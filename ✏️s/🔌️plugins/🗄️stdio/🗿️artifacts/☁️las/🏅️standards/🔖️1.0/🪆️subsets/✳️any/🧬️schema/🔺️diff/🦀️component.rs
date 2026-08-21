@@ -17,13 +17,13 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").await.at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").await.at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
         }
     }
     let mut length = base_len - removed.len();
@@ -32,7 +32,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").await.at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
         }
         previous = Some(index);
         length += 1;
@@ -1534,8 +1534,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1574,25 +1574,25 @@ pub(crate) fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
-    let version_major = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let version_minor = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let version_major = reader.read_u8().map_err(|e| e.to_string())?;
+    let version_minor = reader.read_u8().map_err(|e| e.to_string())?;
     let system_identifier = read_str_lp(reader)?;
     let generating_software = read_str_lp(reader)?;
-    let creation_day_of_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let creation_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let header_size = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let offset_to_point_data = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let number_of_vlrs = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let point_data_format_id = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let point_data_record_length = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let number_of_point_records = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let creation_day_of_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let creation_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let header_size = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let offset_to_point_data = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let number_of_vlrs = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let point_data_format_id = reader.read_u8().map_err(|e| e.to_string())?;
+    let point_data_record_length = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let number_of_point_records = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     let mut points_by_return = [0u32; 5];
     for slot in points_by_return.iter_mut() {
-        *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     }
     let mut floats = [0.0f64; 12];
     for slot in floats.iter_mut() {
-        *slot = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+        *slot = reader.read_f64_le().map_err(|e| e.to_string())?;
     }
     let [x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] = floats;
     Ok(LasHeader {
@@ -1633,7 +1633,7 @@ pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
-    Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
+    Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1669,26 +1669,26 @@ pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
-    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let intensity = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let return_number = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let number_of_returns = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let scan_direction_flag = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let edge_of_flight_line = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let classification = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let scan_angle_rank = reader.read_u8().await.map_err(|e| e.to_string())? as i8;
-    let user_data = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let point_source_id = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let gps_time = match reader.read_u8().await.map_err(|e| e.to_string())? {
+    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let intensity = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let return_number = reader.read_u8().map_err(|e| e.to_string())?;
+    let number_of_returns = reader.read_u8().map_err(|e| e.to_string())?;
+    let scan_direction_flag = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let edge_of_flight_line = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let classification = reader.read_u8().map_err(|e| e.to_string())?;
+    let scan_angle_rank = reader.read_u8().map_err(|e| e.to_string())? as i8;
+    let user_data = reader.read_u8().map_err(|e| e.to_string())?;
+    let point_source_id = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let gps_time = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
+        1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
         other => return Err(format!("bad option tag {other}")),
     };
-    let rgb = match reader.read_u8().await.map_err(|e| e.to_string())? {
+    let rgb = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
+        1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
         other => return Err(format!("bad option tag {other}")),
     };
     Ok(LasPoint { x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb })
@@ -1732,13 +1732,13 @@ fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
-    let mask = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let mask = reader.read_u8().map_err(|e| e.to_string())?;
     let mut d = LasVlrDiff::default();
     if mask & VDF_USER_ID != 0 {
         d.user_id = Some(read_str_lp(reader)?);
     }
     if mask & VDF_RECORD_ID != 0 {
-        d.record_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.record_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & VDF_DESCRIPTION != 0 {
         d.description = Some(read_str_lp(reader)?);
@@ -1869,55 +1869,55 @@ fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
-    let mask = reader.read_u16_le().await.map_err(|e| e.to_string())?;
+    let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
     let mut d = LasPointDiff::default();
     if mask & PDF_X != 0 {
-        d.x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_Y != 0 {
-        d.y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_Z != 0 {
-        d.z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+        d.z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
     }
     if mask & PDF_INTENSITY != 0 {
-        d.intensity = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.intensity = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_RETURN_NUMBER != 0 {
-        d.return_number = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.return_number = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_NUMBER_OF_RETURNS != 0 {
-        d.number_of_returns = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.number_of_returns = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_DIRECTION_FLAG != 0 {
-        d.scan_direction_flag = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
+        d.scan_direction_flag = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_EDGE_OF_FLIGHT_LINE != 0 {
-        d.edge_of_flight_line = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
+        d.edge_of_flight_line = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_CLASSIFICATION != 0 {
-        d.classification = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.classification = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_ANGLE_RANK != 0 {
-        d.scan_angle_rank = Some(reader.read_u8().await.map_err(|e| e.to_string())? as i8);
+        d.scan_angle_rank = Some(reader.read_u8().map_err(|e| e.to_string())? as i8);
     }
     if mask & PDF_USER_DATA != 0 {
-        d.user_data = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+        d.user_data = Some(reader.read_u8().map_err(|e| e.to_string())?);
     }
     if mask & PDF_POINT_SOURCE_ID != 0 {
-        d.point_source_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+        d.point_source_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_GPS_TIME != 0 {
-        d.gps_time = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
+        d.gps_time = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
+            1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
             other => return Err(format!("bad option tag {other}")),
         });
     }
     if mask & PDF_RGB != 0 {
-        d.rgb = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
+        d.rgb = Some(match reader.read_u8().map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
+            1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
             other => return Err(format!("bad option tag {other}")),
         });
     }
@@ -1943,9 +1943,9 @@ fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasVlrModified, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1953,7 +1953,7 @@ fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, 
             Ok(LasVlrModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasVlrAdded, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1983,9 +1983,9 @@ fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasPointModified, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -1993,7 +1993,7 @@ fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDi
             Ok(LasPointModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasPointAdded, String> {
             let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
@@ -2436,7 +2436,7 @@ mod tests {
     async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = LasSnapshot::default();
         let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
-        let error = diff.apply(&base).await.expect_err("missing VLR target must be rejected");
+        let error = diff.apply(&base).expect_err("missing VLR target must be rejected");
         assert_eq!(error.code, "invalid-remove-index");
         assert_eq!(error.target, vec!["vlrs", "0"]);
         assert_eq!(base, LasSnapshot::default());
@@ -2452,12 +2452,12 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = LasDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = LasDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = LasDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = LasDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

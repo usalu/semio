@@ -1,0 +1,16 @@
+{
+  "lineEnding": "crlf",
+  "records": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "fields": [
+            null,
+            "Beta"
+          ]
+        }
+      }
+    ]
+  }
+}

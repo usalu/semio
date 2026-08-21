@@ -131,7 +131,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_requires_output_intent_and_builds_clean() {
-            let snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A Test".into()), ..PdfInfo::default() }).build().await.expect("conforming construction must build");
+            let snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
             assert_eq!(snapshot.info.title.as_deref(), Some("A Test"));
         }
@@ -139,7 +139,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = PdfIndirectObject { id: ObjRef { num: 99, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "S".into(), value: PdfObject::Name("Launch".into()) }]) };
-            let mut snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0, 100.0)).build().await.unwrap();
+            let mut snapshot = PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
             snapshot.objects.push(violating);
             // Even routed back in via the generic `SetSnapshot` escape hatch, `build()` still catches it.
             let (mutated, _diff) = PdfABuilderConstruction::from_snapshot(PdfSnapshot::default()).mutate(PdfMutation::SetSnapshot { snapshot });

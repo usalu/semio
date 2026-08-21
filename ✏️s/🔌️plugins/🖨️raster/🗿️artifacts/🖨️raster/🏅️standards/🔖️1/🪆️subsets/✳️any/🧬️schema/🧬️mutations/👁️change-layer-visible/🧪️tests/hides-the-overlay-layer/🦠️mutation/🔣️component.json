@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerVisible",
+  "layerId": "overlay",
+  "newVisible": false
+}

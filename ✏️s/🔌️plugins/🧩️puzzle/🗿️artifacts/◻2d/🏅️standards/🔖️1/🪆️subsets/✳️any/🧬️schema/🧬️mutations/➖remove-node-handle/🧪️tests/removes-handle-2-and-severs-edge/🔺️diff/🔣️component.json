@@ -1,0 +1,59 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "node-b",
+        "patch": {
+          "replacement": {
+            "id": "node-b",
+            "nodeKind": "node-kind-b",
+            "shape": "rectangle",
+            "x": 40.0,
+            "y": 20.0,
+            "width": 30.0,
+            "height": 12.0,
+            "anchor": "fixed",
+            "handles": []
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "edges": {
+    "added": [],
+    "removed": [
+      "edge-1"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "meta": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "brushCandidateSourceHandleId": null,
+  "locale": null,
+  "terminology": null,
+  "lodModeByPaneJson": null,
+  "engagementInputByPaneJson": null,
+  "brushCandidatesJson": null,
+  "nodeKindWeightsJson": null,
+  "handleKindWeightsJson": null,
+  "activeUtilityByWindowIdJson": null,
+  "hoveredNodeId": null,
+  "previewSeq": null
+}

@@ -1,0 +1,9 @@
+{
+  "mutation": "moveObject",
+  "id": "object-a",
+  "newOrigin": [
+    1.0,
+    2.0,
+    3.0
+  ]
+}

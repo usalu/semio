@@ -1,0 +1,5 @@
+{
+  "mutation": "renameBenchmarkRecord",
+  "id": "benchmark-record-a",
+  "newName": "Renamed Benchmark Record A"
+}

@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "schema": null,
+  "camera": null,
+  "content": null,
+  "selectedNodeIds": null,
+  "selectedEdgeIds": null,
+  "selectedHandleIds": null,
+  "previewOffNodeIds": null,
+  "lodMode": null,
+  "proximityDistance": null,
+  "gridVisible": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "catalogueSectionsJson": null,
+  "automationEnabledJson": null,
+  "contributionsJson": null,
+  "generationJson": null,
+  "locale": null
+}

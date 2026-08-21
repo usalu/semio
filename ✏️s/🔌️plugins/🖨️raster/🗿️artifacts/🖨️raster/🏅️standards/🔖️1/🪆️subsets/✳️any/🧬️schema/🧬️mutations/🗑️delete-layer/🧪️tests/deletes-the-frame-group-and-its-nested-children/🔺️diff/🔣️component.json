@@ -1,0 +1,25 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [
+      "frame"
+    ],
+    "patched": [],
+    "moved": []
+  },
+  "assets": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "brushSize": null,
+  "brushOpacity": null,
+  "compositeViewport": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredId": null
+}

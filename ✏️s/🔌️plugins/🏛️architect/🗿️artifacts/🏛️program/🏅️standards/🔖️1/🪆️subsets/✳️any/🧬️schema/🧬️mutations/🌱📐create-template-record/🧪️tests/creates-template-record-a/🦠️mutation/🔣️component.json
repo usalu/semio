@@ -1,0 +1,38 @@
+{
+  "mutation": "createTemplateRecord",
+  "templateRecord": {
+    "id": "template-record-a",
+    "name": "Template Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "templateType": "",
+    "sector": null,
+    "projectType": null,
+    "version": "",
+    "contentRef": null,
+    "entityKinds": [],
+    "defaultFields": [],
+    "checklists": [],
+    "standards": [],
+    "applicability": [],
+    "authorId": null,
+    "approvalStatus": "pending",
+    "usageCount": 0,
+    "lastApplied": null,
+    "customizationNotes": [],
+    "relatedKnowledgeIds": [],
+    "benchmarkIds": [],
+    "license": null,
+    "sourceOrganization": null
+  }
+}

@@ -15,7 +15,7 @@ pub fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]);
     };
     if face.surface == payload.new_surface {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id));
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
         faces: Some(NamedTripleDiff {

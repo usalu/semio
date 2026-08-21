@@ -1,0 +1,39 @@
+{
+  "mutation": "replaceAnalysisRecord",
+  "analysisRecord": {
+    "id": "analysis-record-a",
+    "name": "Analysis Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "kind": "gap",
+    "title": "Replaced Analysis Record A",
+    "parameters": [],
+    "inputEntityIds": [],
+    "outputSummary": {
+      "text": ""
+    },
+    "findings": [],
+    "metrics": [],
+    "charts": [],
+    "runBy": null,
+    "runAt": null,
+    "durationMs": null,
+    "toolVersion": null,
+    "scenarioId": null,
+    "reportId": null,
+    "confidence": null,
+    "limitations": [],
+    "recommendations": [],
+    "rawResultRef": null
+  }
+}

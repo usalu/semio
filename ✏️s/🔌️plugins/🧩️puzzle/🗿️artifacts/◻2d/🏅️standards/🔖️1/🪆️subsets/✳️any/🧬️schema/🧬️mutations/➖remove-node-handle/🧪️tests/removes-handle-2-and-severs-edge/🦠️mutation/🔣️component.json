@@ -1,0 +1,5 @@
+{
+  "mutation": "removeNodeHandle",
+  "nodeId": "node-b",
+  "handleId": "handle-2"
+}

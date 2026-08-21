@@ -1,0 +1,6 @@
+{
+  "mutation": "changeReferenceHidden",
+  "modelDefinitionId": "spatial.shape",
+  "referenceId": "ref-1",
+  "newHidden": true
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGridSubdivisions",
+  "newSubdivisions": 8.0
+}

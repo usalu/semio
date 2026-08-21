@@ -1,0 +1,21 @@
+{
+  "schema": "s.space",
+  "spaceId": "space-hannover",
+  "artifacts": [
+    {
+      "id": "artifact-1",
+      "name": "Site Plan",
+      "kindId": "s.draw.draw",
+      "schema": "s.draw",
+      "dialect": {
+        "artifactKind": "s.draw.draw",
+        "standard": "1",
+        "subset": "*"
+      },
+      "createdAtMs": 1000,
+      "createdBy": "user:ada",
+      "updatedAtMs": 1000,
+      "updatedBy": "user:ada"
+    }
+  ]
+}

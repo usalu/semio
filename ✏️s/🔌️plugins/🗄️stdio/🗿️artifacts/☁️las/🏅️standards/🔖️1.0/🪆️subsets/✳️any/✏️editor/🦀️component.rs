@@ -74,7 +74,7 @@ impl ArtifactEditor for LasAnyEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -84,7 +84,7 @@ impl ArtifactEditor for LasAnyEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_las_any_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(LAS_ANY_DIALECT)
-        .await.document(["stdio", "las"])
+        .document(["stdio", "las"])
         .icon_id("box")
         .mode_def(edit::definition())
         .default_mode_id(edit::LAS_ANY_EDIT_MODE_ID)

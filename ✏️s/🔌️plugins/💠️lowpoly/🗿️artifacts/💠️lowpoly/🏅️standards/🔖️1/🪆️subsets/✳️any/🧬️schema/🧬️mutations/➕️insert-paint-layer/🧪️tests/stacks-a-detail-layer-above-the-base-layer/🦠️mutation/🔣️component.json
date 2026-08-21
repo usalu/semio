@@ -1,0 +1,13 @@
+{
+  "InsertPaintLayer": {
+    "objectId": "obj-hull",
+    "index": 1,
+    "layer": {
+      "name": "Detail",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "pixels": "AAAAAAAAAAA="
+    }
+  }
+}

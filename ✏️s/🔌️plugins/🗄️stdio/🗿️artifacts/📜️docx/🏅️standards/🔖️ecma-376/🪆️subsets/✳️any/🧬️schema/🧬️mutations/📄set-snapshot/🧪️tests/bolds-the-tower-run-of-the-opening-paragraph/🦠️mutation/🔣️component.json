@@ -1,0 +1,61 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.docx",
+    "opc": {
+      "parts": [],
+      "contentTypes": {
+        "defaults": [
+          [
+            "xml",
+            "application/xml"
+          ],
+          [
+            "rels",
+            "application/vnd.openxmlformats-package.relationships+xml"
+          ]
+        ],
+        "overrides": [
+          [
+            "/word/document.xml",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+          ]
+        ]
+      },
+      "relationships": {},
+      "comment": ""
+    },
+    "document": {
+      "body": [
+        {
+          "kind": "paragraph",
+          "runs": [
+            {
+              "text": "Nakagin ",
+              "bold": false,
+              "italic": false,
+              "underline": false,
+              "extraRunProperties": []
+            },
+            {
+              "text": "Capsule Tower",
+              "bold": true,
+              "italic": false,
+              "underline": false,
+              "extraRunProperties": []
+            }
+          ],
+          "style": "Heading1",
+          "extraParagraphProperties": []
+        }
+      ],
+      "styles": [
+        {
+          "id": "Heading1",
+          "name": "heading 1",
+          "basedOn": null
+        }
+      ]
+    }
+  }
+}

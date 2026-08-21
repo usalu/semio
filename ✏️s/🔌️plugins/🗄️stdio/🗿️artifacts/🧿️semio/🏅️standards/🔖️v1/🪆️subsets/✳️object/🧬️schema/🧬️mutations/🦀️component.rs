@@ -64,7 +64,7 @@ mod tests {
     /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
@@ -112,8 +112,8 @@ mod tests {
         let mut base = fixture();
         base.brep = None;
         let delete = SemioObjectMutation::DeleteBrep(delete_brep::mutation::DeleteBrep {});
-        assert!(delete.inverse(&base).await.is_empty(), "deleting an already-absent slot has nothing to undo");
-        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
+        assert!(delete.inverse(&base).is_empty(), "deleting an already-absent slot has nothing to undo");
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -151,10 +151,39 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioObjectMutation::kinds().await.len(), 9);
+        assert_eq!(SemioObjectMutation::kinds().len(), 9);
         let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh {});
         assert_eq!(mutation.semantics().kind, "delete-mesh");
         assert_eq!(mutation.semantics().record, "DeletedMesh");
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/🦀️component.rs"]
+    mod tests_move_object_moves_the_object_to_a_new_translation;
+    #[path = "🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/🦀️component.rs"]
+    mod tests_rotate_object_rotates_the_object_a_half_turn_about_z;
+    #[path = "📏scale-object/🧪️tests/scales-the-object-non-uniformly/🦀️component.rs"]
+    mod tests_scale_object_scales_the_object_non_uniformly;
+    #[path = "🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/🦀️component.rs"]
+    mod tests_create_brep_attaches_a_brep_child_to_an_object_that_has_none;
+    #[path = "💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦀️component.rs"]
+    mod tests_delete_brep_detaches_the_brep_child_and_leaves_the_mesh_child_alone;
+    #[path = "🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/🦀️component.rs"]
+    mod tests_create_mesh_attaches_a_mesh_child_to_an_object_that_has_none;
+    #[path = "🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦀️component.rs"]
+    mod tests_delete_mesh_detaches_the_mesh_child_and_leaves_the_brep_child_alone;
+    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/🦀️component.rs"]
+    mod tests_create_properties_attaches_a_properties_child_to_an_object_that_has_none;
+    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦀️component.rs"]
+    mod tests_delete_properties_detaches_the_properties_child_and_leaves_the_mesh_child_alone;
+}
+//#endregion 🧪️FixtureTests

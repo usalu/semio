@@ -20,7 +20,7 @@ pub fn diff(payload: &DeleteNode, base: &SemioGraphSnapshot) -> protocol::Mutati
     edges.retain(|e| e.source != payload.id && e.target != payload.id);
     let outcome = protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: Some(SemioGraphEdgeList { values: edges }) });
     if severed > 0 {
-        outcome.await.info("mutation.cascade", format!("Deleting node \"{}\" also severed {severed} edge(s).", payload.id.value))
+        outcome.info("mutation.cascade", format!("Deleting node \"{}\" also severed {severed} edge(s).", payload.id.value))
     } else {
         outcome
     }

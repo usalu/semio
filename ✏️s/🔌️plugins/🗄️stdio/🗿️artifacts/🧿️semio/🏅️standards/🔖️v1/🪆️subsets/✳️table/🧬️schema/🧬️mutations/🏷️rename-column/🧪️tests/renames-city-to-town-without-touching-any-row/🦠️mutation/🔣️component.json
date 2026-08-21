@@ -1,0 +1,6 @@
+{
+  "RenameColumn": {
+    "name": "city",
+    "new_name": "town"
+  }
+}

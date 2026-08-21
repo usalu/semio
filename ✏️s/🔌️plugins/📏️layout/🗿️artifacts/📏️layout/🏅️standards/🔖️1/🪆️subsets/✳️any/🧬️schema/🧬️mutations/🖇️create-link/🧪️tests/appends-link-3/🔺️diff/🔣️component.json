@@ -1,0 +1,46 @@
+{
+  "artifact": null,
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": {
+    "added": [
+      {
+        "id": "link-3",
+        "path": "caption.png",
+        "hash": "hash-caption",
+        "width": 200,
+        "height": 150,
+        "dpi": 144,
+        "colorProfile": null,
+        "state": null,
+        "proxyDataUrl": null
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "parentPages": null,
+  "spreads": null,
+  "pages": null,
+  "printTarget": null,
+  "dataFieldsJson": null,
+  "backgroundDrawing": null,
+  "referencedModel": null,
+  "selectedIds": null,
+  "activePageId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "previewCameraX": null,
+  "previewCameraY": null,
+  "previewCameraZoom": null,
+  "dropPreview": null,
+  "locale": null,
+  "hoveredId": null
+}

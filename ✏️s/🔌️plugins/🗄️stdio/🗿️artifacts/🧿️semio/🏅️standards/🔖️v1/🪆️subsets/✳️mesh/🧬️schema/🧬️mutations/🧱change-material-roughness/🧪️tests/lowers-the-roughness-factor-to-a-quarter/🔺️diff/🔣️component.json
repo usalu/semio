@@ -1,0 +1,12 @@
+{
+  "materials": {
+    "modified": [
+      {
+        "key": "mat-a",
+        "diff": {
+          "roughness": 0.25
+        }
+      }
+    ]
+  }
+}

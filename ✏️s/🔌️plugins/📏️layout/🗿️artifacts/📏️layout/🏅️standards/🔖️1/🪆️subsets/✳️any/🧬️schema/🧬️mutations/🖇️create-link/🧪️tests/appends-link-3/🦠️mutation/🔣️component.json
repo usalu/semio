@@ -1,0 +1,16 @@
+{
+  "CreateLink": {
+    "link": {
+      "id": "link-3",
+      "path": "caption.png",
+      "hash": "hash-caption",
+      "width": 200,
+      "height": 150,
+      "dpi": 144,
+      "colorProfile": null,
+      "state": null,
+      "proxyDataUrl": null
+    },
+    "index": 2
+  }
+}

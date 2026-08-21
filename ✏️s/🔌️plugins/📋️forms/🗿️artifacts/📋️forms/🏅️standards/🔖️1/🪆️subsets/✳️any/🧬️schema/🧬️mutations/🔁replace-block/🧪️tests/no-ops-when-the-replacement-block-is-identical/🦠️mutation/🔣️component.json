@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceBlock",
+  "step_id": "step-basics",
+  "block": {
+    "id": "q-site-name",
+    "label": "Site name",
+    "kind": "text",
+    "required": true
+  }
+}

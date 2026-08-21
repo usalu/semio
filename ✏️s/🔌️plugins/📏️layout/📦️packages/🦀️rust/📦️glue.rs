@@ -97,6 +97,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/renames-the-document/🦀️component.rs"]
+                                    mod tests_renames_the_document;
                                 }
                                 #[path = "."]
                                 pub mod change_print_target {
@@ -106,6 +109,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/sets-a-cmyk-print-target/🦀️component.rs"]
+                                    mod tests_sets_a_cmyk_print_target;
                                 }
                                 #[path = "."]
                                 pub mod change_data_fields {
@@ -115,6 +121,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/attaches-a-data-fields-payload/🦀️component.rs"]
+                                    mod tests_attaches_a_data_fields_payload;
                                 }
                                 #[path = "."]
                                 pub mod create_page {
@@ -124,6 +133,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-page/🧪️tests/appends-page-3/🦀️component.rs"]
+                                    mod tests_appends_page_3;
                                 }
                                 #[path = "."]
                                 pub mod delete_page {
@@ -133,6 +145,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/removes-page-2/🦀️component.rs"]
+                                    mod tests_removes_page_2;
                                 }
                                 #[path = "."]
                                 pub mod rename_page {
@@ -142,6 +157,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-page/🧪️tests/renames-page-1/🦀️component.rs"]
+                                    mod tests_renames_page_1;
                                 }
                                 #[path = "."]
                                 pub mod change_page_width {
@@ -151,6 +169,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-page-width/🧪️tests/widens-page-1/🦀️component.rs"]
+                                    mod tests_widens_page_1;
                                 }
                                 #[path = "."]
                                 pub mod change_page_height {
@@ -160,6 +181,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/lengthens-page-1/🦀️component.rs"]
+                                    mod tests_lengthens_page_1;
                                 }
                                 #[path = "."]
                                 pub mod update_page_margins {
@@ -169,6 +193,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/sets-asymmetric-margins-on-page-1/🦀️component.rs"]
+                                    mod tests_sets_asymmetric_margins_on_page_1;
                                 }
                                 #[path = "."]
                                 pub mod update_page_columns {
@@ -178,6 +205,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/splits-page-1-into-three-columns/🦀️component.rs"]
+                                    mod tests_splits_page_1_into_three_columns;
                                 }
                                 #[path = "."]
                                 pub mod reorder_pages {
@@ -187,6 +217,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/moves-page-1-behind-page-2/🦀️component.rs"]
+                                    mod tests_moves_page_1_behind_page_2;
                                 }
                                 #[path = "."]
                                 pub mod create_story {
@@ -196,6 +229,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📖create-story/🧪️tests/appends-story-3/🦀️component.rs"]
+                                    mod tests_appends_story_3;
                                 }
                                 #[path = "."]
                                 pub mod delete_story {
@@ -205,6 +241,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/removes-story-2/🦀️component.rs"]
+                                    mod tests_removes_story_2;
                                 }
                                 #[path = "."]
                                 pub mod edit_story {
@@ -214,6 +253,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝edit-story/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝edit-story/🧪️tests/rewrites-story-1-body/🦀️component.rs"]
+                                    mod tests_rewrites_story_1_body;
                                 }
                                 #[path = "."]
                                 pub mod create_link {
@@ -223,6 +265,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️create-link/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️create-link/🧪️tests/appends-link-3/🦀️component.rs"]
+                                    mod tests_appends_link_3;
                                 }
                                 #[path = "."]
                                 pub mod delete_link {
@@ -232,6 +277,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/removes-link-2/🦀️component.rs"]
+                                    mod tests_removes_link_2;
                                 }
                                 #[path = "."]
                                 pub mod change_link_path {
@@ -241,6 +289,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-link-path/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-link-path/🧪️tests/relinks-link-1-to-a-new-file/🦀️component.rs"]
+                                    mod tests_relinks_link_1_to_a_new_file;
                                 }
                                 #[path = "."]
                                 pub mod create_frame {
@@ -250,6 +301,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/inserts-a-rect-frame-at-index-1/🦀️component.rs"]
+                                    mod tests_inserts_a_rect_frame_at_index_1;
                                 }
                                 #[path = "."]
                                 pub mod delete_frame {
@@ -259,6 +313,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/removes-the-text-frame-and-its-layer-membership/🦀️component.rs"]
+                                    mod tests_removes_the_text_frame_and_its_layer_membership;
                                 }
                                 #[path = "."]
                                 pub mod move_frame {
@@ -268,6 +325,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-frame/🧪️tests/moves-the-rect-frame/🦀️component.rs"]
+                                    mod tests_moves_the_rect_frame;
                                 }
                                 #[path = "."]
                                 pub mod resize_frame {
@@ -277,6 +337,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/resizes-the-rect-frame/🦀️component.rs"]
+                                    mod tests_resizes_the_rect_frame;
                                 }
                                 #[path = "."]
                                 pub mod change_frame_fill {
@@ -286,6 +349,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/repaints-the-rect-frame-fill/🦀️component.rs"]
+                                    mod tests_repaints_the_rect_frame_fill;
                                 }
                                 #[path = "."]
                                 pub mod change_frame_stroke {
@@ -295,6 +361,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/adds-a-stroke-to-the-rect-frame/🦀️component.rs"]
+                                    mod tests_adds_a_stroke_to_the_rect_frame;
                                 }
                                 #[path = "."]
                                 pub mod change_frame_wrap_mode {
@@ -304,6 +373,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/switches-the-text-frame-to-column-wrap/🦀️component.rs"]
+                                    mod tests_switches_the_text_frame_to_column_wrap;
                                 }
                                 #[path = "."]
                                 pub mod change_frame_columns {
@@ -313,6 +385,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/splits-the-text-frame-into-two-columns/🦀️component.rs"]
+                                    mod tests_splits_the_text_frame_into_two_columns;
                                 }
                             }
                         }

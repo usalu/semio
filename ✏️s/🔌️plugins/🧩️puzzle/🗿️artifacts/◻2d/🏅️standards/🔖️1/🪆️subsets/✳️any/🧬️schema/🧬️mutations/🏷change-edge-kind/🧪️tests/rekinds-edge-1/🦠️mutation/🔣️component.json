@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEdgeKind",
+  "id": "edge-1",
+  "newEdgeKind": "edge-kind-c"
+}

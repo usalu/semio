@@ -1,0 +1,5 @@
+{
+  "mutation": "changeShotFormat",
+  "id": "shot-wide",
+  "new_format": "svg"
+}

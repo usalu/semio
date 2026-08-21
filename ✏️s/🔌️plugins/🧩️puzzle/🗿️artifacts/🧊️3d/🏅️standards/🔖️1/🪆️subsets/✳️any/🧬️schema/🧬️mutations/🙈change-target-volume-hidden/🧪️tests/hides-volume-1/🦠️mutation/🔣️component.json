@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetVolumeHidden",
+  "id": "volume-1",
+  "newHidden": true
+}

@@ -1,0 +1,126 @@
+{
+  "schema": "shooting.shooting",
+  "assets": [
+    {
+      "id": "asset-hero",
+      "name": "Hero",
+      "url": "/mesh/hero.glb",
+      "format": "glb",
+      "origin": [
+        1.0,
+        2.0,
+        3.0
+      ],
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        2.0,
+        2.0,
+        2.0
+      ]
+    },
+    {
+      "id": "asset-prop",
+      "name": "Prop",
+      "url": "/mesh/prop.glb",
+      "format": "glb",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "orientation": null,
+      "scale": null
+    }
+  ],
+  "savedCameras": [
+    {
+      "id": "cam-wide",
+      "label": "Wide",
+      "camera": {
+        "position": [
+          10.0,
+          -10.0,
+          6.0
+        ],
+        "target": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "zoom": 1.0,
+        "fov": 50.0
+      }
+    },
+    {
+      "id": "cam-close",
+      "label": "Close",
+      "camera": {
+        "position": [
+          2.0,
+          -2.0,
+          1.5
+        ],
+        "target": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "zoom": 2.0,
+        "fov": 35.0
+      }
+    }
+  ],
+  "scene": {
+    "background": "#101014",
+    "sun": {
+      "enabled": true,
+      "azimuth": 45.0,
+      "elevation": 35.0,
+      "intensity": 1.2,
+      "color": "#ffffff"
+    },
+    "ambient": {
+      "intensity": 1.15,
+      "color": "#ffffff"
+    },
+    "shadow": {
+      "enabled": true,
+      "opacity": 0.35,
+      "softness": 1.0
+    },
+    "material": {
+      "color": "#9aa0ab",
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "emissive": "#000000",
+      "emissiveIntensity": 0.0
+    }
+  },
+  "shots": [
+    {
+      "id": "shot-wide",
+      "label": "Wide",
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "shape": "rectangle",
+      "background": "#ffffff",
+      "cameraId": "cam-wide"
+    },
+    {
+      "id": "shot-close",
+      "label": "Close",
+      "width": 256,
+      "height": 256,
+      "format": "svg",
+      "shape": "ellipse"
+    }
+  ],
+  "activeShotId": "shot-wide",
+  "activeAssetId": "asset-hero"
+}

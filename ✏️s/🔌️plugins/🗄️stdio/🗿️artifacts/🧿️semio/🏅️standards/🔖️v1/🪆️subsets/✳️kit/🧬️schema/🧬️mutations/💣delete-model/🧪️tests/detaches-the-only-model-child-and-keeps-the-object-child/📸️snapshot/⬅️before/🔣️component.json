@@ -1,0 +1,88 @@
+{
+  "schema": "stdio.semio.kit",
+  "types": [
+    {
+      "id": "t1",
+      "name": "Beam",
+      "category": "structure"
+    },
+    {
+      "id": "t2",
+      "name": "Column",
+      "category": "structure"
+    }
+  ],
+  "designs": [
+    {
+      "id": "d1",
+      "name": "Frame",
+      "pieces": [
+        {
+          "id": "p1",
+          "typeId": "t1",
+          "transform": {
+            "translation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        }
+      ],
+      "connections": []
+    }
+  ],
+  "objects": [
+    {
+      "childId": "obj-1",
+      "target": {
+        "artifactId": "frame-beam-object",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "object"
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "childId": "mod-1",
+      "target": {
+        "artifactId": "frame-model",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      }
+    }
+  ],
+  "representations": [
+    {
+      "target": {
+        "artifactId": "beam-plan",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "drawing"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "t1"
+    }
+  ]
+}

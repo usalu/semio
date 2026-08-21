@@ -1648,11 +1648,11 @@ struct PptxDiffRecord {
 impl protocol::DiffCodec for PptxDiff {
     async fn print_diff(&self) -> String {
         let record = PptxDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical pptx diff") };
-        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
+        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
-        let model = PptxDiffRecord::__dsl_from_record(&record)?;
+        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
+        let model = PptxDiffRecord::__dsl_from_record(&record).await?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -1780,10 +1780,10 @@ mod handcrafted_diff_codec_tests {
 
         let c = elem_snapshot(vec![]);
 
-        let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b).await, PptxDiff::between(&b, &a).await, PptxDiff::between(&a, &c).await, PptxDiff::between(&c, &a)];
+        let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &c), PptxDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = PptxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 

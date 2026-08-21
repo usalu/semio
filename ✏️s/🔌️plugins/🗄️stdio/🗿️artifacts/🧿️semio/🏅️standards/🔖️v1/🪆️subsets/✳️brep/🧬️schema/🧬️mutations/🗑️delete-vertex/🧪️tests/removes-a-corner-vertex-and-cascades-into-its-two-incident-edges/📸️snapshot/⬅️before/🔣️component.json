@@ -1,0 +1,115 @@
+{
+  "schema": "stdio.semio.brep",
+  "vertices": [
+    {
+      "id": "v1",
+      "point": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v2",
+      "point": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v3",
+      "point": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    {
+      "id": "v4",
+      "point": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "startVertex": "v1",
+      "endVertex": "v2",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e2",
+      "startVertex": "v2",
+      "endVertex": "v3",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e3",
+      "startVertex": "v3",
+      "endVertex": "v4",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": -1.0,
+          "y": 0.0,
+          "z": 0.0
+        }
+      }
+    },
+    {
+      "id": "e4",
+      "startVertex": "v4",
+      "endVertex": "v1",
+      "curve": {
+        "kind": "line",
+        "origin": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        },
+        "direction": {
+          "x": 0.0,
+          "y": -1.0,
+          "z": 0.0
+        }
+      }
+    }
+  ],
+  "loops": [],
+  "faces": [],
+  "shells": [],
+  "solids": []
+}

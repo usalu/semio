@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "nodes": [
+      {
+        "mesh": 0,
+        "name": "body"
+      }
+    ],
+    "meshes": [
+      {
+        "name": "hull"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

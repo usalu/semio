@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSystemType",
+  "newSystemType": "decentral_mech"
+}

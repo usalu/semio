@@ -189,7 +189,7 @@ const CP437_HIGH: [char; 128] = [
     'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩', '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', '\u{00a0}',
 ];
 
-fn cp437_decode(bytes: &[u8]) -> String {
+async fn cp437_decode(bytes: &[u8]) -> String {
     bytes.iter().map(|&b| if b < 0x80 { b as char } else { CP437_HIGH[(b - 0x80) as usize] }).collect()
 }
 
@@ -198,7 +198,7 @@ async fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result
     if utf8 {
         String::from_utf8(bytes.to_vec()).map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
     } else {
-        Ok(cp437_decode(bytes))
+        Ok(cp437_decode(bytes).await)
     }
 }
 

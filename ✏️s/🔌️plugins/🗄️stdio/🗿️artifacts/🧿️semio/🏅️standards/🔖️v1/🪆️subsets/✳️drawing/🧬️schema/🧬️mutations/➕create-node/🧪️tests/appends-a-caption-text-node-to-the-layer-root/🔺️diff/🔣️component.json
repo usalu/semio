@@ -1,0 +1,30 @@
+{
+  "layers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "root": {
+            "kind": "group",
+            "children": {
+              "added": [
+                {
+                  "index": 3,
+                  "item": {
+                    "kind": "text",
+                    "value": "Caption",
+                    "at": {
+                      "x": 2.0,
+                      "y": 20.0
+                    },
+                    "style": "primary"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

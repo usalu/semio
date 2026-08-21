@@ -1,0 +1,10 @@
+{
+  "mutation": "addLoad",
+  "caseId": "dead",
+  "load": {
+    "kind": "area",
+    "id": "p1",
+    "solidId": "slab",
+    "pressure": -2500.0
+  }
+}

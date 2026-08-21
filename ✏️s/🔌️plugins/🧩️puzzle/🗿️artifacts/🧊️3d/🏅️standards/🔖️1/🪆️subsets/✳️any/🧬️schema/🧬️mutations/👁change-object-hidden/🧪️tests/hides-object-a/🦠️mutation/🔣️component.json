@@ -1,0 +1,5 @@
+{
+  "mutation": "changeObjectHidden",
+  "id": "object-a",
+  "newHidden": true
+}

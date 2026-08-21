@@ -1,0 +1,5 @@
+{
+  "mutation": "renameVortexKind",
+  "id": "door",
+  "newName": "portal"
+}

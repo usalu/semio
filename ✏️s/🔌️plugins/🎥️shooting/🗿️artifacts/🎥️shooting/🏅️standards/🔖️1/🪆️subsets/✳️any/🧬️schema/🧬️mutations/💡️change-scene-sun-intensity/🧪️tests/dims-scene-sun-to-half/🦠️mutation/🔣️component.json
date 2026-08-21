@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneSunIntensity",
+  "new_intensity": 1.2
+}

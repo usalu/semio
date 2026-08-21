@@ -1,0 +1,5 @@
+{
+  "mutation": "reorderSynapses",
+  "id": "synapse-1",
+  "toIndex": 0
+}

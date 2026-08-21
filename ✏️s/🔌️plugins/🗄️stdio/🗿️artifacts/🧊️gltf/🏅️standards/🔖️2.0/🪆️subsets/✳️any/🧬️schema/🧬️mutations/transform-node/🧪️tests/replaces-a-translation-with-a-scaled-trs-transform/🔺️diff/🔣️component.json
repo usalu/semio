@@ -1,0 +1,21 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "translation": [
+            0.5,
+            0,
+            0
+          ],
+          "scale": [
+            2,
+            2,
+            2
+          ]
+        }
+      }
+    ]
+  }
+}

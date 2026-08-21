@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "step-basics",
+    "q-nickname"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": null,
+  "geometry": null,
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": {
+    "height": {
+      "kind": "decimal",
+      "value": 600.0
+    }
+  },
+  "scriptLimits": null,
+  "exchangeProcess": null,
+  "selectedCheckIndex": null
+}

@@ -66,6 +66,15 @@ mod kernel_seam;
 #[path = "🦀️os_host.rs"]
 mod os_host;
 
+#[path = "🦀️render_snapshot.rs"]
+mod render_snapshot;
+
+// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the `InteractiveJob` seam for the
+// slice of `AppRuntime::frame()` that genuinely is `Send`-safe today — see that file's own module
+// docstring for exactly what moves and, more importantly, what still cannot.
+#[path = "🦀️frame_job.rs"]
+mod frame_job;
+
 #[path = "🦀️winit_app.rs"]
 mod winit_app;
 //#endregion 🔖️OsHostDecomposition
@@ -90,7 +99,6 @@ use program_bridge::load_wasm_plugins;
 use program_bridge::parse_plugin_entries;
 use shell::ShellState;
 use std::cell::RefCell;
-use std::io::Read;
 use std::rc::Rc;
 use std::sync::Arc;
 #[cfg(target_arch = "wasm32")]
@@ -450,12 +458,24 @@ pub(crate) mod kernel_runtime {
     }
 
     impl KernelThreadState {
-        fn new() -> Self {
+        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this whole `impl` block used
+        /// to bridge every single `ParallelRuntime`/`GuestRuntime` call with its OWN `pollster::block_on`
+        /// (15 call sites — the design doc's Category C, "THE PHASE 3 FOCUS"). Those calls never
+        /// actually blocked the UI/winit thread (they only ever ran inside `run_kernel_thread`'s own
+        /// dedicated `"semio-kernel"` background thread — see that fn's own doc comment), but they were
+        /// still disguised, scattered `block_on` calls outside any approved entry point, which is
+        /// exactly what the audit's "block_on confined to approved process/test entry points" rule
+        /// forbids and what inflated the interactivity audit's blocking-bridge count. Every method below
+        /// is now a genuine `async fn`; the ONE remaining bridge lives at `run_kernel_thread`'s own
+        /// top-level `pollster::block_on`, wrapping this thread's entire request-processing loop — the
+        /// same class of justified bridge `run_native`'s event loop or the CLI's `bin.rs` already use,
+        /// not a disguised one hiding inside product logic.
+        async fn new() -> Self {
             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds")));
             // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
             // type mints for itself — see `ParallelRuntime::new`'s own doc.
             let pool = Arc::new(crate::renderer_worker_pool());
-            let runtime = pollster::block_on(crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64));
+            let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
             Self { guest_runtime, runtime, now_ms: 0, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
         }
 
@@ -464,7 +484,7 @@ pub(crate) mod kernel_runtime {
             *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
         }
 
-        fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
+        async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
             let bytes = std::fs::read(&wasm_path).map_err(|error| format!("{}: {error}", wasm_path.display()))?;
             let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
             let package_id = PackageId(plugin_id.clone());
@@ -475,11 +495,11 @@ pub(crate) mod kernel_runtime {
             // bridge (already used repeatedly below, e.g. `poll_world3d_assets`/`fetch_url_bytes`).
             // Pre-existing defect in this exact function, fixed here because it sits directly upstream
             // of this packet's own cascade addition below.
-            let compiled = pollster::block_on(self.guest_runtime.compile(&package_ref, &bytes)).map_err(|error| error.to_string())?;
+            let compiled = self.guest_runtime.compile(&package_ref, &bytes).await.map_err(|error| error.to_string())?;
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
-            let actor = pollster::block_on(self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET))?;
+            let actor = self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await?;
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -493,14 +513,14 @@ pub(crate) mod kernel_runtime {
                 capabilities: Vec::new(),
                 quotas: QuotaSchema::default(),
             };
-            self.run_turn(actor, instance_id, vec![open])?;
+            self.run_turn(actor, instance_id, vec![open]).await?;
             // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): descriptor-driven
             // native cascade — M6's own acceptance wording, "activating a parent brings up its N
             // extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
             // (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
             // wasm artifacts live as siblings under the same `modules_root`.
             if let Some(modules_root) = wasm_path.parent().and_then(|dir| dir.parent()) {
-                self.activate_extensions_of(&plugin_id, actor, modules_root);
+                self.activate_extensions_of(&plugin_id, actor, modules_root).await;
             }
             Ok(instance_id)
         }
@@ -527,12 +547,12 @@ pub(crate) mod kernel_runtime {
         /// is missing. A lease-request for a small additive method is open — see this ticket's report.
         /// `link_extension` (cascade topology, zero-orphan teardown) is unaffected by this gap and
         /// works correctly regardless of which shard the extension landed on.
-        fn activate_extensions_of(&mut self, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
+        async fn activate_extensions_of(&mut self, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
             let extensions = extension_index().extensions_of(plugin_id);
             if extensions.is_empty() {
                 return;
             }
-            let parent_grants = pollster::block_on(self.runtime.kernel().actor_record(parent)).map(|record| record.capabilities).unwrap_or_default();
+            let parent_grants = self.runtime.kernel().actor_record(parent).await.map(|record| record.capabilities).unwrap_or_default();
             for extension in extensions.to_vec() {
                 let extension_dir = modules_root.join(&extension.extension_id);
                 let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir) else {
@@ -548,7 +568,7 @@ pub(crate) mod kernel_runtime {
                 };
                 let extension_hash = PackageHash(*blake3::hash(&extension_bytes).as_bytes());
                 let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
-                let extension_compiled = match pollster::block_on(self.guest_runtime.compile(&extension_package_ref, &extension_bytes)) {
+                let extension_compiled = match self.guest_runtime.compile(&extension_package_ref, &extension_bytes).await {
                     Ok(handle) => handle,
                     Err(error) => {
                         crate::log_debug(&format!("kernel: compile failed for extension {}: {error}", extension.extension_id));
@@ -564,13 +584,13 @@ pub(crate) mod kernel_runtime {
                 // `intersect_capabilities` call still records the correctly-scoped grant kernel-side
                 // (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
                 // ready the moment a broker starts populating `parent_grants` for real.
-                match pollster::block_on(self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET)) {
+                match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await {
                     Ok(extension_actor) => {
-                        let scoped_grants = pollster::block_on(intersect_capabilities(&parent_grants, &extension.capability_requests));
-                        if let Err(error) = pollster::block_on(self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants)) {
+                        let scoped_grants = intersect_capabilities(&parent_grants, &extension.capability_requests).await;
+                        if let Err(error) = self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants).await {
                             crate::log_debug(&format!("kernel: set_capabilities({extension_actor:?}) failed: {error}"));
                         }
-                        if let Err(error) = pollster::block_on(self.runtime.kernel_mut().link_extension(parent, extension_actor)) {
+                        if let Err(error) = self.runtime.kernel_mut().link_extension(parent, extension_actor).await {
                             crate::log_debug(&format!("kernel: link_extension({parent:?}, {extension_actor:?}) failed: {error}"));
                         }
                     }
@@ -579,7 +599,7 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        fn destroy_app(&mut self, instance: u32) {
+        async fn destroy_app(&mut self, instance: u32) {
             if let Some(actor) = self.instances.remove(&instance) {
                 // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): cascade
                 // teardown — `Kernel::deactivate` walks `actor`'s cascade subtree leaves-first and
@@ -589,16 +609,16 @@ pub(crate) mod kernel_runtime {
                 // `Kernel`'s own purity boundary (no transport inside the pure crate). Falls back to
                 // unregistering just `actor` if `Kernel::deactivate` errors (e.g. already gone) —
                 // the pre-existing single-actor behaviour this method had before this packet.
-                let removed = pollster::block_on(self.runtime.kernel_mut().deactivate(actor)).unwrap_or_else(|_| vec![actor]);
+                let removed = self.runtime.kernel_mut().deactivate(actor).await.unwrap_or_else(|_| vec![actor]);
                 for id in removed {
-                    pollster::block_on(self.runtime.unregister(id));
+                    self.runtime.unregister(id).await;
                 }
             }
             self.retained.retain(|(inst, _), _| *inst != instance);
             self.pending_rejections.retain(|(inst, _), _| *inst != instance);
         }
 
-        fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
             let Some(&actor) = self.instances.get(&instance) else {
                 return Err(format!("kernel: instance {instance} is not registered"));
             };
@@ -608,7 +628,7 @@ pub(crate) mod kernel_runtime {
                     events.insert(0, Event::PatchRejected { surface: key.1, revision, reason: "revision-mismatch".to_string() });
                 }
             }
-            self.run_turn(actor, instance, events)
+            self.run_turn(actor, instance, events).await
         }
 
         /// 🎠️ terra-kernel-loop: the real loop the packet brief's item 1 asks for — `Kernel::submit`
@@ -631,7 +651,7 @@ pub(crate) mod kernel_runtime {
         /// commit_frame` for real would mean migrating THIS host's whole UI-patch pipeline onto
         /// `Kernel`'s `SceneStore`, a substantially larger, separate refactor out of this packet's
         /// scope (see `📓️terra-kernel-loop-report.md`'s own gaps section).
-        fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+        async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
             if events.is_empty() {
                 envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? } });
@@ -641,7 +661,7 @@ pub(crate) mod kernel_runtime {
                 }
             }
             for envelope in &envelopes {
-                if !matches!(pollster::block_on(self.runtime.submit(envelope)), Backpressure::Accept) {
+                if !matches!(self.runtime.submit(envelope).await, Backpressure::Accept) {
                     crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
                 }
             }
@@ -649,7 +669,7 @@ pub(crate) mod kernel_runtime {
             let mut fault: Option<String> = None;
             loop {
                 self.now_ms += 1;
-                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)));
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)).await;
                 if decision.run.is_empty() {
                     break;
                 }
@@ -660,7 +680,7 @@ pub(crate) mod kernel_runtime {
                 for outcome in &outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor: reported, result } => {
-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms));
+                            let _ = self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms).await;
                             if *reported == actor.0 {
                                 turn_result = Some(result.clone());
                             }
@@ -674,7 +694,7 @@ pub(crate) mod kernel_runtime {
                         // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
                         ShardOutcome::Fault { actor: reported, message } => {
                             let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms));
+                            let _ = self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms).await;
                             if *reported == actor.0 {
                                 fault = Some(message.clone());
                             }
@@ -751,19 +771,38 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    /// ⏱️ P3a: the ONE `pollster::block_on` for this whole background thread's lifetime — an
+    /// approved-entry-point bridge (this fn IS the thread's entry point, spawned once by
+    /// `KernelClient::get`), not a disguised one scattered through product logic. Everything inside
+    /// `KernelThreadState`'s methods is now genuine `async fn`/`.await`; `mpsc::Receiver::recv()`
+    /// itself stays a plain blocking channel receive (a consumer thread waiting on its own work queue
+    /// is not the `block_on(async_future)` pattern the audit targets).
     fn run_kernel_thread(rx: mpsc::Receiver<(KernelRequest, Arc<ResponseSlot>)>) {
-        let mut state = KernelThreadState::new();
-        while let Ok((request, slot)) = rx.recv() {
-            let outcome = match request {
-                KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id)),
-                KernelRequest::DestroyApp { instance } => {
-                    state.destroy_app(instance);
-                    continue;
-                }
-                KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events)),
-            };
-            slot.deliver(outcome);
-        }
+        // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this thread was invisible to
+        // the thread census before this packet — a real ad-hoc OS thread (`KernelClient::get`'s own
+        // `std::thread::Builder::spawn`, predating this packet) outside `WorkerPool`, never registered
+        // with any role. Registered as an `IoBoundary` (the closest existing category — see
+        // `semio_framework_trace::ThreadRole`'s own doc: "a genuinely blocking OS pipe read... counted
+        // separately and bounded per its own site") rather than `Worker`, since it is NOT a
+        // `WorkerPool`-indexed worker. Retiring this thread entirely in favour of a real pool
+        // submission is flagged as follow-up work in `📓️p3a-render-snapshot.md` — out of this packet's
+        // boundary (it would mean changing how `KernelClient::get` mints its handle, a wider blast
+        // radius than the block_on removal this packet targets).
+        semio_framework_trace::register_io_boundary_thread("semio-kernel");
+        pollster::block_on(async move {
+            let mut state = KernelThreadState::new().await;
+            while let Ok((request, slot)) = rx.recv() {
+                let outcome = match request {
+                    KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await),
+                    KernelRequest::DestroyApp { instance } => {
+                        state.destroy_app(instance).await;
+                        continue;
+                    }
+                    KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events).await),
+                };
+                slot.deliver(outcome);
+            }
+        });
     }
     //#endregion
 
@@ -1830,18 +1869,6 @@ struct AppRuntime {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn fetch_map_tile_bytes_blocking(url: &str) -> Option<Vec<u8>> {
-    let resolved = resolve_map_tile_fetch_url(url);
-    if !resolved.starts_with("http://") && !resolved.starts_with("https://") {
-        return None;
-    }
-    let response = ureq::get(&resolved).call().ok()?;
-    let mut bytes = Vec::new();
-    response.into_reader().read_to_end(&mut bytes).ok()?;
-    Some(bytes)
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 fn resolve_asset_fetch_url(url: &str) -> String {
     if url.starts_with("http://") || url.starts_with("https://") {
         return url.to_string();
@@ -1856,11 +1883,6 @@ fn resolve_asset_fetch_url(url: &str) -> String {
 #[cfg(not(target_arch = "wasm32"))]
 fn resolve_map_tile_fetch_url(url: &str) -> String {
     resolve_asset_fetch_url(url)
-}
-
-#[cfg(target_arch = "wasm32")]
-fn fetch_map_tile_bytes_blocking(_url: &str) -> Option<Vec<u8>> {
-    None
 }
 
 impl AppRuntime {
@@ -1929,7 +1951,11 @@ impl AppRuntime {
         });
     }
 
-    fn frame(&mut self) {
+    /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `build_directives` is
+    /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
+    /// list this method re-validates against LIVE state before acting on, never applies blindly. See
+    /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
+    fn frame(&mut self, build_directives: &crate::frame_job::FrameDirectives) {
         if std::mem::take(&mut self.shell.fullscreen_toggle_requested) {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -1981,14 +2007,28 @@ impl AppRuntime {
         }
         self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
         self.input.clear_frame();
-        if self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
+        // 🧵️ P3b: `build_directives.wheel_zoom_deadline_cleared` is `frame_job::FrameBuildJob`'s
+        // (possibly stale) verdict — re-checked against the LIVE `self.wheel_zoom_deadline_ms`/`now`
+        // right here rather than trusted outright, so a directive computed before this SAME tick
+        // re-armed the deadline (further down this function, on a fresh wheel event) can never clear a
+        // deadline it never actually saw. A stale `false` just means "check again next frame."
+        if build_directives.wheel_zoom_deadline_cleared && self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
             self.wheel_zoom_deadline_ms = 0.0;
             engine_canvas::node_graph_clear_wheel_zoom_active();
         }
         // 🕒️ World3D wheel-zoom's settled `setCamera` dispatch — see `world3d_camera_dispatch_deadlines_ms`'s
         // own doc comment; each surface's expiry fires exactly once per settle, same as the graph/map/
         // board wheel-action dispatches just below reuse `spawn_app_task` for their own async hop.
-        let expired_world3d_surfaces = sweep_expired_camera_dispatch_deadlines(&mut self.world3d_camera_dispatch_deadlines_ms, app_now_ms());
+        // 🧵️ P3b: the SCAN for expired surfaces now runs off the UI thread (`frame_job::FrameBuildJob`,
+        // see that module's own doc for why re-validating each candidate here — rather than trusting
+        // `build_directives` outright — is what makes a stale worker result safe: a candidate no
+        // longer present, or whose live deadline has since moved, is silently skipped this tick and
+        // picked up again once a fresher job result lands, never removed/dispatched on stale grounds.
+        let expired_world3d_surfaces: Vec<String> =
+            build_directives.expired_world3d_surfaces.iter().filter(|surface_id| self.world3d_camera_dispatch_deadlines_ms.get(surface_id.as_str()).is_some_and(|deadline| app_now_ms() >= *deadline)).cloned().collect();
+        for surface_id in &expired_world3d_surfaces {
+            self.world3d_camera_dispatch_deadlines_ms.remove(surface_id);
+        }
         if !expired_world3d_surfaces.is_empty() {
             let camera_actions: Vec<ActionDescriptor> = expired_world3d_surfaces.iter().filter_map(|surface_id| self.shell.world3d_states.get(surface_id).map(orbit_camera_action)).collect();
             if !camera_actions.is_empty() {
@@ -2148,97 +2188,98 @@ impl AppRuntime {
         }
     }
 
+    /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): previously the native
+    /// (`not(wasm32)`) branch of this function did SYNCHRONOUS network I/O on the UI thread —
+    /// `fetch_map_tile_bytes_blocking` called `ureq::get(..).call()` directly inside `frame()`, and
+    /// three more calls wrapped `fetch_url_bytes` in `pollster::block_on`. That is a real
+    /// UI-thread-reachable blocking-I/O violation, not just a disguised `block_on`: an unresponsive
+    /// asset host would freeze every frame's `redraw()` for as long as the HTTP request took. Fixed by
+    /// deleting the whole native fast-path and routing BOTH platforms through the single non-blocking
+    /// `spawn_app_task` deferral the wasm32 branch already used — the only platform difference left is
+    /// URL resolution (native needs `SEMIO_ASSET_BASE_URL` absolute-ification for relative paths;
+    /// wasm32 resolves relative URLs against the page origin for free). Removes 4 of the 17
+    /// UI-thread-reachable `pollster::block_on` sites this packet's brief names (the former lines
+    /// 2157/2170/2180/2184).
     fn poll_pending_assets(&mut self) {
         let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
         glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
         let map = engine_canvas::collect_pending_map_tile_fetches();
         let ui_images = collect_pending_ui_image_fetches();
         if glb.is_empty() && map.is_empty() && ui_images.is_empty() {
-            pollster::block_on(self.shell.poll_world3d_assets());
-            return;
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            for item in map {
-                let url = resolve_map_tile_fetch_url(&item.url);
-                if let Some(bytes) = fetch_map_tile_bytes_blocking(&url) {
-                    engine_canvas::apply_map_tile_bytes(&item.surface_id, &item, &bytes);
-                }
-            }
-            for item in glb {
-                let url = resolve_asset_fetch_url(&item.url);
-                let bytes = fetch_map_tile_bytes_blocking(&url).or_else(|| pollster::block_on(fetch_url_bytes(&item.url)));
-                if let Some(bytes) = bytes {
-                    if let Some(state) = self.shell.world3d_states.get_mut(&item.surface_id) {
-                        apply_glb_bytes(state, &item.url, &bytes);
-                    } else if let Some(state) = self.shell.icon_render_states.get_mut(&item.surface_id) {
-                        apply_glb_bytes(state, &item.url, &bytes);
-                    }
-                }
-            }
-            for item in ui_images {
-                if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
-                    apply_ui_image_bytes(&item.id, &item.url, &bytes);
-                }
-            }
-            pollster::block_on(self.shell.poll_world3d_assets());
-            return;
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            self.asset_poll_pending = true;
             let runtime = self.self_weak.clone();
             spawn_app_task(async move {
-                struct AssetPollReset(std::rc::Weak<RefCell<AppRuntime>>);
-                impl Drop for AssetPollReset {
-                    fn drop(&mut self) {
-                        if let Some(runtime) = self.0.upgrade() {
-                            if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.asset_poll_pending = false;
-                            }
-                        }
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.shell.poll_world3d_assets().await;
                     }
                 }
-                let _reset = AssetPollReset(runtime.clone());
-                let Some(runtime) = runtime.upgrade() else {
-                    return;
-                };
-                let mut fetched_glb = Vec::new();
-                for item in glb {
-                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
-                        fetched_glb.push((item.surface_id, item.url, bytes));
-                    }
-                }
-                let mut fetched_map = Vec::new();
-                for item in map {
-                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
-                        fetched_map.push((item, bytes));
-                    }
-                }
-                let mut fetched_ui_images = Vec::new();
-                for item in ui_images {
-                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
-                        fetched_ui_images.push((item.id, item.url, bytes));
-                    }
-                }
-                if let Ok(mut app) = runtime.try_borrow_mut() {
-                    for (surface_id, url, bytes) in fetched_glb {
-                        if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
-                            apply_glb_bytes(state, &url, &bytes);
-                        } else if let Some(state) = app.shell.icon_render_states.get_mut(&surface_id) {
-                            apply_glb_bytes(state, &url, &bytes);
-                        }
-                    }
-                    for (fetch, bytes) in fetched_map {
-                        engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
-                    }
-                    for (id, url, bytes) in fetched_ui_images {
-                        apply_ui_image_bytes(&id, &url, &bytes);
-                    }
-                    app.shell.poll_world3d_assets().await;
-                };
             });
+            return;
         }
+        self.asset_poll_pending = true;
+        let runtime = self.self_weak.clone();
+        spawn_app_task(async move {
+            struct AssetPollReset(std::rc::Weak<RefCell<AppRuntime>>);
+            impl Drop for AssetPollReset {
+                fn drop(&mut self) {
+                    if let Some(runtime) = self.0.upgrade() {
+                        if let Ok(mut app) = runtime.try_borrow_mut() {
+                            app.asset_poll_pending = false;
+                        }
+                    }
+                }
+            }
+            let _reset = AssetPollReset(runtime.clone());
+            let Some(runtime) = runtime.upgrade() else {
+                return;
+            };
+            let mut fetched_glb = Vec::new();
+            for item in glb {
+                #[cfg(not(target_arch = "wasm32"))]
+                let fetch_url = resolve_asset_fetch_url(&item.url);
+                #[cfg(target_arch = "wasm32")]
+                let fetch_url = item.url.clone();
+                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                    fetched_glb.push((item.surface_id, item.url, bytes));
+                }
+            }
+            let mut fetched_map = Vec::new();
+            for item in map {
+                #[cfg(not(target_arch = "wasm32"))]
+                let fetch_url = resolve_map_tile_fetch_url(&item.url);
+                #[cfg(target_arch = "wasm32")]
+                let fetch_url = item.url.clone();
+                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                    fetched_map.push((item, bytes));
+                }
+            }
+            let mut fetched_ui_images = Vec::new();
+            for item in ui_images {
+                #[cfg(not(target_arch = "wasm32"))]
+                let fetch_url = resolve_asset_fetch_url(&item.url);
+                #[cfg(target_arch = "wasm32")]
+                let fetch_url = item.url.clone();
+                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                    fetched_ui_images.push((item.id, item.url, bytes));
+                }
+            }
+            if let Ok(mut app) = runtime.try_borrow_mut() {
+                for (surface_id, url, bytes) in fetched_glb {
+                    if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
+                        apply_glb_bytes(state, &url, &bytes);
+                    } else if let Some(state) = app.shell.icon_render_states.get_mut(&surface_id) {
+                        apply_glb_bytes(state, &url, &bytes);
+                    }
+                }
+                for (fetch, bytes) in fetched_map {
+                    engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
+                }
+                for (id, url, bytes) in fetched_ui_images {
+                    apply_ui_image_bytes(&id, &url, &bytes);
+                }
+                app.shell.poll_world3d_assets().await;
+            };
+        });
     }
 
     fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {

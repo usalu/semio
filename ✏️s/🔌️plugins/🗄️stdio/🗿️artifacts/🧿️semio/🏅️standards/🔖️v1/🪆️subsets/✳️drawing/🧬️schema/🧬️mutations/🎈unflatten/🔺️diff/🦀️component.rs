@@ -13,7 +13,7 @@ pub fn diff(payload: &UnflattenNode, base: &SemioDrawingSnapshot) -> protocol::M
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
     };
     if *node == payload.original {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} already matches the captured hierarchy.", payload.at.layer));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already matches the captured hierarchy.", payload.at.layer));
     }
     protocol::MutationOutcome::new(diff_at_path(&payload.at, DrawNodeDiff::Replace { node: payload.original.clone() }))
 }

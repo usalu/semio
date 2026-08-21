@@ -1,0 +1,28 @@
+{
+  "defaults": [
+    {
+      "dialect": {
+        "artifactKind": "s.cad.cad",
+        "standard": "1",
+        "subset": "*"
+      },
+      "role": "viewer",
+      "app": {
+        "pluginId": "cad",
+        "appId": "s.cad.cad@1/*#viewer"
+      }
+    },
+    {
+      "dialect": {
+        "artifactKind": "s.cad.cad",
+        "standard": "1",
+        "subset": "*"
+      },
+      "role": "editor",
+      "app": {
+        "pluginId": "drafting",
+        "appId": "s.cad.cad@1/*#editor"
+      }
+    }
+  ]
+}

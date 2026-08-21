@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBlockLocked",
+  "id": "blk-group",
+  "newLocked": true
+}

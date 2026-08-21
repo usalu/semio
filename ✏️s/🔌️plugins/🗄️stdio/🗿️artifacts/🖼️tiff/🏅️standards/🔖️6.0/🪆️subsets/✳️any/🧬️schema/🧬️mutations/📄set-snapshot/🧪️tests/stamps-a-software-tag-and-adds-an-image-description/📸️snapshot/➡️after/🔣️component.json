@@ -1,0 +1,97 @@
+{
+  "schema": "stdio.tiff",
+  "byteOrder": "littleEndian",
+  "ifds": [
+    {
+      "entries": [
+        {
+          "tag": 256,
+          "kind": "short",
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        },
+        {
+          "tag": 257,
+          "kind": "short",
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        },
+        {
+          "tag": 258,
+          "kind": "short",
+          "values": {
+            "kind": "short",
+            "value": [
+              8,
+              8,
+              8,
+              8
+            ]
+          }
+        },
+        {
+          "tag": 259,
+          "kind": "short",
+          "values": {
+            "kind": "short",
+            "value": [
+              1
+            ]
+          }
+        },
+        {
+          "tag": 262,
+          "kind": "short",
+          "values": {
+            "kind": "short",
+            "value": [
+              2
+            ]
+          }
+        },
+        {
+          "tag": 270,
+          "kind": "ascii",
+          "values": {
+            "kind": "ascii",
+            "value": "Two by two swatch"
+          }
+        },
+        {
+          "tag": 305,
+          "kind": "ascii",
+          "values": {
+            "kind": "ascii",
+            "value": "semio 2"
+          }
+        }
+      ]
+    }
+  ],
+  "pixels": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    255,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255
+  ]
+}

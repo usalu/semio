@@ -1,0 +1,4 @@
+{
+  "mutation": "changeCounter",
+  "newCounter": 7
+}

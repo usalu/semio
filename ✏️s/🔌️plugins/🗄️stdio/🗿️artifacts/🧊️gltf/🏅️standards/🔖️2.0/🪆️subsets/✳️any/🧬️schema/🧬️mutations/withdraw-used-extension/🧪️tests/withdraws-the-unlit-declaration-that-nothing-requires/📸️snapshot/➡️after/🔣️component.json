@@ -1,0 +1,16 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "extensionsUsed": [
+      "KHR_texture_transform"
+    ],
+    "extensionsRequired": [
+      "KHR_texture_transform"
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

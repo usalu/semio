@@ -1,0 +1,16 @@
+{
+  "mutation": "createLayer",
+  "layer": {
+    "kind": "shape",
+    "id": "shape-b",
+    "name": "Beta",
+    "visible": true,
+    "locked": false,
+    "opacity": 1.0,
+    "blendMode": "normal",
+    "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 },
+    "attributes": {},
+    "shapeKind": "circle",
+    "circle": { "cx": 40.0, "cy": 40.0, "r": 20.0 }
+  }
+}

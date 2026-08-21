@@ -1,0 +1,38 @@
+{
+  "mutation": "createCostRequirement",
+  "costRequirement": {
+    "id": "cost-requirement-a",
+    "name": "Cost Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "costItem": "",
+    "basis": "capital",
+    "amount": null,
+    "currency": "",
+    "quantityBasis": null,
+    "unitCost": null,
+    "contingencyPercent": null,
+    "escalationRate": null,
+    "fundingSource": null,
+    "elementIds": [],
+    "requirementIds": [],
+    "phase": null,
+    "cashFlowProfile": [],
+    "valueEngineeringNotes": [],
+    "benchmarkRef": null,
+    "approvalStatus": "pending",
+    "ownerId": null,
+    "assumptions": [],
+    "sensitivityFactors": []
+  }
+}

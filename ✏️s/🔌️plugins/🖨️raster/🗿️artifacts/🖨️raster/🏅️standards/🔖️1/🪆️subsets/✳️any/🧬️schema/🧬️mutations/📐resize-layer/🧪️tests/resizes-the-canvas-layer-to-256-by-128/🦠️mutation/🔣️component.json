@@ -1,0 +1,6 @@
+{
+  "mutation": "resizeLayer",
+  "layerId": "canvas",
+  "newWidth": 256,
+  "newHeight": 128
+}

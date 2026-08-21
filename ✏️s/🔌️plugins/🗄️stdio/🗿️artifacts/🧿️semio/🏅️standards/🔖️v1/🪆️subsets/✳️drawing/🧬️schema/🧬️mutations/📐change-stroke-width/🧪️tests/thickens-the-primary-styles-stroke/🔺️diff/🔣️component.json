@@ -1,0 +1,12 @@
+{
+  "styles": {
+    "modified": [
+      {
+        "key": "primary",
+        "diff": {
+          "strokeWidth": 2.5
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "operation": {
+    "node": 0
+  },
+  "after": null,
+  "touchedPaths": [
+    "document/nodes/*/camera"
+  ]
+}

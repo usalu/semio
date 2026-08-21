@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-node.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/nodes/0"
+  ],
+  "payload": {
+    "index": 0
+  },
+  "operation": {
+    "kind": "delete",
+    "index": 0,
+    "removed": {
+      "name": "root"
+    }
+  }
+}

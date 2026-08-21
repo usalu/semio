@@ -1,0 +1,44 @@
+{
+  "workshop": {
+    "machines": []
+  },
+  "stockId": "stock-1",
+  "stockLabel": "Oak Beam",
+  "stockPose": {
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "axis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "angle": 0.0
+  },
+  "stockSolid": {
+    "childId": "brep-stock-01",
+    "target": {
+      "artifactId": "stock-1-solid",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  },
+  "steps": {
+    "childId": "flow-steps-01",
+    "target": {
+      "artifactId": "process-1-steps",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  },
+  "toolSolids": [],
+  "resolvedUpTo": null
+}

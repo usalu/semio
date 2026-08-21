@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVortexKindColor",
+  "id": "door",
+  "newColor": "hsl(0 0% 10%)"
+}

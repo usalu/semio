@@ -1,0 +1,42 @@
+{
+  "schema": "stdio.json",
+  "value": {
+    "kind": "object",
+    "members": [
+      {
+        "key": "name",
+        "value": {
+          "kind": "string",
+          "value": "catalog"
+        }
+      },
+      {
+        "key": "version",
+        "value": {
+          "kind": "number",
+          "lexeme": "2"
+        }
+      },
+      {
+        "key": "tags",
+        "value": {
+          "kind": "array",
+          "items": [
+            {
+              "kind": "string",
+              "value": "a"
+            },
+            {
+              "kind": "string",
+              "value": "b"
+            },
+            {
+              "kind": "string",
+              "value": "c"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

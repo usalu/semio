@@ -1,0 +1,72 @@
+{
+  "schema": "stdio.semio.cad",
+  "layers": [
+    {
+      "name": "0",
+      "colorIndex": 7,
+      "lineType": "CONTINUOUS",
+      "visible": true
+    },
+    {
+      "name": "WALLS",
+      "colorIndex": 1,
+      "lineType": "CONTINUOUS",
+      "visible": true
+    }
+  ],
+  "blocks": [
+    {
+      "name": "DOOR",
+      "basePoint": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "handle": "b-1",
+          "layer": "0",
+          "entity": {
+            "kind": "line",
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 1.0,
+              "y": 0.0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "handle": "h-1",
+      "layer": "0",
+      "entity": {
+        "kind": "circle",
+        "center": {
+          "x": 5.0,
+          "y": 5.0
+        },
+        "radius": 2.5
+      }
+    },
+    {
+      "handle": "h-2",
+      "layer": "WALLS",
+      "entity": {
+        "kind": "line",
+        "a": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 10.0,
+          "y": 0.0
+        }
+      }
+    }
+  ]
+}

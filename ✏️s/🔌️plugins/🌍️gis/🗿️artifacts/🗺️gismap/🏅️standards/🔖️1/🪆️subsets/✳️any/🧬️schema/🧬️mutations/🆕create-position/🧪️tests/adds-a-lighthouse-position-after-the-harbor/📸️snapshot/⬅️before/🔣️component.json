@@ -1,0 +1,36 @@
+{
+  "positions": [
+    {
+      "id": "pos-harbor",
+      "data": {
+        "kind": "harbor",
+        "lat": 53.5,
+        "lon": 10.0
+      }
+    }
+  ],
+  "routes": [],
+  "regions": [],
+  "drawing": {
+    "childId": "gismap-drawing-derived",
+    "target": {
+      "artifactId": "gismap-drawing",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing"
+      }
+    }
+  },
+  "value": {
+    "childId": "gismap-value-derived",
+    "target": {
+      "artifactId": "gismap-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

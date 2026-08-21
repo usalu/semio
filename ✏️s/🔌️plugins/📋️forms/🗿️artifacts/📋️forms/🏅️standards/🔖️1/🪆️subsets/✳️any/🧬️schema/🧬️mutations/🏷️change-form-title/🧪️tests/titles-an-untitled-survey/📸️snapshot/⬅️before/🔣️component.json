@@ -1,0 +1,27 @@
+{
+  "schema": "forms.form",
+  "id": "site-survey",
+  "version": "1",
+  "structure": {
+    "childId": "forms-scene-change-form-title-untitled",
+    "target": {
+      "artifactId": "forms-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "results": {
+    "childId": "forms-scene-change-form-title-untitled",
+    "target": {
+      "artifactId": "forms-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  }
+}

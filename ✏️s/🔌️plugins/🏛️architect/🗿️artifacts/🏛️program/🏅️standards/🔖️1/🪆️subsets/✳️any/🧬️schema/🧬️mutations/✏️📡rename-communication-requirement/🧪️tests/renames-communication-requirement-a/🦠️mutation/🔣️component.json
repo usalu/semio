@@ -1,0 +1,5 @@
+{
+  "mutation": "renameCommunicationRequirement",
+  "id": "communication-requirement-a",
+  "newName": "Renamed Communication Requirement A"
+}

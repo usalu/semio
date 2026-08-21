@@ -1,0 +1,5 @@
+{
+  "mutation": "renameProgramElement",
+  "id": "program-element-a",
+  "newName": "Renamed Program Element A"
+}

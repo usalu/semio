@@ -1,0 +1,73 @@
+{
+  "artifact": null,
+  "schema": null,
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "added": [
+      {
+        "id": "object-c",
+        "objectKind": "object-kind-c",
+        "anchor": "fixed",
+        "origin": [
+          8.0,
+          0.0,
+          0.0
+        ],
+        "vortices": [
+          {
+            "id": "vortex-3",
+            "vortexKind": "vortex-kind-a",
+            "position": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "hidden": false,
+            "locked": false
+          }
+        ],
+        "hidden": false,
+        "locked": false
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "attractions": null,
+  "targetVolumes": null,
+  "references": null,
+  "selectedObjectIds": null,
+  "selectedVortexIds": null,
+  "selectedAttractionIds": null,
+  "selectedTargetVolumeIds": null,
+  "selectedReferenceIds": null,
+  "activeUtilityId": null,
+  "cameraPositionX": null,
+  "cameraPositionY": null,
+  "cameraPositionZ": null,
+  "cameraTargetX": null,
+  "cameraTargetY": null,
+  "cameraTargetZ": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "selectionModeDefault": null,
+  "engagementInput": null,
+  "gridVisible": null,
+  "gridSnapEnabled": null,
+  "gridSpacing": null,
+  "overlapBudget": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "lodAutomatic": null,
+  "lodDepthVariable": null,
+  "lodManual": null,
+  "proximityRadius": null,
+  "locale": null,
+  "runtimeExtrasJson": null,
+  "hoveredObjectId": null,
+  "hoveredVortexFullId": null,
+  "hoveredKindId": null,
+  "previewSeq": null
+}

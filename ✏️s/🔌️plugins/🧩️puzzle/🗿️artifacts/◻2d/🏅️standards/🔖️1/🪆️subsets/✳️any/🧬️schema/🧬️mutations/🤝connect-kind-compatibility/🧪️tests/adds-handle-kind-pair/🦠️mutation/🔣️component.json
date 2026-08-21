@@ -1,0 +1,8 @@
+{
+  "mutation": "connectKindCompatibility",
+  "source": "handle-kind-b",
+  "target": "handle-kind-c",
+  "bidirectional": false,
+  "important": true,
+  "specificity": "wire"
+}

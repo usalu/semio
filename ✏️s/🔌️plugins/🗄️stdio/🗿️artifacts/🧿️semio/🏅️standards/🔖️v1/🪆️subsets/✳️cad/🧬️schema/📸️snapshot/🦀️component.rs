@@ -343,8 +343,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -361,8 +361,8 @@ fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
-    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     Ok(SemioPoint2 { x, y })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -374,7 +374,7 @@ fn write_point2_vec(out: &mut Vec<u8>, v: &[SemioPoint2]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point2_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint2>, String> {
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
         v.push(read_point2(reader)?);
@@ -387,7 +387,7 @@ fn write_bool(out: &mut Vec<u8>, b: bool) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
 
 /// 🏷️ `CadEntity` variant tags — 0=Line, 1=Arc, 2=Circle, 3=Ellipse, 4=Polyline, 5=Text, 6=Insert,
@@ -457,23 +457,23 @@ fn write_entity(out: &mut Vec<u8>, e: &CadEntity) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_entity(reader: &mut store::ByteReader<'_>) -> Result<CadEntity, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(CadEntity::Line { a: read_point2(reader)?, b: read_point2(reader)? }),
-        1 => Ok(CadEntity::Arc { center: read_point2(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())?, start_angle: reader.read_f64_le().await.map_err(|e| e.to_string())?, end_angle: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
-        2 => Ok(CadEntity::Circle { center: read_point2(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        1 => Ok(CadEntity::Arc { center: read_point2(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())?, start_angle: reader.read_f64_le().map_err(|e| e.to_string())?, end_angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        2 => Ok(CadEntity::Circle { center: read_point2(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
         3 => Ok(CadEntity::Ellipse {
             center: read_point2(reader)?,
             major_axis_end: read_point2(reader)?,
-            ratio: reader.read_f64_le().await.map_err(|e| e.to_string())?,
-            start_param: reader.read_f64_le().await.map_err(|e| e.to_string())?,
-            end_param: reader.read_f64_le().await.map_err(|e| e.to_string())?,
+            ratio: reader.read_f64_le().map_err(|e| e.to_string())?,
+            start_param: reader.read_f64_le().map_err(|e| e.to_string())?,
+            end_param: reader.read_f64_le().map_err(|e| e.to_string())?,
         }),
         4 => Ok(CadEntity::Polyline { vertices: read_point2_vec(reader)?, closed: read_bool(reader)? }),
-        5 => Ok(CadEntity::Text { position: read_point2(reader)?, height: reader.read_f64_le().await.map_err(|e| e.to_string())?, rotation: reader.read_f64_le().await.map_err(|e| e.to_string())?, content: read_str_lp(reader)? }),
-        6 => Ok(CadEntity::Insert { block_name: read_str_lp(reader)?, insertion_point: read_point2(reader)?, scale: read_point2(reader)?, rotation: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        5 => Ok(CadEntity::Text { position: read_point2(reader)?, height: reader.read_f64_le().map_err(|e| e.to_string())?, rotation: reader.read_f64_le().map_err(|e| e.to_string())?, content: read_str_lp(reader)? }),
+        6 => Ok(CadEntity::Insert { block_name: read_str_lp(reader)?, insertion_point: read_point2(reader)?, scale: read_point2(reader)?, rotation: reader.read_f64_le().map_err(|e| e.to_string())? }),
         7 => Ok(CadEntity::Solid { p1: read_point2(reader)?, p2: read_point2(reader)?, p3: read_point2(reader)?, p4: read_point2(reader)? }),
-        8 => Ok(CadEntity::Dimension { def_point: read_point2(reader)?, text_position: read_point2(reader)?, measurement: reader.read_f64_le().await.map_err(|e| e.to_string())?, text: read_str_lp(reader)? }),
+        8 => Ok(CadEntity::Dimension { def_point: read_point2(reader)?, text_position: read_point2(reader)?, measurement: reader.read_f64_le().map_err(|e| e.to_string())?, text: read_str_lp(reader)? }),
         other => Err(format!("entity: unknown binary tag {other}")),
     }
 }
@@ -488,7 +488,7 @@ fn write_layer(out: &mut Vec<u8>, l: &CadLayer) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<CadLayer, String> {
     let name = read_str_lp(reader)?;
-    let color_index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as i32;
+    let color_index = reader.read_varint_u64().map_err(|e| e.to_string())? as i32;
     let line_type = read_str_lp(reader)?;
     let visible = read_bool(reader)?;
     Ok(CadLayer { name, color_index, line_type, visible })
@@ -518,7 +518,7 @@ fn write_block(out: &mut Vec<u8>, b: &CadBlock) {
 fn read_block(reader: &mut store::ByteReader<'_>) -> Result<CadBlock, String> {
     let name = read_str_lp(reader)?;
     let base_point = read_point2(reader)?;
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(n as usize);
     for _ in 0..n {
         entities.push(read_entity_record(reader)?);
@@ -550,22 +550,22 @@ fn encode_cad_snapshot_binary(s: &SemioCadSnapshot) -> Vec<u8> {
 fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let layer_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let layer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(layer_count as usize);
     for _ in 0..layer_count {
         layers.push(read_layer(&mut reader)?);
     }
-    let block_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
         blocks.push(read_block(&mut reader)?);
     }
-    let entity_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let entity_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(entity_count as usize);
     for _ in 0..entity_count {
         entities.push(read_entity_record(&mut reader)?);
@@ -675,7 +675,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioCadSnapshot::default();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -683,7 +683,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioCadSnapshot::default();
         let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -693,11 +693,11 @@ mod tests {
     async fn codec_retention_law() {
         let snap = populated_snapshot();
         let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let via_pack = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode pack");
+        let via_pack = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(via_pack, snap);
 
         let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let via_dsl = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse dsl");
+        let via_dsl = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse dsl");
         assert_eq!(via_dsl, snap);
     }
 
@@ -707,9 +707,9 @@ mod tests {
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_cad_snapshot();
         let packed = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&demo);
-        assert_eq!(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode"), demo);
+        assert_eq!(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
         let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&demo);
-        assert_eq!(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse"), demo);
+        assert_eq!(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
     }
 }
 //#endregion 🔖️Tests

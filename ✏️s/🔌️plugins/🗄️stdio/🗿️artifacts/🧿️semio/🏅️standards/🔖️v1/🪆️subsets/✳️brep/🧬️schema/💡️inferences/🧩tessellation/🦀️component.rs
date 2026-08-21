@@ -738,7 +738,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn missing_solid_returns_missing_entity() {
         let body = Body::new();
-        let err = tessellate_solid(&body, SolidId::from_raw(9, 0).await, 0.1).unwrap_err();
+        let err = tessellate_solid(&body, SolidId::from_raw(9, 0), 0.1).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 

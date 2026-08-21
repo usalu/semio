@@ -130,6 +130,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/bumps-the-catalog-generation-to-7/🦀️component.rs"]
+                                    mod tests_bumps_the_catalog_generation_to_7;
                                 }
                             }
                         }
@@ -353,6 +356,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/appends-artifact-3-to-the-index/🦀️component.rs"]
+                                    mod tests_appends_artifact_3_to_the_index;
                                 }
                                 #[path = "."]
                                 pub mod delete_artifact {
@@ -362,6 +368,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/removes-artifact-2-from-the-index/🦀️component.rs"]
+                                    mod tests_removes_artifact_2_from_the_index;
                                 }
                                 #[path = "."]
                                 pub mod rename_artifact {
@@ -371,6 +380,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🧪️tests/renames-artifact-1/🦀️component.rs"]
+                                    mod tests_renames_artifact_1;
                                 }
                                 #[path = "."]
                                 pub mod touch_artifact {
@@ -380,6 +392,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/stamps-artifact-1-with-a-new-editor/🦀️component.rs"]
+                                    mod tests_stamps_artifact_1_with_a_new_editor;
                                 }
                             }
                         }

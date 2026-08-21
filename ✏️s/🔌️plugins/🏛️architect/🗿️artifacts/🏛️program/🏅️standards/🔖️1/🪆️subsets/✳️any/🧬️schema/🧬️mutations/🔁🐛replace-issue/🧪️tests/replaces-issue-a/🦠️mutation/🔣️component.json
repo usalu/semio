@@ -1,0 +1,42 @@
+{
+  "mutation": "replaceIssue",
+  "issue": {
+    "id": "issue-a",
+    "name": "Issue A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "issueType": "Replaced Issue A",
+    "summary": {
+      "text": ""
+    },
+    "issueDescription": {
+      "text": ""
+    },
+    "severity": "cosmetic",
+    "issuePriority": "preferred",
+    "reporterId": null,
+    "assigneeId": null,
+    "affectedEntityIds": [],
+    "rootCause": null,
+    "resolution": null,
+    "workaround": null,
+    "dueDate": null,
+    "resolvedDate": null,
+    "relatedConflictIds": [],
+    "relatedRiskIds": [],
+    "decisionId": null,
+    "comments": [],
+    "attachments": [],
+    "escalationLevel": null
+  }
+}

@@ -1224,7 +1224,7 @@ pub struct SubsetValidatorEntry {
 
 /// 🎹️ Erases a typed `SubsetValidator` impl into a `SubsetValidatorEntry` row -- the
 /// `ComposerEntry::of::<C>()`-style helper for this trait.
-pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
+pub async fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
     // 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
     // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
     // to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.

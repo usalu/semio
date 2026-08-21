@@ -358,32 +358,32 @@ where
     let mut removed = std::collections::HashSet::new();
     for &idx in &diff.removed {
         if idx >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await.at(vec!["removed".to_string(), idx.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec!["removed".to_string(), idx.to_string()]));
         }
         if !removed.insert(idx) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await.at(vec!["removed".to_string(), idx.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec!["removed".to_string(), idx.to_string()]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for m in &diff.modified {
         if m.index >= items.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await.at(vec!["modified".to_string(), m.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec!["modified".to_string(), m.index.to_string()]));
         }
         if removed.contains(&m.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await.at(vec!["modified".to_string(), m.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec!["modified".to_string(), m.index.to_string()]));
         }
         if !modified.insert(m.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await.at(vec!["modified".to_string(), m.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec!["modified".to_string(), m.index.to_string()]));
         }
     }
     let final_len = items.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for add in &diff.added {
         if add.index >= final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await.at(vec!["added".to_string(), add.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec!["added".to_string(), add.index.to_string()]));
         }
         if !added.insert(add.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await.at(vec!["added".to_string(), add.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec!["added".to_string(), add.index.to_string()]));
         }
     }
     for m in &diff.modified {
@@ -589,24 +589,24 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for key in &diff.removed {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at(["removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
         }
     }
     for (index, key) in diff.removed.iter().enumerate() {
         if diff.removed[..index].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at(["removed"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
         }
     }
     let mut modified_keys = Vec::new();
     for modified in &diff.modified {
         if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
         }
         if modified_keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
         }
         modified_keys.push(modified.key.clone());
     }
@@ -614,7 +614,7 @@ where
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || added_keys.contains(&key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await.at(["added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at(["added"]));
         }
         added_keys.push(key);
     }
@@ -1305,23 +1305,23 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
     let mut added = std::collections::HashSet::new();
     for owner in &diff.removed {
         if !rels.contains_key(owner) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await.at(vec!["removed".to_string(), owner.clone()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["removed".to_string(), owner.clone()]));
         }
         if !added.insert(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner is repeated").await.at(vec!["removed".to_string(), owner.clone()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner is repeated").at(vec!["removed".to_string(), owner.clone()]));
         }
     }
     for modified in &diff.modified {
         if !rels.contains_key(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await.at(vec!["modified".to_string(), modified.key.clone()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), modified.key.clone()]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is removed and modified").await.at(vec!["modified".to_string(), modified.key.clone()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is removed and modified").at(vec!["modified".to_string(), modified.key.clone()]));
         }
     }
     for (owner, _) in &diff.added {
         if rels.contains_key(owner) || !added.insert(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").await.at(vec!["added".to_string(), owner.clone()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").at(vec!["added".to_string(), owner.clone()]));
         }
     }
     for owner in &diff.removed {
@@ -2237,8 +2237,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -2300,16 +2300,16 @@ pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
             let name = read_str_lp(reader)?;
-            let attr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut attrs = Vec::with_capacity(attr_count as usize);
             for _ in 0..attr_count {
                 attrs.push(dec_attr_bin(reader)?);
             }
-            let child_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
                 children.push(Box::pin(dec_xml_node_bin(reader))?);
@@ -2336,7 +2336,7 @@ fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(dec_xml_node_bin(reader)?);
@@ -2358,7 +2358,7 @@ pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(OpcTargetMode::Internal),
         1 => Ok(OpcTargetMode::External),
         other => Err(format!("target mode binary: bad value {other}")),
@@ -2376,9 +2376,9 @@ fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
     let text = read_str_lp(reader)?;
-    let bold = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let italic = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let underline = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+    let bold = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let italic = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let underline = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let extra_run_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxRun { text, bold, italic, underline, extra_run_properties })
 }
@@ -2397,12 +2397,12 @@ fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
-    let run_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut runs = Vec::with_capacity(run_count as usize);
     for _ in 0..run_count {
         runs.push(dec_run_bin(reader)?);
     }
-    let style = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let extra_paragraph_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxParagraph { runs, style, extra_paragraph_properties })
 }
@@ -2417,7 +2417,7 @@ fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
-    let block_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
         blocks.push(Box::pin(dec_block_bin(reader))?);
@@ -2436,7 +2436,7 @@ fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
-    let cell_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let cell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(cell_count as usize);
     for _ in 0..cell_count {
         cells.push(Box::pin(dec_cell_bin(reader))?);
@@ -2455,7 +2455,7 @@ fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
-    let row_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
         rows.push(Box::pin(dec_row_bin(reader))?);
@@ -2480,7 +2480,7 @@ pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
         1 => Ok(DocxBlock::Table(Box::pin(dec_table_bin(reader))?)),
         other => Err(format!("block binary: unknown tag {other}")),
@@ -2500,7 +2500,7 @@ pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
 pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
     let id = read_str_lp(reader)?;
     let name = read_str_lp(reader)?;
-    let based_on = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     Ok(DocxStyle { id, name, based_on })
 }
 
@@ -2558,7 +2558,7 @@ pub(crate) fn enc_rel_owner_entry_bin(e: &(String, Vec<OpcRelationship>), out: &
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_rel_owner_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
     let owner = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
     for _ in 0..count {
         list.push(dec_rel_bin(reader)?);
@@ -2589,22 +2589,22 @@ fn enc_indexed_triple_bin<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = dec_d(reader)?;
         modified.push(IndexModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_t(reader)?;
         added.push(IndexAdded { index, item });
     }
@@ -2636,19 +2636,19 @@ fn dec_named_triple_bin<K, D, T>(
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -2724,10 +2724,10 @@ fn enc_run_diff_bin(d: &DocxRunDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_run_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRunDiff, String> {
-    let text = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let bold = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
-    let italic = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
-    let underline = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
+    let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bold = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let italic = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let underline = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
     Ok(DocxRunDiff { text, bold, italic, underline })
 }
 
@@ -2747,8 +2747,8 @@ fn enc_paragraph_diff_bin(pd: &DocxParagraphDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_paragraph_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraphDiff, String> {
-    let runs = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
-    let style = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
+    let runs = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_runs_diff_bin(reader)?) } else { None };
+    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxParagraphDiff { runs, style })
 }
 
@@ -2761,7 +2761,7 @@ fn enc_table_diff_bin(d: &DocxTableDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableDiff, String> {
-    let rows = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
+    let rows = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_rows_diff_bin(reader)?) } else { None };
     Ok(DocxTableDiff { rows })
 }
 
@@ -2774,7 +2774,7 @@ fn enc_table_row_diff_bin(d: &DocxTableRowDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_row_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRowDiff, String> {
-    let cells = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
+    let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_table_cells_diff_bin(reader)?) } else { None };
     Ok(DocxTableRowDiff { cells })
 }
 
@@ -2787,7 +2787,7 @@ fn enc_table_cell_diff_bin(d: &DocxTableCellDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_table_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCellDiff, String> {
-    let blocks = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
+    let blocks = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
     Ok(DocxTableCellDiff { blocks })
 }
 
@@ -2807,8 +2807,8 @@ fn enc_style_diff_bin(d: &DocxStyleDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyleDiff, String> {
-    let name = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let based_on = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
+    let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) } else { None };
     Ok(DocxStyleDiff { name, based_on })
 }
 
@@ -2833,7 +2833,7 @@ fn enc_block_diff_bin(d: &DocxBlockDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockDiff, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlockDiff::Paragraph(dec_paragraph_diff_bin(reader)?)),
         1 => Ok(DocxBlockDiff::Table(dec_table_diff_bin(reader)?)),
         2 => Ok(DocxBlockDiff::Replace { block: dec_block_bin(reader)? }),
@@ -2863,8 +2863,8 @@ fn enc_opc_part_diff_bin(d: &DocxOpcPartDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcPartDiff, String> {
-    let content_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let bytes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(DocxOpcPartDiff { content_type, bytes })
 }
 
@@ -2894,9 +2894,9 @@ fn enc_rel_diff_bin(d: &DocxOpcRelDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcRelDiff, String> {
-    let rel_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target_mode = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
+    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
     Ok(DocxOpcRelDiff { rel_type, target, target_mode })
 }
 
@@ -2931,8 +2931,8 @@ fn enc_content_types_diff_bin(d: &DocxOpcContentTypesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcContentTypesDiff, String> {
-    let defaults = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
-    let overrides = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
     Ok(DocxOpcContentTypesDiff { defaults, overrides })
 }
 
@@ -2953,9 +2953,9 @@ pub(crate) fn enc_opc_diff_bin(d: &DocxOpcDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxOpcDiff, String> {
-    let content_types = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
-    let parts = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
-    let relationships = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
+    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
+    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
+    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
     Ok(DocxOpcDiff { content_types, parts, relationships })
 }
 
@@ -2972,8 +2972,8 @@ pub(crate) fn enc_document_diff_bin(d: &DocxDocumentDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_document_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocumentDiff, String> {
-    let body = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
-    let styles = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_styles_diff_bin(reader)?) } else { None };
+    let body = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_blocks_diff_bin(reader)?) } else { None };
+    let styles = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_styles_diff_bin(reader)?) } else { None };
     Ok(DocxDocumentDiff { body, styles })
 }
 //#endregion 🔖️DiffValueBinaryCodecs
@@ -3140,28 +3140,28 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b).await, DocxDiff::between(&b, &a).await, DocxDiff::between(&a, &a).await];
+        let cases = vec![DocxDiff::default(), DocxDiff::between(&a, &b), DocxDiff::between(&b, &a), DocxDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = DocxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = DocxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = DocxDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = DocxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
 
         // Field sweep: confirm every collection flavor and both tri-states actually got exercised
         // above, not just "it round-trips" (an all-`None`/empty diff would round-trip trivially).
         let diff_ab = DocxDiff::between(&a, &b);
-        let opc_diff = diff_ab.await.opc.as_ref().expect("opc diff present");
+        let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
         assert!(opc_diff.content_types.as_ref().expect("content_types diff present").defaults.as_ref().expect("defaults diff present").added.len() > 0);
         let parts = opc_diff.parts.as_ref().expect("parts diff present");
         assert!(!parts.removed.is_empty() && !parts.modified.is_empty() && !parts.added.is_empty(), "opc.parts: not every flavor exercised");
         let rels = opc_diff.relationships.as_ref().expect("relationships diff present");
         assert!(!rels.removed.is_empty() && !rels.added.is_empty(), "opc.relationships: owner removed/added not exercised");
-        let doc_diff = diff_ab.await.document.as_ref().expect("document diff present");
+        let doc_diff = diff_ab.document.as_ref().expect("document diff present");
         let body_diff = doc_diff.body.as_ref().expect("body diff present");
         assert!(!body_diff.removed.is_empty(), "body: removed not exercised");
         assert_eq!(body_diff.modified.len(), 1);
@@ -3188,7 +3188,7 @@ mod result_apply_tests {
         let diff =
             DocxDiff { document: Some(DocxDocumentDiff { styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: "missing".into(), diff: DocxStyleDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, DocxSnapshot::default());
     }
 }

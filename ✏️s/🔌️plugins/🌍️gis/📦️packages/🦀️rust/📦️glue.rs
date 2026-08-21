@@ -97,6 +97,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚change-exaggeration/🧪️tests/raises-the-exaggeration-from-one-to-two-and-a-half/🦀️component.rs"]
+                                    mod tests_raises_the_exaggeration_from_one_to_two_and_a_half;
                                 }
                                 #[path = "."]
                                 pub mod change_imported_features {
@@ -106,6 +109,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/imports-a-single-harbor-position-descriptor/🦀️component.rs"]
+                                    mod tests_imports_a_single_harbor_position_descriptor;
                                 }
                             }
                         }
@@ -455,6 +461,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/adds-a-lighthouse-position-after-the-harbor/🦀️component.rs"]
+                                    mod tests_adds_a_lighthouse_position_after_the_harbor;
                                 }
                                 #[path = "."]
                                 pub mod delete_position {
@@ -464,6 +473,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-position/🧪️tests/removes-the-lighthouse-position/🦀️component.rs"]
+                                    mod tests_removes_the_lighthouse_position;
                                 }
                                 #[path = "."]
                                 pub mod replace_position_data {
@@ -473,6 +485,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/rewrites-the-harbor-position-payload/🦀️component.rs"]
+                                    mod tests_rewrites_the_harbor_position_payload;
                                 }
                                 #[path = "."]
                                 pub mod reorder_positions {
@@ -482,6 +497,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/moves-the-harbor-position-to-the-end/🦀️component.rs"]
+                                    mod tests_moves_the_harbor_position_to_the_end;
                                 }
                                 #[path = "."]
                                 pub mod create_route {
@@ -491,6 +509,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/adds-a-tram-route-after-the-ferry/🦀️component.rs"]
+                                    mod tests_adds_a_tram_route_after_the_ferry;
                                 }
                                 #[path = "."]
                                 pub mod delete_route {
@@ -500,6 +521,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-route/🧪️tests/removes-the-tram-route/🦀️component.rs"]
+                                    mod tests_removes_the_tram_route;
                                 }
                                 #[path = "."]
                                 pub mod replace_route_data {
@@ -509,6 +533,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/rewrites-the-ferry-route-payload/🦀️component.rs"]
+                                    mod tests_rewrites_the_ferry_route_payload;
                                 }
                                 #[path = "."]
                                 pub mod reorder_routes {
@@ -518,6 +545,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/moves-the-bus-route-to-the-front/🦀️component.rs"]
+                                    mod tests_moves_the_bus_route_to_the_front;
                                 }
                                 #[path = "."]
                                 pub mod create_region {
@@ -527,6 +557,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/adds-the-old-town-region-after-the-harbor-district/🦀️component.rs"]
+                                    mod tests_adds_the_old_town_region_after_the_harbor_district;
                                 }
                                 #[path = "."]
                                 pub mod delete_region {
@@ -536,6 +569,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-region/🧪️tests/removes-the-old-town-region/🦀️component.rs"]
+                                    mod tests_removes_the_old_town_region;
                                 }
                                 #[path = "."]
                                 pub mod replace_region_data {
@@ -545,6 +581,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/rewrites-the-harbor-district-region-payload/🦀️component.rs"]
+                                    mod tests_rewrites_the_harbor_district_region_payload;
                                 }
                                 #[path = "."]
                                 pub mod reorder_regions {
@@ -554,6 +593,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/moves-the-park-region-between-the-two-districts/🦀️component.rs"]
+                                    mod tests_moves_the_park_region_between_the_two_districts;
                                 }
                             }
                         }

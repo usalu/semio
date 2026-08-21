@@ -1,0 +1,28 @@
+{
+  "models": {
+    "values": [
+      {
+        "childId": "mod-1",
+        "target": {
+          "artifactId": "frame-model",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "model"
+          }
+        }
+      },
+      {
+        "childId": "mod-2",
+        "target": {
+          "artifactId": "roof-model",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "model"
+          }
+        }
+      }
+    ]
+  }
+}

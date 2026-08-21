@@ -1,0 +1,9 @@
+{
+  "mutation": "addCompatibilityRule",
+  "rule": {
+    "id": "compat-plug-socket",
+    "source": "gk-plug",
+    "target": "gk-socket",
+    "bidirectional": false
+  }
+}

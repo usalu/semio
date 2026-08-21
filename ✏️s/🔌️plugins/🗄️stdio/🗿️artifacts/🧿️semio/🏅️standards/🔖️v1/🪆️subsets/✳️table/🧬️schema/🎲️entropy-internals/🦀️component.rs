@@ -4840,7 +4840,7 @@ pub mod symbolic {
                             continue;
                         }
                         let window: Vec<f64> = [a, b, c].iter().map(|&i| base[i]).collect();
-                        let symbol = symbolizer.symbolize(&window).await.unwrap();
+                        let symbol = symbolizer.symbolize(&window).unwrap();
                         assert_eq!(symbol.len(), 1);
                         symbols.push(symbol[0]);
                     }
@@ -4859,7 +4859,7 @@ pub mod symbolic {
             let cfg = OrdinalConfig::new(3, 1).unwrap();
             let symbolizer = OrdinalSymbolizer::new(cfg);
             let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
-            let symbols = symbolizer.symbolize(&x).await.unwrap();
+            let symbols = symbolizer.symbolize(&x).unwrap();
             assert_eq!(symbols.len(), 8);
             assert!(symbols.iter().all(|&s| s == symbols[0]));
             assert_eq!(symbols[0], 0); // 🔤️ strictly ascending window == identity permutation
@@ -4876,7 +4876,7 @@ pub mod symbolic {
             let cfg = OrdinalConfig::new(3, 1).unwrap().with_ties(TiePolicy::Error);
             let symbolizer = OrdinalSymbolizer::new(cfg);
             let result = symbolizer.symbolize(&[1.0, 1.0, 2.0]);
-            assert!(matches!(result.await, Err(EntropyError::DegenerateInput { .. })));
+            assert!(matches!(result, Err(EntropyError::DegenerateInput { .. })));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -4906,7 +4906,7 @@ pub mod symbolic {
         async fn dispersion_symbolizer_rejects_constant_series() {
             let symbolizer = DispersionSymbolizer::new(3, 2, 1).unwrap();
             let x = vec![5.0; 20];
-            assert!(matches!(symbolizer.symbolize(&x).await, Err(EntropyError::DegenerateInput { .. })));
+            assert!(matches!(symbolizer.symbolize(&x), Err(EntropyError::DegenerateInput { .. })));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -4914,7 +4914,7 @@ pub mod symbolic {
             let symbolizer = DispersionSymbolizer::new(4, 3, 1).unwrap();
             let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
             let x: Vec<f64> = (0..30).map(|_| rng.next_gaussian()).collect();
-            let symbols = symbolizer.symbolize(&x).await.unwrap();
+            let symbols = symbolizer.symbolize(&x).unwrap();
             assert_eq!(symbols.len(), 30 - (3 - 1));
             assert!(symbols.iter().all(|&s| (s as usize) < symbolizer.alphabet_size()));
         }
@@ -4934,7 +4934,7 @@ pub mod symbolic {
         #[semio_framework_async_macros::async_test]
         async fn quantile_symbolizer_splits_small_example_in_half() {
             let symbolizer = QuantileSymbolizer::new(2).unwrap();
-            let symbols = symbolizer.symbolize(&[1.0, 2.0, 3.0, 4.0]).await.unwrap();
+            let symbols = symbolizer.symbolize(&[1.0, 2.0, 3.0, 4.0]).unwrap();
             assert_eq!(symbols, vec![0, 0, 1, 1]);
         }
         // #endregion 🔖️QuantileTests
@@ -4959,7 +4959,7 @@ pub mod symbolic {
         async fn threshold_symbolizer_classifies_against_edges() {
             let symbolizer = ThresholdSymbolizer::new(vec![0.0, 10.0]).unwrap();
             assert_eq!(symbolizer.alphabet_size(), 3);
-            let symbols = symbolizer.symbolize(&[-5.0, 0.0, 5.0, 10.0, 15.0]).await.unwrap();
+            let symbols = symbolizer.symbolize(&[-5.0, 0.0, 5.0, 10.0, 15.0]).unwrap();
             assert_eq!(symbols, vec![0, 1, 1, 2, 2]);
         }
         // #endregion 🔖️ThresholdTests
@@ -4976,7 +4976,7 @@ pub mod symbolic {
                 for _ in 0..50 {
                     let n = 20 + rng.next_below(50);
                     let x: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
-                    let symbols = symbolizer.symbolize(&x).await.unwrap();
+                    let symbols = symbolizer.symbolize(&x).unwrap();
                     assert!(symbols.iter().all(|&s| (s as usize) < alphabet));
                 }
             }
@@ -4986,7 +4986,7 @@ pub mod symbolic {
                 let symbolizer = QuantileSymbolizer::new(4).unwrap();
                 let mut rng = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(777);
                 let x: Vec<f64> = (0..4000).map(|_| rng.next_gaussian()).collect();
-                let symbols = symbolizer.symbolize(&x).await.unwrap();
+                let symbols = symbolizer.symbolize(&x).unwrap();
                 let mut counts = [0usize; 4];
                 for &s in &symbols {
                     counts[s as usize] += 1;
@@ -5005,7 +5005,7 @@ pub mod symbolic {
                 for _ in 0..50 {
                     let n = 30 + rng.next_below(40);
                     let x: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
-                    let symbols = symbolizer.symbolize(&x).await.unwrap();
+                    let symbols = symbolizer.symbolize(&x).unwrap();
                     assert!(symbols.iter().all(|&s| (s as usize) < alphabet));
                 }
             }
@@ -6957,7 +6957,7 @@ pub mod fft {
                 let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5)).collect();
                 let fast = Fft::new(n).forward(&input);
                 let naive = naive_dft(&input, false);
-                for (a, b) in fast.iter().zip(naive.await.iter()) {
+                for (a, b) in fast.iter().zip(naive.iter()) {
                     assert!(approx_eq_complex(*a, *b, 1e-9), "n={n}");
                 }
             }
@@ -6970,7 +6970,7 @@ pub mod fft {
                 let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5)).collect();
                 let fast = Fft::new(n).forward(&input);
                 let naive = naive_dft(&input, false);
-                for (a, b) in fast.iter().zip(naive.await.iter()) {
+                for (a, b) in fast.iter().zip(naive.iter()) {
                     assert!(approx_eq_complex(*a, *b, 1e-6), "n={n} a={a:?} b={b:?}");
                 }
             }
@@ -7052,7 +7052,7 @@ pub mod fft {
                 let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, 0.0)).collect();
                 let fast = Fft::new(n).forward(&input);
                 let naive = naive_dft(&input, false);
-                for (a, b) in fast.iter().zip(naive.await.iter()) {
+                for (a, b) in fast.iter().zip(naive.iter()) {
                     assert!(approx_eq_complex(*a, *b, 1e-6));
                 }
             }
@@ -9849,7 +9849,7 @@ pub mod streaming {
             for &x in &[0u32, 1, 1, 2, 2, 2, 3] {
                 sc.update(x);
             }
-            let est = sc.estimate().await.unwrap();
+            let est = sc.estimate().unwrap();
             let counts = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 2, 3], 4).unwrap();
             let expected = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Bits).unwrap();
             assert!((est.value - expected).abs() < 1e-9);
@@ -9860,7 +9860,7 @@ pub mod streaming {
             let mut sc = StreamingCounts::new(3, LogBase::Nats);
             sc.update(0);
             sc.update(1);
-            sc.remove(0).await.unwrap();
+            sc.remove(0).unwrap();
             assert_eq!(sc.n_raw, 1);
         }
 
@@ -9868,7 +9868,7 @@ pub mod streaming {
         async fn streaming_counts_remove_rejects_unobserved_symbol() {
             let mut sc = StreamingCounts::new(3, LogBase::Nats);
             sc.update(0);
-            assert!(sc.remove(1).await.is_err());
+            assert!(sc.remove(1).is_err());
         }
 
         #[semio_framework_async_macros::async_test]
@@ -9881,8 +9881,8 @@ pub mod streaming {
             for &x in &[2u32, 2, 0] {
                 b.update(x);
             }
-            a.merge(&b).await.unwrap();
-            let est = a.estimate().await.unwrap();
+            a.merge(&b).unwrap();
+            let est = a.estimate().unwrap();
             let counts = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 0], 3).unwrap();
             let expected = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
             assert!((est.value - expected).abs() < 1e-9);
@@ -9895,8 +9895,8 @@ pub mod streaming {
                 sc.update(x);
             }
             let snap = sc.snapshot();
-            let restored = StreamingCounts::restore(&snap).await.unwrap();
-            assert_eq!(sc.estimate().await.unwrap().value, restored.estimate().await.unwrap().value);
+            let restored = StreamingCounts::restore(&snap).unwrap();
+            assert_eq!(sc.estimate().unwrap().value, restored.estimate().unwrap().value);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -9913,7 +9913,7 @@ pub mod streaming {
                 let window = &history[window_start..];
                 let counts = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(window, 4).unwrap();
                 let expected = crate::artifacts::semio::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
-                let got = sw.estimate().await.unwrap().value;
+                let got = sw.estimate().unwrap().value;
                 assert!((got - expected).abs() < 1e-9, "mismatch at len {}", history.len());
             }
         }
@@ -9922,9 +9922,9 @@ pub mod streaming {
         async fn sliding_window_remove_and_merge_are_unsupported() {
             let mut sw = SlidingWindowEntropy::new(3, 5, LogBase::Nats).unwrap();
             sw.update(0);
-            assert!(sw.remove(0).await.is_err());
+            assert!(sw.remove(0).is_err());
             let other = SlidingWindowEntropy::new(3, 5, LogBase::Nats).unwrap();
-            assert!(sw.merge(&other).await.is_err());
+            assert!(sw.merge(&other).is_err());
         }
 
         #[semio_framework_async_macros::async_test]
@@ -9937,7 +9937,7 @@ pub mod streaming {
         async fn decayed_entropy_remove_is_unsupported() {
             let mut de = DecayedEntropy::new(3, 0.9, LogBase::Nats).unwrap();
             de.update(0);
-            assert!(de.remove(0).await.is_err());
+            assert!(de.remove(0).is_err());
         }
 
         #[semio_framework_async_macros::async_test]
@@ -9948,12 +9948,12 @@ pub mod streaming {
             }
             // 🔐️ after many decayed updates of the same symbol, entropy should be near zero
             // (essentially deterministic), then adding a burst of the other symbol should raise it.
-            let before = de.estimate().await.unwrap().value;
+            let before = de.estimate().unwrap().value;
             assert!(before < 0.1, "got {before}");
             for _ in 0..50 {
                 de.update(1);
             }
-            let after = de.estimate().await.unwrap().value;
+            let after = de.estimate().unwrap().value;
             assert!(after < 0.5, "got {after}"); // 🔐️ decay erased symbol-0 history; now near-deterministic on symbol 1
         }
 
@@ -9963,8 +9963,8 @@ pub mod streaming {
             de.update(0);
             de.update(1);
             let snap = de.snapshot();
-            let restored = DecayedEntropy::restore(&snap).await.unwrap();
-            assert!((de.estimate().await.unwrap().value - restored.estimate().await.unwrap().value).abs() < 1e-12);
+            let restored = DecayedEntropy::restore(&snap).unwrap();
+            assert!((de.estimate().unwrap().value - restored.estimate().unwrap().value).abs() < 1e-12);
         }
     }
     // #endregion 🔖️Tests

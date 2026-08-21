@@ -1,0 +1,82 @@
+{
+  "workshop": {
+    "machines": [
+      {
+        "id": "saw",
+        "label": "Bench Saw",
+        "iconId": "scissors",
+        "capabilities": [
+          {
+            "id": "pocket",
+            "label": "Pocket",
+            "iconId": "square",
+            "recipe": {
+              "recipe": "pocketCut",
+              "diameter": "diameter",
+              "depth": "depth"
+            },
+            "parameters": [
+              {
+                "id": "diameter",
+                "label": "Diameter",
+                "value": 0.125
+              },
+              {
+                "id": "depth",
+                "label": "Depth",
+                "value": 0.25
+              }
+            ],
+            "rules": [
+              {
+                "kind": "min",
+                "quantity": "Width",
+                "parameter": "diameter",
+                "margin": 0.0625
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "stockId": "stock-1",
+  "stockLabel": "Oak Beam",
+  "stockPose": {
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "axis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "angle": 0.0
+  },
+  "stockSolid": {
+    "childId": "brep-stock-01",
+    "target": {
+      "artifactId": "stock-1-solid",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  },
+  "steps": {
+    "childId": "flow-steps-01",
+    "target": {
+      "artifactId": "process-1-steps",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  },
+  "toolSolids": [],
+  "resolvedUpTo": null
+}

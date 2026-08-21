@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "gltf.mutation.no-observable-change",
+  "path": [
+    "document/nodes/children"
+  ]
+}

@@ -348,7 +348,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
 
     // #subregion Handles
     /// 🪝️ Allocates a new handle anchored on `node`; only meaningful when `P::HAS_PORTS` — returns `None` otherwise (or if `node` doesn't exist), never panics.
-    pub fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
+    pub async fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
         if !P::HAS_PORTS || !self.nodes.contains_key(&node) {
             return None;
         }
@@ -369,7 +369,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     // #endsubregion
 
     // #subregion Whole graph
-    pub fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
+    pub async fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
         &mut self.graph_attrs
     }
 

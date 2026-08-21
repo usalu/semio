@@ -1,0 +1,32 @@
+{
+  "root": {
+    "kind": "map",
+    "diff": {
+      "modified": [
+        {
+          "key": "count",
+          "diff": {
+            "kind": "replace",
+            "value": {
+              "kind": "float",
+              "lexeme": "41.5"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "nodes": {
+    "modified": [
+      {
+        "key": {
+          "value": "n-1"
+        },
+        "diff": {
+          "kind": "str",
+          "value": "final"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeAnchor",
+  "id": "node-a",
+  "newAnchor": "derived"
+}

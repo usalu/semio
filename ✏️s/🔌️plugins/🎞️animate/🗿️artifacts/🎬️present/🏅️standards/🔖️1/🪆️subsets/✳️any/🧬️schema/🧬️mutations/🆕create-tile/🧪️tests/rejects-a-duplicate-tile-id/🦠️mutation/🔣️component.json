@@ -1,0 +1,15 @@
+{
+  "CreateTile": {
+    "index": 0,
+    "tile": {
+      "id": "t-hero",
+      "name": "Hero",
+      "crop": {
+        "x": 0.25,
+        "y": 0.25,
+        "width": 0.5,
+        "height": 0.5
+      }
+    }
+  }
+}

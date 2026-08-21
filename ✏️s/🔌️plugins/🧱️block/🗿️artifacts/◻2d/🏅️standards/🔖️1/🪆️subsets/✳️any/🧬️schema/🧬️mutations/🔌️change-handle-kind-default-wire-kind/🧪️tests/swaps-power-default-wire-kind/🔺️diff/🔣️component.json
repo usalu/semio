@@ -1,0 +1,33 @@
+{
+  "artifact": null,
+  "schema": null,
+  "nodeKind": null,
+  "presentation": null,
+  "handleKinds": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "hk-power",
+        "patch": {
+          "replacement": {
+            "id": "hk-power",
+            "name": "power",
+            "label": "Power",
+            "color": "#cc2222",
+            "defaultWireKind": "wire.heavy"
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "handles": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

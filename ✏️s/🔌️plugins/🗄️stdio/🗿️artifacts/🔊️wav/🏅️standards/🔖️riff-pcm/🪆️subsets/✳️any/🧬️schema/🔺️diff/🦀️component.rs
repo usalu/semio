@@ -317,15 +317,15 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let ab = WavDiff::between(&a, &b);
-        assert!(ab.await.fmt.is_some());
-        assert!(ab.await.data.is_some());
-        assert!(ab.await.other_chunks.is_some());
+        assert!(ab.fmt.is_some());
+        assert!(ab.data.is_some());
+        assert!(ab.other_chunks.is_some());
         assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = WavDiff::between(&b, &a);
-        assert!(ba.await.fmt.is_some());
-        assert!(ba.await.data.is_some());
-        assert!(ba.await.other_chunks.is_some());
+        assert!(ba.fmt.is_some());
+        assert!(ba.data.is_some());
+        assert!(ba.other_chunks.is_some());
         assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(WavDiff::between(&a, &a).is_empty());
@@ -350,7 +350,7 @@ mod tests {
         let d2 = diff_set_data(WavData::Raw(vec![9, 9]));
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base).await.unwrap(), d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap());
+        assert_eq!(absorbed.apply(&base).unwrap(), d2.apply(&d1.apply(&base).unwrap()).unwrap());
         assert_eq!(absorbed.fmt, d1.fmt);
         assert_eq!(absorbed.data, d2.data);
 
@@ -373,7 +373,7 @@ mod tests {
         let mut right = da.clone();
         right.absorb(right_tail);
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base).await.unwrap(), dc.apply(&db.apply(&da.apply(&base).await.unwrap()).await.unwrap()).await.unwrap());
+        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
     }
     //#endregion absorb_law
 
@@ -398,8 +398,8 @@ mod tests {
         let b = sweep_b();
         let cases = vec![
             WavDiff::default(),
-            WavDiff::between(&a, &b).await,
-            WavDiff::between(&b, &a).await,
+            WavDiff::between(&a, &b),
+            WavDiff::between(&b, &a),
             diff_set_data(WavData::Pcm16(vec![])),
             diff_set_data(WavData::Pcm8(vec![1, 2, 3])),
             diff_set_data(WavData::Float32(vec![1.5, -2.5])),
@@ -407,12 +407,12 @@ mod tests {
         ];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = WavDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = WavDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = WavDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = WavDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

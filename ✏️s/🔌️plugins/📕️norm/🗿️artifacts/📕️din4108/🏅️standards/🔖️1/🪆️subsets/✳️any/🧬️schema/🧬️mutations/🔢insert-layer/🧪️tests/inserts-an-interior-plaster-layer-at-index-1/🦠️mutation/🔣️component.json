@@ -1,0 +1,9 @@
+{
+  "InsertLayer": {
+    "index": 1,
+    "layer": {
+      "thicknessM": 0.05,
+      "lambdaWMk": 0.25
+    }
+  }
+}

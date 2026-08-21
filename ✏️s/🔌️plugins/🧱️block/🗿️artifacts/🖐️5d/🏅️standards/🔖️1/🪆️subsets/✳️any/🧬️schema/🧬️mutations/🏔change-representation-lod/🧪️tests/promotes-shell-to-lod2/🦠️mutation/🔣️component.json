@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRepresentationLod",
+  "id": "rep-shell",
+  "newLod": "lod2"
+}

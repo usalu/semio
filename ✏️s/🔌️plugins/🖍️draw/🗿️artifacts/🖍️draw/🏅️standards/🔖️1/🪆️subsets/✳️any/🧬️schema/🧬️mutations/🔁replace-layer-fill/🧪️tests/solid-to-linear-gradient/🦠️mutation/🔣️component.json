@@ -1,0 +1,15 @@
+{
+  "mutation": "replaceLayerFill",
+  "layerId": "shape-a",
+  "fill": {
+    "kind": "linearGradient",
+    "x1": 0.0,
+    "y1": 0.0,
+    "x2": 120.0,
+    "y2": 0.0,
+    "stops": [
+      { "offset": 0.0, "color": [1.0, 0.0, 0.0, 1.0] },
+      { "offset": 1.0, "color": [0.0, 0.0, 1.0, 1.0] }
+    ]
+  }
+}

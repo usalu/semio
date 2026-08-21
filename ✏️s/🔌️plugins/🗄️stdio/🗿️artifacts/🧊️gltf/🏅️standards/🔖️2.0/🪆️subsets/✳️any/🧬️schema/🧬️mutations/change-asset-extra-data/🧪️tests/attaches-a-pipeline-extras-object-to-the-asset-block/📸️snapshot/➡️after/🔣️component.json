@@ -1,0 +1,14 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0",
+      "extras": {
+        "pipeline": "semio",
+        "step": 3
+      }
+    }
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

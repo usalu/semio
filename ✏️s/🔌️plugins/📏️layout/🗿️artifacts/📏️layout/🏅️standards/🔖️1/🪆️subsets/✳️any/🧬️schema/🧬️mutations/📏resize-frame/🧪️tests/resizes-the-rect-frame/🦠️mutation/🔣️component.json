@@ -1,0 +1,8 @@
+{
+  "ResizeFrame": {
+    "page_id": "page-1",
+    "frame_id": "frame-rect",
+    "new_width": 90.0,
+    "new_height": 70.0
+  }
+}

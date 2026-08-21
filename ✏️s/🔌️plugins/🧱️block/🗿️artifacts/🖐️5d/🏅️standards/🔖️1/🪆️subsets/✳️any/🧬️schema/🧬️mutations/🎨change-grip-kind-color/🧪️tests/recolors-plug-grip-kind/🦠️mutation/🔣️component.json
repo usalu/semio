@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGripKindColor",
+  "id": "gk-plug",
+  "newColor": "#101010"
+}

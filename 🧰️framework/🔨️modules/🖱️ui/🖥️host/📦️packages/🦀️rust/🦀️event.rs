@@ -41,15 +41,28 @@ pub struct PointerRegistry {
     next_slot: u32,
 }
 
+// 🐛️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): found while building this packet's
+// own wasm32 verification — a real, pre-existing defect this packet's boundary covers (`event.rs` is
+// inside `🖱️ui/🖥️host/**`), unrelated to any P3a edit. Only `MOUSE_TAG` (immediately below) carried the
+// `#[cfg(not(target_arch = "wasm32"))]` gate; `TOUCH_TAG`/`FINGER_MASK`/`impl PointerRegistry` did not,
+// even though the `struct PointerRegistry` they all depend on IS gated (line ~39) and `winit` is a
+// native-only dependency (absent on wasm32 per this crate's own `Cargo.toml`). `cargo check -p
+// semio-framework-ui-host --target wasm32-unknown-unknown` failed with 5 errors (`E0433`/`E0425`, "cannot
+// find crate winit"/"item was configured out") before this fix — confirmed clean after. Each item below
+// now carries its own explicit gate rather than relying on one attribute silently applying to only the
+// single item immediately following it (the exact mistake that produced this defect).
 #[cfg(not(target_arch = "wasm32"))]
 /// 🏷️ Native pointer ids are `[tag: 2 bits][device slot: 30 bits][finger id: 32 bits]`. The tag is
 /// what keeps a device's mouse and its fingers in disjoint id spaces — without it, finger id 0 lands
 /// on exactly the same value as that device's mouse, and the two contacts silently become one.
 const MOUSE_TAG: u64 = 0b01 << 62;
+#[cfg(not(target_arch = "wasm32"))]
 const TOUCH_TAG: u64 = 0b10 << 62;
 /// 🎚️ Finger ids occupy the low 32 bits; wider platform ids fold in rather than overrun the slot.
+#[cfg(not(target_arch = "wasm32"))]
 const FINGER_MASK: u64 = u32::MAX as u64;
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PointerRegistry {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {

@@ -1,0 +1,166 @@
+{
+  "schema": "note.document",
+  "id": "note-fixture",
+  "title": "Field Notes",
+  "blocks": [
+    {
+      "kind": "text",
+      "id": "blk-text",
+      "name": "Intro",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 280.0,
+      "height": 120.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "content": {
+        "childId": "note-text-eea42a3b80b1052b",
+        "target": {
+          "artifactId": "blk-text-text",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          }
+        }
+      },
+      "fontSize": 16.0,
+      "fontWeight": "normal",
+      "align": "left"
+    },
+    {
+      "kind": "stroke",
+      "id": "blk-ink",
+      "name": "Sketch",
+      "x": 20.0,
+      "y": 160.0,
+      "width": 80.0,
+      "height": 40.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          10.0
+        ]
+      ],
+      "strokeWidth": 2.0,
+      "color": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "kind": "table",
+      "id": "blk-table",
+      "name": "Measurements",
+      "x": 0.0,
+      "y": 220.0,
+      "width": 320.0,
+      "height": 160.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "columns": [
+        "A",
+        "B"
+      ],
+      "rows": [
+        [
+          {
+            "content": "Alpha"
+          },
+          {
+            "content": ""
+          }
+        ],
+        [
+          {
+            "content": ""
+          },
+          {
+            "content": ""
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "math",
+      "id": "blk-math",
+      "name": "Formula",
+      "x": 0.0,
+      "y": 400.0,
+      "width": 200.0,
+      "height": 80.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "tex": "E = mc^2",
+      "displayMode": true
+    },
+    {
+      "kind": "image",
+      "id": "blk-image",
+      "name": "Logo",
+      "x": 340.0,
+      "y": 0.0,
+      "width": 240.0,
+      "height": 160.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "imageKey": "asset-logo"
+    },
+    {
+      "kind": "group",
+      "id": "blk-group",
+      "name": "Callout",
+      "x": 340.0,
+      "y": 200.0,
+      "width": 280.0,
+      "height": 120.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "children": [
+        {
+          "kind": "image",
+          "id": "blk-nested",
+          "name": "Badge",
+          "x": 350.0,
+          "y": 210.0,
+          "width": 60.0,
+          "height": 60.0,
+          "rotation": 0.0,
+          "visible": true,
+          "locked": false,
+          "imageKey": "asset-logo"
+        }
+      ]
+    }
+  ],
+  "gridVisible": true,
+  "gridSpacing": 32.0,
+  "gridSubdivisions": 4.0,
+  "gridOpacity": 0.35,
+  "snapEnabled": false,
+  "snapGridSpacing": 8.0,
+  "pencilWidth": 3.0,
+  "eraserRadius": 12.0,
+  "assets": {
+    "asset-logo": {
+      "mime": "image/png",
+      "data": "bG9nbw==",
+      "width": 64.0,
+      "height": 64.0
+    }
+  }
+}

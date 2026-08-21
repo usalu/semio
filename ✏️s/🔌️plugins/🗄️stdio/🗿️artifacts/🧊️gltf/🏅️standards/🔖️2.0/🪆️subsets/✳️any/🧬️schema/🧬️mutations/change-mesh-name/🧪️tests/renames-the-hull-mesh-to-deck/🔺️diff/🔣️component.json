@@ -1,0 +1,12 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "name": "deck"
+        }
+      }
+    ]
+  }
+}

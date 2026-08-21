@@ -1,0 +1,5 @@
+{
+  "mutation": "resizeGrip3d",
+  "id": "grip-north",
+  "newRadius3d": 0.9
+}

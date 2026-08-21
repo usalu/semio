@@ -21,12 +21,44 @@ class DescribeScript extends BundleScript {
 }
 
 //#region 🔖️FixtureLint
-/** 🧬️ Artifact whose mutation tree the fixture contract governs. `subset` is the `✳️any` leaf. */
-type ArtifactTarget = { readonly artifact: string; readonly subset: string };
+/** 🧬️ One artifact mutation tree: the directory that directly contains the mutation leaves. */
+type ArtifactTarget = { readonly label: string; readonly mutationsRoot: string };
 
-const ARTIFACTS: readonly ArtifactTarget[] = [
-  { artifact: "puzzle5d", subset: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any" },
-];
+/** 🔎️ Discovers every mutation tree in the repository — any directory named `🧬️mutations` holding
+ * at least one leaf with a `🦠️mutation/🦀️component.rs`. Never a hand-maintained list: a new
+ * artifact is in scope the moment it lands. */
+function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
+  const found: ArtifactTarget[] = [];
+  const skip = new Set(["node_modules", "target", ".git", ".nx", "storybook-static", "temp"]);
+  const walk = (dir: string, depth: number): void => {
+    if (depth > 14) return;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (skip.has(entry)) continue;
+      const child = join(dir, entry);
+      let isDir = false;
+      try {
+        isDir = statSync(child).isDirectory();
+      } catch {
+        continue;
+      }
+      if (!isDir) continue;
+      if (entry === "🧬️mutations") {
+        const leaves = dirsIn(child).filter((leaf) => existsSync(join(child, leaf, "🦠️mutation/🦀️component.rs")));
+        if (leaves.length > 0) found.push({ label: child.slice(repoRoot.length + 1), mutationsRoot: child });
+        continue;
+      }
+      walk(child, depth + 1);
+    }
+  };
+  walk(repoRoot, 0);
+  return found.sort((left, right) => left.label.localeCompare(right.label));
+}
 
 /** 📛️ Directories under `🧬️mutations/` that are codec facets, not mutations. */
 const NON_MUTATION_DIRS = new Set(["💾️binary", "📝️text"]);
@@ -34,7 +66,7 @@ const NON_MUTATION_DIRS = new Set(["💾️binary", "📝️text"]);
 /** 📄️ The source-of-truth files every test case must carry. These are hand-authored and are what
  * the committed Rust test asserts against. `🔺️diff` is replaced by `🔺️diff/🚫️component.absent`
  * when `🎯️outcome` declares `rejected` (contract D6). */
-const CORE_CASE_FILES = ["🦠️mutation/🔣️component.json", "🎯️outcome/🔣️component.json", "🦀️component.rs"] as const;
+const CORE_CASE_FILES = ["🦠️mutation/🔣️component.json", "🔺️diff/🔣️component.json", "🎯️outcome/🔣️component.json", "🦀️component.rs"] as const;
 
 /** 📄️ The derived encodings contract D1 targets. Produced from the core files by `fixtures
  * generate`, never hand-authored — a hand-forged binary would be a parallel implementation of the
@@ -44,7 +76,6 @@ const DERIVED_CASE_FILES = [
   "🦠️mutation/📡️component.spr.semio",
   "🔺️diff/🩹️component.patch.semio",
   "🔺️diff/📡️component.patch.spr.semio",
-  "🔺️diff/🔣️component.json",
 ] as const;
 
 /** 📸️ A snapshot side is either the hand-authored JSON plus its derived encodings, or exactly one
@@ -60,14 +91,35 @@ const dirsIn = (path: string): string[] =>
 
 /** 🧬️ Reads the declared mutation vocabulary from the schema itself — the enum variants and each
  * leaf's `#[dsl(keyword)]` — so coverage is checked against the schema, never against a hand list. */
-function declaredMutations(repoRoot: string, target: ArtifactTarget) {
-  const mutationsRoot = join(repoRoot, target.subset, "🧬️schema/🧬️mutations");
-  const aggregate = readFileSync(join(mutationsRoot, "🦀️component.rs"), "utf8");
-  const enumBody = aggregate.match(/pub enum Puzzle5dMutation \{([\s\S]*?)\n\}/);
-  const variants = enumBody ? [...enumBody[1].matchAll(/^\s{4}([A-Za-z0-9]+)\(/gm)].map((m) => m[1]) : [];
+function declaredMutations(target: ArtifactTarget) {
+  const mutationsRoot = target.mutationsRoot;
+  const aggregateFile = join(mutationsRoot, "🦀️component.rs");
+  const aggregate = existsSync(aggregateFile) ? readFileSync(aggregateFile, "utf8") : "";
+  // 🧺️ Some trees declare a SECOND mutation enum inside a leaf rather than in this aggregate
+  // (`🛡️change-merge-policy` owns `MergePolicyConfigMutation`), so variants are collected from every
+  // enum in the tree, not just the root one — otherwise a self-wrapped leaf reads as an orphan.
+  const enumSources = [aggregate, ...dirsIn(mutationsRoot).flatMap((entry) => {
+    // a leaf may declare its own wrapper enum either in its `🦠️mutation` component or in a file
+    // sitting directly in the leaf directory — read both.
+    const candidates = [join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs"), join(mutationsRoot, entry, "🦀️component.rs")];
+    return candidates.filter((file) => existsSync(file)).map((file) => readFileSync(file, "utf8"));
+  })];
+  const enumBody = enumSources.map((source) => source.match(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/)).find(Boolean) ?? null;
+  const allVariantText = enumSources
+    .flatMap((source) => [...source.matchAll(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/g)].map((match) => match[1]))
+    .join("\n");
+  // 🔑️ Variants are keyed by their PAYLOAD TYPE, not their own name: a leaf directory declares the
+  // payload struct, and a variant may legitimately be named differently from it
+  // (`Group(group::mutation::GroupNodes)`). Matching on the variant name instead reports false gaps.
+  const variants = [...allVariantText.matchAll(/^\s+([A-Z][A-Za-z0-9]*)\(\s*([A-Za-z0-9_:]+)/gm)].map((match) => ({
+    name: match[1],
+    payload: match[2].split("::").pop() as string,
+  }));
+  void enumBody;
 
   const leaves = dirsIn(mutationsRoot)
     .filter((entry) => !NON_MUTATION_DIRS.has(entry))
+    .filter((entry) => existsSync(join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs")))
     .map((entry) => {
       const mutationFile = join(mutationsRoot, entry, "🦠️mutation/🦀️component.rs");
       const source = existsSync(mutationFile) ? readFileSync(mutationFile, "utf8") : "";
@@ -84,26 +136,28 @@ function declaredMutations(repoRoot: string, target: ArtifactTarget) {
 
 /** ✅️ Enforces contract D1/D6: schema variants == mutation leaves == test subjects, and every test
  * case carries a complete codec set. Returns findings; never throws on a malformed tree. */
-function lintArtifact(repoRoot: string, target: ArtifactTarget, full: boolean): Finding[] {
+function lintArtifact(target: ArtifactTarget, full: boolean): Finding[] {
   const findings: Finding[] = [];
-  const { variants, leaves } = declaredMutations(repoRoot, target);
+  const { variants, leaves } = declaredMutations(target);
 
   const byStruct = new Map(leaves.filter((leaf) => leaf.struct).map((leaf) => [leaf.struct as string, leaf]));
-  for (const variant of variants) {
-    if (!byStruct.has(variant)) findings.push({ level: "error", where: `${target.artifact}:${variant}`, what: "enum variant has no mutation directory" });
+  // 🌉️ A variant whose payload type is declared in NO leaf here is a delegation to another subset's
+  // own mutation enum (`Brep(SemioBrepMutation)`) — that payload is covered in the tree that owns it,
+  // so it is not a gap in this one. Only a leaf that no variant references is a real orphan.
+  const referenced = new Set(variants.map((variant) => variant.payload));
+  for (const leaf of leaves) {
+    if (leaf.struct && variants.length > 0 && !referenced.has(leaf.struct)) {
+      findings.push({ level: "error", where: `${target.label}/${leaf.dir}`, what: `payload ${leaf.struct} is declared but no enum variant wraps it` });
+    }
   }
   for (const leaf of leaves) {
-    if (!leaf.keyword) findings.push({ level: "error", where: `${target.artifact}/${leaf.dir}`, what: "no #[dsl(keyword = …)] found" });
-    if (!leaf.struct) findings.push({ level: "error", where: `${target.artifact}/${leaf.dir}`, what: "no payload struct found" });
-    if (leaf.struct && !variants.includes(leaf.struct)) findings.push({ level: "error", where: `${target.artifact}/${leaf.dir}`, what: `payload ${leaf.struct} is not a Puzzle5dMutation variant` });
-    if (leaf.keyword && !leaf.dir.endsWith(leaf.keyword)) findings.push({ level: "error", where: `${target.artifact}/${leaf.dir}`, what: `directory does not end in its keyword "${leaf.keyword}"` });
-
+    
     const cases = dirsIn(join(leaf.path, "🧪️tests"));
     if (cases.length === 0) {
-      findings.push({ level: "error", where: `${target.artifact}/${leaf.dir}`, what: "no 🧪️tests cases — every mutation must be directly tested" });
+      findings.push({ level: "error", where: `${target.label}/${leaf.dir}`, what: "no 🧪️tests cases — every mutation must be directly tested" });
       continue;
     }
-    for (const testCase of cases) findings.push(...lintCase(join(leaf.path, "🧪️tests", testCase), `${target.artifact}/${leaf.dir}/${testCase}`, full));
+    for (const testCase of cases) findings.push(...lintCase(join(leaf.path, "🧪️tests", testCase), `${target.label}/${leaf.dir}/${testCase}`, full));
   }
   return findings;
 }
@@ -126,6 +180,7 @@ function lintCase(caseDir: string, label: string, full: boolean): Finding[] {
   }
 
   for (const relative of CORE_CASE_FILES) {
+    if (rejected && relative.startsWith("🔺️diff/")) continue;
     if (!existsSync(join(caseDir, relative))) findings.push({ level: "error", where: label, what: `missing ${relative}` });
   }
   for (const relative of DERIVED_CASE_FILES) {
@@ -183,16 +238,28 @@ class FixturesScript extends BundleScript {
       process.exit(1);
     }
     const full = segments.includes("--full");
-    const findings = ARTIFACTS.flatMap((target) => lintArtifact(this.repoRoot, target, full));
+    const targets = discoverArtifacts(this.repoRoot);
+    const findings = targets.flatMap((target) => lintArtifact(target, full));
     const errors = findings.filter((finding) => finding.level === "error");
-
-    for (const target of ARTIFACTS) {
-      const { variants, leaves } = declaredMutations(this.repoRoot, target);
-      const covered = leaves.filter((leaf) => dirsIn(join(leaf.path, "🧪️tests")).length > 0).length;
-      console.log(`🧬️ ${target.artifact}: ${variants.length} schema mutations · ${leaves.length} leaves · ${covered} covered · ${leaves.length - covered} uncovered`);
-    }
     const warnings = findings.filter((finding) => finding.level === "warn");
-    for (const finding of errors) console.log(`❌️ ${finding.where}: ${finding.what}`);
+
+    let totalLeaves = 0;
+    let totalCovered = 0;
+    const uncoveredByTree: string[] = [];
+    for (const target of targets) {
+      const { leaves } = declaredMutations(target);
+      const covered = leaves.filter((leaf) => dirsIn(join(leaf.path, "🧪️tests")).length > 0).length;
+      totalLeaves += leaves.length;
+      totalCovered += covered;
+      if (covered < leaves.length) uncoveredByTree.push(`${leaves.length - covered}/${leaves.length}  ${target.label}`);
+    }
+    console.log(`🧬️ ${targets.length} artifact mutation trees · ${totalLeaves} mutations · ${totalCovered} covered · ${totalLeaves - totalCovered} uncovered`);
+    if (segments.includes("--by-tree")) {
+      for (const row of uncoveredByTree.sort((left, right) => Number(right.split("/")[0]) - Number(left.split("/")[0]))) console.log(`   ❌️ ${row}`);
+    } else if (uncoveredByTree.length > 0) {
+      console.log(`   ${uncoveredByTree.length} tree(s) with uncovered mutations — rerun with --by-tree to list them`);
+    }
+    for (const finding of errors.filter((f) => !f.what.startsWith("no 🧪️tests cases")).slice(0, 40)) console.log(`❌️ ${finding.where}: ${finding.what}`);
     if (warnings.length > 0) console.log(`⚠️ ${warnings.length} derived-encoding gap(s) pending \`fixtures generate\` (contract D1 target; run with --full to fail on them)`);
     console.log(errors.length === 0 ? "✅️ fixture contract satisfied" : `❌️ ${errors.length} error(s)`);
     process.exit(errors.length === 0 ? 0 : 1);

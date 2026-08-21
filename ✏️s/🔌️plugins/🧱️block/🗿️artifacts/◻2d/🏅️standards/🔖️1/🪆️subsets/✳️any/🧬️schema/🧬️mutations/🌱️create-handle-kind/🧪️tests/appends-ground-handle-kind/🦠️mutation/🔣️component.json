@@ -1,0 +1,10 @@
+{
+  "mutation": "createHandleKind",
+  "handleKind": {
+    "id": "hk-ground",
+    "name": "ground",
+    "label": "Ground",
+    "color": "#448844",
+    "defaultWireKind": "wire.link"
+  }
+}

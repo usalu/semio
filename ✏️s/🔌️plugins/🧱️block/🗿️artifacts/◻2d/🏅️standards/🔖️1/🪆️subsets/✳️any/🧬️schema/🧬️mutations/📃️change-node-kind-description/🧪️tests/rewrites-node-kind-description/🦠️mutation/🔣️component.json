@@ -1,0 +1,4 @@
+{
+  "mutation": "changeNodeKindDescription",
+  "newDescription": "One inline valve node with a signal rim."
+}

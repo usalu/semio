@@ -1,0 +1,57 @@
+{
+  "schema": "puzzle.2d.fixture",
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "nodes": [
+    {
+      "id": "node-a",
+      "nodeKind": "node-kind-a",
+      "shape": "circle",
+      "x": 0.0,
+      "y": 0.0,
+      "radius": 10.0,
+      "text": "Alpha",
+      "iconKind": "icon-alpha",
+      "anchor": "fixed",
+      "handles": [
+        {
+          "id": "handle-1",
+          "handleKind": "handle-kind-a",
+          "angle": 0.0
+        },
+        {
+          "id": "handle-spare",
+          "handleKind": "handle-kind-a",
+          "angle": 1.5
+        }
+      ]
+    },
+    {
+      "id": "node-b",
+      "nodeKind": "node-kind-b",
+      "shape": "rectangle",
+      "x": 40.0,
+      "y": 20.0,
+      "width": 30.0,
+      "height": 12.0,
+      "anchor": "fixed",
+      "handles": []
+    }
+  ],
+  "edges": [],
+  "meta": {
+    "manifestId": "manifest-alpha",
+    "kindCompatibility": [
+      {
+        "source": "handle-kind-a",
+        "target": "handle-kind-b",
+        "bidirectional": true,
+        "important": false,
+        "specificity": "handle"
+      }
+    ]
+  }
+}

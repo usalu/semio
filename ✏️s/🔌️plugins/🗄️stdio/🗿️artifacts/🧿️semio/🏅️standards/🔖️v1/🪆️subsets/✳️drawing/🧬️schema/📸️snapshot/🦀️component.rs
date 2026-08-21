@@ -466,8 +466,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -484,7 +484,7 @@ fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
-    Ok(SemioPoint2 { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())? })
+    Ok(SemioPoint2 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
@@ -494,7 +494,7 @@ fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())? })
+    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
@@ -505,7 +505,7 @@ fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())?, w: reader.read_f64_le().await.map_err(|e| e.to_string())? })
+    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
@@ -520,7 +520,7 @@ fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, 
 /// 🩹️ `store::ByteReader` has no native `f32` reader (only `f64_le`) — read 4 raw bytes instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).await.map_err(|e| e.to_string())?;
+    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
@@ -541,7 +541,7 @@ fn write_bool(out: &mut Vec<u8>, b: bool) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
@@ -555,7 +555,7 @@ fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_option<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
+    match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read(reader)?)),
         other => Err(format!("option: bad tag byte {other}")),
@@ -599,16 +599,16 @@ fn write_path_segment(out: &mut Vec<u8>, seg: &PathSegment) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_path_segment(reader: &mut store::ByteReader<'_>) -> Result<PathSegment, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(PathSegment::MoveTo { to: read_point2(reader)? }),
         1 => Ok(PathSegment::LineTo { to: read_point2(reader)? }),
         2 => Ok(PathSegment::CubicTo { c1: read_point2(reader)?, c2: read_point2(reader)?, to: read_point2(reader)? }),
         3 => Ok(PathSegment::QuadTo { c: read_point2(reader)?, to: read_point2(reader)? }),
         4 => Ok(PathSegment::ArcTo {
-            rx: reader.read_f64_le().await.map_err(|e| e.to_string())?,
-            ry: reader.read_f64_le().await.map_err(|e| e.to_string())?,
-            x_rotation: reader.read_f64_le().await.map_err(|e| e.to_string())?,
+            rx: reader.read_f64_le().map_err(|e| e.to_string())?,
+            ry: reader.read_f64_le().map_err(|e| e.to_string())?,
+            x_rotation: reader.read_f64_le().map_err(|e| e.to_string())?,
             large_arc: read_bool(reader)?,
             sweep: read_bool(reader)?,
             to: read_point2(reader)?,
@@ -656,10 +656,10 @@ fn write_node(out: &mut Vec<u8>, n: &DrawNode) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut segments = Vec::with_capacity(n as usize);
             for _ in 0..n {
                 segments.push(read_path_segment(reader)?);
@@ -675,7 +675,7 @@ fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
         }
         2 => {
             let transform = read_transform(reader)?;
-            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(n as usize);
             for _ in 0..n {
                 children.push(read_node(reader)?);
@@ -684,8 +684,8 @@ fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
         }
         3 => {
             let at = read_point2(reader)?;
-            let width = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-            let height = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+            let width = reader.read_f64_le().map_err(|e| e.to_string())?;
+            let height = reader.read_f64_le().map_err(|e| e.to_string())?;
             let mime = read_str_lp(reader)?;
             let bytes = read_bytes_lp(reader)?;
             Ok(DrawNode::Image { at, width, height, mime, bytes })
@@ -732,8 +732,8 @@ fn write_canvas(out: &mut Vec<u8>, c: &DrawCanvas) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_canvas(reader: &mut store::ByteReader<'_>) -> Result<DrawCanvas, String> {
-    let width = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let height = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let width = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let height = reader.read_f64_le().map_err(|e| e.to_string())?;
     let background = read_option(reader, read_rgba)?;
     Ok(DrawCanvas { width, height, background })
 }
@@ -759,18 +759,18 @@ fn encode_drawing_snapshot_binary(s: &SemioDrawingSnapshot) -> Vec<u8> {
 fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
     let canvas = read_canvas(&mut reader)?;
-    let style_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(style_count as usize);
     for _ in 0..style_count {
         styles.push(read_style(&mut reader)?);
     }
-    let layer_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let layer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(layer_count as usize);
     for _ in 0..layer_count {
         layers.push(read_layer(&mut reader)?);
@@ -894,7 +894,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -902,7 +902,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -910,7 +910,7 @@ mod tests {
     async fn default_snapshot_round_trips() {
         let snap = SemioDrawingSnapshot::default();
         let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -921,9 +921,9 @@ mod tests {
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_drawing_snapshot();
         let packed = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&demo);
-        assert_eq!(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode"), demo);
+        assert_eq!(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
         let text = <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(&demo);
-        assert_eq!(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse"), demo);
+        assert_eq!(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
     }
 }
 //#endregion 🔖️Tests

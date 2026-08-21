@@ -199,11 +199,11 @@ mod tests {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(71);
             for _ in 0..50 {
                 let frame =
-                    Frame3::from_normal(Pnt3::new(rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0), Vec3::new(rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
+                    Frame3::from_normal(Pnt3::new(rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0), Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
                         .unwrap();
-                let radius = 0.5 + rng.await.next_f64() * 5.0;
+                let radius = 0.5 + rng.next_f64() * 5.0;
                 let s = Surface::Cylinder { frame, radius };
-                let target = Pnt3::new(rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0);
+                let target = Pnt3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let domain = ((0.0, std::f64::consts::TAU), (-15.0, 15.0));
                 let (_, _, dist) = closest_point(&s, domain, target, 24);
                 let mut oracle = f64::INFINITY;

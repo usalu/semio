@@ -1,0 +1,36 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "nodes": [
+      {
+        "camera": 0
+      },
+      {
+        "camera": 1
+      }
+    ],
+    "cameras": [
+      {
+        "type": "perspective",
+        "perspective": {
+          "yfov": 0.5,
+          "znear": 0.5
+        }
+      },
+      {
+        "type": "orthographic",
+        "orthographic": {
+          "xmag": 1,
+          "ymag": 1,
+          "zfar": 2,
+          "znear": 0.5
+        }
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

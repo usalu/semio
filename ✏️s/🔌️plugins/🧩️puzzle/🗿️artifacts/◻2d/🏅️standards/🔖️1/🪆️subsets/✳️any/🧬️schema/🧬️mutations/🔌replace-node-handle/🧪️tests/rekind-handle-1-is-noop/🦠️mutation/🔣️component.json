@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceNodeHandle",
+  "nodeId": "node-a",
+  "handleId": "handle-1",
+  "newHandle": {
+    "id": "handle-1",
+    "handleKind": "handle-kind-c",
+    "angle": 0.0
+  }
+}

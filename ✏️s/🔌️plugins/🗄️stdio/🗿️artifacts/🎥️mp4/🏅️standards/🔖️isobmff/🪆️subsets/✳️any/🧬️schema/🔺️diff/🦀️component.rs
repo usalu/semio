@@ -50,7 +50,7 @@ pub struct IndexedAdded<T> {
 /// ▶️ Apply semantics (normative, schema-design.md): `removed`/`modified` index BASE state;
 /// `added` indices are FINAL positions, inserted ascending at `min(index, len)`. Out-of-range
 /// keys are graceful no-ops.
-pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+pub async fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
     for m in &diff.modified {
         if let Some(entry) = kept.iter_mut().find(|(i, _)| *i == m.index) {
@@ -296,19 +296,19 @@ struct Mp4SamplesDiffRecord {
 }
 
 impl dsl::DslField for Mp4SamplesDiff {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         <Mp4SamplesDiffRecord as dsl::DslField>::shape()
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         Mp4SamplesDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4SampleModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
             added: self.added.iter().map(|entry| Mp4SampleAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
         }
-        .to_value()
+        .to_value().await
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value)?;
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value).await?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -423,19 +423,19 @@ struct Mp4TracksDiffRecord {
 }
 
 impl dsl::DslField for Mp4TracksDiff {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         <Mp4TracksDiffRecord as dsl::DslField>::shape()
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         Mp4TracksDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4TrackModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
             added: self.added.iter().map(|entry| Mp4TrackAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
         }
-        .to_value()
+        .to_value().await
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value)?;
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value).await?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -507,7 +507,7 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
             after.movie = v.clone();
         }
         if let Some(v) = &self.tracks {
-            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff);
+            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff).await;
         }
         Self::between(&after, base).await
     }
@@ -529,11 +529,11 @@ mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 
-    fn sample(n: u8) -> Mp4Sample {
+    async fn sample(n: u8) -> Mp4Sample {
         Mp4Sample { data: vec![n], duration: u32::from(n) * 10, cts_offset: 0, sync: n % 2 == 0 }
     }
 
-    fn track(id: u32, samples: Vec<Mp4Sample>) -> Mp4Track {
+    async fn track(id: u32, samples: Vec<Mp4Sample>) -> Mp4Track {
         Mp4Track { track_id: id, timescale: 1000, codec: Mp4Codec::default(), width: 64, height: 64, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![samples.len() as u32], samples }
     }
 
@@ -553,8 +553,8 @@ mod tests {
         b.tracks.remove(1);
         b.tracks.push(track(3, vec![sample(5)]));
         let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
-        assert!(d.await.ftyp.is_some(), "ftyp field must be covered by the sweep");
-        assert!(d.await.tracks.is_some(), "tracks field must be covered by the sweep");
+        assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
+        assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
         assert_eq!(d.apply(&a).unwrap(), b);
         assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&b, &a).apply(&b).unwrap(), a);
         assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
@@ -677,11 +677,11 @@ mod tests {
     async fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).await.expect("decode exact MP4 fixture");
+        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let empty = Mp4Diff::default();
         assert!(empty.is_empty());
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).await.unwrap()), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).unwrap()), bytes);
 
         let mut changed = base.clone();
         changed.tracks[0].width += 1;

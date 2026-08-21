@@ -75,6 +75,14 @@ pub fn inverse_merge_policy_config_mutation(snapshot: &MergePolicySetting, mutat
 }
 
 pub use super::change_merge_policy::mutation::{change_merge_policy, ChangeMergePolicy};
+
+/// 🧪️ Handcrafted mutation fixture for this facet's one kind (contract D1, ticket
+/// `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Declared HERE rather than in a crate's `📦️glue.rs`
+/// because this facet is still the deliberately unwired, self-contained file its module doc
+/// describes — the fixture travels with it and starts running the moment the facet is mounted.
+#[cfg(test)]
+#[path = "🧪️tests/tightens-the-authority-to-vigilant/🦀️component.rs"]
+mod tests_tightens_the_authority_to_vigilant;
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests

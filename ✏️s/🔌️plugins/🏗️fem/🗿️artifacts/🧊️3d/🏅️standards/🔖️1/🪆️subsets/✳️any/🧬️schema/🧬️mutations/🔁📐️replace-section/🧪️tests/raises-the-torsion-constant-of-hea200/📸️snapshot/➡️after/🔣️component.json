@@ -1,0 +1,33 @@
+{
+  "nodes": [],
+  "elements": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S235",
+      "e": 210000000000.0,
+      "g": 81000000000.0,
+      "nu": 0.25,
+      "rho": 8000.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "hea200",
+      "name": "HEA 200 with warping restraint",
+      "area": 0.00538,
+      "iy": 0.00003692,
+      "iz": 0.00001336,
+      "j": 0.0000625
+    }
+  ],
+  "solids": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

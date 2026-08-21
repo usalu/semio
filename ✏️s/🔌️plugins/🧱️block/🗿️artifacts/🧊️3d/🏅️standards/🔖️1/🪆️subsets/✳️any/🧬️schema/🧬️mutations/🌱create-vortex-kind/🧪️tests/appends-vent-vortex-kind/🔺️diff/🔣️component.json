@@ -1,0 +1,37 @@
+{
+  "artifact": null,
+  "schema": null,
+  "objectKind": null,
+  "representations": null,
+  "vortexKinds": {
+    "added": [
+      {
+        "id": "vent",
+        "name": "vent",
+        "label": "Vent",
+        "color": "hsl(124 52% 48%)",
+        "defaultCableKind": "cable.link"
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "vortices": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "activeRepresentationId": null,
+  "wantedTags": null,
+  "locale": null,
+  "windows": null,
+  "brushVortexKindId": null,
+  "brushRadius": null,
+  "brushFlip": null,
+  "brushPreview": null,
+  "camera": null,
+  "hoveredVortexFullId": null
+}

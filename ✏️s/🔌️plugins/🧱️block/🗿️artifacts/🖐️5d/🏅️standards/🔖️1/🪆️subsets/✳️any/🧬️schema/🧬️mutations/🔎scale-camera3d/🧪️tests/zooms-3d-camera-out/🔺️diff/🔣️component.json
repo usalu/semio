@@ -1,0 +1,30 @@
+{
+  "artifact": null,
+  "schema": null,
+  "partKind": null,
+  "part2d": null,
+  "part3d": null,
+  "representations": null,
+  "gripKinds": null,
+  "grips": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "camera3d": {
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "zoom": 0.5
+  },
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

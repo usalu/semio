@@ -1,0 +1,9 @@
+{
+  "UpdateFireInputs": {
+    "new_fire_thickness_mm": 32.0,
+    "new_fire_rating": "r90",
+    "new_fire_massivity": 175.0,
+    "new_fire_mu_0": 0.625,
+    "new_fire_design_temperature_c": 620.0
+  }
+}

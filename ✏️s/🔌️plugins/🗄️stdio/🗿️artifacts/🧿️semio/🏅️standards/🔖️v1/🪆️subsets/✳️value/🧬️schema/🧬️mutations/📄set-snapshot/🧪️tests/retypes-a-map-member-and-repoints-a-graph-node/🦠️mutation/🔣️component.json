@@ -1,0 +1,45 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.semio.value",
+    "root": {
+      "kind": "map",
+      "entries": [
+        {
+          "key": "title",
+          "value": {
+            "kind": "str",
+            "value": "Value Fixture"
+          }
+        },
+        {
+          "key": "count",
+          "value": {
+            "kind": "float",
+            "lexeme": "41.5"
+          }
+        },
+        {
+          "key": "alias",
+          "value": {
+            "kind": "ref",
+            "id": {
+              "value": "n-1"
+            }
+          }
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": {
+          "value": "n-1"
+        },
+        "value": {
+          "kind": "str",
+          "value": "final"
+        }
+      }
+    ]
+  }
+}

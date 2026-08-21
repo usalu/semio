@@ -1,0 +1,8 @@
+{
+  "mutation": "updateSynapseEndpoints",
+  "id": "synapse-1",
+  "from": "note-alpha",
+  "fromPort": "out",
+  "to": "note-beta",
+  "toPort": "in"
+}

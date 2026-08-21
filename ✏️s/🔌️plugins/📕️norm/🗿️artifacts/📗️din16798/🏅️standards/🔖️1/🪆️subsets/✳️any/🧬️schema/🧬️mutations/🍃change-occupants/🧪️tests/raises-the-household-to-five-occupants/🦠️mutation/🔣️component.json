@@ -1,0 +1,4 @@
+{
+  "mutation": "changeOccupants",
+  "newOccupants": 5
+}

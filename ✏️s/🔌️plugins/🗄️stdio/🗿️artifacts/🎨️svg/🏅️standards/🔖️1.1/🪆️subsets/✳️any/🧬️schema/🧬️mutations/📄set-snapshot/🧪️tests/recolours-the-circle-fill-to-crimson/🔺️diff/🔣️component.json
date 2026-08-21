@@ -1,0 +1,23 @@
+{
+  "root": {
+    "kind": "element",
+    "children": {
+      "modified": [
+        {
+          "index": 0,
+          "diff": {
+            "kind": "element",
+            "attributes": {
+              "modified": [
+                {
+                  "name": "fill",
+                  "value": "crimson"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

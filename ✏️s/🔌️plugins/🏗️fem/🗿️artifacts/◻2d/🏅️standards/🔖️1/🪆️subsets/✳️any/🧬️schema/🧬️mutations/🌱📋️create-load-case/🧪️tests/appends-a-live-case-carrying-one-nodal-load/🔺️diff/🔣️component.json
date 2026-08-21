@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": {
+    "added": [
+      {
+        "id": "live",
+        "name": "Live",
+        "loads": [
+          {
+            "kind": "nodal",
+            "id": "l1",
+            "nodeId": "n2",
+            "dof": "Ty",
+            "value": -12.5
+          }
+        ],
+        "selfWeight": false
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

@@ -479,20 +479,20 @@ fn validate_gif_images(base_len: usize, diff: &GifImagesDiff) -> MutationApplyRe
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF image removal is missing or duplicated").await.at(["images", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF image removal is missing or duplicated").at(["images", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF image modification is missing, duplicated, or removed").await.at(["images", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF image modification is missing, duplicated, or removed").at(["images", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF image addition index is invalid or duplicated").await.at(["images", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF image addition index is invalid or duplicated").at(["images", "added"]));
         }
     }
     Ok(())
@@ -900,11 +900,11 @@ fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 /// text-as-bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
-    write_bin_option(w, &d.left, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.top, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.width, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.height, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.interlace, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
+    write_bin_option(w, &d.left, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.top, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.width, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.height, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.interlace, |w, v| w.write_u8(if *v { 1 } else { 0 }));
     write_bin_tri_flag(w, &d.lct, write_bin_color_table);
     write_bin_option(w, &d.indices, |w, v| write_bin_blob(w, v));
 }
@@ -923,7 +923,7 @@ fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifImageDiff, dsl:
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_image_diff(w, &m.diff);
@@ -1017,15 +1017,15 @@ impl DiffCodec for GifDiff {
     /// `Option<T>` fields, 3-way flag for the tri-state `gct` field).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new().await;
-        write_bin_option(&mut w, &self.width, |w, v| { w.write_u32_le(*v); });
-        write_bin_option(&mut w, &self.height, |w, v| { w.write_u32_le(*v); });
+        write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
+        write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
             let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
             write_bin_color_table(&mut inner, v);
             write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
-        write_bin_option(&mut w, &self.background_color_index, |w, v| { w.write_u8(*v); });
-        write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| { w.write_u8(*v); });
+        write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
+        write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
         write_bin_option(&mut w, &self.images, |w, v| write_bin_blob(w, &enc_images_diff_bin(v)));
         Ok(w.into_bytes().await)
     }
@@ -1177,18 +1177,18 @@ mod tests {
 
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a).unwrap(), sweep_b);
-        assert!(ab.await.width.is_some());
-        assert!(ab.await.height.is_some());
-        assert!(ab.await.gct.is_some());
-        assert!(ab.await.background_color_index.is_some());
-        assert!(ab.await.pixel_aspect_ratio.is_some());
-        let images_ab = ab.await.images.as_ref().expect("images must differ");
+        assert!(ab.width.is_some());
+        assert!(ab.height.is_some());
+        assert!(ab.gct.is_some());
+        assert!(ab.background_color_index.is_some());
+        assert!(ab.pixel_aspect_ratio.is_some());
+        let images_ab = ab.images.as_ref().expect("images must differ");
         assert!(!images_ab.modified.is_empty(), "sweep must exercise a modified image");
         assert!(!images_ab.added.is_empty(), "sweep must exercise an added image (b is longer)");
 
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(ba.apply(&sweep_b).unwrap(), sweep_a);
-        let images_ba = ba.await.images.as_ref().expect("images must differ");
+        let images_ba = ba.images.as_ref().expect("images must differ");
         assert!(!images_ba.removed.is_empty(), "reverse direction must exercise a removed image (a is shorter)");
 
         assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
@@ -1201,7 +1201,7 @@ mod tests {
         let a = GifSnapshot { gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb::default(); 2] }), ..GifSnapshot::default() };
         let b = GifSnapshot { gct: None, ..GifSnapshot::default() };
         let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
-        assert_eq!(d.await.gct, Some(None));
+        assert_eq!(d.gct, Some(None));
         assert_eq!(d.apply(&a).unwrap(), b);
     }
 
@@ -1216,15 +1216,15 @@ mod tests {
         ib0.interlace = true;
         ib0.lct = None;
         let b = GifSnapshot { width: 20, height: 16, gct: None, images: vec![ib0, img(6, 3, 3), img(7, 3, 3)], ..GifSnapshot::default() };
-        let cases = vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b).await, <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a).await];
+        let cases = vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = GifDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = GifDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = GifDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = GifDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

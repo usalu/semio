@@ -1,0 +1,4 @@
+{
+  "mutation": "changePencilWidth",
+  "newWidth": 5.0
+}

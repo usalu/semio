@@ -1,0 +1,9 @@
+{
+  "mesh": 0,
+  "data": {
+    "state": "present",
+    "value": {
+      "KHR_materials_unlit": {}
+    }
+  }
+}

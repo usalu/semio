@@ -1,0 +1,29 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "nodes": [
+      {
+        "mesh": 0,
+        "name": "morph"
+      }
+    ],
+    "meshes": [
+      {
+        "primitives": [
+          {
+            "attributes": {},
+            "targets": [
+              {},
+              {}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

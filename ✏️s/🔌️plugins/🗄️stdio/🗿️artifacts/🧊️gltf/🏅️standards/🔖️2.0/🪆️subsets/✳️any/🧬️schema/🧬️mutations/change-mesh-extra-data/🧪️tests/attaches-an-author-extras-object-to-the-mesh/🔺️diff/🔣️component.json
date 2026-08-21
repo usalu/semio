@@ -1,0 +1,15 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "extras": {
+            "author": "semio",
+            "revision": 2
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "mutation": "replaceMachineCapabilities",
+  "id": "saw",
+  "newCapabilities": [
+    {
+      "id": "pocket",
+      "label": "Pocket",
+      "iconId": "square",
+      "recipe": {
+        "recipe": "pocketCut",
+        "diameter": "diameter",
+        "depth": "depth"
+      },
+      "parameters": [
+        {
+          "id": "diameter",
+          "label": "Diameter",
+          "value": 0.125
+        },
+        {
+          "id": "depth",
+          "label": "Depth",
+          "value": 0.25
+        }
+      ],
+      "rules": [
+        {
+          "kind": "min",
+          "quantity": "Width",
+          "parameter": "diameter",
+          "margin": 0.0625
+        }
+      ]
+    }
+  ]
+}

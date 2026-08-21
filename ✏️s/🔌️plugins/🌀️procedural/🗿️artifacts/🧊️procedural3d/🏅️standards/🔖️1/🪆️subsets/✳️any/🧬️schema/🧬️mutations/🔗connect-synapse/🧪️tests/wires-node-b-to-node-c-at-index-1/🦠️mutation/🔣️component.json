@@ -1,0 +1,12 @@
+{
+  "ConnectSynapse": {
+    "index": 1,
+    "synapse": {
+      "id": "wire-bc",
+      "from": "node-b",
+      "to": "node-c",
+      "fromPort": "solid",
+      "toPort": "base"
+    }
+  }
+}

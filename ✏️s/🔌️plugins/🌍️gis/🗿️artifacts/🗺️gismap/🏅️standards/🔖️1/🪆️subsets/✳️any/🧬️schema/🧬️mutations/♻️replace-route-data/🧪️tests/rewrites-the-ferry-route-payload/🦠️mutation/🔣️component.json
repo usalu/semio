@@ -1,0 +1,10 @@
+{
+  "ReplaceRouteData": {
+    "id": "route-ferry",
+    "newData": {
+      "kind": "ferry",
+      "lengthKm": 13.75,
+      "seasonal": true
+    }
+  }
+}

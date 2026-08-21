@@ -10,7 +10,7 @@ Pinned to `5904ebe289a4d149e659b23e1f728895ad8de4e8` (verified `HEAD ==` pin at 
 | 1 · read-only census | ✅ done | `📓️census/` (8 reports) + `📓️w1-coordinator-verification.md` |
 | 2 · contract freeze | ✅ done | `📓️w2-contract.md` — 11 frozen decisions |
 | 3 · foundation | ⚠️ partial | fixture-lint + fixture tree landed; codec generation **blocked** (see below) |
-| 4 · atomic mutations | ✅ **28/28 covered** | `fixtures lint` → `28 covered · 0 uncovered` |
+| 4 · mutation fixtures | ✅ **repo-wide** | `fixtures lint` → 1558 mutations across 115 trees |
 | 5 · compose algorithms | ⛔ blocked | needs Wave 3 |
 | 6 · asset translation | ✅ manifest done | `🗺️migration-manifest.json` — 68 entries, **0 unaccounted of 128 tracked files** |
 | 7 · consumer migration | ⛔ blocked | needs Wave 3 |
@@ -150,3 +150,86 @@ The 252 derived-encoding gaps are deliberate, not an oversight — see contract 
 3. Author the binary diff codec (D7.1) — prerequisite for `.patch.spr.semio`.
 4. Generate `tower.pack.semio` / `tower.json` for the Nakagin example (D7).
 5. Waves 5, 7, 8, 9, 10.
+
+---
+
+# Repo-wide mutation coverage
+
+Scope was widened by the dev from puzzle5d's 28 to **every mutation of every artifact of every
+plugin**: 1558 mutation leaves across 115 artifact mutation trees in 34 owners.
+
+## Instrument
+`fixtures lint` (in `✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📜️script.ts`, nx target
+`fixtures-lint`) now **discovers** every mutation tree in the repo rather than working from a list —
+a new artifact is in scope the moment it lands. It reads each tree's own mutation enum and keys
+coverage on **payload type**, so renamed variants and delegating enums are not reported as false gaps
+(contract D15).
+
+## Method — handcrafted, per the dev's ruling
+No generic harness, no macro, no loop over mutations. Every case was authored by reading that
+mutation's own `🔺️diff/🦀️component.rs` and transcribing exactly what it constructs. Work was split
+across a fleet of agents, one slice per plugin (or per artifact for the large ones), each owning its
+paths exclusively; norm and stdio artifacts self-wire their test mods into their own mutations-root
+`🦀️component.rs` so no two lanes ever contended for a shared `📦️glue.rs`.
+
+Each case carries five hand-authored files and seven assertions:
+`📸️snapshot/{⬅️before,➡️after}/🔣️component.json` · `🦠️mutation/🔣️component.json` ·
+**`🔺️diff/🔣️component.json`** · `🎯️outcome/🔣️component.json` · `🦀️component.rs`
+
+## Verification — independent of the lint
+An audit walking `git ls-files` directly, not the lint:
+```
+mutation leaves            : 1558
+leaves with no 🧪️tests     : 0
+test cases                 : 1558   (applied 1487 · rejected 71)
+incomplete cases           : 0
+byte-identical test bodies : 0 in 0 groups
+```
+Every applied case has its diff JSON; every rejected case has `🔺️diff/🚫️component.absent`; no case
+is missing any core file. Per-lane, agents also confirmed every `include_str!` target and every
+`#[path]` mount resolves, and that `rustfmt --edition 2021` parses every test file and every wiring
+file they touched.
+
+## ⛔ Still true: nothing has been executed
+`cargo` remains unusable — a peer session's de-async sweep still has
+`semio-framework-os-infinite` and `semio-s-plugin-stdio` broken. **No test in this ticket has been
+run, and none is claimed to pass.** All calls are written in the de-async target style (no `.await`),
+matching the committed example tests.
+
+## Defects the fixtures surfaced (recorded, not fixed)
+- `Option<Option<T>>` cannot round-trip JSON — found independently by 7 lanes (contract D16).
+- One orphan leaf: `🧰️framework/…/🎚️config/…/🛡️change-merge-policy` declares `ChangeMergePolicy`
+  that no enum variant wraps.
+- `🔌replace-node-handle` / `🔌replace-object-vortex` (puzzle) and puzzle5d's `🔌replace-part-grip`
+  are dead code — a `next == *item` guard sits before the write loop, so every call is a no-op.
+- Several committed `🔣️component.json` / `🟦️component.ts` schema mirrors are stale against their
+  Rust structs (norm, stdio `✳️image`, avi). Fixtures follow Rust.
+- `mutation.no-op` is a third message code the original census missed (contract D13).
+
+---
+
+# ✅ COMPLETE — every mutation in the repository has a handcrafted test
+
+```
+🧬️ 115 artifact mutation trees · 1558 mutations · 1558 covered · 0 uncovered
+✅️ fixture contract satisfied
+```
+
+1558 mutation leaves · 1558 test cases · 1487 applied · 71 rejected · 0 incomplete · 0 templated.
+
+⚠️ **1445 of those tests are wired into a module tree; 113 are not** — all `🗄️stdio/🧊️gltf`, whose
+leaves are pre-existing dead code outside the crate's module tree (and several of which do not
+compile: `GltfComponentType::F32` does not exist). Wiring them would break `cargo test` for all of
+`semio-s-plugin-stdio`. See `📓️w4-coordinator-audit.md` §7.
+
+Each case carries five hand-authored files —
+`📸️snapshot/{⬅️before,➡️after}/🔣️component.json`, `🦠️mutation/🔣️component.json`,
+`🔺️diff/🔣️component.json` (or `🚫️component.absent` when rejected), `🎯️outcome/🔣️component.json` —
+and a `🦀️component.rs` whose assertions name that mutation's own behavior.
+
+## What remains before this can be called green
+1. **Run them.** `cargo` is still broken by the peer's de-async sweep; nothing here has executed.
+2. `fixtures generate` (contract D12.1) — 12322 derived text/binary encodings.
+3. The binary diff codec (D7.1), a prerequisite for `.patch.spr.semio`.
+4. `Option<Option<T>>` schema fix (D16), which reverts the pinned-limitation tests to plain form.
+5. Waves 5, 7, 8, 9, 10 of the compose migration itself.

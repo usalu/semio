@@ -134,11 +134,11 @@ fn dwg_xrecord_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgXRecordValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_xrecord_value_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, group_code, payload_id, payload) = match self {
             Self::String { group_code, value } => (0, *group_code, 2, dsl::FieldValue::Text(value.clone())),
@@ -159,7 +159,7 @@ impl dsl::DslField for DwgXRecordValue {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err(format!("expected XRECORD value record, found {value:?}"));
         };
@@ -329,24 +329,24 @@ fn dwg_table_control_entry_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgTableControlEntry {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_table_control_entry_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         record.fields.insert(0, dsl::FieldValue::Bool(self.handle.is_some()));
         if let Some(handle) = self.handle {
-            record.fields.insert(1, <u64 as dsl::DslField>::to_value(&handle));
+            record.fields.insert(1, <u64 as dsl::DslField>::to_value(&handle).await);
         }
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected table-control entry record".into()) };
         match record.get(0) {
             Some(dsl::FieldValue::Bool(false)) => Ok(Self { handle: None }),
-            Some(dsl::FieldValue::Bool(true)) => Ok(Self { handle: Some(<u64 as dsl::DslField>::from_value(record.get(1).ok_or("table-control handle missing")?)?) }),
+            Some(dsl::FieldValue::Bool(true)) => Ok(Self { handle: Some(<u64 as dsl::DslField>::from_value(record.get(1).ok_or("table-control handle missing")?).await?) }),
             other => Err(format!("invalid table-control handle presence {other:?}")),
         }
     }
@@ -450,11 +450,11 @@ fn table_control_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgTableControlBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(table_control_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::Block(value) => (0, 3, <DwgBlockTableControl as dsl::DslField>::to_value(value)),
@@ -472,18 +472,18 @@ impl dsl::DslField for DwgTableControlBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected table-control body record".into()) };
         match record.get(1) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Block(<DwgBlockTableControl as dsl::DslField>::from_value(record.get(3).ok_or("block control missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Layer(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("layer control missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TextStyle(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("text-style control missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableControl as dsl::DslField>::from_value(record.get(4).ok_or("linetype control missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::View(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("view control missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Ucs(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("UCS control missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::Viewport(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("viewport control missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::RegisteredApplication(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("registered-application control missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableControl as dsl::DslField>::from_value(record.get(5).ok_or("dimension-style control missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Block(<DwgBlockTableControl as dsl::DslField>::from_value(record.get(3).ok_or("block control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Layer(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("layer control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TextStyle(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("text-style control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableControl as dsl::DslField>::from_value(record.get(4).ok_or("linetype control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::View(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("view control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Ucs(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("UCS control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::Viewport(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("viewport control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(7)) => Ok(Self::RegisteredApplication(<DwgTableControlEntries as dsl::DslField>::from_value(record.get(2).ok_or("registered-application control missing")?).await?)),
+            Some(dsl::FieldValue::Enum(8)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableControl as dsl::DslField>::from_value(record.get(5).ok_or("dimension-style control missing")?).await?)),
             other => Err(format!("unknown table-control kind {other:?}")),
         }
     }
@@ -563,27 +563,27 @@ fn dwg_complex_color_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgComplexColorValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_complex_color_value_spec)
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let kind = match self {
             Self::None => 0,
             Self::ByLayer => 1,
             Self::ByBlock => 2,
             Self::ByColor { red, green, blue } => {
-                record.fields.insert(1, <u8 as dsl::DslField>::to_value(red));
-                record.fields.insert(2, <u8 as dsl::DslField>::to_value(green));
-                record.fields.insert(3, <u8 as dsl::DslField>::to_value(blue));
+                record.fields.insert(1, <u8 as dsl::DslField>::to_value(red).await);
+                record.fields.insert(2, <u8 as dsl::DslField>::to_value(green).await);
+                record.fields.insert(3, <u8 as dsl::DslField>::to_value(blue).await);
                 3
             }
             Self::ByAci { index } => {
-                record.fields.insert(4, <u16 as dsl::DslField>::to_value(index));
+                record.fields.insert(4, <u16 as dsl::DslField>::to_value(index).await);
                 4
             }
             Self::ByPen { index } => {
-                record.fields.insert(4, <u16 as dsl::DslField>::to_value(&u16::from(*index)));
+                record.fields.insert(4, <u16 as dsl::DslField>::to_value(&u16::from(*index)).await);
                 5
             }
             Self::Foreground => 6,
@@ -593,7 +593,7 @@ impl dsl::DslField for DwgComplexColorValue {
         record.fields.insert(0, dsl::FieldValue::Enum(kind));
         dsl::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected complex-color value record".into()) };
         let no_extra = |allowed: &[u16]| record.fields.iter().all(|(field, value)| *field == 0 || allowed.contains(field) || matches!(value, dsl::FieldValue::Absent));
         match record.get(0) {
@@ -601,12 +601,12 @@ impl dsl::DslField for DwgComplexColorValue {
             Some(dsl::FieldValue::Enum(1)) if no_extra(&[]) => Ok(Self::ByLayer),
             Some(dsl::FieldValue::Enum(2)) if no_extra(&[]) => Ok(Self::ByBlock),
             Some(dsl::FieldValue::Enum(3)) if no_extra(&[1, 2, 3]) => Ok(Self::ByColor {
-                red: <u8 as dsl::DslField>::from_value(record.get(1).ok_or("red missing")?)?,
-                green: <u8 as dsl::DslField>::from_value(record.get(2).ok_or("green missing")?)?,
-                blue: <u8 as dsl::DslField>::from_value(record.get(3).ok_or("blue missing")?)?,
+                red: <u8 as dsl::DslField>::from_value(record.get(1).ok_or("red missing")?).await?,
+                green: <u8 as dsl::DslField>::from_value(record.get(2).ok_or("green missing")?).await?,
+                blue: <u8 as dsl::DslField>::from_value(record.get(3).ok_or("blue missing")?).await?,
             }),
-            Some(dsl::FieldValue::Enum(4)) if no_extra(&[4]) => Ok(Self::ByAci { index: <u16 as dsl::DslField>::from_value(record.get(4).ok_or("ACI index missing")?)? }),
-            Some(dsl::FieldValue::Enum(5)) if no_extra(&[4]) => Ok(Self::ByPen { index: u8::try_from(<u16 as dsl::DslField>::from_value(record.get(4).ok_or("pen index missing")?)?).map_err(|_| "pen index exceeds u8")? }),
+            Some(dsl::FieldValue::Enum(4)) if no_extra(&[4]) => Ok(Self::ByAci { index: <u16 as dsl::DslField>::from_value(record.get(4).ok_or("ACI index missing")?).await? }),
+            Some(dsl::FieldValue::Enum(5)) if no_extra(&[4]) => Ok(Self::ByPen { index: u8::try_from(<u16 as dsl::DslField>::from_value(record.get(4).ok_or("pen index missing")?).await?).map_err(|_| "pen index exceeds u8")? }),
             Some(dsl::FieldValue::Enum(6)) if no_extra(&[]) => Ok(Self::Foreground),
             Some(dsl::FieldValue::Enum(7)) if no_extra(&[]) => Ok(Self::LayerOff),
             Some(dsl::FieldValue::Enum(8)) if no_extra(&[]) => Ok(Self::LayerFrozen),
@@ -908,57 +908,57 @@ fn table_record_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgTableRecordBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(table_record_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::RegisteredApplication(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(0));
-                record.fields.insert(2, <DwgRegisteredApplicationTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(2, <DwgRegisteredApplicationTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::TextStyle(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(1));
-                record.fields.insert(3, <DwgTextStyleTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(3, <DwgTextStyleTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::Layer(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(2));
-                record.fields.insert(4, <DwgLayerTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(4, <DwgLayerTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::Linetype(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(3));
-                record.fields.insert(5, <DwgLinetypeTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(5, <DwgLinetypeTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::BlockHeader(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(4));
-                record.fields.insert(6, <DwgBlockHeaderTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(6, <DwgBlockHeaderTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::Viewport(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(5));
-                record.fields.insert(7, <DwgViewportTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(7, <DwgViewportTableRecord as dsl::DslField>::to_value(value).await);
             }
             Self::DimensionStyle(value) => {
                 record.fields.insert(1, dsl::FieldValue::Enum(6));
-                record.fields.insert(8, <DwgDimensionStyleTableRecord as dsl::DslField>::to_value(value));
+                record.fields.insert(8, <DwgDimensionStyleTableRecord as dsl::DslField>::to_value(value).await);
             }
         }
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err("expected table-record body record".into());
         };
         match record.get(1) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::RegisteredApplication(<DwgRegisteredApplicationTableRecord as dsl::DslField>::from_value(record.get(2).ok_or("registered-application record missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TextStyle(<DwgTextStyleTableRecord as dsl::DslField>::from_value(record.get(3).ok_or("text-style record missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::Layer(<DwgLayerTableRecord as dsl::DslField>::from_value(record.get(4).ok_or("layer record missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableRecord as dsl::DslField>::from_value(record.get(5).ok_or("linetype record missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockHeader(<DwgBlockHeaderTableRecord as dsl::DslField>::from_value(record.get(6).ok_or("block-header record missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Viewport(<DwgViewportTableRecord as dsl::DslField>::from_value(record.get(7).ok_or("viewport record missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableRecord as dsl::DslField>::from_value(record.get(8).ok_or("dimension-style record missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::RegisteredApplication(<DwgRegisteredApplicationTableRecord as dsl::DslField>::from_value(record.get(2).ok_or("registered-application record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TextStyle(<DwgTextStyleTableRecord as dsl::DslField>::from_value(record.get(3).ok_or("text-style record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::Layer(<DwgLayerTableRecord as dsl::DslField>::from_value(record.get(4).ok_or("layer record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::Linetype(<DwgLinetypeTableRecord as dsl::DslField>::from_value(record.get(5).ok_or("linetype record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockHeader(<DwgBlockHeaderTableRecord as dsl::DslField>::from_value(record.get(6).ok_or("block-header record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Viewport(<DwgViewportTableRecord as dsl::DslField>::from_value(record.get(7).ok_or("viewport record missing")?).await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionStyle(<DwgDimensionStyleTableRecord as dsl::DslField>::from_value(record.get(8).ok_or("dimension-style record missing")?).await?)),
             other => Err(format!("unknown table-record kind {other:?}")),
         }
     }
@@ -1378,25 +1378,25 @@ fn dwg_evaluation_variant_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgEvaluationVariant {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_evaluation_variant_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::Integer32(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(0));
-                record.fields.insert(1, <i32 as dsl::DslField>::to_value(value));
+                record.fields.insert(1, <i32 as dsl::DslField>::to_value(value).await);
             }
         }
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-variant record".into()) };
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation integer32 missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation integer32 missing")?).await?)),
             other => Err(format!("unknown evaluation-variant kind {other:?}")),
         }
     }
@@ -1455,11 +1455,11 @@ fn dwg_evaluation_expression_value_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgEvaluationExpressionValue {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_evaluation_expression_value_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::Empty => (0, None, None),
@@ -1478,7 +1478,7 @@ impl dsl::DslField for DwgEvaluationExpressionValue {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected evaluation-expression value record".into()) };
         let present = record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count();
         let expected = if matches!(record.get(0), Some(dsl::FieldValue::Enum(0))) { 1 } else { 2 };
@@ -1487,13 +1487,13 @@ impl dsl::DslField for DwgEvaluationExpressionValue {
         }
         match record.get(0) {
             Some(dsl::FieldValue::Enum(0)) => Ok(Self::Empty),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Double(<f64 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation-expression double missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::PointGroup10(<Vec<f64> as dsl::DslField>::from_value(record.get(2).ok_or("evaluation-expression group-10 point missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointGroup11(<Vec<f64> as dsl::DslField>::from_value(record.get(3).ok_or("evaluation-expression group-11 point missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::String(<String as dsl::DslField>::from_value(record.get(4).ok_or("evaluation-expression string missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(5).ok_or("evaluation-expression integer32 missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::ObjectReference(<u64 as dsl::DslField>::from_value(record.get(6).ok_or("evaluation-expression object reference missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Integer16(<i16 as dsl::DslField>::from_value(record.get(7).ok_or("evaluation-expression integer16 missing")?)?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Double(<f64 as dsl::DslField>::from_value(record.get(1).ok_or("evaluation-expression double missing")?).await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::PointGroup10(<Vec<f64> as dsl::DslField>::from_value(record.get(2).ok_or("evaluation-expression group-10 point missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointGroup11(<Vec<f64> as dsl::DslField>::from_value(record.get(3).ok_or("evaluation-expression group-11 point missing")?).await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::String(<String as dsl::DslField>::from_value(record.get(4).ok_or("evaluation-expression string missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Integer32(<i32 as dsl::DslField>::from_value(record.get(5).ok_or("evaluation-expression integer32 missing")?).await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::ObjectReference(<u64 as dsl::DslField>::from_value(record.get(6).ok_or("evaluation-expression object reference missing")?).await?)),
+            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Integer16(<i16 as dsl::DslField>::from_value(record.get(7).ok_or("evaluation-expression integer16 missing")?).await?)),
             other => Err(format!("unknown evaluation-expression value kind {other:?}")),
         }
     }
@@ -1595,18 +1595,18 @@ fn dwg_visual_style_property_spec<T: dsl::DslField>() -> dsl::RecordSpec {
 }
 
 impl<T: dsl::DslField> dsl::DslField for DwgVisualStyleProperty<T> {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_visual_style_property_spec::<T>)
     }
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
-        record.fields.insert(0, T::to_value(&self.value));
-        record.fields.insert(1, <DwgVisualStylePropertyOperation as dsl::DslField>::to_value(&self.operation));
+        record.fields.insert(0, T::to_value(&self.value).await);
+        record.fields.insert(1, <DwgVisualStylePropertyOperation as dsl::DslField>::to_value(&self.operation).await);
         dsl::FieldValue::Record(record)
     }
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected visual-style property record".into()) };
-        Ok(Self { value: T::from_value(record.get(0).ok_or("visual-style property value missing")?)?, operation: <DwgVisualStylePropertyOperation as dsl::DslField>::from_value(record.get(1).ok_or("visual-style property operation missing")?)? })
+        Ok(Self { value: T::from_value(record.get(0).ok_or("visual-style property value missing")?).await?, operation: <DwgVisualStylePropertyOperation as dsl::DslField>::from_value(record.get(1).ok_or("visual-style property operation missing")?).await? })
     }
 }
 
@@ -2659,11 +2659,11 @@ fn dwg_constraint_node_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgConstraintNode {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_constraint_node_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, field, value) = match self {
             Self::ConstrainedImplicitPoint(value) => (0, 1, value.to_value()),
@@ -2686,27 +2686,27 @@ impl dsl::DslField for DwgConstraintNode {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected constraint-node record".into()) };
         if record.fields.values().filter(|value| !matches!(value, dsl::FieldValue::Absent)).count() != 2 {
             return Err("constraint node must contain exactly its tagged body".into());
         }
         let geometric = || DwgGeometricConstraint::from_value(record.get(2).ok_or("geometric constraint missing")?);
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint::from_value(record.get(1).ok_or("implicit point missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::PointCurveConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::ConstrainedBoundedLine(DwgConstrainedBoundedLine::from_value(record.get(3).ok_or("bounded line missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointCoincidenceConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::DistanceConstraint(DwgDistanceConstraint::from_value(record.get(4).ok_or("distance constraint missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::PerpendicularConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::HorizontalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("horizontal constraint missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::ParallelConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::MidPointConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(9)) => Ok(Self::EqualLengthConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(10)) => Ok(Self::ColinearConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(11)) => Ok(Self::ConstrainedDatumLine(DwgConstrainedDatumLine::from_value(record.get(6).ok_or("datum line missing")?)?)),
-            Some(dsl::FieldValue::Enum(12)) => Ok(Self::FixedConstraint(geometric()?)),
-            Some(dsl::FieldValue::Enum(13)) => Ok(Self::VerticalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("vertical constraint missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::ConstrainedImplicitPoint(DwgConstrainedImplicitPoint::from_value(record.get(1).ok_or("implicit point missing")?).await?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::PointCurveConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::ConstrainedBoundedLine(DwgConstrainedBoundedLine::from_value(record.get(3).ok_or("bounded line missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::PointCoincidenceConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::DistanceConstraint(DwgDistanceConstraint::from_value(record.get(4).ok_or("distance constraint missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::PerpendicularConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::HorizontalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("horizontal constraint missing")?).await?)),
+            Some(dsl::FieldValue::Enum(7)) => Ok(Self::ParallelConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(8)) => Ok(Self::MidPointConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(9)) => Ok(Self::EqualLengthConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(10)) => Ok(Self::ColinearConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(11)) => Ok(Self::ConstrainedDatumLine(DwgConstrainedDatumLine::from_value(record.get(6).ok_or("datum line missing")?).await?)),
+            Some(dsl::FieldValue::Enum(12)) => Ok(Self::FixedConstraint(geometric().await?)),
+            Some(dsl::FieldValue::Enum(13)) => Ok(Self::VerticalConstraint(DwgAxisConstraint::from_value(record.get(5).ok_or("vertical constraint missing")?).await?)),
             other => Err(format!("unknown constraint-node kind {other:?}")),
         }
     }
@@ -2757,65 +2757,65 @@ fn dwg_entity_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgEntityBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_entity_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         match self {
             Self::Line(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(0));
-                record.fields.insert(1, <DwgLineEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(1, <DwgLineEntity as dsl::DslField>::to_value(value).await);
             }
             Self::Arc(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(1));
-                record.fields.insert(2, <DwgArcEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(2, <DwgArcEntity as dsl::DslField>::to_value(value).await);
             }
             Self::LwPolyline(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(2));
-                record.fields.insert(3, <DwgLwPolylineEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(3, <DwgLwPolylineEntity as dsl::DslField>::to_value(value).await);
             }
             Self::BlockBegin(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(3));
-                record.fields.insert(4, <DwgBlockBeginEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(4, <DwgBlockBeginEntity as dsl::DslField>::to_value(value).await);
             }
             Self::BlockEnd(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(4));
-                record.fields.insert(5, <DwgBlockEndEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(5, <DwgBlockEndEntity as dsl::DslField>::to_value(value).await);
             }
             Self::Insert(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(5));
-                record.fields.insert(6, <DwgInsertEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(6, <DwgInsertEntity as dsl::DslField>::to_value(value).await);
             }
             Self::DimensionLinear(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(6));
-                record.fields.insert(7, <DwgLinearDimensionEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(7, <DwgLinearDimensionEntity as dsl::DslField>::to_value(value).await);
             }
             Self::Viewport(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(7));
-                record.fields.insert(8, <DwgViewportEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(8, <DwgViewportEntity as dsl::DslField>::to_value(value).await);
             }
             Self::Geometry(value) => {
                 record.fields.insert(0, dsl::FieldValue::Enum(8));
-                record.fields.insert(9, <DwgGeometryEntity as dsl::DslField>::to_value(value));
+                record.fields.insert(9, <DwgGeometryEntity as dsl::DslField>::to_value(value).await);
             }
         }
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else { return Err("expected entity-body record".into()) };
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Line(<DwgLineEntity as dsl::DslField>::from_value(record.get(1).ok_or("LINE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Arc(<DwgArcEntity as dsl::DslField>::from_value(record.get(2).ok_or("ARC body missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::LwPolyline(<DwgLwPolylineEntity as dsl::DslField>::from_value(record.get(3).ok_or("LWPOLYLINE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::BlockBegin(<DwgBlockBeginEntity as dsl::DslField>::from_value(record.get(4).ok_or("BLOCK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockEnd(<DwgBlockEndEntity as dsl::DslField>::from_value(record.get(5).ok_or("ENDBLK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Insert(<DwgInsertEntity as dsl::DslField>::from_value(record.get(6).ok_or("INSERT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionLinear(<DwgLinearDimensionEntity as dsl::DslField>::from_value(record.get(7).ok_or("DIMENSION_LINEAR body missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Viewport(<DwgViewportEntity as dsl::DslField>::from_value(record.get(8).ok_or("VIEWPORT body missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::Geometry(<DwgGeometryEntity as dsl::DslField>::from_value(record.get(9).ok_or("GEOMETRY body missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Line(<DwgLineEntity as dsl::DslField>::from_value(record.get(1).ok_or("LINE body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::Arc(<DwgArcEntity as dsl::DslField>::from_value(record.get(2).ok_or("ARC body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::LwPolyline(<DwgLwPolylineEntity as dsl::DslField>::from_value(record.get(3).ok_or("LWPOLYLINE body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::BlockBegin(<DwgBlockBeginEntity as dsl::DslField>::from_value(record.get(4).ok_or("BLOCK body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::BlockEnd(<DwgBlockEndEntity as dsl::DslField>::from_value(record.get(5).ok_or("ENDBLK body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::Insert(<DwgInsertEntity as dsl::DslField>::from_value(record.get(6).ok_or("INSERT body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionLinear(<DwgLinearDimensionEntity as dsl::DslField>::from_value(record.get(7).ok_or("DIMENSION_LINEAR body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(7)) => Ok(Self::Viewport(<DwgViewportEntity as dsl::DslField>::from_value(record.get(8).ok_or("VIEWPORT body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(8)) => Ok(Self::Geometry(<DwgGeometryEntity as dsl::DslField>::from_value(record.get(9).ok_or("GEOMETRY body missing")?).await?)),
             other => Err(format!("unknown entity-body kind {other:?}")),
         }
     }
@@ -2972,11 +2972,11 @@ fn dwg_logical_object_body_spec() -> dsl::RecordSpec {
 }
 
 impl dsl::DslField for DwgLogicalObjectBody {
-    fn shape() -> dsl::Shape {
+    async fn shape() -> dsl::Shape {
         dsl::Shape::Record(dwg_logical_object_body_spec)
     }
 
-    fn to_value(&self) -> dsl::FieldValue {
+    async fn to_value(&self) -> dsl::FieldValue {
         let mut record = dsl::RecordValue::default();
         let (kind, payload_id, payload) = match self {
             Self::Dictionary(value) => (0, 1, <DwgDictionaryBody as dsl::DslField>::to_value(value)),
@@ -3028,7 +3028,7 @@ impl dsl::DslField for DwgLogicalObjectBody {
         dsl::FieldValue::Record(record)
     }
 
-    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Record(record) = value else {
             return Err(format!("expected DWG object-body record, found {value:?}"));
         };
@@ -3036,49 +3036,49 @@ impl dsl::DslField for DwgLogicalObjectBody {
             return Err("DWG object body must contain exactly one tagged payload".into());
         }
         match record.get(0) {
-            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Dictionary(<DwgDictionaryBody as dsl::DslField>::from_value(record.get(1).ok_or("dictionary body missing")?)?)),
-            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TableControl(<DwgTableControlBody as dsl::DslField>::from_value(record.get(2).ok_or("table-control body missing")?)?)),
-            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TableRecord(<DwgTableRecordBody as dsl::DslField>::from_value(record.get(3).ok_or("table-record body missing")?)?)),
-            Some(dsl::FieldValue::Enum(3)) => Ok(Self::XRecord(<DwgXRecordBody as dsl::DslField>::from_value(record.get(4).ok_or("XRECORD body missing")?)?)),
-            Some(dsl::FieldValue::Enum(4)) => Ok(Self::Entity(<DwgEntityBody as dsl::DslField>::from_value(record.get(5).ok_or("entity body missing")?)?)),
-            Some(dsl::FieldValue::Enum(5)) => Ok(Self::AssociativeDependency(<DwgAssociativeDependency as dsl::DslField>::from_value(record.get(6).ok_or("associative-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(6)) => Ok(Self::AssociativeValueDependency(<DwgAssociativeValueDependency as dsl::DslField>::from_value(record.get(7).ok_or("associative-value-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(7)) => Ok(Self::AssociativeGeometryDependency(<DwgAssociativeGeometryDependency as dsl::DslField>::from_value(record.get(8).ok_or("associative-geometry-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(8)) => Ok(Self::BlockGripLocationComponent(<DwgBlockGripLocationComponent as dsl::DslField>::from_value(record.get(9).ok_or("block-grip-location-component body missing")?)?)),
-            Some(dsl::FieldValue::Enum(9)) => Ok(Self::DynamicBlockProxyNode(<DwgDynamicBlockProxyNode as dsl::DslField>::from_value(record.get(10).ok_or("dynamic-block-proxy-node body missing")?)?)),
-            Some(dsl::FieldValue::Enum(10)) => Ok(Self::AssociativeVariable(<DwgAssociativeVariable as dsl::DslField>::from_value(record.get(11).ok_or("associative-variable body missing")?)?)),
-            Some(dsl::FieldValue::Enum(11)) => Ok(Self::AssociativeDimensionDependencyBody(<DwgAssociativeDimensionDependencyBody as dsl::DslField>::from_value(record.get(12).ok_or("associative-dimension-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(12)) => Ok(Self::VisualStyle(<DwgVisualStyle as dsl::DslField>::from_value(record.get(13).ok_or("visual-style body missing")?)?)),
-            Some(dsl::FieldValue::Enum(13)) => Ok(Self::BlockParameterDependencyBody(<DwgBlockParameterDependencyBody as dsl::DslField>::from_value(record.get(14).ok_or("block-parameter-dependency body missing")?)?)),
-            Some(dsl::FieldValue::Enum(14)) => Ok(Self::BlockRepresentationData(<DwgBlockRepresentationData as dsl::DslField>::from_value(record.get(15).ok_or("block-representation data missing")?)?)),
-            Some(dsl::FieldValue::Enum(15)) => Ok(Self::DynamicBlockPurgePreventer(<DwgDynamicBlockPurgePreventer as dsl::DslField>::from_value(record.get(16).ok_or("dynamic-block purge-preventer body missing")?)?)),
-            Some(dsl::FieldValue::Enum(16)) => Ok(Self::EvaluationGraph(<DwgEvaluationGraph as dsl::DslField>::from_value(record.get(17).ok_or("evaluation-graph body missing")?)?)),
-            Some(dsl::FieldValue::Enum(17)) => Ok(Self::BlockFlipParameter(<DwgBlockFlipParameter as dsl::DslField>::from_value(record.get(18).ok_or("block-flip-parameter body missing")?)?)),
-            Some(dsl::FieldValue::Enum(18)) => Ok(Self::BlockVisibilityParameter(<DwgBlockVisibilityParameter as dsl::DslField>::from_value(record.get(19).ok_or("block-visibility-parameter body missing")?)?)),
-            Some(dsl::FieldValue::Enum(19)) => Ok(Self::Placeholder(<DwgPlaceholder as dsl::DslField>::from_value(record.get(20).ok_or("placeholder body missing")?)?)),
-            Some(dsl::FieldValue::Enum(20)) => Ok(Self::DictionaryVariable(<DwgDictionaryVariable as dsl::DslField>::from_value(record.get(21).ok_or("dictionary-variable body missing")?)?)),
-            Some(dsl::FieldValue::Enum(21)) => Ok(Self::AnnotationScale(<DwgAnnotationScale as dsl::DslField>::from_value(record.get(22).ok_or("annotation-scale body missing")?)?)),
-            Some(dsl::FieldValue::Enum(22)) => Ok(Self::SortEntitiesTable(<DwgSortEntitiesTable as dsl::DslField>::from_value(record.get(23).ok_or("sort-entities-table body missing")?)?)),
-            Some(dsl::FieldValue::Enum(23)) => Ok(Self::TableStyle(<DwgTableStyle as dsl::DslField>::from_value(record.get(24).ok_or("table-style body missing")?)?)),
-            Some(dsl::FieldValue::Enum(24)) => Ok(Self::MlineStyle(<DwgMlineStyle as dsl::DslField>::from_value(record.get(25).ok_or("MLINESTYLE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(25)) => Ok(Self::MLeaderStyle(<DwgMLeaderStyle as dsl::DslField>::from_value(record.get(26).ok_or("MLEADERSTYLE body missing")?)?)),
-            Some(dsl::FieldValue::Enum(26)) => Ok(Self::Material(<DwgMaterial as dsl::DslField>::from_value(record.get(27).ok_or("MATERIAL body missing")?)?)),
-            Some(dsl::FieldValue::Enum(27)) => Ok(Self::BlockMoveAction(<DwgBlockMoveAction as dsl::DslField>::from_value(record.get(28).ok_or("BLOCKMOVEACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(28)) => Ok(Self::AssocNetwork(<DwgAssocNetwork as dsl::DslField>::from_value(record.get(29).ok_or("ACDBASSOCNETWORK body missing")?)?)),
-            Some(dsl::FieldValue::Enum(29)) => Ok(Self::Assoc2dConstraintGroup(<DwgAssoc2dConstraintGroup as dsl::DslField>::from_value(record.get(30).ok_or("ACDBASSOC2DCONSTRAINTGROUP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(30)) => Ok(Self::BlockLinearParameter(<DwgBlockLinearParameter as dsl::DslField>::from_value(record.get(31).ok_or("BLOCKLINEARPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(31)) => Ok(Self::BlockLinearGrip(<DwgBlockLinearGrip as dsl::DslField>::from_value(record.get(32).ok_or("BLOCKLINEARGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(32)) => Ok(Self::BlockFlipGrip(<DwgBlockFlipGrip as dsl::DslField>::from_value(record.get(33).ok_or("BLOCKFLIPGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(33)) => Ok(Self::BlockVisibilityGrip(<DwgBlockVisibilityGrip as dsl::DslField>::from_value(record.get(34).ok_or("BLOCKVISIBILITYGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(34)) => Ok(Self::BlockAlignmentParameter(<DwgBlockAlignmentParameter as dsl::DslField>::from_value(record.get(35).ok_or("BLOCKALIGNMENTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(35)) => Ok(Self::BlockAlignmentGrip(<DwgBlockAlignmentGrip as dsl::DslField>::from_value(record.get(36).ok_or("BLOCKALIGNMENTGRIP body missing")?)?)),
-            Some(dsl::FieldValue::Enum(36)) => Ok(Self::BlockStretchAction(<DwgBlockStretchAction as dsl::DslField>::from_value(record.get(37).ok_or("BLOCKSTRETCHACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(37)) => Ok(Self::BlockScaleAction(<DwgBlockScaleAction as dsl::DslField>::from_value(record.get(38).ok_or("BLOCKSCALEACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(38)) => Ok(Self::BlockFlipAction(<DwgBlockFlipAction as dsl::DslField>::from_value(record.get(39).ok_or("BLOCKFLIPACTION body missing")?)?)),
-            Some(dsl::FieldValue::Enum(39)) => Ok(Self::BlockBasePointParameter(<DwgBlockBasePointParameter as dsl::DslField>::from_value(record.get(40).ok_or("BLOCKBASEPOINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(40)) => Ok(Self::BlockVerticalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(41).ok_or("BLOCKVERTICALCONSTRAINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(41)) => Ok(Self::BlockHorizontalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(42).ok_or("BLOCKHORIZONTALCONSTRAINTPARAMETER body missing")?)?)),
-            Some(dsl::FieldValue::Enum(42)) => Ok(Self::Layout(<DwgLayout as dsl::DslField>::from_value(record.get(43).ok_or("LAYOUT body missing")?)?)),
+            Some(dsl::FieldValue::Enum(0)) => Ok(Self::Dictionary(<DwgDictionaryBody as dsl::DslField>::from_value(record.get(1).ok_or("dictionary body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(1)) => Ok(Self::TableControl(<DwgTableControlBody as dsl::DslField>::from_value(record.get(2).ok_or("table-control body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(2)) => Ok(Self::TableRecord(<DwgTableRecordBody as dsl::DslField>::from_value(record.get(3).ok_or("table-record body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(3)) => Ok(Self::XRecord(<DwgXRecordBody as dsl::DslField>::from_value(record.get(4).ok_or("XRECORD body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(4)) => Ok(Self::Entity(<DwgEntityBody as dsl::DslField>::from_value(record.get(5).ok_or("entity body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(5)) => Ok(Self::AssociativeDependency(<DwgAssociativeDependency as dsl::DslField>::from_value(record.get(6).ok_or("associative-dependency body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(6)) => Ok(Self::AssociativeValueDependency(<DwgAssociativeValueDependency as dsl::DslField>::from_value(record.get(7).ok_or("associative-value-dependency body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(7)) => Ok(Self::AssociativeGeometryDependency(<DwgAssociativeGeometryDependency as dsl::DslField>::from_value(record.get(8).ok_or("associative-geometry-dependency body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(8)) => Ok(Self::BlockGripLocationComponent(<DwgBlockGripLocationComponent as dsl::DslField>::from_value(record.get(9).ok_or("block-grip-location-component body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(9)) => Ok(Self::DynamicBlockProxyNode(<DwgDynamicBlockProxyNode as dsl::DslField>::from_value(record.get(10).ok_or("dynamic-block-proxy-node body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(10)) => Ok(Self::AssociativeVariable(<DwgAssociativeVariable as dsl::DslField>::from_value(record.get(11).ok_or("associative-variable body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(11)) => Ok(Self::AssociativeDimensionDependencyBody(<DwgAssociativeDimensionDependencyBody as dsl::DslField>::from_value(record.get(12).ok_or("associative-dimension-dependency body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(12)) => Ok(Self::VisualStyle(<DwgVisualStyle as dsl::DslField>::from_value(record.get(13).ok_or("visual-style body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(13)) => Ok(Self::BlockParameterDependencyBody(<DwgBlockParameterDependencyBody as dsl::DslField>::from_value(record.get(14).ok_or("block-parameter-dependency body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(14)) => Ok(Self::BlockRepresentationData(<DwgBlockRepresentationData as dsl::DslField>::from_value(record.get(15).ok_or("block-representation data missing")?).await?)),
+            Some(dsl::FieldValue::Enum(15)) => Ok(Self::DynamicBlockPurgePreventer(<DwgDynamicBlockPurgePreventer as dsl::DslField>::from_value(record.get(16).ok_or("dynamic-block purge-preventer body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(16)) => Ok(Self::EvaluationGraph(<DwgEvaluationGraph as dsl::DslField>::from_value(record.get(17).ok_or("evaluation-graph body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(17)) => Ok(Self::BlockFlipParameter(<DwgBlockFlipParameter as dsl::DslField>::from_value(record.get(18).ok_or("block-flip-parameter body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(18)) => Ok(Self::BlockVisibilityParameter(<DwgBlockVisibilityParameter as dsl::DslField>::from_value(record.get(19).ok_or("block-visibility-parameter body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(19)) => Ok(Self::Placeholder(<DwgPlaceholder as dsl::DslField>::from_value(record.get(20).ok_or("placeholder body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(20)) => Ok(Self::DictionaryVariable(<DwgDictionaryVariable as dsl::DslField>::from_value(record.get(21).ok_or("dictionary-variable body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(21)) => Ok(Self::AnnotationScale(<DwgAnnotationScale as dsl::DslField>::from_value(record.get(22).ok_or("annotation-scale body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(22)) => Ok(Self::SortEntitiesTable(<DwgSortEntitiesTable as dsl::DslField>::from_value(record.get(23).ok_or("sort-entities-table body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(23)) => Ok(Self::TableStyle(<DwgTableStyle as dsl::DslField>::from_value(record.get(24).ok_or("table-style body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(24)) => Ok(Self::MlineStyle(<DwgMlineStyle as dsl::DslField>::from_value(record.get(25).ok_or("MLINESTYLE body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(25)) => Ok(Self::MLeaderStyle(<DwgMLeaderStyle as dsl::DslField>::from_value(record.get(26).ok_or("MLEADERSTYLE body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(26)) => Ok(Self::Material(<DwgMaterial as dsl::DslField>::from_value(record.get(27).ok_or("MATERIAL body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(27)) => Ok(Self::BlockMoveAction(<DwgBlockMoveAction as dsl::DslField>::from_value(record.get(28).ok_or("BLOCKMOVEACTION body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(28)) => Ok(Self::AssocNetwork(<DwgAssocNetwork as dsl::DslField>::from_value(record.get(29).ok_or("ACDBASSOCNETWORK body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(29)) => Ok(Self::Assoc2dConstraintGroup(<DwgAssoc2dConstraintGroup as dsl::DslField>::from_value(record.get(30).ok_or("ACDBASSOC2DCONSTRAINTGROUP body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(30)) => Ok(Self::BlockLinearParameter(<DwgBlockLinearParameter as dsl::DslField>::from_value(record.get(31).ok_or("BLOCKLINEARPARAMETER body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(31)) => Ok(Self::BlockLinearGrip(<DwgBlockLinearGrip as dsl::DslField>::from_value(record.get(32).ok_or("BLOCKLINEARGRIP body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(32)) => Ok(Self::BlockFlipGrip(<DwgBlockFlipGrip as dsl::DslField>::from_value(record.get(33).ok_or("BLOCKFLIPGRIP body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(33)) => Ok(Self::BlockVisibilityGrip(<DwgBlockVisibilityGrip as dsl::DslField>::from_value(record.get(34).ok_or("BLOCKVISIBILITYGRIP body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(34)) => Ok(Self::BlockAlignmentParameter(<DwgBlockAlignmentParameter as dsl::DslField>::from_value(record.get(35).ok_or("BLOCKALIGNMENTPARAMETER body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(35)) => Ok(Self::BlockAlignmentGrip(<DwgBlockAlignmentGrip as dsl::DslField>::from_value(record.get(36).ok_or("BLOCKALIGNMENTGRIP body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(36)) => Ok(Self::BlockStretchAction(<DwgBlockStretchAction as dsl::DslField>::from_value(record.get(37).ok_or("BLOCKSTRETCHACTION body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(37)) => Ok(Self::BlockScaleAction(<DwgBlockScaleAction as dsl::DslField>::from_value(record.get(38).ok_or("BLOCKSCALEACTION body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(38)) => Ok(Self::BlockFlipAction(<DwgBlockFlipAction as dsl::DslField>::from_value(record.get(39).ok_or("BLOCKFLIPACTION body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(39)) => Ok(Self::BlockBasePointParameter(<DwgBlockBasePointParameter as dsl::DslField>::from_value(record.get(40).ok_or("BLOCKBASEPOINTPARAMETER body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(40)) => Ok(Self::BlockVerticalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(41).ok_or("BLOCKVERTICALCONSTRAINTPARAMETER body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(41)) => Ok(Self::BlockHorizontalConstraintParameter(<DwgBlockLinearConstraintParameter as dsl::DslField>::from_value(record.get(42).ok_or("BLOCKHORIZONTALCONSTRAINTPARAMETER body missing")?).await?)),
+            Some(dsl::FieldValue::Enum(42)) => Ok(Self::Layout(<DwgLayout as dsl::DslField>::from_value(record.get(43).ok_or("LAYOUT body missing")?).await?)),
             other => Err(format!("expected DWG object-body kind, found {other:?}")),
         }
     }
@@ -4136,8 +4136,8 @@ impl store::ArtifactDsl for DwgSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document }).await?;
+        Self::__dsl_from_record(&record).await
     }
     async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
@@ -4158,7 +4158,7 @@ impl store::ArtifactPack for DwgSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).await.map_err(store::text_error_to_pack_error)
     }
     async fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())

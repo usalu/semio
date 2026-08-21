@@ -1,0 +1,14 @@
+{
+  "mutation": "setFramePixels",
+  "index": 0,
+  "rgba8": [
+    0,
+    0,
+    0,
+    255,
+    0,
+    0,
+    0,
+    255
+  ]
+}

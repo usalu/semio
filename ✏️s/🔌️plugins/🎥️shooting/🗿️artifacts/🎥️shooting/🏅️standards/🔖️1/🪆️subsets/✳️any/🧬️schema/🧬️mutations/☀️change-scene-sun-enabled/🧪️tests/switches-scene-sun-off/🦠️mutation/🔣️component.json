@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneSunEnabled",
+  "new_enabled": false
+}

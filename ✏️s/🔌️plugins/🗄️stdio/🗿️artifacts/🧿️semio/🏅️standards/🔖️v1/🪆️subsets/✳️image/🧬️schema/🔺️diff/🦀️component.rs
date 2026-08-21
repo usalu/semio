@@ -581,8 +581,8 @@ fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec();
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
@@ -1073,24 +1073,24 @@ mod tests {
 
         let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
-        assert!(ab.await.width.is_some());
-        assert!(ab.await.height.is_some());
-        assert!(ab.await.colorspace.is_some());
-        assert!(ab.await.bit_depth.is_some());
-        assert_eq!(ab.await.icc, Some(None), "icc Some->None must be tri-state Some(None)");
-        let frames_ab = ab.await.frames.as_ref().expect("frames must differ");
+        assert!(ab.width.is_some());
+        assert!(ab.height.is_some());
+        assert!(ab.colorspace.is_some());
+        assert!(ab.bit_depth.is_some());
+        assert_eq!(ab.icc, Some(None), "icc Some->None must be tri-state Some(None)");
+        let frames_ab = ab.frames.as_ref().expect("frames must differ");
         assert!(!frames_ab.modified.is_empty(), "sweep must exercise a modified frame");
         assert!(!frames_ab.added.is_empty(), "sweep must exercise an added frame (b is longer)");
         assert!(frames_ab.modified[0].diff.delay_ms.is_some());
-        let metadata_ab = ab.await.metadata.as_ref().expect("metadata must differ");
+        let metadata_ab = ab.metadata.as_ref().expect("metadata must differ");
         assert!(!metadata_ab.modified.is_empty(), "metadata: modified not exercised");
         assert!(!metadata_ab.removed.is_empty(), "metadata: removed not exercised");
         assert!(!metadata_ab.added.is_empty(), "metadata: added not exercised");
 
         let ba = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
-        assert_eq!(ba.await.icc, Some(Some(vec![1, 2, 3])), "icc None->Some must be tri-state Some(Some(_))");
-        let frames_ba = ba.await.frames.as_ref().expect("frames must differ");
+        assert_eq!(ba.icc, Some(Some(vec![1, 2, 3])), "icc None->Some must be tri-state Some(Some(_))");
+        let frames_ba = ba.frames.as_ref().expect("frames must differ");
         assert!(!frames_ba.removed.is_empty(), "reverse direction must exercise a removed frame (a is shorter)");
 
         assert!(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
@@ -1106,12 +1106,12 @@ mod tests {
         // rather than an independent copy of the same base/other fixture pair.
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioImageDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioImageDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioImageDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioImageDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

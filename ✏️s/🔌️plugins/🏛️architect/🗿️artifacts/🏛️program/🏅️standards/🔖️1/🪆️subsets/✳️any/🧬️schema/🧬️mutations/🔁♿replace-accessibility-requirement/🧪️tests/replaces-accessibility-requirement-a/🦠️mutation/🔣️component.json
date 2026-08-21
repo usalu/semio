@@ -1,0 +1,41 @@
+{
+  "mutation": "replaceAccessibilityRequirement",
+  "accessibilityRequirement": {
+    "id": "accessibility-requirement-a",
+    "name": "Accessibility Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "standard": "Replaced Accessibility Requirement A",
+    "level": null,
+    "userProfileIds": [],
+    "elementIds": [],
+    "routeIds": [],
+    "clearWidthM": null,
+    "clearHeightM": null,
+    "turningCircleM": null,
+    "rampSlope": null,
+    "liftRequired": false,
+    "tactileGuidance": false,
+    "hearingLoop": false,
+    "visualContrast": false,
+    "signageRequirements": [],
+    "controlsHeight": null,
+    "emergencyEvacuation": [],
+    "serviceAnimalPolicy": null,
+    "companionSeating": false,
+    "verificationPlan": null,
+    "exceptions": [],
+    "wcagConformance": null,
+    "universalDesignPrinciples": []
+  }
+}

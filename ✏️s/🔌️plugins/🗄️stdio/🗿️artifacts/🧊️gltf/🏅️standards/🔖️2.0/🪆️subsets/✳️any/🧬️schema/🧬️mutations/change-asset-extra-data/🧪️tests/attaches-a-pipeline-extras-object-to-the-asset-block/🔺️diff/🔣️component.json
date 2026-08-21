@@ -1,0 +1,8 @@
+{
+  "asset": {
+    "extras": {
+      "pipeline": "semio",
+      "step": 3
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "s.stdio.gltf.mutation.create-accessor.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/accessors/0"
+  ],
+  "payload": {
+    "position": 0,
+    "componentType": 5125,
+    "count": 6,
+    "kind": "SCALAR"
+  },
+  "operation": {
+    "kind": "insert",
+    "position": 0,
+    "item": {
+      "componentType": 5125,
+      "count": 6,
+      "type": "SCALAR"
+    }
+  }
+}

@@ -19,7 +19,7 @@ pub fn diff(payload: &MoveNode, base: &SemioDrawingSnapshot) -> protocol::Mutati
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node at layer #{} new origin has a non-finite component.", payload.at.layer), [payload.at.layer.to_string()]);
     }
     if node_origin(base, &payload.at) == Some(payload.new_origin) {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} is already at that position.", payload.at.layer));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is already at that position.", payload.at.layer));
     }
     protocol::MutationOutcome::new(diff_move_node(base, &payload.at, payload.new_origin))
 }

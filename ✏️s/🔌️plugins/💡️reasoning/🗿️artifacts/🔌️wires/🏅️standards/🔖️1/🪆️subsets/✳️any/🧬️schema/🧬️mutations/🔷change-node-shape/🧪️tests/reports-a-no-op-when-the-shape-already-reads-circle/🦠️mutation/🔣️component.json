@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeShape",
+  "nodeId": "node-orbit",
+  "newShape": "circle"
+}

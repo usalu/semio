@@ -226,10 +226,10 @@ mod carrier_law {
     #[semio_framework_async_macros::async_test]
     async fn carrier_native_is_raw() {
         for bytes in [Vec::<u8>::new(), vec![0x00, 0x01, 0xFF], b"hello".to_vec(), (0u8..=255).collect::<Vec<u8>>()] {
-            let decoded = BinarySnapshot::decode_pack(&bytes).await.expect("decode");
+            let decoded = BinarySnapshot::decode_pack(&bytes).expect("decode");
             let encoded = decoded.encode_pack();
             assert_eq!(encoded, bytes, "carrier round trip must be byte-identical for {bytes:?}");
-            assert!(!encoded.await.starts_with(&store::semio_format::BINARY_MAGIC), "carrier payload must not be a pack container: {encoded:?}");
+            assert!(!encoded.starts_with(&store::semio_format::BINARY_MAGIC), "carrier payload must not be a pack container: {encoded:?}");
         }
         // 🌱 `parse_dsl`/`print_dsl` (the hex-text facet) is NOT law-bound — `CARRIER_BINARY`
         // only governs the `Binary` `IoPayload` variant of this dialect; the DSL hex form stays a

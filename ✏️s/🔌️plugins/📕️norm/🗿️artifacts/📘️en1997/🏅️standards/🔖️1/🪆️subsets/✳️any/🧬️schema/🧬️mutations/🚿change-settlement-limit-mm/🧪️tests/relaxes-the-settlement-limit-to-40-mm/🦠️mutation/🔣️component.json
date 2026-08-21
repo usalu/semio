@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSettlementLimitMm",
+  "newSettlementLimitMm": 40.0
+}

@@ -1,0 +1,98 @@
+{
+  "artifact": null,
+  "schema": null,
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "object-a",
+        "patch": {
+          "replacement": {
+            "id": "object-a",
+            "label": "Alpha Prime",
+            "objectKind": "object-kind-a",
+            "anchor": "fixed",
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": 1.0,
+            "meshUrl": "mesh://alpha",
+            "vortices": [
+              {
+                "id": "vortex-1",
+                "vortexKind": "vortex-kind-a",
+                "position": [
+                  1.0,
+                  0.0,
+                  0.0
+                ],
+                "hidden": false,
+                "locked": false
+              },
+              {
+                "id": "vortex-spare",
+                "vortexKind": "vortex-kind-a",
+                "position": [
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                "hidden": false,
+                "locked": false
+              }
+            ],
+            "hidden": false,
+            "locked": false
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "attractions": null,
+  "targetVolumes": null,
+  "references": null,
+  "selectedObjectIds": null,
+  "selectedVortexIds": null,
+  "selectedAttractionIds": null,
+  "selectedTargetVolumeIds": null,
+  "selectedReferenceIds": null,
+  "activeUtilityId": null,
+  "cameraPositionX": null,
+  "cameraPositionY": null,
+  "cameraPositionZ": null,
+  "cameraTargetX": null,
+  "cameraTargetY": null,
+  "cameraTargetZ": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "selectionModeDefault": null,
+  "engagementInput": null,
+  "gridVisible": null,
+  "gridSnapEnabled": null,
+  "gridSpacing": null,
+  "overlapBudget": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "lodAutomatic": null,
+  "lodDepthVariable": null,
+  "lodManual": null,
+  "proximityRadius": null,
+  "locale": null,
+  "runtimeExtrasJson": null,
+  "hoveredObjectId": null,
+  "hoveredVortexFullId": null,
+  "hoveredKindId": null,
+  "previewSeq": null
+}

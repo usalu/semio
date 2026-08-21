@@ -1,0 +1,14 @@
+{
+  "UpdateBoltInputs": {
+    "new_bolt_f_ed_kn": 200.0,
+    "new_bolt_n_bolts": 4,
+    "new_bolt_a_s_mm2": 353.0,
+    "new_bolt_e1_mm": 48.0,
+    "new_bolt_e2_mm": 48.0,
+    "new_bolt_d0_mm": 26.0,
+    "new_bolt_d_mm": 24.0,
+    "new_bolt_t_mm": 16.0,
+    "new_bolt_f_u_mpa": 540.0,
+    "new_bolt_f_ub_mpa": 1000.0
+  }
+}

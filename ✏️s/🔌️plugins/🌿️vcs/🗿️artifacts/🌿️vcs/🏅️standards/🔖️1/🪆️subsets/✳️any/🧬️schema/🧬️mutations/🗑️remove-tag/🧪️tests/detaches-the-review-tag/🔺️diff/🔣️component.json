@@ -1,0 +1,16 @@
+{
+  "artifact": null,
+  "schema": null,
+  "title": null,
+  "counter": null,
+  "notes": null,
+  "status": null,
+  "tags": {
+    "added": [],
+    "removed": [
+      "review"
+    ]
+  },
+  "selectedCheckpointIds": null,
+  "locale": null
+}

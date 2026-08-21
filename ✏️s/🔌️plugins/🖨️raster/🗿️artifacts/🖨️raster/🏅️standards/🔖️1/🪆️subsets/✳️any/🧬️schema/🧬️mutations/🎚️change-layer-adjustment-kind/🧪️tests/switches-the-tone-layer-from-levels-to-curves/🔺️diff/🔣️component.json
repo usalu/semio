@@ -1,0 +1,38 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "tone",
+        "patch": {
+          "name": null,
+          "visible": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformX": null,
+          "transformY": null,
+          "width": null,
+          "height": null,
+          "adjustmentKind": "curves"
+        }
+      }
+    ],
+    "moved": []
+  },
+  "assets": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "brushSize": null,
+  "brushOpacity": null,
+  "compositeViewport": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredId": null
+}

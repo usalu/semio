@@ -1,0 +1,11 @@
+{
+  "mutation": "replaceNodeKind",
+  "id": "node-a",
+  "newKind": {
+    "kind": "computation",
+    "inputs": [],
+    "outputs": [],
+    "variadicInputs": true,
+    "variadicOutputs": false
+  }
+}

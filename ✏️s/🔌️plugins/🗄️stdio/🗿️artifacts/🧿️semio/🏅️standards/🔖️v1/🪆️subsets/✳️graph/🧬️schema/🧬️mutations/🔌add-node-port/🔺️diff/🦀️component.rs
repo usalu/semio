@@ -13,7 +13,7 @@ pub fn diff(payload: &AddNodePort, base: &SemioGraphSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
     };
     if node.ports.iter().any(|p| p.name == payload.port.name) {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node \"{}\" already has a port \"{}\".", payload.node_id.value, payload.port.name));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has a port \"{}\".", payload.node_id.value, payload.port.name));
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");

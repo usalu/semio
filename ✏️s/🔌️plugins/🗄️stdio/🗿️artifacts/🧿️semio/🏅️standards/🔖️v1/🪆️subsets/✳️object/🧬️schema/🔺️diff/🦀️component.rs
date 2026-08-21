@@ -235,7 +235,7 @@ mod tests {
     async fn apply_replaces_touched_fields_only() {
         let base = demo_object_snapshot();
         let diff = SemioObjectDiff { brep: Some(None), ..Default::default() };
-        let next = diff.apply(&base).await.expect("apply must succeed for a well-formed fixture");
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert!(next.brep.is_none());
         assert_eq!(next.mesh, base.mesh, "untouched fields must be preserved");
     }
@@ -253,12 +253,12 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioObjectDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioObjectDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioObjectDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioObjectDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

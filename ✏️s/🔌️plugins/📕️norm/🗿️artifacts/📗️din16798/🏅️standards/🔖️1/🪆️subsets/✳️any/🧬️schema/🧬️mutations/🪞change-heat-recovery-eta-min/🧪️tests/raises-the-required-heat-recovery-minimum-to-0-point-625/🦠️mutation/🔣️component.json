@@ -1,0 +1,4 @@
+{
+  "mutation": "changeHeatRecoveryEtaMin",
+  "newHeatRecoveryEtaMin": 0.625
+}

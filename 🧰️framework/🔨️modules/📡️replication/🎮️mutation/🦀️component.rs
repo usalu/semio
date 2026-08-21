@@ -315,7 +315,7 @@ impl<D> MutationOutcome<D> {
     }
 
     /// 🔀️ Maps the diff, keeping every message unchanged.
-    pub fn map<D2>(self, f: impl FnOnce(D) -> D2) -> MutationOutcome<D2> {
+    pub async fn map<D2>(self, f: impl FnOnce(D) -> D2) -> MutationOutcome<D2> {
         MutationOutcome { diff: f(self.diff), messages: self.messages }
     }
 }

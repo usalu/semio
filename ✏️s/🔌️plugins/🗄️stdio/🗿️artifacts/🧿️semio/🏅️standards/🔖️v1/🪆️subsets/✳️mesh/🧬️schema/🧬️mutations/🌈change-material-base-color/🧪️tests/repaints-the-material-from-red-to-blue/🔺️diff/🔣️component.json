@@ -1,0 +1,17 @@
+{
+  "materials": {
+    "modified": [
+      {
+        "key": "mat-a",
+        "diff": {
+          "baseColor": {
+            "r": 0.0,
+            "g": 0.5,
+            "b": 1.0,
+            "a": 1.0
+          }
+        }
+      }
+    ]
+  }
+}

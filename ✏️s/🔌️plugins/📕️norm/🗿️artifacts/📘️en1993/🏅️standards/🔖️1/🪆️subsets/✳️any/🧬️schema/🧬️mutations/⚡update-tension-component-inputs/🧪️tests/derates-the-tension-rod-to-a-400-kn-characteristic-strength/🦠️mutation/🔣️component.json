@@ -1,0 +1,7 @@
+{
+  "UpdateTensionComponentInputs": {
+    "new_tension_component_f_uk_kn": 400.0,
+    "new_tension_component_f_k_kn": 280.0,
+    "new_tension_component_n_ed_kn": 190.0
+  }
+}

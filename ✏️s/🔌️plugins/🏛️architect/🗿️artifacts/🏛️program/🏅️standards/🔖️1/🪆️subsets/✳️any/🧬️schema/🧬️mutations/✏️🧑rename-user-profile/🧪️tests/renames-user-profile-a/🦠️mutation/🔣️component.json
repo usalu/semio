@@ -1,0 +1,5 @@
+{
+  "mutation": "renameUserProfile",
+  "id": "user-profile-a",
+  "newName": "Renamed User Profile A"
+}

@@ -1,0 +1,43 @@
+{
+  "nodes": [],
+  "elements": [],
+  "regions": [],
+  "materials": [],
+  "sections": [],
+  "supports": [],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [],
+      "selfWeight": true
+    },
+    {
+      "id": "live",
+      "name": "Live",
+      "loads": [],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [
+    {
+      "id": "uls",
+      "name": "ULS fundamental",
+      "terms": [
+        {
+          "caseId": "dead",
+          "factor": 1.25
+        },
+        {
+          "caseId": "live",
+          "factor": 1.5
+        }
+      ]
+    }
+  ],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

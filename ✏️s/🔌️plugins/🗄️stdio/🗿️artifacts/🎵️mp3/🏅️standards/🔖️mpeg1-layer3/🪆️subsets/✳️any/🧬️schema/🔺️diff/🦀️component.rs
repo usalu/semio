@@ -385,15 +385,15 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let ab = Mp3Diff::between(&a, &b);
-        assert!(matches!(ab.await.id3v2, Some(Some(_))));
-        assert!(ab.await.frames.is_some());
-        assert!(matches!(ab.await.id3v1, Some(Some(_))));
+        assert!(matches!(ab.id3v2, Some(Some(_))));
+        assert!(ab.frames.is_some());
+        assert!(matches!(ab.id3v1, Some(Some(_))));
         assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = Mp3Diff::between(&b, &a);
-        assert_eq!(ba.await.id3v2, Some(None));
-        assert!(ba.await.frames.is_some());
-        assert_eq!(ba.await.id3v1, Some(None));
+        assert_eq!(ba.id3v2, Some(None));
+        assert!(ba.frames.is_some());
+        assert_eq!(ba.id3v1, Some(None));
         assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(Mp3Diff::between(&a, &a).is_empty());
@@ -418,7 +418,7 @@ mod tests {
         let d2 = diff_set_id3v1(Some(Id3v1Tag { raw: vec![1, 2, 3] }));
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base).await.unwrap(), d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap());
+        assert_eq!(absorbed.apply(&base).unwrap(), d2.apply(&d1.apply(&base).unwrap()).unwrap());
 
         let d3 = diff_set_id3v2(Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![] }));
         let d4 = diff_set_id3v2(None);
@@ -437,7 +437,7 @@ mod tests {
         let mut right = da.clone();
         right.absorb(right_tail);
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base).await.unwrap(), dc.apply(&db.apply(&da.apply(&base).await.unwrap()).await.unwrap()).await.unwrap());
+        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
     }
     //#endregion absorb_law
 
@@ -457,15 +457,15 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        let cases = vec![Mp3Diff::default(), Mp3Diff::between(&a, &b).await, Mp3Diff::between(&b, &a).await, diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![])];
+        let cases = vec![Mp3Diff::default(), Mp3Diff::between(&a, &b), Mp3Diff::between(&b, &a), diff_set_id3v2(None), diff_set_id3v1(None), diff_set_frames(vec![])];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = Mp3Diff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = Mp3Diff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = Mp3Diff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = Mp3Diff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -1,0 +1,25 @@
+{
+  "schema": "imperative.document",
+  "flow": {
+    "childId": "imperative-flow-fixture-log-twice",
+    "target": {
+      "artifactId": "imperative-flow-fixture-log-twice",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  },
+  "text": {
+    "childId": "imperative-text-fixture-empty-seed",
+    "target": {
+      "artifactId": "imperative-text-fixture-empty-seed",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "text"
+      }
+    }
+  }
+}

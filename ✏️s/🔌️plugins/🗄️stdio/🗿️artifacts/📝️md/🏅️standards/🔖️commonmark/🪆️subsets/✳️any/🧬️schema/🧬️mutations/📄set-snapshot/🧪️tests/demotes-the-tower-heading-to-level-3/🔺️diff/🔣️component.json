@@ -1,0 +1,13 @@
+{
+  "blocks": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "kind": "heading",
+          "level": 3
+        }
+      }
+    ]
+  }
+}

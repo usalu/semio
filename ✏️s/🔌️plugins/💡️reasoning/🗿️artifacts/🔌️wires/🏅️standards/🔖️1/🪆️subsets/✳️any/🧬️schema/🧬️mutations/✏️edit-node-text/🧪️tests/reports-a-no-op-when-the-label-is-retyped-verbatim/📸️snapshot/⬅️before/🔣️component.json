@@ -1,0 +1,46 @@
+{
+  "wiresFixture": {
+    "schema": "reasoning.wires.fixture",
+    "identities": [],
+    "relationships": [],
+    "board": {
+      "schema": "reasoning.mindmap.fixture",
+      "camera": {
+        "x": 0.0,
+        "y": 0.0,
+        "zoom": 1.0
+      },
+      "nodes": [
+        {
+          "id": "node-thesis",
+          "nodeKind": "identity",
+          "shape": "circle",
+          "x": 0.0,
+          "y": 0.0,
+          "radius": 24.0,
+          "text": "Thesis",
+          "handles": []
+        }
+      ],
+      "edges": [],
+      "wires": []
+    }
+  },
+  "content": {
+    "childId": "wires-content-text-no-op-fixture",
+    "target": {
+      "artifactId": "wires-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      }
+    }
+  },
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "meta": null
+}

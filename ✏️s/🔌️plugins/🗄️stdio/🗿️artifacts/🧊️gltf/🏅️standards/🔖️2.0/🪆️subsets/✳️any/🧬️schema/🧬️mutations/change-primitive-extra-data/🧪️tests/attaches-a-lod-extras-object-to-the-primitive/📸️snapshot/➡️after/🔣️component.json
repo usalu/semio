@@ -1,0 +1,22 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "meshes": [
+      {
+        "primitives": [
+          {
+            "attributes": {},
+            "extras": {
+              "lodBias": 0.5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

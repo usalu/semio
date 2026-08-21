@@ -1,0 +1,108 @@
+//! 🧪️ `change-m-ed-knm` fixture — `raises-design-moment-to-9-5-knm` (EN 1999 aluminium).
+//!
+//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use crate::artifacts::en1999::{En1999Diff, En1999Mutation, En1999Snapshot};
+use protocol::{Mutation, MutationDiff};
+
+const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
+const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
+const MUTATION: &str = include_str!("🦠️mutation/🔣️component.json");
+const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
+const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
+
+fn before() -> En1999Snapshot {
+    serde_json::from_str(BEFORE).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: before snapshot decodes")
+}
+fn expected_after() -> En1999Snapshot {
+    serde_json::from_str(AFTER).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: after snapshot decodes")
+}
+fn mutation() -> En1999Mutation {
+    serde_json::from_str(MUTATION).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: mutation decodes")
+}
+
+/// ▶️ `change-m-ed-knm` carries `m_ed_knm` from 6.0 to 9.5 and lands on the committed `after`.
+#[semio_framework_async_macros::async_test]
+async fn applies_to_committed_after() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let produced = outcome.diff().apply(&base).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: mutation applies to its committed before-snapshot");
+    assert_eq!(produced.m_ed_knm, 9.5, "change-m-ed-knm/raises-design-moment-to-9-5-knm: `m_ed_knm` must read 9.5 after the mutation");
+    assert_eq!(produced.a_mm2, base.a_mm2, "change-m-ed-knm/raises-design-moment-to-9-5-knm: `a_mm2` is not addressed by this mutation and must survive untouched");
+    assert_eq!(produced, expected_after(), "change-m-ed-knm/raises-design-moment-to-9-5-knm: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ The inverse re-states the pre-edit `m_ed_knm` (6.0) and restores `before` exactly.
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_before() {
+    let base = before();
+    let forward = mutation();
+    let outcome = forward.diff(&base);
+    let mut snapshot = outcome.diff().apply(&base).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: forward applies");
+    for step in &forward.inverse(&base) {
+        let step_outcome = step.diff(&snapshot);
+        snapshot = step_outcome.diff().apply(&snapshot).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: inverse step applies");
+    }
+    assert_eq!(snapshot.m_ed_knm, base.m_ed_knm, "change-m-ed-knm/raises-design-moment-to-9-5-knm: inverse must put `m_ed_knm` back to 6.0");
+    assert_eq!(snapshot, base, "change-m-ed-knm/raises-design-moment-to-9-5-knm: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn committed_json_is_canonical() {
+    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: En1999Snapshot = serde_json::from_str(text).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: snapshot decodes");
+        let reencoded = serde_json::to_value(&decoded).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: snapshot reparses");
+        assert_eq!(reencoded, original, "change-m-ed-knm/raises-design-moment-to-9-5-knm: committed {side} JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: mutation reparses");
+    assert_eq!(reencoded, original, "change-m-ed-knm/raises-design-moment-to-9-5-knm: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared `applied` outcome holds — a clean 6.0→9.5 edit of `m_ed_knm` raises no diagnostic.
+#[semio_framework_async_macros::async_test]
+async fn declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-m-ed-knm/raises-design-moment-to-9-5-knm: this fixture declares an applied outcome");
+    let base = before();
+    let outcome = mutation().diff(&base);
+    assert!(outcome.messages().is_empty(), "change-m-ed-knm/raises-design-moment-to-9-5-knm: changing `m_ed_knm` away from 6.0 must not warn `mutation.no-op` nor fail `mutation.invariant`");
+    assert!(outcome.diff().apply(&base).is_ok(), "change-m-ed-knm/raises-design-moment-to-9-5-knm: declared applied but the diff was rejected");
+}
+
+/// 🔺️ The sparse delta is exactly the committed diff: `mEdKnm` set, every other field left null.
+#[semio_framework_async_macros::async_test]
+async fn produces_committed_diff() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    assert_eq!(outcome.diff().m_ed_knm, Some(9.5), "change-m-ed-knm/raises-design-moment-to-9-5-knm: the diff must carry `m_ed_knm` = 9.5");
+    assert!(outcome.diff().a_mm2.is_none(), "change-m-ed-knm/raises-design-moment-to-9-5-knm: the diff must leave `a_mm2` unset");
+    let produced = serde_json::to_value(outcome.diff()).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff decodes");
+    assert_eq!(produced, committed, "change-m-ed-knm/raises-design-moment-to-9-5-knm: produced diff differs from the committed 🔺️diff/🔣️component.json");
+}
+
+/// 🔣️ The committed diff is canonical and decodes to `En1999Diff`.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_is_canonical() {
+    let decoded: En1999Diff = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff decodes");
+    assert_eq!(decoded.m_ed_knm, Some(9.5), "change-m-ed-knm/raises-design-moment-to-9-5-knm: the committed diff must name `m_ed_knm` = 9.5");
+    let reencoded = serde_json::to_value(&decoded).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff reparses");
+    assert_eq!(reencoded, original, "change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff to `before` yields `after` — the 9.5 `m_ed_knm` edit is complete on its own.
+#[semio_framework_async_macros::async_test]
+async fn committed_diff_applies_to_after() {
+    let base = before();
+    let decoded: En1999Diff = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff decodes");
+    let produced = decoded.apply(&base).expect("change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff applies to the before-snapshot");
+    assert_eq!(produced.m_ed_knm, 9.5, "change-m-ed-knm/raises-design-moment-to-9-5-knm: the committed diff must set `m_ed_knm` to 9.5");
+    assert_eq!(produced, expected_after(), "change-m-ed-knm/raises-design-moment-to-9-5-knm: committed diff did not carry before to after");
+}

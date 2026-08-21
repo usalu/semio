@@ -1,0 +1,12 @@
+{
+  "EditPaintLayer": {
+    "objectId": "obj-hull",
+    "layerIndex": 0,
+    "runs": [
+      {
+        "offset": 4,
+        "bytes": "/wAA/w=="
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": {
+    "values": [
+      {
+        "id": "stream-a",
+        "name": "Front",
+        "kind": "video",
+        "cameraId": "cam-a",
+        "syncOffsetMs": 12.5,
+        "fpsHint": 30.0,
+        "frames": [
+          {
+            "index": 0,
+            "timestampMs": 0.0,
+            "assetId": "asset-a"
+          },
+          {
+            "index": 1,
+            "timestampMs": 40.0,
+            "assetId": "asset-a"
+          }
+        ],
+        "source": {
+          "name": "front.mp4",
+          "container": "mp4",
+          "codec": "avc",
+          "durationMs": 6400.0,
+          "frameCount": 160,
+          "width": 1920,
+          "height": 1080
+        }
+      }
+    ]
+  },
+  "assets": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "values": [
+      {
+        "id": "gcp-ridge",
+        "name": "Ridge",
+        "worldPosition": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "observations": []
+      },
+      {
+        "id": "gcp-corner",
+        "name": "Corner",
+        "worldPosition": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "observations": []
+      }
+    ]
+  },
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

@@ -1,0 +1,7 @@
+{
+  "mutation": "moveBlock",
+  "blockId": "b-notes",
+  "fromStepId": "s-intro",
+  "toStepId": "s-missing",
+  "index": 0
+}

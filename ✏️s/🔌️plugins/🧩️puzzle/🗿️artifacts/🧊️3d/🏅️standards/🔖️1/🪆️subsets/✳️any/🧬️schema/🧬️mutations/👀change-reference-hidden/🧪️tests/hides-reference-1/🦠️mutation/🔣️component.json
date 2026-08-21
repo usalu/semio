@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReferenceHidden",
+  "id": "reference-1",
+  "newHidden": true
+}

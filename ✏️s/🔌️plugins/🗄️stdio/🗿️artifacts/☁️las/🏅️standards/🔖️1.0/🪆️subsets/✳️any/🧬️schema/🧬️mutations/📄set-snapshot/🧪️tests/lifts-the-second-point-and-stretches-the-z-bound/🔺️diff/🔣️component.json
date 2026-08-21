@@ -1,0 +1,13 @@
+{
+  "maxZ": 2.5,
+  "points": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "z": 2.5
+        }
+      }
+    ]
+  }
+}

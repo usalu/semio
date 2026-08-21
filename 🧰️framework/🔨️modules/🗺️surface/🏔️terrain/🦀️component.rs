@@ -333,8 +333,8 @@ impl TerrainSessionCore {
     /// mutable state.
     pub async fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
         let camera: CameraRecord = serde_json::from_str(camera_json).unwrap_or(CameraRecord { position: None, target: None });
-        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat)
-            .into_iter().await.await
+        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat).await
+            .into_iter()
             .map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) })
             .collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())

@@ -1,0 +1,13 @@
+{
+  "mutation": "replaceBlock",
+  "stepId": "s-intro",
+  "block": {
+    "id": "b-size",
+    "label": "Team size",
+    "kind": "number",
+    "required": true,
+    "min": 1.0,
+    "max": 80.0,
+    "unit": "people"
+  }
+}

@@ -763,13 +763,13 @@ where
     let mut removed_set = std::collections::HashSet::new();
     for &index in removed {
         if index >= base_len || !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF collection removal is missing or duplicated").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     let mut modified_set = std::collections::HashSet::new();
     for index in modified {
         if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF collection modification is missing, duplicated, or removed").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
         }
     }
     let added: Vec<usize> = added.into_iter().collect();
@@ -777,7 +777,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     Ok(())
@@ -1313,7 +1313,7 @@ fn write_bin_frame(w: &mut dsl::ByteWriter, f: &GifFrame) {
     write_bin_blob(w, &f.indices);
     w.write_u16_le(f.delay_cs);
     write_bin_disposal(w, f.disposal);
-    write_bin_option(w, &f.transparent_index, |w, v| { w.write_u8(*v); });
+    write_bin_option(w, &f.transparent_index, |w, v| w.write_u8(*v));
     w.write_u8(if f.user_input { 1 } else { 0 });
     write_bin_option(w, &f.plain_text, write_bin_plain_text);
 }
@@ -1420,17 +1420,17 @@ fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 /// varint counts, real per-item recursive encoding), never text-as-bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_bin_frame_diff(w: &mut dsl::ByteWriter, d: &GifFrameDiff) {
-    write_bin_option(w, &d.left, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.top, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.width, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.height, |w, v| { w.write_u32_le(*v); });
-    write_bin_option(w, &d.interlace, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
+    write_bin_option(w, &d.left, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.top, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.width, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.height, |w, v| w.write_u32_le(*v));
+    write_bin_option(w, &d.interlace, |w, v| w.write_u8(if *v { 1 } else { 0 }));
     write_bin_tri_flag(w, &d.lct, write_bin_color_table);
     write_bin_option(w, &d.indices, |w, v| write_bin_blob(w, v));
-    write_bin_option(w, &d.delay_cs, |w, v| { w.write_u16_le(*v); });
+    write_bin_option(w, &d.delay_cs, |w, v| w.write_u16_le(*v));
     write_bin_option(w, &d.disposal, |w, v| write_bin_disposal(w, *v));
-    write_bin_tri_flag(w, &d.transparent_index, |w, v| { w.write_u8(*v); });
-    write_bin_option(w, &d.user_input, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
+    write_bin_tri_flag(w, &d.transparent_index, |w, v| w.write_u8(*v));
+    write_bin_option(w, &d.user_input, |w, v| w.write_u8(if *v { 1 } else { 0 }));
     write_bin_tri_flag(w, &d.plain_text, write_bin_plain_text);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1453,7 +1453,7 @@ fn read_bin_frame_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifFrameDiff, dsl:
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_frames_diff_bin(d: &GifFramesDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifFrameModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_frame_diff(w, &m.diff);
@@ -1483,7 +1483,7 @@ fn dec_frames_diff_bin(bytes: &[u8]) -> Result<GifFramesDiff, dsl::PackError> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_comments_diff_bin(d: &GifCommentsDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifCommentModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_str(w, &m.text);
@@ -1513,7 +1513,7 @@ fn dec_comments_diff_bin(bytes: &[u8]) -> Result<GifCommentsDiff, dsl::PackError
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_app_extensions_diff_bin(d: &GifAppExtensionsDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifAppExtensionModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_app_extension(w, &m.extension);
@@ -1622,16 +1622,16 @@ impl DiffCodec for GifDiff {
     /// `Option<T>` fields, 3-way flag for the tri-state `gct`/`loop_count` fields).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new().await;
-        write_bin_option(&mut w, &self.width, |w, v| { w.write_u32_le(*v); });
-        write_bin_option(&mut w, &self.height, |w, v| { w.write_u32_le(*v); });
+        write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
+        write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
             let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
             write_bin_color_table(&mut inner, v);
             write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
-        write_bin_option(&mut w, &self.background_color_index, |w, v| { w.write_u8(*v); });
-        write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| { w.write_u8(*v); });
-        write_bin_tri_flag(&mut w, &self.loop_count, |w, v| { w.write_u16_le(*v); });
+        write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
+        write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
+        write_bin_tri_flag(&mut w, &self.loop_count, |w, v| w.write_u16_le(*v));
         write_bin_option(&mut w, &self.frames, |w, v| write_bin_blob(w, &enc_frames_diff_bin(v)));
         write_bin_option(&mut w, &self.comments, |w, v| write_bin_blob(w, &enc_comments_diff_bin(v)));
         write_bin_option(&mut w, &self.app_extensions, |w, v| write_bin_blob(w, &enc_app_extensions_diff_bin(v)));
@@ -1815,13 +1815,13 @@ mod tests {
 
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a).unwrap(), sweep_b);
-        assert!(ab.await.width.is_some());
-        assert!(ab.await.height.is_some());
-        assert_eq!(ab.await.gct, Some(None), "gct going Some->None must be tri-state Some(None)");
-        assert!(ab.await.background_color_index.is_some());
-        assert!(ab.await.pixel_aspect_ratio.is_some());
-        assert_eq!(ab.await.loop_count, Some(Some(5)));
-        let frames_ab = ab.await.frames.as_ref().expect("frames must differ");
+        assert!(ab.width.is_some());
+        assert!(ab.height.is_some());
+        assert_eq!(ab.gct, Some(None), "gct going Some->None must be tri-state Some(None)");
+        assert!(ab.background_color_index.is_some());
+        assert!(ab.pixel_aspect_ratio.is_some());
+        assert_eq!(ab.loop_count, Some(Some(5)));
+        let frames_ab = ab.frames.as_ref().expect("frames must differ");
         assert!(!frames_ab.modified.is_empty(), "sweep must exercise a modified frame");
         assert!(!frames_ab.added.is_empty(), "sweep must exercise an added frame (b is longer)");
         let modified_diff = &frames_ab.modified[0].diff;
@@ -1829,18 +1829,18 @@ mod tests {
         assert!(modified_diff.interlace.is_some());
         assert_eq!(modified_diff.transparent_index, Some(None), "transparent_index Some->None must be tri-state Some(None)");
         assert!(modified_diff.plain_text.is_some(), "plain_text None->Some must be captured");
-        let comments_ab = ab.await.comments.as_ref().expect("comments must differ");
+        let comments_ab = ab.comments.as_ref().expect("comments must differ");
         assert!(!comments_ab.removed.is_empty(), "sweep must exercise a removed comment (b has none)");
-        let app_ext_ab = ab.await.app_extensions.as_ref().expect("app_extensions must differ");
+        let app_ext_ab = ab.app_extensions.as_ref().expect("app_extensions must differ");
         assert!(!app_ext_ab.removed.is_empty(), "sweep must exercise a removed app extension (b has none)");
 
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(ba.apply(&sweep_b).unwrap(), sweep_a);
-        let frames_ba = ba.await.frames.as_ref().expect("frames must differ");
+        let frames_ba = ba.frames.as_ref().expect("frames must differ");
         assert!(!frames_ba.removed.is_empty(), "reverse direction must exercise a removed frame (a is shorter)");
-        let comments_ba = ba.await.comments.as_ref().expect("comments must differ");
+        let comments_ba = ba.comments.as_ref().expect("comments must differ");
         assert!(!comments_ba.added.is_empty(), "reverse direction must exercise an added comment");
-        let app_ext_ba = ba.await.app_extensions.as_ref().expect("app_extensions must differ");
+        let app_ext_ba = ba.app_extensions.as_ref().expect("app_extensions must differ");
         assert!(!app_ext_ba.added.is_empty(), "reverse direction must exercise an added app extension");
 
         assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
@@ -1869,15 +1869,15 @@ mod tests {
         fb0.transparent_index = None;
         fb0.plain_text = Some(GifPlainText { left: 1, top: 1, width: 2, height: 2, cell_width: 4, cell_height: 4, fg_color_index: 0, bg_color_index: 1, text: "hi".into() });
         let b = GifSnapshot { width: 20, height: 16, gct: None, loop_count: Some(5), frames: vec![fb0, frame(6, 3, 3), frame(7, 3, 3)], comments: vec![], app_extensions: vec![], ..GifSnapshot::default() };
-        let cases = vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b).await, <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a).await];
+        let cases = vec![GifDiff::default(), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b), <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = GifDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = GifDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = GifDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = GifDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

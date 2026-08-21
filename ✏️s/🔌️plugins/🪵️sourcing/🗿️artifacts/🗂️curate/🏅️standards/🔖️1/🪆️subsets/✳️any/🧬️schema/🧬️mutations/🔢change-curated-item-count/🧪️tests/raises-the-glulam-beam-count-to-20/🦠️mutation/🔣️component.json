@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCuratedItemCount",
+  "objectId": "beam-glulam-240",
+  "newCount": 20
+}

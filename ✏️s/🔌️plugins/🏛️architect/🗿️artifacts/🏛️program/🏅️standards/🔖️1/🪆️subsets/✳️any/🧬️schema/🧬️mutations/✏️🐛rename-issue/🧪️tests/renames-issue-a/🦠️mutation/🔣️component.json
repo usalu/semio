@@ -1,0 +1,5 @@
+{
+  "mutation": "renameIssue",
+  "id": "issue-a",
+  "newName": "Renamed Issue A"
+}

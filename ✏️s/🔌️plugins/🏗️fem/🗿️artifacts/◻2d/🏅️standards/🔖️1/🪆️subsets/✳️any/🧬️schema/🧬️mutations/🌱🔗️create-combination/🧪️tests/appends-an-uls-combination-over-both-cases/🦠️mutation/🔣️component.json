@@ -1,0 +1,17 @@
+{
+  "mutation": "createCombination",
+  "combination": {
+    "id": "uls",
+    "name": "ULS fundamental",
+    "terms": [
+      {
+        "caseId": "dead",
+        "factor": 1.25
+      },
+      {
+        "caseId": "live",
+        "factor": 1.5
+      }
+    ]
+  }
+}

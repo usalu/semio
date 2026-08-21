@@ -1,0 +1,8 @@
+{
+  "DeleteNodes": {
+    "ids": [
+      "n-alpha",
+      "n-beta"
+    ]
+  }
+}

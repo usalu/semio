@@ -1,0 +1,34 @@
+{
+  "schema": "draw.document",
+  "id": "draw-fixture",
+  "title": "Fixture Base",
+  "layers": [
+    {
+      "kind": "shape",
+      "id": "shape-a",
+      "name": "Alpha",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 },
+      "attributes": { "fill": { "kind": "solid", "color": [0.2, 0.4, 0.8, 1.0] } },
+      "shapeKind": "rect",
+      "rect": { "x": 0.0, "y": 0.0, "width": 120.0, "height": 60.0 }
+    },
+    {
+      "kind": "shape",
+      "id": "shape-b",
+      "name": "Beta",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 },
+      "attributes": {},
+      "shapeKind": "circle",
+      "circle": { "cx": 40.0, "cy": 40.0, "r": 20.0 }
+    }
+  ],
+  "artboard": { "width": 640.0, "height": 480.0 }
+}

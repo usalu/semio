@@ -1,0 +1,7 @@
+{
+  "ConnectNodes": {
+    "id": "e-alpha-beta",
+    "source": "n-alpha",
+    "target": "n-beta"
+  }
+}

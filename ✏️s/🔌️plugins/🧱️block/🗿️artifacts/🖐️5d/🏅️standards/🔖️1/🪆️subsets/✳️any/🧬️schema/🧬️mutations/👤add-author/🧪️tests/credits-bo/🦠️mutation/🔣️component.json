@@ -1,0 +1,7 @@
+{
+  "mutation": "addAuthor",
+  "author": {
+    "id": "author-bo",
+    "name": "Bo"
+  }
+}

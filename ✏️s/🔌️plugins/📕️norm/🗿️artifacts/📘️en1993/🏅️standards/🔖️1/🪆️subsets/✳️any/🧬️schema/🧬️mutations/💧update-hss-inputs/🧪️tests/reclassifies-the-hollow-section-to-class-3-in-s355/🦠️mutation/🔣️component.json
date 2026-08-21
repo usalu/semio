@@ -1,0 +1,8 @@
+{
+  "UpdateHssInputs": {
+    "new_hss_w_el_mm3": 320000.0,
+    "new_hss_f_y_mpa": 355.0,
+    "new_hss_section_class": 3,
+    "new_hss_m_ed_knm": 75.0
+  }
+}

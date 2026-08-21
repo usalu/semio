@@ -307,6 +307,548 @@ pub enum ProgramMutation {
 }
 //#endregion 🔖️ProgramMutation
 
+//#region 🧫️FixtureTests
+/// 🧫️ Handcrafted per-mutation fixture cases (contract D1, ticket
+/// `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`) — one `🧪️tests/<case>/🦀️component.rs` per mutation
+/// leaf, mounted here rather than in `📦️glue.rs` so this tree owns its own test wiring.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🔗🧲connect-adjacency/🧪️tests/connects-reception-to-waiting/🦀️component.rs"]
+    mod tests_connect_adjacency;
+    #[path = "🔗🧵connect-trace/🧪️tests/connects-requirement-a-to-decision-a/🦀️component.rs"]
+    mod tests_connect_trace;
+    #[path = "🌱🔑create-access-rule/🧪️tests/creates-access-rule-a/🦀️component.rs"]
+    mod tests_create_access_rule;
+    #[path = "🌱♿create-accessibility-requirement/🧪️tests/creates-accessibility-requirement-a/🦀️component.rs"]
+    mod tests_create_accessibility_requirement;
+    #[path = "🌱🏃create-activity/🧪️tests/creates-activity-a/🦀️component.rs"]
+    mod tests_create_activity;
+    #[path = "🌱🔬create-analysis-record/🧪️tests/creates-analysis-record-a/🦀️component.rs"]
+    mod tests_create_analysis_record;
+    #[path = "🌱👍create-approval-record/🧪️tests/creates-approval-record-a/🦀️component.rs"]
+    mod tests_create_approval_record;
+    #[path = "🌱💭create-assumption/🧪️tests/creates-assumption-a/🦀️component.rs"]
+    mod tests_create_assumption;
+    #[path = "🌱📒create-audit-event/🧪️tests/creates-audit-event-a/🦀️component.rs"]
+    mod tests_create_audit_event;
+    #[path = "🌱🏁create-benchmark-record/🧪️tests/creates-benchmark-record-a/🦀️component.rs"]
+    mod tests_create_benchmark_record;
+    #[path = "🌱📝create-change-record/🧪️tests/creates-change-record-a/🦀️component.rs"]
+    mod tests_create_change_record;
+    #[path = "🌱🤝create-collaboration-record/🧪️tests/creates-collaboration-record-a/🦀️component.rs"]
+    mod tests_create_collaboration_record;
+    #[path = "🌱📡create-communication-requirement/🧪️tests/creates-communication-requirement-a/🦀️component.rs"]
+    mod tests_create_communication_requirement;
+    #[path = "🌱🛂create-compliance-record/🧪️tests/creates-compliance-record-a/🦀️component.rs"]
+    mod tests_create_compliance_record;
+    #[path = "🌱⚔️create-conflict/🧪️tests/creates-conflict-a/🦀️component.rs"]
+    mod tests_create_conflict;
+    #[path = "🌱🚧create-constraint-record/🧪️tests/creates-constraint-record-a/🦀️component.rs"]
+    mod tests_create_constraint_record;
+    #[path = "🌱💰create-cost-requirement/🧪️tests/creates-cost-requirement-a/🦀️component.rs"]
+    mod tests_create_cost_requirement;
+    #[path = "🌱✅create-decision/🧪️tests/creates-decision-a/🦀️component.rs"]
+    mod tests_create_decision;
+    #[path = "🌱🚚create-delivery-constraint/🧪️tests/creates-delivery-constraint-a/🦀️component.rs"]
+    mod tests_create_delivery_constraint;
+    #[path = "🌱📄create-document/🧪️tests/creates-document-a/🦀️component.rs"]
+    mod tests_create_document;
+    #[path = "🌱🌿create-environmental-requirement/🧪️tests/creates-environmental-requirement-a/🦀️component.rs"]
+    mod tests_create_environmental_requirement;
+    #[path = "🌱🛠️create-equipment/🧪️tests/creates-equipment-a/🦀️component.rs"]
+    mod tests_create_equipment;
+    #[path = "🌱🧩create-flexibility-requirement/🧪️tests/creates-flexibility-requirement-a/🦀️component.rs"]
+    mod tests_create_flexibility_requirement;
+    #[path = "🌱🌊create-flow-requirement/🧪️tests/creates-flow-requirement-a/🦀️component.rs"]
+    mod tests_create_flow_requirement;
+    #[path = "🌱⚙️create-function/🧪️tests/creates-function-a/🦀️component.rs"]
+    mod tests_create_function;
+    #[path = "🌱📈create-growth-plan/🧪️tests/creates-growth-plan-a/🦀️component.rs"]
+    mod tests_create_growth_plan;
+    #[path = "🌱🧠create-human-factor-requirement/🧪️tests/creates-human-factor-requirement-a/🦀️component.rs"]
+    mod tests_create_human_factor_requirement;
+    #[path = "🌱ℹ️create-information-requirement/🧪️tests/creates-information-requirement-a/🦀️component.rs"]
+    mod tests_create_information_requirement;
+    #[path = "🌱🏗️create-infrastructure-requirement/🧪️tests/creates-infrastructure-requirement-a/🦀️component.rs"]
+    mod tests_create_infrastructure_requirement;
+    #[path = "🌱🐛create-issue/🧪️tests/creates-issue-a/🦀️component.rs"]
+    mod tests_create_issue;
+    #[path = "🌱📚create-knowledge-record/🧪️tests/creates-knowledge-record-a/🦀️component.rs"]
+    mod tests_create_knowledge_record;
+    #[path = "🌱🗓️create-meeting-record/🧪️tests/creates-meeting-record-a/🦀️component.rs"]
+    mod tests_create_meeting_record;
+    #[path = "🌱📋create-operational-requirement/🧪️tests/creates-operational-requirement-a/🦀️component.rs"]
+    mod tests_create_operational_requirement;
+    #[path = "🌱⚖️create-option-evaluation/🧪️tests/creates-option-evaluation-a/🦀️component.rs"]
+    mod tests_create_option_evaluation;
+    #[path = "🌱🏢create-organizational-requirement/🧪️tests/creates-organizational-requirement-a/🦀️component.rs"]
+    mod tests_create_organizational_requirement;
+    #[path = "🌱📊create-performance-criterion/🧪️tests/creates-performance-criterion-a/🦀️component.rs"]
+    mod tests_create_performance_criterion;
+    #[path = "🌱⭐create-priority-record/🧪️tests/creates-priority-record-a/🦀️component.rs"]
+    mod tests_create_priority_record;
+    #[path = "🌱🔒create-privacy-requirement/🧪️tests/creates-privacy-requirement-a/🦀️component.rs"]
+    mod tests_create_privacy_requirement;
+    #[path = "🌱🔄create-process/🧪️tests/creates-process-a/🦀️component.rs"]
+    mod tests_create_process;
+    #[path = "🌱🧱create-program-element/🧪️tests/creates-program-element-a/🦀️component.rs"]
+    mod tests_create_program_element;
+    #[path = "🌱💎create-quality-record/🧪️tests/creates-quality-record-a/🦀️component.rs"]
+    mod tests_create_quality_record;
+    #[path = "🌱🔢create-quantity-requirement/🧪️tests/creates-quantity-requirement-a/🦀️component.rs"]
+    mod tests_create_quantity_requirement;
+    #[path = "🌱📜create-regulatory-requirement/🧪️tests/creates-regulatory-requirement-a/🦀️component.rs"]
+    mod tests_create_regulatory_requirement;
+    #[path = "🌱🔗create-relationship/🧪️tests/creates-relationship-a/🦀️component.rs"]
+    mod tests_create_relationship;
+    #[path = "🌱📑create-report-record/🧪️tests/creates-report-record-a/🦀️component.rs"]
+    mod tests_create_report_record;
+    #[path = "🌱📌create-requirement/🧪️tests/creates-requirement-a/🦀️component.rs"]
+    mod tests_create_requirement;
+    #[path = "🌱💪create-resilience-requirement/🧪️tests/creates-resilience-requirement-a/🦀️component.rs"]
+    mod tests_create_resilience_requirement;
+    #[path = "🌱📦create-resource/🧪️tests/creates-resource-a/🦀️component.rs"]
+    mod tests_create_resource;
+    #[path = "🌱⚠️create-risk/🧪️tests/creates-risk-a/🦀️component.rs"]
+    mod tests_create_risk;
+    #[path = "🌱🦺create-safety-requirement/🧪️tests/creates-safety-requirement-a/🦀️component.rs"]
+    mod tests_create_safety_requirement;
+    #[path = "🌱🎬create-scenario/🧪️tests/creates-scenario-a/🦀️component.rs"]
+    mod tests_create_scenario;
+    #[path = "🌱📅create-schedule-requirement/🧪️tests/creates-schedule-requirement-a/🦀️component.rs"]
+    mod tests_create_schedule_requirement;
+    #[path = "🌱🔍create-search-filter/🧪️tests/creates-search-filter-a/🦀️component.rs"]
+    mod tests_create_search_filter;
+    #[path = "🌱🛡️create-security-requirement/🧪️tests/creates-security-requirement-a/🦀️component.rs"]
+    mod tests_create_security_requirement;
+    #[path = "🌱🛎️create-service-requirement/🧪️tests/creates-service-requirement-a/🦀️component.rs"]
+    mod tests_create_service_requirement;
+    #[path = "🌱📍create-site-context/🧪️tests/creates-site-context-a/🦀️component.rs"]
+    mod tests_create_site_context;
+    #[path = "🌱👥create-stakeholder/🧪️tests/creates-stakeholder-a/🦀️component.rs"]
+    mod tests_create_stakeholder;
+    #[path = "🌱📶create-status-record/🧪️tests/creates-status-record-a/🦀️component.rs"]
+    mod tests_create_status_record;
+    #[path = "🌱🗄️create-storage-requirement/🧪️tests/creates-storage-requirement-a/🦀️component.rs"]
+    mod tests_create_storage_requirement;
+    #[path = "🌱🗳️create-survey/🧪️tests/creates-survey-a/🦀️component.rs"]
+    mod tests_create_survey;
+    #[path = "🌱♻️create-sustainability-requirement/🧪️tests/creates-sustainability-requirement-a/🦀️component.rs"]
+    mod tests_create_sustainability_requirement;
+    #[path = "🌱📐create-template-record/🧪️tests/creates-template-record-a/🦀️component.rs"]
+    mod tests_create_template_record;
+    #[path = "🌱🧑create-user-profile/🧪️tests/creates-user-profile-a/🦀️component.rs"]
+    mod tests_create_user_profile;
+    #[path = "🌱✔️create-validation-record/🧪️tests/creates-validation-record-a/🦀️component.rs"]
+    mod tests_create_validation_record;
+    #[path = "🌱🧭create-wayfinding-requirement/🧪️tests/creates-wayfinding-requirement-a/🦀️component.rs"]
+    mod tests_create_wayfinding_requirement;
+    #[path = "🌱🎓create-workshop/🧪️tests/creates-workshop-a/🦀️component.rs"]
+    mod tests_create_workshop;
+    #[path = "🗑️🔑delete-access-rule/🧪️tests/deletes-access-rule-a/🦀️component.rs"]
+    mod tests_delete_access_rule;
+    #[path = "🗑️♿delete-accessibility-requirement/🧪️tests/deletes-accessibility-requirement-a/🦀️component.rs"]
+    mod tests_delete_accessibility_requirement;
+    #[path = "🗑️🏃delete-activity/🧪️tests/deletes-activity-a/🦀️component.rs"]
+    mod tests_delete_activity;
+    #[path = "🗑️🔬delete-analysis-record/🧪️tests/deletes-analysis-record-a/🦀️component.rs"]
+    mod tests_delete_analysis_record;
+    #[path = "🗑️👍delete-approval-record/🧪️tests/deletes-approval-record-a/🦀️component.rs"]
+    mod tests_delete_approval_record;
+    #[path = "🗑️💭delete-assumption/🧪️tests/deletes-assumption-a/🦀️component.rs"]
+    mod tests_delete_assumption;
+    #[path = "🗑️📒delete-audit-event/🧪️tests/deletes-audit-event-a/🦀️component.rs"]
+    mod tests_delete_audit_event;
+    #[path = "🗑️🏁delete-benchmark-record/🧪️tests/rejects-deleting-absent-benchmark-record-a/🦀️component.rs"]
+    mod tests_delete_benchmark_record;
+    #[path = "🗑️📝delete-change-record/🧪️tests/deletes-change-record-a/🦀️component.rs"]
+    mod tests_delete_change_record;
+    #[path = "🗑️🤝delete-collaboration-record/🧪️tests/deletes-collaboration-record-a/🦀️component.rs"]
+    mod tests_delete_collaboration_record;
+    #[path = "🗑️📡delete-communication-requirement/🧪️tests/deletes-communication-requirement-a/🦀️component.rs"]
+    mod tests_delete_communication_requirement;
+    #[path = "🗑️🛂delete-compliance-record/🧪️tests/deletes-compliance-record-a/🦀️component.rs"]
+    mod tests_delete_compliance_record;
+    #[path = "🗑️⚔️delete-conflict/🧪️tests/deletes-conflict-a/🦀️component.rs"]
+    mod tests_delete_conflict;
+    #[path = "🗑️🚧delete-constraint-record/🧪️tests/deletes-constraint-record-a/🦀️component.rs"]
+    mod tests_delete_constraint_record;
+    #[path = "🗑️💰delete-cost-requirement/🧪️tests/deletes-cost-requirement-a/🦀️component.rs"]
+    mod tests_delete_cost_requirement;
+    #[path = "🗑️✅delete-decision/🧪️tests/deletes-decision-a/🦀️component.rs"]
+    mod tests_delete_decision;
+    #[path = "🗑️🚚delete-delivery-constraint/🧪️tests/deletes-delivery-constraint-a/🦀️component.rs"]
+    mod tests_delete_delivery_constraint;
+    #[path = "🗑️📄delete-document/🧪️tests/deletes-document-a/🦀️component.rs"]
+    mod tests_delete_document;
+    #[path = "🗑️🌿delete-environmental-requirement/🧪️tests/deletes-environmental-requirement-a/🦀️component.rs"]
+    mod tests_delete_environmental_requirement;
+    #[path = "🗑️🛠️delete-equipment/🧪️tests/deletes-equipment-a/🦀️component.rs"]
+    mod tests_delete_equipment;
+    #[path = "🗑️🧩delete-flexibility-requirement/🧪️tests/deletes-flexibility-requirement-a/🦀️component.rs"]
+    mod tests_delete_flexibility_requirement;
+    #[path = "🗑️🌊delete-flow-requirement/🧪️tests/deletes-flow-requirement-a/🦀️component.rs"]
+    mod tests_delete_flow_requirement;
+    #[path = "🗑️⚙️delete-function/🧪️tests/deletes-function-a/🦀️component.rs"]
+    mod tests_delete_function;
+    #[path = "🗑️📈delete-growth-plan/🧪️tests/deletes-growth-plan-a/🦀️component.rs"]
+    mod tests_delete_growth_plan;
+    #[path = "🗑️🧠delete-human-factor-requirement/🧪️tests/deletes-human-factor-requirement-a/🦀️component.rs"]
+    mod tests_delete_human_factor_requirement;
+    #[path = "🗑️ℹ️delete-information-requirement/🧪️tests/deletes-information-requirement-a/🦀️component.rs"]
+    mod tests_delete_information_requirement;
+    #[path = "🗑️🏗️delete-infrastructure-requirement/🧪️tests/deletes-infrastructure-requirement-a/🦀️component.rs"]
+    mod tests_delete_infrastructure_requirement;
+    #[path = "🗑️🐛delete-issue/🧪️tests/deletes-issue-a/🦀️component.rs"]
+    mod tests_delete_issue;
+    #[path = "🗑️📚delete-knowledge-record/🧪️tests/rejects-deleting-absent-knowledge-record-a/🦀️component.rs"]
+    mod tests_delete_knowledge_record;
+    #[path = "🗑️🗓️delete-meeting-record/🧪️tests/deletes-meeting-record-a/🦀️component.rs"]
+    mod tests_delete_meeting_record;
+    #[path = "🗑️📋delete-operational-requirement/🧪️tests/deletes-operational-requirement-a/🦀️component.rs"]
+    mod tests_delete_operational_requirement;
+    #[path = "🗑️⚖️delete-option-evaluation/🧪️tests/deletes-option-evaluation-a/🦀️component.rs"]
+    mod tests_delete_option_evaluation;
+    #[path = "🗑️🏢delete-organizational-requirement/🧪️tests/deletes-organizational-requirement-a/🦀️component.rs"]
+    mod tests_delete_organizational_requirement;
+    #[path = "🗑️📊delete-performance-criterion/🧪️tests/deletes-performance-criterion-a/🦀️component.rs"]
+    mod tests_delete_performance_criterion;
+    #[path = "🗑️⭐delete-priority-record/🧪️tests/deletes-priority-record-a/🦀️component.rs"]
+    mod tests_delete_priority_record;
+    #[path = "🗑️🔒delete-privacy-requirement/🧪️tests/deletes-privacy-requirement-a/🦀️component.rs"]
+    mod tests_delete_privacy_requirement;
+    #[path = "🗑️🔄delete-process/🧪️tests/deletes-process-a/🦀️component.rs"]
+    mod tests_delete_process;
+    #[path = "🗑️🧱delete-program-element/🧪️tests/deletes-program-element-a/🦀️component.rs"]
+    mod tests_delete_program_element;
+    #[path = "🗑️💎delete-quality-record/🧪️tests/deletes-quality-record-a/🦀️component.rs"]
+    mod tests_delete_quality_record;
+    #[path = "🗑️🔢delete-quantity-requirement/🧪️tests/deletes-quantity-requirement-a/🦀️component.rs"]
+    mod tests_delete_quantity_requirement;
+    #[path = "🗑️📜delete-regulatory-requirement/🧪️tests/deletes-regulatory-requirement-a/🦀️component.rs"]
+    mod tests_delete_regulatory_requirement;
+    #[path = "🗑️🔗delete-relationship/🧪️tests/deletes-relationship-a/🦀️component.rs"]
+    mod tests_delete_relationship;
+    #[path = "🗑️📑delete-report-record/🧪️tests/deletes-report-record-a/🦀️component.rs"]
+    mod tests_delete_report_record;
+    #[path = "🗑️📌delete-requirement/🧪️tests/deletes-requirement-a/🦀️component.rs"]
+    mod tests_delete_requirement;
+    #[path = "🗑️💪delete-resilience-requirement/🧪️tests/deletes-resilience-requirement-a/🦀️component.rs"]
+    mod tests_delete_resilience_requirement;
+    #[path = "🗑️📦delete-resource/🧪️tests/deletes-resource-a/🦀️component.rs"]
+    mod tests_delete_resource;
+    #[path = "🗑️⚠️delete-risk/🧪️tests/deletes-risk-a/🦀️component.rs"]
+    mod tests_delete_risk;
+    #[path = "🗑️🦺delete-safety-requirement/🧪️tests/deletes-safety-requirement-a/🦀️component.rs"]
+    mod tests_delete_safety_requirement;
+    #[path = "🗑️🎬delete-scenario/🧪️tests/deletes-scenario-a/🦀️component.rs"]
+    mod tests_delete_scenario;
+    #[path = "🗑️📅delete-schedule-requirement/🧪️tests/deletes-schedule-requirement-a/🦀️component.rs"]
+    mod tests_delete_schedule_requirement;
+    #[path = "🗑️🔍delete-search-filter/🧪️tests/deletes-search-filter-a/🦀️component.rs"]
+    mod tests_delete_search_filter;
+    #[path = "🗑️🛡️delete-security-requirement/🧪️tests/deletes-security-requirement-a/🦀️component.rs"]
+    mod tests_delete_security_requirement;
+    #[path = "🗑️🛎️delete-service-requirement/🧪️tests/deletes-service-requirement-a/🦀️component.rs"]
+    mod tests_delete_service_requirement;
+    #[path = "🗑️📍delete-site-context/🧪️tests/deletes-site-context-a/🦀️component.rs"]
+    mod tests_delete_site_context;
+    #[path = "🗑️👥delete-stakeholder/🧪️tests/deletes-stakeholder-a/🦀️component.rs"]
+    mod tests_delete_stakeholder;
+    #[path = "🗑️📶delete-status-record/🧪️tests/deletes-status-record-a/🦀️component.rs"]
+    mod tests_delete_status_record;
+    #[path = "🗑️🗄️delete-storage-requirement/🧪️tests/deletes-storage-requirement-a/🦀️component.rs"]
+    mod tests_delete_storage_requirement;
+    #[path = "🗑️🗳️delete-survey/🧪️tests/deletes-survey-a/🦀️component.rs"]
+    mod tests_delete_survey;
+    #[path = "🗑️♻️delete-sustainability-requirement/🧪️tests/deletes-sustainability-requirement-a/🦀️component.rs"]
+    mod tests_delete_sustainability_requirement;
+    #[path = "🗑️📐delete-template-record/🧪️tests/deletes-template-record-a/🦀️component.rs"]
+    mod tests_delete_template_record;
+    #[path = "🗑️🧑delete-user-profile/🧪️tests/deletes-user-profile-a/🦀️component.rs"]
+    mod tests_delete_user_profile;
+    #[path = "🗑️✔️delete-validation-record/🧪️tests/deletes-validation-record-a/🦀️component.rs"]
+    mod tests_delete_validation_record;
+    #[path = "🗑️🧭delete-wayfinding-requirement/🧪️tests/deletes-wayfinding-requirement-a/🦀️component.rs"]
+    mod tests_delete_wayfinding_requirement;
+    #[path = "🗑️🎓delete-workshop/🧪️tests/deletes-workshop-a/🦀️component.rs"]
+    mod tests_delete_workshop;
+    #[path = "✂️🧲disconnect-adjacency/🧪️tests/disconnects-reception-from-waiting/🦀️component.rs"]
+    mod tests_disconnect_adjacency;
+    #[path = "✂️🧵disconnect-trace/🧪️tests/disconnects-requirement-a-from-decision-a/🦀️component.rs"]
+    mod tests_disconnect_trace;
+    #[path = "✏️🔑rename-access-rule/🧪️tests/renames-access-rule-a/🦀️component.rs"]
+    mod tests_rename_access_rule;
+    #[path = "✏️♿rename-accessibility-requirement/🧪️tests/renames-accessibility-requirement-a/🦀️component.rs"]
+    mod tests_rename_accessibility_requirement;
+    #[path = "✏️🏃rename-activity/🧪️tests/renames-activity-a/🦀️component.rs"]
+    mod tests_rename_activity;
+    #[path = "✏️🔬rename-analysis-record/🧪️tests/renames-analysis-record-a/🦀️component.rs"]
+    mod tests_rename_analysis_record;
+    #[path = "✏️👍rename-approval-record/🧪️tests/renames-approval-record-a/🦀️component.rs"]
+    mod tests_rename_approval_record;
+    #[path = "✏️💭rename-assumption/🧪️tests/renames-assumption-a/🦀️component.rs"]
+    mod tests_rename_assumption;
+    #[path = "✏️📒rename-audit-event/🧪️tests/renames-audit-event-a/🦀️component.rs"]
+    mod tests_rename_audit_event;
+    #[path = "✏️🏁rename-benchmark-record/🧪️tests/rejects-renaming-absent-benchmark-record-a/🦀️component.rs"]
+    mod tests_rename_benchmark_record;
+    #[path = "✏️📝rename-change-record/🧪️tests/renames-change-record-a/🦀️component.rs"]
+    mod tests_rename_change_record;
+    #[path = "✏️🤝rename-collaboration-record/🧪️tests/renames-collaboration-record-a/🦀️component.rs"]
+    mod tests_rename_collaboration_record;
+    #[path = "✏️📡rename-communication-requirement/🧪️tests/renames-communication-requirement-a/🦀️component.rs"]
+    mod tests_rename_communication_requirement;
+    #[path = "✏️🛂rename-compliance-record/🧪️tests/renames-compliance-record-a/🦀️component.rs"]
+    mod tests_rename_compliance_record;
+    #[path = "✏️⚔️rename-conflict/🧪️tests/renames-conflict-a/🦀️component.rs"]
+    mod tests_rename_conflict;
+    #[path = "✏️🚧rename-constraint-record/🧪️tests/renames-constraint-record-a/🦀️component.rs"]
+    mod tests_rename_constraint_record;
+    #[path = "✏️💰rename-cost-requirement/🧪️tests/renames-cost-requirement-a/🦀️component.rs"]
+    mod tests_rename_cost_requirement;
+    #[path = "✏️✅rename-decision/🧪️tests/renames-decision-a/🦀️component.rs"]
+    mod tests_rename_decision;
+    #[path = "✏️🚚rename-delivery-constraint/🧪️tests/renames-delivery-constraint-a/🦀️component.rs"]
+    mod tests_rename_delivery_constraint;
+    #[path = "✏️📄rename-document/🧪️tests/renames-document-a/🦀️component.rs"]
+    mod tests_rename_document;
+    #[path = "✏️🌿rename-environmental-requirement/🧪️tests/renames-environmental-requirement-a/🦀️component.rs"]
+    mod tests_rename_environmental_requirement;
+    #[path = "✏️🛠️rename-equipment/🧪️tests/renames-equipment-a/🦀️component.rs"]
+    mod tests_rename_equipment;
+    #[path = "✏️🧩rename-flexibility-requirement/🧪️tests/renames-flexibility-requirement-a/🦀️component.rs"]
+    mod tests_rename_flexibility_requirement;
+    #[path = "✏️🌊rename-flow-requirement/🧪️tests/renames-flow-requirement-a/🦀️component.rs"]
+    mod tests_rename_flow_requirement;
+    #[path = "✏️⚙️rename-function/🧪️tests/renames-function-a/🦀️component.rs"]
+    mod tests_rename_function;
+    #[path = "✏️🏛️rename-governance/🧪️tests/renames-the-governance-framework/🦀️component.rs"]
+    mod tests_rename_governance;
+    #[path = "✏️📈rename-growth-plan/🧪️tests/renames-growth-plan-a/🦀️component.rs"]
+    mod tests_rename_growth_plan;
+    #[path = "✏️🧠rename-human-factor-requirement/🧪️tests/renames-human-factor-requirement-a/🦀️component.rs"]
+    mod tests_rename_human_factor_requirement;
+    #[path = "✏️ℹ️rename-information-requirement/🧪️tests/renames-information-requirement-a/🦀️component.rs"]
+    mod tests_rename_information_requirement;
+    #[path = "✏️🏗️rename-infrastructure-requirement/🧪️tests/renames-infrastructure-requirement-a/🦀️component.rs"]
+    mod tests_rename_infrastructure_requirement;
+    #[path = "✏️🐛rename-issue/🧪️tests/renames-issue-a/🦀️component.rs"]
+    mod tests_rename_issue;
+    #[path = "✏️📚rename-knowledge-record/🧪️tests/rejects-renaming-absent-knowledge-record-a/🦀️component.rs"]
+    mod tests_rename_knowledge_record;
+    #[path = "✏️🗓️rename-meeting-record/🧪️tests/renames-meeting-record-a/🦀️component.rs"]
+    mod tests_rename_meeting_record;
+    #[path = "✏️🏷️rename-meta/🧪️tests/renames-the-document-title/🦀️component.rs"]
+    mod tests_rename_meta;
+    #[path = "✏️📋rename-operational-requirement/🧪️tests/renames-operational-requirement-a/🦀️component.rs"]
+    mod tests_rename_operational_requirement;
+    #[path = "✏️⚖️rename-option-evaluation/🧪️tests/renames-option-evaluation-a/🦀️component.rs"]
+    mod tests_rename_option_evaluation;
+    #[path = "✏️🏢rename-organizational-requirement/🧪️tests/renames-organizational-requirement-a/🦀️component.rs"]
+    mod tests_rename_organizational_requirement;
+    #[path = "✏️📊rename-performance-criterion/🧪️tests/renames-performance-criterion-a/🦀️component.rs"]
+    mod tests_rename_performance_criterion;
+    #[path = "✏️⭐rename-priority-record/🧪️tests/renames-priority-record-a/🦀️component.rs"]
+    mod tests_rename_priority_record;
+    #[path = "✏️🔒rename-privacy-requirement/🧪️tests/renames-privacy-requirement-a/🦀️component.rs"]
+    mod tests_rename_privacy_requirement;
+    #[path = "✏️🔄rename-process/🧪️tests/renames-process-a/🦀️component.rs"]
+    mod tests_rename_process;
+    #[path = "✏️🧱rename-program-element/🧪️tests/renames-program-element-a/🦀️component.rs"]
+    mod tests_rename_program_element;
+    #[path = "✏️📁rename-project/🧪️tests/renames-the-project-code/🦀️component.rs"]
+    mod tests_rename_project;
+    #[path = "✏️💎rename-quality-record/🧪️tests/renames-quality-record-a/🦀️component.rs"]
+    mod tests_rename_quality_record;
+    #[path = "✏️🔢rename-quantity-requirement/🧪️tests/renames-quantity-requirement-a/🦀️component.rs"]
+    mod tests_rename_quantity_requirement;
+    #[path = "✏️📜rename-regulatory-requirement/🧪️tests/renames-regulatory-requirement-a/🦀️component.rs"]
+    mod tests_rename_regulatory_requirement;
+    #[path = "✏️🔗rename-relationship/🧪️tests/renames-relationship-a/🦀️component.rs"]
+    mod tests_rename_relationship;
+    #[path = "✏️📑rename-report-record/🧪️tests/renames-report-record-a/🦀️component.rs"]
+    mod tests_rename_report_record;
+    #[path = "✏️📌rename-requirement/🧪️tests/renames-requirement-a/🦀️component.rs"]
+    mod tests_rename_requirement;
+    #[path = "✏️💪rename-resilience-requirement/🧪️tests/renames-resilience-requirement-a/🦀️component.rs"]
+    mod tests_rename_resilience_requirement;
+    #[path = "✏️📦rename-resource/🧪️tests/renames-resource-a/🦀️component.rs"]
+    mod tests_rename_resource;
+    #[path = "✏️⚠️rename-risk/🧪️tests/renames-risk-a/🦀️component.rs"]
+    mod tests_rename_risk;
+    #[path = "✏️🦺rename-safety-requirement/🧪️tests/renames-safety-requirement-a/🦀️component.rs"]
+    mod tests_rename_safety_requirement;
+    #[path = "✏️🎬rename-scenario/🧪️tests/renames-scenario-a/🦀️component.rs"]
+    mod tests_rename_scenario;
+    #[path = "✏️📅rename-schedule-requirement/🧪️tests/renames-schedule-requirement-a/🦀️component.rs"]
+    mod tests_rename_schedule_requirement;
+    #[path = "✏️🔍rename-search-filter/🧪️tests/renames-search-filter-a/🦀️component.rs"]
+    mod tests_rename_search_filter;
+    #[path = "✏️🛡️rename-security-requirement/🧪️tests/renames-security-requirement-a/🦀️component.rs"]
+    mod tests_rename_security_requirement;
+    #[path = "✏️🛎️rename-service-requirement/🧪️tests/renames-service-requirement-a/🦀️component.rs"]
+    mod tests_rename_service_requirement;
+    #[path = "✏️📍rename-site-context/🧪️tests/renames-site-context-a/🦀️component.rs"]
+    mod tests_rename_site_context;
+    #[path = "✏️👥rename-stakeholder/🧪️tests/renames-stakeholder-a/🦀️component.rs"]
+    mod tests_rename_stakeholder;
+    #[path = "✏️📶rename-status-record/🧪️tests/renames-status-record-a/🦀️component.rs"]
+    mod tests_rename_status_record;
+    #[path = "✏️🗄️rename-storage-requirement/🧪️tests/renames-storage-requirement-a/🦀️component.rs"]
+    mod tests_rename_storage_requirement;
+    #[path = "✏️🗳️rename-survey/🧪️tests/renames-survey-a/🦀️component.rs"]
+    mod tests_rename_survey;
+    #[path = "✏️♻️rename-sustainability-requirement/🧪️tests/renames-sustainability-requirement-a/🦀️component.rs"]
+    mod tests_rename_sustainability_requirement;
+    #[path = "✏️📐rename-template-record/🧪️tests/renames-template-record-a/🦀️component.rs"]
+    mod tests_rename_template_record;
+    #[path = "✏️🧑rename-user-profile/🧪️tests/renames-user-profile-a/🦀️component.rs"]
+    mod tests_rename_user_profile;
+    #[path = "✏️✔️rename-validation-record/🧪️tests/renames-validation-record-a/🦀️component.rs"]
+    mod tests_rename_validation_record;
+    #[path = "✏️🧭rename-wayfinding-requirement/🧪️tests/renames-wayfinding-requirement-a/🦀️component.rs"]
+    mod tests_rename_wayfinding_requirement;
+    #[path = "✏️🎓rename-workshop/🧪️tests/renames-workshop-a/🦀️component.rs"]
+    mod tests_rename_workshop;
+    #[path = "🔁🔑replace-access-rule/🧪️tests/replaces-access-rule-a/🦀️component.rs"]
+    mod tests_replace_access_rule;
+    #[path = "🔁♿replace-accessibility-requirement/🧪️tests/replaces-accessibility-requirement-a/🦀️component.rs"]
+    mod tests_replace_accessibility_requirement;
+    #[path = "🔁🏃replace-activity/🧪️tests/replaces-activity-a/🦀️component.rs"]
+    mod tests_replace_activity;
+    #[path = "🔁🔬replace-analysis-record/🧪️tests/replaces-analysis-record-a/🦀️component.rs"]
+    mod tests_replace_analysis_record;
+    #[path = "🔁👍replace-approval-record/🧪️tests/replaces-approval-record-a/🦀️component.rs"]
+    mod tests_replace_approval_record;
+    #[path = "🔁💭replace-assumption/🧪️tests/replaces-assumption-a/🦀️component.rs"]
+    mod tests_replace_assumption;
+    #[path = "🔁📒replace-audit-event/🧪️tests/replaces-audit-event-a/🦀️component.rs"]
+    mod tests_replace_audit_event;
+    #[path = "🔁🏁replace-benchmark-record/🧪️tests/rejects-replacing-absent-benchmark-record-a/🦀️component.rs"]
+    mod tests_replace_benchmark_record;
+    #[path = "🔁📝replace-change-record/🧪️tests/replaces-change-record-a/🦀️component.rs"]
+    mod tests_replace_change_record;
+    #[path = "🔁🤝replace-collaboration-record/🧪️tests/replaces-collaboration-record-a/🦀️component.rs"]
+    mod tests_replace_collaboration_record;
+    #[path = "🔁📡replace-communication-requirement/🧪️tests/replaces-communication-requirement-a/🦀️component.rs"]
+    mod tests_replace_communication_requirement;
+    #[path = "🔁🛂replace-compliance-record/🧪️tests/replaces-compliance-record-a/🦀️component.rs"]
+    mod tests_replace_compliance_record;
+    #[path = "🔁⚔️replace-conflict/🧪️tests/replaces-conflict-a/🦀️component.rs"]
+    mod tests_replace_conflict;
+    #[path = "🔁🚧replace-constraint-record/🧪️tests/replaces-constraint-record-a/🦀️component.rs"]
+    mod tests_replace_constraint_record;
+    #[path = "🔁💰replace-cost-requirement/🧪️tests/replaces-cost-requirement-a/🦀️component.rs"]
+    mod tests_replace_cost_requirement;
+    #[path = "🔁✅replace-decision/🧪️tests/replaces-decision-a/🦀️component.rs"]
+    mod tests_replace_decision;
+    #[path = "🔁🚚replace-delivery-constraint/🧪️tests/replaces-delivery-constraint-a/🦀️component.rs"]
+    mod tests_replace_delivery_constraint;
+    #[path = "🔁📄replace-document/🧪️tests/replaces-document-a/🦀️component.rs"]
+    mod tests_replace_document;
+    #[path = "🔁🌿replace-environmental-requirement/🧪️tests/replaces-environmental-requirement-a/🦀️component.rs"]
+    mod tests_replace_environmental_requirement;
+    #[path = "🔁🛠️replace-equipment/🧪️tests/replaces-equipment-a/🦀️component.rs"]
+    mod tests_replace_equipment;
+    #[path = "🔁🧩replace-flexibility-requirement/🧪️tests/replaces-flexibility-requirement-a/🦀️component.rs"]
+    mod tests_replace_flexibility_requirement;
+    #[path = "🔁🌊replace-flow-requirement/🧪️tests/replaces-flow-requirement-a/🦀️component.rs"]
+    mod tests_replace_flow_requirement;
+    #[path = "🔁⚙️replace-function/🧪️tests/replaces-function-a/🦀️component.rs"]
+    mod tests_replace_function;
+    #[path = "🔁🏛️replace-governance/🧪️tests/replaces-the-governance-block/🦀️component.rs"]
+    mod tests_replace_governance;
+    #[path = "🔁📈replace-growth-plan/🧪️tests/replaces-growth-plan-a/🦀️component.rs"]
+    mod tests_replace_growth_plan;
+    #[path = "🔁🧠replace-human-factor-requirement/🧪️tests/replaces-human-factor-requirement-a/🦀️component.rs"]
+    mod tests_replace_human_factor_requirement;
+    #[path = "🔁ℹ️replace-information-requirement/🧪️tests/replaces-information-requirement-a/🦀️component.rs"]
+    mod tests_replace_information_requirement;
+    #[path = "🔁🏗️replace-infrastructure-requirement/🧪️tests/replaces-infrastructure-requirement-a/🦀️component.rs"]
+    mod tests_replace_infrastructure_requirement;
+    #[path = "🔁🐛replace-issue/🧪️tests/replaces-issue-a/🦀️component.rs"]
+    mod tests_replace_issue;
+    #[path = "🔁📚replace-knowledge-record/🧪️tests/rejects-replacing-absent-knowledge-record-a/🦀️component.rs"]
+    mod tests_replace_knowledge_record;
+    #[path = "🔁🗓️replace-meeting-record/🧪️tests/replaces-meeting-record-a/🦀️component.rs"]
+    mod tests_replace_meeting_record;
+    #[path = "🔁🏷️replace-meta/🧪️tests/replaces-the-document-meta-block/🦀️component.rs"]
+    mod tests_replace_meta;
+    #[path = "🔁📋replace-operational-requirement/🧪️tests/replaces-operational-requirement-a/🦀️component.rs"]
+    mod tests_replace_operational_requirement;
+    #[path = "🔁⚖️replace-option-evaluation/🧪️tests/replaces-option-evaluation-a/🦀️component.rs"]
+    mod tests_replace_option_evaluation;
+    #[path = "🔁🏢replace-organizational-requirement/🧪️tests/replaces-organizational-requirement-a/🦀️component.rs"]
+    mod tests_replace_organizational_requirement;
+    #[path = "🔁📊replace-performance-criterion/🧪️tests/replaces-performance-criterion-a/🦀️component.rs"]
+    mod tests_replace_performance_criterion;
+    #[path = "🔁⭐replace-priority-record/🧪️tests/replaces-priority-record-a/🦀️component.rs"]
+    mod tests_replace_priority_record;
+    #[path = "🔁🔒replace-privacy-requirement/🧪️tests/replaces-privacy-requirement-a/🦀️component.rs"]
+    mod tests_replace_privacy_requirement;
+    #[path = "🔁🔄replace-process/🧪️tests/replaces-process-a/🦀️component.rs"]
+    mod tests_replace_process;
+    #[path = "🔁🧱replace-program-element/🧪️tests/replaces-program-element-a/🦀️component.rs"]
+    mod tests_replace_program_element;
+    #[path = "🔁📁replace-project/🧪️tests/replaces-the-project-definition/🦀️component.rs"]
+    mod tests_replace_project;
+    #[path = "🔁💎replace-quality-record/🧪️tests/replaces-quality-record-a/🦀️component.rs"]
+    mod tests_replace_quality_record;
+    #[path = "🔁🔢replace-quantity-requirement/🧪️tests/replaces-quantity-requirement-a/🦀️component.rs"]
+    mod tests_replace_quantity_requirement;
+    #[path = "🔁📜replace-regulatory-requirement/🧪️tests/replaces-regulatory-requirement-a/🦀️component.rs"]
+    mod tests_replace_regulatory_requirement;
+    #[path = "🔁🔗replace-relationship/🧪️tests/replaces-relationship-a/🦀️component.rs"]
+    mod tests_replace_relationship;
+    #[path = "🔁📑replace-report-record/🧪️tests/replaces-report-record-a/🦀️component.rs"]
+    mod tests_replace_report_record;
+    #[path = "🔁📌replace-requirement/🧪️tests/replaces-requirement-a/🦀️component.rs"]
+    mod tests_replace_requirement;
+    #[path = "🔁💪replace-resilience-requirement/🧪️tests/replaces-resilience-requirement-a/🦀️component.rs"]
+    mod tests_replace_resilience_requirement;
+    #[path = "🔁📦replace-resource/🧪️tests/replaces-resource-a/🦀️component.rs"]
+    mod tests_replace_resource;
+    #[path = "🔁⚠️replace-risk/🧪️tests/replaces-risk-a/🦀️component.rs"]
+    mod tests_replace_risk;
+    #[path = "🔁🦺replace-safety-requirement/🧪️tests/replaces-safety-requirement-a/🦀️component.rs"]
+    mod tests_replace_safety_requirement;
+    #[path = "🔁🎬replace-scenario/🧪️tests/replaces-scenario-a/🦀️component.rs"]
+    mod tests_replace_scenario;
+    #[path = "🔁📅replace-schedule-requirement/🧪️tests/replaces-schedule-requirement-a/🦀️component.rs"]
+    mod tests_replace_schedule_requirement;
+    #[path = "🔁🔍replace-search-filter/🧪️tests/replaces-search-filter-a/🦀️component.rs"]
+    mod tests_replace_search_filter;
+    #[path = "🔁🛡️replace-security-requirement/🧪️tests/replaces-security-requirement-a/🦀️component.rs"]
+    mod tests_replace_security_requirement;
+    #[path = "🔁🛎️replace-service-requirement/🧪️tests/replaces-service-requirement-a/🦀️component.rs"]
+    mod tests_replace_service_requirement;
+    #[path = "🔁📍replace-site-context/🧪️tests/replaces-site-context-a/🦀️component.rs"]
+    mod tests_replace_site_context;
+    #[path = "🔁👥replace-stakeholder/🧪️tests/replaces-stakeholder-a/🦀️component.rs"]
+    mod tests_replace_stakeholder;
+    #[path = "🔁📶replace-status-record/🧪️tests/replaces-status-record-a/🦀️component.rs"]
+    mod tests_replace_status_record;
+    #[path = "🔁🗄️replace-storage-requirement/🧪️tests/replaces-storage-requirement-a/🦀️component.rs"]
+    mod tests_replace_storage_requirement;
+    #[path = "🔁🗳️replace-survey/🧪️tests/replaces-survey-a/🦀️component.rs"]
+    mod tests_replace_survey;
+    #[path = "🔁♻️replace-sustainability-requirement/🧪️tests/replaces-sustainability-requirement-a/🦀️component.rs"]
+    mod tests_replace_sustainability_requirement;
+    #[path = "🔁📐replace-template-record/🧪️tests/replaces-template-record-a/🦀️component.rs"]
+    mod tests_replace_template_record;
+    #[path = "🔁🧑replace-user-profile/🧪️tests/replaces-user-profile-a/🦀️component.rs"]
+    mod tests_replace_user_profile;
+    #[path = "🔁✔️replace-validation-record/🧪️tests/replaces-validation-record-a/🦀️component.rs"]
+    mod tests_replace_validation_record;
+    #[path = "🔁🧭replace-wayfinding-requirement/🧪️tests/replaces-wayfinding-requirement-a/🦀️component.rs"]
+    mod tests_replace_wayfinding_requirement;
+    #[path = "🔁🎓replace-workshop/🧪️tests/replaces-workshop-a/🦀️component.rs"]
+    mod tests_replace_workshop;
+}
+//#endregion 🧫️FixtureTests
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

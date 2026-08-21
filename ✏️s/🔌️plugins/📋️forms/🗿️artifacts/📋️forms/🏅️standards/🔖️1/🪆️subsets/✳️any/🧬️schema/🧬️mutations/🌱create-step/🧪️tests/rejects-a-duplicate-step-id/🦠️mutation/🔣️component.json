@@ -1,0 +1,9 @@
+{
+  "mutation": "createStep",
+  "step": {
+    "id": "step-basics",
+    "title": "Basics",
+    "blocks": []
+  },
+  "index": null
+}

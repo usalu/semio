@@ -1,0 +1,5 @@
+{
+  "mutation": "editNodeText",
+  "nodeId": "node-thesis",
+  "newText": "Thesis"
+}

@@ -1,0 +1,21 @@
+{
+  "tracks": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "samples": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "sync": true
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

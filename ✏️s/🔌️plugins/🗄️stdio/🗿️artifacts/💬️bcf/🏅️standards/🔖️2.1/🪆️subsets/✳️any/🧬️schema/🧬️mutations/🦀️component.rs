@@ -122,12 +122,12 @@ pub enum BcfMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
     let outcome = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -169,7 +169,7 @@ impl Mutation<BcfSnapshot> for BcfMutation {
             BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None }),
             BcfMutation::SetViewpointComponents { topic_guid, guid, components } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }),
             BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }),
-        }).await
+        })
     }
 
     async fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {
@@ -373,7 +373,7 @@ fn write_opt_str_bin(out: &mut Vec<u8>, opt: &Option<String>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_opt_str_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    Ok(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
+    Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_list_bin(out: &mut Vec<u8>, items: &[String]) {
@@ -384,7 +384,7 @@ fn write_str_list_bin(out: &mut Vec<u8>, items: &[String]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(read_str_lp(reader)?);
@@ -612,3 +612,17 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     ]
 }
 //#endregion 🔖️DemoCases
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/closes-the-clash-topic-and-answers-its-comment/🦀️component.rs"]
+    mod tests_set_snapshot_closes_the_clash_topic_and_answers_its_comment;
+}
+//#endregion 🧪️FixtureTests

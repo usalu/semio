@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVortexKindDefaultCableKind",
+  "id": "door",
+  "newDefaultCableKind": "cable.heavy"
+}

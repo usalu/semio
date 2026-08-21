@@ -1,0 +1,24 @@
+{
+  "document": {
+    "body": {
+      "modified": [
+        {
+          "index": 0,
+          "diff": {
+            "kind": "paragraph",
+            "runs": {
+              "modified": [
+                {
+                  "index": 1,
+                  "diff": {
+                    "bold": true
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

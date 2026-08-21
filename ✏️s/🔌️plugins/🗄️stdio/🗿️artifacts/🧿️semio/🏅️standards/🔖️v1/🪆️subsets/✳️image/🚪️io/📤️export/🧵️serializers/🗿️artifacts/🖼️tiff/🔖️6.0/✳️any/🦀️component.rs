@@ -75,8 +75,8 @@ mod tests {
     async fn real_byte_round_trip_through_tiff_codec() {
         let semio = sample_semio();
         let tiff = semio_framework_plugin::resolve_ready(SemioImageToTiff::serialize(&semio)).expect("serialize");
-        let bytes = crate::artifacts::tiff::engine::encode_tiff(&tiff).await.expect("encode real tiff bytes");
-        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).await.expect("decode real tiff bytes");
+        let bytes = crate::artifacts::tiff::engine::encode_tiff(&tiff).expect("encode real tiff bytes");
+        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
         assert_eq!(decoded.width(), Some(2));
         assert_eq!(decoded.height(), Some(1));
         for (a, b) in decoded.pixels.chunks_exact(4).zip(semio.frames[0].rgba8.chunks_exact(4)) {

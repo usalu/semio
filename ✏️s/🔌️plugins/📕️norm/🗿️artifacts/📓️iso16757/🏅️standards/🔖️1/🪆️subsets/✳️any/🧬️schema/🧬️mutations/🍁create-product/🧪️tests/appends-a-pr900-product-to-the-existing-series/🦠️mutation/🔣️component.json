@@ -1,0 +1,20 @@
+{
+  "CreateProduct": {
+    "product": {
+      "id": "product.pr900",
+      "series_id": "series.pr",
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "PR-900"
+        },
+        "short_name": null,
+        "alternatives": []
+      },
+      "parameter_domains": [],
+      "variants": [],
+      "static_properties": []
+    },
+    "index": null
+  }
+}

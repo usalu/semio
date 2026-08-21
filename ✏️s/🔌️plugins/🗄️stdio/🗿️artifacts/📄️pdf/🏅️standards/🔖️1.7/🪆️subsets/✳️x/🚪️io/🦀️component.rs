@@ -133,7 +133,7 @@ pub mod derived_composition {
             let bytes = minimal_conforming_x_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PdfXComposerComposition::compose(&sources).await.expect("clean document must compose to x");
+            let composed = PdfXComposerComposition::compose(&sources).expect("clean document must compose to x");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -142,18 +142,18 @@ pub mod derived_composition {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = PdfXComposerComposition::compose(&sources).await.expect_err("a document with no OutputIntent must not stamp x");
+            let err = PdfXComposerComposition::compose(&sources).expect_err("a document with no OutputIntent must not stamp x");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {:?}", err.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_runs_the_same_check() {
-            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().await.unwrap();
+            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes.await));
+            let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes));
             // The 1.7 writer doesn't re-serialize `objects`, so the wire recheck honestly re-reports
             // the OutputIntent/TrimBox as missing (same documented gap as ✳️a's own validator test).
-            assert!(diagnostics.await.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {diagnostics:?}");
+            assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_OUTPUT_INTENT), "got {diagnostics:?}");
         }
     }
 }

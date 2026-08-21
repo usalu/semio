@@ -1,0 +1,8 @@
+{
+  "material": 0,
+  "expectedAlphaMode": "OPAQUE",
+  "alphaMode": "MASK",
+  "touchedPaths": [
+    "document/materials/0/alphaMode"
+  ]
+}

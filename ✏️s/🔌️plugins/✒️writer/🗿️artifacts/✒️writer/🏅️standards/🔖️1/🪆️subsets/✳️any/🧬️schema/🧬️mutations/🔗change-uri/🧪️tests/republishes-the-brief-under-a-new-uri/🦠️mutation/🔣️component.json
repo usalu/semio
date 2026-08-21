@@ -1,0 +1,4 @@
+{
+  "mutation": "changeUri",
+  "newUri": "writer://published/brief.md"
+}

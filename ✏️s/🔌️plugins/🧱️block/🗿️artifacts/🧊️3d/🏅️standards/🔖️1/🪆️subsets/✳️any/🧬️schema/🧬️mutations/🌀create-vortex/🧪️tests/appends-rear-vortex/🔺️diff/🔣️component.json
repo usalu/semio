@@ -1,0 +1,46 @@
+{
+  "artifact": null,
+  "schema": null,
+  "objectKind": null,
+  "representations": null,
+  "vortexKinds": null,
+  "vortices": {
+    "added": [
+      {
+        "id": "vortex-rear",
+        "vortexKind": "hatch",
+        "position": [
+          0.0,
+          1.6,
+          1.2
+        ],
+        "direction": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "radius": 0.2,
+        "label": "rear hatch"
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "activeRepresentationId": null,
+  "wantedTags": null,
+  "locale": null,
+  "windows": null,
+  "brushVortexKindId": null,
+  "brushRadius": null,
+  "brushFlip": null,
+  "brushPreview": null,
+  "camera": null,
+  "hoveredVortexFullId": null
+}

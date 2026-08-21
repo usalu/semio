@@ -1,0 +1,17 @@
+{
+  "schema": "writer.document",
+  "id": "mission-brief",
+  "languageId": "markdown",
+  "uri": "writer://drafts/brief.md",
+  "document": {
+    "childId": "document-fixture-brief-body",
+    "target": {
+      "artifactId": "brief-document",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      }
+    }
+  }
+}

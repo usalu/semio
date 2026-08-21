@@ -1,0 +1,26 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "textures": [
+      {
+        "sampler": 0
+      },
+      {
+        "sampler": 1
+      }
+    ],
+    "samplers": [
+      {
+        "magFilter": 9729
+      },
+      {
+        "wrapS": 33071
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

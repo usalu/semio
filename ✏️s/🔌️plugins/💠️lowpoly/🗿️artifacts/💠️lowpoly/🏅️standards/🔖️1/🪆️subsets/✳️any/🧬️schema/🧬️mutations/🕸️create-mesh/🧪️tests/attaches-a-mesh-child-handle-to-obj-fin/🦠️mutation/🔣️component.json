@@ -1,0 +1,15 @@
+{
+  "CreateMesh": {
+    "id": "obj-fin",
+    "childId": "mesh-fin-01",
+    "target": {
+      "artifactId": "obj-fin-mesh",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    },
+    "meshWorkspace": "{\"vertices\":[],\"faces\":[]}"
+  }
+}

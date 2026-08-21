@@ -1,0 +1,4 @@
+{
+  "mutation": "changeNodeKindIcon",
+  "newIcon": "icon://gate"
+}

@@ -20,7 +20,7 @@ pub fn diff(payload: &MoveVertex, base: &SemioBrepSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Vertex \"{}\" new point has a non-finite component.", payload.vertex_id), [payload.vertex_id.clone()]);
     }
     if vertex.point == p {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Vertex \"{}\" is already at this point.", payload.vertex_id));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Vertex \"{}\" is already at this point.", payload.vertex_id));
     }
     protocol::MutationOutcome::new(SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.vertex_id.clone(), diff: BrepVertexDiff { point: Some(p) } }], added: vec![] }), ..Default::default() })
 }

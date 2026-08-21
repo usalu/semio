@@ -289,7 +289,7 @@ mod tests {
     /// convention.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
@@ -328,12 +328,12 @@ mod tests {
         let base = fixture();
         let delete = SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: "v1".into() });
         let diff = delete.diff(&base);
-        let after = diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let after = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
         assert!(!after.vertices.iter().any(|v| v.id == "v1"), "v1 must be gone");
         assert!(!after.edges.iter().any(|e| e.id == "e1"), "e1 (dependent on v1) must be cascade-deleted");
 
         let undo = delete.inverse(&base);
-        assert_eq!(undo.await.len(), 2, "inverse must reconstruct the vertex AND the one cascade-deleted edge");
+        assert_eq!(undo.len(), 2, "inverse must reconstruct the vertex AND the one cascade-deleted edge");
         let mut restored = after;
         for back in &undo {
             restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
@@ -345,7 +345,7 @@ mod tests {
     async fn delete_of_an_absent_id_has_an_empty_inverse_and_is_a_diff_level_no_op() {
         let base = fixture();
         let delete = SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: "f-missing".into() });
-        assert!(delete.inverse(&base).await.is_empty(), "deleting an absent id has nothing to undo");
+        assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -358,12 +358,12 @@ mod tests {
                 direction: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3::default(),
             },
         });
-        assert!(replace.inverse(&base).await.is_empty());
-        assert_eq!(replace.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
+        assert!(replace.inverse(&base).is_empty());
+        assert_eq!(replace.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
         let mv = SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3::default() });
-        assert!(mv.inverse(&base).await.is_empty());
-        assert_eq!(mv.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
+        assert!(mv.inverse(&base).is_empty());
+        assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
     }
     //#endregion 🧪️InverseRoundTripLaw
 
@@ -380,9 +380,9 @@ mod tests {
         let base = fixture();
         for m in demo_mutation_cases() {
             let hand_diff = m.diff(&base);
-            let after = hand_diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+            let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
             let independent_diff = SemioBrepDiff::between(&base, &after);
-            assert_eq!(hand_diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"), "diff({m:?}) must match an independent before/after comparison");
+            assert_eq!(hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"), "diff({m:?}) must match an independent before/after comparison");
         }
     }
     //#endregion 🧪️DiffConsistencyLaw
@@ -403,12 +403,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioBrepMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioBrepMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioBrepMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioBrepMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
@@ -417,7 +417,7 @@ mod tests {
     //#region 🧪️SemanticKinds
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioBrepMutation::kinds().await.len(), 13);
+        assert_eq!(SemioBrepMutation::kinds().len(), 13);
         let mutation = SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: "v1".into() });
         assert_eq!(mutation.semantics().kind, "delete-vertex");
         assert_eq!(mutation.semantics().record, "DeletedVertex");
@@ -426,3 +426,40 @@ mod tests {
     //#endregion 🧪️SemanticKinds
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/🦀️component.rs"]
+    mod tests_create_vertex_adds_an_apex_vertex_above_the_square;
+    #[path = "🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦀️component.rs"]
+    mod tests_delete_vertex_removes_a_corner_vertex_and_cascades_into_its_two_incident_edges;
+    #[path = "📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/🦀️component.rs"]
+    mod tests_move_vertex_lifts_the_third_corner_off_the_base_plane;
+    #[path = "🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/🦀️component.rs"]
+    mod tests_create_edge_adds_a_diagonal_edge_across_the_square;
+    #[path = "✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/🦀️component.rs"]
+    mod tests_delete_edge_removes_the_closing_edge_and_keeps_its_two_vertices;
+    #[path = "➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/🦀️component.rs"]
+    mod tests_replace_curve_swaps_the_first_edges_line_for_a_circular_arc;
+    #[path = "🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/🦀️component.rs"]
+    mod tests_create_face_adds_an_opposing_face_over_the_same_loop;
+    #[path = "🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/🦀️component.rs"]
+    mod tests_delete_face_removes_the_only_face_and_leaves_its_loop_behind;
+    #[path = "🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/🦀️component.rs"]
+    mod tests_replace_surface_swaps_the_faces_plane_for_a_cylinder;
+    #[path = "🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦀️component.rs"]
+    mod tests_create_shell_adds_a_second_shell_that_reuses_the_face_with_flipped_sense;
+    #[path = "💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/🦀️component.rs"]
+    mod tests_delete_shell_removes_the_only_shell_and_leaves_its_faces_behind;
+    #[path = "🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/🦀️component.rs"]
+    mod tests_create_solid_adds_a_second_solid_that_treats_the_shell_as_a_void;
+    #[path = "🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/🦀️component.rs"]
+    mod tests_delete_solid_removes_the_only_solid_and_leaves_its_shell_behind;
+}
+//#endregion 🧪️FixtureTests

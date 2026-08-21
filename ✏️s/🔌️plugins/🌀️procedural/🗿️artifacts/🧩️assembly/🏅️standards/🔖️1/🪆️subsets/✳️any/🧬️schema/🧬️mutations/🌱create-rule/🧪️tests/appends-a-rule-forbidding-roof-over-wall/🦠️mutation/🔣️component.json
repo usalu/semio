@@ -1,0 +1,14 @@
+{
+  "CreateRule": {
+    "index": 1,
+    "rule": {
+      "id": "rule-roof-wall",
+      "moduleAId": "module-roof",
+      "moduleBId": "module-wall",
+      "allowed": false,
+      "params": {
+        "kind": "null"
+      }
+    }
+  }
+}

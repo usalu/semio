@@ -1,0 +1,54 @@
+{
+  "mutation": "replaceProject",
+  "newProject": {
+    "id": "project-fixture",
+    "code": "FIX-000",
+    "clientName": "Sample Health",
+    "ownerOrganization": "",
+    "briefSummary": {
+      "text": ""
+    },
+    "problemStatement": {
+      "text": ""
+    },
+    "vision": {
+      "text": ""
+    },
+    "mission": {
+      "text": ""
+    },
+    "objectives": [],
+    "successCriteria": [],
+    "projectPriorities": [],
+    "completionCriteria": [],
+    "decisionCriteria": [],
+    "scopeInclusions": [],
+    "scopeExclusions": [],
+    "assumptions": [],
+    "constraintsSummary": [],
+    "dependencies": [],
+    "deliverables": [],
+    "phases": [],
+    "geographicContext": {
+      "text": ""
+    },
+    "developmentContext": {
+      "text": ""
+    },
+    "operationalContext": {
+      "text": ""
+    },
+    "regulatoryContext": [],
+    "fundingModel": "",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    }
+  }
+}

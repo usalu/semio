@@ -436,8 +436,8 @@ mod tests {
         async fn cross_product_antisymmetric_on_random_vectors() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(1);
             for _ in 0..200 {
-                let a = Vec3::new(rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0);
-                let b = Vec3::new(rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0);
+                let a = Vec3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
+                let b = Vec3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let ab = a.cross(b);
                 let ba = b.cross(a);
                 assert!((ab + ba).norm() < 1e-9);

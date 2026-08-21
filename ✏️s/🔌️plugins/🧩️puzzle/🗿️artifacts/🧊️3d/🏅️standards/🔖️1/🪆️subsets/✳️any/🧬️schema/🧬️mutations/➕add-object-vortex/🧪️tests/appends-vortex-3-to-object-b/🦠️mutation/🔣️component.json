@@ -1,0 +1,16 @@
+{
+  "mutation": "addObjectVortex",
+  "objectId": "object-b",
+  "vortex": {
+    "id": "vortex-3",
+    "vortexKind": "vortex-kind-b",
+    "position": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "hidden": false,
+    "locked": false
+  },
+  "index": null
+}

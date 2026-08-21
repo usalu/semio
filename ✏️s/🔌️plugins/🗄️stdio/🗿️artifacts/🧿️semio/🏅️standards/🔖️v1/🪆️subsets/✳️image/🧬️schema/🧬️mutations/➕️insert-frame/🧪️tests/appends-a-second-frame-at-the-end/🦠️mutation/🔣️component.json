@@ -1,0 +1,17 @@
+{
+  "mutation": "insertFrame",
+  "index": 1,
+  "frame": {
+    "delayMs": 80,
+    "rgba8": [
+      0,
+      0,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "mutation": "addGcpObservation",
+  "id": "gcp-ridge",
+  "observation": {
+    "streamId": "stream-a",
+    "frameIndex": 1,
+    "pixel": [
+      30.0,
+      40.0
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "editRhs",
+  "newRhsJson": "{\"set\":[{\"var\":\"c\",\"prop\":\"label\",\"value\":\"$caption\"},{\"var\":\"c\",\"prop\":\"count\",\"value\":\"$repeat\"}]}"
+}

@@ -3814,7 +3814,7 @@ impl DagHost {
         use canvas::Point;
         use graph::pick_merge_mode_for_modifiers;
 
-        let point = Point::new(world_x, world_y);
+        let point = Point::new(world_x, world_y).await;
         self.engine.pointer_down_on_draggable_node_at(node_id, point, shift, ctrl_or_meta);
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             if let Some(hid) = self.channel_row_handle_hit(world_x, world_y) {

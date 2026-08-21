@@ -1,0 +1,30 @@
+{
+  "artifact": null,
+  "positions": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "pos-harbor",
+        "patch": {
+          "data": {
+            "kind": "harbor",
+            "lat": 53.75,
+            "lon": 9.75,
+            "name": "Harbor North"
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "routes": null,
+  "regions": null,
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

@@ -1,0 +1,34 @@
+{
+  "root": {
+    "kind": "element",
+    "attributes": {
+      "modified": [
+        {
+          "name": "revision",
+          "value": "2"
+        }
+      ]
+    },
+    "children": {
+      "modified": [
+        {
+          "index": 0,
+          "diff": {
+            "kind": "element",
+            "children": {
+              "modified": [
+                {
+                  "index": 0,
+                  "diff": {
+                    "kind": "text",
+                    "text": "Brick, Glazed"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

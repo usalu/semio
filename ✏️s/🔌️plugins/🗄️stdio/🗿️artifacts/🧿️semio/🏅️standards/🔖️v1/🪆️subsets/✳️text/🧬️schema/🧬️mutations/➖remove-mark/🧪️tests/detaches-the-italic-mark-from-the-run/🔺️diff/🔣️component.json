@@ -1,0 +1,16 @@
+{
+  "runs": {
+    "values": [
+      {
+        "language": "en",
+        "content": "emphasis",
+        "marks": [
+          {
+            "kind": "bold",
+            "href": ""
+          }
+        ]
+      }
+    ]
+  }
+}

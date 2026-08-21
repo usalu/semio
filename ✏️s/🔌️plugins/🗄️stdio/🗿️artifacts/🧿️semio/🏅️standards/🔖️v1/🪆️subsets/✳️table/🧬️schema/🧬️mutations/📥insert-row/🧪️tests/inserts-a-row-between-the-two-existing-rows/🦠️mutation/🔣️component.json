@@ -1,0 +1,17 @@
+{
+  "InsertRow": {
+    "index": 1,
+    "row": {
+      "cells": [
+        {
+          "kind": "int",
+          "lexeme": "2"
+        },
+        {
+          "kind": "str",
+          "value": "Hamburg"
+        }
+      ]
+    }
+  }
+}

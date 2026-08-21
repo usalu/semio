@@ -1,0 +1,5 @@
+{
+  "mutation": "reorderAssets",
+  "id": "asset-hero",
+  "to_index": 1
+}

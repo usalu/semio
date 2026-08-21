@@ -1,0 +1,17 @@
+{
+  "node": 0,
+  "transform": {
+    "kind": "trs",
+    "translation": [
+      0.5,
+      0,
+      0
+    ],
+    "rotation": null,
+    "scale": [
+      2,
+      2,
+      2
+    ]
+  }
+}

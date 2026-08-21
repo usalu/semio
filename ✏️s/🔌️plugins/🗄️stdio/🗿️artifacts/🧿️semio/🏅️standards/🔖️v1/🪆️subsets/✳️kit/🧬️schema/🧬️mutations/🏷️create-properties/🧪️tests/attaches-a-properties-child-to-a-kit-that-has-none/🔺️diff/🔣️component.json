@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "childId": "props-1",
+    "target": {
+      "artifactId": "kit-properties",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

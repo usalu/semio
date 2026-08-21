@@ -1,0 +1,33 @@
+{
+  "comments": [
+    "semio fixture",
+    "raised the second vertex"
+  ],
+  "elements": {
+    "modified": [
+      {
+        "name": "vertex",
+        "diff": {
+          "rows": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "fields": [
+                    {
+                      "name": "z",
+                      "value": {
+                        "kind": "float",
+                        "value": 2.0
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

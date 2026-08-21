@@ -234,7 +234,7 @@ pub enum SemioDocumentMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_document_mutation(snapshot: &mut SemioDocumentSnapshot, mutation: &SemioDocumentMutation) -> protocol::MutationOutcome<SemioDocumentDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    outcome.await.apply_to(snapshot)
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -317,9 +317,9 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
             SemioDocumentMutation::SetRunStyle { path, run_index, style } => {
                 let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
                 let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
                 if &run.style == style {
-                    return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await;
+                    return protocol::MutationOutcome::new(SemioDocumentDiff::default());
                 }
                 let style_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::RunStyleDiff {
                     bold: Some(style.bold),
@@ -929,7 +929,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply_valid(diff: &SemioDocumentDiff, base: &SemioDocumentSnapshot) -> SemioDocumentSnapshot {
-        MutationDiff::apply(diff, base).await.expect("valid Semio document diff fixture")
+        MutationDiff::apply(diff, base).expect("valid Semio document diff fixture")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -937,7 +937,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = apply_valid(diff_direct.await.diff().await, &base);
+            let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_document_mutation(&mut via_apply, &mutation);
@@ -962,8 +962,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = apply_valid(diff.await.diff().await, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
+            let next = apply_valid(diff.diff(), &base);
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
             let restored = apply_valid(&inverse_diff, &next);
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -991,9 +991,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }, &base);
-            let mid = apply_valid(d1.await.diff().await, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioDocumentMutation::RemoveBlock { path: DocBlockPath::top(0) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = blocks_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -1005,9 +1005,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }, &base);
-            let mid = apply_valid(d1.await.diff().await, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = blocks_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == DocBlock::paragraph("f")));
@@ -1018,9 +1018,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("f") }, &base);
-            let mid = apply_valid(d1.await.diff().await, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioDocumentMutation::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -1031,9 +1031,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioDocumentMutation::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }, &base);
-            let mid = apply_valid(d1.await.diff().await, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioDocumentMutation::RemoveBlock { path: DocBlockPath::top(1) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -1043,19 +1043,19 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }, &base);
-            let mid1 = apply_valid(d1.await.diff().await, &base);
+            let mid1 = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioDocumentMutation::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("g") }, &mid1);
-            let mid2 = apply_valid(d2.await.diff().await, &mid1);
+            let mid2 = apply_valid(d2.diff(), &mid1);
             let d3 = Mutation::diff(&SemioDocumentMutation::RemoveBlock { path: DocBlockPath::top(0) }, &mid2);
-            let sequential = apply_valid(d3.await.diff().await, &mid2);
+            let sequential = apply_valid(d3.diff(), &mid2);
 
-            let mut left = d1.await.diff().clone();
-            MutationDiff::absorb(&mut left, d2.await.diff().clone());
-            MutationDiff::absorb(&mut left, d3.await.diff().clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.await.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
-            let mut right = d1.await.diff().clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(apply_valid(&left, &base), sequential, "absorb associativity (left) failed");
@@ -1088,7 +1088,7 @@ mod tests {
     async fn codec_retention_law() {
         let snap = sweep_b();
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -1108,20 +1108,20 @@ mod tests {
         assert_eq!(apply_valid(&diff_ba, &b), a);
         assert!(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(&a, &a).is_empty());
 
-        let styles_diff = diff_ab.await.styles.as_ref().expect("styles diff present");
+        let styles_diff = diff_ab.styles.as_ref().expect("styles diff present");
         assert!(!styles_diff.removed.is_empty(), "styles: removed not exercised");
         assert!(!styles_diff.added.is_empty(), "styles: added not exercised");
         let style_mod = styles_diff.modified.iter().find(|m| m.key == "toModify").expect("toModify style modified");
         assert!(style_mod.diff.name.is_some());
         assert_eq!(style_mod.diff.based_on, Some(Some("keep".to_string())), "style based_on tri-state Some(Some(_)) not exercised");
 
-        let images_diff = diff_ab.await.images.as_ref().expect("images diff present");
+        let images_diff = diff_ab.images.as_ref().expect("images diff present");
         assert!(!images_diff.removed.is_empty(), "images: removed not exercised");
         assert!(!images_diff.added.is_empty(), "images: added not exercised");
         let image_mod = images_diff.modified.iter().find(|m| m.key == "toModify").expect("toModify image modified");
         assert!(image_mod.diff.mime.is_some() && image_mod.diff.bytes.is_some());
 
-        let body_diff = diff_ab.await.blocks.as_ref().expect("blocks diff present");
+        let body_diff = diff_ab.blocks.as_ref().expect("blocks diff present");
         assert!(!body_diff.removed.is_empty(), "blocks: removed not exercised");
         assert_eq!(body_diff.modified.len(), 1);
         let TestDocBlockDiff::Paragraph(p_diff) = &body_diff.modified[0].diff else { panic!("expected paragraph diff") };
@@ -1134,13 +1134,13 @@ mod tests {
         assert!(style_diff.bold.is_some(), "modified run style: bold not exercised");
         assert!(!runs_diff.added.is_empty(), "modified paragraph: runs.added (nested) not exercised");
 
-        let body_diff_ba = diff_ba.await.blocks.as_ref().expect("blocks diff (b->a) present");
+        let body_diff_ba = diff_ba.blocks.as_ref().expect("blocks diff (b->a) present");
         assert!(!body_diff_ba.added.is_empty(), "blocks (b->a): added not exercised");
         let DocBlock::Table { rows } = &body_diff_ba.added[0].item else { panic!("expected added table") };
         assert!(!rows.is_empty());
 
         // Some(None) tri-state coverage: style based_on cleared going the OTHER direction.
-        let style_mod_ba = diff_ba.await.styles.as_ref().unwrap().modified.iter().find(|m| m.key == "toModify").expect("toModify present in b->a");
+        let style_mod_ba = diff_ba.styles.as_ref().unwrap().modified.iter().find(|m| m.key == "toModify").expect("toModify present in b->a");
         assert_eq!(style_mod_ba.diff.based_on, Some(None), "style based_on tri-state Some(None) not exercised");
     }
     //#endregion 🔖️FieldSweep
@@ -1177,15 +1177,24 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioDocumentMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioDocumentMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = SemioDocumentMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SemioDocumentMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🔖️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/bolds-the-body-paragraph-and-finalizes-its-copy/🦀️component.rs"]
+mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
+//#endregion 🧪️FixtureCases

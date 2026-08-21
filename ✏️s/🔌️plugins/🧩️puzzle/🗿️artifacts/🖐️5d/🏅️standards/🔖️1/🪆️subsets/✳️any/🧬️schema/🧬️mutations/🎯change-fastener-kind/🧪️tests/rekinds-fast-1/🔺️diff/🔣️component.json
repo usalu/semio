@@ -1,0 +1,63 @@
+{
+  "artifact": null,
+  "schema": null,
+  "domain": null,
+  "label": null,
+  "meta": null,
+  "kindCatalogs": null,
+  "kindCatalogsExtra": null,
+  "kindCompatibility": null,
+  "parts": null,
+  "fasteners": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "fast-1",
+        "patch": {
+          "replacement": {
+            "id": "fast-1",
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "fastenerKind": "fastener-kind-b",
+            "gap": 1.0,
+            "shift": 0.0,
+            "rise": 0.0,
+            "rotation": 0.0,
+            "turn": 0.0,
+            "tilt": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "selectedPartIds": null,
+  "selectedGripIds": null,
+  "selectedFastenerIds": null,
+  "activeUtilityId": null,
+  "camera2dX": null,
+  "camera2dY": null,
+  "camera2dZoom": null,
+  "camera3dPositionX": null,
+  "camera3dPositionY": null,
+  "camera3dPositionZ": null,
+  "camera3dTargetX": null,
+  "camera3dTargetY": null,
+  "camera3dTargetZ": null,
+  "camera3dZoom": null,
+  "selectionMethod": null,
+  "gridSnapEnabled": null,
+  "gridFactor": null,
+  "suggestionOffset": null,
+  "overlapBudget": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "lodMode": null,
+  "locale": null,
+  "runtimeExtrasJson": null,
+  "hoveredPartId": null,
+  "previewSeq": null
+}

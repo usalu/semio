@@ -1,0 +1,5 @@
+{
+  "mutation": "createShapeModel",
+  "childId": "shape-model-2",
+  "target": "cad-shape-2!s.stdio.semio@v1/model"
+}

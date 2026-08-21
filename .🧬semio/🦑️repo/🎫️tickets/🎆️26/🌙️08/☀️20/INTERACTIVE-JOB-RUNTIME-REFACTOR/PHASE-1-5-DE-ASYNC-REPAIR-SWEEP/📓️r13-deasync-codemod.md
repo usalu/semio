@@ -390,9 +390,21 @@ guard had caught — confirming it was a REAL, reachability-driven cascade (fixi
 dependencies' stale-awaits correctly unmasked stdio's own large pile of calls into those now-sync
 functions), not measurement noise, and safe to proceed into deliberately this time.
 
-<!-- stdio wave 2 result appended once the background run completes -->
+### stdio wave 2 (post mesh-engine/math fix)
 
-### Two more real bugs found and fixed on this crate's own residue
+Wave 2 applied 221 edits, 13,396 → 13,528 (guard tripped, reverted). Session interruption during
+a background retry (harness kills backgrounded shell children when a turn ends — confirmed by
+observation; re-run synchronously afterward) cost one iteration's worth of edits being applied
+then needing to be re-discovered, but nothing was lost: 168 of those edits had already landed and
+journaled safely before the kill, verified with `cargo check` (no parse errors) before continuing.
+A second synchronous attempt (247 edits) again tripped the guard at the same ~13,400-13,530
+range. Added diagnostic tooling (a newly-appeared-diagnostic diff, printed automatically when the
+monotonic guard trips) to stop guessing and see exactly what the regression was — see the fourth
+bug below, which this directly led to finding. `semio-s-plugin-stdio` is NOT closed; its current
+state is deliberately the fresh, honestly-diagnosable state after stripping accumulated
+corruption (see below), not a further-reduced count — see Final State for the real number.
+
+### Four real bugs found and fixed on this crate's own residue (not three — see the fourth, most damaging one)
 
 **1. Corruption**: `findFutureExprSpan()`'s label-based span selection picked a PATTERN
 sub-span instead of the real Future-typed expression for
@@ -452,3 +464,123 @@ expected`/`error: unexpected`) across every crate this packet touched — `semio
 `semio-framework-os-kernel`, `semio-framework-geometry`, `semio-framework-mesh-engine`,
 `semio-framework-math` — came back clean after these three hand-repairs, confirming no further
 parse-level corruption anywhere in this packet's blast radius.
+
+**4. Corruption (the most damaging, found via the newly-appeared-diagnostic diff added above)**:
+for the `` `T` is not an iterator `` diagnostic shape (and its siblings — unary op, `?` operator,
+binary op, no-field), rustc's PRIMARY span covers only the short trailing failing method/operator
+(e.g. `into_iter`, ~9 bytes), NOT the Future-producing receiver expression. The actual Future
+expression is a SEPARATE, unlabeled, non-primary sibling span whose `byte_end` exactly equals the
+primary span's `byte_start` — confirmed byte-for-byte on `semio-framework-surface`
+(`visible_tile_coords(...)\n    .into_iter()`: non-primary span `[16072,16148)`, primary span
+`[16148,16157)`, exactly abutting). `findFutureExprSpan()`'s fallback-to-primary-span logic
+picked the WRONG span, so `.await` landed AFTER `.into_iter()` instead of before it
+(`X.into_iter().await` instead of the correct `X.await.into_iter()`). This does not fix the
+underlying type error, so every SUBSEQUENT run's fresh diagnostic scan found the "same"
+unresolved error and stacked ANOTHER `.await` on top — confirmed accumulated up to **6 deep** in
+one file (`ifc/2x3/.../io/component.rs`), across **116 sites in 16 files**, entirely from this
+one tool's own repeated runs during this packet (not from the concurrent second session — the
+stacking pattern matches this tool's own run history exactly, and the affected files are ones
+this packet's own runs are journaled against).
+
+This was the ONE class of bug this packet's own single-file spot-checks did not catch early,
+because the very first working validation of the "is not an iterator" shape
+(`semio-s-imperative`'s `parse_contributions`) went through the DE-ASYNC branch (the callee was
+successfully cross-file-resolved and de-asynced, never exercising the await-INSERTION branch at
+all) — so the insertion-path bug for this specific diagnostic shape was never exercised at small
+scale before it ran at the scale of `semio-framework-surface` and `semio-s-plugin-stdio`.
+
+**Fix, two parts**: (1) `findFutureExprSpan()` now prefers a non-primary span that is
+byte-adjacent to the primary span (a structural signal, not a guess) before falling back to
+primary. (2) A new, unconditional backstop, `wouldStackAwait()`, refuses ANY `.await` insertion
+whose position already has `.await` immediately adjacent — independent of root cause, so even an
+as-yet-undiscovered future span-selection bug cannot stack past one attempt; it will show up as
+residue instead. Two reproducing self-tests (`selftest7`) assert the abutting-span selection
+against the real `visible_tile_coords` shape and the stacking backstop directly.
+
+**Repair of existing damage**: rather than trying to algorithmically re-derive the correct
+insertion point for arbitrarily long method chains (confirmed NOT always "one call back" — e.g.
+`actual.iter().zip(expected)` where the real receiver is `actual`, two calls back), a new
+journaled, revertible tool command (`strip-stacked-awaits`) removes ALL stacked `.await`s at
+each of the 116 sites back to zero (the original, never-mis-edited, honestly-broken state), so
+the NOW-FIXED span selection can re-diagnose and correctly re-fix each one in a future run. Ran
+for real: 116 sites across 16 files, all successfully stripped (verified: `grep -rn
+"\.await\.await"` across the repo returns zero matches; `cargo check` shows zero parse-level
+errors in every affected crate afterward). This intentionally leaves those crates' error counts
+HIGHER than they were mid-corruption (since a corrupted-but-"compiling-less-badly" count is not
+a real state to report) — see Final State below for the honest current numbers.
+
+## Final state at wind-down (measured `cargo check -p <crate> --all-targets`, never workspace totals)
+
+Stopped deliberately at a clean checkpoint per explicit direction, after finishing the
+stacked-await repair (a safe cleanup, not a new crate iteration) — no file left mid-edit, every
+edit journaled, dependency ratchet reverified at 238.
+
+| crate | status | notes |
+|---|---:|---|
+| `semio-framework-hash` | **0** (no-op proven) | untouched, already clean from an earlier packet |
+| `semio-s-imperative` | **4** | E0733 mutually-recursive-with-other-suspension residue, documented, refused correctly |
+| `semio-framework-os-mcp` | 24 | NOT this bug class — unrelated missing-API breakage (E0425/E0405 against `semio-framework-plugin-host`), 0 async-class |
+| `semio-framework-os-kernel` | **0** | fixed this session (145→0), re-verified clean at wind-down, 779/779 tests pass |
+| `semio-framework-os-kernel-db` | **0** | fixed this session (11→0), re-verified clean, 424/424 tests pass |
+| `semio-framework-geometry` | **0** | fixed this session (8→0, then a later 6→0 regression-fix), 57/57 tests pass, clippy clean |
+| `semio-framework-graph` | **0** | fixed this session (6→0), 174/174 tests pass |
+| `semio-framework-mesh-engine` | **0** | fixed this session (11→0), 20/20 tests pass |
+| `semio-framework-math` | **0** | fixed this session (9→0), 191/191 tests pass |
+| `semio-framework-plugin` | 146 | dominant residue: bare-`let`-bound-variable def-use shape (67 confirmed at last direct check); count includes fresh diagnostics from the stacked-await strip on this crate's own files |
+| `semio-framework-surface` | 870 | terrain/tiled-map modules; freshly re-exposed by the stacked-await strip (was showing as few as 7 mid-corruption, which was never a real number) |
+| `semio-framework-os-infinite` | 1,189 | net 2,155 (session baseline) → 1,189 at wind-down; re-measured after the stacked-await strip (which touched 3 sites in its `🎲️board` files) — improved further, likely from a mix of this session's own earlier edits and the concurrent session's parallel work on shared dependency files |
+| `semio-s-plugin-stdio` | 10,450 | dominant residue: same bare-`let`-bound-variable def-use shape at large scale, PLUS the freshly re-exposed (never-actually-fixed) sites from the stacked-await strip; this is the honest current number, not a regression from a "better" prior state — the prior lower numbers were artifacts of the corruption |
+
+**Regression sweep of every crate this packet (or an earlier packet) had driven to zero**,
+requested mid-session and completed: `semio-framework-ui`, `semio-framework-machine`,
+`semio-framework-2d`, `semio-hub` — all still 0 errors, no regressions found.
+
+**Dominant residue shape, repo-wide**: a `let`-bound local variable holding an un-awaited Future,
+used later (`let x = some_async_call(); ... x.field` / `x.method()` / `for _ in x`) rather than a
+fresh call expression at the diagnostic site. `findFutureExprSpan()` + `extractCallForward()`
+correctly and safely refuse these (no `(` follows the bare identifier) rather than guess — this
+is BY FAR the largest remaining category across every crate touched.
+
+## Def-use extension for the bare-variable residue shape: NOT attempted — explicit refusal, not a guess
+
+The coordinator asked whether to extend the tool to trace a bare `let`-bound variable back to its
+assignment site within the same function body, resolve the callee there, and apply the same
+suspend/don't-suspend rule. **Decision: did not attempt it, and this is a deliberate refusal, not
+an oversight.** Reasoning:
+
+1. This session already found and fixed FOUR real corruption/near-miss bugs in the existing,
+   narrower span-local design — three of them (pattern-constructor, struct-shorthand-field, and
+   especially the abutting-span stacking bug) took real investigative effort to root-cause even
+   with the existing safety net (journal, per-edit span verification, monotonic guard) catching
+   them before they became unrecoverable. A def-use extension is a strictly harder, higher-risk
+   feature: it requires correctly handling reassignment, shadowing, conditional
+   (`if`/`match`-arm) assignment, loop-carried variables, and multi-use variables (only SOME of
+   whose uses may need the await) — each an independent way to compute a wrong insertion point
+   with the SAME "looks plausible, silently wrong" failure mode as bug #4 above, which took a
+   full diagnostic-diff feature to actually find.
+2. Building it "with the same discipline" (span-keyed, guarded, self-tested, monotonic,
+   journalled, refusing ambiguity) for a feature of this shape realistically needs: a proper
+   single-assignment-in-scope check, a shadowing check, a loop/conditional-assignment guard, and
+   several new reproducing self-tests against real fixture shapes — a half-day-scale addition on
+   its own, not a same-session extension of an already-large, already-incident-prone session.
+3. The existing refusal behavior (fall through to residue) is SAFE by construction — it is
+   exactly why bug #4 was recoverable at all (the tool failed loudly into a compile error, not
+   silently into a plausible-looking wrong edit, for every case where the span heuristics
+   couldn't find a real call). Leaving this residue class to a dedicated future packet preserves
+   that safety property; rushing a def-use pass in the time remaining would not.
+
+This residue is now the clearly-identified, well-characterized human/future-tool work item —
+correctly left as documented residue rather than guessed at.
+
+## Concurrent-session observations
+
+Per the coordinator's note that a second Claude session is active on this repo: `git status`
+throughout this session showed many files modified outside this packet's own edits (framework-ui
+wgpu backend files, hub, various os-kernel/store files) consistent with ongoing concurrent work,
+as expected in this repo's live multi-session model. One directly observed interaction during
+this session: `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`'s `MediaFingerprint::of` and a
+stale `hash_parts(...).await` inside it were de-asynced by something other than this tool's own
+journal (not attributed to any `r13-*` run) between two of this packet's own runs — the edits
+coexisted without collision since they were at different byte spans in the same file, which is
+exactly the scenario the per-edit span verification exists to make safe either way. No attempt
+was made to reconcile, revert, or otherwise interfere with it, per instruction.

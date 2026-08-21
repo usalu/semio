@@ -1,0 +1,11 @@
+{
+  "MoveNode": {
+    "id": {
+      "value": "b"
+    },
+    "new_position": {
+      "x": 6.0,
+      "y": -2.5
+    }
+  }
+}

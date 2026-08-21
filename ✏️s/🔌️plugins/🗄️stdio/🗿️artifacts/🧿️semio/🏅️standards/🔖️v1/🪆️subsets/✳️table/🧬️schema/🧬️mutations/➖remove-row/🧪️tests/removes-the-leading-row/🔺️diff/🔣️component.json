@@ -1,0 +1,18 @@
+{
+  "rows": {
+    "values": [
+      {
+        "cells": [
+          {
+            "kind": "int",
+            "lexeme": "2"
+          },
+          {
+            "kind": "str",
+            "value": "Berlin"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "CreateObject": {
+    "index": 1,
+    "object": {
+      "id": "obj-mast",
+      "name": "Mast",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "smoothShading": false,
+      "mesh": null,
+      "paintLayers": []
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneSunElevation",
+  "new_elevation": 60.0
+}

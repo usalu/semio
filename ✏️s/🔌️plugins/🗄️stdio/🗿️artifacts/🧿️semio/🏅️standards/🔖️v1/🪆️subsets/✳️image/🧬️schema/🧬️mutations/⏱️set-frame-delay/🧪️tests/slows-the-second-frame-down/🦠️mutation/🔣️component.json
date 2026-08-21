@@ -1,0 +1,5 @@
+{
+  "mutation": "setFrameDelay",
+  "index": 1,
+  "delay_ms": 200
+}

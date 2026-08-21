@@ -1,0 +1,37 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "blk-image",
+        "patch": {
+          "blockJson": "{\"kind\":\"image\",\"id\":\"blk-image\",\"name\":\"Logo\",\"x\":340.0,\"y\":0.0,\"width\":320.0,\"height\":200.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"imageKey\":\"asset-logo\"}"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null,
+  "selectedBlockIds": null,
+  "activeUtilityId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredBlockId": null
+}

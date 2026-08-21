@@ -1,0 +1,18 @@
+{
+  "mutation": "replaceSavedCameraView",
+  "id": "cam-close",
+  "new_camera": {
+    "position": [
+      1.0,
+      -1.0,
+      0.75
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "zoom": 4.0,
+    "fov": 20.0
+  }
+}

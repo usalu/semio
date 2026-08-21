@@ -1,0 +1,6 @@
+{
+  "mutation": "resizeNode",
+  "id": "node-a",
+  "width": 240.0,
+  "height": 120.0
+}

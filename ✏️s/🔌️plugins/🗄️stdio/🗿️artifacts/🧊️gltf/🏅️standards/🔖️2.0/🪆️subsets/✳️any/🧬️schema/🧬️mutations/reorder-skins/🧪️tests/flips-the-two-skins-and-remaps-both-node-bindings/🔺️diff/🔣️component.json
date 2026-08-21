@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.reorder-skins.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/skins/1",
+    "document/skins/0"
+  ],
+  "payload": {
+    "order": [
+      1,
+      0
+    ]
+  },
+  "operation": {
+    "kind": "reorder",
+    "order": [
+      1,
+      0
+    ]
+  }
+}

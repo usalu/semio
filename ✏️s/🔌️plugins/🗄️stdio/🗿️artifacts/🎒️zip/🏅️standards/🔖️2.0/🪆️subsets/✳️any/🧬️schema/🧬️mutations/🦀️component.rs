@@ -42,12 +42,12 @@ pub enum ZipMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
     let outcome = mutation.diff(snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -63,7 +63,7 @@ impl Mutation<ZipSnapshot> for ZipMutation {
             Self::RemoveEntry { name } => diff::diff_remove_entry(name),
             Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
             Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
-        }).await
+        })
     }
 
     async fn inverse(&self, base: &ZipSnapshot) -> Vec<Self> {
@@ -86,18 +86,18 @@ impl protocol::OpText for ZipMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown ZIP operation '{line}'")))
     }
 
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
-        dsl::print(&record, &spec(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec(), dsl::JoinMode::Inline).await
     }
 }
 
@@ -148,10 +148,10 @@ mod tests {
         let base = base_snapshot();
         for mutation in demo_mutation_cases() {
             let text = mutation.print_op();
-            assert_eq!(ZipMutation::parse_op(&text).await.expect("text operation"), mutation);
-            let bytes = mutation.encode_op().await.expect("binary operation");
-            assert_eq!(ZipMutation::decode_op(&bytes).await.expect("binary operation"), mutation);
-            assert_eq!(mutation.diff(&base).await.diff().apply(&base).unwrap(), {
+            assert_eq!(ZipMutation::parse_op(&text).expect("text operation"), mutation);
+            let bytes = mutation.encode_op().expect("binary operation");
+            assert_eq!(ZipMutation::decode_op(&bytes).expect("binary operation"), mutation);
+            assert_eq!(mutation.diff(&base).diff().apply(&base).unwrap(), {
                 let mut next = base.clone();
                 apply_zip_mutation(&mut next, &mutation);
                 next
@@ -159,3 +159,17 @@ mod tests {
         }
     }
 }
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/extends-the-readme-and-adds-a-version-member/🦀️component.rs"]
+    mod tests_set_snapshot_extends_the_readme_and_adds_a_version_member;
+}
+//#endregion 🧪️FixtureTests

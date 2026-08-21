@@ -136,7 +136,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn aabb_of_a_populated_primitive_is_the_real_componentwise_extent() {
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&two_primitive_snapshot(), None);
-        let aabb = values.await.get(&aabb_key("mesh-a", "prim-1")).expect("prim-1 aabb present");
+        let aabb = values.get(&aabb_key("mesh-a", "prim-1")).expect("prim-1 aabb present");
         assert_eq!(aabb.min, SemioPoint3 { x: -1.0, y: 0.0, z: 0.0 });
         assert_eq!(aabb.max, SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 });
     }
@@ -145,7 +145,7 @@ mod tests {
     async fn aabb_of_an_empty_primitive_is_the_honest_default_not_a_faked_extent() {
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "mesh-a".into(), primitives: vec![SemioPrimitive { id: "empty".into(), ..Default::default() }] }], ..Default::default() };
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
-        assert_eq!(values.await.get(&aabb_key("mesh-a", "empty")), Some(&SemioAabb::default()));
+        assert_eq!(values.get(&aabb_key("mesh-a", "empty")), Some(&SemioAabb::default()));
     }
     //#endregion 🧪️Honesty
 
@@ -166,11 +166,11 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
-        let before = cache.await.stats();
+        let before = cache.stats();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
-        let after = cache.await.stats();
-        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.await.hits - before.await.hits, 2, "both primitives must be cache hits");
+        let after = cache.stats();
+        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.hits - before.hits, 2, "both primitives must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -181,12 +181,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.meshes[0].primitives[0].positions[0] = SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 };
-        let before = cache.await.stats();
+        let before = cache.stats();
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
+        let after = cache.stats();
 
-        assert_eq!(after.await.misses - before.await.misses, 1, "only prim-1's own entry may miss when its own positions change");
-        assert_eq!(values.await.get(&aabb_key("mesh-a", "prim-2")), Some(&SemioAabb { min: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }, max: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 } }), "prim-2's aabb must be untouched");
+        assert_eq!(after.misses - before.misses, 1, "only prim-1's own entry may miss when its own positions change");
+        assert_eq!(values.get(&aabb_key("mesh-a", "prim-2")), Some(&SemioAabb { min: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }, max: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 } }), "prim-2's aabb must be untouched");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -197,10 +197,10 @@ mod tests {
 
         let mut changed = base.clone();
         changed.meshes[0].primitives[0].material_id = Some("some-material".into());
-        let before = cache.await.stats();
+        let before = cache.stats();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
-        assert_eq!(after.await.misses, before.await.misses, "material_id has no bearing on the aabb dep chain");
+        let after = cache.stats();
+        assert_eq!(after.misses, before.misses, "material_id has no bearing on the aabb dep chain");
     }
     //#endregion 🧪️IncrementalityLaw
 }

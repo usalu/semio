@@ -1,0 +1,38 @@
+{
+  "mutation": "replaceSearchFilter",
+  "searchFilter": {
+    "id": "search-filter-a",
+    "name": "Search Filter A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "filterName": "Replaced Search Filter A",
+    "filterDescription": null,
+    "keywords": [],
+    "categories": [],
+    "ownerIds": [],
+    "statuses": [],
+    "priorities": [],
+    "sources": [],
+    "dateFrom": null,
+    "dateTo": null,
+    "entityKinds": [],
+    "tagFilters": [],
+    "sortField": null,
+    "sortDirection": null,
+    "isPublic": false,
+    "createdBy": null,
+    "lastUsed": null,
+    "useCount": 0,
+    "pinned": false
+  }
+}

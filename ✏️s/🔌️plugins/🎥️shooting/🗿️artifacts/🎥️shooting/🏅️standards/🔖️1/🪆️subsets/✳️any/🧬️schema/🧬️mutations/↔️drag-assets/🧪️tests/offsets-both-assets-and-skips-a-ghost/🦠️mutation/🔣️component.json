@@ -1,0 +1,11 @@
+{
+  "mutation": "dragAssets",
+  "asset_ids": [
+    "asset-hero",
+    "asset-prop",
+    "asset-ghost"
+  ],
+  "dx": 4.0,
+  "dy": -1.0,
+  "dz": 0.5
+}

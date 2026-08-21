@@ -1,0 +1,9 @@
+{
+  "UpdateWeldInputs": {
+    "new_weld_a_mm": 7.0,
+    "new_weld_l_mm": 160.0,
+    "new_weld_f_u_mpa": 540.0,
+    "new_weld_steel_grade": "S460",
+    "new_weld_f_ed_kn": 140.0
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameNode",
+  "id": "node-a",
+  "newId": "node-b"
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "s.stdio.semio.table",
+  "columns": [
+    {
+      "name": "id",
+      "kind": "int"
+    },
+    {
+      "name": "city",
+      "kind": "str"
+    }
+  ],
+  "rows": [
+    {
+      "cells": [
+        {
+          "kind": "int",
+          "lexeme": "2"
+        },
+        {
+          "kind": "str",
+          "value": "Berlin"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGridSpacing",
+  "newSpacing": 48.0
+}

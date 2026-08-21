@@ -134,7 +134,7 @@ pub mod derived_composition {
             let bytes = minimal_conforming_vt_pdf();
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PdfVtComposerComposition::compose(&sources).await.expect("clean document must compose to vt");
+            let composed = PdfVtComposerComposition::compose(&sources).expect("clean document must compose to vt");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -143,7 +143,7 @@ pub mod derived_composition {
             let snapshot = PdfSnapshot::default();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = PdfVtComposerComposition::compose(&sources).await.expect_err("a document with no DPartRoot must not stamp vt");
+            let err = PdfVtComposerComposition::compose(&sources).expect_err("a document with no DPartRoot must not stamp vt");
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
     }

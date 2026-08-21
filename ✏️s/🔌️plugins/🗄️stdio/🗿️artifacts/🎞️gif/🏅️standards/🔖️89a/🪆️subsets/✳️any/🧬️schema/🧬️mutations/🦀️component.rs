@@ -181,12 +181,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
     let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -332,17 +332,17 @@ impl OpText for GifMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
@@ -399,7 +399,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         let diff = mutation.diff(base);
-        let mutated = diff.await.diff().apply(base).expect("diff must apply to base");
+        let mutated = diff.diff().apply(base).expect("diff must apply to base");
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
@@ -440,7 +440,7 @@ mod tests {
             let returned_diff = apply_gif_mutation(&mut snap, &mutation);
             let expected_diff = mutation.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-            assert_eq!(snap, expected_diff.await.diff().apply(&base).expect("diff must apply to base"), "apply_gif_mutation must match diff.diff().apply(base) for {mutation:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply_gif_mutation must match diff.diff().apply(base) for {mutation:?}");
         }
     }
 
@@ -511,14 +511,28 @@ mod tests {
             GifMutation::RemoveAppExtension { index: 0 },
         ] {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = GifMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = GifMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = GifMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = GifMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
 }
 //#endregion Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/slows-the-second-frame-and-marks-it-do-not-dispose/🦀️component.rs"]
+    mod tests_set_snapshot_slows_the_second_frame_and_marks_it_do_not_dispose;
+}
+//#endregion 🧪️FixtureTests

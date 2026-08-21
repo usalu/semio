@@ -1,0 +1,10 @@
+{
+  "operation": {
+    "scene": 0,
+    "value": "alternate"
+  },
+  "after": "alternate",
+  "touchedPaths": [
+    "document/scenes/*/name"
+  ]
+}

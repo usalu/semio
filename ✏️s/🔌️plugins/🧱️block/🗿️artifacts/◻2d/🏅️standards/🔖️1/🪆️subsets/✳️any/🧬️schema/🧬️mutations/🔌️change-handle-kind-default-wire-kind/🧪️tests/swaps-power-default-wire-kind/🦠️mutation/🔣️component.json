@@ -1,0 +1,5 @@
+{
+  "mutation": "changeHandleKindDefaultWireKind",
+  "id": "hk-power",
+  "newDefaultWireKind": "wire.heavy"
+}

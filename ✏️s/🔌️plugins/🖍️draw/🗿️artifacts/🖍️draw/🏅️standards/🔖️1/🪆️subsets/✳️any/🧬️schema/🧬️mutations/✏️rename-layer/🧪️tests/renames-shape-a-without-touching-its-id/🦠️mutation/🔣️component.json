@@ -1,0 +1,5 @@
+{
+  "mutation": "renameLayer",
+  "layerId": "shape-a",
+  "newName": "Alpha Renamed"
+}

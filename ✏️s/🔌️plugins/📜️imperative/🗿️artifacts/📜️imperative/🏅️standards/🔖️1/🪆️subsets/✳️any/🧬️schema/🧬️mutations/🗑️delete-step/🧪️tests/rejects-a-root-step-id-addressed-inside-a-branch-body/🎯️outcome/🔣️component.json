@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "step-1"
+  ]
+}

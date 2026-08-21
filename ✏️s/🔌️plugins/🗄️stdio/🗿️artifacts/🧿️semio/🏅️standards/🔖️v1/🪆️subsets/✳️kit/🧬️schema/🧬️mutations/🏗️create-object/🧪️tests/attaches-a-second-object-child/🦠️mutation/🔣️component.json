@@ -1,0 +1,13 @@
+{
+  "CreateObject": {
+    "child_id": "obj-2",
+    "target": {
+      "artifactId": "frame-column-object",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "object"
+      }
+    }
+  }
+}

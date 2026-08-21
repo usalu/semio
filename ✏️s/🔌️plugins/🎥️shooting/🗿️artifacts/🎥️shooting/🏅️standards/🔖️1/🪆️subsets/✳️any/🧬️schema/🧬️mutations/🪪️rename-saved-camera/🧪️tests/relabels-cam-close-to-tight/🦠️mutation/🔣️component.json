@@ -1,0 +1,5 @@
+{
+  "mutation": "renameSavedCamera",
+  "id": "cam-close",
+  "new_label": "Tight"
+}

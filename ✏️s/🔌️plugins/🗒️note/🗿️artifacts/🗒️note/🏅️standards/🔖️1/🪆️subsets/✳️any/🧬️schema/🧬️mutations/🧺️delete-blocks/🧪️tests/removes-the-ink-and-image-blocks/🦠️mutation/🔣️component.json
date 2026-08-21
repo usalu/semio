@@ -1,0 +1,7 @@
+{
+  "mutation": "deleteBlocks",
+  "ids": [
+    "blk-ink",
+    "blk-image"
+  ]
+}

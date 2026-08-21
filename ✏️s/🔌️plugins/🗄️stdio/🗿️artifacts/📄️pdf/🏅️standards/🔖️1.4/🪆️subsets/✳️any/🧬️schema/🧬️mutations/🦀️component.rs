@@ -33,12 +33,12 @@ pub enum PdfMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
     let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -76,17 +76,17 @@ impl protocol::OpText for PdfMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
@@ -123,7 +123,7 @@ mod tests {
             let returned_diff = apply_pdf_mutation(&mut s, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-            assert_eq!(s, expected_diff.await.diff().apply(&base).unwrap());
+            assert_eq!(s, expected_diff.diff().apply(&base).unwrap());
         }
     }
     //#endregion mutation_diff_law
@@ -134,7 +134,7 @@ mod tests {
         let base = snap(612.0, 792.0, "base");
         for m in [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }] {
             let diff = m.diff(&base);
-            let mutated = diff.await.diff().apply(&base).unwrap();
+            let mutated = diff.diff().apply(&base).unwrap();
             let mut restored = mutated;
             for inv in m.inverse(&base) {
                 let inv_diff = inv.diff(&restored);
@@ -155,15 +155,29 @@ mod tests {
         let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }];
         for m in cases {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must not contain a newline: {printed:?}");
-            let parsed = PdfMutation::parse_op(&printed).await.expect("parse_op must accept its own print_op output");
+            assert!(!printed.contains('\n'), "print_op must not contain a newline: {printed:?}");
+            let parsed = PdfMutation::parse_op(&printed).expect("parse_op must accept its own print_op output");
             assert_eq!(parsed, m, "parse_op(print_op(m)) must equal m for {m:?}");
 
-            let encoded = m.encode_op().await.expect("encode_op must succeed");
-            let decoded = PdfMutation::decode_op(&encoded).await.expect("decode_op must accept its own encode_op output");
+            let encoded = m.encode_op().expect("encode_op must succeed");
+            let decoded = PdfMutation::decode_op(&encoded).expect("decode_op must accept its own encode_op output");
             assert_eq!(decoded, m, "decode_op(encode_op(m)) must equal m for {m:?}");
         }
     }
     //#endregion op_text_binary_roundtrip_law
 }
 //#endregion Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/shrinks-the-page-to-a5-and-rewrites-its-text/🦀️component.rs"]
+    mod tests_set_snapshot_shrinks_the_page_to_a5_and_rewrites_its_text;
+}
+//#endregion 🧪️FixtureTests

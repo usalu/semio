@@ -1,0 +1,14 @@
+{
+  "mutation": "replaceStockSolid",
+  "newSolid": {
+    "childId": "brep-stock-02",
+    "target": {
+      "artifactId": "stock-1-solid-planed",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  }
+}

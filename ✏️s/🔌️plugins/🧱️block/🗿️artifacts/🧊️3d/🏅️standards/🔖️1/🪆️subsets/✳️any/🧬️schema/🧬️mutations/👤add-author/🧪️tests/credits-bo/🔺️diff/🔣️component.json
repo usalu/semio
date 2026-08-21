@@ -1,0 +1,36 @@
+{
+  "artifact": null,
+  "schema": null,
+  "objectKind": null,
+  "representations": null,
+  "vortexKinds": null,
+  "vortices": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": {
+    "values": [
+      {
+        "id": "author-ada",
+        "name": "Ada",
+        "email": "ada@example.org"
+      },
+      {
+        "id": "author-bo",
+        "name": "Bo"
+      }
+    ]
+  },
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "activeRepresentationId": null,
+  "wantedTags": null,
+  "locale": null,
+  "windows": null,
+  "brushVortexKindId": null,
+  "brushRadius": null,
+  "brushFlip": null,
+  "brushPreview": null,
+  "camera": null,
+  "hoveredVortexFullId": null
+}

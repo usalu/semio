@@ -1,0 +1,4 @@
+{
+  "mutation": "changeObjectKindIcon",
+  "newIcon": "icon://pod"
+}

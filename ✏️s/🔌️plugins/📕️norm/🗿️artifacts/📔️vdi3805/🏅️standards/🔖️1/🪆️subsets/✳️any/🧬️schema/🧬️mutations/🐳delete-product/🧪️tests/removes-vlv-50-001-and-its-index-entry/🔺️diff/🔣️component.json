@@ -1,0 +1,35 @@
+{
+  "artifact": null,
+  "manufacturerFile": null,
+  "catalog": {
+    "file": {
+      "header_version": "3805",
+      "manufacturer": "DEMO",
+      "building_system_number": {
+        "system_code": "420",
+        "subsystem": "10",
+        "sequence": 1
+      },
+      "created": "2026-07-22",
+      "charset": "UTF-8",
+      "record_count": 2,
+      "extensions": {
+        "fields": {}
+      }
+    },
+    "products": [],
+    "extensions": {
+      "fields": {}
+    }
+  },
+  "editionProfile": null,
+  "correctionAsOf": null,
+  "strictMode": null,
+  "index": {
+    "entries": []
+  },
+  "geometry": null,
+  "curves": null,
+  "limits": null,
+  "selectedCheckIndex": null
+}

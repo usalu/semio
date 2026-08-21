@@ -1,0 +1,6 @@
+{
+  "mutation": "moveHandle",
+  "id": "handle-in",
+  "newAngle": 1.5,
+  "newRadius": 0.75
+}

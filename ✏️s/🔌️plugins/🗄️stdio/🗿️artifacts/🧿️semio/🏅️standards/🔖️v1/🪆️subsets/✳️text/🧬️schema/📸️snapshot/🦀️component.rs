@@ -197,8 +197,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -235,7 +235,7 @@ pub(crate) fn write_mark(out: &mut Vec<u8>, m: &SemioTextMark) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_mark(reader: &mut store::ByteReader<'_>) -> Result<SemioTextMark, String> {
-    let kind = mark_kind_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?)?;
+    let kind = mark_kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
     let href = read_str_lp(reader)?;
     Ok(SemioTextMark { kind, href })
 }
@@ -252,7 +252,7 @@ pub(crate) fn write_run(out: &mut Vec<u8>, r: &SemioTextRun) {
 pub(crate) fn read_run(reader: &mut store::ByteReader<'_>) -> Result<SemioTextRun, String> {
     let language = read_str_lp(reader)?;
     let content = read_str_lp(reader)?;
-    let mark_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mark_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut marks = Vec::with_capacity(mark_count as usize);
     for _ in 0..mark_count {
         marks.push(read_mark(reader)?);
@@ -280,12 +280,12 @@ fn encode_text_snapshot_binary(s: &SemioTextSnapshot) -> Vec<u8> {
 fn decode_text_snapshot_binary(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let run_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut runs = Vec::with_capacity(run_count as usize);
     for _ in 0..run_count {
         runs.push(read_run(&mut reader)?);
@@ -369,7 +369,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioTextSnapshot::default();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -377,7 +377,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioTextSnapshot::default();
         let text = <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -387,10 +387,10 @@ mod tests {
     async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTextSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioTextSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
         let text = <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back_text = <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back_text);
     }
 }

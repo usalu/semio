@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTargetVolumeLocked",
+  "id": "volume-1",
+  "newLocked": true
+}

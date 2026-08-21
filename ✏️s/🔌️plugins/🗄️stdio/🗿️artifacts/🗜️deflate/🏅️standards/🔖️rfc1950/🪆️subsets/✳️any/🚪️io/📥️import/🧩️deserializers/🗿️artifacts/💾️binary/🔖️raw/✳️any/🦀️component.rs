@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🗜️ Zlib-compress binary payload into a DeflateSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<DeflateSnapshot, store::PackError> {
-    let payload = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&from.bytes).await.map_err(|e| store::PackError::Schema(e))?;
+    let payload = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&from.bytes).map_err(|e| store::PackError::Schema(e))?;
     Ok(DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), payload, ..Default::default() })
 }
 

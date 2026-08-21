@@ -1,0 +1,28 @@
+{
+  "objects": {
+    "values": [
+      {
+        "childId": "obj-1",
+        "target": {
+          "artifactId": "frame-beam-object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        }
+      },
+      {
+        "childId": "obj-2",
+        "target": {
+          "artifactId": "frame-column-object",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          }
+        }
+      }
+    ]
+  }
+}

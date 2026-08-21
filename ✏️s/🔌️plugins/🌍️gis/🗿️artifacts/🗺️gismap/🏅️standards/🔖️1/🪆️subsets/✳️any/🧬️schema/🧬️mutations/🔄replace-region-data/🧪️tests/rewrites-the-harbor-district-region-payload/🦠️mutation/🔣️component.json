@@ -1,0 +1,10 @@
+{
+  "ReplaceRegionData": {
+    "id": "region-harbor-district",
+    "newData": {
+      "areaKm2": 3.25,
+      "kind": "district",
+      "protectedArea": false
+    }
+  }
+}

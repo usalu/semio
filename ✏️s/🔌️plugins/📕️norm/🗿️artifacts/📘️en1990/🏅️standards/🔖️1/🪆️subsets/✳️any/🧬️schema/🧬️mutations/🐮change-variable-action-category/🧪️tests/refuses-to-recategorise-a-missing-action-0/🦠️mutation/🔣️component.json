@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVariableActionCategory",
+  "index": 0,
+  "new_category": "Q_wind"
+}

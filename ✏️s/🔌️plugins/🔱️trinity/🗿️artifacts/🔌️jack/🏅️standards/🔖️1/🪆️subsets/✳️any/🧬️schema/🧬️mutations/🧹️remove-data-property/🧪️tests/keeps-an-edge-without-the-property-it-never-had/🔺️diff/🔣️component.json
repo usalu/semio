@@ -1,0 +1,21 @@
+{
+  "schema": null,
+  "name": null,
+  "manifestId": null,
+  "manifest": null,
+  "camera": null,
+  "content": null,
+  "rootNodeId": null,
+  "activeFixtureId": null,
+  "jackQuery": null,
+  "lodModeByWindow": null,
+  "viewportCamera": null,
+  "jackResultJson": null,
+  "editorEngagementInput": null,
+  "graphEngagementInput": null,
+  "resultsEngagementInput": null,
+  "reorganizeEpoch": null,
+  "editorSelection": null,
+  "revision": null,
+  "locale": null
+}

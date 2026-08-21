@@ -1,0 +1,13 @@
+{
+  "mutation": "replaceElement",
+  "id": "f1",
+  "newElement": {
+    "kind": "frame",
+    "id": "f1",
+    "start": "n1",
+    "end": "n3",
+    "materialId": "steel",
+    "sectionId": "hea200",
+    "roll": 1.5
+  }
+}

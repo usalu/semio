@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "workshop": null,
+  "stockId": null,
+  "stockLabel": null,
+  "stockPose": null,
+  "stockSolid": {
+    "childId": "brep-stock-02",
+    "target": {
+      "artifactId": "stock-1-solid-planed",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  },
+  "steps": null,
+  "toolSolids": null,
+  "resolvedUpTo": null,
+  "selectedId": null,
+  "selectedFaceId": null,
+  "activeUtilityId": null,
+  "selectionMethod": null,
+  "engagementInput": null,
+  "cameraPositionX": null,
+  "cameraPositionY": null,
+  "cameraPositionZ": null,
+  "cameraTargetX": null,
+  "cameraTargetY": null,
+  "cameraTargetZ": null,
+  "cameraFov": null,
+  "sunEnabled": null,
+  "sunAzimuth": null,
+  "sunElevation": null,
+  "sunIntensity": null,
+  "sunColor": null,
+  "locale": null,
+  "contributionsJson": null,
+  "hoveredId": null
+}

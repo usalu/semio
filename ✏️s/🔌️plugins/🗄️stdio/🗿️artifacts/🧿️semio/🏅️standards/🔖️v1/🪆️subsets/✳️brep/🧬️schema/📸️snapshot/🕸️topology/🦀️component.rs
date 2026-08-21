@@ -295,7 +295,7 @@ impl EngineRep<BrepArenaSeed> for Body {
     /// here, where the whole point is restoring each entity's *existing* label from the seed;
     /// calling them would silently break the round-trip law below. `euler::make_loop` is the one
     /// euler function this DOES call, because loops carry no label to preserve or break.
-    fn build(seed: &BrepArenaSeed) -> Self {
+    async fn build(seed: &BrepArenaSeed) -> Self {
         let mut body = Body::new();
         body.labels = LabelSource::from_next(seed.next_label);
 

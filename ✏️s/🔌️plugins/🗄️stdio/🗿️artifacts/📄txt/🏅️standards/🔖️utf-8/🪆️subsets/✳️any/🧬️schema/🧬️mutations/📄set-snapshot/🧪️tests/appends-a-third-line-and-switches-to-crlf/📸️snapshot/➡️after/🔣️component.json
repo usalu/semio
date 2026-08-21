@@ -1,0 +1,10 @@
+{
+  "schema": "stdio.txt",
+  "lines": [
+    "semio",
+    "stdio",
+    "txt"
+  ],
+  "trailingNewline": true,
+  "lineEnding": "crLf"
+}

@@ -6819,6 +6819,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-job"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-trace",
+]
+
+[[package]]
 name = "semio-framework-machine"
 version = "0.1.0"
 dependencies = [
@@ -7076,6 +7084,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-editor",
+ "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7085,6 +7094,9 @@ dependencies = [
  "semio-framework-surface",
  "semio-framework-trace",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-host",
+ "semio-framework-ui-render",
  "semio-s-plugin-puzzle",
  "serde",
  "serde_json",

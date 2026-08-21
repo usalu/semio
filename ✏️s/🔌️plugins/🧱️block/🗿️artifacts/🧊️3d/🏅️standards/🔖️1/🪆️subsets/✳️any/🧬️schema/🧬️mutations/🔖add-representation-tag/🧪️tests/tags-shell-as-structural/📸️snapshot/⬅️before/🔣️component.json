@@ -1,0 +1,111 @@
+{
+  "schema": "block.3d",
+  "objectKind": {
+    "id": "ok-capsule",
+    "name": "capsule",
+    "label": "Capsule",
+    "variant": "a",
+    "description": "One habitation capsule shell.",
+    "icon": "icon://capsule",
+    "unit": "m"
+  },
+  "representations": [
+    {
+      "id": "rep-shell",
+      "name": "shell",
+      "meshUrl": "mesh://capsule/shell",
+      "tags": [
+        "lod0",
+        "printable"
+      ],
+      "lod": "lod0",
+      "description": "Outer shell mesh.",
+      "attributes": [
+        {
+          "key": "finish",
+          "value": "matte"
+        }
+      ]
+    }
+  ],
+  "catalog": {
+    "childId": "catalog-a602bbe51a39cd44",
+    "target": {
+      "artifactId": "catalog-a602bbe51a39cd44",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "kit"
+      }
+    }
+  },
+  "vortexKindExtra": [
+    {
+      "id": "door",
+      "label": "Door",
+      "color": "hsl(206 52% 48%)",
+      "defaultCableKind": "cable.link"
+    },
+    {
+      "id": "hatch",
+      "label": "Hatch",
+      "color": "hsl(37 52% 48%)",
+      "defaultCableKind": "cable.bus"
+    }
+  ],
+  "vortices": [
+    {
+      "id": "vortex-front",
+      "vortexKind": "door",
+      "position": [
+        0.0,
+        -1.6,
+        1.2
+      ],
+      "direction": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "radius": 0.3,
+      "label": "front door"
+    }
+  ],
+  "compatibility": [
+    {
+      "id": "compat-door-door",
+      "source": "door",
+      "target": "door",
+      "bidirectional": true
+    }
+  ],
+  "attributes": [
+    {
+      "key": "material",
+      "value": "concrete"
+    }
+  ],
+  "authors": [
+    {
+      "id": "author-ada",
+      "name": "Ada",
+      "email": "ada@example.org"
+    }
+  ],
+  "camera3d": {
+    "position": [
+      10.0,
+      -10.0,
+      6.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "zoom": 1.0
+  },
+  "meta": {
+    "description": "Fixture base for the block3d mutation vocabulary."
+  }
+}

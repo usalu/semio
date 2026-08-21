@@ -1,0 +1,24 @@
+{
+  "nodes": [],
+  "elements": [],
+  "materials": [
+    {
+      "id": "c30",
+      "name": "Concrete C30/37",
+      "e": 30000000000.0,
+      "g": 12000000000.0,
+      "nu": 0.25,
+      "rho": 2500.0
+    }
+  ],
+  "sections": [],
+  "solids": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

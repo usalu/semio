@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGridOpacity",
+  "newOpacity": 0.75
+}

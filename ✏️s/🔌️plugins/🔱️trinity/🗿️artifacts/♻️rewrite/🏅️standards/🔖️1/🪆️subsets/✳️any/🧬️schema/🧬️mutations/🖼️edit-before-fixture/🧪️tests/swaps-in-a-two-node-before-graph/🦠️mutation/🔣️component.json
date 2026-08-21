@@ -1,0 +1,4 @@
+{
+  "mutation": "editBeforeFixture",
+  "newBeforeFixtureJson": "{\"schema\":\"trinity.graph\",\"name\":\"capsule-stack\",\"nodes\":[{\"id\":\"shaft\"},{\"id\":\"c\"}]}"
+}

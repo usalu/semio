@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "category": null,
+  "layers": null,
+  "climate": null,
+  "airtightnessN50": null,
+  "psiTimesLSum": null,
+  "rhInt": null,
+  "catalogId": null,
+  "materialId": null,
+  "airtightnessClass": null,
+  "tIntC": null,
+  "solarAbsorptance": null,
+  "irradianceWM2": null,
+  "moistureMuExterior": null,
+  "moistureMuInterior": null,
+  "envelopeAreaM2": 150.0,
+  "bb2DetailsConform": null,
+  "applicationType": null,
+  "declaredApplicationClass": null,
+  "selectedCheckIndex": null
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeRoot",
+  "id": "node-a",
+  "newRoot": true
+}

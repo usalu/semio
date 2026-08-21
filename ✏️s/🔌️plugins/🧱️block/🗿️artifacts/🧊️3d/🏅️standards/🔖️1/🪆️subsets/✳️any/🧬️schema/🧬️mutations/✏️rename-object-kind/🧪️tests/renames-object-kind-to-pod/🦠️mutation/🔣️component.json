@@ -1,0 +1,4 @@
+{
+  "mutation": "renameObjectKind",
+  "newName": "pod"
+}

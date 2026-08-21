@@ -1,0 +1,5 @@
+{
+  "mutation": "setLayerOpacity",
+  "layerId": "shape-a",
+  "opacity": 0.5
+}

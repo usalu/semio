@@ -71,7 +71,7 @@ impl ArtifactViewer for Pdf14Viewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -81,7 +81,7 @@ impl ArtifactViewer for Pdf14Viewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf14_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PDF14_DIALECT)
-        .await.document(["stdio", "pdf", "1.4", "any"])
+        .document(["stdio", "pdf", "1.4", "any"])
         .icon_id("file-text")
         .mode_def(view::definition())
         .default_mode_id(view::PDF14_VIEW_MODE_ID)

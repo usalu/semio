@@ -1,0 +1,28 @@
+{
+  "schema": "playbook.program",
+  "id": "playbook",
+  "version": "1",
+  "title": null,
+  "document": {
+    "childId": "playbook-document-add-step-duplicate",
+    "target": {
+      "artifactId": "playbook-document",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "document"
+      }
+    }
+  },
+  "flow": {
+    "childId": "playbook-flow-add-step-duplicate",
+    "target": {
+      "artifactId": "playbook-flow",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  }
+}

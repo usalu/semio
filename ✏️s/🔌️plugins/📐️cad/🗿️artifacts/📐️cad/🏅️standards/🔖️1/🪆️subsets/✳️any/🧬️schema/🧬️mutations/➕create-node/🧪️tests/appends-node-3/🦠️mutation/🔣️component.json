@@ -1,0 +1,8 @@
+{
+  "mutation": "createNode",
+  "node": {
+    "id": "node-3",
+    "label": "Column",
+    "kind": "solid"
+  }
+}

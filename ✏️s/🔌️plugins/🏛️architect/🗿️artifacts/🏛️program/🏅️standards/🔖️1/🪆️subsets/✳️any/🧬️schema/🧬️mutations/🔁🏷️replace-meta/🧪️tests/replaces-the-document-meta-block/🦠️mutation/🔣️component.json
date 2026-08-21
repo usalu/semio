@@ -1,0 +1,25 @@
+{
+  "mutation": "replaceMeta",
+  "newMeta": {
+    "schema": "architect.program",
+    "documentId": "document-fixture",
+    "title": "Fixture Program",
+    "subtitle": null,
+    "purpose": {
+      "text": ""
+    },
+    "terminology": [],
+    "classification": [],
+    "industrySector": "healthcare",
+    "projectType": "",
+    "locale": "en",
+    "revision": "0",
+    "authorIds": [],
+    "sourceSystem": null,
+    "exportProfile": null,
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    }
+  }
+}

@@ -102,7 +102,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn from_text_round_trips_through_tiny_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
-            let built = SvgTinyBuilderConstruction::from_text(text).await.expect("parses").build().await.expect("conforming document builds");
+            let built = SvgTinyBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
             assert!(matches!(built.doc.root, Some(XmlNode::Element { .. })));
         }
     }

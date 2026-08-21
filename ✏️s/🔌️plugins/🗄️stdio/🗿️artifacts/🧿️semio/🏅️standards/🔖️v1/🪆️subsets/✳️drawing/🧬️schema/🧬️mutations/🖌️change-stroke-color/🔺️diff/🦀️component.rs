@@ -20,7 +20,7 @@ pub fn diff(payload: &ChangeStrokeColor, base: &SemioDrawingSnapshot) -> protoco
         }
     }
     if old.stroke == payload.new_color {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that stroke color.", payload.style_name));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that stroke color.", payload.style_name));
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,

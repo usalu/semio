@@ -1,0 +1,6 @@
+{
+  "mutation": "changeEdgeTips",
+  "id": "edge-1",
+  "newSourceTip": "arrow",
+  "newTargetTip": "none"
+}

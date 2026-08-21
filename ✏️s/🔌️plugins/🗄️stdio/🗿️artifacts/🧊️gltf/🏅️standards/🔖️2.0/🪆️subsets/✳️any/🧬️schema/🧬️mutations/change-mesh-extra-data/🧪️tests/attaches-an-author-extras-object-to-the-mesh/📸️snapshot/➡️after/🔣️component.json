@@ -1,0 +1,19 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "meshes": [
+      {
+        "name": "hull",
+        "extras": {
+          "author": "semio",
+          "revision": 2
+        }
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

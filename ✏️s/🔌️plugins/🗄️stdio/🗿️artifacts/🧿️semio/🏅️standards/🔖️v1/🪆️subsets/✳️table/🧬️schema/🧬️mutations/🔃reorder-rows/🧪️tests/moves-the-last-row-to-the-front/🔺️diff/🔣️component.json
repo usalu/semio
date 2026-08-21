@@ -1,0 +1,30 @@
+{
+  "rows": {
+    "values": [
+      {
+        "cells": [
+          {
+            "kind": "str",
+            "value": "Hamburg"
+          }
+        ]
+      },
+      {
+        "cells": [
+          {
+            "kind": "str",
+            "value": "Hannover"
+          }
+        ]
+      },
+      {
+        "cells": [
+          {
+            "kind": "str",
+            "value": "Berlin"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -206,10 +206,10 @@ mod carrier_law {
     #[semio_framework_async_macros::async_test]
     async fn carrier_native_is_raw() {
         for text in ["", "hello\n", "a\r\nb\r\nc", "just one line, no newline", "Hello, \u{4e16}\u{754c}!\n\u{1f389}"] {
-            let decoded = TxtSnapshot::parse_dsl(text).await.expect("decode");
+            let decoded = TxtSnapshot::parse_dsl(text).expect("decode");
             let encoded = decoded.print_dsl();
             assert_eq!(encoded, text, "carrier round trip must be verbatim for {text:?}");
-            assert!(!encoded.await.starts_with("semio "), "carrier payload must not carry a .semio preamble: {encoded:?}");
+            assert!(!encoded.starts_with("semio "), "carrier payload must not carry a .semio preamble: {encoded:?}");
         }
     }
 }

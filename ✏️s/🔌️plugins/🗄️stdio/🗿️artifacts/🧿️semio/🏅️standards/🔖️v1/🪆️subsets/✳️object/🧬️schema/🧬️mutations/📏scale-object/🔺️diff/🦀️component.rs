@@ -15,7 +15,7 @@ pub fn diff(payload: &ScaleObject, base: &SemioObjectSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object scale must be finite and positive.".to_string(), ["transform".to_string()]);
     }
     if base.transform.scale == s {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", "Object is already at this scale.".to_string());
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this scale.".to_string());
     }
     let mut transform = base.transform.clone();
     transform.scale = s;

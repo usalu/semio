@@ -1,0 +1,13 @@
+{
+  "mutation": "editBlockText",
+  "id": "blk-text",
+  "newParagraphs": [
+    {
+      "runs": [
+        {
+          "text": "Hello, note."
+        }
+      ]
+    }
+  ]
+}

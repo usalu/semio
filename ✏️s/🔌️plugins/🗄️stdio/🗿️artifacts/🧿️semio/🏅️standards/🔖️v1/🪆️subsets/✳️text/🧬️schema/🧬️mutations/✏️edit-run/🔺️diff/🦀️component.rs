@@ -12,7 +12,7 @@ pub fn diff(payload: &EditRun, base: &SemioTextSnapshot) -> protocol::MutationOu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
     };
     if existing.content == payload.new_content {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content));
     }
     let mut runs = base.runs.clone();
     runs[payload.index].content = payload.new_content.clone();

@@ -31,7 +31,7 @@ mod tests {
         use crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::PngInference;
         use crate::artifacts::png::PngSnapshot;
         use protocol::Inference;
-        let snapshot = <PngSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
+        let snapshot = <PngSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(PngInference::infer(&snapshot), PngInference::infer(&snapshot));
     }
 

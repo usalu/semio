@@ -1,0 +1,6 @@
+{
+  "mutation": "moveBlockToContainer",
+  "id": "blk-ink",
+  "newParentId": "blk-group",
+  "index": 0
+}

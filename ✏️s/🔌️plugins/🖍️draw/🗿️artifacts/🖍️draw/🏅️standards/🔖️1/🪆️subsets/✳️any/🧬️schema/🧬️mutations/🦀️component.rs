@@ -112,6 +112,24 @@ pub use super::set_layer_visible::mutation::{set_layer_visible, SetLayerVisible}
 pub use super::update_layer_trace_params::mutation::{update_layer_trace_params, UpdateLayerTraceParams};
 pub use super::update_layer_transform::mutation::{update_layer_transform, UpdateLayerTransform};
 
+//#region 🔖️Apply
+/// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry
+/// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
+/// diff carries an empty `DrawDiff`, so the snapshot is left untouched and `Ok(())` is still
+/// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
+pub async fn apply_draw_mutation(snapshot: &mut DrawSnapshot, mutation: &DrawMutation) -> protocol::MutationApplyResult<()> {
+    use store::MutationDiff;
+    let next = <DrawMutation as protocol::Mutation<DrawSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
+    *snapshot = next;
+    Ok(())
+}
+
+/// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
+pub async fn inverse_draw_mutation(snapshot: &DrawSnapshot, mutation: &DrawMutation) -> Vec<DrawMutation> {
+    <DrawMutation as protocol::Mutation<DrawSnapshot>>::inverse(mutation, snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

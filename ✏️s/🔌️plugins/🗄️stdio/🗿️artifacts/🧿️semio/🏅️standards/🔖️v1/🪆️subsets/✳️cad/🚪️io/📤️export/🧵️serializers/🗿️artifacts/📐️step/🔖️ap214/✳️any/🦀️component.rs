@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(step.entities.len(), 7, "4 for LINE + 3 for CIRCLE; Text is dropped");
 
         let text = store::ArtifactDsl::print_dsl(&step);
-        let reparsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("reparse real step text");
+        let reparsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real step text");
         assert_eq!(reparsed, step, "step's own codec_retention_law must hold on our emitted graph");
 
         let line_count = reparsed.entities.iter().filter(|e| e.name == "LINE").count();

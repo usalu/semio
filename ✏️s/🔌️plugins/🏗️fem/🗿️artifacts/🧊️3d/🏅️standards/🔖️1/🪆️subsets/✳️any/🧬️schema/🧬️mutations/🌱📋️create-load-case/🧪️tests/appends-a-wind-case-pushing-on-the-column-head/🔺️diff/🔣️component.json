@@ -1,0 +1,38 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": {
+    "added": [
+      {
+        "id": "wind",
+        "name": "Wind X",
+        "loads": [
+          {
+            "kind": "nodal",
+            "id": "w1",
+            "nodeId": "n3",
+            "dof": "Tx",
+            "value": 7.5
+          }
+        ],
+        "selfWeight": false
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

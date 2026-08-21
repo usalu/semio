@@ -125,12 +125,12 @@ pub enum ObjMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
     let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -187,7 +187,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
             ObjMutation::SetUsemtl { usemtl } => diff_set_usemtl(usemtl.clone()),
             ObjMutation::SetSmoothingGroups { smoothing_groups } => diff_set_smoothing_groups(smoothing_groups.clone()),
             ObjMutation::SetUnknownStatements { unknown_statements } => diff_set_unknown_statements(unknown_statements.clone()),
-        }).await
+        })
     }
 
     async fn inverse(&self, base: &ObjSnapshot) -> Vec<Self> {
@@ -271,17 +271,17 @@ impl OpText for ObjMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
@@ -419,7 +419,7 @@ mod tests {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
-            let expected = diff.await.diff().apply(&base).expect("valid mutation diff");
+            let expected = diff.diff().apply(&base).expect("valid mutation diff");
 
             let mut via_apply = base.clone();
             let returned_diff = apply_obj_mutation(&mut via_apply, &m);
@@ -443,8 +443,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.await.diff().apply(&base).expect("valid forward diff");
-            let back = d.await.diff().inverse(&base).apply(&mid).expect("valid inverse diff");
+            let mid = d.diff().apply(&base).expect("valid forward diff");
+            let back = d.diff().inverse(&base).apply(&mid).expect("valid inverse diff");
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -457,68 +457,68 @@ mod tests {
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
         let d1 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 8.0, y: 8.0, z: 8.0, w: None } }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveVertex { index: 0 }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).expect("valid second diff");
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive.
         let d1 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: None } }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).expect("valid second diff");
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.vertices.len(), base.vertices.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField (SetVertex): patch into the added payload.
         let d1 = ObjMutation::InsertVertex { index: 1, vertex: ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::SetVertex { index: 1, vertex: ObjVertex { x: 42.0, y: 0.0, z: 0.0, w: Some(1.0) } }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).expect("valid second diff");
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
         assert_eq!(after.vertices[1].x, 42.0);
 
         // 🧩 Modify + Remove: modifying then removing the same vertex collapses to a removal.
         let d1 = ObjMutation::SetVertex { index: 1, vertex: ObjVertex { x: 7.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveVertex { index: 1 }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).expect("valid second diff");
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Name-keyed: Add group + Rename-shaped remove-of-added annihilates the add.
         let d1 = ObjMutation::SetGroup { name: "Fresh".into(), faces: vec![0] }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveGroup { name: "Fresh".into() }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).expect("valid second diff");
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
         assert_eq!(after.groups, base.groups, "add-then-remove of the same name must be a full no-op");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = ObjMutation::InsertVertex { index: 0, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let s1 = d1.await.diff().apply(&base).expect("valid first diff");
+        let s1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::SetVertex { index: 0, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: Some(1.0) } }.diff(&s1);
-        let s2 = d2.await.diff().apply(&s1).expect("valid second diff");
+        let s2 = d2.diff().apply(&s1).expect("valid second diff");
         let d3 = ObjMutation::RemoveVertex { index: 2 }.diff(&s2);
-        let s3 = d3.await.diff().apply(&s2).expect("valid third diff");
+        let s3 = d3.diff().apply(&s2).expect("valid third diff");
 
-        let mut left = d1.await.diff().clone();
-        left.absorb(d2.await.diff().clone());
-        left.absorb(d3.await.diff().clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.await.diff().clone();
-        d23.absorb(d3.await.diff().clone());
-        let mut right = d1.await.diff().clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("valid left diff"), s3);
@@ -553,43 +553,43 @@ mod tests {
         // 🔍 Index-keyed collections: `between(a,b)` (b longer) proves modified+added;
         // `between(b,a)` (b longer, now the base) proves modified+removed. Combined, every
         // triple kind is exercised for every one of the four index-keyed collections.
-        let vd_ab = d_ab.await.vertices.as_ref().expect("vertices diff populated (a->b)");
+        let vd_ab = d_ab.vertices.as_ref().expect("vertices diff populated (a->b)");
         assert!(vd_ab.removed.is_empty() && !vd_ab.modified.is_empty() && !vd_ab.added.is_empty());
         let vm = &vd_ab.modified[0].diff;
         assert!(vm.x.is_some() && vm.y.is_some() && vm.z.is_some() && vm.w.is_some(), "every ObjVertexDiff field must be patched");
-        let vd_ba = d_ba.await.vertices.as_ref().expect("vertices diff populated (b->a)");
+        let vd_ba = d_ba.vertices.as_ref().expect("vertices diff populated (b->a)");
         assert!(!vd_ba.removed.is_empty() && !vd_ba.modified.is_empty() && vd_ba.added.is_empty());
 
-        let td_ab = d_ab.await.texcoords.as_ref().expect("texcoords diff populated");
+        let td_ab = d_ab.texcoords.as_ref().expect("texcoords diff populated");
         assert!(!td_ab.modified.is_empty() && !td_ab.added.is_empty());
         let tm = &td_ab.modified[0].diff;
         assert!(tm.u.is_some() && tm.v.is_some(), "u/v must be patched");
         assert_eq!(tm.w, Some(None), "w tri-state must exercise Some(None) (source had w, target doesn't)");
 
-        let nd_ab = d_ab.await.normals.as_ref().expect("normals diff populated");
+        let nd_ab = d_ab.normals.as_ref().expect("normals diff populated");
         assert!(!nd_ab.modified.is_empty() && !nd_ab.added.is_empty());
         let nm = &nd_ab.modified[0].diff;
         assert!(nm.x.is_some() && nm.y.is_some() && nm.z.is_some());
 
-        let fd_ab = d_ab.await.faces.as_ref().expect("faces diff populated");
+        let fd_ab = d_ab.faces.as_ref().expect("faces diff populated");
         assert!(!fd_ab.modified.is_empty() && !fd_ab.added.is_empty());
         assert!(fd_ab.modified[0].diff.vertices.is_some());
 
         // 🔍 Name-keyed collections: all three kinds from ONE `between(a,b)` call.
-        let gd = d_ab.await.groups.as_ref().expect("groups diff populated");
+        let gd = d_ab.groups.as_ref().expect("groups diff populated");
         assert!(!gd.removed.is_empty(), "removed must be non-empty (G1 dropped)");
         assert!(!gd.modified.is_empty(), "modified must be non-empty (G2's faces changed)");
         assert!(!gd.added.is_empty(), "added must be non-empty (G3 is new)");
         assert!(gd.modified[0].diff.faces.is_some());
 
-        let od = d_ab.await.objects.as_ref().expect("objects diff populated");
+        let od = d_ab.objects.as_ref().expect("objects diff populated");
         assert!(!od.removed.is_empty() && !od.modified.is_empty() && !od.added.is_empty());
 
         // 🔍 Scalars.
-        assert_eq!(d_ab.await.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
-        assert!(d_ab.await.usemtl.is_some());
-        assert!(d_ab.await.smoothing_groups.is_some());
-        assert!(d_ab.await.unknown_statements.is_some());
+        assert_eq!(d_ab.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
+        assert!(d_ab.usemtl.is_some());
+        assert!(d_ab.smoothing_groups.is_some());
+        assert!(d_ab.unknown_statements.is_some());
     }
     //#endregion 🔖️FieldSweep
 
@@ -602,15 +602,24 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = ObjMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = ObjMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = ObjMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = ObjMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/lifts-the-third-vertex-and-gives-it-an-explicit-w/🦀️component.rs"]
+mod set_snapshot_lifts_the_third_vertex_and_gives_it_an_explicit_w;
+//#endregion 🧪️FixtureCases

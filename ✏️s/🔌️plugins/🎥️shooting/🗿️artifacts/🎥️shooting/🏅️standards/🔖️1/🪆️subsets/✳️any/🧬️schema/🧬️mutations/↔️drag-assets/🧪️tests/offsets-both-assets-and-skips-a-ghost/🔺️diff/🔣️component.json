@@ -1,0 +1,55 @@
+{
+  "artifact": null,
+  "schema": null,
+  "assets": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "asset-hero",
+        "patch": {
+          "name": null,
+          "url": null,
+          "origin": [
+            5.0,
+            1.0,
+            3.5
+          ],
+          "orientation": null,
+          "scale": null
+        }
+      },
+      {
+        "id": "asset-prop",
+        "patch": {
+          "name": null,
+          "url": null,
+          "origin": [
+            4.0,
+            -1.0,
+            0.5
+          ],
+          "orientation": null,
+          "scale": null
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "savedCameras": null,
+  "scene": null,
+  "shots": null,
+  "activeShotId": null,
+  "activeAssetId": null,
+  "emblem": null,
+  "selectedShotIds": null,
+  "activeUtilityId": null,
+  "defaultShotFormat": null,
+  "defaultShotShape": null,
+  "defaultAssetFormat": null,
+  "centerModel": null,
+  "fitRevision": null,
+  "cameraDraftLabel": null,
+  "camera": null,
+  "locale": null
+}

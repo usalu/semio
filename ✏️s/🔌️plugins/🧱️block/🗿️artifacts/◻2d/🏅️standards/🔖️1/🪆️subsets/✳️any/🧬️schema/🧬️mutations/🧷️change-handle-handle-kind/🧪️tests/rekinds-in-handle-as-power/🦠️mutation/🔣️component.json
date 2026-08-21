@@ -1,0 +1,5 @@
+{
+  "mutation": "changeHandleHandleKind",
+  "id": "handle-in",
+  "newHandleKind": "hk-power"
+}

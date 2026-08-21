@@ -69,7 +69,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -109,8 +109,8 @@ mod tests {
     async fn remove_run_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 99 });
-        assert!(remove.inverse(&base).await.is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+        assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -127,7 +127,7 @@ mod tests {
         assert_eq!(after.runs[0].language, "fr");
 
         let missing = SemioTextMutation::EditRun(edit_run::mutation::EditRun { index: 99, new_content: "x".into() });
-        assert!(missing.inverse(&base).await.is_empty(), "editing an absent index has nothing to undo");
+        assert!(missing.inverse(&base).is_empty(), "editing an absent index has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -162,13 +162,13 @@ mod tests {
     async fn add_remove_mark_of_an_absent_run_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTextMutation::RemoveMark(remove_mark::mutation::RemoveMark { run_index: 99, index: 0 });
-        assert!(remove.inverse(&base).await.is_empty());
-        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(remove.inverse(&base).is_empty());
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioTextMutation::kinds().await.len(), 7);
+        assert_eq!(SemioTextMutation::kinds().len(), 7);
         let mutation = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 2 });
         assert_eq!(mutation.semantics().kind, "remove-run");
         assert_eq!(mutation.semantics().record, "RemovedRun");
@@ -176,3 +176,28 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📥insert-run/🧪️tests/inserts-a-german-run-between-two-english-runs/🦀️component.rs"]
+    mod tests_insert_run_inserts_a_german_run_between_two_english_runs;
+    #[path = "🗑️remove-run/🧪️tests/removes-the-middle-run/🦀️component.rs"]
+    mod tests_remove_run_removes_the_middle_run;
+    #[path = "✏️edit-run/🧪️tests/rewrites-the-marked-runs-content/🦀️component.rs"]
+    mod tests_edit_run_rewrites_the_marked_runs_content;
+    #[path = "🌐change-run-language/🧪️tests/retags-the-second-run-as-german/🦀️component.rs"]
+    mod tests_change_run_language_retags_the_second_run_as_german;
+    #[path = "🔀reorder-runs/🧪️tests/moves-the-first-run-to-the-end/🦀️component.rs"]
+    mod tests_reorder_runs_moves_the_first_run_to_the_end;
+    #[path = "➕add-mark/🧪️tests/adds-a-link-mark-ahead-of-the-bold-mark/🦀️component.rs"]
+    mod tests_add_mark_adds_a_link_mark_ahead_of_the_bold_mark;
+    #[path = "➖remove-mark/🧪️tests/detaches-the-italic-mark-from-the-run/🦀️component.rs"]
+    mod tests_remove_mark_detaches_the_italic_mark_from_the_run;
+}
+//#endregion 🧪️FixtureTests

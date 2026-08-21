@@ -1,0 +1,42 @@
+{
+  "mutation": "replaceServiceRequirement",
+  "serviceRequirement": {
+    "id": "service-requirement-a",
+    "name": "Service Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "serviceName": "Replaced Service Requirement A",
+    "serviceType": "",
+    "provider": null,
+    "serviceLevel": null,
+    "operatingHours": null,
+    "capacity": {
+      "unit": ""
+    },
+    "responseTime": null,
+    "queueManagement": [],
+    "customerProfiles": [],
+    "elementIds": [],
+    "equipmentIds": [],
+    "staffing": {
+      "unit": ""
+    },
+    "qualityMetrics": [],
+    "costModel": null,
+    "contractRefs": [],
+    "dependencies": [],
+    "failureImpact": null,
+    "backupService": [],
+    "feedbackChannels": []
+  }
+}

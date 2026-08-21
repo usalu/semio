@@ -1,0 +1,8 @@
+{
+  "UpdateCraneInputs": {
+    "new_crane_f_z_ed_kn": 75.0,
+    "new_crane_wheel_contact_length_mm": 125.0,
+    "new_crane_dispersion_mm": 62.5,
+    "new_crane_t_w_mm": 12.0
+  }
+}

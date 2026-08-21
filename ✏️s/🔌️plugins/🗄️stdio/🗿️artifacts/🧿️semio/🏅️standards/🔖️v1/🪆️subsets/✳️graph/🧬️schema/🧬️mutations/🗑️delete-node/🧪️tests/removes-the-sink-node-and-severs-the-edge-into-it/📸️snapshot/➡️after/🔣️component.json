@@ -1,0 +1,19 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodes": [
+    {
+      "id": {
+        "value": "a"
+      },
+      "kind": "source",
+      "label": "Source",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "ports": [],
+      "properties": []
+    }
+  ],
+  "edges": []
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "meshes": [
+      {
+        "primitives": [
+          {
+            "attributes": {
+              "POSITION": 0
+            },
+            "targets": [
+              {}
+            ]
+          }
+        ]
+      }
+    ],
+    "accessors": [
+      {
+        "componentType": 5126,
+        "count": 3,
+        "type": "VEC3"
+      },
+      {
+        "componentType": 5126,
+        "count": 3,
+        "type": "VEC3",
+        "name": "normals"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

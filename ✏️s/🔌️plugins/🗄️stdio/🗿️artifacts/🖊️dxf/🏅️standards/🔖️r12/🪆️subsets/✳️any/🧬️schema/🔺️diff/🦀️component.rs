@@ -228,7 +228,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
         }
     }
     let removed_set: HashSet<&str> = removed.iter().map(String::as_str).collect();
-    items.retain(|it| !removed_set.contains(&it.key()));
+    items.retain(|it| !removed_set.contains(it.key()));
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
@@ -241,7 +241,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
 fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> (Vec<String>, Vec<(String, T::Diff)>, Vec<(usize, T)>) {
     let base_keys: HashSet<&str> = base.iter().map(|t| t.key()).collect();
     let other_keys: HashSet<&str> = other.iter().map(|t| t.key()).collect();
-    let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(&t.key())).map(|t| t.key().to_string()).collect();
+    let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(t.key())).map(|t| t.key().to_string()).collect();
     let mut modified = Vec::new();
     for bt in base {
         if let Some(ot) = other.iter().find(|o| o.key() == bt.key()) {
@@ -251,7 +251,7 @@ fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> (Vec<String>, Vec<
             }
         }
     }
-    let added: Vec<(usize, T)> = other.iter().enumerate().filter(|(_, t)| !base_keys.contains(&t.key())).map(|(i, t)| (i, t.clone())).collect();
+    let added: Vec<(usize, T)> = other.iter().enumerate().filter(|(_, t)| !base_keys.contains(t.key())).map(|(i, t)| (i, t.clone())).collect();
     (removed, modified, added)
 }
 
@@ -276,7 +276,7 @@ fn named_absorb_pair<T: DxfNamedElem>(
         }
     }
     let mut merged_modified: Vec<(String, T::Diff)> = d1_modified.iter().filter(|(k, _)| !merged_removed.contains(k)).cloned().collect();
-    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(&t.key())).cloned().collect();
+    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(t.key())).cloned().collect();
 
     for (key, d2d) in d2_modified {
         if added_keys.contains(key) {
@@ -1482,7 +1482,7 @@ pub struct DxfDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).await.at(target)
+    MutationApplyError::new(code, message).at(target)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2572,8 +2572,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -2595,7 +2595,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -2617,7 +2617,7 @@ pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().await.map_err(|e| e.to_string())
+    reader.read_f64_le().map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_point3_bin(out: &mut Vec<u8>, p: &[f64; 3]) {
@@ -2663,10 +2663,10 @@ pub(crate) fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_value_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfValue, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(DxfValue::Str { value: read_str_lp(reader)? }),
-        1 => Ok(DxfValue::Int { value: reader.read_varint_i64().await.map_err(|e| e.to_string())? }),
+        1 => Ok(DxfValue::Int { value: reader.read_varint_i64().map_err(|e| e.to_string())? }),
         2 => Ok(DxfValue::Double { value: read_f64_bin(reader)? }),
         3 => Ok(DxfValue::Point { value: read_point3_bin(reader)? }),
         other => Err(format!("dxf value binary: unknown tag {other}")),
@@ -2679,7 +2679,7 @@ pub(crate) fn enc_group_code_bin(pair: &(i32, DxfValue), out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_group_code_bin(reader: &mut store::ByteReader<'_>) -> Result<(i32, DxfValue), String> {
-    let code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let value = dec_dxf_value_bin(reader)?;
     Ok((code, value))
 }
@@ -2692,7 +2692,7 @@ pub(crate) fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_group_codes_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<(i32, DxfValue)>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(dec_group_code_bin(reader)?);
@@ -2726,7 +2726,7 @@ pub(crate) fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfVertex>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(dec_vertex_bin(reader)?);
@@ -2802,7 +2802,7 @@ pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntity, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
             let start = read_point3_bin(reader)?;
@@ -2829,7 +2829,7 @@ pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<D
         }
         3 => {
             let vertices = dec_vertices_bin(reader)?;
-            let closed = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+            let closed = reader.read_u8().map_err(|e| e.to_string())? != 0;
             let layer = read_str_lp(reader)?;
             let unknown_group_codes = dec_group_codes_bin(reader)?;
             Ok(DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes })
@@ -2874,7 +2874,7 @@ pub(crate) fn enc_dxf_entities_bin(es: &[DxfEntity], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_entities_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfEntity>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(dec_dxf_entity_bin(reader)?);
@@ -2892,7 +2892,7 @@ pub(crate) fn enc_header_var_bin(hv: &DxfHeaderVar, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_header_var_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVar, String> {
     let name = read_str_lp(reader)?;
-    let group_code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let group_code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let value = dec_dxf_value_bin(reader)?;
     let extra_group_codes = dec_group_codes_bin(reader)?;
     Ok(DxfHeaderVar { name, group_code, value, extra_group_codes })
@@ -2908,9 +2908,9 @@ pub(crate) fn enc_layer_bin(l: &DxfLayer, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_layer_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayer, String> {
     let name = read_str_lp(reader)?;
-    let color = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let color = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let linetype = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let unknown_group_codes = dec_group_codes_bin(reader)?;
     Ok(DxfLayer { name, color, linetype, flags, unknown_group_codes })
 }
@@ -2924,7 +2924,7 @@ pub(crate) fn enc_style_bin(s: &DxfStyle, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyle, String> {
     let name = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let font_name = read_str_lp(reader)?;
     let unknown_group_codes = dec_group_codes_bin(reader)?;
     Ok(DxfStyle { name, flags, font_name, unknown_group_codes })
@@ -2939,7 +2939,7 @@ pub(crate) fn enc_linetype_bin(l: &DxfLinetype, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_linetype_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetype, String> {
     let name = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let description = read_str_lp(reader)?;
     let unknown_group_codes = dec_group_codes_bin(reader)?;
     Ok(DxfLinetype { name, flags, description, unknown_group_codes })
@@ -2966,7 +2966,7 @@ pub(crate) fn enc_dxf_tag_bin(t: &DxfTag, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTag, String> {
-    let code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let value = read_str_lp(reader)?;
     Ok(DxfTag { code, value })
 }
@@ -2981,7 +2981,7 @@ pub(crate) fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_other_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfOtherTable, String> {
     let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut tags = Vec::with_capacity(count as usize);
     for _ in 0..count {
         tags.push(dec_dxf_tag_bin(reader)?);
@@ -3005,17 +3005,17 @@ pub(crate) fn enc_dxf_tables_bin(t: &DxfTables, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_tables_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTables, String> {
-    let lc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let lc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(lc as usize);
     for _ in 0..lc {
         layers.push(dec_layer_bin(reader)?);
     }
-    let sc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let sc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(sc as usize);
     for _ in 0..sc {
         styles.push(dec_style_bin(reader)?);
     }
-    let ltc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ltc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut linetypes = Vec::with_capacity(ltc as usize);
     for _ in 0..ltc {
         linetypes.push(dec_linetype_bin(reader)?);
@@ -3045,18 +3045,18 @@ pub(crate) fn enc_dxf_snapshot_bin(s: &DxfSnapshot, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dxf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfSnapshot, String> {
     let schema = read_str_lp(reader)?;
-    let hvc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let hvc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut header_vars = Vec::with_capacity(hvc as usize);
     for _ in 0..hvc {
         header_vars.push(dec_header_var_bin(reader)?);
     }
     let tables = dec_dxf_tables_bin(reader)?;
-    let otc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let otc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut other_tables = Vec::with_capacity(otc as usize);
     for _ in 0..otc {
         other_tables.push(dec_other_table_bin(reader)?);
     }
-    let bc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let bc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(bc as usize);
     for _ in 0..bc {
         blocks.push(dec_block_bin(reader)?);
@@ -3074,7 +3074,7 @@ pub(crate) fn dec_dxf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 /// `[1,<value>]` pair.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.group_code, |v, out| { store::write_varint_i64(out, *v as i64); });
+    write_option_bin(out, &d.group_code, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.value, |v, out| enc_dxf_value_bin(v, out));
     write_option_bin(out, &d.extra_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
@@ -3087,9 +3087,9 @@ pub(crate) fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Res
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.color, |v, out| { store::write_varint_i64(out, *v as i64); });
+    write_option_bin(out, &d.color, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.linetype, |v, out| write_str_lp(out, v));
-    write_option_bin(out, &d.flags, |v, out| { store::write_varint_i64(out, *v as i64); });
+    write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -3102,7 +3102,7 @@ pub(crate) fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.flags, |v, out| { store::write_varint_i64(out, *v as i64); });
+    write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.font_name, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
@@ -3115,7 +3115,7 @@ pub(crate) fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<D
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.flags, |v, out| { store::write_varint_i64(out, *v as i64); });
+    write_option_bin(out, &d.flags, |v, out| store::write_varint_i64(out, *v as i64));
     write_option_bin(out, &d.description, |v, out| write_str_lp(out, v));
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
@@ -3198,7 +3198,7 @@ pub(crate) fn enc_entity_diff_bin(d: &DxfEntityDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntityDiff, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         8 => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity_bin(reader)? }),
         0 => {
@@ -3318,22 +3318,22 @@ fn dec_name_triple_bin<T, D>(
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
         removed.push(read_str_lp(reader)?);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
         let name = read_str_lp(reader)?;
         let d = dec_diff(reader)?;
         modified.push((name, d));
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_item(reader)?;
         added.push((idx, item));
     }
@@ -3362,22 +3362,22 @@ fn dec_index_triple_bin<T, D>(
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let d = dec_diff(reader)?;
         modified.push((idx, d));
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_item(reader)?;
         added.push((idx, item));
     }
@@ -3636,20 +3636,20 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must never contain a newline, for {d:?}");
-            let parsed = DxfDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e:?}, for {d:?}"));
+            assert!(!printed.contains('\n'), "print_diff must never contain a newline, for {d:?}");
+            let parsed = DxfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e:?}, for {d:?}"));
             assert_eq!(parsed, d, "parse_diff(print_diff(d)) == d");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e:?}, for {d:?}"));
-            let decoded = DxfDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e:?}, for {d:?}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e:?}, for {d:?}"));
+            let decoded = DxfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e:?}, for {d:?}"));
             assert_eq!(decoded, d, "decode_diff(encode_diff(d)) == d");
 
             let printed2 = d.print_diff();
             assert_eq!(printed, printed2, "print_diff must be deterministic, for {d:?}");
         }
 
-        assert!(DxfDiff::default().print_diff().await.is_empty());
-        assert_eq!(DxfDiff::parse_diff("").await.expect("parse empty"), DxfDiff::default());
+        assert!(DxfDiff::default().print_diff().is_empty());
+        assert_eq!(DxfDiff::parse_diff("").expect("parse empty"), DxfDiff::default());
     }
 }
 //#endregion 🧪️Tests

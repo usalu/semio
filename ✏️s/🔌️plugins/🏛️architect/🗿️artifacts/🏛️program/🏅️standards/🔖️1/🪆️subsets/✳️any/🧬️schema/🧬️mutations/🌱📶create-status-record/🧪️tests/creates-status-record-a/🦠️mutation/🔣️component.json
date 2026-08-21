@@ -1,0 +1,37 @@
+{
+  "mutation": "createStatusRecord",
+  "statusRecord": {
+    "id": "status-record-a",
+    "name": "Status Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "subjectId": "",
+    "subjectKind": "",
+    "recordStatus": "draft",
+    "previousStatus": null,
+    "changedBy": null,
+    "changedAt": null,
+    "reason": null,
+    "blockers": [],
+    "nextActions": [],
+    "dueDate": null,
+    "progressPercent": null,
+    "health": null,
+    "escalationLevel": null,
+    "relatedIssueIds": [],
+    "relatedRiskIds": [],
+    "milestoneId": null,
+    "reportingPeriod": null,
+    "statusNotes": []
+  }
+}

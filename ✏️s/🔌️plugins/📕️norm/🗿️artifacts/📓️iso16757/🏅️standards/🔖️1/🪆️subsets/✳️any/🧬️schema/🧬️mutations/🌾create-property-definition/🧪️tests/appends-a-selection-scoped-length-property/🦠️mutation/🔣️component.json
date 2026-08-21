@@ -1,0 +1,33 @@
+{
+  "CreatePropertyDefinition": {
+    "property_definition": {
+      "id": "prop.length",
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "Length"
+        },
+        "short_name": null,
+        "alternatives": []
+      },
+      "data_type": "decimal",
+      "unit": {
+        "symbol": "mm",
+        "dimension": {
+          "length": 1,
+          "mass": 0,
+          "time": 0,
+          "temperature": 0
+        },
+        "si_factor": 0.001
+      },
+      "cardinality": {
+        "min": 0,
+        "max": 1
+      },
+      "kind": "Selection",
+      "dictionary_property_id": null
+    },
+    "index": null
+  }
+}

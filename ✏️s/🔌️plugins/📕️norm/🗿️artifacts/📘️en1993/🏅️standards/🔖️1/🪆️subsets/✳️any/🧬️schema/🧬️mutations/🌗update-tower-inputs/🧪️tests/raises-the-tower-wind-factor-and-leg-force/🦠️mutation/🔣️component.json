@@ -1,0 +1,6 @@
+{
+  "UpdateTowerInputs": {
+    "new_tower_wind_factor": 1.75,
+    "new_tower_n_ed_kn": 480.0
+  }
+}

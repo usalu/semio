@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.reorder-cameras.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/cameras/1",
+    "document/cameras/0"
+  ],
+  "payload": {
+    "order": [
+      1,
+      0
+    ]
+  },
+  "operation": {
+    "kind": "reorder",
+    "order": [
+      1,
+      0
+    ]
+  }
+}

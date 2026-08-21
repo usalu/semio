@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.reorder-nodes.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/nodes/1",
+    "document/nodes/0"
+  ],
+  "payload": {
+    "order": [
+      1,
+      0
+    ]
+  },
+  "operation": {
+    "kind": "reorder",
+    "order": [
+      1,
+      0
+    ]
+  }
+}

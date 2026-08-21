@@ -1,0 +1,6 @@
+{
+  "mutation": "changeReferenceLocked",
+  "modelDefinitionId": "spatial.shape",
+  "referenceId": "ref-1",
+  "newLocked": false
+}

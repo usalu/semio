@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRepresentationMeshUrl",
+  "id": "rep-shell",
+  "newMeshUrl": "mesh://capsule/shell-v2"
+}

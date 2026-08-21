@@ -1,0 +1,16 @@
+{
+  "mutation": "replaceObjectVortex",
+  "objectId": "object-a",
+  "vortexId": "vortex-1",
+  "newVortex": {
+    "id": "vortex-1",
+    "vortexKind": "vortex-kind-c",
+    "position": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "hidden": false,
+    "locked": false
+  }
+}

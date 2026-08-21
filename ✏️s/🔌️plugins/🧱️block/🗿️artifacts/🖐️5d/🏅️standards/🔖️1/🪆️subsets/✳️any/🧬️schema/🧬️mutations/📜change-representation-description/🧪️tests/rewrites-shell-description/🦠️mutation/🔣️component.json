@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRepresentationDescription",
+  "id": "rep-shell",
+  "newDescription": "Outer shell mesh, watertight."
+}

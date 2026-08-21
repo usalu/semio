@@ -1,0 +1,4 @@
+{
+  "mutation": "changeStorageAllowanceKwh",
+  "newStorageAllowanceKwh": 4.5
+}

@@ -1,0 +1,143 @@
+{
+  "schema": "s.stdio.semio.presentation",
+  "masters": [
+    {
+      "id": "m-1",
+      "shapes": [
+        {
+          "shapeKind": "placeholder",
+          "frame": {
+            "origin": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "width": 960.0,
+            "height": 120.0
+          },
+          "kind": {
+            "kind": "title"
+          }
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "id": "l-1",
+      "masterId": "m-1",
+      "shapes": [
+        {
+          "shapeKind": "placeholder",
+          "frame": {
+            "origin": {
+              "x": 0.0,
+              "y": 140.0
+            },
+            "width": 960.0,
+            "height": 400.0
+          },
+          "kind": {
+            "kind": "body"
+          }
+        }
+      ]
+    }
+  ],
+  "slides": [
+    {
+      "id": "s-1",
+      "layoutId": "l-1",
+      "shapes": [
+        {
+          "shapeKind": "textBox",
+          "frame": {
+            "origin": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "width": 960.0,
+            "height": 120.0
+          },
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "style_id": null,
+              "runs": [
+                {
+                  "text": "Title Slide",
+                  "style": {
+                    "bold": false,
+                    "italic": false,
+                    "underline": false,
+                    "size": null,
+                    "font": null,
+                    "color": null,
+                    "link": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "notes": []
+    },
+    {
+      "id": "s-2",
+      "layoutId": "l-1",
+      "shapes": [
+        {
+          "shapeKind": "textBox",
+          "frame": {
+            "origin": {
+              "x": 0.0,
+              "y": 140.0
+            },
+            "width": 960.0,
+            "height": 400.0
+          },
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "style_id": null,
+              "runs": [
+                {
+                  "text": "Final agenda",
+                  "style": {
+                    "bold": false,
+                    "italic": false,
+                    "underline": false,
+                    "size": null,
+                    "font": null,
+                    "color": null,
+                    "link": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "kind": "paragraph",
+          "style_id": null,
+          "runs": [
+            {
+              "text": "Keep this slide under a minute.",
+              "style": {
+                "bold": false,
+                "italic": false,
+                "underline": false,
+                "size": null,
+                "font": null,
+                "color": null,
+                "link": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "CreateSubject": {
+    "subject": {
+      "id": "subject.towel-radiator",
+      "kind": "ProductSpecialization",
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "Towel radiator"
+        },
+        "short_name": null,
+        "alternatives": []
+      },
+      "definition": {
+        "locale": "en",
+        "text": "Space heating emitter doubling as a towel rail"
+      },
+      "parent_id": "subject.radiator"
+    },
+    "index": null
+  }
+}

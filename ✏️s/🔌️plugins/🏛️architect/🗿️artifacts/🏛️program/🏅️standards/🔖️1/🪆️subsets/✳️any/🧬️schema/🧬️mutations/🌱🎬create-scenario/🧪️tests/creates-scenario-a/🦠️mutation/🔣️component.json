@@ -1,0 +1,40 @@
+{
+  "mutation": "createScenario",
+  "scenario": {
+    "id": "scenario-a",
+    "name": "Scenario A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "",
+    "hypothesis": {
+      "text": ""
+    },
+    "assumptions": [],
+    "variables": [],
+    "elementIds": [],
+    "requirementIds": [],
+    "growthPlanId": null,
+    "probability": null,
+    "impactSummary": null,
+    "costDelta": null,
+    "areaDelta": null,
+    "headcountDelta": null,
+    "scheduleDelta": null,
+    "riskIds": [],
+    "optionIds": [],
+    "baseline": false,
+    "preferred": false,
+    "analysisIds": [],
+    "ownerId": null
+  }
+}

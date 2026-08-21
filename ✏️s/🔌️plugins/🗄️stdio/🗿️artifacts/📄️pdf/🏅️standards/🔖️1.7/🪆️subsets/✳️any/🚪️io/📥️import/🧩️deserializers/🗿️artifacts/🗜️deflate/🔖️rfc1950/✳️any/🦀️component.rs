@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &DeflateSnapshot) -> Result<PdfSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.payload).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.payload).map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

@@ -125,12 +125,12 @@ fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
     let outcome = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -347,13 +347,13 @@ fn enc_json_path_bin(path: &[JsonPathSegment], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_json_path_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonPath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
         match tag {
             0 => path.push(JsonPathSegment::Key(read_str_lp(reader)?)),
-            1 => path.push(JsonPathSegment::Index(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize)),
+            1 => path.push(JsonPathSegment::Index(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
             other => return Err(format!("json path binary: unknown segment tag {other}")),
         }
     }
@@ -542,7 +542,7 @@ mod tests {
         let returned = apply_json_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
         assert_eq!(returned, expected_diff, "apply_json_mutation must return mutation.diff(base)");
-        let via_diff_apply = expected_diff.await.diff().apply(base).unwrap();
+        let via_diff_apply = expected_diff.diff().apply(base).unwrap();
         assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_json_mutation's result");
         (via_apply, returned)
     }
@@ -612,8 +612,8 @@ mod tests {
         let base = snap(objv(vec![("a", num("1"))]));
         let mutation = JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2") };
         let diff = mutation.diff(&base);
-        let mid = diff.await.diff().apply(&base).unwrap();
-        let inv = diff.await.diff().inverse(&base);
+        let mid = diff.diff().apply(&base).unwrap();
+        let inv = diff.diff().inverse(&base);
         assert_eq!(inv.apply(&mid).unwrap(), base);
     }
     //#endregion inverse_law
@@ -628,15 +628,24 @@ mod tests {
 
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = <JsonMutation as OpText>::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = <JsonMutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch (printed {printed:?})");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed: {e}"));
-            let decoded = <JsonMutation as OpBinary>::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op failed: {e}"));
+            let decoded = <JsonMutation as OpBinary>::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch");
         }
     }
     //#endregion 🔖️OpCodecTests
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/bumps-the-version-lexeme-and-appends-a-tag/🦀️component.rs"]
+mod set_snapshot_bumps_the_version_lexeme_and_appends_a_tag;
+//#endregion 🧪️FixtureCases

@@ -1,0 +1,7 @@
+{
+  "UpdateScriptLimits": {
+    "new_max_steps": 20000,
+    "new_max_recursion": 128,
+    "new_timeout_ms": 250
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGridVisible",
+  "newVisible": false
+}

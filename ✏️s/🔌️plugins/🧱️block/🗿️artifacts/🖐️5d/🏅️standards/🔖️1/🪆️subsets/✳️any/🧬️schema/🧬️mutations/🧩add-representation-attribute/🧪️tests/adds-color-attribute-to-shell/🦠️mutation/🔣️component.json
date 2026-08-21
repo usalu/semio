@@ -1,0 +1,8 @@
+{
+  "mutation": "addRepresentationAttribute",
+  "id": "rep-shell",
+  "attribute": {
+    "key": "color",
+    "value": "bone"
+  }
+}

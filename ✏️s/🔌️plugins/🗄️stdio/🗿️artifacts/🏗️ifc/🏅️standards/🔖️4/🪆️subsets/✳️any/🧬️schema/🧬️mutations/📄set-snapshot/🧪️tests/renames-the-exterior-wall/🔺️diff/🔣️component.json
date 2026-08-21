@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "modified": [
+      {
+        "id": 1,
+        "diff": {
+          "args": {
+            "modified": [
+              {
+                "index": 2,
+                "value": {
+                  "kind": "string",
+                  "value": "Exterior Wall"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -3534,7 +3534,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             continue;
         };
         let plane_position = reference.origin.unwrap_or([0.0, 0.0, 0.0]);
-        let plane_origin = Vec3::new(plane_position[0] as f32, plane_position[1] as f32, plane_position[2] as f32);
+        let plane_origin = Vec3::new(plane_position[0] as f32, plane_position[1] as f32, plane_position[2] as f32).await;
         let width = reference.width_world.unwrap_or(1.0) as f32;
         let image_aspect = state.reference_aspect.get(url).copied().unwrap_or(1.0);
         let height = width / image_aspect.max(0.01);

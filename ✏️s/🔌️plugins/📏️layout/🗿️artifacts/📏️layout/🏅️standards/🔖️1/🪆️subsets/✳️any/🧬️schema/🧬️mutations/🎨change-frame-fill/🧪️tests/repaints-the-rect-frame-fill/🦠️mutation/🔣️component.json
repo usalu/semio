@@ -1,0 +1,12 @@
+{
+  "ChangeFrameFill": {
+    "page_id": "page-1",
+    "frame_id": "frame-rect",
+    "new_fill": [
+      0.5,
+      0.25,
+      0.75,
+      1.0
+    ]
+  }
+}

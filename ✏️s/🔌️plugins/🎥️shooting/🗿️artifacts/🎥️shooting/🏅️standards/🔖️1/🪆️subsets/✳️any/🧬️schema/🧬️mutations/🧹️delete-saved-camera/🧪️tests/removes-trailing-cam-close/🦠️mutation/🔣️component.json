@@ -1,0 +1,4 @@
+{
+  "mutation": "deleteSavedCamera",
+  "id": "cam-close"
+}

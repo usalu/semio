@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.create-buffer-view.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/bufferViews/0"
+  ],
+  "payload": {
+    "position": 0,
+    "buffer": 0,
+    "byteOffset": 0,
+    "byteLength": 2
+  },
+  "operation": {
+    "kind": "insert",
+    "position": 0,
+    "item": {
+      "buffer": 0,
+      "byteLength": 2
+    }
+  }
+}

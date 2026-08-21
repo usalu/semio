@@ -1,0 +1,13 @@
+{
+  "mutation": "createNode",
+  "node": {
+    "id": "node-alpha",
+    "nodeKind": "identity",
+    "shape": "circle",
+    "x": 0.0,
+    "y": 0.0,
+    "radius": 24.0,
+    "text": "Alpha",
+    "handles": []
+  }
+}

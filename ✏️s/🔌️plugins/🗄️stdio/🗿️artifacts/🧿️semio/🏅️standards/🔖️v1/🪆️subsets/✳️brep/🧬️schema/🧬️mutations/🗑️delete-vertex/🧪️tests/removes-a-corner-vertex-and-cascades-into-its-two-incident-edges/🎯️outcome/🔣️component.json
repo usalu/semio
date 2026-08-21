@@ -1,0 +1,9 @@
+{
+  "status": "applied",
+  "messages": [
+    {
+      "level": "info",
+      "code": "mutation.cascade"
+    }
+  ]
+}

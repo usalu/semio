@@ -1,0 +1,5 @@
+{
+  "mutation": "replaceStreamSource",
+  "id": "stream-a",
+  "source": null
+}

@@ -1,0 +1,14 @@
+{
+  "mutation": "moveGrip3d",
+  "id": "grip-north",
+  "newPosition": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "newDirection": [
+    1.0,
+    0.0,
+    0.0
+  ]
+}

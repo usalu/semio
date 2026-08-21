@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneAmbientIntensity",
+  "new_intensity": 0.25
+}

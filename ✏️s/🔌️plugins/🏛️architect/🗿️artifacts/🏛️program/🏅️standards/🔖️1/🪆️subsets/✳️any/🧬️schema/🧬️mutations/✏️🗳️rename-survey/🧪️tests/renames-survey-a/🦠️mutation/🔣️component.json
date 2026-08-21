@@ -1,0 +1,5 @@
+{
+  "mutation": "renameSurvey",
+  "id": "survey-a",
+  "newName": "Renamed Survey A"
+}

@@ -1,0 +1,8 @@
+{
+  "mutation": "duplicateWidget",
+  "source_id": "note-alpha",
+  "new_id": "note-beta",
+  "synapse_id": "synapse-alpha-to-beta",
+  "from_port": "out",
+  "to_port": "in"
+}

@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "added": [
+      {
+        "id": "uls",
+        "name": "ULS fundamental",
+        "terms": [
+          {
+            "caseId": "dead",
+            "factor": 1.25
+          },
+          {
+            "caseId": "live",
+            "factor": 1.5
+          }
+        ]
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

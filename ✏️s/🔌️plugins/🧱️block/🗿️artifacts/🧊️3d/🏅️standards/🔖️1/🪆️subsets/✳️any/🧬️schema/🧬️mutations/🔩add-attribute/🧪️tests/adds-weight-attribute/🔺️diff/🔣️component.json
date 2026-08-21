@@ -1,0 +1,34 @@
+{
+  "artifact": null,
+  "schema": null,
+  "objectKind": null,
+  "representations": null,
+  "vortexKinds": null,
+  "vortices": null,
+  "compatibility": null,
+  "attributes": {
+    "added": [
+      {
+        "key": "weight",
+        "value": "1400"
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "authors": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "activeRepresentationId": null,
+  "wantedTags": null,
+  "locale": null,
+  "windows": null,
+  "brushVortexKindId": null,
+  "brushRadius": null,
+  "brushFlip": null,
+  "brushPreview": null,
+  "camera": null,
+  "hoveredVortexFullId": null
+}

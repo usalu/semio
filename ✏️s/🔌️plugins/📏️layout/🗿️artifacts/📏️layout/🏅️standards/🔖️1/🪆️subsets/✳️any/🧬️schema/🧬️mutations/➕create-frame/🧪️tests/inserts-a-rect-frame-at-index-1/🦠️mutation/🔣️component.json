@@ -1,0 +1,28 @@
+{
+  "CreateFrame": {
+    "page_id": "page-1",
+    "frame": {
+      "kind": "rect",
+      "id": "frame-badge",
+      "layerId": "layer-1",
+      "bounds": {
+        "x": 120.0,
+        "y": 30.0,
+        "w": 40.0,
+        "h": 40.0,
+        "rotation": 0.0
+      },
+      "locked": null,
+      "visible": null,
+      "fill": [
+        0.0,
+        0.5,
+        1.0,
+        1.0
+      ],
+      "stroke": null
+    },
+    "index": 1,
+    "layer_id": "layer-1"
+  }
+}

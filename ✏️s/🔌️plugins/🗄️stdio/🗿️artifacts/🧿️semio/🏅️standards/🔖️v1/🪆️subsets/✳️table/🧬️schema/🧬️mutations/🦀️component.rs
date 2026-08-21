@@ -74,7 +74,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -120,7 +120,7 @@ mod tests {
         }
 
         let undo = delete.inverse(&base);
-        assert_eq!(undo.await.len(), 1 + base.rows.len(), "expected one CreateColumn plus one EditCell per row");
+        assert_eq!(undo.len(), 1 + base.rows.len(), "expected one CreateColumn plus one EditCell per row");
         assert!(matches!(&undo[0], SemioTableMutation::CreateColumn(_)));
         for m in &undo[1..] {
             assert!(matches!(m, SemioTableMutation::EditCell(_)));
@@ -131,8 +131,8 @@ mod tests {
     async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "missing".into() });
-        assert!(delete.inverse(&base).await.is_empty());
-        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
+        assert!(delete.inverse(&base).is_empty());
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -182,8 +182,8 @@ mod tests {
     async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 99 });
-        assert!(remove.inverse(&base).await.is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+        assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -204,12 +204,12 @@ mod tests {
         assert_eq!(after.columns, base.columns, "edit-cell must not touch columns");
 
         let missing = SemioTableMutation::EditCell(edit_cell::mutation::EditCell { row_index: 99, column_name: "score".into(), new_value: SemioValue::Null });
-        assert!(missing.inverse(&base).await.is_empty(), "editing an absent row has nothing to undo");
+        assert!(missing.inverse(&base).is_empty(), "editing an absent row has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioTableMutation::kinds().await.len(), 8);
+        assert_eq!(SemioTableMutation::kinds().len(), 8);
         let mutation = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 2 });
         assert_eq!(mutation.semantics().kind, "remove-row");
         assert_eq!(mutation.semantics().record, "RemovedRow");
@@ -217,3 +217,30 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🏗️create-column/🧪️tests/appends-a-float-column-and-null-pads-every-row/🦀️component.rs"]
+    mod tests_create_column_appends_a_float_column_and_null_pads_every_row;
+    #[path = "🗑️delete-column/🧪️tests/drops-the-middle-column-and-cascades-into-every-row/🦀️component.rs"]
+    mod tests_delete_column_drops_the_middle_column_and_cascades_into_every_row;
+    #[path = "🏷️rename-column/🧪️tests/renames-city-to-town-without-touching-any-row/🦀️component.rs"]
+    mod tests_rename_column_renames_city_to_town_without_touching_any_row;
+    #[path = "🔀reorder-columns/🧪️tests/moves-the-area-column-to-the-front-and-realigns-every-row/🦀️component.rs"]
+    mod tests_reorder_columns_moves_the_area_column_to_the_front_and_realigns_every_row;
+    #[path = "📥insert-row/🧪️tests/inserts-a-row-between-the-two-existing-rows/🦀️component.rs"]
+    mod tests_insert_row_inserts_a_row_between_the_two_existing_rows;
+    #[path = "➖remove-row/🧪️tests/removes-the-leading-row/🦀️component.rs"]
+    mod tests_remove_row_removes_the_leading_row;
+    #[path = "🔃reorder-rows/🧪️tests/moves-the-last-row-to-the-front/🦀️component.rs"]
+    mod tests_reorder_rows_moves_the_last_row_to_the_front;
+    #[path = "✏️edit-cell/🧪️tests/rewrites-the-population-cell-of-the-second-row/🦀️component.rs"]
+    mod tests_edit_cell_rewrites_the_population_cell_of_the_second_row;
+}
+//#endregion 🧪️FixtureTests

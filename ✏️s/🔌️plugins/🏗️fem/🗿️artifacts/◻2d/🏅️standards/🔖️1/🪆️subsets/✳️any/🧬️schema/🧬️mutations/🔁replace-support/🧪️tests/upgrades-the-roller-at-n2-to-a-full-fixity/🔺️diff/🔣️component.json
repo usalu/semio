@@ -1,0 +1,37 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "s2",
+        "item": {
+          "id": "s2",
+          "nodeId": "n2",
+          "fixed": [
+            "Tx",
+            "Ty",
+            "Rz"
+          ]
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

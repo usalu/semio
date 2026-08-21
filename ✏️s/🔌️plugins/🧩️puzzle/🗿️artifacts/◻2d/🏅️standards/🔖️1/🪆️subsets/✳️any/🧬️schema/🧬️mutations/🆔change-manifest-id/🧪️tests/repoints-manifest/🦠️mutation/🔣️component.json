@@ -1,0 +1,4 @@
+{
+  "mutation": "changeManifestId",
+  "newManifestId": "manifest-beta"
+}

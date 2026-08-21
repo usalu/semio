@@ -1,0 +1,19 @@
+{
+  "mutation": "moveWidgets",
+  "entries": [
+    {
+      "id": "note-alpha",
+      "layout": {
+        "x": 4.0,
+        "y": 8.0
+      }
+    },
+    {
+      "id": "note-beta",
+      "layout": {
+        "x": 16.0,
+        "y": 32.0
+      }
+    }
+  ]
+}

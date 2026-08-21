@@ -1,0 +1,36 @@
+{
+  "schema": "s.space",
+  "spaceId": "space-hannover",
+  "artifacts": [
+    {
+      "id": "artifact-1",
+      "name": "Site Plan",
+      "kindId": "s.draw.draw",
+      "schema": "s.draw",
+      "dialect": {
+        "artifactKind": "s.draw.draw",
+        "standard": "1",
+        "subset": "*"
+      },
+      "createdAtMs": 1000,
+      "createdBy": "user:ada",
+      "updatedAtMs": 1000,
+      "updatedBy": "user:ada"
+    },
+    {
+      "id": "artifact-2",
+      "name": "Massing Study",
+      "kindId": "s.puzzle.5d",
+      "schema": "puzzle.5d",
+      "dialect": {
+        "artifactKind": "s.puzzle.5d",
+        "standard": "1",
+        "subset": "*"
+      },
+      "createdAtMs": 2000,
+      "createdBy": "user:linus",
+      "updatedAtMs": 2500,
+      "updatedBy": "user:grace"
+    }
+  ]
+}

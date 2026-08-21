@@ -1,0 +1,5 @@
+{
+  "mutation": "renameAccessRule",
+  "id": "access-rule-a",
+  "newName": "Renamed Access Rule A"
+}

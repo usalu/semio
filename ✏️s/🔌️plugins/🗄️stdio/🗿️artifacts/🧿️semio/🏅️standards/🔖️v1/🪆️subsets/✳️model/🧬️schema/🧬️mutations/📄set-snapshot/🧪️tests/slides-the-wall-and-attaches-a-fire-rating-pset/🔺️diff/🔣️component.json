@@ -1,0 +1,50 @@
+{
+  "elements": {
+    "modified": [
+      {
+        "key": "w-1",
+        "diff": {
+          "placement": {
+            "translation": {
+              "x": 3.5,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "rotation": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 1.0
+            },
+            "scale": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          },
+          "psets": [
+            {
+              "name": "Pset_WallCommon",
+              "properties": [
+                {
+                  "key": "FireRating",
+                  "value": {
+                    "kind": "text",
+                    "value": "F30"
+                  }
+                },
+                {
+                  "key": "ThermalTransmittance",
+                  "value": {
+                    "kind": "number",
+                    "value": 0.25
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

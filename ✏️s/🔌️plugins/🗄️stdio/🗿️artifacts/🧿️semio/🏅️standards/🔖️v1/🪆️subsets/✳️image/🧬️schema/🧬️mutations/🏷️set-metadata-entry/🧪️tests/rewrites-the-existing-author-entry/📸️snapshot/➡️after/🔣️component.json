@@ -1,0 +1,29 @@
+{
+  "schema": "s.stdio.semio.image",
+  "width": 2,
+  "height": 1,
+  "colorspace": "rgb",
+  "bitDepth": 8,
+  "frames": [
+    {
+      "delayMs": 40,
+      "rgba8": [
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255
+      ]
+    }
+  ],
+  "icc": null,
+  "metadata": [
+    {
+      "key": "Author",
+      "value": "Ueli Saluz"
+    }
+  ]
+}

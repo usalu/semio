@@ -1,0 +1,5 @@
+{
+  "mutation": "changeObjectKind",
+  "id": "object-a",
+  "newObjectKind": "object-kind-c"
+}

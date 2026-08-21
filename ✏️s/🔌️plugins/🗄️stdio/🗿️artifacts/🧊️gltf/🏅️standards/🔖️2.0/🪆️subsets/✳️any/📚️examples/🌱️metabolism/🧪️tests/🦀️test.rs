@@ -107,18 +107,18 @@ async fn base_glb_decode_encode_decode_is_semantically_equal() {
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
     let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]);
-    let original = analysis.await.parts.snapshot.expect("analyzer decodes base.glb");
+    let original = analysis.parts.snapshot.expect("analyzer decodes base.glb");
     let doc = &original.document;
 
     let mut builder = GltfBuilder::empty();
-    builder.await.set_asset_version(&doc.asset.version);
+    builder.set_asset_version(&doc.asset.version);
 
     for (i, buf) in original.buffers.iter().enumerate() {
-        assert_eq!(builder.await.add_buffer(buf.clone()), i);
+        assert_eq!(builder.add_buffer(buf.clone()), i);
     }
 
     for bv in &doc.buffer_views {
-        builder.await.add_buffer_view(bv.buffer, bv.byte_offset, bv.byte_length, bv.byte_stride, bv.target);
+        builder.add_buffer_view(bv.buffer, bv.byte_offset, bv.byte_length, bv.byte_stride, bv.target);
     }
 
     for acc in &doc.accessors {
@@ -129,33 +129,33 @@ async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
         if let (Some(min), Some(max)) = (&acc.min, &acc.max) {
             spec = spec.with_min_max(min.clone(), max.clone());
         }
-        builder.await.add_accessor(spec);
+        builder.add_accessor(spec);
     }
 
     for mat in &doc.materials {
-        builder.await.add_material(mat.clone());
+        builder.add_material(mat.clone());
     }
 
     for mesh in &doc.meshes {
-        let mesh_idx = builder.await.add_mesh();
+        let mesh_idx = builder.add_mesh();
         for prim in &mesh.primitives {
             let attrs: Vec<(&str, usize)> = prim.attributes.iter().map(|(k, v)| (k.as_str(), *v)).collect();
-            builder.await.add_mesh_primitive(mesh_idx, &attrs, prim.indices, prim.material, prim.mode);
+            builder.add_mesh_primitive(mesh_idx, &attrs, prim.indices, prim.material, prim.mode);
         }
     }
 
     for node in &doc.nodes {
-        builder.await.add_node(node.mesh);
+        builder.add_node(node.mesh);
     }
 
     for scene in &doc.scenes {
-        builder.await.add_scene(scene.nodes.clone(), scene.extensions.clone());
+        builder.add_scene(scene.nodes.clone(), scene.extensions.clone());
     }
     if let Some(scene) = doc.scene {
-        builder.await.set_default_scene(scene);
+        builder.set_default_scene(scene);
     }
     if !doc.extensions_used.is_empty() {
-        builder.await.set_extensions_used(doc.extensions_used.clone());
+        builder.set_extensions_used(doc.extensions_used.clone());
     }
 
     let rebuilt = builder.build().expect("build rebuilt snapshot");

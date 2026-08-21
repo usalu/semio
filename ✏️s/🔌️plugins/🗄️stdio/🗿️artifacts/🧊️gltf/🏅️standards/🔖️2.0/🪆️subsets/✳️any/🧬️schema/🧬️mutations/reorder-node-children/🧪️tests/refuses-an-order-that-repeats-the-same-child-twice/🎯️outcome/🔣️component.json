@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "gltf.mutation.invalid-permutation",
+  "path": [
+    "document/nodes/children"
+  ]
+}

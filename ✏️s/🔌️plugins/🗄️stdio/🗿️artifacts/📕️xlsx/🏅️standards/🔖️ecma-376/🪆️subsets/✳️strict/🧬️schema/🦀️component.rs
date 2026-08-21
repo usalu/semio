@@ -121,13 +121,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_stamps_strict_and_builds_clean() {
-            let snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().await.expect("conforming construction must build");
+            let snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().expect("conforming construction must build");
             assert!(check_strict_conformance(&snapshot).iter().all(|d| d.severity != Severity::Error), "got {:?}", check_strict_conformance(&snapshot));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().await.unwrap();
+            let mut snapshot = XlsxStrictBuilderConstruction::new(XlsxWorkbook::default()).build().unwrap();
             // Directly corrupt the stamped namespace, bypassing every typed constructor -- mirrors the
             // PDF/A pilot's raw-mutate escape-hatch test.
             snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, b"<workbook xmlns=\"transitional\"/>".to_vec());

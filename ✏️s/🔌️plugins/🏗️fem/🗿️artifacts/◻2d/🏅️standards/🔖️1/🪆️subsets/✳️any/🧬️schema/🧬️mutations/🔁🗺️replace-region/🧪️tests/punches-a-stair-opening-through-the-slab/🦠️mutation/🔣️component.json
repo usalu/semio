@@ -1,0 +1,49 @@
+{
+  "mutation": "replaceRegion",
+  "id": "slab",
+  "newRegion": {
+    "id": "slab",
+    "name": "Floor slab with stair opening",
+    "outline": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        4.0,
+        0.0
+      ],
+      [
+        4.0,
+        2.0
+      ],
+      [
+        0.0,
+        2.0
+      ]
+    ],
+    "holes": [
+      [
+        [
+          1.0,
+          0.5
+        ],
+        [
+          2.0,
+          0.5
+        ],
+        [
+          2.0,
+          1.5
+        ],
+        [
+          1.0,
+          1.5
+        ]
+      ]
+    ],
+    "thickness": 0.25,
+    "materialId": "c30",
+    "meshSize": 0.25
+  }
+}

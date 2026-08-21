@@ -1,0 +1,14 @@
+{
+  "mutation": "createRepresentation",
+  "representation": {
+    "id": "rep-frame",
+    "name": "frame",
+    "meshUrl": "mesh://capsule/frame",
+    "tags": [
+      "lod1"
+    ],
+    "lod": "lod1",
+    "description": "Structural frame mesh.",
+    "attributes": []
+  }
+}

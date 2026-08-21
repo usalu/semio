@@ -1,0 +1,14 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "extensions": {
+            "KHR_materials_unlit": {}
+          }
+        }
+      }
+    ]
+  }
+}

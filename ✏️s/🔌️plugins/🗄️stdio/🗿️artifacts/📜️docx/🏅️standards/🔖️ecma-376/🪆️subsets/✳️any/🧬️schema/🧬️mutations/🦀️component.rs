@@ -111,12 +111,12 @@ pub enum DocxMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -161,7 +161,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
             DocxMutation::SetStyleBasedOn { id, based_on } => diff_set_style_based_on(id, based_on.clone()),
             DocxMutation::SetPart { path, content_type, bytes } => diff_set_part(&base.opc, path, content_type, bytes.clone()),
             DocxMutation::RemovePart { path } => diff_remove_part(path),
-        }).await
+        })
     }
 
     async fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
@@ -393,9 +393,9 @@ fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxPathSegment, String> {
-    let block_index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let cell = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    let block_index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let cell = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(DocxPathSegment { block_index, row, cell })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -408,12 +408,12 @@ fn enc_block_path_bin(p: &DocxBlockPath, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_block_path_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlockPath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut segments = Vec::with_capacity(count as usize);
     for _ in 0..count {
         segments.push(dec_path_segment_bin(reader)?);
     }
-    let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(DocxBlockPath { segments, index })
 }
 
@@ -437,12 +437,12 @@ fn enc_opc_content_types_bin(ct: &OpcContentTypes, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_content_types_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcContentTypes, String> {
-    let default_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let default_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut defaults = Vec::with_capacity(default_count as usize);
     for _ in 0..default_count {
         defaults.push((read_str_lp(reader)?, read_str_lp(reader)?));
     }
-    let override_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let override_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut overrides = Vec::with_capacity(override_count as usize);
     for _ in 0..override_count {
         overrides.push((read_str_lp(reader)?, read_str_lp(reader)?));
@@ -470,17 +470,17 @@ fn enc_opc_package_bin(pkg: &OpcPackage, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_package_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPackage, String> {
-    let part_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
         parts.push(dec_opc_part_bin(reader)?);
     }
     let content_types = dec_opc_content_types_bin(reader)?;
-    let owner_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let owner_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut relationships = HashMap::with_capacity(owner_count as usize);
     for _ in 0..owner_count {
         let owner = read_str_lp(reader)?;
-        let rel_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let rel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut list = Vec::with_capacity(rel_count as usize);
         for _ in 0..rel_count {
             list.push(dec_rel_bin(reader)?);
@@ -502,12 +502,12 @@ fn enc_docx_document_bin(doc: &DocxDocument, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_docx_document_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxDocument, String> {
-    let body_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let body_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut body = Vec::with_capacity(body_count as usize);
     for _ in 0..body_count {
         body.push(dec_block_bin(reader)?);
     }
-    let style_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(style_count as usize);
     for _ in 0..style_count {
         styles.push(dec_style_bin(reader)?);
@@ -953,7 +953,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).unwrap();
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_docx_mutation(&mut via_apply, &mutation);
@@ -978,8 +978,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff.await.diff().await, &base).unwrap();
-            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -989,10 +989,10 @@ mod tests {
     //#region 🔖️AbsorbLaw
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).await.unwrap()).await.unwrap();
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base).await.unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -1007,9 +1007,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -1021,9 +1021,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("g") }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == DocxBlock::paragraph("f")));
@@ -1034,9 +1034,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 1 }, run_index: 0, text: "patched".into() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -1047,9 +1047,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 1 }, run_index: 0, text: "patched".into() }, &base);
-            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 1 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -1059,19 +1059,19 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid1 = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("g") }, &mid1);
-            let mid2 = MutationDiff::apply(&d2.await.diff().await, &mid1).unwrap();
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } }, &mid2);
-            let sequential = MutationDiff::apply(&d3.await.diff().await, &mid2).unwrap();
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.await.diff().clone();
-            MutationDiff::absorb(&mut left, d2.await.diff().clone());
-            MutationDiff::absorb(&mut left, d3.await.diff().clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.await.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
-            let mut right = d1.await.diff().clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
@@ -1116,7 +1116,7 @@ mod tests {
             styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }],
         });
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -1139,7 +1139,7 @@ mod tests {
         assert!(<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &a).is_empty());
 
         // opc: content_types (both defaults+overrides), parts, relationships all populated.
-        let opc_diff = diff_ab.await.opc.as_ref().expect("opc diff present");
+        let opc_diff = diff_ab.opc.as_ref().expect("opc diff present");
         let ct = opc_diff.content_types.as_ref().expect("content_types diff present");
         let defaults = ct.defaults.as_ref().expect("defaults diff present");
         assert!(!defaults.added.is_empty(), "content_types.defaults: added not exercised");
@@ -1159,7 +1159,7 @@ mod tests {
         // document.body: `a -> b` exercises removed (top) + modified-with-nested-runs-added (per
         // the "known structural trap" note, one same-direction `between()` can't show BOTH a
         // top-level removed AND a top-level added -- see `sweep_b`'s doc comment).
-        let doc_diff = diff_ab.await.document.as_ref().expect("document diff present");
+        let doc_diff = diff_ab.document.as_ref().expect("document diff present");
         let body_diff = doc_diff.body.as_ref().expect("body diff present");
         assert!(!body_diff.removed.is_empty(), "body: removed not exercised");
         assert_eq!(body_diff.modified.len(), 1);
@@ -1173,7 +1173,7 @@ mod tests {
 
         // `b -> a` exercises the OTHER direction's top-level `added` (the very same dropped
         // `Table`, carried whole as the added item's payload, recursively structured).
-        let body_diff_ba = diff_ba.await.document.as_ref().unwrap().body.as_ref().expect("body diff (b->a) present");
+        let body_diff_ba = diff_ba.document.as_ref().unwrap().body.as_ref().expect("body diff (b->a) present");
         assert!(!body_diff_ba.added.is_empty(), "body (b->a): added not exercised");
         let DocxBlock::Table(added_table) = &body_diff_ba.added[0].item else { panic!("expected added table") };
         assert!(!added_table.rows.is_empty());
@@ -1188,7 +1188,7 @@ mod tests {
 
         // Some(None) tri-state coverage: style based_on cleared, going the OTHER direction (b -> a
         // clears "toModify"'s based_on since a's copy has based_on: None).
-        let style_mod_ba = diff_ba.await.document.as_ref().unwrap().styles.as_ref().unwrap().modified.iter().find(|m| m.key == "toModify").expect("toModify present in b->a");
+        let style_mod_ba = diff_ba.document.as_ref().unwrap().styles.as_ref().unwrap().modified.iter().find(|m| m.key == "toModify").expect("toModify present in b->a");
         assert_eq!(style_mod_ba.diff.based_on, Some(None), "style based_on tri-state Some(None) not exercised");
     }
     //#endregion 🔖️FieldSweep
@@ -1221,15 +1221,29 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = DocxMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = DocxMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = DocxMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = DocxMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/bolds-the-tower-run-of-the-opening-paragraph/🦀️component.rs"]
+    mod tests_set_snapshot_bolds_the_tower_run_of_the_opening_paragraph;
+}
+//#endregion 🧪️FixtureTests

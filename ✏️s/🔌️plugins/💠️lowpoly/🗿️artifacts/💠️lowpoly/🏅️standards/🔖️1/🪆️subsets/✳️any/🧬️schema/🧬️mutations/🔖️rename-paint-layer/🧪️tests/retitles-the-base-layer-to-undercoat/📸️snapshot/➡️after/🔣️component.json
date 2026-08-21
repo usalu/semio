@@ -1,0 +1,71 @@
+{
+  "schema": "lowpoly.document",
+  "objects": [
+    {
+      "id": "obj-hull",
+      "name": "Hull",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "smoothShading": false,
+      "mesh": {
+        "childId": "mesh-hull-01",
+        "target": {
+          "artifactId": "obj-hull-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "paintLayers": [
+        {
+          "name": "Undercoat",
+          "visible": true,
+          "opacity": 1.0,
+          "blendMode": "normal",
+          "pixels": "//////////8="
+        }
+      ]
+    },
+    {
+      "id": "obj-fin",
+      "name": "Fin",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "smoothShading": true,
+      "mesh": null,
+      "paintLayers": []
+    }
+  ]
+}

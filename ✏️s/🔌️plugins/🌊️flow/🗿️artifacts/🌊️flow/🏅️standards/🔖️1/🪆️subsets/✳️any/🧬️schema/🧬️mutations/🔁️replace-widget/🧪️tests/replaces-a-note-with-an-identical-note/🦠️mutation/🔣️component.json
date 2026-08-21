@@ -1,0 +1,9 @@
+{
+  "mutation": "replaceWidget",
+  "id": "note-alpha",
+  "widget": {
+    "kind": "inputNote",
+    "id": "note-alpha",
+    "text": "Alpha"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "mutation": "createKnowledgeRecord",
+  "knowledgeRecord": {
+    "id": "knowledge-record-a",
+    "name": "Knowledge Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "topic": "",
+    "category": "",
+    "summary": {
+      "text": ""
+    },
+    "content": {
+      "text": ""
+    },
+    "sources": [],
+    "references": [],
+    "lessonsLearned": [],
+    "bestPractices": [],
+    "applicableSectors": [],
+    "relatedEntityKinds": [],
+    "authorIds": [],
+    "expertiseLevel": null,
+    "validationStatus": "pending",
+    "lastReviewed": null,
+    "keywords": [],
+    "attachments": [],
+    "citations": [],
+    "usageCount": 0
+  }
+}

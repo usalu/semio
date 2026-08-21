@@ -1,0 +1,17 @@
+{
+  "mutation": "replaceTracks",
+  "tracks": [
+    {
+      "id": "track-b",
+      "length": 8,
+      "class": "static",
+      "meanSpeedMS": 0.0
+    },
+    {
+      "id": "track-c",
+      "length": 12,
+      "class": "static",
+      "meanSpeedMS": 0.25
+    }
+  ]
+}

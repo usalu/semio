@@ -1,0 +1,40 @@
+{
+  "CreateProduct": {
+    "product": {
+      "identity": {
+        "manufacturer_code": "DEMO",
+        "product_group": "HV",
+        "article_number": "VLV-80-002"
+      },
+      "title": [
+        {
+          "locale": "de",
+          "text": "Stellventil DN80"
+        },
+        {
+          "locale": "en",
+          "text": "Control valve DN80"
+        }
+      ],
+      "sheet": 2,
+      "records": [],
+      "configuration": {
+        "id": "cfg.VLV-80-002",
+        "parameters": {
+          "dn": {
+            "kind": "integer",
+            "value": 80
+          }
+        },
+        "geometry_ref": null,
+        "function_refs": []
+      },
+      "accessories": [],
+      "components": [],
+      "extensions": {
+        "fields": {}
+      }
+    },
+    "index": null
+  }
+}

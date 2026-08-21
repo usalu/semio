@@ -1,0 +1,23 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "textures": [
+      {
+        "source": 1
+      }
+    ],
+    "images": [
+      {
+        "uri": "albedo.png"
+      },
+      {
+        "uri": "normal.png"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

@@ -328,10 +328,10 @@ mod tests {
     async fn codec_round_trip_via_dsl_and_pack() {
         let snapshot = from_part21_document("stdio.ifc", &parse_part21(FIXTURE).expect("parse"));
         let text = store::ArtifactDsl::print_dsl(&snapshot);
-        let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse_dsl");
+        let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");
         assert_eq!(parsed, snapshot);
         let bytes = store::ArtifactPack::encode_pack(&snapshot);
-        let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode_pack");
+        let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode_pack");
         assert_eq!(decoded, snapshot);
     }
 }

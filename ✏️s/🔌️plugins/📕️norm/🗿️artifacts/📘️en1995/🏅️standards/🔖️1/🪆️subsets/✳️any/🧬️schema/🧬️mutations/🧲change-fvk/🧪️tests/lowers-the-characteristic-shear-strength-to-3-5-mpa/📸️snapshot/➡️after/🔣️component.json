@@ -1,0 +1,22 @@
+{
+  "annex": "De",
+  "mEdKnm": 25.0,
+  "nEdKn": 50.0,
+  "vEdKn": 15.0,
+  "wMm3": 3000000.0,
+  "aMm2": 60000.0,
+  "bMm": 200.0,
+  "hMm": 300.0,
+  "fMK": 24.0,
+  "fC0K": 21.0,
+  "serviceClass": "sc1",
+  "loadDuration": "medium",
+  "mCritKnm": 80.0,
+  "fEdKn": 18.0,
+  "aEfMm2": 12000.0,
+  "fVK": 3.5,
+  "fireDurationMin": 30.0,
+  "sectionDepthMm": 300.0,
+  "aVertMS2": 0.25,
+  "nCyclesBridge": 500000.0
+}

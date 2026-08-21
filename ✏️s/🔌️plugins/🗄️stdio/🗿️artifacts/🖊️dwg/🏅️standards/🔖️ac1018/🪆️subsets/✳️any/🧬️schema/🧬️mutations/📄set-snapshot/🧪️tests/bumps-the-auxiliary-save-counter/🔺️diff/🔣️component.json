@@ -1,0 +1,27 @@
+{
+  "auxiliaryHeader": {
+    "totalSaves": 8,
+    "savePartitionOne": 1,
+    "savePartitionTwo": 1,
+    "saveGeneration": 5,
+    "legacyStampOne": {
+      "version": 0,
+      "maintenance": 0
+    },
+    "legacyStampTwo": {
+      "version": 0,
+      "maintenance": 0
+    },
+    "compatibilityProfile": "autocad2009",
+    "createdAt": {
+      "days": 0,
+      "milliseconds": 0
+    },
+    "updatedAt": {
+      "days": 0,
+      "milliseconds": 0
+    },
+    "handleSeed": 256,
+    "terminalSaveGeneration": 5
+  }
+}

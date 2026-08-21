@@ -1,0 +1,11 @@
+{
+  "schema": "vcs.vcs",
+  "title": "Fixture Base",
+  "counter": 3,
+  "notes": "Initial notes.",
+  "status": "draft",
+  "tags": [
+    "review",
+    "urgent"
+  ]
+}

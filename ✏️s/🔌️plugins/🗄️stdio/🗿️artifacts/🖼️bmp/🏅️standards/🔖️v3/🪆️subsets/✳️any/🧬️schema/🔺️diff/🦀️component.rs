@@ -399,20 +399,20 @@ fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApply
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").await.at(["palette", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").at(["palette", "removed"]));
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").await.at(["palette", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").at(["palette", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").await.at(["palette", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").at(["palette", "added"]));
         }
     }
     Ok(())
@@ -574,12 +574,12 @@ mod tests {
 
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = BmpDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = BmpDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch for {d:?} (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
-            let decoded = BmpDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
+            let decoded = BmpDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
         }
 
@@ -588,13 +588,13 @@ mod tests {
         let a = demo_snap_a();
         let b = demo_snap_b();
         let ab = BmpDiff::between(&a, &b);
-        let pd = ab.await.palette.as_ref().expect("palette diff must be populated a->b");
+        let pd = ab.palette.as_ref().expect("palette diff must be populated a->b");
         assert!(pd.removed.is_empty(), "a->b must not need a removal (palette grows)");
         assert!(!pd.modified.is_empty(), "a->b must show the modified entry");
         assert!(!pd.added.is_empty(), "a->b must show the added entry");
 
         let ba = BmpDiff::between(&b, &a);
-        let pd_ba = ba.await.palette.as_ref().expect("palette diff must be populated b->a");
+        let pd_ba = ba.palette.as_ref().expect("palette diff must be populated b->a");
         assert!(!pd_ba.removed.is_empty(), "b->a must show the removed entry");
     }
 }

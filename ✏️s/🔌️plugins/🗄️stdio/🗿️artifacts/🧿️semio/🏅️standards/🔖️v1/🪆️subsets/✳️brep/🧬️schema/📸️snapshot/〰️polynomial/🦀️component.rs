@@ -455,8 +455,8 @@ mod tests {
         async fn isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(23);
             for _ in 0..200 {
-                let degree = 1 + (rng.await.next_range(0, 4) as usize);
-                let coeffs: Vec<f64> = (0..=degree).map(|_| rng.await.next_f64() * 10.0 - 5.0).collect();
+                let degree = 1 + (rng.next_range(0, 4) as usize);
+                let coeffs: Vec<f64> = (0..=degree).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
                 let p = Poly::new(coeffs);
                 if p.coeffs[p.degree()] == 0.0 {
                     continue;
@@ -477,8 +477,8 @@ mod tests {
         async fn bernstein_monomial_round_trip_holds_on_random_polynomials() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(29);
             for _ in 0..200 {
-                let degree = rng.await.next_range(0, 6) as usize;
-                let coeffs: Vec<f64> = (0..=degree).map(|_| rng.await.next_f64() * 10.0 - 5.0).collect();
+                let degree = rng.next_range(0, 6) as usize;
+                let coeffs: Vec<f64> = (0..=degree).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
                 let p = Poly::new(coeffs);
                 let b = Bernstein::from_monomial(&p);
                 let back = b.to_monomial();

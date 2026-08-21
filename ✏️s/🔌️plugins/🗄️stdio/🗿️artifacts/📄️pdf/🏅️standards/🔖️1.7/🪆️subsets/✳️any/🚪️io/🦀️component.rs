@@ -87,10 +87,10 @@ async fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
 //#endregion 🔖️Error
 
 //#region 🔖️Lexer
-fn is_ws(b: u8) -> bool {
+async fn is_ws(b: u8) -> bool {
     matches!(b, b' ' | b'\t' | b'\r' | b'\n' | 0x0C | 0x00)
 }
-fn is_delim(b: u8) -> bool {
+async fn is_delim(b: u8) -> bool {
     matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
 }
 
@@ -119,7 +119,7 @@ impl<'a> Lexer<'a> {
     pub async fn skip_ws(&mut self) {
         loop {
             match self.peek().await {
-                Some(b) if is_ws(b) => {
+                Some(b) if is_ws(b).await => {
                     self.pos += 1;
                 }
                 Some(b'%') => {
@@ -138,7 +138,7 @@ impl<'a> Lexer<'a> {
     async fn read_regular_run(&mut self) -> &'a [u8] {
         let start = self.pos;
         while let Some(b) = self.peek().await {
-            if is_ws(b) || is_delim(b) {
+            if is_ws(b).await || is_delim(b).await {
                 break;
             }
             self.pos += 1;
@@ -197,7 +197,7 @@ impl<'a> Lexer<'a> {
         self.pos += 1; // consume '/'
         let mut out = String::new();
         while let Some(b) = self.peek().await {
-            if is_ws(b) || is_delim(b) {
+            if is_ws(b).await || is_delim(b).await {
                 break;
             }
             if b == b'#' && self.peek_at(1).await.is_some() && self.peek_at(2).await.is_some() {
@@ -316,7 +316,7 @@ impl<'a> Lexer<'a> {
                     nibbles.push(hex_val(b));
                     self.pos += 1;
                 }
-                Some(b) if is_ws(b) => {
+                Some(b) if is_ws(b).await => {
                     self.pos += 1;
                 }
                 None => return malformed("unterminated hex string").await,
@@ -506,7 +506,7 @@ async fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
     let mut found: HashMap<u32, (ObjRef, usize)> = HashMap::new();
     let mut i = 0usize;
     while i < data.len() {
-        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]) || is_delim(data[i - 1])) {
+        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]).await || is_delim(data[i - 1]).await) {
             let start = i;
             let mut lex = Lexer::new(data).await.at(start);
             if let Ok(PdfObject::Int(num)) = lex.await.parse_number().await {
@@ -541,7 +541,7 @@ pub async fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
         if b == b'>' {
             break;
         }
-        if is_ws(b) {
+        if is_ws(b).await {
             continue;
         }
         if b.is_ascii_hexdigit() {
@@ -564,7 +564,7 @@ pub async fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
     while i < s.len() {
         let b = s[i];
         i += 1;
-        if is_ws(b) {
+        if is_ws(b).await {
             continue;
         }
         if b == b'~' {
@@ -1048,10 +1048,10 @@ impl<'a> Resolver<'a> {
 async fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
     match value {
         PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
-        PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value).await? })).collect::<PResult<_>>()?)),
+        PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
         PdfObject::Stream { dict, data, .. } => {
             let (decoded, filters) = decode_stream(&dict, &data).await?;
-            let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP")).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value).await? })).collect::<PResult<_>>()?;
+            let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP")).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?;
             Ok(PdfObject::Stream { dict, data: decoded, filters })
         }
         value => Ok(value),
@@ -1383,7 +1383,7 @@ async fn extract_block<'a>(s: &'a str, start: &str, end: &str) -> Option<&'a str
     let j = s[i..].find(end)? + i;
     Some(&s[i..j])
 }
-fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
+async fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
     let mut out = Vec::new();
     let mut from = 0usize;
     while let Some(rel) = s[from..].find(start) {
@@ -1752,7 +1752,7 @@ pub async fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     let header_end = data.iter().take(32).position(|&b| b == b'\n' || b == b'\r').unwrap_or(data.len().min(16));
     let declared_version = String::from_utf8_lossy(&data[5..header_end.max(5)]).trim().to_string();
 
-    let startxref_pos = find_last_subslice(data, b"startxref").ok_or(PdfEngineError::Malformed("missing startxref".into()));
+    let startxref_pos = find_last_subslice(data, b"startxref").await.ok_or(PdfEngineError::Malformed("missing startxref".into()));
     let xref = match startxref_pos {
         Ok(pos) => {
             let mut lex = Lexer::new(data).await.at(pos + b"startxref".len());
@@ -1817,7 +1817,7 @@ async fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
     Some(bytes.iter().map(|&b| semio_framework_plugin::resolve_ready(win_ansi(b)).unwrap_or('\u{FFFD}')).collect())
 }
 
-fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
+async fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.len() > data.len() {
         return None;
     }
@@ -2101,7 +2101,7 @@ async fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b')');
 }
 
-fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
+async fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
     let row_bytes = (predictor.columns as usize * predictor.colors as usize * predictor.bits_per_component as usize).div_ceil(8);
     if predictor.predictor >= 10 {
         let mut out = Vec::with_capacity(data.len() + data.len().div_ceil(row_bytes.max(1)));
@@ -2124,7 +2124,7 @@ fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
     data.to_vec()
 }
 
-fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
+async fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
     dict.iter().any(|entry| entry.key == "PieceInfo" && matches!(&entry.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Illustrator")))
 }
 
@@ -2167,7 +2167,7 @@ async fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFi
     if !names.is_empty() {
         let root_piece_info = has_illustrator_piece_info(dict);
         let font_program = dict.iter().any(|entry| entry.key == "Length1") || dict.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if matches!(name.as_str(), "Type1C" | "CIDFontType0C" | "OpenType")));
-        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
+        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info.await || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
         if illustrator && !root_piece_info {
             let index = entries.iter().position(|entry| entry.key == "Length").unwrap_or(entries.len());
             entries.insert(index, filter);
@@ -2559,7 +2559,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ascii85_decode_classic_vector() {
-        let dec = ascii85_decode(b"9jqo^BlbD-BleB1DJ+*+F(f,q").await.unwrap();
+        let dec = ascii85_decode(b"9jqo^BlbD-BleB1DJ+*+F(f,q").unwrap();
         assert_eq!(&dec, b"Man is distinguished");
     }
 
@@ -2573,7 +2573,7 @@ mod tests {
     async fn png_predictor_decode_hand_checked_rows() {
         let mut raw = vec![0u8, 10, 20, 30, 40];
         raw.extend_from_slice(&[2u8, 5, 5, 5, 5]);
-        let dec = png_predictor_decode(&raw, 4, 1, 8).await.unwrap();
+        let dec = png_predictor_decode(&raw, 4, 1, 8).unwrap();
         assert_eq!(dec, vec![10, 20, 30, 40, 15, 25, 35, 45]);
     }
 
@@ -2589,10 +2589,10 @@ mod tests {
     async fn demo_snapshot_round_trip() {
         let snap = demo_pdf17_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed, snap);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -2606,67 +2606,67 @@ mod tests {
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
 
         let original = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/📄️bachelor-thesis.pdf")).expect("read bachelor thesis fixture");
-        let base = decode_pdf(&original).await.expect("decode bachelor thesis fixture");
+        let base = decode_pdf(&original).expect("decode bachelor thesis fixture");
         let assert_original = |label: &str, actual: Vec<u8>| {
             let first_difference = actual.iter().zip(&original).position(|(actual, expected)| actual != expected).or_else(|| (actual.len() != original.len()).then_some(actual.len().min(original.len())));
             let index = first_difference.unwrap_or(0);
             let end = index.saturating_add(96).min(actual.len()).min(original.len());
             assert!(actual == original, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}; expected window: {:?}; actual window: {:?}", original.len(), actual.len(), &original[index..end], &actual[index..end]);
         };
-        assert_original("direct native export", encode_pdf(&base).await.expect("direct native export"));
+        assert_original("direct native export", encode_pdf(&base).expect("direct native export"));
 
         let dsl = store::ArtifactDsl::print_dsl(&base);
-        let from_dsl = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("DSL roundtrip");
-        assert_original("DSL native export", encode_pdf(&from_dsl).await.expect("DSL native export"));
+        let from_dsl = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("DSL roundtrip");
+        assert_original("DSL native export", encode_pdf(&from_dsl).expect("DSL native export"));
         let pack = store::ArtifactPack::encode_pack(&base);
-        let from_pack = <PdfSnapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("pack roundtrip");
-        assert_original("pack native export", encode_pdf(&from_pack).await.expect("pack native export"));
+        let from_pack = <PdfSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("pack roundtrip");
+        assert_original("pack native export", encode_pdf(&from_pack).expect("pack native export"));
 
         let mut changed = base.clone();
         changed.info.title = Some("Lifecycle mutation".into());
         let forward = PdfDiff::between(&base, &changed);
         let forward_text = forward.print_diff();
-        let forward = PdfDiff::parse_diff(&forward_text).await.expect("diff text roundtrip");
-        let forward_binary = forward.encode_diff().await.expect("diff binary encode");
+        let forward = PdfDiff::parse_diff(&forward_text).expect("diff text roundtrip");
+        let forward_binary = forward.encode_diff().expect("diff binary encode");
         assert_eq!(forward_binary.first().copied(), Some(store::pack_rt::OP_BINARY_FORMAT), "diff binary must start with the structural format byte");
         assert_eq!(forward_binary.get(1).copied(), Some(0b00010), "title-only lifecycle edit must set only the typed info flag");
         assert_ne!(forward_binary, forward_text.as_bytes(), "diff binary must not be a text envelope");
-        let forward = PdfDiff::decode_diff(&forward_binary).await.expect("diff binary roundtrip");
+        let forward = PdfDiff::decode_diff(&forward_binary).expect("diff binary roundtrip");
         let reverse = forward.inverse(&base);
-        let diff_restored = MutationDiff::apply(&reverse, &MutationDiff::apply(&forward, &base).await.unwrap()).unwrap();
+        let diff_restored = MutationDiff::apply(&reverse, &MutationDiff::apply(&forward, &base).unwrap()).unwrap();
         assert_eq!(diff_restored, base);
-        assert_original("diff inverse native export", encode_pdf(&diff_restored).await.expect("diff inverse native export"));
+        assert_original("diff inverse native export", encode_pdf(&diff_restored).expect("diff inverse native export"));
         let mut absorbed = forward;
-        MutationDiff::absorb(&mut absorbed, reverse.await);
-        let absorbed = MutationDiff::apply(&absorbed, &base).await.unwrap();
+        MutationDiff::absorb(&mut absorbed, reverse);
+        let absorbed = MutationDiff::apply(&absorbed, &base).unwrap();
         assert_eq!(absorbed, base);
-        assert_original("diff absorb native export", encode_pdf(&absorbed).await.expect("diff absorb native export"));
+        assert_original("diff absorb native export", encode_pdf(&absorbed).expect("diff absorb native export"));
 
         let mutation = PdfMutation::SetInfo { info: changed.info };
         let mutation_text = mutation.print_op();
-        let mutation = PdfMutation::parse_op(&mutation_text).await.expect("mutation text roundtrip");
-        let mutation_binary = mutation.encode_op().await.expect("mutation binary encode");
-        let mutation = PdfMutation::decode_op(&mutation_binary).await.expect("mutation binary roundtrip");
+        let mutation = PdfMutation::parse_op(&mutation_text).expect("mutation text roundtrip");
+        let mutation_binary = mutation.encode_op().expect("mutation binary encode");
+        let mutation = PdfMutation::decode_op(&mutation_binary).expect("mutation binary roundtrip");
         let inverse = mutation.inverse(&base);
         let mut restored = base.clone();
         apply_pdf_mutation(&mut restored, &mutation);
         for operation in inverse {
             let text = operation.print_op();
-            let operation = PdfMutation::parse_op(&text).await.expect("inverse mutation text roundtrip");
-            let binary = operation.encode_op().await.expect("inverse mutation binary encode");
-            let operation = PdfMutation::decode_op(&binary).await.expect("inverse mutation binary roundtrip");
+            let operation = PdfMutation::parse_op(&text).expect("inverse mutation text roundtrip");
+            let binary = operation.encode_op().expect("inverse mutation binary encode");
+            let operation = PdfMutation::decode_op(&binary).expect("inverse mutation binary roundtrip");
             apply_pdf_mutation(&mut restored, &operation);
         }
         assert_eq!(restored, base);
-        assert_original("mutation inverse native export", encode_pdf(&restored).await.expect("mutation inverse native export"));
+        assert_original("mutation inverse native export", encode_pdf(&restored).expect("mutation inverse native export"));
 
         let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]);
-        let analyzed = analysis.await.parts.snapshot.expect("analyzer snapshot");
-        assert_original("analyzer native export", encode_pdf(&analyzed).await.expect("analyzer native export"));
+        let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
+        assert_original("analyzer native export", encode_pdf(&analyzed).expect("analyzer native export"));
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
         let sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&original) }];
-        let composed = PdfComposerComposition::compose(&sources).await.expect("composer snapshot");
-        assert_original("composer native export", encode_pdf(&composed.snapshot).await.expect("composer native export"));
+        let composed = PdfComposerComposition::compose(&sources).expect("composer snapshot");
+        assert_original("composer native export", encode_pdf(&composed.snapshot).expect("composer native export"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2712,13 +2712,13 @@ mod tests {
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        fn oref(num: u32, gen: u16) -> ObjRef {
+        async fn oref(num: u32, gen: u16) -> ObjRef {
             ObjRef { num, gen }
         }
 
         /// 🧹 Every `PdfMutation` variant (tags 0-14), incl. object-graph/path-addressing
         /// variants that exercise `pdf-object`'s full recursive grammar (Array/Dict/Ref/Stream).
-        fn demo_mutation_cases() -> Vec<PdfMutation> {
+        async fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
                 PdfMutation::NoMutation,
                 PdfMutation::SetSnapshot { snapshot: demo_pdf17_snapshot() },
@@ -2741,7 +2741,7 @@ mod tests {
 
         /// 🧹 A representative `PdfDiff` sweep: every top-level field set, plus every
         /// `PdfValueDiff` tag (Replace/scalar/Array/Dict/Stream) reachable through `objects`.
-        fn demo_diff_cases() -> Vec<PdfDiff> {
+        async fn demo_diff_cases() -> Vec<PdfDiff> {
             let a = demo_pdf17_snapshot();
             let mut b = a.clone();
             b.declared_version = "1.4".into();
@@ -2754,7 +2754,7 @@ mod tests {
                 PdfIndirectObject { id: oref(1, 0), value: PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Bool(true), PdfObject::Name("X".into())]) },
                 PdfIndirectObject { id: oref(2, 0), value: PdfObject::Stream { dict: vec![], data: vec![9, 9], filters: vec![] } },
             ];
-            vec![PdfDiff::between(&a, &b).await, PdfDiff::between(&b, &c), PdfDiff::default()]
+            vec![PdfDiff::between(&a, &b), PdfDiff::between(&b, &c), PdfDiff::default()]
         }
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -2818,14 +2818,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in demo_mutation_cases() {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -2840,11 +2840,11 @@ mod tests {
 
             let demo = demo_pdf17_snapshot();
 
-            let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pdf17_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pdf17_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pdf17_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pdf17_snapshot()) drifted from the shipped .pack.semio fixture");
         }
@@ -2855,15 +2855,15 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn op_diff_codec_binary_roundtrip_law() {
             for mutation in demo_mutation_cases() {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT, "op format byte must be OP_BINARY_FORMAT");
-                let decoded = PdfMutation::decode_op(&bytes).await.unwrap_or_else(|e| panic!("decode_op failed for {mutation:?}: {e:?}"));
+                let decoded = PdfMutation::decode_op(&bytes).unwrap_or_else(|e| panic!("decode_op failed for {mutation:?}: {e:?}"));
                 assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
             }
             for d in demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT, "diff format byte must be OP_BINARY_FORMAT");
-                let decoded = PdfDiff::decode_diff(&bytes).await.unwrap_or_else(|e| panic!("decode_diff failed for {d:?}: {e:?}"));
+                let decoded = PdfDiff::decode_diff(&bytes).unwrap_or_else(|e| panic!("decode_diff failed for {d:?}: {e:?}"));
                 assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
             }
         }
@@ -2888,9 +2888,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn encode_then_decode_recovers_pages_and_text_via_identity_tounicode() {
         let snap = sample_snapshot();
-        let bytes = encode_pdf(&snap).await.expect("encode ok");
+        let bytes = encode_pdf(&snap).expect("encode ok");
         assert!(bytes.starts_with(b"%PDF-1.7"));
-        let decoded = decode_pdf(&bytes).await.expect("decode ok");
+        let decoded = decode_pdf(&bytes).expect("decode ok");
         assert_eq!(decoded.pages.len(), 2);
         assert_eq!(decoded.pages[0].media_box, [0.0, 0.0, 612.0, 792.0]);
         assert_eq!(decoded.pages[0].text, "Hello Semio");
@@ -2904,8 +2904,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_page_text_produces_no_content_ops_and_still_decodes() {
         let snap = PdfSnapshot { pages: vec![PdfPage::new(200.0, 200.0)], ..PdfSnapshot::default() };
-        let bytes = encode_pdf(&snap).await.unwrap();
-        let decoded = decode_pdf(&bytes).await.unwrap();
+        let bytes = encode_pdf(&snap).unwrap();
+        let decoded = decode_pdf(&bytes).unwrap();
         assert_eq!(decoded.pages.len(), 1);
         assert_eq!(decoded.pages[0].text, "");
     }
@@ -2938,7 +2938,7 @@ mod tests {
         body.extend_from_slice(format!("{:010} 00000 n \n", o1).as_bytes());
         body.extend_from_slice(format!("{:010} 00000 n \n", o2).as_bytes());
         body.extend_from_slice(format!("trailer\n<< /Size 3 /Root 1 0 R /Encrypt << /Filter /Standard >> >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
-        let err = decode_pdf(&body).await.expect_err("must reject encrypted files");
+        let err = decode_pdf(&body).expect_err("must reject encrypted files");
         assert!(matches!(err, PdfEngineError::Unsupported(_)), "got {err:?}");
     }
     //#endregion Encryption
@@ -2949,10 +2949,10 @@ mod tests {
         // 🩹 Same minimal file as the round-trip test, but with its xref/trailer/startxref tail
         // sliced off entirely (simulates a truncated/damaged file) -- requirement #2.
         let snap = sample_snapshot();
-        let bytes = encode_pdf(&snap).await.unwrap();
+        let bytes = encode_pdf(&snap).unwrap();
         let xref_kw = find_last_subslice(&bytes, b"\nxref\n").expect("has xref");
         let damaged = &bytes[..xref_kw + 1];
-        let decoded = decode_pdf(damaged).await.expect("brute-force fallback must still decode");
+        let decoded = decode_pdf(damaged).expect("brute-force fallback must still decode");
         assert_eq!(decoded.pages.len(), 2, "brute force must recover both pages via Catalog scan + Kids walk");
         assert_eq!(decoded.pages[0].text, "Hello Semio");
     }
@@ -2999,7 +2999,7 @@ mod tests {
                 predicted.push(row[x].wrapping_sub(a));
             }
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&predicted).await.unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&predicted).unwrap();
         let o4 = body.len();
         let xref_dict = format!("4 0 obj\n<< /Type /XRef /Size 5 /W [1 2 1] /Root 1 0 R /Filter /FlateDecode /DecodeParms << /Predictor 12 /Columns {row_bytes} /Colors 1 /BitsPerComponent 8 >> /Length {} >>\nstream\n", compressed.len());
         body.extend_from_slice(xref_dict.as_bytes());
@@ -3007,7 +3007,7 @@ mod tests {
         body.extend_from_slice(b"\nendstream\nendobj\n");
         body.extend_from_slice(format!("startxref\n{o4}\n%%EOF\n").as_bytes());
 
-        let decoded = decode_pdf(&body).await.expect("xref-stream file must decode");
+        let decoded = decode_pdf(&body).expect("xref-stream file must decode");
         assert_eq!(decoded.pages.len(), 1);
         assert_eq!(decoded.pages[0].media_box, [0.0, 0.0, 100.0, 100.0]);
     }
@@ -3029,7 +3029,7 @@ mod tests {
         let objstm_header = b"3 0 ".to_vec(); // objnum=3 at local offset 0
         let mut objstm_body = objstm_header.clone();
         objstm_body.extend_from_slice(&page_obj);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&objstm_body).await.unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&objstm_body).unwrap();
         let first = objstm_header.len();
         body.extend_from_slice(format!("4 0 obj\n<< /Type /ObjStm /N 1 /First {first} /Filter /FlateDecode /Length {} >>\nstream\n", compressed.len()).as_bytes());
         body.extend_from_slice(&compressed);
@@ -3046,12 +3046,12 @@ mod tests {
         // directly, exercised through `parse_xref_stream`'s row decode in the test above. Here we
         // additionally verify the ObjStm header/body parse in isolation.
         let _ = xref;
-        let (decoded_dict, filt) = decode_stream(&[PdfDictEntry { key: "Filter".into(), value: PdfObject::Name("FlateDecode".into()) }], &compressed).await.unwrap();
+        let (decoded_dict, filt) = decode_stream(&[PdfDictEntry { key: "Filter".into(), value: PdfObject::Name("FlateDecode".into()) }], &compressed).unwrap();
         assert_eq!(filt, vec![PdfStreamFilter::Flate { predictor: None }]);
         assert_eq!(decoded_dict, objstm_body);
         let mut lex = Lexer::new(&decoded_dict);
-        lex.await.pos = first;
-        let parsed = lex.await.parse_object().await.unwrap();
+        lex.pos = first;
+        let parsed = lex.parse_object().unwrap();
         assert_eq!(parsed.dict_get("Type").and_then(|v| v.as_name()), Some("Page"));
     }
     //#endregion ObjectStreams
@@ -3073,19 +3073,19 @@ mod tests {
         ]);
         let mut resolve = |_num: u32| -> Option<PdfObject> { None };
         let fd = build_font_decoder(&font, &mut resolve);
-        assert_eq!(fd.await.decode(&[31]), "fi", "ligature glyph name must resolve via AGL, not fabricate");
-        assert_eq!(fd.await.decode(&[0xE4]), "\u{00E4}", "WinAnsiEncoding base table must resolve \u{00E4} directly");
-        assert_eq!(fd.await.decode(&[200]), "\u{FFFD}", "unresolvable subset-specific glyph name must emit U+FFFD, never fabricate");
+        assert_eq!(fd.decode(&[31]), "fi", "ligature glyph name must resolve via AGL, not fabricate");
+        assert_eq!(fd.decode(&[0xE4]), "\u{00E4}", "WinAnsiEncoding base table must resolve \u{00E4} directly");
+        assert_eq!(fd.decode(&[200]), "\u{FFFD}", "unresolvable subset-specific glyph name must emit U+FFFD, never fabricate");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn tounicode_cmap_bfrange_identity_and_bfchar() {
         let cmap = b"1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0001> <0003> <0041>\nendbfrange\n1 beginbfchar\n<0009> <0058>\nendbfchar\n";
         let fd = parse_tounicode_cmap(cmap);
-        assert_eq!(fd.await.byte_width, 2);
-        assert_eq!(fd.await.decode(&[0x00, 0x01]), "A");
-        assert_eq!(fd.await.decode(&[0x00, 0x03]), "C");
-        assert_eq!(fd.await.decode(&[0x00, 0x09]), "X");
+        assert_eq!(fd.byte_width, 2);
+        assert_eq!(fd.decode(&[0x00, 0x01]), "A");
+        assert_eq!(fd.decode(&[0x00, 0x03]), "C");
+        assert_eq!(fd.decode(&[0x00, 0x09]), "X");
     }
     //#endregion Encodings
 
@@ -3107,7 +3107,7 @@ mod tests {
         }
         body.extend_from_slice(format!("trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
 
-        let decoded = decode_pdf(&body).await.unwrap();
+        let decoded = decode_pdf(&body).unwrap();
         assert_eq!(decoded.pages.len(), 1);
         assert_eq!(decoded.pages[0].media_box, [0.0, 0.0, 500.0, 700.0], "MediaBox must inherit from the parent /Pages node");
         assert_eq!(decoded.pages[0].rotate, 180, "Rotate set on the leaf must win");

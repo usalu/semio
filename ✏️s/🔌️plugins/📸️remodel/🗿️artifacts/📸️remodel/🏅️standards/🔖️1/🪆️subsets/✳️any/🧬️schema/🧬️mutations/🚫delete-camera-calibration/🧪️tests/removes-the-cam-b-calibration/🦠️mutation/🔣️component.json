@@ -1,0 +1,4 @@
+{
+  "mutation": "deleteCameraCalibration",
+  "cameraId": "cam-b"
+}

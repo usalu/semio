@@ -1,0 +1,4 @@
+{
+  "mutation": "setBitDepth",
+  "bit_depth": 16
+}

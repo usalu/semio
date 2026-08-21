@@ -496,8 +496,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1005,21 +1005,21 @@ mod tests {
         let b = sweep_b();
         let d = SemioModelDiff::between(&a, &b);
 
-        let spatial = d.await.spatial.as_ref().expect("spatial diff present");
+        let spatial = d.spatial.as_ref().expect("spatial diff present");
         assert_eq!(spatial.removed, vec!["gone-spatial".to_string()]);
         assert_eq!(spatial.added.len(), 1);
         let keep_spatial = &spatial.modified.iter().find(|m| m.key == "keep-spatial").expect("keep-spatial modified").diff;
         assert!(keep_spatial.kind.is_some() && keep_spatial.name.is_some() && keep_spatial.placement.is_some());
         assert_eq!(keep_spatial.parent_id, Some(None), "Some->None parent_id tri-state must surface as Some(None)");
 
-        let elements = d.await.elements.as_ref().expect("elements diff present");
+        let elements = d.elements.as_ref().expect("elements diff present");
         assert_eq!(elements.removed, vec!["gone-element".to_string()]);
         assert_eq!(elements.added.len(), 1);
         let keep_element = &elements.modified.iter().find(|m| m.key == "keep-element").expect("keep-element modified").diff;
         assert!(keep_element.class.is_some() && keep_element.placement.is_some() && keep_element.geometry.is_some() && keep_element.psets.is_some());
         assert_eq!(keep_element.spatial_id, Some(Some("keep-spatial".to_string())), "None->Some spatial_id tri-state must surface");
 
-        let relations = d.await.relations.as_ref().expect("relations diff present");
+        let relations = d.relations.as_ref().expect("relations diff present");
         assert_eq!(relations.removed, vec!["gone-relation".to_string()]);
         assert_eq!(relations.added.len(), 1);
         let keep_relation = &relations.modified.iter().find(|m| m.key == "keep-relation").expect("keep-relation modified").diff;
@@ -1101,17 +1101,17 @@ mod tests {
 
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-        let parsed = SemioModelDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
-        assert_eq!(parsed, d.await);
+        let parsed = SemioModelDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+        assert_eq!(parsed, d);
 
         let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-        let decoded = SemioModelDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
-        assert_eq!(decoded, d.await);
+        let decoded = SemioModelDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+        assert_eq!(decoded, d);
 
         // Empty diff also round-trips (the common "no change" case every artifact's codec hits).
         let empty = SemioModelDiff::default();
         assert_eq!(empty.print_diff(), "");
-        assert_eq!(SemioModelDiff::parse_diff("").await.unwrap(), empty);
+        assert_eq!(SemioModelDiff::parse_diff("").unwrap(), empty);
     }
 }
 //#endregion 🔖️Tests

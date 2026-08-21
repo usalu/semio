@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeKind",
+  "id": "node-a",
+  "newNodeKind": "node-kind-c"
+}

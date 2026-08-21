@@ -1,0 +1,18 @@
+{
+  "mutation": "createArtifact",
+  "artifact": {
+    "id": "artifact-3",
+    "name": "Energy Model",
+    "kindId": "s.energy.model",
+    "schema": "energy.model",
+    "dialect": {
+      "artifactKind": "s.energy.model",
+      "standard": "1",
+      "subset": "*"
+    },
+    "createdAtMs": 3000,
+    "createdBy": "user:grace",
+    "updatedAtMs": 3000,
+    "updatedBy": "user:grace"
+  }
+}

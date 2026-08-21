@@ -1,0 +1,57 @@
+{
+  "schema": "stdio.dxf",
+  "headerVars": [
+    {
+      "name": "$INSBASE",
+      "groupCode": 10,
+      "value": {
+        "kind": "point",
+        "value": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "tables": {
+    "layers": [
+      {
+        "name": "0",
+        "color": 7,
+        "linetype": "CONTINUOUS",
+        "flags": 0
+      }
+    ]
+  },
+  "otherTables": [],
+  "blocks": [],
+  "entities": [
+    {
+      "line": {
+        "start": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "end": [
+          10.0,
+          0.0,
+          0.0
+        ],
+        "layer": "0"
+      }
+    },
+    {
+      "circle": {
+        "center": [
+          5.0,
+          5.0,
+          0.0
+        ],
+        "radius": 2.5,
+        "layer": "0"
+      }
+    }
+  ]
+}

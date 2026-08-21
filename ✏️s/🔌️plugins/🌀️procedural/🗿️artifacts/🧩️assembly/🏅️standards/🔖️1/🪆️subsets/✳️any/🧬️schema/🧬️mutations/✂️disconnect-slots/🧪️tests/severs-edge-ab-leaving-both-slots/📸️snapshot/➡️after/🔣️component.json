@@ -1,0 +1,60 @@
+{
+  "schema": "s.assembly",
+  "seed": 7,
+  "slots": [
+    {
+      "id": "slot-a",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "slot-b",
+      "x": 2.0,
+      "y": 0.0,
+      "z": 0.0
+    }
+  ],
+  "edges": [],
+  "modules": [
+    {
+      "childId": "module-wall",
+      "target": {
+        "artifactId": "kit-wall",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "1",
+          "subset": "kit"
+        }
+      }
+    },
+    {
+      "childId": "module-roof",
+      "target": {
+        "artifactId": "kit-roof",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "1",
+          "subset": "kit"
+        }
+      }
+    }
+  ],
+  "weights": [
+    {
+      "moduleId": "module-wall",
+      "weight": 1.0
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-wall-roof",
+      "moduleAId": "module-wall",
+      "moduleBId": "module-roof",
+      "allowed": true,
+      "params": {
+        "kind": "null"
+      }
+    }
+  ]
+}

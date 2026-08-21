@@ -1,0 +1,5 @@
+{
+  "mutation": "renameWorkshop",
+  "id": "workshop-a",
+  "newName": "Renamed Workshop A"
+}

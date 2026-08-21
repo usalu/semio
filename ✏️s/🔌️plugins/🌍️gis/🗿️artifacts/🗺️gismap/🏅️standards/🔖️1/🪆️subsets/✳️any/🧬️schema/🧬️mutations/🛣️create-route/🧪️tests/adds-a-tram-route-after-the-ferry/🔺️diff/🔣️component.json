@@ -1,0 +1,26 @@
+{
+  "artifact": null,
+  "positions": null,
+  "routes": {
+    "added": [
+      {
+        "id": "route-tram",
+        "data": {
+          "kind": "tram",
+          "lengthKm": 4.25
+        }
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "regions": null,
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

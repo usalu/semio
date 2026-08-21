@@ -188,12 +188,12 @@ mod tests {
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let d = PdfDiff::between(&a, &b);
-        assert!(d.await.width.is_some(), "width must be present");
-        assert!(d.await.height.is_some(), "height must be present");
-        assert!(d.await.text.is_some(), "text must be present");
-        assert_eq!(d.await.width, Some(300.5));
-        assert_eq!(d.await.height, Some(400.25));
-        assert_eq!(d.await.text, Some("changed text".to_string()));
+        assert!(d.width.is_some(), "width must be present");
+        assert!(d.height.is_some(), "height must be present");
+        assert!(d.text.is_some(), "text must be present");
+        assert_eq!(d.width, Some(300.5));
+        assert_eq!(d.height, Some(400.25));
+        assert_eq!(d.text, Some("changed text".to_string()));
     }
     //#endregion field_sweep
 
@@ -210,12 +210,12 @@ mod tests {
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must not contain a newline: {printed:?}");
-            let parsed = PdfDiff::parse_diff(&printed).await.expect("parse_diff must accept its own print_diff output");
-            assert_eq!(parsed, d.await, "parse_diff(print_diff(d)) must equal d");
+            let parsed = PdfDiff::parse_diff(&printed).expect("parse_diff must accept its own print_diff output");
+            assert_eq!(parsed, d, "parse_diff(print_diff(d)) must equal d");
 
             let encoded = d.encode_diff().expect("encode_diff must succeed");
-            let decoded = PdfDiff::decode_diff(&encoded).await.expect("decode_diff must accept its own encode_diff output");
-            assert_eq!(decoded, d.await, "decode_diff(encode_diff(d)) must equal d");
+            let decoded = PdfDiff::decode_diff(&encoded).expect("decode_diff must accept its own encode_diff output");
+            assert_eq!(decoded, d, "decode_diff(encode_diff(d)) must equal d");
         }
     }
     //#endregion diff_codec_text_binary_roundtrip_law

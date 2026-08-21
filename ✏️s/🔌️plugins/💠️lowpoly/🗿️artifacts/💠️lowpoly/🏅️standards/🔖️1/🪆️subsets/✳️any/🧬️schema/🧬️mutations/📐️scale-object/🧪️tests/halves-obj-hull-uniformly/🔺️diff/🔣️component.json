@@ -1,0 +1,72 @@
+{
+  "artifact": null,
+  "schema": null,
+  "objects": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "obj-hull",
+        "patch": {
+          "name": null,
+          "smoothShading": null,
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              0.5,
+              0.5,
+              0.5
+            ]
+          },
+          "mesh": null
+        },
+        "paintLayers": null
+      }
+    ],
+    "reordered": null
+  },
+  "activeObjectId": null,
+  "selection": null,
+  "selectedObjectIds": null,
+  "paintUtility": null,
+  "activePaintLayer": null,
+  "activeUtilityId": null,
+  "showEdges": null,
+  "sunEnabled": null,
+  "sunAzimuth": null,
+  "sunElevation": null,
+  "sunIntensity": null,
+  "sunColor": null,
+  "worldCameraPositionX": null,
+  "worldCameraPositionY": null,
+  "worldCameraPositionZ": null,
+  "worldCameraTargetX": null,
+  "worldCameraTargetY": null,
+  "worldCameraTargetZ": null,
+  "worldCameraFov": null,
+  "utilityParamsJson": null,
+  "paintColorR": null,
+  "paintColorG": null,
+  "paintColorB": null,
+  "paintColorA": null,
+  "selectionMethod": null,
+  "selectionModeDefault": null,
+  "engagementInput": null,
+  "locale": null,
+  "hoveredObjectId": null,
+  "hoveredTargetObjectId": null,
+  "hoveredTargetMode": null,
+  "hoveredTargetId": null,
+  "strokeDragActive": null,
+  "transformDragActive": null,
+  "previewSeq": null
+}

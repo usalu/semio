@@ -1,0 +1,4 @@
+{
+  "mutation": "changeRenewableKwh",
+  "newRenewableKwh": 2250.0
+}

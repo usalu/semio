@@ -353,12 +353,19 @@ mod native {
         clock: MonotonicClock,
         pending_reason: Option<InvalidationReason>,
         delegate: D,
+        /// 🎫️ Minted once, here — `NativeHost` is constructed on, and only ever driven from, the
+        /// thread `winit::event_loop::EventLoop::run_app` blocks on (this crate's own U1 boundary).
+        /// Not yet read anywhere (`WindowDelegate`'s methods don't take one — see
+        /// `crate::enqueue::UiThreadToken`'s own doc for why that is a deliberate, scoped choice, not
+        /// an oversight); kept as a field so the capability exists at the point of construction, ready
+        /// for a future `WindowDelegate` signature that threads it through.
+        _ui_token: crate::enqueue::UiThreadToken,
     }
 
     impl<D: WindowDelegate> NativeHost<D> {
         // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn new(delegate: D) -> Self {
-            Self { window: None, pointers: PointerRegistry::new(), modifiers: ui_render::EventModifiers::default(), last_pointer_pos: (0.0, 0.0), last_cursor: None, clock: MonotonicClock::new(), pending_reason: None, delegate }
+            Self { window: None, pointers: PointerRegistry::new(), modifiers: ui_render::EventModifiers::default(), last_pointer_pos: (0.0, 0.0), last_cursor: None, clock: MonotonicClock::new(), pending_reason: None, delegate, _ui_token: crate::enqueue::UiThreadToken::mint() }
         }
 
         // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -597,6 +604,8 @@ mod browser {
         /// path, not two.
         raf_closure: Option<Closure<dyn FnMut(f64)>>,
         delegate: D,
+        /// 🎫️ Same rationale as `NativeHost`'s own field — minted once, here, at construction.
+        _ui_token: crate::enqueue::UiThreadToken,
     }
 
     /// 🌐️ The canvas equivalent of [`super::NativeHost`] (see this crate's `native` module —
@@ -623,7 +632,7 @@ mod browser {
 
     impl<D: WindowDelegate + 'static> CanvasHost<D> {
         pub fn new(canvas: web_sys::HtmlCanvasElement, delegate: D) -> Self {
-            let state = Rc::new(RefCell::new(CanvasHostState { canvas: canvas.clone(), clock: BrowserClock::new(), raf_pending: false, document_hidden: false, last_cursor: None, raf_closure: None, delegate }));
+            let state = Rc::new(RefCell::new(CanvasHostState { canvas: canvas.clone(), clock: BrowserClock::new(), raf_pending: false, document_hidden: false, last_cursor: None, raf_closure: None, delegate, _ui_token: crate::enqueue::UiThreadToken::mint() }));
 
             let raf_state = state.clone();
             let raf_closure = Closure::wrap(Box::new(move |timestamp_ms: f64| on_animation_frame(&raf_state, timestamp_ms)) as Box<dyn FnMut(f64)>);

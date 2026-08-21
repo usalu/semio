@@ -1,0 +1,4 @@
+{
+  "mutation": "changeDuctClass",
+  "newDuctClass": "D"
+}

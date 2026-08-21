@@ -1,0 +1,11 @@
+{
+  "ResizeTileCrop": {
+    "id": "t-hero",
+    "newCrop": {
+      "x": 0.25,
+      "y": 0.25,
+      "width": 0.0,
+      "height": 0.5
+    }
+  }
+}

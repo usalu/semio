@@ -1,0 +1,5542 @@
+{
+ "✂️🧲disconnect-adjacency": {
+  "cat": "edge",
+  "verb": "disconnect",
+  "entity": "adjacency",
+  "kind": "disconnect-adjacency",
+  "struct": "DisconnectAdjacency",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "adjacencies",
+  "diff_field": "adjacencies",
+  "delta": "ProgramAdjacenciesDelta",
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✂️🧵disconnect-trace": {
+  "cat": "edge",
+  "verb": "disconnect",
+  "entity": "trace",
+  "kind": "disconnect-trace",
+  "struct": "DisconnectTrace",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "traces",
+  "diff_field": "traces",
+  "delta": "ProgramTracesDelta",
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️ℹ️rename-information-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "information-requirement",
+  "kind": "rename-information-requirement",
+  "struct": "RenameInformationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "information",
+  "diff_field": "information",
+  "delta": "ProgramInformationDelta",
+  "patch_entry": "ProgramInformationPatchEntry",
+  "patch_type": "InformationRequirementPatch",
+  "etype": "InformationRequirement"
+ },
+ "✏️♻️rename-sustainability-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "sustainability-requirement",
+  "kind": "rename-sustainability-requirement",
+  "struct": "RenameSustainabilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "sustainability",
+  "diff_field": "sustainability",
+  "delta": "ProgramSustainabilityDelta",
+  "patch_entry": "ProgramSustainabilityPatchEntry",
+  "patch_type": "SustainabilityRequirementPatch",
+  "etype": "SustainabilityRequirement"
+ },
+ "✏️♿rename-accessibility-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "accessibility-requirement",
+  "kind": "rename-accessibility-requirement",
+  "struct": "RenameAccessibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "accessibility",
+  "diff_field": "accessibility",
+  "delta": "ProgramAccessibilityDelta",
+  "patch_entry": "ProgramAccessibilityPatchEntry",
+  "patch_type": "AccessibilityRequirementPatch",
+  "etype": "AccessibilityRequirement"
+ },
+ "✏️⚔️rename-conflict": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "conflict",
+  "kind": "rename-conflict",
+  "struct": "RenameConflict",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "conflicts",
+  "diff_field": "conflicts",
+  "delta": "ProgramConflictsDelta",
+  "patch_entry": "ProgramConflictsPatchEntry",
+  "patch_type": "ConflictPatch",
+  "etype": "Conflict"
+ },
+ "✏️⚖️rename-option-evaluation": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "option-evaluation",
+  "kind": "rename-option-evaluation",
+  "struct": "RenameOptionEvaluation",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "options",
+  "diff_field": "options",
+  "delta": "ProgramOptionsDelta",
+  "patch_entry": "ProgramOptionsPatchEntry",
+  "patch_type": "OptionEvaluationPatch",
+  "etype": "OptionEvaluation"
+ },
+ "✏️⚙️rename-function": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "function",
+  "kind": "rename-function",
+  "struct": "RenameFunction",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "functions",
+  "diff_field": "functions",
+  "delta": "ProgramFunctionsDelta",
+  "patch_entry": "ProgramFunctionsPatchEntry",
+  "patch_type": "FunctionPatch",
+  "etype": "Function"
+ },
+ "✏️⚠️rename-risk": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "risk",
+  "kind": "rename-risk",
+  "struct": "RenameRisk",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "risks",
+  "diff_field": "risks",
+  "delta": "ProgramRisksDelta",
+  "patch_entry": "ProgramRisksPatchEntry",
+  "patch_type": "RiskPatch",
+  "etype": "Risk"
+ },
+ "✏️✅rename-decision": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "decision",
+  "kind": "rename-decision",
+  "struct": "RenameDecision",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "decisions",
+  "diff_field": "decisions",
+  "delta": "ProgramDecisionsDelta",
+  "patch_entry": "ProgramDecisionsPatchEntry",
+  "patch_type": "DecisionPatch",
+  "etype": "Decision"
+ },
+ "✏️✔️rename-validation-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "validation-record",
+  "kind": "rename-validation-record",
+  "struct": "RenameValidationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "validations",
+  "diff_field": "validations",
+  "delta": "ProgramValidationsDelta",
+  "patch_entry": "ProgramValidationsPatchEntry",
+  "patch_type": "ValidationRecordPatch",
+  "etype": "ValidationRecord"
+ },
+ "✏️⭐rename-priority-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "priority-record",
+  "kind": "rename-priority-record",
+  "struct": "RenamePriorityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "priorities",
+  "diff_field": "priorities",
+  "delta": "ProgramPrioritiesDelta",
+  "patch_entry": "ProgramPrioritiesPatchEntry",
+  "patch_type": "PriorityRecordPatch",
+  "etype": "PriorityRecord"
+ },
+ "✏️🌊rename-flow-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "flow-requirement",
+  "kind": "rename-flow-requirement",
+  "struct": "RenameFlowRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "flows",
+  "diff_field": "flows",
+  "delta": "ProgramFlowsDelta",
+  "patch_entry": "ProgramFlowsPatchEntry",
+  "patch_type": "FlowRequirementPatch",
+  "etype": "FlowRequirement"
+ },
+ "✏️🌿rename-environmental-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "environmental-requirement",
+  "kind": "rename-environmental-requirement",
+  "struct": "RenameEnvironmentalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "environmental",
+  "diff_field": "environmental",
+  "delta": "ProgramEnvironmentalDelta",
+  "patch_entry": "ProgramEnvironmentalPatchEntry",
+  "patch_type": "EnvironmentalRequirementPatch",
+  "etype": "EnvironmentalRequirement"
+ },
+ "✏️🎓rename-workshop": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "workshop",
+  "kind": "rename-workshop",
+  "struct": "RenameWorkshop",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "workshops",
+  "diff_field": "workshops",
+  "delta": "ProgramWorkshopsDelta",
+  "patch_entry": "ProgramWorkshopsPatchEntry",
+  "patch_type": "WorkshopPatch",
+  "etype": "Workshop"
+ },
+ "✏️🎬rename-scenario": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "scenario",
+  "kind": "rename-scenario",
+  "struct": "RenameScenario",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "scenarios",
+  "diff_field": "scenarios",
+  "delta": "ProgramScenariosDelta",
+  "patch_entry": "ProgramScenariosPatchEntry",
+  "patch_type": "ScenarioPatch",
+  "etype": "Scenario"
+ },
+ "✏️🏁rename-benchmark-record": {
+  "cat": "child",
+  "verb": "rename",
+  "entity": "benchmark-record",
+  "kind": "rename-benchmark-record",
+  "struct": "RenameBenchmarkRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️🏃rename-activity": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "activity",
+  "kind": "rename-activity",
+  "struct": "RenameActivity",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "activities",
+  "diff_field": "activities",
+  "delta": "ProgramActivitiesDelta",
+  "patch_entry": "ProgramActivitiesPatchEntry",
+  "patch_type": "ActivityPatch",
+  "etype": "Activity"
+ },
+ "✏️🏗️rename-infrastructure-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "infrastructure-requirement",
+  "kind": "rename-infrastructure-requirement",
+  "struct": "RenameInfrastructureRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "infrastructure",
+  "diff_field": "infrastructure",
+  "delta": "ProgramInfrastructureDelta",
+  "patch_entry": "ProgramInfrastructurePatchEntry",
+  "patch_type": "InfrastructureRequirementPatch",
+  "etype": "InfrastructureRequirement"
+ },
+ "✏️🏛️rename-governance": {
+  "cat": "scalar",
+  "verb": "rename",
+  "entity": "governance",
+  "kind": "rename-governance",
+  "struct": "RenameGovernance",
+  "fields": [
+   [
+    "new_framework",
+    "String"
+   ]
+  ],
+  "coll": "governance",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️🏢rename-organizational-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "organizational-requirement",
+  "kind": "rename-organizational-requirement",
+  "struct": "RenameOrganizationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "organizational",
+  "diff_field": "organizational",
+  "delta": "ProgramOrganizationalDelta",
+  "patch_entry": "ProgramOrganizationalPatchEntry",
+  "patch_type": "OrganizationalRequirementPatch",
+  "etype": "OrganizationalRequirement"
+ },
+ "✏️🏷️rename-meta": {
+  "cat": "scalar",
+  "verb": "rename",
+  "entity": "meta",
+  "kind": "rename-meta",
+  "struct": "RenameMeta",
+  "fields": [
+   [
+    "new_title",
+    "String"
+   ]
+  ],
+  "coll": "meta",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️🐛rename-issue": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "issue",
+  "kind": "rename-issue",
+  "struct": "RenameIssue",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "issues",
+  "diff_field": "issues",
+  "delta": "ProgramIssuesDelta",
+  "patch_entry": "ProgramIssuesPatchEntry",
+  "patch_type": "IssuePatch",
+  "etype": "Issue"
+ },
+ "✏️👍rename-approval-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "approval-record",
+  "kind": "rename-approval-record",
+  "struct": "RenameApprovalRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "approvals",
+  "diff_field": "approvals",
+  "delta": "ProgramApprovalsDelta",
+  "patch_entry": "ProgramApprovalsPatchEntry",
+  "patch_type": "ApprovalRecordPatch",
+  "etype": "ApprovalRecord"
+ },
+ "✏️👥rename-stakeholder": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "stakeholder",
+  "kind": "rename-stakeholder",
+  "struct": "RenameStakeholder",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "stakeholders",
+  "diff_field": "stakeholders",
+  "delta": "ProgramStakeholdersDelta",
+  "patch_entry": "ProgramStakeholdersPatchEntry",
+  "patch_type": "StakeholderPatch",
+  "etype": "Stakeholder"
+ },
+ "✏️💎rename-quality-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "quality-record",
+  "kind": "rename-quality-record",
+  "struct": "RenameQualityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "quality",
+  "diff_field": "quality",
+  "delta": "ProgramQualityDelta",
+  "patch_entry": "ProgramQualityPatchEntry",
+  "patch_type": "QualityRecordPatch",
+  "etype": "QualityRecord"
+ },
+ "✏️💪rename-resilience-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "resilience-requirement",
+  "kind": "rename-resilience-requirement",
+  "struct": "RenameResilienceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "resilience",
+  "diff_field": "resilience",
+  "delta": "ProgramResilienceDelta",
+  "patch_entry": "ProgramResiliencePatchEntry",
+  "patch_type": "ResilienceRequirementPatch",
+  "etype": "ResilienceRequirement"
+ },
+ "✏️💭rename-assumption": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "assumption",
+  "kind": "rename-assumption",
+  "struct": "RenameAssumption",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "assumptions",
+  "diff_field": "assumptions",
+  "delta": "ProgramAssumptionsDelta",
+  "patch_entry": "ProgramAssumptionsPatchEntry",
+  "patch_type": "AssumptionPatch",
+  "etype": "Assumption"
+ },
+ "✏️💰rename-cost-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "cost-requirement",
+  "kind": "rename-cost-requirement",
+  "struct": "RenameCostRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "costs",
+  "diff_field": "costs",
+  "delta": "ProgramCostsDelta",
+  "patch_entry": "ProgramCostsPatchEntry",
+  "patch_type": "CostRequirementPatch",
+  "etype": "CostRequirement"
+ },
+ "✏️📁rename-project": {
+  "cat": "scalar",
+  "verb": "rename",
+  "entity": "project",
+  "kind": "rename-project",
+  "struct": "RenameProject",
+  "fields": [
+   [
+    "new_code",
+    "String"
+   ]
+  ],
+  "coll": "project",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️📄rename-document": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "document",
+  "kind": "rename-document",
+  "struct": "RenameDocument",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "artifacts",
+  "diff_field": "documents",
+  "delta": "ProgramArtifactsDelta",
+  "patch_entry": "ProgramArtifactsPatchEntry",
+  "patch_type": "ArtifactRecordPatch",
+  "etype": "ArtifactRecord"
+ },
+ "✏️📅rename-schedule-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "schedule-requirement",
+  "kind": "rename-schedule-requirement",
+  "struct": "RenameScheduleRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "schedules",
+  "diff_field": "schedules",
+  "delta": "ProgramSchedulesDelta",
+  "patch_entry": "ProgramSchedulesPatchEntry",
+  "patch_type": "ScheduleRequirementPatch",
+  "etype": "ScheduleRequirement"
+ },
+ "✏️📈rename-growth-plan": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "growth-plan",
+  "kind": "rename-growth-plan",
+  "struct": "RenameGrowthPlan",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "growth",
+  "diff_field": "growth",
+  "delta": "ProgramGrowthDelta",
+  "patch_entry": "ProgramGrowthPatchEntry",
+  "patch_type": "GrowthPlanPatch",
+  "etype": "GrowthPlan"
+ },
+ "✏️📊rename-performance-criterion": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "performance-criterion",
+  "kind": "rename-performance-criterion",
+  "struct": "RenamePerformanceCriterion",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "performance",
+  "diff_field": "performance",
+  "delta": "ProgramPerformanceDelta",
+  "patch_entry": "ProgramPerformancePatchEntry",
+  "patch_type": "PerformanceCriterionPatch",
+  "etype": "PerformanceCriterion"
+ },
+ "✏️📋rename-operational-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "operational-requirement",
+  "kind": "rename-operational-requirement",
+  "struct": "RenameOperationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "operations",
+  "diff_field": "operations",
+  "delta": "ProgramOperationsDelta",
+  "patch_entry": "ProgramOperationsPatchEntry",
+  "patch_type": "OperationalRequirementPatch",
+  "etype": "OperationalRequirement"
+ },
+ "✏️📌rename-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "requirement",
+  "kind": "rename-requirement",
+  "struct": "RenameRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "requirements",
+  "diff_field": "requirements",
+  "delta": "ProgramRequirementsDelta",
+  "patch_entry": "ProgramRequirementsPatchEntry",
+  "patch_type": "RequirementPatch",
+  "etype": "Requirement"
+ },
+ "✏️📍rename-site-context": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "site-context",
+  "kind": "rename-site-context",
+  "struct": "RenameSiteContext",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "site_context",
+  "diff_field": "site_context",
+  "delta": "ProgramSiteContextDelta",
+  "patch_entry": "ProgramSiteContextPatchEntry",
+  "patch_type": "SiteContextPatch",
+  "etype": "SiteContext"
+ },
+ "✏️📐rename-template-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "template-record",
+  "kind": "rename-template-record",
+  "struct": "RenameTemplateRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "templates",
+  "diff_field": "templates",
+  "delta": "ProgramTemplatesDelta",
+  "patch_entry": "ProgramTemplatesPatchEntry",
+  "patch_type": "TemplateRecordPatch",
+  "etype": "TemplateRecord"
+ },
+ "✏️📑rename-report-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "report-record",
+  "kind": "rename-report-record",
+  "struct": "RenameReportRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "reports",
+  "diff_field": "reports",
+  "delta": "ProgramReportsDelta",
+  "patch_entry": "ProgramReportsPatchEntry",
+  "patch_type": "ReportRecordPatch",
+  "etype": "ReportRecord"
+ },
+ "✏️📒rename-audit-event": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "audit-event",
+  "kind": "rename-audit-event",
+  "struct": "RenameAuditEvent",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "audit_events",
+  "diff_field": "audit_events",
+  "delta": "ProgramAuditEventsDelta",
+  "patch_entry": "ProgramAuditEventsPatchEntry",
+  "patch_type": "AuditEventPatch",
+  "etype": "AuditEvent"
+ },
+ "✏️📚rename-knowledge-record": {
+  "cat": "child",
+  "verb": "rename",
+  "entity": "knowledge-record",
+  "kind": "rename-knowledge-record",
+  "struct": "RenameKnowledgeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "✏️📜rename-regulatory-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "regulatory-requirement",
+  "kind": "rename-regulatory-requirement",
+  "struct": "RenameRegulatoryRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "regulatory",
+  "diff_field": "regulatory",
+  "delta": "ProgramRegulatoryDelta",
+  "patch_entry": "ProgramRegulatoryPatchEntry",
+  "patch_type": "RegulatoryRequirementPatch",
+  "etype": "RegulatoryRequirement"
+ },
+ "✏️📝rename-change-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "change-record",
+  "kind": "rename-change-record",
+  "struct": "RenameChangeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "changes",
+  "diff_field": "changes",
+  "delta": "ProgramChangesDelta",
+  "patch_entry": "ProgramChangesPatchEntry",
+  "patch_type": "ChangeRecordPatch",
+  "etype": "ChangeRecord"
+ },
+ "✏️📡rename-communication-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "communication-requirement",
+  "kind": "rename-communication-requirement",
+  "struct": "RenameCommunicationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "communication",
+  "diff_field": "communication",
+  "delta": "ProgramCommunicationDelta",
+  "patch_entry": "ProgramCommunicationPatchEntry",
+  "patch_type": "CommunicationRequirementPatch",
+  "etype": "CommunicationRequirement"
+ },
+ "✏️📦rename-resource": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "resource",
+  "kind": "rename-resource",
+  "struct": "RenameResource",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "resources",
+  "diff_field": "resources",
+  "delta": "ProgramResourcesDelta",
+  "patch_entry": "ProgramResourcesPatchEntry",
+  "patch_type": "ResourcePatch",
+  "etype": "Resource"
+ },
+ "✏️📶rename-status-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "status-record",
+  "kind": "rename-status-record",
+  "struct": "RenameStatusRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "status_records",
+  "diff_field": "status_records",
+  "delta": "ProgramStatusRecordsDelta",
+  "patch_entry": "ProgramStatusRecordsPatchEntry",
+  "patch_type": "StatusRecordPatch",
+  "etype": "StatusRecord"
+ },
+ "✏️🔄rename-process": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "process",
+  "kind": "rename-process",
+  "struct": "RenameProcess",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "processes",
+  "diff_field": "processes",
+  "delta": "ProgramProcessesDelta",
+  "patch_entry": "ProgramProcessesPatchEntry",
+  "patch_type": "ProcessPatch",
+  "etype": "Process"
+ },
+ "✏️🔍rename-search-filter": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "search-filter",
+  "kind": "rename-search-filter",
+  "struct": "RenameSearchFilter",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "search_filters",
+  "diff_field": "search_filters",
+  "delta": "ProgramSearchFiltersDelta",
+  "patch_entry": "ProgramSearchFiltersPatchEntry",
+  "patch_type": "SearchFilterPatch",
+  "etype": "SearchFilter"
+ },
+ "✏️🔑rename-access-rule": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "access-rule",
+  "kind": "rename-access-rule",
+  "struct": "RenameAccessRule",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "access_rules",
+  "diff_field": "access_rules",
+  "delta": "ProgramAccessRulesDelta",
+  "patch_entry": "ProgramAccessRulesPatchEntry",
+  "patch_type": "AccessRulePatch",
+  "etype": "AccessRule"
+ },
+ "✏️🔒rename-privacy-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "privacy-requirement",
+  "kind": "rename-privacy-requirement",
+  "struct": "RenamePrivacyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "privacy",
+  "diff_field": "privacy",
+  "delta": "ProgramPrivacyDelta",
+  "patch_entry": "ProgramPrivacyPatchEntry",
+  "patch_type": "PrivacyRequirementPatch",
+  "etype": "PrivacyRequirement"
+ },
+ "✏️🔗rename-relationship": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "relationship",
+  "kind": "rename-relationship",
+  "struct": "RenameRelationship",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "relationships",
+  "diff_field": "relationships",
+  "delta": "ProgramRelationshipsDelta",
+  "patch_entry": "ProgramRelationshipsPatchEntry",
+  "patch_type": "RelationshipPatch",
+  "etype": "Relationship"
+ },
+ "✏️🔢rename-quantity-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "quantity-requirement",
+  "kind": "rename-quantity-requirement",
+  "struct": "RenameQuantityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "quantities",
+  "diff_field": "quantities",
+  "delta": "ProgramQuantitiesDelta",
+  "patch_entry": "ProgramQuantitiesPatchEntry",
+  "patch_type": "QuantityRequirementPatch",
+  "etype": "QuantityRequirement"
+ },
+ "✏️🔬rename-analysis-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "analysis-record",
+  "kind": "rename-analysis-record",
+  "struct": "RenameAnalysisRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "analyses",
+  "diff_field": "analyses",
+  "delta": "ProgramAnalysesDelta",
+  "patch_entry": "ProgramAnalysesPatchEntry",
+  "patch_type": "AnalysisRecordPatch",
+  "etype": "AnalysisRecord"
+ },
+ "✏️🗄️rename-storage-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "storage-requirement",
+  "kind": "rename-storage-requirement",
+  "struct": "RenameStorageRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "storage",
+  "diff_field": "storage",
+  "delta": "ProgramStorageDelta",
+  "patch_entry": "ProgramStoragePatchEntry",
+  "patch_type": "StorageRequirementPatch",
+  "etype": "StorageRequirement"
+ },
+ "✏️🗓️rename-meeting-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "meeting-record",
+  "kind": "rename-meeting-record",
+  "struct": "RenameMeetingRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "meetings",
+  "diff_field": "meetings",
+  "delta": "ProgramMeetingsDelta",
+  "patch_entry": "ProgramMeetingsPatchEntry",
+  "patch_type": "MeetingRecordPatch",
+  "etype": "MeetingRecord"
+ },
+ "✏️🗳️rename-survey": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "survey",
+  "kind": "rename-survey",
+  "struct": "RenameSurvey",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "surveys",
+  "diff_field": "surveys",
+  "delta": "ProgramSurveysDelta",
+  "patch_entry": "ProgramSurveysPatchEntry",
+  "patch_type": "SurveyPatch",
+  "etype": "Survey"
+ },
+ "✏️🚚rename-delivery-constraint": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "delivery-constraint",
+  "kind": "rename-delivery-constraint",
+  "struct": "RenameDeliveryConstraint",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "delivery",
+  "diff_field": "delivery",
+  "delta": "ProgramDeliveryDelta",
+  "patch_entry": "ProgramDeliveryPatchEntry",
+  "patch_type": "DeliveryConstraintPatch",
+  "etype": "DeliveryConstraint"
+ },
+ "✏️🚧rename-constraint-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "constraint-record",
+  "kind": "rename-constraint-record",
+  "struct": "RenameConstraintRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "constraints",
+  "diff_field": "constraints",
+  "delta": "ProgramConstraintsDelta",
+  "patch_entry": "ProgramConstraintsPatchEntry",
+  "patch_type": "ConstraintRecordPatch",
+  "etype": "ConstraintRecord"
+ },
+ "✏️🛂rename-compliance-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "compliance-record",
+  "kind": "rename-compliance-record",
+  "struct": "RenameComplianceRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "compliance_records",
+  "diff_field": "compliance_records",
+  "delta": "ProgramComplianceRecordsDelta",
+  "patch_entry": "ProgramComplianceRecordsPatchEntry",
+  "patch_type": "ComplianceRecordPatch",
+  "etype": "ComplianceRecord"
+ },
+ "✏️🛎️rename-service-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "service-requirement",
+  "kind": "rename-service-requirement",
+  "struct": "RenameServiceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "services",
+  "diff_field": "services",
+  "delta": "ProgramServicesDelta",
+  "patch_entry": "ProgramServicesPatchEntry",
+  "patch_type": "ServiceRequirementPatch",
+  "etype": "ServiceRequirement"
+ },
+ "✏️🛠️rename-equipment": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "equipment",
+  "kind": "rename-equipment",
+  "struct": "RenameEquipment",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "equipment",
+  "diff_field": "equipment",
+  "delta": "ProgramEquipmentDelta",
+  "patch_entry": "ProgramEquipmentPatchEntry",
+  "patch_type": "EquipmentPatch",
+  "etype": "Equipment"
+ },
+ "✏️🛡️rename-security-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "security-requirement",
+  "kind": "rename-security-requirement",
+  "struct": "RenameSecurityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "security",
+  "diff_field": "security",
+  "delta": "ProgramSecurityDelta",
+  "patch_entry": "ProgramSecurityPatchEntry",
+  "patch_type": "SecurityRequirementPatch",
+  "etype": "SecurityRequirement"
+ },
+ "✏️🤝rename-collaboration-record": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "collaboration-record",
+  "kind": "rename-collaboration-record",
+  "struct": "RenameCollaborationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "collaboration",
+  "diff_field": "collaboration",
+  "delta": "ProgramCollaborationDelta",
+  "patch_entry": "ProgramCollaborationPatchEntry",
+  "patch_type": "CollaborationRecordPatch",
+  "etype": "CollaborationRecord"
+ },
+ "✏️🦺rename-safety-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "safety-requirement",
+  "kind": "rename-safety-requirement",
+  "struct": "RenameSafetyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "safety",
+  "diff_field": "safety",
+  "delta": "ProgramSafetyDelta",
+  "patch_entry": "ProgramSafetyPatchEntry",
+  "patch_type": "SafetyRequirementPatch",
+  "etype": "SafetyRequirement"
+ },
+ "✏️🧑rename-user-profile": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "user-profile",
+  "kind": "rename-user-profile",
+  "struct": "RenameUserProfile",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "users",
+  "diff_field": "users",
+  "delta": "ProgramUsersDelta",
+  "patch_entry": "ProgramUsersPatchEntry",
+  "patch_type": "UserProfilePatch",
+  "etype": "UserProfile"
+ },
+ "✏️🧠rename-human-factor-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "human-factor-requirement",
+  "kind": "rename-human-factor-requirement",
+  "struct": "RenameHumanFactorRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "human_factors",
+  "diff_field": "human_factors",
+  "delta": "ProgramHumanFactorsDelta",
+  "patch_entry": "ProgramHumanFactorsPatchEntry",
+  "patch_type": "HumanFactorRequirementPatch",
+  "etype": "HumanFactorRequirement"
+ },
+ "✏️🧩rename-flexibility-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "flexibility-requirement",
+  "kind": "rename-flexibility-requirement",
+  "struct": "RenameFlexibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "flexibility",
+  "diff_field": "flexibility",
+  "delta": "ProgramFlexibilityDelta",
+  "patch_entry": "ProgramFlexibilityPatchEntry",
+  "patch_type": "FlexibilityRequirementPatch",
+  "etype": "FlexibilityRequirement"
+ },
+ "✏️🧭rename-wayfinding-requirement": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "wayfinding-requirement",
+  "kind": "rename-wayfinding-requirement",
+  "struct": "RenameWayfindingRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "wayfinding",
+  "diff_field": "wayfinding",
+  "delta": "ProgramWayfindingDelta",
+  "patch_entry": "ProgramWayfindingPatchEntry",
+  "patch_type": "WayfindingRequirementPatch",
+  "etype": "WayfindingRequirement"
+ },
+ "✏️🧱rename-program-element": {
+  "cat": "regular",
+  "verb": "rename",
+  "entity": "program-element",
+  "kind": "rename-program-element",
+  "struct": "RenameProgramElement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "coll": "elements",
+  "diff_field": "elements",
+  "delta": "ProgramElementsDelta",
+  "patch_entry": "ProgramElementsPatchEntry",
+  "patch_type": "ProgramElementPatch",
+  "etype": "ProgramElement"
+ },
+ "🌱ℹ️create-information-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "information-requirement",
+  "kind": "create-information-requirement",
+  "struct": "CreateInformationRequirement",
+  "fields": [
+   [
+    "information_requirement",
+    "InformationRequirement"
+   ]
+  ],
+  "coll": "information",
+  "diff_field": "information",
+  "delta": "ProgramInformationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "InformationRequirement",
+  "payload_field": "information_requirement",
+  "payload_type": "InformationRequirement"
+ },
+ "🌱♻️create-sustainability-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "sustainability-requirement",
+  "kind": "create-sustainability-requirement",
+  "struct": "CreateSustainabilityRequirement",
+  "fields": [
+   [
+    "sustainability_requirement",
+    "SustainabilityRequirement"
+   ]
+  ],
+  "coll": "sustainability",
+  "diff_field": "sustainability",
+  "delta": "ProgramSustainabilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SustainabilityRequirement",
+  "payload_field": "sustainability_requirement",
+  "payload_type": "SustainabilityRequirement"
+ },
+ "🌱♿create-accessibility-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "accessibility-requirement",
+  "kind": "create-accessibility-requirement",
+  "struct": "CreateAccessibilityRequirement",
+  "fields": [
+   [
+    "accessibility_requirement",
+    "AccessibilityRequirement"
+   ]
+  ],
+  "coll": "accessibility",
+  "diff_field": "accessibility",
+  "delta": "ProgramAccessibilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AccessibilityRequirement",
+  "payload_field": "accessibility_requirement",
+  "payload_type": "AccessibilityRequirement"
+ },
+ "🌱⚔️create-conflict": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "conflict",
+  "kind": "create-conflict",
+  "struct": "CreateConflict",
+  "fields": [
+   [
+    "conflict",
+    "Conflict"
+   ]
+  ],
+  "coll": "conflicts",
+  "diff_field": "conflicts",
+  "delta": "ProgramConflictsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Conflict",
+  "payload_field": "conflict",
+  "payload_type": "Conflict"
+ },
+ "🌱⚖️create-option-evaluation": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "option-evaluation",
+  "kind": "create-option-evaluation",
+  "struct": "CreateOptionEvaluation",
+  "fields": [
+   [
+    "option_evaluation",
+    "OptionEvaluation"
+   ]
+  ],
+  "coll": "options",
+  "diff_field": "options",
+  "delta": "ProgramOptionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OptionEvaluation",
+  "payload_field": "option_evaluation",
+  "payload_type": "OptionEvaluation"
+ },
+ "🌱⚙️create-function": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "function",
+  "kind": "create-function",
+  "struct": "CreateFunction",
+  "fields": [
+   [
+    "function",
+    "Function"
+   ]
+  ],
+  "coll": "functions",
+  "diff_field": "functions",
+  "delta": "ProgramFunctionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Function",
+  "payload_field": "function",
+  "payload_type": "Function"
+ },
+ "🌱⚠️create-risk": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "risk",
+  "kind": "create-risk",
+  "struct": "CreateRisk",
+  "fields": [
+   [
+    "risk",
+    "Risk"
+   ]
+  ],
+  "coll": "risks",
+  "diff_field": "risks",
+  "delta": "ProgramRisksDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Risk",
+  "payload_field": "risk",
+  "payload_type": "Risk"
+ },
+ "🌱✅create-decision": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "decision",
+  "kind": "create-decision",
+  "struct": "CreateDecision",
+  "fields": [
+   [
+    "decision",
+    "Decision"
+   ]
+  ],
+  "coll": "decisions",
+  "diff_field": "decisions",
+  "delta": "ProgramDecisionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Decision",
+  "payload_field": "decision",
+  "payload_type": "Decision"
+ },
+ "🌱✔️create-validation-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "validation-record",
+  "kind": "create-validation-record",
+  "struct": "CreateValidationRecord",
+  "fields": [
+   [
+    "validation_record",
+    "ValidationRecord"
+   ]
+  ],
+  "coll": "validations",
+  "diff_field": "validations",
+  "delta": "ProgramValidationsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ValidationRecord",
+  "payload_field": "validation_record",
+  "payload_type": "ValidationRecord"
+ },
+ "🌱⭐create-priority-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "priority-record",
+  "kind": "create-priority-record",
+  "struct": "CreatePriorityRecord",
+  "fields": [
+   [
+    "priority_record",
+    "PriorityRecord"
+   ]
+  ],
+  "coll": "priorities",
+  "diff_field": "priorities",
+  "delta": "ProgramPrioritiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PriorityRecord",
+  "payload_field": "priority_record",
+  "payload_type": "PriorityRecord"
+ },
+ "🌱🌊create-flow-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "flow-requirement",
+  "kind": "create-flow-requirement",
+  "struct": "CreateFlowRequirement",
+  "fields": [
+   [
+    "flow_requirement",
+    "FlowRequirement"
+   ]
+  ],
+  "coll": "flows",
+  "diff_field": "flows",
+  "delta": "ProgramFlowsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "FlowRequirement",
+  "payload_field": "flow_requirement",
+  "payload_type": "FlowRequirement"
+ },
+ "🌱🌿create-environmental-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "environmental-requirement",
+  "kind": "create-environmental-requirement",
+  "struct": "CreateEnvironmentalRequirement",
+  "fields": [
+   [
+    "environmental_requirement",
+    "EnvironmentalRequirement"
+   ]
+  ],
+  "coll": "environmental",
+  "diff_field": "environmental",
+  "delta": "ProgramEnvironmentalDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "EnvironmentalRequirement",
+  "payload_field": "environmental_requirement",
+  "payload_type": "EnvironmentalRequirement"
+ },
+ "🌱🎓create-workshop": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "workshop",
+  "kind": "create-workshop",
+  "struct": "CreateWorkshop",
+  "fields": [
+   [
+    "workshop",
+    "Workshop"
+   ]
+  ],
+  "coll": "workshops",
+  "diff_field": "workshops",
+  "delta": "ProgramWorkshopsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Workshop",
+  "payload_field": "workshop",
+  "payload_type": "Workshop"
+ },
+ "🌱🎬create-scenario": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "scenario",
+  "kind": "create-scenario",
+  "struct": "CreateScenario",
+  "fields": [
+   [
+    "scenario",
+    "Scenario"
+   ]
+  ],
+  "coll": "scenarios",
+  "diff_field": "scenarios",
+  "delta": "ProgramScenariosDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Scenario",
+  "payload_field": "scenario",
+  "payload_type": "Scenario"
+ },
+ "🌱🏁create-benchmark-record": {
+  "cat": "child",
+  "verb": "create",
+  "entity": "benchmark-record",
+  "kind": "create-benchmark-record",
+  "struct": "CreateBenchmarkRecord",
+  "fields": [
+   [
+    "benchmark_record",
+    "BenchmarkRecord"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🌱🏃create-activity": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "activity",
+  "kind": "create-activity",
+  "struct": "CreateActivity",
+  "fields": [
+   [
+    "activity",
+    "Activity"
+   ]
+  ],
+  "coll": "activities",
+  "diff_field": "activities",
+  "delta": "ProgramActivitiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Activity",
+  "payload_field": "activity",
+  "payload_type": "Activity"
+ },
+ "🌱🏗️create-infrastructure-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "infrastructure-requirement",
+  "kind": "create-infrastructure-requirement",
+  "struct": "CreateInfrastructureRequirement",
+  "fields": [
+   [
+    "infrastructure_requirement",
+    "InfrastructureRequirement"
+   ]
+  ],
+  "coll": "infrastructure",
+  "diff_field": "infrastructure",
+  "delta": "ProgramInfrastructureDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "InfrastructureRequirement",
+  "payload_field": "infrastructure_requirement",
+  "payload_type": "InfrastructureRequirement"
+ },
+ "🌱🏢create-organizational-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "organizational-requirement",
+  "kind": "create-organizational-requirement",
+  "struct": "CreateOrganizationalRequirement",
+  "fields": [
+   [
+    "organizational_requirement",
+    "OrganizationalRequirement"
+   ]
+  ],
+  "coll": "organizational",
+  "diff_field": "organizational",
+  "delta": "ProgramOrganizationalDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OrganizationalRequirement",
+  "payload_field": "organizational_requirement",
+  "payload_type": "OrganizationalRequirement"
+ },
+ "🌱🐛create-issue": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "issue",
+  "kind": "create-issue",
+  "struct": "CreateIssue",
+  "fields": [
+   [
+    "issue",
+    "Issue"
+   ]
+  ],
+  "coll": "issues",
+  "diff_field": "issues",
+  "delta": "ProgramIssuesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Issue",
+  "payload_field": "issue",
+  "payload_type": "Issue"
+ },
+ "🌱👍create-approval-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "approval-record",
+  "kind": "create-approval-record",
+  "struct": "CreateApprovalRecord",
+  "fields": [
+   [
+    "approval_record",
+    "ApprovalRecord"
+   ]
+  ],
+  "coll": "approvals",
+  "diff_field": "approvals",
+  "delta": "ProgramApprovalsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ApprovalRecord",
+  "payload_field": "approval_record",
+  "payload_type": "ApprovalRecord"
+ },
+ "🌱👥create-stakeholder": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "stakeholder",
+  "kind": "create-stakeholder",
+  "struct": "CreateStakeholder",
+  "fields": [
+   [
+    "stakeholder",
+    "Stakeholder"
+   ]
+  ],
+  "coll": "stakeholders",
+  "diff_field": "stakeholders",
+  "delta": "ProgramStakeholdersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Stakeholder",
+  "payload_field": "stakeholder",
+  "payload_type": "Stakeholder"
+ },
+ "🌱💎create-quality-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "quality-record",
+  "kind": "create-quality-record",
+  "struct": "CreateQualityRecord",
+  "fields": [
+   [
+    "quality_record",
+    "QualityRecord"
+   ]
+  ],
+  "coll": "quality",
+  "diff_field": "quality",
+  "delta": "ProgramQualityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "QualityRecord",
+  "payload_field": "quality_record",
+  "payload_type": "QualityRecord"
+ },
+ "🌱💪create-resilience-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "resilience-requirement",
+  "kind": "create-resilience-requirement",
+  "struct": "CreateResilienceRequirement",
+  "fields": [
+   [
+    "resilience_requirement",
+    "ResilienceRequirement"
+   ]
+  ],
+  "coll": "resilience",
+  "diff_field": "resilience",
+  "delta": "ProgramResilienceDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ResilienceRequirement",
+  "payload_field": "resilience_requirement",
+  "payload_type": "ResilienceRequirement"
+ },
+ "🌱💭create-assumption": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "assumption",
+  "kind": "create-assumption",
+  "struct": "CreateAssumption",
+  "fields": [
+   [
+    "assumption",
+    "Assumption"
+   ]
+  ],
+  "coll": "assumptions",
+  "diff_field": "assumptions",
+  "delta": "ProgramAssumptionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Assumption",
+  "payload_field": "assumption",
+  "payload_type": "Assumption"
+ },
+ "🌱💰create-cost-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "cost-requirement",
+  "kind": "create-cost-requirement",
+  "struct": "CreateCostRequirement",
+  "fields": [
+   [
+    "cost_requirement",
+    "CostRequirement"
+   ]
+  ],
+  "coll": "costs",
+  "diff_field": "costs",
+  "delta": "ProgramCostsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CostRequirement",
+  "payload_field": "cost_requirement",
+  "payload_type": "CostRequirement"
+ },
+ "🌱📄create-document": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "document",
+  "kind": "create-document",
+  "struct": "CreateDocument",
+  "fields": [
+   [
+    "document",
+    "ArtifactRecord"
+   ]
+  ],
+  "coll": "artifacts",
+  "diff_field": "documents",
+  "delta": "ProgramArtifactsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ArtifactRecord",
+  "payload_field": "document",
+  "payload_type": "ArtifactRecord"
+ },
+ "🌱📅create-schedule-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "schedule-requirement",
+  "kind": "create-schedule-requirement",
+  "struct": "CreateScheduleRequirement",
+  "fields": [
+   [
+    "schedule_requirement",
+    "ScheduleRequirement"
+   ]
+  ],
+  "coll": "schedules",
+  "diff_field": "schedules",
+  "delta": "ProgramSchedulesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ScheduleRequirement",
+  "payload_field": "schedule_requirement",
+  "payload_type": "ScheduleRequirement"
+ },
+ "🌱📈create-growth-plan": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "growth-plan",
+  "kind": "create-growth-plan",
+  "struct": "CreateGrowthPlan",
+  "fields": [
+   [
+    "growth_plan",
+    "GrowthPlan"
+   ]
+  ],
+  "coll": "growth",
+  "diff_field": "growth",
+  "delta": "ProgramGrowthDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "GrowthPlan",
+  "payload_field": "growth_plan",
+  "payload_type": "GrowthPlan"
+ },
+ "🌱📊create-performance-criterion": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "performance-criterion",
+  "kind": "create-performance-criterion",
+  "struct": "CreatePerformanceCriterion",
+  "fields": [
+   [
+    "performance_criterion",
+    "PerformanceCriterion"
+   ]
+  ],
+  "coll": "performance",
+  "diff_field": "performance",
+  "delta": "ProgramPerformanceDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PerformanceCriterion",
+  "payload_field": "performance_criterion",
+  "payload_type": "PerformanceCriterion"
+ },
+ "🌱📋create-operational-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "operational-requirement",
+  "kind": "create-operational-requirement",
+  "struct": "CreateOperationalRequirement",
+  "fields": [
+   [
+    "operational_requirement",
+    "OperationalRequirement"
+   ]
+  ],
+  "coll": "operations",
+  "diff_field": "operations",
+  "delta": "ProgramOperationsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OperationalRequirement",
+  "payload_field": "operational_requirement",
+  "payload_type": "OperationalRequirement"
+ },
+ "🌱📌create-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "requirement",
+  "kind": "create-requirement",
+  "struct": "CreateRequirement",
+  "fields": [
+   [
+    "requirement",
+    "Requirement"
+   ]
+  ],
+  "coll": "requirements",
+  "diff_field": "requirements",
+  "delta": "ProgramRequirementsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Requirement",
+  "payload_field": "requirement",
+  "payload_type": "Requirement"
+ },
+ "🌱📍create-site-context": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "site-context",
+  "kind": "create-site-context",
+  "struct": "CreateSiteContext",
+  "fields": [
+   [
+    "site_context",
+    "SiteContext"
+   ]
+  ],
+  "coll": "site_context",
+  "diff_field": "site_context",
+  "delta": "ProgramSiteContextDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SiteContext",
+  "payload_field": "site_context",
+  "payload_type": "SiteContext"
+ },
+ "🌱📐create-template-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "template-record",
+  "kind": "create-template-record",
+  "struct": "CreateTemplateRecord",
+  "fields": [
+   [
+    "template_record",
+    "TemplateRecord"
+   ]
+  ],
+  "coll": "templates",
+  "diff_field": "templates",
+  "delta": "ProgramTemplatesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "TemplateRecord",
+  "payload_field": "template_record",
+  "payload_type": "TemplateRecord"
+ },
+ "🌱📑create-report-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "report-record",
+  "kind": "create-report-record",
+  "struct": "CreateReportRecord",
+  "fields": [
+   [
+    "report_record",
+    "ReportRecord"
+   ]
+  ],
+  "coll": "reports",
+  "diff_field": "reports",
+  "delta": "ProgramReportsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ReportRecord",
+  "payload_field": "report_record",
+  "payload_type": "ReportRecord"
+ },
+ "🌱📒create-audit-event": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "audit-event",
+  "kind": "create-audit-event",
+  "struct": "CreateAuditEvent",
+  "fields": [
+   [
+    "audit_event",
+    "AuditEvent"
+   ]
+  ],
+  "coll": "audit_events",
+  "diff_field": "audit_events",
+  "delta": "ProgramAuditEventsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AuditEvent",
+  "payload_field": "audit_event",
+  "payload_type": "AuditEvent"
+ },
+ "🌱📚create-knowledge-record": {
+  "cat": "child",
+  "verb": "create",
+  "entity": "knowledge-record",
+  "kind": "create-knowledge-record",
+  "struct": "CreateKnowledgeRecord",
+  "fields": [
+   [
+    "knowledge_record",
+    "KnowledgeRecord"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🌱📜create-regulatory-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "regulatory-requirement",
+  "kind": "create-regulatory-requirement",
+  "struct": "CreateRegulatoryRequirement",
+  "fields": [
+   [
+    "regulatory_requirement",
+    "RegulatoryRequirement"
+   ]
+  ],
+  "coll": "regulatory",
+  "diff_field": "regulatory",
+  "delta": "ProgramRegulatoryDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "RegulatoryRequirement",
+  "payload_field": "regulatory_requirement",
+  "payload_type": "RegulatoryRequirement"
+ },
+ "🌱📝create-change-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "change-record",
+  "kind": "create-change-record",
+  "struct": "CreateChangeRecord",
+  "fields": [
+   [
+    "change_record",
+    "ChangeRecord"
+   ]
+  ],
+  "coll": "changes",
+  "diff_field": "changes",
+  "delta": "ProgramChangesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ChangeRecord",
+  "payload_field": "change_record",
+  "payload_type": "ChangeRecord"
+ },
+ "🌱📡create-communication-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "communication-requirement",
+  "kind": "create-communication-requirement",
+  "struct": "CreateCommunicationRequirement",
+  "fields": [
+   [
+    "communication_requirement",
+    "CommunicationRequirement"
+   ]
+  ],
+  "coll": "communication",
+  "diff_field": "communication",
+  "delta": "ProgramCommunicationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CommunicationRequirement",
+  "payload_field": "communication_requirement",
+  "payload_type": "CommunicationRequirement"
+ },
+ "🌱📦create-resource": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "resource",
+  "kind": "create-resource",
+  "struct": "CreateResource",
+  "fields": [
+   [
+    "resource",
+    "Resource"
+   ]
+  ],
+  "coll": "resources",
+  "diff_field": "resources",
+  "delta": "ProgramResourcesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Resource",
+  "payload_field": "resource",
+  "payload_type": "Resource"
+ },
+ "🌱📶create-status-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "status-record",
+  "kind": "create-status-record",
+  "struct": "CreateStatusRecord",
+  "fields": [
+   [
+    "status_record",
+    "StatusRecord"
+   ]
+  ],
+  "coll": "status_records",
+  "diff_field": "status_records",
+  "delta": "ProgramStatusRecordsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "StatusRecord",
+  "payload_field": "status_record",
+  "payload_type": "StatusRecord"
+ },
+ "🌱🔄create-process": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "process",
+  "kind": "create-process",
+  "struct": "CreateProcess",
+  "fields": [
+   [
+    "process",
+    "Process"
+   ]
+  ],
+  "coll": "processes",
+  "diff_field": "processes",
+  "delta": "ProgramProcessesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Process",
+  "payload_field": "process",
+  "payload_type": "Process"
+ },
+ "🌱🔍create-search-filter": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "search-filter",
+  "kind": "create-search-filter",
+  "struct": "CreateSearchFilter",
+  "fields": [
+   [
+    "search_filter",
+    "SearchFilter"
+   ]
+  ],
+  "coll": "search_filters",
+  "diff_field": "search_filters",
+  "delta": "ProgramSearchFiltersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SearchFilter",
+  "payload_field": "search_filter",
+  "payload_type": "SearchFilter"
+ },
+ "🌱🔑create-access-rule": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "access-rule",
+  "kind": "create-access-rule",
+  "struct": "CreateAccessRule",
+  "fields": [
+   [
+    "access_rule",
+    "AccessRule"
+   ]
+  ],
+  "coll": "access_rules",
+  "diff_field": "access_rules",
+  "delta": "ProgramAccessRulesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AccessRule",
+  "payload_field": "access_rule",
+  "payload_type": "AccessRule"
+ },
+ "🌱🔒create-privacy-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "privacy-requirement",
+  "kind": "create-privacy-requirement",
+  "struct": "CreatePrivacyRequirement",
+  "fields": [
+   [
+    "privacy_requirement",
+    "PrivacyRequirement"
+   ]
+  ],
+  "coll": "privacy",
+  "diff_field": "privacy",
+  "delta": "ProgramPrivacyDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PrivacyRequirement",
+  "payload_field": "privacy_requirement",
+  "payload_type": "PrivacyRequirement"
+ },
+ "🌱🔗create-relationship": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "relationship",
+  "kind": "create-relationship",
+  "struct": "CreateRelationship",
+  "fields": [
+   [
+    "relationship",
+    "Relationship"
+   ]
+  ],
+  "coll": "relationships",
+  "diff_field": "relationships",
+  "delta": "ProgramRelationshipsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Relationship",
+  "payload_field": "relationship",
+  "payload_type": "Relationship"
+ },
+ "🌱🔢create-quantity-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "quantity-requirement",
+  "kind": "create-quantity-requirement",
+  "struct": "CreateQuantityRequirement",
+  "fields": [
+   [
+    "quantity_requirement",
+    "QuantityRequirement"
+   ]
+  ],
+  "coll": "quantities",
+  "diff_field": "quantities",
+  "delta": "ProgramQuantitiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "QuantityRequirement",
+  "payload_field": "quantity_requirement",
+  "payload_type": "QuantityRequirement"
+ },
+ "🌱🔬create-analysis-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "analysis-record",
+  "kind": "create-analysis-record",
+  "struct": "CreateAnalysisRecord",
+  "fields": [
+   [
+    "analysis_record",
+    "AnalysisRecord"
+   ]
+  ],
+  "coll": "analyses",
+  "diff_field": "analyses",
+  "delta": "ProgramAnalysesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AnalysisRecord",
+  "payload_field": "analysis_record",
+  "payload_type": "AnalysisRecord"
+ },
+ "🌱🗄️create-storage-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "storage-requirement",
+  "kind": "create-storage-requirement",
+  "struct": "CreateStorageRequirement",
+  "fields": [
+   [
+    "storage_requirement",
+    "StorageRequirement"
+   ]
+  ],
+  "coll": "storage",
+  "diff_field": "storage",
+  "delta": "ProgramStorageDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "StorageRequirement",
+  "payload_field": "storage_requirement",
+  "payload_type": "StorageRequirement"
+ },
+ "🌱🗓️create-meeting-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "meeting-record",
+  "kind": "create-meeting-record",
+  "struct": "CreateMeetingRecord",
+  "fields": [
+   [
+    "meeting_record",
+    "MeetingRecord"
+   ]
+  ],
+  "coll": "meetings",
+  "diff_field": "meetings",
+  "delta": "ProgramMeetingsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "MeetingRecord",
+  "payload_field": "meeting_record",
+  "payload_type": "MeetingRecord"
+ },
+ "🌱🗳️create-survey": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "survey",
+  "kind": "create-survey",
+  "struct": "CreateSurvey",
+  "fields": [
+   [
+    "survey",
+    "Survey"
+   ]
+  ],
+  "coll": "surveys",
+  "diff_field": "surveys",
+  "delta": "ProgramSurveysDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Survey",
+  "payload_field": "survey",
+  "payload_type": "Survey"
+ },
+ "🌱🚚create-delivery-constraint": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "delivery-constraint",
+  "kind": "create-delivery-constraint",
+  "struct": "CreateDeliveryConstraint",
+  "fields": [
+   [
+    "delivery_constraint",
+    "DeliveryConstraint"
+   ]
+  ],
+  "coll": "delivery",
+  "diff_field": "delivery",
+  "delta": "ProgramDeliveryDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "DeliveryConstraint",
+  "payload_field": "delivery_constraint",
+  "payload_type": "DeliveryConstraint"
+ },
+ "🌱🚧create-constraint-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "constraint-record",
+  "kind": "create-constraint-record",
+  "struct": "CreateConstraintRecord",
+  "fields": [
+   [
+    "constraint_record",
+    "ConstraintRecord"
+   ]
+  ],
+  "coll": "constraints",
+  "diff_field": "constraints",
+  "delta": "ProgramConstraintsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ConstraintRecord",
+  "payload_field": "constraint_record",
+  "payload_type": "ConstraintRecord"
+ },
+ "🌱🛂create-compliance-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "compliance-record",
+  "kind": "create-compliance-record",
+  "struct": "CreateComplianceRecord",
+  "fields": [
+   [
+    "compliance_record",
+    "ComplianceRecord"
+   ]
+  ],
+  "coll": "compliance_records",
+  "diff_field": "compliance_records",
+  "delta": "ProgramComplianceRecordsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ComplianceRecord",
+  "payload_field": "compliance_record",
+  "payload_type": "ComplianceRecord"
+ },
+ "🌱🛎️create-service-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "service-requirement",
+  "kind": "create-service-requirement",
+  "struct": "CreateServiceRequirement",
+  "fields": [
+   [
+    "service_requirement",
+    "ServiceRequirement"
+   ]
+  ],
+  "coll": "services",
+  "diff_field": "services",
+  "delta": "ProgramServicesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ServiceRequirement",
+  "payload_field": "service_requirement",
+  "payload_type": "ServiceRequirement"
+ },
+ "🌱🛠️create-equipment": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "equipment",
+  "kind": "create-equipment",
+  "struct": "CreateEquipment",
+  "fields": [
+   [
+    "equipment",
+    "Equipment"
+   ]
+  ],
+  "coll": "equipment",
+  "diff_field": "equipment",
+  "delta": "ProgramEquipmentDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Equipment",
+  "payload_field": "equipment",
+  "payload_type": "Equipment"
+ },
+ "🌱🛡️create-security-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "security-requirement",
+  "kind": "create-security-requirement",
+  "struct": "CreateSecurityRequirement",
+  "fields": [
+   [
+    "security_requirement",
+    "SecurityRequirement"
+   ]
+  ],
+  "coll": "security",
+  "diff_field": "security",
+  "delta": "ProgramSecurityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SecurityRequirement",
+  "payload_field": "security_requirement",
+  "payload_type": "SecurityRequirement"
+ },
+ "🌱🤝create-collaboration-record": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "collaboration-record",
+  "kind": "create-collaboration-record",
+  "struct": "CreateCollaborationRecord",
+  "fields": [
+   [
+    "collaboration_record",
+    "CollaborationRecord"
+   ]
+  ],
+  "coll": "collaboration",
+  "diff_field": "collaboration",
+  "delta": "ProgramCollaborationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CollaborationRecord",
+  "payload_field": "collaboration_record",
+  "payload_type": "CollaborationRecord"
+ },
+ "🌱🦺create-safety-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "safety-requirement",
+  "kind": "create-safety-requirement",
+  "struct": "CreateSafetyRequirement",
+  "fields": [
+   [
+    "safety_requirement",
+    "SafetyRequirement"
+   ]
+  ],
+  "coll": "safety",
+  "diff_field": "safety",
+  "delta": "ProgramSafetyDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SafetyRequirement",
+  "payload_field": "safety_requirement",
+  "payload_type": "SafetyRequirement"
+ },
+ "🌱🧑create-user-profile": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "user-profile",
+  "kind": "create-user-profile",
+  "struct": "CreateUserProfile",
+  "fields": [
+   [
+    "user_profile",
+    "UserProfile"
+   ]
+  ],
+  "coll": "users",
+  "diff_field": "users",
+  "delta": "ProgramUsersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "UserProfile",
+  "payload_field": "user_profile",
+  "payload_type": "UserProfile"
+ },
+ "🌱🧠create-human-factor-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "human-factor-requirement",
+  "kind": "create-human-factor-requirement",
+  "struct": "CreateHumanFactorRequirement",
+  "fields": [
+   [
+    "human_factor_requirement",
+    "HumanFactorRequirement"
+   ]
+  ],
+  "coll": "human_factors",
+  "diff_field": "human_factors",
+  "delta": "ProgramHumanFactorsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "HumanFactorRequirement",
+  "payload_field": "human_factor_requirement",
+  "payload_type": "HumanFactorRequirement"
+ },
+ "🌱🧩create-flexibility-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "flexibility-requirement",
+  "kind": "create-flexibility-requirement",
+  "struct": "CreateFlexibilityRequirement",
+  "fields": [
+   [
+    "flexibility_requirement",
+    "FlexibilityRequirement"
+   ]
+  ],
+  "coll": "flexibility",
+  "diff_field": "flexibility",
+  "delta": "ProgramFlexibilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "FlexibilityRequirement",
+  "payload_field": "flexibility_requirement",
+  "payload_type": "FlexibilityRequirement"
+ },
+ "🌱🧭create-wayfinding-requirement": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "wayfinding-requirement",
+  "kind": "create-wayfinding-requirement",
+  "struct": "CreateWayfindingRequirement",
+  "fields": [
+   [
+    "wayfinding_requirement",
+    "WayfindingRequirement"
+   ]
+  ],
+  "coll": "wayfinding",
+  "diff_field": "wayfinding",
+  "delta": "ProgramWayfindingDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "WayfindingRequirement",
+  "payload_field": "wayfinding_requirement",
+  "payload_type": "WayfindingRequirement"
+ },
+ "🌱🧱create-program-element": {
+  "cat": "regular",
+  "verb": "create",
+  "entity": "program-element",
+  "kind": "create-program-element",
+  "struct": "CreateProgramElement",
+  "fields": [
+   [
+    "program_element",
+    "ProgramElement"
+   ]
+  ],
+  "coll": "elements",
+  "diff_field": "elements",
+  "delta": "ProgramElementsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ProgramElement",
+  "payload_field": "program_element",
+  "payload_type": "ProgramElement"
+ },
+ "🔁ℹ️replace-information-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "information-requirement",
+  "kind": "replace-information-requirement",
+  "struct": "ReplaceInformationRequirement",
+  "fields": [
+   [
+    "information_requirement",
+    "InformationRequirement"
+   ]
+  ],
+  "coll": "information",
+  "diff_field": "information",
+  "delta": "ProgramInformationDelta",
+  "patch_entry": "ProgramInformationPatchEntry",
+  "patch_type": null,
+  "etype": "InformationRequirement",
+  "payload_field": "information_requirement",
+  "payload_type": "InformationRequirement"
+ },
+ "🔁♻️replace-sustainability-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "sustainability-requirement",
+  "kind": "replace-sustainability-requirement",
+  "struct": "ReplaceSustainabilityRequirement",
+  "fields": [
+   [
+    "sustainability_requirement",
+    "SustainabilityRequirement"
+   ]
+  ],
+  "coll": "sustainability",
+  "diff_field": "sustainability",
+  "delta": "ProgramSustainabilityDelta",
+  "patch_entry": "ProgramSustainabilityPatchEntry",
+  "patch_type": null,
+  "etype": "SustainabilityRequirement",
+  "payload_field": "sustainability_requirement",
+  "payload_type": "SustainabilityRequirement"
+ },
+ "🔁♿replace-accessibility-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "accessibility-requirement",
+  "kind": "replace-accessibility-requirement",
+  "struct": "ReplaceAccessibilityRequirement",
+  "fields": [
+   [
+    "accessibility_requirement",
+    "AccessibilityRequirement"
+   ]
+  ],
+  "coll": "accessibility",
+  "diff_field": "accessibility",
+  "delta": "ProgramAccessibilityDelta",
+  "patch_entry": "ProgramAccessibilityPatchEntry",
+  "patch_type": null,
+  "etype": "AccessibilityRequirement",
+  "payload_field": "accessibility_requirement",
+  "payload_type": "AccessibilityRequirement"
+ },
+ "🔁⚔️replace-conflict": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "conflict",
+  "kind": "replace-conflict",
+  "struct": "ReplaceConflict",
+  "fields": [
+   [
+    "conflict",
+    "Conflict"
+   ]
+  ],
+  "coll": "conflicts",
+  "diff_field": "conflicts",
+  "delta": "ProgramConflictsDelta",
+  "patch_entry": "ProgramConflictsPatchEntry",
+  "patch_type": null,
+  "etype": "Conflict",
+  "payload_field": "conflict",
+  "payload_type": "Conflict"
+ },
+ "🔁⚖️replace-option-evaluation": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "option-evaluation",
+  "kind": "replace-option-evaluation",
+  "struct": "ReplaceOptionEvaluation",
+  "fields": [
+   [
+    "option_evaluation",
+    "OptionEvaluation"
+   ]
+  ],
+  "coll": "options",
+  "diff_field": "options",
+  "delta": "ProgramOptionsDelta",
+  "patch_entry": "ProgramOptionsPatchEntry",
+  "patch_type": null,
+  "etype": "OptionEvaluation",
+  "payload_field": "option_evaluation",
+  "payload_type": "OptionEvaluation"
+ },
+ "🔁⚙️replace-function": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "function",
+  "kind": "replace-function",
+  "struct": "ReplaceFunction",
+  "fields": [
+   [
+    "function",
+    "Function"
+   ]
+  ],
+  "coll": "functions",
+  "diff_field": "functions",
+  "delta": "ProgramFunctionsDelta",
+  "patch_entry": "ProgramFunctionsPatchEntry",
+  "patch_type": null,
+  "etype": "Function",
+  "payload_field": "function",
+  "payload_type": "Function"
+ },
+ "🔁⚠️replace-risk": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "risk",
+  "kind": "replace-risk",
+  "struct": "ReplaceRisk",
+  "fields": [
+   [
+    "risk",
+    "Risk"
+   ]
+  ],
+  "coll": "risks",
+  "diff_field": "risks",
+  "delta": "ProgramRisksDelta",
+  "patch_entry": "ProgramRisksPatchEntry",
+  "patch_type": null,
+  "etype": "Risk",
+  "payload_field": "risk",
+  "payload_type": "Risk"
+ },
+ "🔁✅replace-decision": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "decision",
+  "kind": "replace-decision",
+  "struct": "ReplaceDecision",
+  "fields": [
+   [
+    "decision",
+    "Decision"
+   ]
+  ],
+  "coll": "decisions",
+  "diff_field": "decisions",
+  "delta": "ProgramDecisionsDelta",
+  "patch_entry": "ProgramDecisionsPatchEntry",
+  "patch_type": null,
+  "etype": "Decision",
+  "payload_field": "decision",
+  "payload_type": "Decision"
+ },
+ "🔁✔️replace-validation-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "validation-record",
+  "kind": "replace-validation-record",
+  "struct": "ReplaceValidationRecord",
+  "fields": [
+   [
+    "validation_record",
+    "ValidationRecord"
+   ]
+  ],
+  "coll": "validations",
+  "diff_field": "validations",
+  "delta": "ProgramValidationsDelta",
+  "patch_entry": "ProgramValidationsPatchEntry",
+  "patch_type": null,
+  "etype": "ValidationRecord",
+  "payload_field": "validation_record",
+  "payload_type": "ValidationRecord"
+ },
+ "🔁⭐replace-priority-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "priority-record",
+  "kind": "replace-priority-record",
+  "struct": "ReplacePriorityRecord",
+  "fields": [
+   [
+    "priority_record",
+    "PriorityRecord"
+   ]
+  ],
+  "coll": "priorities",
+  "diff_field": "priorities",
+  "delta": "ProgramPrioritiesDelta",
+  "patch_entry": "ProgramPrioritiesPatchEntry",
+  "patch_type": null,
+  "etype": "PriorityRecord",
+  "payload_field": "priority_record",
+  "payload_type": "PriorityRecord"
+ },
+ "🔁🌊replace-flow-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "flow-requirement",
+  "kind": "replace-flow-requirement",
+  "struct": "ReplaceFlowRequirement",
+  "fields": [
+   [
+    "flow_requirement",
+    "FlowRequirement"
+   ]
+  ],
+  "coll": "flows",
+  "diff_field": "flows",
+  "delta": "ProgramFlowsDelta",
+  "patch_entry": "ProgramFlowsPatchEntry",
+  "patch_type": null,
+  "etype": "FlowRequirement",
+  "payload_field": "flow_requirement",
+  "payload_type": "FlowRequirement"
+ },
+ "🔁🌿replace-environmental-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "environmental-requirement",
+  "kind": "replace-environmental-requirement",
+  "struct": "ReplaceEnvironmentalRequirement",
+  "fields": [
+   [
+    "environmental_requirement",
+    "EnvironmentalRequirement"
+   ]
+  ],
+  "coll": "environmental",
+  "diff_field": "environmental",
+  "delta": "ProgramEnvironmentalDelta",
+  "patch_entry": "ProgramEnvironmentalPatchEntry",
+  "patch_type": null,
+  "etype": "EnvironmentalRequirement",
+  "payload_field": "environmental_requirement",
+  "payload_type": "EnvironmentalRequirement"
+ },
+ "🔁🎓replace-workshop": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "workshop",
+  "kind": "replace-workshop",
+  "struct": "ReplaceWorkshop",
+  "fields": [
+   [
+    "workshop",
+    "Workshop"
+   ]
+  ],
+  "coll": "workshops",
+  "diff_field": "workshops",
+  "delta": "ProgramWorkshopsDelta",
+  "patch_entry": "ProgramWorkshopsPatchEntry",
+  "patch_type": null,
+  "etype": "Workshop",
+  "payload_field": "workshop",
+  "payload_type": "Workshop"
+ },
+ "🔁🎬replace-scenario": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "scenario",
+  "kind": "replace-scenario",
+  "struct": "ReplaceScenario",
+  "fields": [
+   [
+    "scenario",
+    "Scenario"
+   ]
+  ],
+  "coll": "scenarios",
+  "diff_field": "scenarios",
+  "delta": "ProgramScenariosDelta",
+  "patch_entry": "ProgramScenariosPatchEntry",
+  "patch_type": null,
+  "etype": "Scenario",
+  "payload_field": "scenario",
+  "payload_type": "Scenario"
+ },
+ "🔁🏁replace-benchmark-record": {
+  "cat": "child",
+  "verb": "replace",
+  "entity": "benchmark-record",
+  "kind": "replace-benchmark-record",
+  "struct": "ReplaceBenchmarkRecord",
+  "fields": [
+   [
+    "benchmark_record",
+    "BenchmarkRecord"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🔁🏃replace-activity": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "activity",
+  "kind": "replace-activity",
+  "struct": "ReplaceActivity",
+  "fields": [
+   [
+    "activity",
+    "Activity"
+   ]
+  ],
+  "coll": "activities",
+  "diff_field": "activities",
+  "delta": "ProgramActivitiesDelta",
+  "patch_entry": "ProgramActivitiesPatchEntry",
+  "patch_type": null,
+  "etype": "Activity",
+  "payload_field": "activity",
+  "payload_type": "Activity"
+ },
+ "🔁🏗️replace-infrastructure-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "infrastructure-requirement",
+  "kind": "replace-infrastructure-requirement",
+  "struct": "ReplaceInfrastructureRequirement",
+  "fields": [
+   [
+    "infrastructure_requirement",
+    "InfrastructureRequirement"
+   ]
+  ],
+  "coll": "infrastructure",
+  "diff_field": "infrastructure",
+  "delta": "ProgramInfrastructureDelta",
+  "patch_entry": "ProgramInfrastructurePatchEntry",
+  "patch_type": null,
+  "etype": "InfrastructureRequirement",
+  "payload_field": "infrastructure_requirement",
+  "payload_type": "InfrastructureRequirement"
+ },
+ "🔁🏛️replace-governance": {
+  "cat": "scalar",
+  "verb": "replace",
+  "entity": "governance",
+  "kind": "replace-governance",
+  "struct": "ReplaceGovernance",
+  "fields": [
+   [
+    "new_governance",
+    "Governance"
+   ]
+  ],
+  "coll": "governance",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🔁🏢replace-organizational-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "organizational-requirement",
+  "kind": "replace-organizational-requirement",
+  "struct": "ReplaceOrganizationalRequirement",
+  "fields": [
+   [
+    "organizational_requirement",
+    "OrganizationalRequirement"
+   ]
+  ],
+  "coll": "organizational",
+  "diff_field": "organizational",
+  "delta": "ProgramOrganizationalDelta",
+  "patch_entry": "ProgramOrganizationalPatchEntry",
+  "patch_type": null,
+  "etype": "OrganizationalRequirement",
+  "payload_field": "organizational_requirement",
+  "payload_type": "OrganizationalRequirement"
+ },
+ "🔁🏷️replace-meta": {
+  "cat": "scalar",
+  "verb": "replace",
+  "entity": "meta",
+  "kind": "replace-meta",
+  "struct": "ReplaceMeta",
+  "fields": [
+   [
+    "new_meta",
+    "ProgramMeta"
+   ]
+  ],
+  "coll": "meta",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🔁🐛replace-issue": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "issue",
+  "kind": "replace-issue",
+  "struct": "ReplaceIssue",
+  "fields": [
+   [
+    "issue",
+    "Issue"
+   ]
+  ],
+  "coll": "issues",
+  "diff_field": "issues",
+  "delta": "ProgramIssuesDelta",
+  "patch_entry": "ProgramIssuesPatchEntry",
+  "patch_type": null,
+  "etype": "Issue",
+  "payload_field": "issue",
+  "payload_type": "Issue"
+ },
+ "🔁👍replace-approval-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "approval-record",
+  "kind": "replace-approval-record",
+  "struct": "ReplaceApprovalRecord",
+  "fields": [
+   [
+    "approval_record",
+    "ApprovalRecord"
+   ]
+  ],
+  "coll": "approvals",
+  "diff_field": "approvals",
+  "delta": "ProgramApprovalsDelta",
+  "patch_entry": "ProgramApprovalsPatchEntry",
+  "patch_type": null,
+  "etype": "ApprovalRecord",
+  "payload_field": "approval_record",
+  "payload_type": "ApprovalRecord"
+ },
+ "🔁👥replace-stakeholder": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "stakeholder",
+  "kind": "replace-stakeholder",
+  "struct": "ReplaceStakeholder",
+  "fields": [
+   [
+    "stakeholder",
+    "Stakeholder"
+   ]
+  ],
+  "coll": "stakeholders",
+  "diff_field": "stakeholders",
+  "delta": "ProgramStakeholdersDelta",
+  "patch_entry": "ProgramStakeholdersPatchEntry",
+  "patch_type": null,
+  "etype": "Stakeholder",
+  "payload_field": "stakeholder",
+  "payload_type": "Stakeholder"
+ },
+ "🔁💎replace-quality-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "quality-record",
+  "kind": "replace-quality-record",
+  "struct": "ReplaceQualityRecord",
+  "fields": [
+   [
+    "quality_record",
+    "QualityRecord"
+   ]
+  ],
+  "coll": "quality",
+  "diff_field": "quality",
+  "delta": "ProgramQualityDelta",
+  "patch_entry": "ProgramQualityPatchEntry",
+  "patch_type": null,
+  "etype": "QualityRecord",
+  "payload_field": "quality_record",
+  "payload_type": "QualityRecord"
+ },
+ "🔁💪replace-resilience-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "resilience-requirement",
+  "kind": "replace-resilience-requirement",
+  "struct": "ReplaceResilienceRequirement",
+  "fields": [
+   [
+    "resilience_requirement",
+    "ResilienceRequirement"
+   ]
+  ],
+  "coll": "resilience",
+  "diff_field": "resilience",
+  "delta": "ProgramResilienceDelta",
+  "patch_entry": "ProgramResiliencePatchEntry",
+  "patch_type": null,
+  "etype": "ResilienceRequirement",
+  "payload_field": "resilience_requirement",
+  "payload_type": "ResilienceRequirement"
+ },
+ "🔁💭replace-assumption": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "assumption",
+  "kind": "replace-assumption",
+  "struct": "ReplaceAssumption",
+  "fields": [
+   [
+    "assumption",
+    "Assumption"
+   ]
+  ],
+  "coll": "assumptions",
+  "diff_field": "assumptions",
+  "delta": "ProgramAssumptionsDelta",
+  "patch_entry": "ProgramAssumptionsPatchEntry",
+  "patch_type": null,
+  "etype": "Assumption",
+  "payload_field": "assumption",
+  "payload_type": "Assumption"
+ },
+ "🔁💰replace-cost-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "cost-requirement",
+  "kind": "replace-cost-requirement",
+  "struct": "ReplaceCostRequirement",
+  "fields": [
+   [
+    "cost_requirement",
+    "CostRequirement"
+   ]
+  ],
+  "coll": "costs",
+  "diff_field": "costs",
+  "delta": "ProgramCostsDelta",
+  "patch_entry": "ProgramCostsPatchEntry",
+  "patch_type": null,
+  "etype": "CostRequirement",
+  "payload_field": "cost_requirement",
+  "payload_type": "CostRequirement"
+ },
+ "🔁📁replace-project": {
+  "cat": "scalar",
+  "verb": "replace",
+  "entity": "project",
+  "kind": "replace-project",
+  "struct": "ReplaceProject",
+  "fields": [
+   [
+    "new_project",
+    "ProjectDefinition"
+   ]
+  ],
+  "coll": "project",
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🔁📄replace-document": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "document",
+  "kind": "replace-document",
+  "struct": "ReplaceDocument",
+  "fields": [
+   [
+    "document",
+    "ArtifactRecord"
+   ]
+  ],
+  "coll": "artifacts",
+  "diff_field": "documents",
+  "delta": "ProgramArtifactsDelta",
+  "patch_entry": "ProgramArtifactsPatchEntry",
+  "patch_type": null,
+  "etype": "ArtifactRecord",
+  "payload_field": "document",
+  "payload_type": "ArtifactRecord"
+ },
+ "🔁📅replace-schedule-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "schedule-requirement",
+  "kind": "replace-schedule-requirement",
+  "struct": "ReplaceScheduleRequirement",
+  "fields": [
+   [
+    "schedule_requirement",
+    "ScheduleRequirement"
+   ]
+  ],
+  "coll": "schedules",
+  "diff_field": "schedules",
+  "delta": "ProgramSchedulesDelta",
+  "patch_entry": "ProgramSchedulesPatchEntry",
+  "patch_type": null,
+  "etype": "ScheduleRequirement",
+  "payload_field": "schedule_requirement",
+  "payload_type": "ScheduleRequirement"
+ },
+ "🔁📈replace-growth-plan": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "growth-plan",
+  "kind": "replace-growth-plan",
+  "struct": "ReplaceGrowthPlan",
+  "fields": [
+   [
+    "growth_plan",
+    "GrowthPlan"
+   ]
+  ],
+  "coll": "growth",
+  "diff_field": "growth",
+  "delta": "ProgramGrowthDelta",
+  "patch_entry": "ProgramGrowthPatchEntry",
+  "patch_type": null,
+  "etype": "GrowthPlan",
+  "payload_field": "growth_plan",
+  "payload_type": "GrowthPlan"
+ },
+ "🔁📊replace-performance-criterion": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "performance-criterion",
+  "kind": "replace-performance-criterion",
+  "struct": "ReplacePerformanceCriterion",
+  "fields": [
+   [
+    "performance_criterion",
+    "PerformanceCriterion"
+   ]
+  ],
+  "coll": "performance",
+  "diff_field": "performance",
+  "delta": "ProgramPerformanceDelta",
+  "patch_entry": "ProgramPerformancePatchEntry",
+  "patch_type": null,
+  "etype": "PerformanceCriterion",
+  "payload_field": "performance_criterion",
+  "payload_type": "PerformanceCriterion"
+ },
+ "🔁📋replace-operational-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "operational-requirement",
+  "kind": "replace-operational-requirement",
+  "struct": "ReplaceOperationalRequirement",
+  "fields": [
+   [
+    "operational_requirement",
+    "OperationalRequirement"
+   ]
+  ],
+  "coll": "operations",
+  "diff_field": "operations",
+  "delta": "ProgramOperationsDelta",
+  "patch_entry": "ProgramOperationsPatchEntry",
+  "patch_type": null,
+  "etype": "OperationalRequirement",
+  "payload_field": "operational_requirement",
+  "payload_type": "OperationalRequirement"
+ },
+ "🔁📌replace-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "requirement",
+  "kind": "replace-requirement",
+  "struct": "ReplaceRequirement",
+  "fields": [
+   [
+    "requirement",
+    "Requirement"
+   ]
+  ],
+  "coll": "requirements",
+  "diff_field": "requirements",
+  "delta": "ProgramRequirementsDelta",
+  "patch_entry": "ProgramRequirementsPatchEntry",
+  "patch_type": null,
+  "etype": "Requirement",
+  "payload_field": "requirement",
+  "payload_type": "Requirement"
+ },
+ "🔁📍replace-site-context": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "site-context",
+  "kind": "replace-site-context",
+  "struct": "ReplaceSiteContext",
+  "fields": [
+   [
+    "site_context",
+    "SiteContext"
+   ]
+  ],
+  "coll": "site_context",
+  "diff_field": "site_context",
+  "delta": "ProgramSiteContextDelta",
+  "patch_entry": "ProgramSiteContextPatchEntry",
+  "patch_type": null,
+  "etype": "SiteContext",
+  "payload_field": "site_context",
+  "payload_type": "SiteContext"
+ },
+ "🔁📐replace-template-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "template-record",
+  "kind": "replace-template-record",
+  "struct": "ReplaceTemplateRecord",
+  "fields": [
+   [
+    "template_record",
+    "TemplateRecord"
+   ]
+  ],
+  "coll": "templates",
+  "diff_field": "templates",
+  "delta": "ProgramTemplatesDelta",
+  "patch_entry": "ProgramTemplatesPatchEntry",
+  "patch_type": null,
+  "etype": "TemplateRecord",
+  "payload_field": "template_record",
+  "payload_type": "TemplateRecord"
+ },
+ "🔁📑replace-report-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "report-record",
+  "kind": "replace-report-record",
+  "struct": "ReplaceReportRecord",
+  "fields": [
+   [
+    "report_record",
+    "ReportRecord"
+   ]
+  ],
+  "coll": "reports",
+  "diff_field": "reports",
+  "delta": "ProgramReportsDelta",
+  "patch_entry": "ProgramReportsPatchEntry",
+  "patch_type": null,
+  "etype": "ReportRecord",
+  "payload_field": "report_record",
+  "payload_type": "ReportRecord"
+ },
+ "🔁📒replace-audit-event": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "audit-event",
+  "kind": "replace-audit-event",
+  "struct": "ReplaceAuditEvent",
+  "fields": [
+   [
+    "audit_event",
+    "AuditEvent"
+   ]
+  ],
+  "coll": "audit_events",
+  "diff_field": "audit_events",
+  "delta": "ProgramAuditEventsDelta",
+  "patch_entry": "ProgramAuditEventsPatchEntry",
+  "patch_type": null,
+  "etype": "AuditEvent",
+  "payload_field": "audit_event",
+  "payload_type": "AuditEvent"
+ },
+ "🔁📚replace-knowledge-record": {
+  "cat": "child",
+  "verb": "replace",
+  "entity": "knowledge-record",
+  "kind": "replace-knowledge-record",
+  "struct": "ReplaceKnowledgeRecord",
+  "fields": [
+   [
+    "knowledge_record",
+    "KnowledgeRecord"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🔁📜replace-regulatory-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "regulatory-requirement",
+  "kind": "replace-regulatory-requirement",
+  "struct": "ReplaceRegulatoryRequirement",
+  "fields": [
+   [
+    "regulatory_requirement",
+    "RegulatoryRequirement"
+   ]
+  ],
+  "coll": "regulatory",
+  "diff_field": "regulatory",
+  "delta": "ProgramRegulatoryDelta",
+  "patch_entry": "ProgramRegulatoryPatchEntry",
+  "patch_type": null,
+  "etype": "RegulatoryRequirement",
+  "payload_field": "regulatory_requirement",
+  "payload_type": "RegulatoryRequirement"
+ },
+ "🔁📝replace-change-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "change-record",
+  "kind": "replace-change-record",
+  "struct": "ReplaceChangeRecord",
+  "fields": [
+   [
+    "change_record",
+    "ChangeRecord"
+   ]
+  ],
+  "coll": "changes",
+  "diff_field": "changes",
+  "delta": "ProgramChangesDelta",
+  "patch_entry": "ProgramChangesPatchEntry",
+  "patch_type": null,
+  "etype": "ChangeRecord",
+  "payload_field": "change_record",
+  "payload_type": "ChangeRecord"
+ },
+ "🔁📡replace-communication-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "communication-requirement",
+  "kind": "replace-communication-requirement",
+  "struct": "ReplaceCommunicationRequirement",
+  "fields": [
+   [
+    "communication_requirement",
+    "CommunicationRequirement"
+   ]
+  ],
+  "coll": "communication",
+  "diff_field": "communication",
+  "delta": "ProgramCommunicationDelta",
+  "patch_entry": "ProgramCommunicationPatchEntry",
+  "patch_type": null,
+  "etype": "CommunicationRequirement",
+  "payload_field": "communication_requirement",
+  "payload_type": "CommunicationRequirement"
+ },
+ "🔁📦replace-resource": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "resource",
+  "kind": "replace-resource",
+  "struct": "ReplaceResource",
+  "fields": [
+   [
+    "resource",
+    "Resource"
+   ]
+  ],
+  "coll": "resources",
+  "diff_field": "resources",
+  "delta": "ProgramResourcesDelta",
+  "patch_entry": "ProgramResourcesPatchEntry",
+  "patch_type": null,
+  "etype": "Resource",
+  "payload_field": "resource",
+  "payload_type": "Resource"
+ },
+ "🔁📶replace-status-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "status-record",
+  "kind": "replace-status-record",
+  "struct": "ReplaceStatusRecord",
+  "fields": [
+   [
+    "status_record",
+    "StatusRecord"
+   ]
+  ],
+  "coll": "status_records",
+  "diff_field": "status_records",
+  "delta": "ProgramStatusRecordsDelta",
+  "patch_entry": "ProgramStatusRecordsPatchEntry",
+  "patch_type": null,
+  "etype": "StatusRecord",
+  "payload_field": "status_record",
+  "payload_type": "StatusRecord"
+ },
+ "🔁🔄replace-process": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "process",
+  "kind": "replace-process",
+  "struct": "ReplaceProcess",
+  "fields": [
+   [
+    "process",
+    "Process"
+   ]
+  ],
+  "coll": "processes",
+  "diff_field": "processes",
+  "delta": "ProgramProcessesDelta",
+  "patch_entry": "ProgramProcessesPatchEntry",
+  "patch_type": null,
+  "etype": "Process",
+  "payload_field": "process",
+  "payload_type": "Process"
+ },
+ "🔁🔍replace-search-filter": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "search-filter",
+  "kind": "replace-search-filter",
+  "struct": "ReplaceSearchFilter",
+  "fields": [
+   [
+    "search_filter",
+    "SearchFilter"
+   ]
+  ],
+  "coll": "search_filters",
+  "diff_field": "search_filters",
+  "delta": "ProgramSearchFiltersDelta",
+  "patch_entry": "ProgramSearchFiltersPatchEntry",
+  "patch_type": null,
+  "etype": "SearchFilter",
+  "payload_field": "search_filter",
+  "payload_type": "SearchFilter"
+ },
+ "🔁🔑replace-access-rule": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "access-rule",
+  "kind": "replace-access-rule",
+  "struct": "ReplaceAccessRule",
+  "fields": [
+   [
+    "access_rule",
+    "AccessRule"
+   ]
+  ],
+  "coll": "access_rules",
+  "diff_field": "access_rules",
+  "delta": "ProgramAccessRulesDelta",
+  "patch_entry": "ProgramAccessRulesPatchEntry",
+  "patch_type": null,
+  "etype": "AccessRule",
+  "payload_field": "access_rule",
+  "payload_type": "AccessRule"
+ },
+ "🔁🔒replace-privacy-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "privacy-requirement",
+  "kind": "replace-privacy-requirement",
+  "struct": "ReplacePrivacyRequirement",
+  "fields": [
+   [
+    "privacy_requirement",
+    "PrivacyRequirement"
+   ]
+  ],
+  "coll": "privacy",
+  "diff_field": "privacy",
+  "delta": "ProgramPrivacyDelta",
+  "patch_entry": "ProgramPrivacyPatchEntry",
+  "patch_type": null,
+  "etype": "PrivacyRequirement",
+  "payload_field": "privacy_requirement",
+  "payload_type": "PrivacyRequirement"
+ },
+ "🔁🔗replace-relationship": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "relationship",
+  "kind": "replace-relationship",
+  "struct": "ReplaceRelationship",
+  "fields": [
+   [
+    "relationship",
+    "Relationship"
+   ]
+  ],
+  "coll": "relationships",
+  "diff_field": "relationships",
+  "delta": "ProgramRelationshipsDelta",
+  "patch_entry": "ProgramRelationshipsPatchEntry",
+  "patch_type": null,
+  "etype": "Relationship",
+  "payload_field": "relationship",
+  "payload_type": "Relationship"
+ },
+ "🔁🔢replace-quantity-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "quantity-requirement",
+  "kind": "replace-quantity-requirement",
+  "struct": "ReplaceQuantityRequirement",
+  "fields": [
+   [
+    "quantity_requirement",
+    "QuantityRequirement"
+   ]
+  ],
+  "coll": "quantities",
+  "diff_field": "quantities",
+  "delta": "ProgramQuantitiesDelta",
+  "patch_entry": "ProgramQuantitiesPatchEntry",
+  "patch_type": null,
+  "etype": "QuantityRequirement",
+  "payload_field": "quantity_requirement",
+  "payload_type": "QuantityRequirement"
+ },
+ "🔁🔬replace-analysis-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "analysis-record",
+  "kind": "replace-analysis-record",
+  "struct": "ReplaceAnalysisRecord",
+  "fields": [
+   [
+    "analysis_record",
+    "AnalysisRecord"
+   ]
+  ],
+  "coll": "analyses",
+  "diff_field": "analyses",
+  "delta": "ProgramAnalysesDelta",
+  "patch_entry": "ProgramAnalysesPatchEntry",
+  "patch_type": null,
+  "etype": "AnalysisRecord",
+  "payload_field": "analysis_record",
+  "payload_type": "AnalysisRecord"
+ },
+ "🔁🗄️replace-storage-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "storage-requirement",
+  "kind": "replace-storage-requirement",
+  "struct": "ReplaceStorageRequirement",
+  "fields": [
+   [
+    "storage_requirement",
+    "StorageRequirement"
+   ]
+  ],
+  "coll": "storage",
+  "diff_field": "storage",
+  "delta": "ProgramStorageDelta",
+  "patch_entry": "ProgramStoragePatchEntry",
+  "patch_type": null,
+  "etype": "StorageRequirement",
+  "payload_field": "storage_requirement",
+  "payload_type": "StorageRequirement"
+ },
+ "🔁🗓️replace-meeting-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "meeting-record",
+  "kind": "replace-meeting-record",
+  "struct": "ReplaceMeetingRecord",
+  "fields": [
+   [
+    "meeting_record",
+    "MeetingRecord"
+   ]
+  ],
+  "coll": "meetings",
+  "diff_field": "meetings",
+  "delta": "ProgramMeetingsDelta",
+  "patch_entry": "ProgramMeetingsPatchEntry",
+  "patch_type": null,
+  "etype": "MeetingRecord",
+  "payload_field": "meeting_record",
+  "payload_type": "MeetingRecord"
+ },
+ "🔁🗳️replace-survey": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "survey",
+  "kind": "replace-survey",
+  "struct": "ReplaceSurvey",
+  "fields": [
+   [
+    "survey",
+    "Survey"
+   ]
+  ],
+  "coll": "surveys",
+  "diff_field": "surveys",
+  "delta": "ProgramSurveysDelta",
+  "patch_entry": "ProgramSurveysPatchEntry",
+  "patch_type": null,
+  "etype": "Survey",
+  "payload_field": "survey",
+  "payload_type": "Survey"
+ },
+ "🔁🚚replace-delivery-constraint": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "delivery-constraint",
+  "kind": "replace-delivery-constraint",
+  "struct": "ReplaceDeliveryConstraint",
+  "fields": [
+   [
+    "delivery_constraint",
+    "DeliveryConstraint"
+   ]
+  ],
+  "coll": "delivery",
+  "diff_field": "delivery",
+  "delta": "ProgramDeliveryDelta",
+  "patch_entry": "ProgramDeliveryPatchEntry",
+  "patch_type": null,
+  "etype": "DeliveryConstraint",
+  "payload_field": "delivery_constraint",
+  "payload_type": "DeliveryConstraint"
+ },
+ "🔁🚧replace-constraint-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "constraint-record",
+  "kind": "replace-constraint-record",
+  "struct": "ReplaceConstraintRecord",
+  "fields": [
+   [
+    "constraint_record",
+    "ConstraintRecord"
+   ]
+  ],
+  "coll": "constraints",
+  "diff_field": "constraints",
+  "delta": "ProgramConstraintsDelta",
+  "patch_entry": "ProgramConstraintsPatchEntry",
+  "patch_type": null,
+  "etype": "ConstraintRecord",
+  "payload_field": "constraint_record",
+  "payload_type": "ConstraintRecord"
+ },
+ "🔁🛂replace-compliance-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "compliance-record",
+  "kind": "replace-compliance-record",
+  "struct": "ReplaceComplianceRecord",
+  "fields": [
+   [
+    "compliance_record",
+    "ComplianceRecord"
+   ]
+  ],
+  "coll": "compliance_records",
+  "diff_field": "compliance_records",
+  "delta": "ProgramComplianceRecordsDelta",
+  "patch_entry": "ProgramComplianceRecordsPatchEntry",
+  "patch_type": null,
+  "etype": "ComplianceRecord",
+  "payload_field": "compliance_record",
+  "payload_type": "ComplianceRecord"
+ },
+ "🔁🛎️replace-service-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "service-requirement",
+  "kind": "replace-service-requirement",
+  "struct": "ReplaceServiceRequirement",
+  "fields": [
+   [
+    "service_requirement",
+    "ServiceRequirement"
+   ]
+  ],
+  "coll": "services",
+  "diff_field": "services",
+  "delta": "ProgramServicesDelta",
+  "patch_entry": "ProgramServicesPatchEntry",
+  "patch_type": null,
+  "etype": "ServiceRequirement",
+  "payload_field": "service_requirement",
+  "payload_type": "ServiceRequirement"
+ },
+ "🔁🛠️replace-equipment": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "equipment",
+  "kind": "replace-equipment",
+  "struct": "ReplaceEquipment",
+  "fields": [
+   [
+    "equipment",
+    "Equipment"
+   ]
+  ],
+  "coll": "equipment",
+  "diff_field": "equipment",
+  "delta": "ProgramEquipmentDelta",
+  "patch_entry": "ProgramEquipmentPatchEntry",
+  "patch_type": null,
+  "etype": "Equipment",
+  "payload_field": "equipment",
+  "payload_type": "Equipment"
+ },
+ "🔁🛡️replace-security-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "security-requirement",
+  "kind": "replace-security-requirement",
+  "struct": "ReplaceSecurityRequirement",
+  "fields": [
+   [
+    "security_requirement",
+    "SecurityRequirement"
+   ]
+  ],
+  "coll": "security",
+  "diff_field": "security",
+  "delta": "ProgramSecurityDelta",
+  "patch_entry": "ProgramSecurityPatchEntry",
+  "patch_type": null,
+  "etype": "SecurityRequirement",
+  "payload_field": "security_requirement",
+  "payload_type": "SecurityRequirement"
+ },
+ "🔁🤝replace-collaboration-record": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "collaboration-record",
+  "kind": "replace-collaboration-record",
+  "struct": "ReplaceCollaborationRecord",
+  "fields": [
+   [
+    "collaboration_record",
+    "CollaborationRecord"
+   ]
+  ],
+  "coll": "collaboration",
+  "diff_field": "collaboration",
+  "delta": "ProgramCollaborationDelta",
+  "patch_entry": "ProgramCollaborationPatchEntry",
+  "patch_type": null,
+  "etype": "CollaborationRecord",
+  "payload_field": "collaboration_record",
+  "payload_type": "CollaborationRecord"
+ },
+ "🔁🦺replace-safety-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "safety-requirement",
+  "kind": "replace-safety-requirement",
+  "struct": "ReplaceSafetyRequirement",
+  "fields": [
+   [
+    "safety_requirement",
+    "SafetyRequirement"
+   ]
+  ],
+  "coll": "safety",
+  "diff_field": "safety",
+  "delta": "ProgramSafetyDelta",
+  "patch_entry": "ProgramSafetyPatchEntry",
+  "patch_type": null,
+  "etype": "SafetyRequirement",
+  "payload_field": "safety_requirement",
+  "payload_type": "SafetyRequirement"
+ },
+ "🔁🧑replace-user-profile": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "user-profile",
+  "kind": "replace-user-profile",
+  "struct": "ReplaceUserProfile",
+  "fields": [
+   [
+    "user_profile",
+    "UserProfile"
+   ]
+  ],
+  "coll": "users",
+  "diff_field": "users",
+  "delta": "ProgramUsersDelta",
+  "patch_entry": "ProgramUsersPatchEntry",
+  "patch_type": null,
+  "etype": "UserProfile",
+  "payload_field": "user_profile",
+  "payload_type": "UserProfile"
+ },
+ "🔁🧠replace-human-factor-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "human-factor-requirement",
+  "kind": "replace-human-factor-requirement",
+  "struct": "ReplaceHumanFactorRequirement",
+  "fields": [
+   [
+    "human_factor_requirement",
+    "HumanFactorRequirement"
+   ]
+  ],
+  "coll": "human_factors",
+  "diff_field": "human_factors",
+  "delta": "ProgramHumanFactorsDelta",
+  "patch_entry": "ProgramHumanFactorsPatchEntry",
+  "patch_type": null,
+  "etype": "HumanFactorRequirement",
+  "payload_field": "human_factor_requirement",
+  "payload_type": "HumanFactorRequirement"
+ },
+ "🔁🧩replace-flexibility-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "flexibility-requirement",
+  "kind": "replace-flexibility-requirement",
+  "struct": "ReplaceFlexibilityRequirement",
+  "fields": [
+   [
+    "flexibility_requirement",
+    "FlexibilityRequirement"
+   ]
+  ],
+  "coll": "flexibility",
+  "diff_field": "flexibility",
+  "delta": "ProgramFlexibilityDelta",
+  "patch_entry": "ProgramFlexibilityPatchEntry",
+  "patch_type": null,
+  "etype": "FlexibilityRequirement",
+  "payload_field": "flexibility_requirement",
+  "payload_type": "FlexibilityRequirement"
+ },
+ "🔁🧭replace-wayfinding-requirement": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "wayfinding-requirement",
+  "kind": "replace-wayfinding-requirement",
+  "struct": "ReplaceWayfindingRequirement",
+  "fields": [
+   [
+    "wayfinding_requirement",
+    "WayfindingRequirement"
+   ]
+  ],
+  "coll": "wayfinding",
+  "diff_field": "wayfinding",
+  "delta": "ProgramWayfindingDelta",
+  "patch_entry": "ProgramWayfindingPatchEntry",
+  "patch_type": null,
+  "etype": "WayfindingRequirement",
+  "payload_field": "wayfinding_requirement",
+  "payload_type": "WayfindingRequirement"
+ },
+ "🔁🧱replace-program-element": {
+  "cat": "regular",
+  "verb": "replace",
+  "entity": "program-element",
+  "kind": "replace-program-element",
+  "struct": "ReplaceProgramElement",
+  "fields": [
+   [
+    "program_element",
+    "ProgramElement"
+   ]
+  ],
+  "coll": "elements",
+  "diff_field": "elements",
+  "delta": "ProgramElementsDelta",
+  "patch_entry": "ProgramElementsPatchEntry",
+  "patch_type": null,
+  "etype": "ProgramElement",
+  "payload_field": "program_element",
+  "payload_type": "ProgramElement"
+ },
+ "🔗🧲connect-adjacency": {
+  "cat": "edge",
+  "verb": "connect",
+  "entity": "adjacency",
+  "kind": "connect-adjacency",
+  "struct": "ConnectAdjacency",
+  "fields": [
+   [
+    "adjacency",
+    "Adjacency"
+   ]
+  ],
+  "coll": "elements",
+  "diff_field": "adjacencies",
+  "delta": "ProgramAdjacenciesDelta",
+  "patch_entry": "ProgramAdjacenciesPatchEntry",
+  "patch_type": null
+ },
+ "🔗🧵connect-trace": {
+  "cat": "edge",
+  "verb": "connect",
+  "entity": "trace",
+  "kind": "connect-trace",
+  "struct": "ConnectTrace",
+  "fields": [
+   [
+    "trace",
+    "TraceLink"
+   ]
+  ],
+  "coll": "traces",
+  "diff_field": "traces",
+  "delta": "ProgramTracesDelta",
+  "patch_entry": "ProgramTracesPatchEntry",
+  "patch_type": null
+ },
+ "🗑️ℹ️delete-information-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "information-requirement",
+  "kind": "delete-information-requirement",
+  "struct": "DeleteInformationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "information",
+  "diff_field": "information",
+  "delta": "ProgramInformationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "InformationRequirement"
+ },
+ "🗑️♻️delete-sustainability-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "sustainability-requirement",
+  "kind": "delete-sustainability-requirement",
+  "struct": "DeleteSustainabilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "sustainability",
+  "diff_field": "sustainability",
+  "delta": "ProgramSustainabilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SustainabilityRequirement"
+ },
+ "🗑️♿delete-accessibility-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "accessibility-requirement",
+  "kind": "delete-accessibility-requirement",
+  "struct": "DeleteAccessibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "accessibility",
+  "diff_field": "accessibility",
+  "delta": "ProgramAccessibilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AccessibilityRequirement"
+ },
+ "🗑️⚔️delete-conflict": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "conflict",
+  "kind": "delete-conflict",
+  "struct": "DeleteConflict",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "conflicts",
+  "diff_field": "conflicts",
+  "delta": "ProgramConflictsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Conflict"
+ },
+ "🗑️⚖️delete-option-evaluation": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "option-evaluation",
+  "kind": "delete-option-evaluation",
+  "struct": "DeleteOptionEvaluation",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "options",
+  "diff_field": "options",
+  "delta": "ProgramOptionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OptionEvaluation"
+ },
+ "🗑️⚙️delete-function": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "function",
+  "kind": "delete-function",
+  "struct": "DeleteFunction",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "functions",
+  "diff_field": "functions",
+  "delta": "ProgramFunctionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Function"
+ },
+ "🗑️⚠️delete-risk": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "risk",
+  "kind": "delete-risk",
+  "struct": "DeleteRisk",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "risks",
+  "diff_field": "risks",
+  "delta": "ProgramRisksDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Risk"
+ },
+ "🗑️✅delete-decision": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "decision",
+  "kind": "delete-decision",
+  "struct": "DeleteDecision",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "decisions",
+  "diff_field": "decisions",
+  "delta": "ProgramDecisionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Decision"
+ },
+ "🗑️✔️delete-validation-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "validation-record",
+  "kind": "delete-validation-record",
+  "struct": "DeleteValidationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "validations",
+  "diff_field": "validations",
+  "delta": "ProgramValidationsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ValidationRecord"
+ },
+ "🗑️⭐delete-priority-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "priority-record",
+  "kind": "delete-priority-record",
+  "struct": "DeletePriorityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "priorities",
+  "diff_field": "priorities",
+  "delta": "ProgramPrioritiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PriorityRecord"
+ },
+ "🗑️🌊delete-flow-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "flow-requirement",
+  "kind": "delete-flow-requirement",
+  "struct": "DeleteFlowRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "flows",
+  "diff_field": "flows",
+  "delta": "ProgramFlowsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "FlowRequirement"
+ },
+ "🗑️🌿delete-environmental-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "environmental-requirement",
+  "kind": "delete-environmental-requirement",
+  "struct": "DeleteEnvironmentalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "environmental",
+  "diff_field": "environmental",
+  "delta": "ProgramEnvironmentalDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "EnvironmentalRequirement"
+ },
+ "🗑️🎓delete-workshop": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "workshop",
+  "kind": "delete-workshop",
+  "struct": "DeleteWorkshop",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "workshops",
+  "diff_field": "workshops",
+  "delta": "ProgramWorkshopsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Workshop"
+ },
+ "🗑️🎬delete-scenario": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "scenario",
+  "kind": "delete-scenario",
+  "struct": "DeleteScenario",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "scenarios",
+  "diff_field": "scenarios",
+  "delta": "ProgramScenariosDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Scenario"
+ },
+ "🗑️🏁delete-benchmark-record": {
+  "cat": "child",
+  "verb": "delete",
+  "entity": "benchmark-record",
+  "kind": "delete-benchmark-record",
+  "struct": "DeleteBenchmarkRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🗑️🏃delete-activity": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "activity",
+  "kind": "delete-activity",
+  "struct": "DeleteActivity",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "activities",
+  "diff_field": "activities",
+  "delta": "ProgramActivitiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Activity"
+ },
+ "🗑️🏗️delete-infrastructure-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "infrastructure-requirement",
+  "kind": "delete-infrastructure-requirement",
+  "struct": "DeleteInfrastructureRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "infrastructure",
+  "diff_field": "infrastructure",
+  "delta": "ProgramInfrastructureDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "InfrastructureRequirement"
+ },
+ "🗑️🏢delete-organizational-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "organizational-requirement",
+  "kind": "delete-organizational-requirement",
+  "struct": "DeleteOrganizationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "organizational",
+  "diff_field": "organizational",
+  "delta": "ProgramOrganizationalDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OrganizationalRequirement"
+ },
+ "🗑️🐛delete-issue": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "issue",
+  "kind": "delete-issue",
+  "struct": "DeleteIssue",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "issues",
+  "diff_field": "issues",
+  "delta": "ProgramIssuesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Issue"
+ },
+ "🗑️👍delete-approval-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "approval-record",
+  "kind": "delete-approval-record",
+  "struct": "DeleteApprovalRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "approvals",
+  "diff_field": "approvals",
+  "delta": "ProgramApprovalsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ApprovalRecord"
+ },
+ "🗑️👥delete-stakeholder": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "stakeholder",
+  "kind": "delete-stakeholder",
+  "struct": "DeleteStakeholder",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "stakeholders",
+  "diff_field": "stakeholders",
+  "delta": "ProgramStakeholdersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Stakeholder"
+ },
+ "🗑️💎delete-quality-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "quality-record",
+  "kind": "delete-quality-record",
+  "struct": "DeleteQualityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "quality",
+  "diff_field": "quality",
+  "delta": "ProgramQualityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "QualityRecord"
+ },
+ "🗑️💪delete-resilience-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "resilience-requirement",
+  "kind": "delete-resilience-requirement",
+  "struct": "DeleteResilienceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "resilience",
+  "diff_field": "resilience",
+  "delta": "ProgramResilienceDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ResilienceRequirement"
+ },
+ "🗑️💭delete-assumption": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "assumption",
+  "kind": "delete-assumption",
+  "struct": "DeleteAssumption",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "assumptions",
+  "diff_field": "assumptions",
+  "delta": "ProgramAssumptionsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Assumption"
+ },
+ "🗑️💰delete-cost-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "cost-requirement",
+  "kind": "delete-cost-requirement",
+  "struct": "DeleteCostRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "costs",
+  "diff_field": "costs",
+  "delta": "ProgramCostsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CostRequirement"
+ },
+ "🗑️📄delete-document": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "document",
+  "kind": "delete-document",
+  "struct": "DeleteDocument",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "artifacts",
+  "diff_field": "documents",
+  "delta": "ProgramArtifactsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ArtifactRecord"
+ },
+ "🗑️📅delete-schedule-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "schedule-requirement",
+  "kind": "delete-schedule-requirement",
+  "struct": "DeleteScheduleRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "schedules",
+  "diff_field": "schedules",
+  "delta": "ProgramSchedulesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ScheduleRequirement"
+ },
+ "🗑️📈delete-growth-plan": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "growth-plan",
+  "kind": "delete-growth-plan",
+  "struct": "DeleteGrowthPlan",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "growth",
+  "diff_field": "growth",
+  "delta": "ProgramGrowthDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "GrowthPlan"
+ },
+ "🗑️📊delete-performance-criterion": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "performance-criterion",
+  "kind": "delete-performance-criterion",
+  "struct": "DeletePerformanceCriterion",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "performance",
+  "diff_field": "performance",
+  "delta": "ProgramPerformanceDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PerformanceCriterion"
+ },
+ "🗑️📋delete-operational-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "operational-requirement",
+  "kind": "delete-operational-requirement",
+  "struct": "DeleteOperationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "operations",
+  "diff_field": "operations",
+  "delta": "ProgramOperationsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "OperationalRequirement"
+ },
+ "🗑️📌delete-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "requirement",
+  "kind": "delete-requirement",
+  "struct": "DeleteRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "requirements",
+  "diff_field": "requirements",
+  "delta": "ProgramRequirementsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Requirement"
+ },
+ "🗑️📍delete-site-context": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "site-context",
+  "kind": "delete-site-context",
+  "struct": "DeleteSiteContext",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "site_context",
+  "diff_field": "site_context",
+  "delta": "ProgramSiteContextDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SiteContext"
+ },
+ "🗑️📐delete-template-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "template-record",
+  "kind": "delete-template-record",
+  "struct": "DeleteTemplateRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "templates",
+  "diff_field": "templates",
+  "delta": "ProgramTemplatesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "TemplateRecord"
+ },
+ "🗑️📑delete-report-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "report-record",
+  "kind": "delete-report-record",
+  "struct": "DeleteReportRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "reports",
+  "diff_field": "reports",
+  "delta": "ProgramReportsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ReportRecord"
+ },
+ "🗑️📒delete-audit-event": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "audit-event",
+  "kind": "delete-audit-event",
+  "struct": "DeleteAuditEvent",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "audit_events",
+  "diff_field": "audit_events",
+  "delta": "ProgramAuditEventsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AuditEvent"
+ },
+ "🗑️📚delete-knowledge-record": {
+  "cat": "child",
+  "verb": "delete",
+  "entity": "knowledge-record",
+  "kind": "delete-knowledge-record",
+  "struct": "DeleteKnowledgeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": null,
+  "diff_field": null,
+  "delta": null,
+  "patch_entry": null,
+  "patch_type": null
+ },
+ "🗑️📜delete-regulatory-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "regulatory-requirement",
+  "kind": "delete-regulatory-requirement",
+  "struct": "DeleteRegulatoryRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "regulatory",
+  "diff_field": "regulatory",
+  "delta": "ProgramRegulatoryDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "RegulatoryRequirement"
+ },
+ "🗑️📝delete-change-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "change-record",
+  "kind": "delete-change-record",
+  "struct": "DeleteChangeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "changes",
+  "diff_field": "changes",
+  "delta": "ProgramChangesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ChangeRecord"
+ },
+ "🗑️📡delete-communication-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "communication-requirement",
+  "kind": "delete-communication-requirement",
+  "struct": "DeleteCommunicationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "communication",
+  "diff_field": "communication",
+  "delta": "ProgramCommunicationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CommunicationRequirement"
+ },
+ "🗑️📦delete-resource": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "resource",
+  "kind": "delete-resource",
+  "struct": "DeleteResource",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "resources",
+  "diff_field": "resources",
+  "delta": "ProgramResourcesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Resource"
+ },
+ "🗑️📶delete-status-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "status-record",
+  "kind": "delete-status-record",
+  "struct": "DeleteStatusRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "status_records",
+  "diff_field": "status_records",
+  "delta": "ProgramStatusRecordsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "StatusRecord"
+ },
+ "🗑️🔄delete-process": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "process",
+  "kind": "delete-process",
+  "struct": "DeleteProcess",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "processes",
+  "diff_field": "processes",
+  "delta": "ProgramProcessesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Process"
+ },
+ "🗑️🔍delete-search-filter": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "search-filter",
+  "kind": "delete-search-filter",
+  "struct": "DeleteSearchFilter",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "search_filters",
+  "diff_field": "search_filters",
+  "delta": "ProgramSearchFiltersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SearchFilter"
+ },
+ "🗑️🔑delete-access-rule": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "access-rule",
+  "kind": "delete-access-rule",
+  "struct": "DeleteAccessRule",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "access_rules",
+  "diff_field": "access_rules",
+  "delta": "ProgramAccessRulesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AccessRule"
+ },
+ "🗑️🔒delete-privacy-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "privacy-requirement",
+  "kind": "delete-privacy-requirement",
+  "struct": "DeletePrivacyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "privacy",
+  "diff_field": "privacy",
+  "delta": "ProgramPrivacyDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "PrivacyRequirement"
+ },
+ "🗑️🔗delete-relationship": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "relationship",
+  "kind": "delete-relationship",
+  "struct": "DeleteRelationship",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "relationships",
+  "diff_field": "relationships",
+  "delta": "ProgramRelationshipsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Relationship"
+ },
+ "🗑️🔢delete-quantity-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "quantity-requirement",
+  "kind": "delete-quantity-requirement",
+  "struct": "DeleteQuantityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "quantities",
+  "diff_field": "quantities",
+  "delta": "ProgramQuantitiesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "QuantityRequirement"
+ },
+ "🗑️🔬delete-analysis-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "analysis-record",
+  "kind": "delete-analysis-record",
+  "struct": "DeleteAnalysisRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "analyses",
+  "diff_field": "analyses",
+  "delta": "ProgramAnalysesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "AnalysisRecord"
+ },
+ "🗑️🗄️delete-storage-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "storage-requirement",
+  "kind": "delete-storage-requirement",
+  "struct": "DeleteStorageRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "storage",
+  "diff_field": "storage",
+  "delta": "ProgramStorageDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "StorageRequirement"
+ },
+ "🗑️🗓️delete-meeting-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "meeting-record",
+  "kind": "delete-meeting-record",
+  "struct": "DeleteMeetingRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "meetings",
+  "diff_field": "meetings",
+  "delta": "ProgramMeetingsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "MeetingRecord"
+ },
+ "🗑️🗳️delete-survey": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "survey",
+  "kind": "delete-survey",
+  "struct": "DeleteSurvey",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "surveys",
+  "diff_field": "surveys",
+  "delta": "ProgramSurveysDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Survey"
+ },
+ "🗑️🚚delete-delivery-constraint": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "delivery-constraint",
+  "kind": "delete-delivery-constraint",
+  "struct": "DeleteDeliveryConstraint",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "delivery",
+  "diff_field": "delivery",
+  "delta": "ProgramDeliveryDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "DeliveryConstraint"
+ },
+ "🗑️🚧delete-constraint-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "constraint-record",
+  "kind": "delete-constraint-record",
+  "struct": "DeleteConstraintRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "constraints",
+  "diff_field": "constraints",
+  "delta": "ProgramConstraintsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ConstraintRecord"
+ },
+ "🗑️🛂delete-compliance-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "compliance-record",
+  "kind": "delete-compliance-record",
+  "struct": "DeleteComplianceRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "compliance_records",
+  "diff_field": "compliance_records",
+  "delta": "ProgramComplianceRecordsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ComplianceRecord"
+ },
+ "🗑️🛎️delete-service-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "service-requirement",
+  "kind": "delete-service-requirement",
+  "struct": "DeleteServiceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "services",
+  "diff_field": "services",
+  "delta": "ProgramServicesDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ServiceRequirement"
+ },
+ "🗑️🛠️delete-equipment": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "equipment",
+  "kind": "delete-equipment",
+  "struct": "DeleteEquipment",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "equipment",
+  "diff_field": "equipment",
+  "delta": "ProgramEquipmentDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "Equipment"
+ },
+ "🗑️🛡️delete-security-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "security-requirement",
+  "kind": "delete-security-requirement",
+  "struct": "DeleteSecurityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "security",
+  "diff_field": "security",
+  "delta": "ProgramSecurityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SecurityRequirement"
+ },
+ "🗑️🤝delete-collaboration-record": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "collaboration-record",
+  "kind": "delete-collaboration-record",
+  "struct": "DeleteCollaborationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "collaboration",
+  "diff_field": "collaboration",
+  "delta": "ProgramCollaborationDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "CollaborationRecord"
+ },
+ "🗑️🦺delete-safety-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "safety-requirement",
+  "kind": "delete-safety-requirement",
+  "struct": "DeleteSafetyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "safety",
+  "diff_field": "safety",
+  "delta": "ProgramSafetyDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "SafetyRequirement"
+ },
+ "🗑️🧑delete-user-profile": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "user-profile",
+  "kind": "delete-user-profile",
+  "struct": "DeleteUserProfile",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "users",
+  "diff_field": "users",
+  "delta": "ProgramUsersDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "UserProfile"
+ },
+ "🗑️🧠delete-human-factor-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "human-factor-requirement",
+  "kind": "delete-human-factor-requirement",
+  "struct": "DeleteHumanFactorRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "human_factors",
+  "diff_field": "human_factors",
+  "delta": "ProgramHumanFactorsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "HumanFactorRequirement"
+ },
+ "🗑️🧩delete-flexibility-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "flexibility-requirement",
+  "kind": "delete-flexibility-requirement",
+  "struct": "DeleteFlexibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "flexibility",
+  "diff_field": "flexibility",
+  "delta": "ProgramFlexibilityDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "FlexibilityRequirement"
+ },
+ "🗑️🧭delete-wayfinding-requirement": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "wayfinding-requirement",
+  "kind": "delete-wayfinding-requirement",
+  "struct": "DeleteWayfindingRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "wayfinding",
+  "diff_field": "wayfinding",
+  "delta": "ProgramWayfindingDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "WayfindingRequirement"
+ },
+ "🗑️🧱delete-program-element": {
+  "cat": "regular",
+  "verb": "delete",
+  "entity": "program-element",
+  "kind": "delete-program-element",
+  "struct": "DeleteProgramElement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "coll": "elements",
+  "diff_field": "elements",
+  "delta": "ProgramElementsDelta",
+  "patch_entry": null,
+  "patch_type": null,
+  "etype": "ProgramElement"
+ }
+}

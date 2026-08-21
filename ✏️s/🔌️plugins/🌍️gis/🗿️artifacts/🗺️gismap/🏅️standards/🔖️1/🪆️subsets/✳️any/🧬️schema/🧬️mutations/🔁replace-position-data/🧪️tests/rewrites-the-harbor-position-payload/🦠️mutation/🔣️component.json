@@ -1,0 +1,11 @@
+{
+  "ReplacePositionData": {
+    "id": "pos-harbor",
+    "newData": {
+      "kind": "harbor",
+      "lat": 53.75,
+      "lon": 9.75,
+      "name": "Harbor North"
+    }
+  }
+}

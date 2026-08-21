@@ -1,0 +1,26 @@
+{
+  "schema": "raster.document",
+  "id": "canvas-plate",
+  "title": "Canvas Plate",
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "canvas",
+      "name": "Canvas",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 256,
+      "height": 128,
+      "imageKey": null
+    }
+  ]
+}

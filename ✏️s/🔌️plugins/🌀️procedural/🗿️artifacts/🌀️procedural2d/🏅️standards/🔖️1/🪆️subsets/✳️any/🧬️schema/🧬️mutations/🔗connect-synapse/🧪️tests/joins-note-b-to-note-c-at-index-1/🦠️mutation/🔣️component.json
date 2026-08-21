@@ -1,0 +1,12 @@
+{
+  "ConnectSynapse": {
+    "index": 1,
+    "synapse": {
+      "id": "link-bc",
+      "from": "note-b",
+      "to": "note-c",
+      "fromPort": "out",
+      "toPort": "in"
+    }
+  }
+}

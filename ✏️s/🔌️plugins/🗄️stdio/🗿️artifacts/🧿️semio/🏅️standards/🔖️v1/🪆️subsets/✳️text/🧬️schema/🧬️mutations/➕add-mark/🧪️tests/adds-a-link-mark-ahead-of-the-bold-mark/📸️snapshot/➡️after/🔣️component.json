@@ -1,0 +1,19 @@
+{
+  "schema": "s.stdio.semio.text",
+  "runs": [
+    {
+      "language": "en",
+      "content": "semio",
+      "marks": [
+        {
+          "kind": "link",
+          "href": "https://semio.tech"
+        },
+        {
+          "kind": "bold",
+          "href": ""
+        }
+      ]
+    }
+  ]
+}

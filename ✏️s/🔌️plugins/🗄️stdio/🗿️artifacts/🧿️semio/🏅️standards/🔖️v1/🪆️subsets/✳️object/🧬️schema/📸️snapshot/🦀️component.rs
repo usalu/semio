@@ -174,8 +174,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -217,7 +217,7 @@ pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactCh
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
-    let presence = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let presence = reader.read_u8().map_err(|e| e.to_string())?;
     if presence == 0 {
         Ok(None)
     } else {
@@ -252,7 +252,7 @@ fn encode_object_snapshot_binary(s: &SemioObjectSnapshot) -> Vec<u8> {
 fn decode_object_snapshot_binary(bytes: &[u8]) -> Result<SemioObjectSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
@@ -332,7 +332,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioObjectSnapshot::default();
         let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -340,7 +340,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioObjectSnapshot::default();
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -350,10 +350,10 @@ mod tests {
     async fn codec_retention_law() {
         let snap = demo_object_snapshot();
         let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back_text = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back_text);
     }
 
@@ -364,8 +364,8 @@ mod tests {
     async fn parent_snapshot_stores_only_child_handles_never_content() {
         let snap = demo_object_snapshot();
         let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        assert!(text.await.contains(&enc_str("brep-01")), "hex-encoded child_id must be present");
-        assert!(!text.await.to_lowercase().contains("vertices") && !text.await.to_lowercase().contains("faces"), "must never embed brep/mesh field names — only the handle");
+        assert!(text.contains(&enc_str("brep-01")), "hex-encoded child_id must be present");
+        assert!(!text.to_lowercase().contains("vertices") && !text.to_lowercase().contains("faces"), "must never embed brep/mesh field names — only the handle");
     }
 }
 //#endregion 🔖️Tests

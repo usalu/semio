@@ -1,0 +1,49 @@
+{
+  "schema": "stdio.semio.flow",
+  "nodes": [
+    {
+      "id": "a",
+      "kind": "source",
+      "label": "Input",
+      "params": [
+        {
+          "key": "path",
+          "value": "in.json"
+        }
+      ],
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "b",
+      "kind": "transform",
+      "label": "Scale",
+      "params": [
+        {
+          "key": "factor",
+          "value": "2"
+        }
+      ],
+      "position": {
+        "x": 100.0,
+        "y": 0.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": {
+        "node": "a",
+        "port": "out"
+      },
+      "to": {
+        "node": "b",
+        "port": "in"
+      },
+      "kind": "data"
+    }
+  ]
+}

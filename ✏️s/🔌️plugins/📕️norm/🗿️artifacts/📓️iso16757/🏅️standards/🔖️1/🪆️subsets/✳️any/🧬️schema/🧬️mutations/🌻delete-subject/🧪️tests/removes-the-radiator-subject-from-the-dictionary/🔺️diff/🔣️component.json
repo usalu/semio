@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": {
+    "reference": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "subjects": [],
+    "relationships": [],
+    "properties": [],
+    "controlled_lists": [],
+    "meta_subjects": []
+  },
+  "geometry": null,
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null,
+  "selectedCheckIndex": null
+}

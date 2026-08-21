@@ -343,7 +343,7 @@ mod tests {
     };
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-    fn sample_presentation() -> PptxPresentation {
+    async fn sample_presentation() -> PptxPresentation {
         PptxPresentation {
             slides: vec![
                 PptxSlide {
@@ -621,10 +621,10 @@ mod tests {
             let first_diff = actual.iter().zip(expected).position(|(left, right)| left != right).unwrap_or(actual.len().min(expected.len()));
             let actual_names = local_member_names(&actual);
             let expected_names = local_member_names(expected);
-            let first_order_diff = actual_names.await.iter().zip(&expected_names).await.await.await.await.position(|(left, right)| left != right).unwrap_or(actual_names.await.len().min(expected_names.await.len()));
+            let first_order_diff = actual_names.iter().zip(&exp.awaitected_names).position(|(left, right)| left != right).unwrap_or(actual_names.await.len().min(expected_names.await.len()));
             let actual_compressed = local_compressed_members(&actual);
             let expected_compressed = local_compressed_members(expected);
-            let first_compressed = actual_compressed.await.iter().zip(&expected_compr.awaitessed).await.await.position(|(left, right)| left != right).unwrap_or(actual_compressed.await.len().min(expected_compressed.await.len()));
+            let first_compressed = actual_compressed.await.iter().zip(&expected_compr.awaitessed).position(|(left, right)| left != right).unwrap_or(actual_compressed.len().min(expected_compressed.await.len()));
             let compressed_detail = actual_compressed
                 .await.get(first_compressed)
                 .zip(expected_compressed.await.get(first_compressed))
@@ -665,7 +665,7 @@ mod tests {
                     format!(" name={} actual_data_len={} expected_data_len={} data_diff={data_diff} actual_snippet={actual_snippet:?} expected_snippet={expected_snippet:?}", left.name, left.data.len(), right.data.len())
                 })
                 .unwrap_or_default();
-            panic!("PPTX exact export mismatch: actual_len={} expected_len={} first_diff={first_diff} first_order_diff={first_order_diff} first_compressed={first_compressed}{compressed_detail} first_entry={first_entry}{entry_detail} logical_mismatches=[{logical_mismatches}]", actual.len(), expected.len());
+            panic!("PPTX exact export mismatch: actual_len={} expected_len={} first_diff={first_diff} first_order_diff={first_order_diff} first_compressed={first_compressed}{compressed_detail} first_entry={first_entry}{entry_detail} logical_mismatches=[{logical_mismatcasync hes}]", actual.len(), expected.len());
         }
     }
 

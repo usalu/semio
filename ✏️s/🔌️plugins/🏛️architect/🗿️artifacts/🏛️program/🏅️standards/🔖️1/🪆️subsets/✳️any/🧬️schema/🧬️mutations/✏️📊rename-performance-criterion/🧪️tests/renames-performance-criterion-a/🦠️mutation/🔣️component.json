@@ -1,0 +1,5 @@
+{
+  "mutation": "renamePerformanceCriterion",
+  "id": "performance-criterion-a",
+  "newName": "Renamed Performance Criterion A"
+}

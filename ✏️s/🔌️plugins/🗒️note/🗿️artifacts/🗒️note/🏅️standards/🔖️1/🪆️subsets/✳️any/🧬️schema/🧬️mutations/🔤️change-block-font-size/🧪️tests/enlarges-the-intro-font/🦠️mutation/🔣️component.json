@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBlockFontSize",
+  "id": "blk-text",
+  "newFontSize": 24.0
+}

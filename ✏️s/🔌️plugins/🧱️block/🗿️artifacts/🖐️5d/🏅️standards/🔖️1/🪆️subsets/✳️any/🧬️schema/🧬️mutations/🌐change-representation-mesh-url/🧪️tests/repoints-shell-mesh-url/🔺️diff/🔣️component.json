@@ -1,0 +1,46 @@
+{
+  "artifact": null,
+  "schema": null,
+  "partKind": null,
+  "part2d": null,
+  "part3d": null,
+  "representations": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "rep-shell",
+        "patch": {
+          "replacement": {
+            "id": "rep-shell",
+            "name": "shell",
+            "meshUrl": "mesh://capsule/shell-v2",
+            "tags": [
+              "lod0",
+              "printable"
+            ],
+            "lod": "lod0",
+            "description": "Outer shell mesh.",
+            "attributes": [
+              {
+                "key": "finish",
+                "value": "matte"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "gripKinds": null,
+  "grips": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

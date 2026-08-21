@@ -1,0 +1,41 @@
+{
+  "mutation": "replaceRequirement",
+  "requirement": {
+    "id": "requirement-a",
+    "name": "Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "Replaced Requirement A",
+    "kind": "functional",
+    "statement": {
+      "text": ""
+    },
+    "rationale": null,
+    "source": null,
+    "stakeholderIds": [],
+    "elementIds": [],
+    "functionIds": [],
+    "parentRequirementId": null,
+    "childRequirementIds": [],
+    "acceptanceCriteria": [],
+    "verificationMethod": null,
+    "validationStatus": "pending",
+    "conflictIds": [],
+    "riskIds": [],
+    "costEstimate": null,
+    "scheduleConstraint": null,
+    "regulatoryRefs": [],
+    "traceLinks": [],
+    "supersededBy": null
+  }
+}

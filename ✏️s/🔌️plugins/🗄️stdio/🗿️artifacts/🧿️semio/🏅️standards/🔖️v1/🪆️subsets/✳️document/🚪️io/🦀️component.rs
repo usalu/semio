@@ -207,8 +207,8 @@ pub mod derived_composition {
                 blocks: vec![DocBlock::Paragraph { style_id: Some("child".into()), runs: Vec::new() }, DocBlock::Image { image_id: "img1".into(), alt: "alt".into(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes.await));
-            assert!(diagnostics.await.is_empty(), "expected no diagnostics, got {diagnostics:?}");
+            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
+            assert!(diagnostics.is_empty(), "expected no diagnostics, got {diagnostics:?}");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -220,9 +220,9 @@ pub mod derived_composition {
                 blocks: vec![DocBlock::Paragraph { style_id: Some("missing-style".into()), runs: Vec::new() }, DocBlock::Image { image_id: "missing-image".into(), alt: String::new(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes.await));
-            assert!(diagnostics.await.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-style-id"), "got {diagnostics:?}");
-            assert!(diagnostics.await.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-image-id"), "got {diagnostics:?}");
+            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
+            assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-style-id"), "got {diagnostics:?}");
+            assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-image-id"), "got {diagnostics:?}");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -258,7 +258,7 @@ pub mod derived_composition {
             let snapshot = SemioDocumentSnapshot::default();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = SemioDocumentComposerComposition::compose(&sources).await.expect("compose from native dialect");
+            let composed = SemioDocumentComposerComposition::compose(&sources).expect("compose from native dialect");
             assert_eq!(composed.snapshot, snapshot);
         }
 
@@ -422,14 +422,14 @@ pub mod derived_composition {
 
                 let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
                 for mutation in mutations::demo_mutation_cases() {
-                    let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                    let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
                 }
 
                 let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
                 for d in diff::demo_diff_cases() {
-                    let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                    let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
                 }
@@ -446,11 +446,11 @@ pub mod derived_composition {
 
                 let demo = snapshot::demo_semio_document_snapshot();
 
-                let parsed = <snapshot::SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+                let parsed = <snapshot::SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_semio_document_snapshot()");
                 assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_semio_document_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-                let decoded = <snapshot::SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+                let decoded = <snapshot::SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
                 assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_semio_document_snapshot()");
                 assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_semio_document_snapshot()) drifted from the shipped .pack.semio fixture");
             }

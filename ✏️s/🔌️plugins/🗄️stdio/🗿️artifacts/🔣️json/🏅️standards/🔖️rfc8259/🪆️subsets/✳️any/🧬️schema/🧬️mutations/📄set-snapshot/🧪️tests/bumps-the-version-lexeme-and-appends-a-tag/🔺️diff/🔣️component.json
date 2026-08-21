@@ -1,0 +1,33 @@
+{
+  "value": {
+    "kind": "object",
+    "diff": {
+      "modified": [
+        {
+          "key": "version",
+          "diff": {
+            "kind": "number",
+            "lexeme": "2"
+          }
+        },
+        {
+          "key": "tags",
+          "diff": {
+            "kind": "array",
+            "diff": {
+              "added": [
+                {
+                  "index": 2,
+                  "item": {
+                    "kind": "string",
+                    "value": "c"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

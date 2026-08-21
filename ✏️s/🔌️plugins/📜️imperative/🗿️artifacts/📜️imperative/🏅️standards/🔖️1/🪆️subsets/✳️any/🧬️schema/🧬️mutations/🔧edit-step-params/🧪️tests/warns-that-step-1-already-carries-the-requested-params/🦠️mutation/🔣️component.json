@@ -1,0 +1,8 @@
+{
+  "mutation": "editStepParams",
+  "pathRef": {},
+  "id": "step-1",
+  "newParams": {
+    "message": "Guten Tag"
+  }
+}

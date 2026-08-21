@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "positions": null,
+  "routes": null,
+  "regions": {
+    "added": [],
+    "removed": [],
+    "patched": [],
+    "reordered": [
+      "region-harbor-district",
+      "region-park",
+      "region-old-town"
+    ]
+  },
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

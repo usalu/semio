@@ -1,0 +1,42 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "calibration": null,
+  "params": null,
+  "gcps": {
+    "values": [
+      {
+        "id": "gcp-ridge",
+        "name": "Ridge",
+        "worldPosition": [
+          4.0,
+          5.0,
+          6.0
+        ],
+        "observations": []
+      },
+      {
+        "id": "gcp-corner",
+        "name": "Corner",
+        "worldPosition": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "observations": []
+      }
+    ]
+  },
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

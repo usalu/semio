@@ -373,8 +373,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -386,7 +386,7 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).await.map_err(|e| e.to_string())?;
+    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
@@ -402,12 +402,12 @@ fn write_point3_list(out: &mut Vec<u8>, items: &[SemioPoint3]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point3_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint3>, String> {
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-        let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-        let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+        let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+        let y = reader.read_f64_le().map_err(|e| e.to_string())?;
+        let z = reader.read_f64_le().map_err(|e| e.to_string())?;
         out.push(SemioPoint3 { x, y, z });
     }
     Ok(out)
@@ -422,11 +422,11 @@ fn write_uv_list(out: &mut Vec<u8>, items: &[SemioUv]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_uv_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioUv>, String> {
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        let u = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-        let v = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+        let u = reader.read_f64_le().map_err(|e| e.to_string())?;
+        let v = reader.read_f64_le().map_err(|e| e.to_string())?;
         out.push(SemioUv { u, v });
     }
     Ok(out)
@@ -451,7 +451,7 @@ fn write_rgba_list(out: &mut Vec<u8>, items: &[SemioRgba]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_rgba_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioRgba>, String> {
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
         out.push(read_rgba(reader)?);
@@ -515,20 +515,20 @@ fn encode_mesh_snapshot_binary(s: &SemioMeshSnapshot) -> Vec<u8> {
 fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let mesh_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mesh_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut meshes = Vec::with_capacity(mesh_count as usize);
     for _ in 0..mesh_count {
         let id = read_str_lp(&mut reader)?;
-        let primitive_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let primitive_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut primitives = Vec::with_capacity(primitive_count as usize);
         for _ in 0..primitive_count {
             let pid = read_str_lp(&mut reader)?;
-            let topology_tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+            let topology_tag = reader.read_u8().map_err(|e| e.to_string())?;
             let topology = match topology_tag {
                 0 => SemioTopology::Points,
                 1 => SemioTopology::Lines,
@@ -542,12 +542,12 @@ fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String
             let normals = read_point3_list(&mut reader)?;
             let uvs = read_uv_list(&mut reader)?;
             let colors = read_rgba_list(&mut reader)?;
-            let index_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let index_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut indices = Vec::with_capacity(index_count as usize);
             for _ in 0..index_count {
-                indices.push(reader.read_u32_le().await.map_err(|e| e.to_string())?);
+                indices.push(reader.read_u32_le().map_err(|e| e.to_string())?);
             }
-            let material_id = match reader.read_u8().await.map_err(|e| e.to_string())? {
+            let material_id = match reader.read_u8().map_err(|e| e.to_string())? {
                 0 => None,
                 1 => Some(read_str_lp(&mut reader)?),
                 other => return Err(format!("unsupported material_id tag {other}")),
@@ -556,7 +556,7 @@ fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String
         }
         meshes.push(SemioMesh { id, primitives });
     }
-    let material_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let material_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut materials = Vec::with_capacity(material_count as usize);
     for _ in 0..material_count {
         let id = read_str_lp(&mut reader)?;
@@ -565,7 +565,7 @@ fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String
         let roughness = read_f32_le(&mut reader)?;
         materials.push(SemioMaterial { id, base_color, metallic, roughness });
     }
-    let texture_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let texture_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut textures = Vec::with_capacity(texture_count as usize);
     for _ in 0..texture_count {
         let id = read_str_lp(&mut reader)?;
@@ -702,7 +702,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = populated();
         let bytes = <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -710,7 +710,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = populated();
         let text = <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 

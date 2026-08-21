@@ -1,0 +1,58 @@
+{
+  "artifact": null,
+  "schema": null,
+  "domain": null,
+  "meta": null,
+  "objects": null,
+  "attractions": null,
+  "targetVolumes": {
+    "added": [
+      {
+        "id": "volume-2",
+        "origin": [
+          10.0,
+          0.0,
+          0.0
+        ],
+        "hidden": false,
+        "locked": false
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "references": null,
+  "selectedObjectIds": null,
+  "selectedVortexIds": null,
+  "selectedAttractionIds": null,
+  "selectedTargetVolumeIds": null,
+  "selectedReferenceIds": null,
+  "activeUtilityId": null,
+  "cameraPositionX": null,
+  "cameraPositionY": null,
+  "cameraPositionZ": null,
+  "cameraTargetX": null,
+  "cameraTargetY": null,
+  "cameraTargetZ": null,
+  "cameraZoom": null,
+  "selectionMethod": null,
+  "selectionModeDefault": null,
+  "engagementInput": null,
+  "gridVisible": null,
+  "gridSnapEnabled": null,
+  "gridSpacing": null,
+  "overlapBudget": null,
+  "fillCount": null,
+  "brushCandidateIndex": null,
+  "lodAutomatic": null,
+  "lodDepthVariable": null,
+  "lodManual": null,
+  "proximityRadius": null,
+  "locale": null,
+  "runtimeExtrasJson": null,
+  "hoveredObjectId": null,
+  "hoveredVortexFullId": null,
+  "hoveredKindId": null,
+  "previewSeq": null
+}

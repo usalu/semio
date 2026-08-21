@@ -72,13 +72,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_snapshot_builds_clean() {
-            let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").await.expect("parses").build().await.expect("conforming construction must build");
+            let snapshot = JsonIJsonBuilderConstruction::from_text("{\"a\":1}").expect("parses").build().expect("conforming construction must build");
             assert!(matches!(snapshot.value, crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonValue::Object { .. }));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn duplicate_member_name_fails_build() {
-            let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").await.expect("parses").build().await.expect_err("a duplicate member name must fail build()");
+            let err = JsonIJsonBuilderConstruction::from_text("{\"a\":1,\"a\":2}").expect("parses").build().expect_err("a duplicate member name must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name"));
         }
 

@@ -1,0 +1,32 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "meshes": [
+      {
+        "primitives": [
+          {
+            "attributes": {},
+            "mode": 5
+          },
+          {
+            "attributes": {
+              "POSITION": 0
+            }
+          }
+        ]
+      }
+    ],
+    "accessors": [
+      {
+        "componentType": 5126,
+        "count": 3,
+        "type": "VEC3"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

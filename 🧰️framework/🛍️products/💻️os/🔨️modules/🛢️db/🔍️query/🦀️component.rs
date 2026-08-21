@@ -466,7 +466,7 @@ impl Query {
         self
     }
 
-    pub fn filter(mut self, predicate: Predicate) -> Query {
+    pub async fn filter(mut self, predicate: Predicate) -> Query {
         self.filter = Some(predicate);
         self
     }

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameDocument",
+  "id": "document-a",
+  "newName": "Renamed Document A"
+}

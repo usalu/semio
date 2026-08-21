@@ -1,0 +1,32 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "added": [
+      {
+        "id": "sls",
+        "name": "SLS characteristic",
+        "terms": {
+          "dead": 1.0,
+          "wind": 0.5
+        }
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

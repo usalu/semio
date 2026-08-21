@@ -1,0 +1,7 @@
+{
+  "SetPrimitiveMaterial": {
+    "mesh_id": "mesh-a",
+    "primitive_id": "prim-a",
+    "material_id": "mat-a"
+  }
+}

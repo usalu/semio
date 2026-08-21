@@ -1,0 +1,10 @@
+{
+  "ResizeSourceFrame": {
+    "newFrame": {
+      "x": 0.125,
+      "y": 0.125,
+      "width": 0.75,
+      "height": 0.75
+    }
+  }
+}

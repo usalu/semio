@@ -33,7 +33,7 @@ mod tests {
         use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::TiffInference;
         use crate::artifacts::tiff::TiffSnapshot;
         use protocol::Inference;
-        let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
+        let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(TiffInference::infer(&snapshot), TiffInference::infer(&snapshot));
     }
 
@@ -66,20 +66,20 @@ mod tests {
         }
 
         async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-            crate::artifacts::tiff::engine::decode_tiff(asset.bytes).await
+            crate::artifacts::tiff::engine::decode_tiff(asset.bytes)
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            crate::artifacts::tiff::engine::encode_tiff(snapshot).await
+            crate::artifacts::tiff::engine::encode_tiff(snapshot)
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-            crate::artifacts::tiff::engine::decode_tiff(bytes).await
+            crate::artifacts::tiff::engine::decode_tiff(bytes)
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
             use protocol::Inference;
-            Self::Inference::infer(snapshot).await
+            Self::Inference::infer(snapshot)
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
@@ -97,7 +97,7 @@ mod tests {
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            crate::artifacts::tiff::engine::decode_tiff(bytes).await.map(|_| ()).map_err(|e| vec![e])
+            crate::artifacts::tiff::engine::decode_tiff(bytes).map(|_| ()).map_err(|e| vec![e])
         }
 
         async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

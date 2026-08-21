@@ -1,0 +1,50 @@
+{
+  "nodes": [],
+  "elements": [],
+  "regions": [
+    {
+      "id": "slab",
+      "name": "Floor slab",
+      "outline": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          4.0,
+          0.0
+        ],
+        [
+          4.0,
+          2.0
+        ],
+        [
+          0.0,
+          2.0
+        ]
+      ],
+      "holes": [],
+      "thickness": 0.25,
+      "materialId": "c30",
+      "meshSize": 0.5
+    }
+  ],
+  "materials": [
+    {
+      "id": "c30",
+      "name": "Concrete C30/37",
+      "e": 30000000000.0,
+      "nu": 0.25,
+      "rho": 2500.0
+    }
+  ],
+  "sections": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

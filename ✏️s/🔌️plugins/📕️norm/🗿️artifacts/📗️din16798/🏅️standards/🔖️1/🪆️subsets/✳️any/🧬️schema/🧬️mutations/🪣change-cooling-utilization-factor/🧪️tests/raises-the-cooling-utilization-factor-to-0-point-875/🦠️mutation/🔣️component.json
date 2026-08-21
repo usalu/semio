@@ -1,0 +1,4 @@
+{
+  "mutation": "changeCoolingUtilizationFactor",
+  "newCoolingUtilizationFactor": 0.875
+}

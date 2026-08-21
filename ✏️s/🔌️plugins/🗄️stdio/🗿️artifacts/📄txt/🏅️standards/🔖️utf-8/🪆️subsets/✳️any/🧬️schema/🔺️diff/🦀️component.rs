@@ -287,26 +287,26 @@ fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResu
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").await.at(["lines", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").at(["lines", "removed"]));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").await.at(["lines", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").at(["lines", "removed"]));
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").await.at(["lines", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").at(["lines", "modified"]));
         }
         if !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").await.at(["lines", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").at(["lines", "modified"]));
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut additions = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !additions.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").await.at(["lines", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").at(["lines", "added"]));
         }
     }
     Ok(())
@@ -366,10 +366,10 @@ mod tests {
 
         let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
         let sequential = {
-            let mid = d1.apply(&base).await.unwrap();
-            d2.apply(&mid).await.unwrap()
+            let mid = d1.apply(&base).unwrap();
+            d2.apply(&mid).unwrap()
         };
-        assert_eq!(merged.apply(&base).await.unwrap(), sequential);
+        assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -380,10 +380,10 @@ mod tests {
         merged.absorb(d2.clone());
         let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
         let sequential = {
-            let mid = d1.apply(&base).await.unwrap();
-            d2.apply(&mid).await.unwrap()
+            let mid = d1.apply(&base).unwrap();
+            d2.apply(&mid).unwrap()
         };
-        assert_eq!(merged.apply(&base).await.unwrap(), sequential);
+        assert_eq!(merged.apply(&base).unwrap(), sequential);
         assert!(sequential.lines.contains(&"f".to_string()) && sequential.lines.contains(&"g".to_string()));
     }
 
@@ -399,10 +399,10 @@ mod tests {
 
         let base = TxtSnapshot { lines: lines(&["a", "b", "c"]), ..Default::default() };
         let sequential = {
-            let mid = d1.apply(&base).await.unwrap();
-            d2.apply(&mid).await.unwrap()
+            let mid = d1.apply(&base).unwrap();
+            d2.apply(&mid).unwrap()
         };
-        assert_eq!(merged.apply(&base).await.unwrap(), sequential);
+        assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -417,10 +417,10 @@ mod tests {
 
         let base = TxtSnapshot { lines: lines(&["a", "b"]), ..Default::default() };
         let sequential = {
-            let mid = d1.apply(&base).await.unwrap();
-            d2.apply(&mid).await.unwrap()
+            let mid = d1.apply(&base).unwrap();
+            d2.apply(&mid).unwrap()
         };
-        assert_eq!(merged.apply(&base).await.unwrap(), sequential);
+        assert_eq!(merged.apply(&base).unwrap(), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -439,13 +439,13 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(mid);
 
-        assert_eq!(left.apply(&base).await.unwrap(), right.apply(&base).await.unwrap());
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap());
         let sequential = {
-            let s1 = d1.apply(&base).await.unwrap();
-            let s2 = d2.apply(&s1).await.unwrap();
-            d3.apply(&s2).await.unwrap()
+            let s1 = d1.apply(&base).unwrap();
+            let s2 = d2.apply(&s1).unwrap();
+            d3.apply(&s2).unwrap()
         };
-        assert_eq!(left.apply(&base).await.unwrap(), sequential);
+        assert_eq!(left.apply(&base).unwrap(), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -461,7 +461,7 @@ mod tests {
     async fn inverse_diff_level_roundtrip() {
         let base = TxtSnapshot { lines: lines(&["a", "b"]), trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
         let d = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "z".into() }] }), trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf) };
-        let next = d.apply(&base).await.unwrap();
+        let next = d.apply(&base).unwrap();
         let inv = d.inverse(&base);
         assert_eq!(inv.apply(&next).unwrap(), base);
     }
@@ -489,16 +489,16 @@ mod tests {
                     added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }],
                 }),
             },
-            TxtDiff::between(&a, &b).await,
+            TxtDiff::between(&a, &b),
         ];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = TxtDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = TxtDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch for {d:?} (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
-            let decoded = TxtDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
+            let decoded = TxtDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
         }
     }
@@ -533,7 +533,7 @@ mod tests {
                     added: vec![TxtLineAdded { index: 0, text: "new-head".into() }, TxtLineAdded { index: 3, text: "new-tail".into() }],
                 }),
             },
-            TxtDiff::between(&a, &b).await,
+            TxtDiff::between(&a, &b),
         ];
         for d in cases {
             let printed = d.print_diff();

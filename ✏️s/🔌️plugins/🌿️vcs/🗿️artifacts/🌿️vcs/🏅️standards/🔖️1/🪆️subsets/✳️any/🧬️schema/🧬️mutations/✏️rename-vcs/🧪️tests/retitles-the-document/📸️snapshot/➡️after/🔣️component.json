@@ -1,0 +1,10 @@
+{
+  "schema": "vcs.vcs",
+  "title": "Retitled Fixture",
+  "counter": 3,
+  "notes": "Initial notes.",
+  "status": "draft",
+  "tags": [
+    "review"
+  ]
+}

@@ -15,7 +15,7 @@
 //! `meta_subjects`, and `geometry` (objects + primitive registry) — see this ticket's wave2 report.
 //!
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `📦️glue.rs` (this lane's
-//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
+//! agent owns `📦️glue.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS — the orphaned
 //! `📄set-snapshot` stub is deleted along with its dangling glue mount).
 
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
@@ -340,3 +340,56 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`),
+/// self-wired here rather than in `📦️glue.rs`: that file is shared with the other artifact lanes
+/// running concurrently, and a `#[path]` on a module declared at the top level of this non-mod-rs
+/// file already resolves relative to this very directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🛁add-selection-constraint/🧪️tests/appends-a-width-under-800-constraint/🦀️component.rs"]
+    mod tests_add_selection_constraint_appends_a_width_under_800_constraint;
+    #[path = "🍃change-exchange-process/🧪️tests/advances-the-exchange-stage-to-determine-product/🦀️component.rs"]
+    mod tests_change_exchange_process_advances_the_exchange_stage_to_determine_product;
+    #[path = "🌱change-part-number-input/🧪️tests/raises-the-height-part-number-input-to-750/🦀️component.rs"]
+    mod tests_change_part_number_input_raises_the_height_part_number_input_to_750;
+    #[path = "🌴change-selection-class/🧪️tests/retargets-the-selection-at-the-towel-radiator-class/🦀️component.rs"]
+    mod tests_change_selection_class_retargets_the_selection_at_the_towel_radiator_class;
+    #[path = "🌼change-selection-series/🧪️tests/narrows-the-selection-to-the-pr-plus-series/🦀️component.rs"]
+    mod tests_change_selection_series_narrows_the_selection_to_the_pr_plus_series;
+    #[path = "🍁create-product/🧪️tests/appends-a-pr900-product-to-the-existing-series/🦀️component.rs"]
+    mod tests_create_product_appends_a_pr900_product_to_the_existing_series;
+    #[path = "🍀create-product-group/🧪️tests/appends-a-towel-radiators-group/🦀️component.rs"]
+    mod tests_create_product_group_appends_a_towel_radiators_group;
+    #[path = "🌾create-property-definition/🧪️tests/appends-a-selection-scoped-length-property/🦀️component.rs"]
+    mod tests_create_property_definition_appends_a_selection_scoped_length_property;
+    #[path = "🌵create-subject/🧪️tests/appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️component.rs"]
+    mod tests_create_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
+    #[path = "🌸delete-product/🧪️tests/removes-the-pr600-product-from-the-catalogue/🦀️component.rs"]
+    mod tests_delete_product_removes_the_pr600_product_from_the_catalogue;
+    #[path = "🌹delete-product-group/🧪️tests/removes-the-radiators-group-and-strands-its-class/🦀️component.rs"]
+    mod tests_delete_product_group_removes_the_radiators_group_and_strands_its_class;
+    #[path = "🌺delete-property-definition/🧪️tests/removes-the-height-property-definition/🦀️component.rs"]
+    mod tests_delete_property_definition_removes_the_height_property_definition;
+    #[path = "🌻delete-subject/🧪️tests/removes-the-radiator-subject-from-the-dictionary/🦀️component.rs"]
+    mod tests_delete_subject_removes_the_radiator_subject_from_the_dictionary;
+    #[path = "🌿remove-part-number-input/🧪️tests/drops-the-length-part-number-input/🦀️component.rs"]
+    mod tests_remove_part_number_input_drops_the_length_part_number_input;
+    #[path = "🛋️remove-selection-constraint/🧪️tests/drops-the-trailing-length-constraint/🦀️component.rs"]
+    mod tests_remove_selection_constraint_drops_the_trailing_length_constraint;
+    #[path = "🌲rename-catalogue/🧪️tests/restamps-the-catalogue-as-the-2026-edition/🦀️component.rs"]
+    mod tests_rename_catalogue_restamps_the_catalogue_as_the_2026_edition;
+    #[path = "🌳rename-manufacturer/🧪️tests/adds-the-ag-suffix-to-the-manufacturer/🦀️component.rs"]
+    mod tests_rename_manufacturer_adds_the_ag_suffix_to_the_manufacturer;
+    #[path = "🛏️rename-product/🧪️tests/renames-pr600-to-the-compact-variant-name/🦀️component.rs"]
+    mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
+    #[path = "🚿rename-product-group/🧪️tests/renames-the-radiators-group-to-panel-radiators/🦀️component.rs"]
+    mod tests_rename_product_group_renames_the_radiators_group_to_panel_radiators;
+    #[path = "🍂replace-part-number-rule/🧪️tests/swaps-the-literal-rule-for-a-height-driven-script/🦀️component.rs"]
+    mod tests_replace_part_number_rule_swaps_the_literal_rule_for_a_height_driven_script;
+    #[path = "🌷update-script-limits/🧪️tests/doubles-the-step-budget-and-quintuples-the-timeout/🦀️component.rs"]
+    mod tests_update_script_limits_doubles_the_step_budget_and_quintuples_the_timeout;
+}
+//#endregion 🧪️FixtureTests

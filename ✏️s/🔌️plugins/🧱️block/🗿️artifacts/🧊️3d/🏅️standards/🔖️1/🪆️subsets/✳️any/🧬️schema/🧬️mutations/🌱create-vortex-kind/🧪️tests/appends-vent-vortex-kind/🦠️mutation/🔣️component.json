@@ -1,0 +1,10 @@
+{
+  "mutation": "createVortexKind",
+  "vortexKind": {
+    "id": "vent",
+    "name": "vent",
+    "label": "Vent",
+    "color": "hsl(124 52% 48%)",
+    "defaultCableKind": "cable.link"
+  }
+}

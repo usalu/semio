@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneSunAzimuth",
+  "new_azimuth": 315.0
+}

@@ -1,0 +1,30 @@
+[package]
+name = "semio-framework-job"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The universal resumable InteractiveJob protocol: a synchronous, explicitly-resumable step(&mut StepContext) -> StepOutcome every interactive operation implements instead of running to completion in one call. Operation/Generation identity and commit validation, structured child jobs on top of the async crate's CancelToken parent-chain, the ten-event progress-stream vocabulary with its channel-policy matrix, direct semio-framework-trace watchdog/record_* integration (no duplicated instrumentation), a batch adapter so CLI/headless paths reuse the same job impl as the interactive path, and the synthetic torture-job conformance test. Design ticket 26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR, packet P2a."
+
+[package.metadata.semio]
+role = "framework"
+id = "job"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job"
+path = "📦️glue.rs"
+
+[features]
+# 🧪️ Turns on `semio_framework_async::testkit::ManualRuntime` for this crate's own scope/runtime
+# integration tests — same shape as `semio-framework-async`'s own `testkit` feature, always
+# available under `cfg(test)` regardless of this flag.
+testkit = ["semio-framework-async/testkit"]
+
+[dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-async = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["testkit"] }

@@ -1,0 +1,13 @@
+{
+  "CreateMesh": {
+    "child_id": "mesh-1",
+    "target": {
+      "artifactId": "kitchen-sink-mesh",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  }
+}

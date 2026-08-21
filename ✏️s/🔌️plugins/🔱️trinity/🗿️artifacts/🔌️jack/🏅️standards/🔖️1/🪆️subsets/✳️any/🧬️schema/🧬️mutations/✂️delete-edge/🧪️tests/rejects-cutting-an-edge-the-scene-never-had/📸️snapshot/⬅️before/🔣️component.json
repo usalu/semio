@@ -1,0 +1,25 @@
+{
+  "schema": "trinity.graph",
+  "name": "Capsule Stack",
+  "manifest": {
+    "nodeKinds": [],
+    "edgeKinds": [],
+    "portKinds": []
+  },
+  "camera": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "content": {
+    "childId": "jack-content-delete-edge-unresolved-fixture",
+    "target": {
+      "artifactId": "jack-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      }
+    }
+  }
+}

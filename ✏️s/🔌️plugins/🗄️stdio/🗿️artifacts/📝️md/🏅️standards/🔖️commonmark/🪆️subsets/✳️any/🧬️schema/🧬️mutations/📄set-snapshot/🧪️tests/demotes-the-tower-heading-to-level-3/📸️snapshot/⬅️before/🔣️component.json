@@ -1,0 +1,24 @@
+{
+  "schema": "stdio.md",
+  "blocks": [
+    {
+      "kind": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Capsule Tower"
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "inlines": [
+        {
+          "kind": "text",
+          "text": "Built in 1972."
+        }
+      ]
+    }
+  ]
+}

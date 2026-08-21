@@ -1,0 +1,29 @@
+{
+  "category": "residential",
+  "layers": [
+    {
+      "thicknessM": 0.24,
+      "lambdaWMk": 0.81
+    },
+    {
+      "thicknessM": 0.14,
+      "lambdaWMk": 0.04
+    }
+  ],
+  "climate": "Zone2",
+  "airtightnessN50": 2.5,
+  "psiTimesLSum": 0.02,
+  "rhInt": 0.5,
+  "catalogId": "AW-01",
+  "materialId": "mineral_wool",
+  "airtightnessClass": "class2",
+  "tIntC": 20.0,
+  "solarAbsorptance": 0.6,
+  "irradianceWM2": 600.0,
+  "moistureMuExterior": 15.0,
+  "moistureMuInterior": 1.5,
+  "envelopeAreaM2": 100.0,
+  "bb2DetailsConform": true,
+  "applicationType": "DEO",
+  "declaredApplicationClass": "dk"
+}

@@ -1,0 +1,16 @@
+{
+  "mutation": "connectNodes",
+  "edge": {
+    "id": "edge-alpha-beta",
+    "edgeKind": "wires.owns",
+    "source": "node-alpha",
+    "target": "node-beta"
+  },
+  "relationship": {
+    "relationshipId": 1.0,
+    "kind": "owns",
+    "sourceIdentityId": 1.0,
+    "targetIdentityId": 2.0,
+    "edgeId": "edge-alpha-beta"
+  }
+}

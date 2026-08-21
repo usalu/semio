@@ -1,0 +1,34 @@
+{
+  "mutation": "replaceGovernance",
+  "newGovernance": {
+    "id": "governance-fixture",
+    "framework": "ISO 9001",
+    "roles": [],
+    "responsibilities": [],
+    "approvalMatrix": [],
+    "escalationPaths": [],
+    "meetingCadence": [],
+    "decisionRights": [],
+    "changeControlProcess": [],
+    "qualityPolicy": {
+      "text": ""
+    },
+    "riskAppetite": "Low",
+    "complianceObligations": [],
+    "auditSchedule": null,
+    "documentControl": [],
+    "stakeholderEngagementPlan": [],
+    "ethicsPolicy": [],
+    "dataGovernance": [],
+    "ownerId": null,
+    "reviewCycle": null,
+    "reviewHierarchy": [],
+    "policyOwnershipId": null,
+    "requirementOwnershipId": null,
+    "riskOwnershipId": null,
+    "reportingFrequency": null,
+    "accountabilityRules": [],
+    "exceptionManagement": [],
+    "governancePerformance": []
+  }
+}

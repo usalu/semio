@@ -1,0 +1,38 @@
+{
+  "mutation": "createWayfindingRequirement",
+  "wayfindingRequirement": {
+    "id": "wayfinding-requirement-a",
+    "name": "Wayfinding Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "userProfileIds": [],
+    "elementIds": [],
+    "destinationTypes": [],
+    "signageTypes": [],
+    "languages": [],
+    "tactileRequired": false,
+    "audioRequired": false,
+    "digitalWayfinding": false,
+    "landmarkStrategy": [],
+    "colorCoding": [],
+    "symbolStandards": [],
+    "decisionPoints": [],
+    "maximumSignageDistanceM": null,
+    "lightingRequirements": [],
+    "maintenancePlan": null,
+    "emergencyEgress": [],
+    "visitorJourney": [],
+    "staffJourney": [],
+    "brandIntegration": []
+  }
+}

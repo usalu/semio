@@ -1,0 +1,8 @@
+{
+  "node": 0,
+  "before": "root",
+  "after": "pivot",
+  "touchedPaths": [
+    "document/nodes/0/name"
+  ]
+}

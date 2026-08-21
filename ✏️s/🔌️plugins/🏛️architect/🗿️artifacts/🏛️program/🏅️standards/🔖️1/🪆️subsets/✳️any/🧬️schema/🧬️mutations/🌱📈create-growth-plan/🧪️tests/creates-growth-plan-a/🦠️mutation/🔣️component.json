@@ -1,0 +1,42 @@
+{
+  "mutation": "createGrowthPlan",
+  "growthPlan": {
+    "id": "growth-plan-a",
+    "name": "Growth Plan A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "horizonYears": 0,
+    "growthRate": null,
+    "headcountGrowth": {
+      "unit": ""
+    },
+    "areaGrowth": {
+      "unit": ""
+    },
+    "phases": [],
+    "triggerEvents": [],
+    "expansionElementIds": [],
+    "reserveAreas": [],
+    "infrastructureHeadroom": [],
+    "budgetEnvelope": null,
+    "fundingSources": [],
+    "riskFactors": [],
+    "decisionPoints": [],
+    "scenarioIds": [],
+    "decommissionPlan": [],
+    "relocationStrategy": [],
+    "stakeholderImpact": [],
+    "regulatoryConsiderations": [],
+    "ownerId": null
+  }
+}

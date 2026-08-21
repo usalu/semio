@@ -270,7 +270,7 @@ mod tests {
             columns: Some(SemioTableColumnList { values: vec![SemioTableColumn { name: "b".into(), kind: SemioTableCellKind::Int }] }),
             rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Int { lexeme: "1".into() }] }] }),
         };
-        let next = diff.apply(&base).await.expect("apply must succeed for a well-formed fixture");
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(next.columns[0].name, "b");
         assert_eq!(next.rows[0].cells[0], SemioValue::Int { lexeme: "1".into() });
     }
@@ -287,12 +287,12 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioTableDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioTableDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioTableDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioTableDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -301,8 +301,8 @@ mod tests {
     async fn print_diff_joins_both_fields_with_semicolon_on_one_line() {
         let d = &demo_diff_cases()[3];
         let printed = d.print_diff();
-        assert!(printed.await.contains(';'), "expected both-present diff to join with ';', got {printed:?}");
-        assert_eq!(printed.await.matches('\n').count(), 0);
+        assert!(printed.contains(';'), "expected both-present diff to join with ';', got {printed:?}");
+        assert_eq!(printed.matches('\n').count(), 0);
     }
 }
 //#endregion 🔖️Tests

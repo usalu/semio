@@ -1,0 +1,4 @@
+{
+  "mutation": "editLhs",
+  "newLhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\",\"near\":\"shaft\"}}"
+}

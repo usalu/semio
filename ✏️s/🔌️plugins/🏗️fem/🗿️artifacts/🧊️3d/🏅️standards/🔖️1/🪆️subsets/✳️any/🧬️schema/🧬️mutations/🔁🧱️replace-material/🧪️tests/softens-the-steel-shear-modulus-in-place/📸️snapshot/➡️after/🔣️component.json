@@ -1,0 +1,32 @@
+{
+  "nodes": [],
+  "elements": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S235",
+      "e": 210000000000.0,
+      "g": 78000000000.0,
+      "nu": 0.25,
+      "rho": 8000.0
+    },
+    {
+      "id": "alu",
+      "name": "Aluminium EN AW-6082",
+      "e": 70000000000.0,
+      "g": 26000000000.0,
+      "nu": 0.25,
+      "rho": 2700.0
+    }
+  ],
+  "sections": [],
+  "solids": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

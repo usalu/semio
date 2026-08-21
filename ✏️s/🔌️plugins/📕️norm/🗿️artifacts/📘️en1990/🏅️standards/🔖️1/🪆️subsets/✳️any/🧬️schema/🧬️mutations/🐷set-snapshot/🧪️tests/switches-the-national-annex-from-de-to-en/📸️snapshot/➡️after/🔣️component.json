@@ -1,0 +1,18 @@
+{
+  "gK": 45.0,
+  "qK": {
+    "childId": "en1990-qk-7904dd65836c8ff4",
+    "target": {
+      "artifactId": "en1990-qk",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "resistanceKn": 250.0,
+  "consequenceClass": 2,
+  "annex": "En",
+  "seismicAEdKn": 0.0
+}

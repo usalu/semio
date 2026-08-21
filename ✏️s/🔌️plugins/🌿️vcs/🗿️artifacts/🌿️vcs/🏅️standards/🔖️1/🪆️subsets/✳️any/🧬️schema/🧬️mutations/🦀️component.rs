@@ -30,6 +30,24 @@ pub use super::remove_tag::mutation::{remove_tag, RemoveTag};
 pub use super::rename_vcs::mutation::{rename_vcs, RenameVcs};
 //#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry
+/// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
+/// diff carries an empty `VcsDiff`, so the snapshot is left untouched and `Ok(())` is still
+/// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
+pub async fn apply_vcs_mutation(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> protocol::MutationApplyResult<()> {
+    use store::MutationDiff;
+    let next = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
+    *snapshot = next;
+    Ok(())
+}
+
+/// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
+pub async fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<VcsDemoMutation> {
+    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

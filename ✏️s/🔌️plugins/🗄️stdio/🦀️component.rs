@@ -13,7 +13,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 /// of its ~90 registered editors persists mutations back to whichever of these formats is open.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
-    let mut builder = Plugin::builder("stdio").await.label("Stdio").version("0.1.0");
+    let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0");
     for assembly in crate::registry::artifact_assemblies()? {
         builder = match assembly {
             crate::registry::ArtifactAssembly::Definition(definition) => builder.artifact_definition(definition),

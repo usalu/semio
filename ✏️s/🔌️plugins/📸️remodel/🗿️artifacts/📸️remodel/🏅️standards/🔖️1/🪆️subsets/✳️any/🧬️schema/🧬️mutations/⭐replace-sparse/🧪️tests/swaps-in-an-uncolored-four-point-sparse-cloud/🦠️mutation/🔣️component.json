@@ -1,0 +1,7 @@
+{
+  "mutation": "replaceSparse",
+  "sparse": {
+    "points": "AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABA",
+    "colors": null
+  }
+}

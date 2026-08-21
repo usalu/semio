@@ -1,0 +1,19 @@
+{
+  "UpdateManufacturerFile": {
+    "new_manufacturer_file": {
+      "header_version": "3805",
+      "manufacturer": "ACME",
+      "building_system_number": {
+        "system_code": "420",
+        "subsystem": "10",
+        "sequence": 1
+      },
+      "created": "2026-07-22",
+      "charset": "UTF-8",
+      "record_count": 3,
+      "extensions": {
+        "fields": {}
+      }
+    }
+  }
+}

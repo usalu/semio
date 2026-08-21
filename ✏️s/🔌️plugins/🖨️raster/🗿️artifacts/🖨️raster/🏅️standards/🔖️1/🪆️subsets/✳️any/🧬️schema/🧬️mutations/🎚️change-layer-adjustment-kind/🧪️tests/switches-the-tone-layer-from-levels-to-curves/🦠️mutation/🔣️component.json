@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerAdjustmentKind",
+  "layerId": "tone",
+  "newAdjustmentKind": "curves"
+}

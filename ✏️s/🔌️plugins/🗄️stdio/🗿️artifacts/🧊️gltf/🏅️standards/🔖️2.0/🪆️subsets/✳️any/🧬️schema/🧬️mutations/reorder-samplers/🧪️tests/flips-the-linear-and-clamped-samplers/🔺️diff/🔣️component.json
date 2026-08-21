@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.reorder-samplers.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/samplers/1",
+    "document/samplers/0"
+  ],
+  "payload": {
+    "order": [
+      1,
+      0
+    ]
+  },
+  "operation": {
+    "kind": "reorder",
+    "order": [
+      1,
+      0
+    ]
+  }
+}

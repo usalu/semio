@@ -1,0 +1,6 @@
+{
+  "mutation": "changeReferenceWidth",
+  "modelDefinitionId": "spatial.shape",
+  "referenceId": "ref-1",
+  "newWidthWorld": 12.0
+}

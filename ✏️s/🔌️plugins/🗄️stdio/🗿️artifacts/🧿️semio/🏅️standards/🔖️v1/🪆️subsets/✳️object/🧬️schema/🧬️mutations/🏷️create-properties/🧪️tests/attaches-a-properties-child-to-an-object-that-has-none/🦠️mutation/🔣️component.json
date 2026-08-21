@@ -1,0 +1,13 @@
+{
+  "CreateProperties": {
+    "child_id": "props-1",
+    "target": {
+      "artifactId": "kitchen-sink-properties",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
+}

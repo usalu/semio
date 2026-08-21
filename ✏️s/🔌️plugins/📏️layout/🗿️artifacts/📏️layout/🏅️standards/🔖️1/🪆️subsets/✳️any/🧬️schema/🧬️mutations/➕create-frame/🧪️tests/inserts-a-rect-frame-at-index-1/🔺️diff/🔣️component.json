@@ -1,0 +1,76 @@
+{
+  "artifact": null,
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "page-1",
+        "patch": {
+          "name": null,
+          "width": null,
+          "height": null,
+          "margin_top": null,
+          "margin_right": null,
+          "margin_bottom": null,
+          "margin_left": null,
+          "columns_count": null,
+          "columns_gutter": null,
+          "frame_added": {
+            "frame": {
+              "kind": "rect",
+              "id": "frame-badge",
+              "layerId": "layer-1",
+              "bounds": {
+                "x": 120.0,
+                "y": 30.0,
+                "w": 40.0,
+                "h": 40.0,
+                "rotation": 0.0
+              },
+              "locked": null,
+              "visible": null,
+              "fill": [
+                0.0,
+                0.5,
+                1.0,
+                1.0
+              ],
+              "stroke": null
+            },
+            "index": 1,
+            "layer_id": "layer-1"
+          },
+          "frame_removed": null,
+          "frame_patched": null
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "printTarget": null,
+  "dataFieldsJson": null,
+  "backgroundDrawing": null,
+  "referencedModel": null,
+  "selectedIds": null,
+  "activePageId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "previewCameraX": null,
+  "previewCameraY": null,
+  "previewCameraZoom": null,
+  "dropPreview": null,
+  "locale": null,
+  "hoveredId": null
+}

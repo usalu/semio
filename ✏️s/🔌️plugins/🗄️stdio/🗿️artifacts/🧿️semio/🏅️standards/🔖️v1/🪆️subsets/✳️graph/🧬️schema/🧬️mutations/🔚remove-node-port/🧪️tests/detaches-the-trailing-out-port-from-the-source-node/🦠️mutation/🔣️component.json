@@ -1,0 +1,8 @@
+{
+  "RemoveNodePort": {
+    "node_id": {
+      "value": "a"
+    },
+    "index": 1
+  }
+}

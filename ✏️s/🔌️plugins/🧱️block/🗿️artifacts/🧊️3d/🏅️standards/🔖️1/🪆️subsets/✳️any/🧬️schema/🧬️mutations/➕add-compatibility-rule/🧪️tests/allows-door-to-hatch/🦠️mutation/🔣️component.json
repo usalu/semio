@@ -1,0 +1,9 @@
+{
+  "mutation": "addCompatibilityRule",
+  "rule": {
+    "id": "compat-door-hatch",
+    "source": "door",
+    "target": "hatch",
+    "bidirectional": false
+  }
+}

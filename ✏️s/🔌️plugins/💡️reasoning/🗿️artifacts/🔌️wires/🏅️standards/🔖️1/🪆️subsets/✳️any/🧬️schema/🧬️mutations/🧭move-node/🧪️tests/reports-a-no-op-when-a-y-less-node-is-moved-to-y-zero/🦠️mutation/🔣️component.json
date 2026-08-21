@@ -1,0 +1,6 @@
+{
+  "mutation": "moveNode",
+  "nodeId": "node-drifter",
+  "newX": 12.0,
+  "newY": 0.0
+}

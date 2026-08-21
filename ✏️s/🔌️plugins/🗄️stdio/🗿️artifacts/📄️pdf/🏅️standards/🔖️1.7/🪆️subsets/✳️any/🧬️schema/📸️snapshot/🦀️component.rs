@@ -381,7 +381,7 @@ pub fn demo_pdf17_snapshot() -> PdfSnapshot {
         objects: Vec::new(),
         trailer: Vec::new(),
     };
-    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).await.expect("encode_pdf(seed) must succeed");
-    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).await.expect("decode_pdf(encode_pdf(seed)) must succeed")
+    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
+    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️SnapshotFixtures

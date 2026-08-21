@@ -1,0 +1,44 @@
+{
+  "mutation": "replaceDecision",
+  "decision": {
+    "id": "decision-a",
+    "name": "Decision A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "decisionStatement": {
+      "text": ""
+    },
+    "context": {
+      "text": ""
+    },
+    "optionsConsidered": [],
+    "selectedOptionId": null,
+    "rationale": {
+      "text": ""
+    },
+    "decisionMakerIds": [],
+    "consultedIds": [],
+    "informedIds": [],
+    "decisionDate": null,
+    "effectiveDate": null,
+    "reversalConditions": [],
+    "impactedRequirementIds": [],
+    "impactedElementIds": [],
+    "costImpact": null,
+    "scheduleImpact": null,
+    "riskImpact": [],
+    "approvalStatus": "passed",
+    "meetingRef": null,
+    "artifactRefs": []
+  }
+}

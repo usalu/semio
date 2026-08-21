@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "p3a-render-snapshot-verify"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust", package = "semio-framework-trace" }
+ui_render = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }

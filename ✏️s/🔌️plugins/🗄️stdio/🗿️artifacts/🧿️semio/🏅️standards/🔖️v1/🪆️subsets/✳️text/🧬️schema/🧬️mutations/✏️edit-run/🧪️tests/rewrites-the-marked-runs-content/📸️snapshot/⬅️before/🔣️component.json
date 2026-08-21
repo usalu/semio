@@ -1,0 +1,20 @@
+{
+  "schema": "s.stdio.semio.text",
+  "runs": [
+    {
+      "language": "en",
+      "content": "Hello",
+      "marks": []
+    },
+    {
+      "language": "en",
+      "content": "world",
+      "marks": [
+        {
+          "kind": "bold",
+          "href": ""
+        }
+      ]
+    }
+  ]
+}

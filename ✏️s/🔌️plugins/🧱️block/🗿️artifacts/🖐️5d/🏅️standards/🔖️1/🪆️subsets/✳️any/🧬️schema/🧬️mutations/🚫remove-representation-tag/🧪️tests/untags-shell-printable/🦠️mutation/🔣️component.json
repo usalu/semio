@@ -1,0 +1,5 @@
+{
+  "mutation": "removeRepresentationTag",
+  "id": "rep-shell",
+  "tag": "printable"
+}

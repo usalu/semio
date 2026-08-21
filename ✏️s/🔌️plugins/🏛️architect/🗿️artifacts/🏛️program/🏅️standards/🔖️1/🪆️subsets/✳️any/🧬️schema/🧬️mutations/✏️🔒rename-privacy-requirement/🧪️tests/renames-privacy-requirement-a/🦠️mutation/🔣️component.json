@@ -1,0 +1,5 @@
+{
+  "mutation": "renamePrivacyRequirement",
+  "id": "privacy-requirement-a",
+  "newName": "Renamed Privacy Requirement A"
+}

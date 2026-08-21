@@ -64,7 +64,7 @@ mod tests {
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            Ok(crate::artifacts::csv::schema::snapshot::encode_csv(snapshot).await.into_bytes())
+            Ok(crate::artifacts::csv::schema::snapshot::encode_csv(snapshot).into_bytes())
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
@@ -73,7 +73,7 @@ mod tests {
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
-            CsvInference::infer(snapshot).await
+            CsvInference::infer(snapshot)
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
@@ -81,7 +81,7 @@ mod tests {
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-            std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).await.map_err(|e| vec![e])).map(|_| ())
+            std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::csv::schema::snapshot::decode_csv(text).map_err(|e| vec![e])).map(|_| ())
         }
 
         async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

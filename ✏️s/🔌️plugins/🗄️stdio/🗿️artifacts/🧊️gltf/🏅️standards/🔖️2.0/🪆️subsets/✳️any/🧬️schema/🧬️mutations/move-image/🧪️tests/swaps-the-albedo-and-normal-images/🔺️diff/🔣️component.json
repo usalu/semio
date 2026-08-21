@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.move-image.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/images/0",
+    "document/images/1"
+  ],
+  "payload": {
+    "index": 0,
+    "position": 1
+  },
+  "operation": {
+    "kind": "move",
+    "index": 0,
+    "position": 1
+  }
+}

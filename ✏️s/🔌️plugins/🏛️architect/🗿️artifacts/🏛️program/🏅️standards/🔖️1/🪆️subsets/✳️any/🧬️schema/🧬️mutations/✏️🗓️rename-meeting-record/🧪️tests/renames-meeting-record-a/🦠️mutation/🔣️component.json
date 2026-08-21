@@ -1,0 +1,5 @@
+{
+  "mutation": "renameMeetingRecord",
+  "id": "meeting-record-a",
+  "newName": "Renamed Meeting Record A"
+}

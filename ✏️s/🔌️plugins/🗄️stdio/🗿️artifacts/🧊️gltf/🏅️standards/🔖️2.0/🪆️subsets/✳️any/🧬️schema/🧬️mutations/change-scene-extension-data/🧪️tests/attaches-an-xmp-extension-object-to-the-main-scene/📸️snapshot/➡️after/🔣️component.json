@@ -1,0 +1,18 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "scenes": [
+      {
+        "name": "main",
+        "extensions": {
+          "KHR_xmp_json_ld": {}
+        }
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

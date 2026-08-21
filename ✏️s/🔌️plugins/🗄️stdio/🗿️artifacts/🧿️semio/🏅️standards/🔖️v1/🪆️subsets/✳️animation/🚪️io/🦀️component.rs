@@ -193,8 +193,8 @@ pub mod derived_composition {
         async fn registered_validator_matches_direct_invariant_check_on_a_binary_payload() {
             let snap = snapshot_with_channel(vec![]);
             let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let via_validator = SemioAnimationValidator::validate(&IoPayload::Binary(bytes.await));
-            assert!(via_validator.await.iter().any(|d| d.code.0 == "stdio.semio_animation.empty-channel"), "got {via_validator:?}");
+            let via_validator = SemioAnimationValidator::validate(&IoPayload::Binary(bytes));
+            assert!(via_validator.iter().any(|d| d.code.0 == "stdio.semio_animation.empty-channel"), "got {via_validator:?}");
         }
 
         //#region 🔖️ConformanceLaws
@@ -276,14 +276,14 @@ pub mod derived_composition {
 
                 let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
                 for mutation in mutations::demo_mutation_cases() {
-                    let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                    let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
                 }
 
                 let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
                 for d in diff::demo_diff_cases() {
-                    let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                    let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
                 }
@@ -300,11 +300,11 @@ pub mod derived_composition {
 
                 let demo = snapshot::demo_animation_snapshot();
 
-                let parsed = <snapshot::SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+                let parsed = <snapshot::SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_animation_snapshot()");
                 assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_animation_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-                let decoded = <snapshot::SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+                let decoded = <snapshot::SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
                 assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_animation_snapshot()");
                 assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_animation_snapshot()) drifted from the shipped .pack.semio fixture");
             }

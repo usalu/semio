@@ -1,0 +1,12 @@
+{
+  "ReplaceTextureBytes": {
+    "id": "tex-a",
+    "new_bytes": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ]
+  }
+}

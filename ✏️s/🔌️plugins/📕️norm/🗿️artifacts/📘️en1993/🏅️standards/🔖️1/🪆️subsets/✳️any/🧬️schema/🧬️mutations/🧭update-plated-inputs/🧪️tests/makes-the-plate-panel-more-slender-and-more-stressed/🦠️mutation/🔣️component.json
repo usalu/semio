@@ -1,0 +1,6 @@
+{
+  "UpdatePlatedInputs": {
+    "new_plated_lambda_p": 1.25,
+    "new_plated_sigma_ed_mpa": 275.0
+  }
+}

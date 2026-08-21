@@ -77,7 +77,7 @@ interface Edit {
   end: number;
   before: string;
   after: string;
-  kind: "call-add-await" | "call-remove-await" | "def-remove-async" | "test-remove-async";
+  kind: "call-add-await" | "call-remove-await" | "def-remove-async" | "test-remove-async" | "defuse-call-add-await";
   diagnosticCode: string | null;
   diagnosticMessage: string;
 }
@@ -272,6 +272,7 @@ function invalidateFile(absPath: string): void {
   fileCleanCache.delete(absPath);
   quoteRangeCache.delete(absPath);
   byteToCharCache.delete(absPath);
+  invalidateDefUseCaches(absPath);
 }
 
 function computeQuoteRanges(clean: string): [number, number][] {
@@ -639,6 +640,20 @@ function isRiskyBareIdentifierAwaitInsertion(clean: string, insertionStart: numb
   return clean[p] === "{" || clean[p] === ",";
 }
 
+// Defense-in-depth backstop, independent of root cause: NEVER insert `.await` immediately
+// after text that already ends with `.await` (or, for the dot-prefix "await." insertion shape,
+// immediately before text that already starts with "await"). This is what let the
+// findFutureExprSpan mis-selection (fixed above) accumulate up to 6 stacked `.await`s across
+// repeated runs instead of failing loudly on the first one — each run's fresh diagnostic scan
+// re-found the "same" unresolved error and piled another `.await` on top rather than recognising
+// the position was already touched. This check is cheap and unconditional: even if some other,
+// not-yet-found bug someday computes a wrong insertion point again, it cannot stack.
+function wouldStackAwait(clean: string, insertionStart: number): boolean {
+  const before = clean.slice(Math.max(0, insertionStart - 6), insertionStart);
+  const after = clean.slice(insertionStart, insertionStart + 6);
+  return before === ".await" || after === "await.";
+}
+
 function extractCalleeNameBackward(clean: string, callEndExclusive: number): string | null {
   let p = callEndExclusive - 1;
   while (p >= 0 && /\s/.test(clean[p])) p--;
@@ -699,6 +714,612 @@ function extractCallForward(clean: string, spanStart: number): { name: string; c
 
 //#endregion
 
+//#region R14: def-use resolution for bare let-bound Future locals
+//
+// R13's no-suggestion fallback (findFutureExprSpan + extractCallForward) correctly and safely
+// refuses to guess when the Future-typed expression named by a diagnostic is a BARE, let-bound
+// local variable rather than a fresh call — this was, by a wide margin, the dominant residue
+// shape across every large crate R13 touched (~1,250+ diagnostics). R14 resolves that specific
+// shape, and ONLY that shape: trace the variable back to its OWN binding statement within the
+// SAME enclosing function body, and apply R13's identical decision rule to the binding's RHS
+// call — never at the later use site (that is both the semantically correct fix location and
+// what avoids the receiver-span class of bug R13's incident #4 found).
+//
+// This is deliberately narrower than a general data-flow pass. It resolves exactly:
+//   let (mut)? NAME (: TYPE)? = CALL(...);      ... (same fn, no reassignment/shadow/closure) ... NAME
+// and refuses — with a specific, logged reason, never a guess — every shape enumerated in the
+// R14 task brief: shadowing, function-parameter/pattern/closure-argument bindings, reassignment
+// or mutable-borrow between binding and use, RHS that is not a bare resolvable call (macro,
+// method chain, block/conditional expression), a binding that crosses a closure or nested-fn
+// boundary, and a binding hidden behind an unevaluated `#[cfg(...)]`. Every one of R13's existing
+// guards (PATTERN_CONSTRUCTOR_DENYLIST, wouldStackAwait, isRiskyBareIdentifierAwaitInsertion,
+// isEditableFile, the trait-impl/quote!/async-test guards inside resolveCallee) is re-applied
+// unchanged at the resolved binding site — R14 adds a smarter way to LOCATE the edit, not a new
+// way to decide whether an edit is safe.
+
+interface EnclosingFn {
+  name: string;
+  isAsync: boolean;
+  paramsStart: number; // char offset, first char inside '('
+  paramsEnd: number; // char offset of matching ')'
+  bodyStart: number; // char offset of the fn's opening '{'
+  bodyEnd: number; // char offset of the fn's matching closing '}'
+}
+
+// Cheap memoization: the list of `fn NAME` candidate offsets in a file never changes within one
+// planning pass over a fixed snapshot of that file, and large files can have thousands of fns.
+const fnCandidateCache = new Map<string, { idx: number; name: string; afterName: number }[]>();
+
+function invalidateDefUseCaches(absPath: string): void {
+  fnCandidateCache.delete(absPath);
+}
+
+function matchBraceForward(clean: string, openBraceIdx: number): number {
+  let depth = 1;
+  let i = openBraceIdx + 1;
+  const n = clean.length;
+  while (i < n && depth > 0) {
+    if (clean[i] === "{") depth++;
+    else if (clean[i] === "}") depth--;
+    i++;
+  }
+  return depth === 0 ? i - 1 : n; // n (out of range) signals "unbalanced" to callers
+}
+
+// Finds the innermost `fn ... { ... }` whose body textually contains `pos`. Scanning backward
+// from the nearest preceding `fn` keyword and taking the FIRST candidate whose body actually
+// contains `pos` is correct by construction: any enclosing function's `fn` keyword must precede
+// `pos`, and among all such enclosing functions the innermost one's `fn` keyword is the closest
+// preceding one (nesting means the inner function's text starts after the outer's `fn` keyword
+// but before `pos`) — so the nearest-first scan finds the innermost match first.
+function findEnclosingFunction(absPath: string, clean: string, pos: number): EnclosingFn | null {
+  let candidates = fnCandidateCache.get(absPath);
+  if (!candidates) {
+    candidates = [];
+    const fnRe = /\bfn\s+([A-Za-z_][A-Za-z0-9_]*)/g;
+    let m: RegExpExecArray | null;
+    while ((m = fnRe.exec(clean))) candidates.push({ idx: m.index, name: m[1], afterName: m.index + m[0].length });
+    fnCandidateCache.set(absPath, candidates);
+  }
+  for (let k = candidates.length - 1; k >= 0; k--) {
+    const c = candidates[k];
+    if (c.idx >= pos) continue;
+    let i = c.afterName;
+    while (i < clean.length && /\s/.test(clean[i])) i++;
+    if (clean[i] === "<") {
+      let depth = 1;
+      i++;
+      while (i < clean.length && depth > 0) {
+        if (clean[i] === "<") depth++;
+        else if (clean[i] === ">") {
+          if (clean[i - 1] !== "-") depth--;
+        }
+        i++;
+      }
+    }
+    while (i < clean.length && /\s/.test(clean[i])) i++;
+    if (clean[i] !== "(") continue;
+    const parenStart = i;
+    let depth = 1;
+    i = parenStart + 1;
+    while (i < clean.length && depth > 0) {
+      if (clean[i] === "(") depth++;
+      else if (clean[i] === ")") depth--;
+      i++;
+    }
+    if (depth !== 0) continue;
+    const paramsEnd = i - 1;
+    const sig = findBodyOrDecl(clean, paramsEnd + 1);
+    if (!sig || !sig.hasBody || sig.bodyStart === undefined) continue;
+    const bodyEnd = matchBraceForward(clean, sig.bodyStart);
+    if (bodyEnd >= clean.length) continue; // unbalanced — refuse silently, caller sees null
+    if (pos > sig.bodyStart && pos < bodyEnd) {
+      let asyncCheck = c.idx - 1;
+      while (asyncCheck >= 0 && /\s/.test(clean[asyncCheck])) asyncCheck--;
+      let asyncWordEnd = asyncCheck + 1;
+      let asyncWordStart = asyncWordEnd;
+      while (asyncWordStart > 0 && /[A-Za-z0-9_]/.test(clean[asyncWordStart - 1])) asyncWordStart--;
+      const isAsync = clean.slice(asyncWordStart, asyncWordEnd) === "async";
+      return { name: c.name, isAsync, paramsStart: parenStart + 1, paramsEnd, bodyStart: sig.bodyStart, bodyEnd };
+    }
+  }
+  return null;
+}
+
+// Simple-identifier parameter names only (top-level comma split, `&`/`&mut`/`mut` stripped,
+// `self` variants excluded). Destructuring params are intentionally NOT enumerated here — a
+// variable bound by a tuple/struct-pattern parameter never matches a bare-identifier name via
+// this parser, so it naturally falls through to the "no let-binding found" refusal instead,
+// which is safe (a refusal either way).
+// R14: a real bug this packet's OWN dry-run/monotonic-guard caught (not merely a theoretical
+// one) — a `.await` insertion can be textually correct (real call, real callee) while still
+// being WRONG for a reason none of R13's existing guards check: the insertion point may not be
+// lexically inside ANY async context at all. `.await` is legal Rust syntax anywhere inside an
+// `async fn`, an `async {}` block, or an `async move? |..| {}` closure — but a Future-typed LOCAL
+// VARIABLE can perfectly legally exist and be passed around inside an ordinary SYNC function
+// too (it just can never be `.await`ed there). Confirmed on `semio-framework-surface`: the
+// generic "mismatched types" diagnostic pattern (broad by necessity — see ASYNC_SIGNATURE_
+// PATTERNS) misattributed a completely unrelated diagnostic to `let plane_normal =
+// Vec3::new(0.0, 0.0, 1.0);` inside an ordinary, never-async pointer-picking function; `Vec3::new`
+// is fully synchronous. Both R13's pre-existing call-add-await paths AND the new R14 def-use path
+// share this exposure — a diagnostic misattribution can point ANY of them at a position that was
+// never inside async code, and rustc's response to an illegal `.await` there
+// ("`await` is only allowed inside `async` functions and blocks") is a different failure mode
+// from the pattern-position/struct-shorthand/stacking corruptions R13's incidents already
+// catalogue. Caught here by the monotonic guard exactly as designed (reverted, zero corruption
+// on disk) — but rather than rely on catch-and-revert forever, this closes the gap at all three
+// `.await`-insertion sites (both pre-existing R13 sites and the new R14 site) with a shared,
+// conservative, span-local check: an insertion point is accepted only if its innermost enclosing
+// named function is itself `async`, OR it sits inside a nested `async {}` / `async move? |..|`
+// block/closure within that function. Anything else refuses into residue with a specific reason.
+function hasEnclosingAsyncBlockOrClosure(clean: string, regionStart: number, regionEnd: number, pos: number): boolean {
+  const re = /\basync\b/g;
+  re.lastIndex = regionStart;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(clean)) && m.index < pos) {
+    let i = m.index + 5;
+    while (i < regionEnd && /\s/.test(clean[i])) i++;
+    if (clean.slice(i, i + 4) === "move" && !/[A-Za-z0-9_]/.test(clean[i + 4] ?? "")) {
+      i += 4;
+      while (i < regionEnd && /\s/.test(clean[i])) i++;
+    }
+    let zoneEnd = -1;
+    if (clean[i] === "{") {
+      const be = matchBraceForward(clean, i);
+      zoneEnd = be >= clean.length ? regionEnd : be + 1;
+    } else if (clean[i] === "|") {
+      let depth = 0;
+      let j = i + 1;
+      let found = -1;
+      while (j < regionEnd) {
+        const cj = clean[j];
+        if (cj === "(" || cj === "[") depth++;
+        else if (cj === ")" || cj === "]") depth--;
+        else if (cj === "|" && depth === 0 && clean[j + 1] !== "|" && clean[j - 1] !== "|") {
+          found = j;
+          break;
+        } else if (cj === ";" && depth === 0) break;
+        j++;
+      }
+      if (found > 0) {
+        let k = found + 1;
+        while (k < regionEnd && /\s/.test(clean[k])) k++;
+        if (clean[k] === "{") {
+          const be = matchBraceForward(clean, k);
+          zoneEnd = be >= clean.length ? regionEnd : be + 1;
+        } else {
+          let d = 0;
+          let z = k;
+          while (z < regionEnd) {
+            const cz = clean[z];
+            if (cz === "(" || cz === "[" || cz === "{") d++;
+            else if (cz === ")" || cz === "]" || cz === "}") {
+              if (d === 0) break;
+              d--;
+            } else if ((cz === "," || cz === ";") && d === 0) break;
+            z++;
+          }
+          zoneEnd = z;
+        }
+      }
+    } else {
+      continue; // e.g. `async fn` — the named-function case, handled separately via EnclosingFn.isAsync
+    }
+    if (zoneEnd > pos) return true;
+  }
+  return false;
+}
+
+// The shared gate: refuses any `.await`-insertion position that is not lexically inside async
+// code. `absPath`/`clean` must already be loaded (loadFile) by the caller.
+function isInsideAsyncContext(absPath: string, clean: string, pos: number): boolean {
+  const fn = findEnclosingFunction(absPath, clean, pos);
+  if (!fn) return false; // cannot even locate an enclosing function — refuse rather than assume
+  if (fn.isAsync) return true;
+  return hasEnclosingAsyncBlockOrClosure(clean, fn.bodyStart, fn.bodyEnd, pos);
+}
+
+function paramNamesOf(clean: string, paramsStart: number, paramsEnd: number): Set<string> {
+  const text = clean.slice(paramsStart, paramsEnd);
+  const names = new Set<string>();
+  let depth = 0;
+  let last = 0;
+  const parts: string[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "(" || c === "[" || c === "<") depth++;
+    else if (c === ")" || c === "]") depth--;
+    else if (c === ">") {
+      if (text[i - 1] !== "-" && depth > 0) depth--;
+    } else if (c === "," && depth === 0) {
+      parts.push(text.slice(last, i));
+      last = i + 1;
+    }
+  }
+  parts.push(text.slice(last));
+  for (const raw of parts) {
+    let p = raw.trim();
+    if (!p || /^(&\s*(mut\s+)?)?mut\s+self$/.test(p) || /^&?\s*self$/.test(p)) continue;
+    p = p.replace(/^&\s*(mut\s+)?/, "").replace(/^mut\s+/, "");
+    const colonIdx = p.indexOf(":");
+    const namePart = (colonIdx >= 0 ? p.slice(0, colonIdx) : p).trim();
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(namePart)) names.add(namePart);
+  }
+  return names;
+}
+
+interface Zone {
+  start: number;
+  end: number;
+}
+
+// Best-effort closure-span detector. `|` is lexically ambiguous with bitwise-or, logical-or
+// (`||`), and or-patterns in match arms — this deliberately does NOT try to be a real Rust
+// parser. It only fires when a `|` (or `||`, the empty-params case) is IMMEDIATELY preceded
+// (after whitespace) by `move`, or by one of `( , = { ;`, or is at the very start of the scanned
+// region — contexts where a bitwise/logical-or genuinely cannot appear (an operator needs a
+// left-hand operand token directly before it, not an opening delimiter). False negatives (a real
+// closure this misses) fall through to the general "no let-binding found" refusal downstream if
+// it hides the binding/use; false positives just widen a zone, which can only ever cause an
+// EXTRA refusal, never a wrong edit — the same false-refusal-is-cheap philosophy as R13's other
+// guards.
+function computeClosureZones(clean: string, regionStart: number, regionEnd: number): Zone[] {
+  const zones: Zone[] = [];
+  let i = regionStart;
+  while (i < regionEnd) {
+    if (clean[i] !== "|") {
+      i++;
+      continue;
+    }
+    let p = i - 1;
+    while (p >= regionStart && /\s/.test(clean[p])) p--;
+    const prevCh = p >= regionStart ? clean[p] : "";
+    let isMove = false;
+    if (/[A-Za-z_]/.test(prevCh)) {
+      let ws = p;
+      while (ws >= regionStart && /[A-Za-z0-9_]/.test(clean[ws])) ws--;
+      if (clean.slice(ws + 1, p + 1) === "move") isMove = true;
+    }
+    const introducerOk = isMove || prevCh === "" || "(,={;".includes(prevCh);
+    if (!introducerOk) {
+      i++;
+      continue;
+    }
+
+    let paramsEndExclusive: number;
+    if (clean[i + 1] === "|") {
+      paramsEndExclusive = i + 2; // empty-params closure `||`
+    } else {
+      let depth = 0;
+      let j = i + 1;
+      let found = -1;
+      while (j < regionEnd && j - i < 2000) {
+        const cj = clean[j];
+        if (cj === "(" || cj === "[") depth++;
+        else if (cj === ")" || cj === "]") depth--;
+        else if (cj === "|" && depth === 0 && clean[j + 1] !== "|" && clean[j - 1] !== "|") {
+          found = j;
+          break;
+        } else if (cj === ";" && depth === 0) break;
+        j++;
+      }
+      if (found < 0) {
+        i++;
+        continue;
+      }
+      paramsEndExclusive = found + 1;
+    }
+
+    let k = paramsEndExclusive;
+    while (k < regionEnd && /\s/.test(clean[k])) k++;
+    let zoneEnd: number;
+    if (clean[k] === "{") {
+      const be = matchBraceForward(clean, k);
+      zoneEnd = be >= clean.length ? regionEnd : be + 1;
+    } else {
+      let d = 0;
+      let z = k;
+      while (z < regionEnd) {
+        const cz = clean[z];
+        if (cz === "(" || cz === "[" || cz === "{") d++;
+        else if (cz === ")" || cz === "]" || cz === "}") {
+          if (d === 0) break;
+          d--;
+        } else if ((cz === "," || cz === ";") && d === 0) break;
+        z++;
+      }
+      zoneEnd = z;
+    }
+    zones.push({ start: i, end: zoneEnd });
+    i = zoneEnd;
+  }
+  return zones;
+}
+
+function insideZones(zones: Zone[], pos: number): boolean {
+  return zones.some((z) => pos >= z.start && pos < z.end);
+}
+
+interface LetBinding {
+  letStart: number;
+  eqPos: number; // char offset of the `=`
+  stmtEnd: number; // char offset of the terminating `;`
+}
+
+// Enumerates `let (mut)? NAME (: TYPE)? = <rhs>;` bindings of `varName` inside [bodyStart,
+// bodyEnd), skipping the bodies of any NESTED named `fn` items (a different function's own
+// scope — mirrors the same nested-fn skip census's scanBody() uses for `.await` accounting).
+// Destructuring/enum-variant patterns (`let (a, b) = ..`, `let Some(x) = ..`) never match: the
+// identifier captured right after `let`/`mut` is the pattern's own leading token ("Some", not
+// "x"), so they correctly produce zero bindings for the pattern-bound name.
+function findLetBindingsSkippingNestedFns(clean: string, bodyStart: number, bodyEnd: number, varName: string): LetBinding[] {
+  const results: LetBinding[] = [];
+  let i = bodyStart + 1;
+  while (i < bodyEnd) {
+    const ch = clean[i];
+    if (!/[A-Za-z_]/.test(ch)) {
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j < bodyEnd && /[A-Za-z0-9_]/.test(clean[j])) j++;
+    const word = clean.slice(i, j);
+
+    if (word === "fn") {
+      let k = j;
+      while (k < bodyEnd && /\s/.test(clean[k])) k++;
+      if (/[A-Za-z_]/.test(clean[k] ?? "")) {
+        let nameEnd = k;
+        while (nameEnd < bodyEnd && /[A-Za-z0-9_]/.test(clean[nameEnd])) nameEnd++;
+        const sig = findBodyOrDecl(clean, nameEnd);
+        if (sig && sig.hasBody && sig.bodyStart !== undefined) {
+          const nestedEnd = matchBraceForward(clean, sig.bodyStart);
+          i = nestedEnd < bodyEnd ? nestedEnd + 1 : bodyEnd;
+          continue;
+        } else if (sig && !sig.hasBody && sig.declEnd !== undefined) {
+          i = sig.declEnd + 1;
+          continue;
+        }
+      }
+      i = j;
+      continue;
+    }
+
+    if (word === "let") {
+      let k = j;
+      while (k < bodyEnd && /\s/.test(clean[k])) k++;
+      if (clean.slice(k, k + 3) === "mut" && /\s/.test(clean[k + 3] ?? "")) {
+        k += 3;
+        while (k < bodyEnd && /\s/.test(clean[k])) k++;
+      }
+      const nameStart = k;
+      let nameEnd = k;
+      while (nameEnd < bodyEnd && /[A-Za-z0-9_]/.test(clean[nameEnd])) nameEnd++;
+      const name = clean.slice(nameStart, nameEnd);
+      let p = nameEnd;
+      while (p < bodyEnd && /\s/.test(clean[p])) p++;
+      if (clean[p] === ":") {
+        p++;
+        let depth = 0;
+        let stopped = false;
+        while (p < bodyEnd) {
+          const cp = clean[p];
+          if (cp === "(" || cp === "[" || cp === "<") depth++;
+          else if (cp === ")" || cp === "]") depth--;
+          else if (cp === ">") {
+            if (clean[p - 1] !== "-" && depth > 0) depth--;
+          } else if (cp === "=" && depth === 0) {
+            stopped = true;
+            break;
+          } else if (cp === ";" && depth === 0) {
+            stopped = true;
+            break;
+          }
+          p++;
+        }
+        if (!stopped) p = bodyEnd;
+      }
+      while (p < bodyEnd && /\s/.test(clean[p])) p++;
+      if (clean[p] === "=" && clean[p + 1] !== "=") {
+        const eqPos = p;
+        let d = 0;
+        let q = eqPos + 1;
+        while (q < bodyEnd) {
+          const cq = clean[q];
+          if (cq === "(" || cq === "[" || cq === "{") d++;
+          else if (cq === ")" || cq === "]" || cq === "}") d--;
+          else if (cq === ";" && d === 0) break;
+          q++;
+        }
+        if (name === varName && q < bodyEnd) {
+          results.push({ letStart: i, eqPos, stmtEnd: q });
+        }
+      }
+      i = nameEnd > i ? nameEnd : j;
+      continue;
+    }
+
+    i = j;
+  }
+  return results;
+}
+
+function checkReassignedOrMutated(clean: string, varName: string, from: number, to: number): string | null {
+  if (to <= from) return null;
+  const region = clean.slice(from, to);
+  const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const reassignRe = new RegExp(`\\b${escaped}\\b\\s*(=[^=]|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=)`);
+  if (reassignRe.test(region)) return `variable "${varName}" is reassigned between its binding and this use — cannot assume it is still the same Future, refused`;
+  const mutBorrowRe = new RegExp(`&\\s*mut\\s+${escaped}\\b`);
+  if (mutBorrowRe.test(region)) return `variable "${varName}" is mutably borrowed between its binding and this use — cannot assume it is unchanged, refused`;
+  return null;
+}
+
+function checkCfgAbove(src: string, letCharOffset: number): boolean {
+  const line = lineOfOffset(src, letCharOffset);
+  const lines = src.split("\n");
+  for (let l = Math.max(0, line - 4); l < line - 1 && l < lines.length; l++) {
+    if (/#\[\s*cfg\s*\(/.test(lines[l])) return true;
+  }
+  return false;
+}
+
+const RHS_BLOCK_KEYWORDS = new Set(["if", "match", "unsafe", "loop", "while", "for", "async", "move"]);
+
+// R14: Rust reserved words are lexically indistinguishable from identifiers, so a diagnostic's
+// Future-expr span can start at one (e.g. `crate::Foo::bar()?` — the `?`-operator diagnostic's
+// span landed on the leading `crate` keyword in real code this packet touched). None of these
+// are ever a bindable local variable; def-use is never attempted for them, and the residue
+// reason says so explicitly instead of the misleading generic "no let-binding found" message.
+const RUST_RESERVED_WORDS = new Set([
+  "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in",
+  "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super",
+  "trait", "true", "type", "unsafe", "use", "where", "while", "async", "await", "dyn", "abstract", "become", "box",
+  "do", "final", "macro", "override", "priv", "typeof", "unsized", "virtual", "yield", "try", "union", "'static",
+]);
+
+interface RhsCall {
+  calleeName: string;
+  callEnd: number;
+}
+
+type RhsParseResult = { ok: true; call: RhsCall } | { ok: false; reason: string };
+
+// Requires the RHS to be EXACTLY a bare, possibly path-qualified, possibly turbofished call —
+// `[Path::]*NAME[::<T>](args)` — with nothing else in the statement. Anything else (a macro
+// `foo!(..)`, a method chain `recv.method()`, a trailing `?`, a block/conditional expression) is
+// refused rather than guessed at, per the task brief's explicit refusal list. Only the trailing
+// bare identifier is returned as the callee name — consistent with how resolveCallee()/
+// extractCalleeNameBackward() already resolve callees by bare name only, never by full path.
+function parseSimpleCallRhs(clean: string, rhsStart: number, stmtEnd: number): RhsParseResult {
+  let i = rhsStart;
+  while (i < stmtEnd && /\s/.test(clean[i])) i++;
+  if (!/[A-Za-z_]/.test(clean[i] ?? "")) {
+    return { ok: false, reason: "RHS does not start with an identifier (block/literal/reference/other expression) — not a plain call" };
+  }
+  const firstWordStart = i;
+  let j = i;
+  while (j < stmtEnd && /[A-Za-z0-9_]/.test(clean[j])) j++;
+  const firstWord = clean.slice(firstWordStart, j);
+  if (RHS_BLOCK_KEYWORDS.has(firstWord)) {
+    return { ok: false, reason: `RHS is a "${firstWord}" block/conditional expression, not a plain call` };
+  }
+  let lastSegStart = firstWordStart;
+  let lastSegEnd = j;
+  i = j;
+  while (clean[i] === ":" && clean[i + 1] === ":") {
+    const k = i + 2;
+    if (clean[k] === "<") break; // turbofish — handled generically below
+    if (!/[A-Za-z_]/.test(clean[k] ?? "")) break;
+    let k2 = k;
+    while (k2 < stmtEnd && /[A-Za-z0-9_]/.test(clean[k2])) k2++;
+    lastSegStart = k;
+    lastSegEnd = k2;
+    i = k2;
+  }
+  if (clean[i] === ":" && clean[i + 1] === ":" && clean[i + 2] === "<") {
+    let depth = 1;
+    i += 3;
+    while (i < stmtEnd && depth > 0) {
+      if (clean[i] === "<") depth++;
+      else if (clean[i] === ">") {
+        if (clean[i - 1] !== "-") depth--;
+      }
+      i++;
+    }
+  }
+  while (i < stmtEnd && /\s/.test(clean[i])) i++;
+  if (clean[i] !== "(") {
+    if (clean[i] === "!") return { ok: false, reason: "RHS is a macro invocation, not a resolvable fn call" };
+    if (clean[i] === ".") return { ok: false, reason: "RHS is a method chain — cannot attribute the receiver's type, not a resolvable call" };
+    return { ok: false, reason: "RHS is not a plain call expression" };
+  }
+  let depth = 1;
+  let p = i + 1;
+  while (p < stmtEnd && depth > 0) {
+    if (clean[p] === "(") depth++;
+    else if (clean[p] === ")") depth--;
+    p++;
+  }
+  if (depth !== 0) return { ok: false, reason: "RHS call parens did not balance within the statement — needs human triage" };
+  const callEnd = p;
+  let q = callEnd;
+  while (q < stmtEnd && /\s/.test(clean[q])) q++;
+  if (q !== stmtEnd) {
+    return { ok: false, reason: "RHS has trailing tokens after the call (method chain, `?`, or binary operator) — cannot attribute a single callee, not a resolvable call" };
+  }
+  return { ok: true, call: { calleeName: clean.slice(lastSegStart, lastSegEnd), callEnd } };
+}
+
+interface DefUseResolution {
+  ok: boolean;
+  reason?: string;
+  calleeName?: string;
+  callEnd?: number; // char offset, same coordinate space as loadFile(absPath).clean/.src
+}
+
+// The single entry point: given a use-site (absPath, char offset of the bare identifier, its
+// name), trace it to its unique, unambiguous, same-function `let` binding and return the
+// binding's RHS call — or a specific, logged refusal. Never guesses.
+function resolveDefUse(absPath: string, useCharOffset: number, varName: string): DefUseResolution {
+  const { clean, src } = loadFile(absPath);
+  const fn = findEnclosingFunction(absPath, clean, useCharOffset);
+  if (!fn) return { ok: false, reason: "could not locate an enclosing function body for the use site" };
+
+  const params = paramNamesOf(clean, fn.paramsStart, fn.paramsEnd);
+  if (params.has(varName)) {
+    return { ok: false, reason: `"${varName}" is a function parameter of ${fn.name}, not a local let-binding — refused` };
+  }
+
+  const closureZones = computeClosureZones(clean, fn.bodyStart, fn.bodyEnd);
+  const bindings = findLetBindingsSkippingNestedFns(clean, fn.bodyStart, fn.bodyEnd, varName);
+
+  if (bindings.length === 0) {
+    const bodyText = clean.slice(fn.bodyStart, fn.bodyEnd);
+    const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const patternish =
+      new RegExp(`\\b(for|if\\s+let|while\\s+let|match)\\b[^;{]{0,200}\\b${escaped}\\b`).test(bodyText) ||
+      closureZones.some((z) => new RegExp(`\\b${escaped}\\b`).test(clean.slice(z.start, Math.min(z.end, z.start + 200))));
+    return {
+      ok: false,
+      reason: patternish
+        ? `"${varName}" appears to be introduced by a match/if-let/for/closure-argument pattern, not a plain "let ${varName} = <call>;" binding — refused`
+        : `no plain "let ${varName} = <call>;" binding found in enclosing function ${fn.name} — refused`,
+    };
+  }
+
+  if (bindings.length > 1) {
+    return { ok: false, reason: `"${varName}" is bound ${bindings.length} times in ${fn.name} (shadowing) — ambiguous which binding governs this use, refused` };
+  }
+
+  const b = bindings[0];
+
+  if (insideZones(closureZones, b.letStart)) {
+    return { ok: false, reason: `binding of "${varName}" occurs inside a closure — crosses closure boundary, refused` };
+  }
+  if (insideZones(closureZones, useCharOffset)) {
+    return { ok: false, reason: `use of "${varName}" occurs inside a closure — crosses closure boundary, refused` };
+  }
+
+  if (checkCfgAbove(src, b.letStart)) {
+    return { ok: false, reason: `binding of "${varName}" sits behind a #[cfg(...)] attribute this tool cannot evaluate — refused` };
+  }
+
+  if (useCharOffset < b.stmtEnd) {
+    return { ok: false, reason: `use of "${varName}" occurs textually before its own binding statement — likely loop-carried or otherwise non-linear control flow, refused` };
+  }
+
+  const mutReason = checkReassignedOrMutated(clean, varName, b.stmtEnd, useCharOffset);
+  if (mutReason) return { ok: false, reason: mutReason };
+
+  const rhs = parseSimpleCallRhs(clean, b.eqPos + 1, b.stmtEnd);
+  if (rhs.ok === false) return { ok: false, reason: `RHS of "let ${varName} = ..." is not a resolvable call: ${rhs.reason}` };
+
+  return { ok: true, calleeName: rhs.call.calleeName, callEnd: rhs.call.callEnd };
+}
+
+//#endregion
+
 //#region Per-diagnostic edit planning
 
 interface PlannedEdit {
@@ -734,15 +1355,53 @@ function resolveFilePath(fileName: string): string {
 // anything from a bare identifier (no following `(`), so even a wrong span choice here fails
 // safely into residue rather than corrupting code — this is a precision improvement, not a
 // correctness requirement of the safety model.
-function findFutureExprSpan(d: RustcDiagnostic): RustcSpan | null {
+interface FutureSpanResult {
+  span: RustcSpan;
+  // 🛡️ true when the span was independently identified BY RUSTC as the Future-typed expression
+  // itself (a "this expression has type impl Future"/"found impl Future" label, or a structural
+  // byte-adjacent sibling to the primary span) — safe to forward-extract a call from. false when
+  // it is the bare primary span reached only via the last-resort fallback, with no corroborating
+  // signal that it is the RECEIVER rather than a trailing method/operator name applied TO the
+  // receiver — see the R15 comment at its one call site for the real-world corruption this caught.
+  trusted: boolean;
+}
+
+function findFutureExprSpan(d: RustcDiagnostic): FutureSpanResult | null {
   const allSpans: RustcSpan[] = [...d.spans, ...d.children.flatMap((c) => c.spans)];
   for (const s of allSpans) {
-    if (s.label && /this expression has type `?impl Future/i.test(s.label)) return s;
+    if (s.label && /this expression has type `?impl Future/i.test(s.label)) return { span: s, trusted: true };
   }
   for (const s of allSpans) {
-    if (s.label && /found (`?impl )?[Ff]uture/i.test(s.label)) return s;
+    if (s.label && /found (`?impl )?[Ff]uture/i.test(s.label)) return { span: s, trusted: true };
   }
-  return d.spans.find((s) => s.is_primary) ?? d.spans[0] ?? null;
+  const primary = d.spans.find((s) => s.is_primary) ?? d.spans[0] ?? null;
+  // CONFIRMED REAL BUG, fixed here: for the "`T` is not an iterator" shape (and siblings), the
+  // primary span covers only the short trailing failing method/operator (e.g. the ~9 bytes of
+  // `into_iter`), NOT the Future-producing expression — that is a SEPARATE, non-primary,
+  // unlabeled sibling span whose byte_end exactly abuts the primary span's byte_start. Blindly
+  // falling back to primary here inserted `.await` AFTER the trailing method instead of before
+  // it (`X.into_iter().await` instead of `X.await.into_iter()`), which does not fix the
+  // underlying type error — so a LATER run's fresh diagnostic scan found the "same" error again
+  // and stacked ANOTHER `.await` on top. Confirmed on `semio-framework-surface`
+  // (`visible_tile_coords(..).into_iter().await.await`) and reproduced up to 6-deep elsewhere.
+  // Prefer the byte-adjacent sibling span when one exists in the same file — a structural
+  // signal, not a guess.
+  if (primary) {
+    const abutting = d.spans.find((s) => !s.is_primary && s.file_name === primary.file_name && s.byte_end === primary.byte_start);
+    if (abutting) return { span: abutting, trusted: true };
+  }
+  // R15: NOT every "is not an iterator"/"no field ... on type impl Future"/etc. diagnostic carries
+  // the abutting sibling span the fix above relies on — confirmed at scale on real
+  // `semio-s-plugin-stdio` diagnostics (168 single-span occurrences in the lib target alone, e.g.
+  // `<X as Mutation<Y>>::inverse(m, b).into_iter().map(...)` where rustc emits ONLY the 9-byte
+  // `into_iter` span, no sibling at all). Falling back to this untrusted primary and forward-
+  // extracting from it silently reproduces the SAME bug the abutting-span fix above was built to
+  // close, except as a fresh misattribution rather than a re-diagnosed stack: `extractCallForward`
+  // happily parses `into_iter()` itself as "the call" and inserts `.await` after ITS closing paren
+  // (`X.into_iter().await`) — syntactically clean, so no self-test or parse-error sweep would have
+  // caught it, and it does not fix the underlying error, which is why the caller must refuse this
+  // specific shape rather than trust an untrusted span the way it trusts the other three.
+  return primary ? { span: primary, trusted: false } : null;
 }
 
 // Plans a definition-edit ("remove async") for `calleeName`, expected near/at `nearOffset`
@@ -974,6 +1633,10 @@ function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
           plan.residue.push({ file: absPath, message: d.message, reason: "refused: .await would land on a bare identifier immediately preceded by `{`/`,` and followed by `,`/`}` — looks like a struct-literal shorthand field or tuple/array element, not a real expression tail; needs human triage" });
           continue;
         }
+        if (wouldStackAwait(clean, start)) {
+          plan.residue.push({ file: absPath, message: d.message, reason: "refused: this position already has a .await immediately adjacent — inserting another would stack rather than fix; the underlying error is likely mis-diagnosed (wrong span) and needs human triage" });
+          continue;
+        }
         const calleeName = extractCalleeNameBackward(clean, start + before.length);
         if (calleeName && PATTERN_CONSTRUCTOR_DENYLIST.has(calleeName)) {
           plan.residue.push({ file: absPath, message: d.message, reason: `refused: extracted callee "${calleeName}" is a pattern-position enum constructor, not a real call — likely a tuple/pattern mismatch diagnostic, needs human triage` });
@@ -981,6 +1644,10 @@ function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
         }
         const handled = calleeName ? planDeasyncDefinition(absPath, calleeName, plan, d, "suggestion-driven") : false;
         if (!handled) {
+          if (!isInsideAsyncContext(absPath, clean, start)) {
+            plan.residue.push({ file: absPath, message: d.message, reason: "refused: .await insertion point is not lexically inside an async fn/block/closure — a Future-typed value can legally exist in sync code too; the diagnostic likely misattributed this position (see isInsideAsyncContext), needs human triage" });
+            continue;
+          }
           plan.edits.push({ file: absPath, start, end, before, after, kind: "call-add-await", diagnosticCode: d.code?.code ?? null, diagnosticMessage: d.message });
         }
         continue;
@@ -1031,9 +1698,32 @@ function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
   // extraction correctly fails and this falls through to residue rather than guessing.
   const NO_SUGGESTION_FALLBACK_PATTERNS = [/is not an iterator/i, /no field .* on type `?impl Future/i, /cannot apply unary operator .* to type `?impl Future/i, /the `?\??`? operator can only be applied/i, /binary operation .* cannot be applied to type `?impl Future/i, /cannot (add|subtract|multiply|divide) .*`?impl Future/i, /mismatched types/i];
   if (NO_SUGGESTION_FALLBACK_PATTERNS.some((re) => re.test(d.message))) {
-    const futureSpan = findFutureExprSpan(d);
-    if (!futureSpan) {
+    const futureSpanResult = findFutureExprSpan(d);
+    if (!futureSpanResult) {
       plan.residue.push({ file: "?", message: d.message, reason: "no-suggestion fallback pattern matched but diagnostic has no span" });
+      return;
+    }
+    const futureSpan = futureSpanResult.span;
+    // R15: SIXTH real bug, a second manifestation of the FIFTH failure mode listed for this
+    // packet ("diagnostics misattributed to fully synchronous expressions") that isInsideAsyncContext
+    // does NOT catch, because it only asks "is this position lexically inside an async fn/block?" —
+    // true here, since the enclosing fn genuinely IS async. Confirmed on real `semio-s-plugin-stdio`:
+    // `write_box(b"moov", &[build_mvhd(&snapshot.movie), traks, build_udta(&snapshot.movie)].concat())`
+    // — an array literal mixing two un-awaited async calls with one ordinary `Vec<u8>` local
+    // (`traks`). rustc's element-type unification picks the FIRST element's type (the un-awaited
+    // Future from `build_mvhd(..)`) as "expected" for the whole array, then reports the mismatch at
+    // the first element that doesn't match — `traks`, an entirely innocent bystander — with the
+    // unmistakable, self-describing label `"expected future, found `Vec<u8>`"`. That label PROVES
+    // the span is the CONCRETE ("found") side, not the future-producing expression, so treating it
+    // as one (as def-use/extractCallForward would) can only be wrong; the real fix (awaiting the
+    // Future-typed SIBLING elements earlier in the same array/call) needs sibling-expression
+    // reasoning this span-local tool deliberately does not attempt. Refuse rather than guess.
+    if (futureSpan.label && /^expected\s+(`?impl\s+)?[Ff]uture.*,\s*found\s+/i.test(futureSpan.label)) {
+      plan.residue.push({
+        file: resolveFilePath(futureSpan.file_name),
+        message: d.message,
+        reason: `no-suggestion fallback: Future-expr span's own label is "${futureSpan.label}" — this proves the span is the CONCRETE ("found") side of an element-type-unification mismatch (e.g. an array/tuple/call-argument literal mixing un-awaited async calls with an ordinary value), not the Future-producing expression itself; the real fix is on an unidentified sibling expression, which needs reasoning this tool does not attempt — refused, needs human triage`,
+      });
       return;
     }
     const absPath = resolveFilePath(futureSpan.file_name);
@@ -1045,8 +1735,103 @@ function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
     const { src, clean } = loadFile(absPath);
     const primaryStartChar = toCharOffset(absPath, futureSpan.byte_start);
     const call = extractCallForward(clean, primaryStartChar);
+    // R15: FIFTH real bug, found applying this packet to real `semio-s-plugin-stdio` diagnostics
+    // (168 occurrences in the lib target alone). When findFutureExprSpan() had to fall back to
+    // the untrusted bare primary span (no rustc label, no abutting sibling — see its comment) AND
+    // that span is immediately preceded by `.`, it is a TRAILING method/field name in a dot chain
+    // (e.g. `<T as Trait>::inverse(m, b).into_iter().map(...)`, primary span = `into_iter` only,
+    // no sibling at all). extractCallForward() then happily parses `into_iter()` itself as "the
+    // call" and would insert `.await` after ITS OWN closing paren — syntactically clean
+    // (`X.into_iter().await.map(...)`), so no parse-error sweep catches it, but it does not fix
+    // the underlying error (the receiver, not `.into_iter()`'s result, is the un-awaited Future).
+    // This is bug #2's exact symptom (misattributed trailing-method `.await`) rediscovered via a
+    // different mechanism (a genuinely single-span diagnostic, not a mis-selected sibling), so it
+    // needs its own refusal rather than being folded into the existing abutting-span preference,
+    // which has nothing to select from here. A trusted span (label-matched or abutting-sibling)
+    // legitimately CAN be dot-preceded — e.g. `self.fetch_data()` where `fetch_data` really is the
+    // Future-producing callee — so this guard only fires on the untrusted-fallback case.
+    if (call && !futureSpanResult.trusted && primaryStartChar > 0 && clean[primaryStartChar - 1] === ".") {
+      plan.residue.push({
+        file: absPath,
+        message: d.message,
+        reason: `no-suggestion fallback: Future-expr span is an untrusted primary-fallback (no rustc label, no abutting sibling span) immediately preceded by "." — forward-extracting "${call.name}(...)" here would treat a trailing dot-chained method/field as the callee, misattributing .await to it instead of the actual Future-producing receiver earlier in the chain (bug#2's symptom, rediscovered on a genuinely single-span diagnostic); refused pending a real receiver-locating heuristic, needs human triage`,
+      });
+      return;
+    }
     if (!call) {
-      plan.residue.push({ file: absPath, message: d.message, reason: `no-suggestion fallback: could not forward-parse a call expression at Future-expr span start byte=${futureSpan.byte_start} char=${primaryStartChar} (likely a bare variable holding an un-awaited Future assigned elsewhere — needs def-use triage)` });
+      // R14: the dominant residue shape — the Future-typed expression is a bare, let-bound
+      // local (no `(` follows the identifier), not a fresh call. Trace it to its own binding
+      // statement in the same enclosing function and apply the identical decision rule to the
+      // BINDING's RHS call (never the use site — see the R14 region's header comment).
+      const identMatch = /^[A-Za-z_][A-Za-z0-9_]*/.exec(clean.slice(primaryStartChar));
+      if (identMatch && !RUST_RESERVED_WORDS.has(identMatch[0])) {
+        const varName = identMatch[0];
+        // R15: EIGHTH real bug, the mirror image of the sixth. `extractCallForward` already
+        // failed at this exact position (that is why we are in this branch at all), which only
+        // proves the identifier is not IMMEDIATELY followed by `(` — it says nothing about
+        // whether the identifier is a bare variable USE (def-use's whole premise) versus the
+        // RECEIVER of a method chain, e.g. the Future-expr span covers `myc.nodes()` in full (a
+        // genuinely async `.nodes()` call on an ordinary, already-synchronous `myc: Storage<..>`)
+        // and `identMatch` only captures its leading `myc`. Confirmed on real `semio-s-plugin-
+        // stdio` (`graph::operators-internals`): def-use dutifully traced "myc" to its own
+        // (non-async, already-correct) binding `let myc = mycielskian(&g);` and inserted
+        // `.await` THERE — `mycielskian(&g).await` — which rustc's own SUBSEQUENT diagnostic
+        // (`` `graph_core::Storage<Normal, Undirected>` is not a future ``, appearing only once
+        // the bad `.await` was actually on disk) proved is not a future at all; the real fix was
+        // `.await` after `myc.nodes()`'s OWN closing paren, an ordinary call-add-await on `nodes`
+        // this branch never gets a chance to consider because def-use hijacks the bare leading
+        // identifier first. Caught by the monotonic guard tripping (13091 >= 13091) on iteration
+        // 3, root-caused against the pre-edit diagnostic JSON (`mycielskian` confirmed plain
+        // `pub fn`, never `async`, by grep), not guessed at. Refuse rather than pick a side.
+        if (clean[primaryStartChar + identMatch[0].length] === ".") {
+          plan.residue.push({
+            file: absPath,
+            message: d.message,
+            reason: `def-use: identifier "${varName}" at the Future-expr span start is immediately followed by "." — the span covers a RECEIVER.method(..) chain, not a bare variable use; def-use's bare-variable premise does not hold (the Future may come from the trailing method, not this identifier's own binding) — refused, needs human triage`,
+          });
+          return;
+        }
+        const defUse = resolveDefUse(absPath, primaryStartChar, varName);
+        if (defUse.ok && defUse.calleeName && defUse.callEnd !== undefined) {
+          if (PATTERN_CONSTRUCTOR_DENYLIST.has(defUse.calleeName)) {
+            plan.residue.push({ file: absPath, message: d.message, reason: `def-use: resolved callee "${defUse.calleeName}" is a pattern-position enum constructor, not a real call — refused` });
+            return;
+          }
+          const handled = planDeasyncDefinition(absPath, defUse.calleeName, plan, d, "def-use");
+          if (!handled) {
+            if (isRiskyBareIdentifierAwaitInsertion(clean, defUse.callEnd)) {
+              plan.residue.push({ file: absPath, message: d.message, reason: `def-use: .await insertion at the binding-site call would land on a bare-identifier struct-shorthand/tuple-element position — refused` });
+              return;
+            }
+            if (wouldStackAwait(clean, defUse.callEnd)) {
+              plan.residue.push({ file: absPath, message: d.message, reason: `def-use: binding-site insertion position already has .await immediately adjacent — would stack, refused` });
+              return;
+            }
+            if (!isInsideAsyncContext(absPath, clean, defUse.callEnd)) {
+              plan.residue.push({ file: absPath, message: d.message, reason: `def-use: binding-site of "${varName}" is not lexically inside an async fn/block/closure — a Future-typed local can legally exist in sync code too; the diagnostic likely misattributed this use site, refused` });
+              return;
+            }
+            plan.edits.push({
+              file: absPath,
+              start: defUse.callEnd,
+              end: defUse.callEnd,
+              before: "",
+              after: ".await",
+              kind: "defuse-call-add-await",
+              diagnosticCode: d.code?.code ?? null,
+              diagnosticMessage: `${d.message} [def-use: .await inserted at binding-site RHS call for bare variable "${varName}", callee ${defUse.calleeName}]`,
+            });
+          }
+          return;
+        }
+        plan.residue.push({ file: absPath, message: d.message, reason: `def-use refused for bare variable "${varName}": ${defUse.reason ?? "unknown"}` });
+        return;
+      }
+      if (identMatch && RUST_RESERVED_WORDS.has(identMatch[0])) {
+        plan.residue.push({ file: absPath, message: d.message, reason: `no-suggestion fallback: Future-expr span starts at the reserved word "${identMatch[0]}" (keyword/path-segment, not a variable) — def-use not attempted, needs human triage` });
+        return;
+      }
+      plan.residue.push({ file: absPath, message: d.message, reason: `no-suggestion fallback: could not forward-parse a call expression at Future-expr span start byte=${futureSpan.byte_start} char=${primaryStartChar}` });
       return;
     }
     if (PATTERN_CONSTRUCTOR_DENYLIST.has(call.name)) {
@@ -1061,6 +1846,14 @@ function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
       // uniformity with the suggestion-driven site and as a defense-in-depth backstop.)
       if (isRiskyBareIdentifierAwaitInsertion(clean, call.callEnd)) {
         plan.residue.push({ file: absPath, message: d.message, reason: "refused: .await insertion point looks like a struct-literal shorthand/tuple-element tail — needs human triage" });
+        return;
+      }
+      if (wouldStackAwait(clean, call.callEnd)) {
+        plan.residue.push({ file: absPath, message: d.message, reason: "refused: this position already has a .await immediately adjacent — inserting another would stack rather than fix; the underlying error is likely mis-diagnosed (wrong span) and needs human triage" });
+        return;
+      }
+      if (!isInsideAsyncContext(absPath, clean, call.callEnd)) {
+        plan.residue.push({ file: absPath, message: d.message, reason: "refused: .await insertion point is not lexically inside an async fn/block/closure — a Future-typed value can legally exist in sync code too; the diagnostic likely misattributed this position, needs human triage" });
         return;
       }
       plan.edits.push({ file: absPath, start: call.callEnd, end: call.callEnd, before: "", after: ".await", kind: "call-add-await", diagnosticCode: d.code?.code ?? null, diagnosticMessage: d.message });
@@ -1125,30 +1918,81 @@ function randomRunId(): string {
   return "r13-" + Math.random().toString(36).slice(2, 10);
 }
 
-async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; target?: string }): Promise<void> {
+// R14: buckets a residue reason string into a short, stable category label for auditing — the
+// task brief requires "the complete refusal taxonomy with counts", which needs aggregation
+// across potentially thousands of residue entries, not just the first-20 console sample below.
+function residueCategory(reason: string): string {
+  if (reason.startsWith('def-use refused for bare variable')) {
+    const sub = reason.split(": ").slice(1).join(": ");
+    if (/function parameter/.test(sub)) return "def-use: function parameter";
+    if (/match\/if-let\/for\/closure-argument pattern/.test(sub)) return "def-use: pattern binding (match/if-let/for/closure-arg)";
+    if (/shadowing/.test(sub)) return "def-use: shadowed binding";
+    if (/crosses closure boundary/.test(sub)) return "def-use: crosses closure boundary";
+    if (/#\[cfg/.test(sub)) return "def-use: binding behind #[cfg(...)]";
+    if (/not lexically inside an async/.test(sub)) return "def-use: binding site not inside async context";
+    if (/reassigned/.test(sub)) return "def-use: reassigned between binding and use";
+    if (/mutably borrowed/.test(sub)) return "def-use: mutably borrowed between binding and use";
+    if (/loop-carried/.test(sub)) return "def-use: use precedes its own binding textually";
+    if (/no plain "let/.test(sub)) return "def-use: no let-binding found";
+    if (/macro invocation/.test(sub)) return "def-use: RHS is a macro invocation";
+    if (/method chain/.test(sub)) return "def-use: RHS is a method chain";
+    if (/block\/conditional/.test(sub)) return "def-use: RHS is a block/conditional expression";
+    if (/RHS/.test(sub)) return "def-use: RHS not a resolvable call (other)";
+    if (/could not locate an enclosing function/.test(sub)) return "def-use: no enclosing function located";
+    return "def-use: other";
+  }
+  if (reason.startsWith("def-use:") && /RECEIVER\.method\(\.\.\) chain/.test(reason)) return "R15: def-use identifier is a method-chain receiver, not a bare variable (eighth bug guard)";
+  if (reason.startsWith("def-use:")) return "def-use: post-resolution guard (denylist/risky-insertion/stacking)";
+  if (reason.startsWith("no-suggestion fallback") && /reserved word/.test(reason)) return "R13: Future-expr span starts at a reserved word (not a variable)";
+  if (reason.startsWith("no-suggestion fallback") && /untrusted primary-fallback/.test(reason)) return "R15: untrusted primary-fallback dot-method/field misattribution (fifth bug guard)";
+  if (reason.startsWith("no-suggestion fallback") && /CONCRETE \("found"\) side/.test(reason)) return "R15: span is the concrete side of an element-type-unification mismatch (sixth bug guard)";
+  if (reason.startsWith("no-suggestion fallback")) return "R13: bare identifier, no def-use attempted (not this residue class)";
+  if (reason.includes("not lexically inside an async")) return "R13/R14: .await insertion refused — not lexically inside async context";
+  if (reason.startsWith("E0053")) return "R13: E0053 human-triage";
+  if (reason.startsWith("E0733")) return "R13: E0733 human-triage";
+  if (reason.startsWith("refused:")) return "R13: guard refusal (pattern-ctor/risky-insertion/stacking)";
+  if (reason.includes("ambiguous")) return "R13: ambiguous callee resolution";
+  return "other/unclassified";
+}
+
+async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; target?: string; verbose?: boolean }): Promise<void> {
   const runId = randomRunId();
   console.log(`[run ${runId}] crate=${crate} dryRun=${opts.dryRun} target=${opts.target ?? "(host)"}`);
 
   let prevErrorCount = Infinity;
+  let prevDiagKeys: Set<string> = new Set();
   for (let iteration = 1; iteration <= opts.maxIterations; iteration++) {
     fileSrcCache.clear();
     fileCleanCache.clear();
     quoteRangeCache.clear();
     byteToCharCache.clear();
+    fnCandidateCache.clear();
     invalidateGlobalAsyncFnIndex();
 
     const diags = runCargoCheckJson(crate, { tests: true, target: opts.target });
     const totalErrors = countErrors(diags);
     const asyncDiags = diags.filter(isAsyncClassDiagnostic);
+    const errorDiags = diags.filter((d) => d.level === "error" && !isExcludedDiag(d));
+    const diagKeys = new Set(
+      errorDiags.map((d) => {
+        const p = d.spans.find((s) => s.is_primary) ?? d.spans[0];
+        return `${p?.file_name ?? "?"}:${p?.byte_start ?? "?"}:${d.message}`;
+      })
+    );
 
     console.log(`[run ${runId}] iteration ${iteration}: total errors=${totalErrors}, async-class=${asyncDiags.length}`);
 
     if (totalErrors >= prevErrorCount && iteration > 1) {
-      console.log(`[run ${runId}] MONOTONIC GUARD TRIPPED: ${totalErrors} >= previous ${prevErrorCount}. Reverting iteration ${iteration - 1} and stopping.`);
+      console.log(`[run ${runId}] MONOTONIC GUARD TRIPPED: ${totalErrors} >= previous ${prevErrorCount}.`);
+      const newlyAppeared = [...diagKeys].filter((k) => !prevDiagKeys.has(k));
+      console.log(`[run ${runId}] ${newlyAppeared.length} newly-appeared diagnostics this iteration (sample up to 15):`);
+      for (const k of newlyAppeared.slice(0, 15)) console.log(`  + ${k.slice(0, 220)}`);
+      console.log(`[run ${runId}] Reverting iteration ${iteration - 1} and stopping.`);
       revertRun(runId, iteration - 1);
       return;
     }
     prevErrorCount = totalErrors;
+    prevDiagKeys = diagKeys;
 
     if (asyncDiags.length === 0) {
       console.log(`[run ${runId}] no async-class diagnostics remain (total errors=${totalErrors}, presumably other bug classes or zero). Stopping.`);
@@ -1160,7 +2004,10 @@ async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: n
 
     if (plan.edits.length === 0) {
       console.log(`[run ${runId}] ${asyncDiags.length} async-class diagnostics but zero automatable edits planned. Residue:`);
-      for (const r of plan.residue.slice(0, 20)) console.log(`  - ${r.file}: ${r.reason} :: ${r.message.slice(0, 120)}`);
+      const cats: Record<string, number> = {};
+      for (const r of plan.residue) cats[residueCategory(r.reason)] = (cats[residueCategory(r.reason)] ?? 0) + 1;
+      console.log(`[run ${runId}] residue by category:`, cats);
+      for (const r of plan.residue.slice(0, opts.verbose ? plan.residue.length : 20)) console.log(`  - ${r.file}: ${r.reason} :: ${r.message.slice(0, 120)}`);
       console.log(`  (${plan.residue.length} total residue entries this iteration)`);
       return;
     }
@@ -1171,12 +2018,15 @@ async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: n
       const byKind: Record<string, number> = {};
       for (const e of plan.edits) byKind[e.kind] = (byKind[e.kind] ?? 0) + 1;
       console.log(`[run ${runId}] DRY RUN — edits by kind:`, byKind);
-      for (const e of plan.edits.slice(0, 10)) {
+      for (const e of plan.edits.slice(0, opts.verbose ? plan.edits.length : 10)) {
         console.log(`  ${e.kind} ${e.file}:${e.start}-${e.end} ${JSON.stringify(e.before)} -> ${JSON.stringify(e.after)}`);
       }
       if (plan.residue.length > 0) {
+        const cats: Record<string, number> = {};
+        for (const r of plan.residue) cats[residueCategory(r.reason)] = (cats[residueCategory(r.reason)] ?? 0) + 1;
+        console.log(`[run ${runId}] DRY RUN — residue by category:`, cats);
         console.log(`[run ${runId}] DRY RUN — residue (${plan.residue.length}):`);
-        for (const r of plan.residue.slice(0, 20)) console.log(`  - ${r.file}: ${r.reason} :: ${r.message.slice(0, 120)}`);
+        for (const r of plan.residue.slice(0, opts.verbose ? plan.residue.length : 20)) console.log(`  - ${r.file}: ${r.reason} :: ${r.message.slice(0, 120)}`);
       }
       return; // dry-run never iterates past the first plan
     }
@@ -1405,8 +2255,390 @@ function selftest(): void {
   }
   console.log("selftest6: struct-shorthand-field bare-identifier guard catches the real records.await corruption shape without false-positiving on normal field: call() positions — OK");
 
+  // Regression test for the FOURTH real bug, and the most damaging one: for the "`T` is not an
+  // iterator" diagnostic shape, rustc's primary span covers only the trailing failing method
+  // (e.g. `into_iter`, ~9 bytes), not the Future-producing expression — a separate, non-primary,
+  // unlabeled sibling span that byte-abuts it. Reproduces the exact shape confirmed on
+  // `semio-framework-surface`: `visible_tile_coords(..)\n    .into_iter()` where rustc's
+  // primary span is just ".into_iter" and a sibling span covers the full receiver expression
+  // ending exactly where the primary begins.
+  const stackFixtureSrc = "visible_tile_coords(&camera, a, b)\n    .into_iter()";
+  const intoIterStart = stackFixtureSrc.indexOf(".into_iter") + 1; // skip the dot itself, per real span shape
+  const intoIterEnd = intoIterStart + "into_iter".length;
+  const receiverEnd = intoIterStart; // per the real diagnostic dump, the non-primary span's byte_end (16148) EQUALS the primary span's byte_start (16148) exactly — the dot belongs to the receiver span, not the trailing-method span
+  const fakeDiag: RustcDiagnostic = {
+    message: "`impl Future<Output = Vec<(u32, u32, u32)>>` is not an iterator",
+    code: { code: "E0277" },
+    level: "error",
+    rendered: null,
+    children: [],
+    spans: [
+      { file_name: "fixture.rs", byte_start: 0, byte_end: receiverEnd, is_primary: false, label: "", suggested_replacement: null, suggestion_applicability: null, text: [] },
+      { file_name: "fixture.rs", byte_start: intoIterStart, byte_end: intoIterEnd, is_primary: true, label: "`impl Future<Output = Vec<(u32, u32, u32)>>` is not an iterator", suggested_replacement: null, suggestion_applicability: null, text: [] },
+    ],
+  };
+  const chosenResult = findFutureExprSpan(fakeDiag);
+  if (!chosenResult || chosenResult.span.is_primary) {
+    throw new Error("selftest7: findFutureExprSpan still picked the primary (trailing-method) span instead of the abutting receiver-expression span — the .into_iter().await.await stacking bug would reproduce");
+  }
+  if (chosenResult.span.byte_start !== 0 || chosenResult.span.byte_end !== receiverEnd) {
+    throw new Error(`selftest7: findFutureExprSpan picked an unexpected span [${chosenResult.span.byte_start},${chosenResult.span.byte_end}), expected [0,${receiverEnd})`);
+  }
+  if (!chosenResult.trusted) {
+    throw new Error("selftest7: findFutureExprSpan picked the abutting sibling span but did not mark it trusted");
+  }
+  // And the stacking backstop itself: given a position that already has `.await` immediately
+  // before it, wouldStackAwait must refuse regardless of how the position was computed.
+  const stackedSrc = "foo().await";
+  const stackedClean = cleanRustSource(stackedSrc);
+  if (!wouldStackAwait(stackedClean, stackedSrc.length)) {
+    throw new Error("selftest7: wouldStackAwait did not catch an insertion point immediately after an existing .await");
+  }
+  if (wouldStackAwait(cleanRustSource("foo()"), "foo()".length)) {
+    throw new Error("selftest7: wouldStackAwait false-positived on a position with no existing .await nearby");
+  }
+  console.log("selftest7: findFutureExprSpan prefers the byte-adjacent receiver span over the primary trailing-method span, and wouldStackAwait refuses to stack — OK");
+
+  // R14 selftest8: happy-path def-use resolution. `fut` is a bare, let-bound local used later
+  // (`use_it(fut)`) rather than a fresh call — the dominant residue shape. Must resolve to the
+  // BINDING's RHS call (`helper_fn()`), not the use site, and the resolved callee must be
+  // independently confirmed non-suspending via the same resolveCallee() pipeline R13 already
+  // uses for def-remove-async — proving the full decision rule connects end to end.
+  const d8dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest8-"));
+  const f8 = join(d8dir, "fixture8.rs");
+  const src8 = "pub async fn helper_fn() -> i32 { 1 }\n\npub fn caller() -> i32 {\n    let fut = helper_fn();\n    use_it(fut)\n}\n";
+  writeFileSync(f8, src8);
+  const useOffset8 = src8.indexOf("use_it(fut)") + "use_it(".length;
+  const res8 = resolveDefUse(f8, useOffset8, "fut");
+  if (!res8.ok) throw new Error(`selftest8: expected def-use resolution to succeed, got refusal: ${res8.reason}`);
+  if (res8.calleeName !== "helper_fn") throw new Error(`selftest8: expected calleeName "helper_fn", got "${res8.calleeName}"`);
+  const expectedCallEnd8 = src8.indexOf("helper_fn();") + "helper_fn()".length;
+  if (res8.callEnd !== expectedCallEnd8) throw new Error(`selftest8: expected callEnd ${expectedCallEnd8}, got ${res8.callEnd}`);
+  const calleeInfo8 = resolveCallee(f8, "helper_fn");
+  if (!calleeInfo8 || calleeInfo8.suspends !== false) throw new Error("selftest8: expected helper_fn to be classified non-suspending (no own .await) via the shared resolveCallee pipeline");
+  invalidateFile(f8);
+  rmSync(d8dir, { recursive: true, force: true });
+  console.log("selftest8: def-use resolves a bare let-bound variable to its binding-site RHS call, decision rule confirmed non-suspending — OK");
+
+  // R14 selftest9: shadowing. Two `let x = ..;` bindings of the same name in the same function
+  // must refuse — it is ambiguous which one governs the use without proper lexical scoping,
+  // which this tool deliberately does not implement (refusal, not a guess).
+  const d9dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest9-"));
+  const f9 = join(d9dir, "fixture9.rs");
+  const src9 = "pub fn caller() -> i32 {\n    let x = helper_a();\n    let x = helper_b();\n    use_it(x)\n}\n";
+  writeFileSync(f9, src9);
+  const useOffset9 = src9.indexOf("use_it(x)") + "use_it(".length;
+  const res9 = resolveDefUse(f9, useOffset9, "x");
+  if (res9.ok) throw new Error("selftest9: expected shadowing refusal, got a resolution");
+  if (!/shadow|bound 2 times/i.test(res9.reason ?? "")) throw new Error(`selftest9: refusal reason does not mention shadowing: ${res9.reason}`);
+  invalidateFile(f9);
+  rmSync(d9dir, { recursive: true, force: true });
+  console.log("selftest9: shadowed same-name binding refused — OK");
+
+  // R14 selftest10: reassignment between binding and use. `x` is reassigned after its `let mut`
+  // binding, so the value at the use site may not be the one the diagnostic's Future-type
+  // judgement was even made against — must refuse.
+  const d10dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest10-"));
+  const f10 = join(d10dir, "fixture10.rs");
+  const src10 = "pub fn caller() -> i32 {\n    let mut x = helper_a();\n    x = helper_b();\n    use_it(x)\n}\n";
+  writeFileSync(f10, src10);
+  const useOffset10 = src10.indexOf("use_it(x)") + "use_it(".length;
+  const res10 = resolveDefUse(f10, useOffset10, "x");
+  if (res10.ok) throw new Error("selftest10: expected reassignment refusal, got a resolution");
+  if (!/reassign/i.test(res10.reason ?? "")) throw new Error(`selftest10: refusal reason does not mention reassignment: ${res10.reason}`);
+  invalidateFile(f10);
+  rmSync(d10dir, { recursive: true, force: true });
+  console.log("selftest10: reassignment between binding and use refused — OK");
+
+  // R14 selftest11: function parameter. `x` is a parameter of `caller`, not a local let-binding
+  // — must refuse before even attempting a let-binding scan.
+  const d11dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest11-"));
+  const f11 = join(d11dir, "fixture11.rs");
+  const src11 = "pub fn caller(x: SomeFuture) -> i32 {\n    use_it(x)\n}\n";
+  writeFileSync(f11, src11);
+  const useOffset11 = src11.indexOf("use_it(x)") + "use_it(".length;
+  const res11 = resolveDefUse(f11, useOffset11, "x");
+  if (res11.ok) throw new Error("selftest11: expected function-parameter refusal, got a resolution");
+  if (!/function parameter/i.test(res11.reason ?? "")) throw new Error(`selftest11: refusal reason does not mention function parameter: ${res11.reason}`);
+  invalidateFile(f11);
+  rmSync(d11dir, { recursive: true, force: true });
+  console.log("selftest11: function-parameter binding refused — OK");
+
+  // R14 selftest12: closure boundary. `x` is bound OUTSIDE a `move || { .. }` closure but used
+  // INSIDE it — must refuse rather than assume the captured value at the use site matches
+  // straightforward same-scope reasoning (closures can outlive/re-invoke, captured-by-value vs
+  // by-ref changes semantics, and this tool deliberately does not model capture semantics).
+  const d12dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest12-"));
+  const f12 = join(d12dir, "fixture12.rs");
+  const src12 = "pub fn caller() -> i32 {\n    let x = helper_a();\n    let f = move || {\n        use_it(x)\n    };\n    f()\n}\n";
+  writeFileSync(f12, src12);
+  const useOffset12 = src12.indexOf("use_it(x)", src12.indexOf("move ||")) + "use_it(".length;
+  const res12 = resolveDefUse(f12, useOffset12, "x");
+  if (res12.ok) throw new Error("selftest12: expected closure-boundary refusal, got a resolution");
+  if (!/closure/i.test(res12.reason ?? "")) throw new Error(`selftest12: refusal reason does not mention closure: ${res12.reason}`);
+  invalidateFile(f12);
+  rmSync(d12dir, { recursive: true, force: true });
+  console.log("selftest12: closure-boundary crossing (use inside a move closure, binding outside) refused — OK");
+
+  // R14 selftest13: RHS shapes that are not a bare resolvable call — macro invocation, method
+  // chain, and block/conditional expression — must each refuse with a specific reason, never
+  // guess at a callee.
+  const d13dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest13-"));
+  const f13macro = join(d13dir, "fixture13macro.rs");
+  writeFileSync(f13macro, "pub fn caller() -> i32 {\n    let x = some_macro!(1, 2);\n    use_it(x)\n}\n");
+  const resMacro = resolveDefUse(f13macro, readFileSync(f13macro, "utf8").indexOf("use_it(x)") + "use_it(".length, "x");
+  if (resMacro.ok || !/macro/i.test(resMacro.reason ?? "")) throw new Error(`selftest13: macro RHS not refused correctly: ${JSON.stringify(resMacro)}`);
+
+  const f13chain = join(d13dir, "fixture13chain.rs");
+  writeFileSync(f13chain, "pub fn caller() -> i32 {\n    let x = receiver.method_call();\n    use_it(x)\n}\n");
+  const resChain = resolveDefUse(f13chain, readFileSync(f13chain, "utf8").indexOf("use_it(x)") + "use_it(".length, "x");
+  if (resChain.ok || !/method chain/i.test(resChain.reason ?? "")) throw new Error(`selftest13: method-chain RHS not refused correctly: ${JSON.stringify(resChain)}`);
+
+  const f13block = join(d13dir, "fixture13block.rs");
+  writeFileSync(f13block, "pub fn caller() -> i32 {\n    let x = if cond { helper_a() } else { helper_b() };\n    use_it(x)\n}\n");
+  const resBlock = resolveDefUse(f13block, readFileSync(f13block, "utf8").indexOf("use_it(x)") + "use_it(".length, "x");
+  if (resBlock.ok || !/block\/conditional/i.test(resBlock.reason ?? "")) throw new Error(`selftest13: block/conditional RHS not refused correctly: ${JSON.stringify(resBlock)}`);
+
+  invalidateFile(f13macro);
+  invalidateFile(f13chain);
+  invalidateFile(f13block);
+  rmSync(d13dir, { recursive: true, force: true });
+  console.log("selftest13: non-resolvable RHS shapes (macro, method chain, block/conditional) each refused with a specific reason — OK");
+
+  // R14 selftest14: async-context guard. A real bug this packet's own dry-run caught — a
+  // Future-typed local (`plane_normal = Vec3::new(..)`, misattributed by an overly-broad
+  // diagnostic pattern) can sit inside an ORDINARY SYNC function, where `.await` is simply
+  // illegal Rust regardless of how correctly the callee/position were extracted. Both a plain
+  // sync fn and an `async {}`-block-nested position must be told apart correctly.
+  const d14dir = mkdtempSync(join(tmpdir(), "r14-defuse-selftest14-"));
+  const f14 = join(d14dir, "fixture14.rs");
+  const src14 =
+    "pub fn sync_caller() -> i32 {\n    let x = helper_a();\n    use_it(x)\n}\n\npub fn sync_with_async_block() -> i32 {\n    let y = async {\n        let z = helper_a();\n        use_it(z)\n    };\n    0\n}\n\npub async fn real_async_caller() -> i32 {\n    let w = helper_a();\n    use_it(w)\n}\n";
+  writeFileSync(f14, src14);
+  const { clean: clean14 } = loadFile(f14);
+
+  const useOffsetSync = src14.indexOf("use_it(x)") + "use_it(".length;
+  if (isInsideAsyncContext(f14, clean14, useOffsetSync)) throw new Error("selftest14: expected an ordinary sync fn to be refused (not inside async context)");
+
+  const useOffsetAsyncBlock = src14.indexOf("use_it(z)") + "use_it(".length;
+  if (!isInsideAsyncContext(f14, clean14, useOffsetAsyncBlock)) throw new Error("selftest14: expected a position inside a nested `async {}` block (within a sync fn) to be accepted");
+
+  const useOffsetAsyncFn = src14.indexOf("use_it(w)") + "use_it(".length;
+  if (!isInsideAsyncContext(f14, clean14, useOffsetAsyncFn)) throw new Error("selftest14: expected a position inside a genuinely `async fn` to be accepted");
+
+  invalidateFile(f14);
+  rmSync(d14dir, { recursive: true, force: true });
+  console.log("selftest14: async-context guard distinguishes sync fn (refused) from async fn / nested async{} block (accepted) — OK");
+
+  // R15 selftest15: FIFTH real bug (see the guard's comment at its call site in
+  // planEditsForDiagnostic). Reproduces the exact real-world `semio-s-plugin-stdio` shape: an
+  // "is not an iterator" diagnostic with rustc emitting ONLY the primary span over the trailing
+  // dot-method name (`into_iter`, 9 bytes), no sibling span at all — the untrusted-fallback case
+  // findFutureExprSpan() now flags via `trusted: false`. Before this packet's fix,
+  // extractCallForward() successfully (but wrongly) parsed `into_iter()` itself as "the call" and
+  // this would have queued a `call-add-await` edit placing `.await` after `.into_iter()`'s own
+  // closing paren — syntactically clean, so no parse-error sweep would have caught it, and it does
+  // not fix the underlying error. Run through the FULL `planEditsForDiagnostic` (not just
+  // `findFutureExprSpan` in isolation, unlike selftest7) to prove the guard actually blocks the
+  // edit end to end, the same standard R14's own selftest8 set for its happy path.
+  const d15dir = mkdtempSync(join(ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP", "r15-selftest15-"));
+  const f15 = join(d15dir, "fixture15.rs");
+  const src15 = "pub fn convert(m: i32, b: i32) -> Vec<i32> {\n    inverse(m, b).into_iter().map(wrap).collect()\n}\n";
+  writeFileSync(f15, src15);
+  const intoIterStart15 = src15.indexOf(".into_iter") + 1; // span starts AFTER the dot, per the real diagnostic shape
+  const intoIterEnd15 = intoIterStart15 + "into_iter".length;
+  const fakeDiag15: RustcDiagnostic = {
+    message: "`impl Future<Output = Vec<i32>>` is not an iterator",
+    code: { code: "E0599" },
+    level: "error",
+    rendered: null,
+    children: [],
+    spans: [
+      { file_name: f15, byte_start: intoIterStart15, byte_end: intoIterEnd15, is_primary: true, label: "`impl Future<Output = Vec<i32>>` is not an iterator", suggested_replacement: null, suggestion_applicability: null, text: [] },
+    ],
+  };
+  const plan15: PlanResult = { edits: [], residue: [] };
+  planEditsForDiagnostic(fakeDiag15, plan15);
+  if (plan15.edits.length !== 0) {
+    throw new Error(`selftest15: expected zero edits (untrusted dot-preceded fallback must be refused), got ${JSON.stringify(plan15.edits)}`);
+  }
+  if (plan15.residue.length !== 1 || !/untrusted primary-fallback/i.test(plan15.residue[0]!.reason)) {
+    throw new Error(`selftest15: expected exactly one residue entry citing the untrusted-primary-fallback guard, got ${JSON.stringify(plan15.residue)}`);
+  }
+  invalidateFile(f15);
+  rmSync(d15dir, { recursive: true, force: true });
+  console.log("selftest15: untrusted-primary-fallback dot-method guard refuses the real `.into_iter()`-as-callee misattribution end to end — OK");
+
+  // R15 selftest16: SIXTH real bug — a second manifestation of the FIFTH failure mode
+  // (misattribution to a fully synchronous expression) that isInsideAsyncContext does NOT catch,
+  // because the enclosing fn genuinely IS async this time. Reproduces the exact real-world
+  // `semio-s-plugin-stdio` shape: an array literal `[async_call_a(), plain_local, async_call_b()]`
+  // where rustc's element-type unification blames the innocent, ordinary `plain_local` with the
+  // self-describing label "expected future, found `Vec<u8>`" — the span is the CONCRETE side, not
+  // the Future-producing expression. Before this packet's fix, def-use would have resolved
+  // `plain_local`'s own (entirely synchronous) binding and — since its callee doesn't resolve as
+  // async — inserted `.await` after it, producing invalid code that awaits a non-Future value.
+  const d16dir = mkdtempSync(join(ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP", "r15-selftest16-"));
+  const f16 = join(d16dir, "fixture16.rs");
+  const src16 = "pub async fn build_moov() -> Vec<u8> {\n    let mut plain_local = Vec::new();\n    plain_local.extend(vec![1u8]);\n    write_box(async_call_a(), plain_local, async_call_b())\n}\n";
+  writeFileSync(f16, src16);
+  const plainLocalUseStart16 = src16.indexOf("write_box(") + "write_box(async_call_a(), ".length;
+  const plainLocalUseEnd16 = plainLocalUseStart16 + "plain_local".length;
+  const fakeDiag16: RustcDiagnostic = {
+    message: "mismatched types",
+    code: { code: "E0308" },
+    level: "error",
+    rendered: null,
+    children: [
+      { children: [], code: null, level: "note", message: "expected opaque type `impl Future<Output = Vec<u8>>`\n                found struct `Vec<u8>`", rendered: null, spans: [] },
+    ],
+    spans: [
+      {
+        file_name: f16,
+        byte_start: plainLocalUseStart16,
+        byte_end: plainLocalUseEnd16,
+        is_primary: true,
+        label: "expected future, found `Vec<u8>`",
+        suggested_replacement: null,
+        suggestion_applicability: null,
+        text: [],
+      },
+    ],
+  };
+  const plan16: PlanResult = { edits: [], residue: [] };
+  planEditsForDiagnostic(fakeDiag16, plan16);
+  if (plan16.edits.length !== 0) {
+    throw new Error(`selftest16: expected zero edits (the concrete side of an element-type-unification mismatch must be refused, not awaited), got ${JSON.stringify(plan16.edits)}`);
+  }
+  if (plan16.residue.length !== 1 || !/CONCRETE \("found"\) side/.test(plan16.residue[0]!.reason)) {
+    throw new Error(`selftest16: expected exactly one residue entry citing the concrete-side guard, got ${JSON.stringify(plan16.residue)}`);
+  }
+  invalidateFile(f16);
+  rmSync(d16dir, { recursive: true, force: true });
+  console.log('selftest16: "expected future, found <concrete type>" guard refuses the real array-literal-unification misattribution (traks/build_moov shape) end to end — OK');
+
+  // R15 selftest17: EIGHTH real bug — the mirror image of the sixth, and the one that actually
+  // tripped the monotonic guard on real `semio-s-plugin-stdio` (`graph::operators-internals`,
+  // run `r13-o9bdzimk`, iteration 3: "13091 >= previous 13091"). Reproduces the exact shape:
+  // `let myc = mycielskian(&g);` (`mycielskian` a PLAIN, never-async fn — confirmed by grep
+  // against the real source) followed later by `for n in myc.nodes() { .. }` where `.nodes()`
+  // (not `myc` itself) is the genuinely async, un-awaited call. Before this packet's fix, the
+  // def-use fallback matched only the leading identifier "myc" of the `myc.nodes()` Future-expr
+  // span, traced it to its own (already-correct, non-async) binding, and inserted `.await`
+  // there — `mycielskian(&g).await` — which does not fix the error and, worse, awaits a value
+  // that plainly is not a Future at all (confirmed only by a LATER compiler run once the bad
+  // edit was on disk, exactly why this needed a proper guard rather than a plausible-looking
+  // heuristic).
+  const d17dir = mkdtempSync(join(ROOT, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP", "r15-selftest17-"));
+  const f17 = join(d17dir, "fixture17.rs");
+  const src17 = "pub fn mycielskian(g: &Storage) -> Storage {\n    g.clone()\n}\n\npub fn use_it() {\n    let myc = mycielskian(&some_graph());\n    for n in myc.nodes() {\n        touch(n);\n    }\n}\n";
+  writeFileSync(f17, src17);
+  const mycNodesStart17 = src17.indexOf("myc.nodes()");
+  const mycNodesEnd17 = mycNodesStart17 + "myc.nodes()".length;
+  const fakeDiag17: RustcDiagnostic = {
+    message: "`impl Future<Output = impl Iterator<Item = u64>>` is not an iterator",
+    code: { code: "E0277" },
+    level: "error",
+    rendered: null,
+    children: [],
+    spans: [
+      {
+        file_name: f17,
+        byte_start: mycNodesStart17,
+        byte_end: mycNodesEnd17,
+        is_primary: true,
+        label: "`impl Future<Output = impl Iterator<Item = u64>>` is not an iterator",
+        suggested_replacement: null,
+        suggestion_applicability: null,
+        text: [],
+      },
+    ],
+  };
+  const plan17: PlanResult = { edits: [], residue: [] };
+  planEditsForDiagnostic(fakeDiag17, plan17);
+  if (plan17.edits.length !== 0) {
+    throw new Error(`selftest17: expected zero edits (the method-chain-receiver identifier must be refused, never traced to its own binding), got ${JSON.stringify(plan17.edits)}`);
+  }
+  if (plan17.residue.length !== 1 || !/RECEIVER\.method\(\.\.\) chain/.test(plan17.residue[0]!.reason)) {
+    throw new Error(`selftest17: expected exactly one residue entry citing the method-chain-receiver guard, got ${JSON.stringify(plan17.residue)}`);
+  }
+  invalidateFile(f17);
+  rmSync(d17dir, { recursive: true, force: true });
+  console.log("selftest17: method-chain-receiver guard refuses the real mycielskian/myc.nodes() misattribution (the one that tripped the monotonic guard) end to end — OK");
+
   rmSync(dir, { recursive: true, force: true });
   console.log("ALL SELFTESTS PASSED");
+}
+
+//#endregion
+
+//#region Repair: strip accumulated stacked-.await corruption (see findFutureExprSpan fix)
+
+// ONE-TIME repair for damage accumulated BEFORE the findFutureExprSpan abutting-span fix and
+// the wouldStackAwait backstop existed: repeated runs, each re-diagnosing the SAME never-
+// actually-fixed error, piled up to 6 `.await`s at a single wrong position. Since the correct
+// insertion point can be arbitrarily far back through a method chain (not reliably "one call
+// back" — confirmed by `actual.iter().zip(expected)` where the real receiver is `actual`, two
+// calls back), this does NOT try to guess the right position. It strips the stack back to the
+// original (still-broken, but never mis-edited) source, so a fresh `run` with the FIXED span
+// selection can re-diagnose and repair each one correctly and safely, exactly like any other
+// crate this tool has processed. Journalled (kind "strip-stacked-await") and revertible like
+// every other edit in this file — `revert --run=<id>` undoes it the same way.
+function stripStackedAwaits(dryRun: boolean): void {
+  const runId = randomRunId();
+  console.log(`[strip ${runId}] scanning repo for stacked .await corruption (dryRun=${dryRun})`);
+  const found: string[] = [];
+  function walk(dir: string): void {
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (GLOBAL_INDEX_MANDATORY_EXCLUDE.has(entry) || GLOBAL_INDEX_EXTRA_EXCLUDE.has(entry)) continue;
+      const full = join(dir, entry);
+      let st;
+      try {
+        st = statSync(full);
+      } catch {
+        continue;
+      }
+      if (st.isDirectory()) walk(full);
+      else if (st.isFile() && entry.endsWith(".rs")) found.push(full);
+    }
+  }
+  walk(ROOT);
+
+  let totalStripped = 0;
+  for (const absPath of found) {
+    if (!isEditableFile(absPath)) continue;
+    const src = readFileSync(absPath, "utf8");
+    const clean = cleanRustSource(src);
+    const re = /(\.await){2,}/g;
+    const edits: PlannedEdit[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(clean))) {
+      edits.push({ file: absPath, start: m.index, end: m.index + m[0].length, before: src.slice(m.index, m.index + m[0].length), after: "", kind: "call-remove-await", diagnosticCode: null, diagnosticMessage: "strip-stacked-await repair: remove ALL N>=2 stacked .await (even one remaining is at the wrong position), to be re-diagnosed and correctly re-fixed fresh" });
+    }
+    if (edits.length === 0) continue;
+    console.log(`[strip ${runId}] ${absPath}: ${edits.length} stacked-await site(s)`);
+    totalStripped += edits.length;
+    if (dryRun) continue;
+    edits.sort((a, b) => b.start - a.start);
+    let cur = src;
+    for (const e of edits) {
+      const actual = cur.slice(e.start, e.end);
+      if (actual !== e.before) throw new Error(`strip: span mismatch in ${absPath} — file changed underneath us`);
+      cur = cur.slice(0, e.start) + e.after + cur.slice(e.end);
+    }
+    writeFileSync(absPath, cur);
+    invalidateFile(absPath);
+    for (const e of edits) {
+      appendJournal({ ts: nowIso(), runId, iteration: 1, crate: "<repo-wide-repair>", file: e.file, start: e.start, end: e.end, before: e.before, after: e.after, kind: e.kind, diagnosticCode: e.diagnosticCode, diagnosticMessage: e.diagnosticMessage });
+    }
+  }
+  console.log(`[strip ${runId}] ${totalStripped} stacked-await site(s) ${dryRun ? "found (dry-run, none written)" : "fully stripped back to zero .await, ready for fresh re-diagnosis"}`);
 }
 
 //#endregion
@@ -1438,7 +2670,12 @@ async function main(): Promise<void> {
       dryRun: !!opts["dry-run"],
       maxIterations: opts["max-iterations"] ? Number(opts["max-iterations"]) : 20,
       target: opts.target ? String(opts.target) : undefined,
+      verbose: !!opts.verbose,
     });
+    return;
+  }
+  if (cmd === "strip-stacked-awaits") {
+    stripStackedAwaits(!!opts["dry-run"]);
     return;
   }
   if (cmd === "revert") {

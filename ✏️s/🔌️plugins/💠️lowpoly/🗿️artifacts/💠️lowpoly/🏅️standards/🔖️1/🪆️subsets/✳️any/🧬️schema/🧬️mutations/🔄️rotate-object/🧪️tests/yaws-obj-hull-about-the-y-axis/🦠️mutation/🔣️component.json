@@ -1,0 +1,10 @@
+{
+  "RotateObject": {
+    "id": "obj-hull",
+    "newRotation": [
+      0.0,
+      1.5,
+      0.0
+    ]
+  }
+}

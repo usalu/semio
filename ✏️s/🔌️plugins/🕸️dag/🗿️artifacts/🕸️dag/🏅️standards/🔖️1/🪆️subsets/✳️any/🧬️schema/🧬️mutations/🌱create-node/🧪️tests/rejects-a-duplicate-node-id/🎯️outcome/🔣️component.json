@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "path": [
+    "node-a"
+  ]
+}

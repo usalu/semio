@@ -1,0 +1,64 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.semio.video",
+    "streams": [
+      {
+        "kind": "video",
+        "codec": "h264",
+        "width": 16,
+        "height": 16,
+        "rate": {
+          "num": 25,
+          "den": 1
+        },
+        "samples": [
+          {
+            "pts": 0,
+            "key": true,
+            "data": [
+              0,
+              0,
+              1,
+              103
+            ]
+          },
+          {
+            "pts": 1,
+            "key": true,
+            "data": [
+              0,
+              0,
+              1,
+              103
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "subtitle",
+        "codec": "webvtt",
+        "width": 0,
+        "height": 0,
+        "rate": {
+          "num": 1,
+          "den": 1
+        },
+        "samples": [
+          {
+            "pts": 0,
+            "key": true,
+            "data": [
+              87,
+              69,
+              66,
+              86,
+              84,
+              84
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

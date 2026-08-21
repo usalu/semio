@@ -1,0 +1,6046 @@
+{
+ "✂️🧲disconnect-adjacency": {
+  "struct": "DisconnectAdjacency",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "disconnect",
+   "adjacency",
+   "disconnect-adjacency",
+   "DisconnectedAdjacency"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "✂️🧵disconnect-trace": {
+  "struct": "DisconnectTrace",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "disconnect",
+   "trace",
+   "disconnect-trace",
+   "DisconnectedTrace"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "✏️ℹ️rename-information-requirement": {
+  "struct": "RenameInformationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "information-requirement",
+   "rename-information-requirement",
+   "RenamedInformationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️♻️rename-sustainability-requirement": {
+  "struct": "RenameSustainabilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "sustainability-requirement",
+   "rename-sustainability-requirement",
+   "RenamedSustainabilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️♿rename-accessibility-requirement": {
+  "struct": "RenameAccessibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "accessibility-requirement",
+   "rename-accessibility-requirement",
+   "RenamedAccessibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️⚔️rename-conflict": {
+  "struct": "RenameConflict",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "conflict",
+   "rename-conflict",
+   "RenamedConflict"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️⚖️rename-option-evaluation": {
+  "struct": "RenameOptionEvaluation",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "option-evaluation",
+   "rename-option-evaluation",
+   "RenamedOptionEvaluation"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️⚙️rename-function": {
+  "struct": "RenameFunction",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "function",
+   "rename-function",
+   "RenamedFunction"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️⚠️rename-risk": {
+  "struct": "RenameRisk",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "risk",
+   "rename-risk",
+   "RenamedRisk"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️✅rename-decision": {
+  "struct": "RenameDecision",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "decision",
+   "rename-decision",
+   "RenamedDecision"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️✔️rename-validation-record": {
+  "struct": "RenameValidationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "validation-record",
+   "rename-validation-record",
+   "RenamedValidationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️⭐rename-priority-record": {
+  "struct": "RenamePriorityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "priority-record",
+   "rename-priority-record",
+   "RenamedPriorityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🌊rename-flow-requirement": {
+  "struct": "RenameFlowRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "flow-requirement",
+   "rename-flow-requirement",
+   "RenamedFlowRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🌿rename-environmental-requirement": {
+  "struct": "RenameEnvironmentalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "environmental-requirement",
+   "rename-environmental-requirement",
+   "RenamedEnvironmentalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🎓rename-workshop": {
+  "struct": "RenameWorkshop",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "workshop",
+   "rename-workshop",
+   "RenamedWorkshop"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🎬rename-scenario": {
+  "struct": "RenameScenario",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "scenario",
+   "rename-scenario",
+   "RenamedScenario"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🏁rename-benchmark-record": {
+  "struct": "RenameBenchmarkRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "benchmark-record",
+   "rename-benchmark-record",
+   "RenamedBenchmarkRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "program_benchmarks",
+   "benchmarks_child_from_records",
+   "mutation.target-missing",
+   "mutation.no-op",
+   "iter_mut"
+  ]
+ },
+ "✏️🏃rename-activity": {
+  "struct": "RenameActivity",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "activity",
+   "rename-activity",
+   "RenamedActivity"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🏗️rename-infrastructure-requirement": {
+  "struct": "RenameInfrastructureRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "infrastructure-requirement",
+   "rename-infrastructure-requirement",
+   "RenamedInfrastructureRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🏛️rename-governance": {
+  "struct": "RenameGovernance",
+  "fields": [
+   [
+    "new_framework",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "governance",
+   "rename-governance",
+   "RenamedGovernance"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🏢rename-organizational-requirement": {
+  "struct": "RenameOrganizationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "organizational-requirement",
+   "rename-organizational-requirement",
+   "RenamedOrganizationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🏷️rename-meta": {
+  "struct": "RenameMeta",
+  "fields": [
+   [
+    "new_title",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "meta",
+   "rename-meta",
+   "RenamedMeta"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🐛rename-issue": {
+  "struct": "RenameIssue",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "issue",
+   "rename-issue",
+   "RenamedIssue"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️👍rename-approval-record": {
+  "struct": "RenameApprovalRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "approval-record",
+   "rename-approval-record",
+   "RenamedApprovalRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️👥rename-stakeholder": {
+  "struct": "RenameStakeholder",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "stakeholder",
+   "rename-stakeholder",
+   "RenamedStakeholder"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️💎rename-quality-record": {
+  "struct": "RenameQualityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "quality-record",
+   "rename-quality-record",
+   "RenamedQualityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️💪rename-resilience-requirement": {
+  "struct": "RenameResilienceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "resilience-requirement",
+   "rename-resilience-requirement",
+   "RenamedResilienceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️💭rename-assumption": {
+  "struct": "RenameAssumption",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "assumption",
+   "rename-assumption",
+   "RenamedAssumption"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️💰rename-cost-requirement": {
+  "struct": "RenameCostRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "cost-requirement",
+   "rename-cost-requirement",
+   "RenamedCostRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📁rename-project": {
+  "struct": "RenameProject",
+  "fields": [
+   [
+    "new_code",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "project",
+   "rename-project",
+   "RenamedProject"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📄rename-document": {
+  "struct": "RenameDocument",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "document",
+   "rename-document",
+   "RenamedDocument"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📅rename-schedule-requirement": {
+  "struct": "RenameScheduleRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "schedule-requirement",
+   "rename-schedule-requirement",
+   "RenamedScheduleRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📈rename-growth-plan": {
+  "struct": "RenameGrowthPlan",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "growth-plan",
+   "rename-growth-plan",
+   "RenamedGrowthPlan"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📊rename-performance-criterion": {
+  "struct": "RenamePerformanceCriterion",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "performance-criterion",
+   "rename-performance-criterion",
+   "RenamedPerformanceCriterion"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📋rename-operational-requirement": {
+  "struct": "RenameOperationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "operational-requirement",
+   "rename-operational-requirement",
+   "RenamedOperationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📌rename-requirement": {
+  "struct": "RenameRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "requirement",
+   "rename-requirement",
+   "RenamedRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📍rename-site-context": {
+  "struct": "RenameSiteContext",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "site-context",
+   "rename-site-context",
+   "RenamedSiteContext"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📐rename-template-record": {
+  "struct": "RenameTemplateRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "template-record",
+   "rename-template-record",
+   "RenamedTemplateRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📑rename-report-record": {
+  "struct": "RenameReportRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "report-record",
+   "rename-report-record",
+   "RenamedReportRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📒rename-audit-event": {
+  "struct": "RenameAuditEvent",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "audit-event",
+   "rename-audit-event",
+   "RenamedAuditEvent"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📚rename-knowledge-record": {
+  "struct": "RenameKnowledgeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "knowledge-record",
+   "rename-knowledge-record",
+   "RenamedKnowledgeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "program_knowledge",
+   "knowledge_child_from_records",
+   "mutation.target-missing",
+   "mutation.no-op",
+   "iter_mut"
+  ]
+ },
+ "✏️📜rename-regulatory-requirement": {
+  "struct": "RenameRegulatoryRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "regulatory-requirement",
+   "rename-regulatory-requirement",
+   "RenamedRegulatoryRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📝rename-change-record": {
+  "struct": "RenameChangeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "change-record",
+   "rename-change-record",
+   "RenamedChangeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📡rename-communication-requirement": {
+  "struct": "RenameCommunicationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "communication-requirement",
+   "rename-communication-requirement",
+   "RenamedCommunicationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📦rename-resource": {
+  "struct": "RenameResource",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "resource",
+   "rename-resource",
+   "RenamedResource"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️📶rename-status-record": {
+  "struct": "RenameStatusRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "status-record",
+   "rename-status-record",
+   "RenamedStatusRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔄rename-process": {
+  "struct": "RenameProcess",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "process",
+   "rename-process",
+   "RenamedProcess"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔍rename-search-filter": {
+  "struct": "RenameSearchFilter",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "search-filter",
+   "rename-search-filter",
+   "RenamedSearchFilter"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔑rename-access-rule": {
+  "struct": "RenameAccessRule",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "access-rule",
+   "rename-access-rule",
+   "RenamedAccessRule"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔒rename-privacy-requirement": {
+  "struct": "RenamePrivacyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "privacy-requirement",
+   "rename-privacy-requirement",
+   "RenamedPrivacyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔗rename-relationship": {
+  "struct": "RenameRelationship",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "relationship",
+   "rename-relationship",
+   "RenamedRelationship"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔢rename-quantity-requirement": {
+  "struct": "RenameQuantityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "quantity-requirement",
+   "rename-quantity-requirement",
+   "RenamedQuantityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🔬rename-analysis-record": {
+  "struct": "RenameAnalysisRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "analysis-record",
+   "rename-analysis-record",
+   "RenamedAnalysisRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🗄️rename-storage-requirement": {
+  "struct": "RenameStorageRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "storage-requirement",
+   "rename-storage-requirement",
+   "RenamedStorageRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🗓️rename-meeting-record": {
+  "struct": "RenameMeetingRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "meeting-record",
+   "rename-meeting-record",
+   "RenamedMeetingRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🗳️rename-survey": {
+  "struct": "RenameSurvey",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "survey",
+   "rename-survey",
+   "RenamedSurvey"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🚚rename-delivery-constraint": {
+  "struct": "RenameDeliveryConstraint",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "delivery-constraint",
+   "rename-delivery-constraint",
+   "RenamedDeliveryConstraint"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🚧rename-constraint-record": {
+  "struct": "RenameConstraintRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "constraint-record",
+   "rename-constraint-record",
+   "RenamedConstraintRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🛂rename-compliance-record": {
+  "struct": "RenameComplianceRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "compliance-record",
+   "rename-compliance-record",
+   "RenamedComplianceRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🛎️rename-service-requirement": {
+  "struct": "RenameServiceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "service-requirement",
+   "rename-service-requirement",
+   "RenamedServiceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🛠️rename-equipment": {
+  "struct": "RenameEquipment",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "equipment",
+   "rename-equipment",
+   "RenamedEquipment"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🛡️rename-security-requirement": {
+  "struct": "RenameSecurityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "security-requirement",
+   "rename-security-requirement",
+   "RenamedSecurityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🤝rename-collaboration-record": {
+  "struct": "RenameCollaborationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "collaboration-record",
+   "rename-collaboration-record",
+   "RenamedCollaborationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🦺rename-safety-requirement": {
+  "struct": "RenameSafetyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "safety-requirement",
+   "rename-safety-requirement",
+   "RenamedSafetyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🧑rename-user-profile": {
+  "struct": "RenameUserProfile",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "user-profile",
+   "rename-user-profile",
+   "RenamedUserProfile"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🧠rename-human-factor-requirement": {
+  "struct": "RenameHumanFactorRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "human-factor-requirement",
+   "rename-human-factor-requirement",
+   "RenamedHumanFactorRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🧩rename-flexibility-requirement": {
+  "struct": "RenameFlexibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "flexibility-requirement",
+   "rename-flexibility-requirement",
+   "RenamedFlexibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🧭rename-wayfinding-requirement": {
+  "struct": "RenameWayfindingRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "wayfinding-requirement",
+   "rename-wayfinding-requirement",
+   "RenamedWayfindingRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "✏️🧱rename-program-element": {
+  "struct": "RenameProgramElement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ],
+   [
+    "new_name",
+    "String"
+   ]
+  ],
+  "sem": [
+   "rename",
+   "program-element",
+   "rename-program-element",
+   "RenamedProgramElement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🌱ℹ️create-information-requirement": {
+  "struct": "CreateInformationRequirement",
+  "fields": [
+   [
+    "information_requirement",
+    "InformationRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "information-requirement",
+   "create-information-requirement",
+   "CreatedInformationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱♻️create-sustainability-requirement": {
+  "struct": "CreateSustainabilityRequirement",
+  "fields": [
+   [
+    "sustainability_requirement",
+    "SustainabilityRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "sustainability-requirement",
+   "create-sustainability-requirement",
+   "CreatedSustainabilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱♿create-accessibility-requirement": {
+  "struct": "CreateAccessibilityRequirement",
+  "fields": [
+   [
+    "accessibility_requirement",
+    "AccessibilityRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "accessibility-requirement",
+   "create-accessibility-requirement",
+   "CreatedAccessibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱⚔️create-conflict": {
+  "struct": "CreateConflict",
+  "fields": [
+   [
+    "conflict",
+    "Conflict"
+   ]
+  ],
+  "sem": [
+   "create",
+   "conflict",
+   "create-conflict",
+   "CreatedConflict"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱⚖️create-option-evaluation": {
+  "struct": "CreateOptionEvaluation",
+  "fields": [
+   [
+    "option_evaluation",
+    "OptionEvaluation"
+   ]
+  ],
+  "sem": [
+   "create",
+   "option-evaluation",
+   "create-option-evaluation",
+   "CreatedOptionEvaluation"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱⚙️create-function": {
+  "struct": "CreateFunction",
+  "fields": [
+   [
+    "function",
+    "Function"
+   ]
+  ],
+  "sem": [
+   "create",
+   "function",
+   "create-function",
+   "CreatedFunction"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱⚠️create-risk": {
+  "struct": "CreateRisk",
+  "fields": [
+   [
+    "risk",
+    "Risk"
+   ]
+  ],
+  "sem": [
+   "create",
+   "risk",
+   "create-risk",
+   "CreatedRisk"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱✅create-decision": {
+  "struct": "CreateDecision",
+  "fields": [
+   [
+    "decision",
+    "Decision"
+   ]
+  ],
+  "sem": [
+   "create",
+   "decision",
+   "create-decision",
+   "CreatedDecision"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱✔️create-validation-record": {
+  "struct": "CreateValidationRecord",
+  "fields": [
+   [
+    "validation_record",
+    "ValidationRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "validation-record",
+   "create-validation-record",
+   "CreatedValidationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱⭐create-priority-record": {
+  "struct": "CreatePriorityRecord",
+  "fields": [
+   [
+    "priority_record",
+    "PriorityRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "priority-record",
+   "create-priority-record",
+   "CreatedPriorityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🌊create-flow-requirement": {
+  "struct": "CreateFlowRequirement",
+  "fields": [
+   [
+    "flow_requirement",
+    "FlowRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "flow-requirement",
+   "create-flow-requirement",
+   "CreatedFlowRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🌿create-environmental-requirement": {
+  "struct": "CreateEnvironmentalRequirement",
+  "fields": [
+   [
+    "environmental_requirement",
+    "EnvironmentalRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "environmental-requirement",
+   "create-environmental-requirement",
+   "CreatedEnvironmentalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🎓create-workshop": {
+  "struct": "CreateWorkshop",
+  "fields": [
+   [
+    "workshop",
+    "Workshop"
+   ]
+  ],
+  "sem": [
+   "create",
+   "workshop",
+   "create-workshop",
+   "CreatedWorkshop"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🎬create-scenario": {
+  "struct": "CreateScenario",
+  "fields": [
+   [
+    "scenario",
+    "Scenario"
+   ]
+  ],
+  "sem": [
+   "create",
+   "scenario",
+   "create-scenario",
+   "CreatedScenario"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🏁create-benchmark-record": {
+  "struct": "CreateBenchmarkRecord",
+  "fields": [
+   [
+    "benchmark_record",
+    "BenchmarkRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "benchmark-record",
+   "create-benchmark-record",
+   "CreatedBenchmarkRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "program_benchmarks",
+   "benchmarks_child_from_records",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🏃create-activity": {
+  "struct": "CreateActivity",
+  "fields": [
+   [
+    "activity",
+    "Activity"
+   ]
+  ],
+  "sem": [
+   "create",
+   "activity",
+   "create-activity",
+   "CreatedActivity"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🏗️create-infrastructure-requirement": {
+  "struct": "CreateInfrastructureRequirement",
+  "fields": [
+   [
+    "infrastructure_requirement",
+    "InfrastructureRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "infrastructure-requirement",
+   "create-infrastructure-requirement",
+   "CreatedInfrastructureRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🏢create-organizational-requirement": {
+  "struct": "CreateOrganizationalRequirement",
+  "fields": [
+   [
+    "organizational_requirement",
+    "OrganizationalRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "organizational-requirement",
+   "create-organizational-requirement",
+   "CreatedOrganizationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🐛create-issue": {
+  "struct": "CreateIssue",
+  "fields": [
+   [
+    "issue",
+    "Issue"
+   ]
+  ],
+  "sem": [
+   "create",
+   "issue",
+   "create-issue",
+   "CreatedIssue"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱👍create-approval-record": {
+  "struct": "CreateApprovalRecord",
+  "fields": [
+   [
+    "approval_record",
+    "ApprovalRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "approval-record",
+   "create-approval-record",
+   "CreatedApprovalRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱👥create-stakeholder": {
+  "struct": "CreateStakeholder",
+  "fields": [
+   [
+    "stakeholder",
+    "Stakeholder"
+   ]
+  ],
+  "sem": [
+   "create",
+   "stakeholder",
+   "create-stakeholder",
+   "CreatedStakeholder"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱💎create-quality-record": {
+  "struct": "CreateQualityRecord",
+  "fields": [
+   [
+    "quality_record",
+    "QualityRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "quality-record",
+   "create-quality-record",
+   "CreatedQualityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱💪create-resilience-requirement": {
+  "struct": "CreateResilienceRequirement",
+  "fields": [
+   [
+    "resilience_requirement",
+    "ResilienceRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "resilience-requirement",
+   "create-resilience-requirement",
+   "CreatedResilienceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱💭create-assumption": {
+  "struct": "CreateAssumption",
+  "fields": [
+   [
+    "assumption",
+    "Assumption"
+   ]
+  ],
+  "sem": [
+   "create",
+   "assumption",
+   "create-assumption",
+   "CreatedAssumption"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱💰create-cost-requirement": {
+  "struct": "CreateCostRequirement",
+  "fields": [
+   [
+    "cost_requirement",
+    "CostRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "cost-requirement",
+   "create-cost-requirement",
+   "CreatedCostRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📄create-document": {
+  "struct": "CreateDocument",
+  "fields": [
+   [
+    "document",
+    "ArtifactRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "document",
+   "create-document",
+   "CreatedDocument"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📅create-schedule-requirement": {
+  "struct": "CreateScheduleRequirement",
+  "fields": [
+   [
+    "schedule_requirement",
+    "ScheduleRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "schedule-requirement",
+   "create-schedule-requirement",
+   "CreatedScheduleRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📈create-growth-plan": {
+  "struct": "CreateGrowthPlan",
+  "fields": [
+   [
+    "growth_plan",
+    "GrowthPlan"
+   ]
+  ],
+  "sem": [
+   "create",
+   "growth-plan",
+   "create-growth-plan",
+   "CreatedGrowthPlan"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📊create-performance-criterion": {
+  "struct": "CreatePerformanceCriterion",
+  "fields": [
+   [
+    "performance_criterion",
+    "PerformanceCriterion"
+   ]
+  ],
+  "sem": [
+   "create",
+   "performance-criterion",
+   "create-performance-criterion",
+   "CreatedPerformanceCriterion"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📋create-operational-requirement": {
+  "struct": "CreateOperationalRequirement",
+  "fields": [
+   [
+    "operational_requirement",
+    "OperationalRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "operational-requirement",
+   "create-operational-requirement",
+   "CreatedOperationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📌create-requirement": {
+  "struct": "CreateRequirement",
+  "fields": [
+   [
+    "requirement",
+    "Requirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "requirement",
+   "create-requirement",
+   "CreatedRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📍create-site-context": {
+  "struct": "CreateSiteContext",
+  "fields": [
+   [
+    "site_context",
+    "SiteContext"
+   ]
+  ],
+  "sem": [
+   "create",
+   "site-context",
+   "create-site-context",
+   "CreatedSiteContext"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📐create-template-record": {
+  "struct": "CreateTemplateRecord",
+  "fields": [
+   [
+    "template_record",
+    "TemplateRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "template-record",
+   "create-template-record",
+   "CreatedTemplateRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📑create-report-record": {
+  "struct": "CreateReportRecord",
+  "fields": [
+   [
+    "report_record",
+    "ReportRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "report-record",
+   "create-report-record",
+   "CreatedReportRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📒create-audit-event": {
+  "struct": "CreateAuditEvent",
+  "fields": [
+   [
+    "audit_event",
+    "AuditEvent"
+   ]
+  ],
+  "sem": [
+   "create",
+   "audit-event",
+   "create-audit-event",
+   "CreatedAuditEvent"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📚create-knowledge-record": {
+  "struct": "CreateKnowledgeRecord",
+  "fields": [
+   [
+    "knowledge_record",
+    "KnowledgeRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "knowledge-record",
+   "create-knowledge-record",
+   "CreatedKnowledgeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "program_knowledge",
+   "knowledge_child_from_records",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📜create-regulatory-requirement": {
+  "struct": "CreateRegulatoryRequirement",
+  "fields": [
+   [
+    "regulatory_requirement",
+    "RegulatoryRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "regulatory-requirement",
+   "create-regulatory-requirement",
+   "CreatedRegulatoryRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📝create-change-record": {
+  "struct": "CreateChangeRecord",
+  "fields": [
+   [
+    "change_record",
+    "ChangeRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "change-record",
+   "create-change-record",
+   "CreatedChangeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📡create-communication-requirement": {
+  "struct": "CreateCommunicationRequirement",
+  "fields": [
+   [
+    "communication_requirement",
+    "CommunicationRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "communication-requirement",
+   "create-communication-requirement",
+   "CreatedCommunicationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📦create-resource": {
+  "struct": "CreateResource",
+  "fields": [
+   [
+    "resource",
+    "Resource"
+   ]
+  ],
+  "sem": [
+   "create",
+   "resource",
+   "create-resource",
+   "CreatedResource"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱📶create-status-record": {
+  "struct": "CreateStatusRecord",
+  "fields": [
+   [
+    "status_record",
+    "StatusRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "status-record",
+   "create-status-record",
+   "CreatedStatusRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔄create-process": {
+  "struct": "CreateProcess",
+  "fields": [
+   [
+    "process",
+    "Process"
+   ]
+  ],
+  "sem": [
+   "create",
+   "process",
+   "create-process",
+   "CreatedProcess"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔍create-search-filter": {
+  "struct": "CreateSearchFilter",
+  "fields": [
+   [
+    "search_filter",
+    "SearchFilter"
+   ]
+  ],
+  "sem": [
+   "create",
+   "search-filter",
+   "create-search-filter",
+   "CreatedSearchFilter"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔑create-access-rule": {
+  "struct": "CreateAccessRule",
+  "fields": [
+   [
+    "access_rule",
+    "AccessRule"
+   ]
+  ],
+  "sem": [
+   "create",
+   "access-rule",
+   "create-access-rule",
+   "CreatedAccessRule"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔒create-privacy-requirement": {
+  "struct": "CreatePrivacyRequirement",
+  "fields": [
+   [
+    "privacy_requirement",
+    "PrivacyRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "privacy-requirement",
+   "create-privacy-requirement",
+   "CreatedPrivacyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔗create-relationship": {
+  "struct": "CreateRelationship",
+  "fields": [
+   [
+    "relationship",
+    "Relationship"
+   ]
+  ],
+  "sem": [
+   "create",
+   "relationship",
+   "create-relationship",
+   "CreatedRelationship"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔢create-quantity-requirement": {
+  "struct": "CreateQuantityRequirement",
+  "fields": [
+   [
+    "quantity_requirement",
+    "QuantityRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "quantity-requirement",
+   "create-quantity-requirement",
+   "CreatedQuantityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🔬create-analysis-record": {
+  "struct": "CreateAnalysisRecord",
+  "fields": [
+   [
+    "analysis_record",
+    "AnalysisRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "analysis-record",
+   "create-analysis-record",
+   "CreatedAnalysisRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🗄️create-storage-requirement": {
+  "struct": "CreateStorageRequirement",
+  "fields": [
+   [
+    "storage_requirement",
+    "StorageRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "storage-requirement",
+   "create-storage-requirement",
+   "CreatedStorageRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🗓️create-meeting-record": {
+  "struct": "CreateMeetingRecord",
+  "fields": [
+   [
+    "meeting_record",
+    "MeetingRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "meeting-record",
+   "create-meeting-record",
+   "CreatedMeetingRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🗳️create-survey": {
+  "struct": "CreateSurvey",
+  "fields": [
+   [
+    "survey",
+    "Survey"
+   ]
+  ],
+  "sem": [
+   "create",
+   "survey",
+   "create-survey",
+   "CreatedSurvey"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🚚create-delivery-constraint": {
+  "struct": "CreateDeliveryConstraint",
+  "fields": [
+   [
+    "delivery_constraint",
+    "DeliveryConstraint"
+   ]
+  ],
+  "sem": [
+   "create",
+   "delivery-constraint",
+   "create-delivery-constraint",
+   "CreatedDeliveryConstraint"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🚧create-constraint-record": {
+  "struct": "CreateConstraintRecord",
+  "fields": [
+   [
+    "constraint_record",
+    "ConstraintRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "constraint-record",
+   "create-constraint-record",
+   "CreatedConstraintRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🛂create-compliance-record": {
+  "struct": "CreateComplianceRecord",
+  "fields": [
+   [
+    "compliance_record",
+    "ComplianceRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "compliance-record",
+   "create-compliance-record",
+   "CreatedComplianceRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🛎️create-service-requirement": {
+  "struct": "CreateServiceRequirement",
+  "fields": [
+   [
+    "service_requirement",
+    "ServiceRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "service-requirement",
+   "create-service-requirement",
+   "CreatedServiceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🛠️create-equipment": {
+  "struct": "CreateEquipment",
+  "fields": [
+   [
+    "equipment",
+    "Equipment"
+   ]
+  ],
+  "sem": [
+   "create",
+   "equipment",
+   "create-equipment",
+   "CreatedEquipment"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🛡️create-security-requirement": {
+  "struct": "CreateSecurityRequirement",
+  "fields": [
+   [
+    "security_requirement",
+    "SecurityRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "security-requirement",
+   "create-security-requirement",
+   "CreatedSecurityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🤝create-collaboration-record": {
+  "struct": "CreateCollaborationRecord",
+  "fields": [
+   [
+    "collaboration_record",
+    "CollaborationRecord"
+   ]
+  ],
+  "sem": [
+   "create",
+   "collaboration-record",
+   "create-collaboration-record",
+   "CreatedCollaborationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🦺create-safety-requirement": {
+  "struct": "CreateSafetyRequirement",
+  "fields": [
+   [
+    "safety_requirement",
+    "SafetyRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "safety-requirement",
+   "create-safety-requirement",
+   "CreatedSafetyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🧑create-user-profile": {
+  "struct": "CreateUserProfile",
+  "fields": [
+   [
+    "user_profile",
+    "UserProfile"
+   ]
+  ],
+  "sem": [
+   "create",
+   "user-profile",
+   "create-user-profile",
+   "CreatedUserProfile"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🧠create-human-factor-requirement": {
+  "struct": "CreateHumanFactorRequirement",
+  "fields": [
+   [
+    "human_factor_requirement",
+    "HumanFactorRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "human-factor-requirement",
+   "create-human-factor-requirement",
+   "CreatedHumanFactorRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🧩create-flexibility-requirement": {
+  "struct": "CreateFlexibilityRequirement",
+  "fields": [
+   [
+    "flexibility_requirement",
+    "FlexibilityRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "flexibility-requirement",
+   "create-flexibility-requirement",
+   "CreatedFlexibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🧭create-wayfinding-requirement": {
+  "struct": "CreateWayfindingRequirement",
+  "fields": [
+   [
+    "wayfinding_requirement",
+    "WayfindingRequirement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "wayfinding-requirement",
+   "create-wayfinding-requirement",
+   "CreatedWayfindingRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🌱🧱create-program-element": {
+  "struct": "CreateProgramElement",
+  "fields": [
+   [
+    "program_element",
+    "ProgramElement"
+   ]
+  ],
+  "sem": [
+   "create",
+   "program-element",
+   "create-program-element",
+   "CreatedProgramElement"
+  ],
+  "sig": [
+   "MutationOutcome::fatal",
+   "added:",
+   "mutation.duplicate-id"
+  ]
+ },
+ "🔁ℹ️replace-information-requirement": {
+  "struct": "ReplaceInformationRequirement",
+  "fields": [
+   [
+    "information_requirement",
+    "InformationRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "information-requirement",
+   "replace-information-requirement",
+   "ReplacedInformationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁♻️replace-sustainability-requirement": {
+  "struct": "ReplaceSustainabilityRequirement",
+  "fields": [
+   [
+    "sustainability_requirement",
+    "SustainabilityRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "sustainability-requirement",
+   "replace-sustainability-requirement",
+   "ReplacedSustainabilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁♿replace-accessibility-requirement": {
+  "struct": "ReplaceAccessibilityRequirement",
+  "fields": [
+   [
+    "accessibility_requirement",
+    "AccessibilityRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "accessibility-requirement",
+   "replace-accessibility-requirement",
+   "ReplacedAccessibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁⚔️replace-conflict": {
+  "struct": "ReplaceConflict",
+  "fields": [
+   [
+    "conflict",
+    "Conflict"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "conflict",
+   "replace-conflict",
+   "ReplacedConflict"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁⚖️replace-option-evaluation": {
+  "struct": "ReplaceOptionEvaluation",
+  "fields": [
+   [
+    "option_evaluation",
+    "OptionEvaluation"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "option-evaluation",
+   "replace-option-evaluation",
+   "ReplacedOptionEvaluation"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁⚙️replace-function": {
+  "struct": "ReplaceFunction",
+  "fields": [
+   [
+    "function",
+    "Function"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "function",
+   "replace-function",
+   "ReplacedFunction"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁⚠️replace-risk": {
+  "struct": "ReplaceRisk",
+  "fields": [
+   [
+    "risk",
+    "Risk"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "risk",
+   "replace-risk",
+   "ReplacedRisk"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁✅replace-decision": {
+  "struct": "ReplaceDecision",
+  "fields": [
+   [
+    "decision",
+    "Decision"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "decision",
+   "replace-decision",
+   "ReplacedDecision"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁✔️replace-validation-record": {
+  "struct": "ReplaceValidationRecord",
+  "fields": [
+   [
+    "validation_record",
+    "ValidationRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "validation-record",
+   "replace-validation-record",
+   "ReplacedValidationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁⭐replace-priority-record": {
+  "struct": "ReplacePriorityRecord",
+  "fields": [
+   [
+    "priority_record",
+    "PriorityRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "priority-record",
+   "replace-priority-record",
+   "ReplacedPriorityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🌊replace-flow-requirement": {
+  "struct": "ReplaceFlowRequirement",
+  "fields": [
+   [
+    "flow_requirement",
+    "FlowRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "flow-requirement",
+   "replace-flow-requirement",
+   "ReplacedFlowRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🌿replace-environmental-requirement": {
+  "struct": "ReplaceEnvironmentalRequirement",
+  "fields": [
+   [
+    "environmental_requirement",
+    "EnvironmentalRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "environmental-requirement",
+   "replace-environmental-requirement",
+   "ReplacedEnvironmentalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🎓replace-workshop": {
+  "struct": "ReplaceWorkshop",
+  "fields": [
+   [
+    "workshop",
+    "Workshop"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "workshop",
+   "replace-workshop",
+   "ReplacedWorkshop"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🎬replace-scenario": {
+  "struct": "ReplaceScenario",
+  "fields": [
+   [
+    "scenario",
+    "Scenario"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "scenario",
+   "replace-scenario",
+   "ReplacedScenario"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🏁replace-benchmark-record": {
+  "struct": "ReplaceBenchmarkRecord",
+  "fields": [
+   [
+    "benchmark_record",
+    "BenchmarkRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "benchmark-record",
+   "replace-benchmark-record",
+   "ReplacedBenchmarkRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "program_benchmarks",
+   "benchmarks_child_from_records",
+   "mutation.target-missing",
+   "mutation.no-op",
+   "iter_mut"
+  ]
+ },
+ "🔁🏃replace-activity": {
+  "struct": "ReplaceActivity",
+  "fields": [
+   [
+    "activity",
+    "Activity"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "activity",
+   "replace-activity",
+   "ReplacedActivity"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🏗️replace-infrastructure-requirement": {
+  "struct": "ReplaceInfrastructureRequirement",
+  "fields": [
+   [
+    "infrastructure_requirement",
+    "InfrastructureRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "infrastructure-requirement",
+   "replace-infrastructure-requirement",
+   "ReplacedInfrastructureRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🏛️replace-governance": {
+  "struct": "ReplaceGovernance",
+  "fields": [
+   [
+    "new_governance",
+    "Governance"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "governance",
+   "replace-governance",
+   "ReplacedGovernance"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🏢replace-organizational-requirement": {
+  "struct": "ReplaceOrganizationalRequirement",
+  "fields": [
+   [
+    "organizational_requirement",
+    "OrganizationalRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "organizational-requirement",
+   "replace-organizational-requirement",
+   "ReplacedOrganizationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🏷️replace-meta": {
+  "struct": "ReplaceMeta",
+  "fields": [
+   [
+    "new_meta",
+    "ProgramMeta"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "meta",
+   "replace-meta",
+   "ReplacedMeta"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🐛replace-issue": {
+  "struct": "ReplaceIssue",
+  "fields": [
+   [
+    "issue",
+    "Issue"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "issue",
+   "replace-issue",
+   "ReplacedIssue"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁👍replace-approval-record": {
+  "struct": "ReplaceApprovalRecord",
+  "fields": [
+   [
+    "approval_record",
+    "ApprovalRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "approval-record",
+   "replace-approval-record",
+   "ReplacedApprovalRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁👥replace-stakeholder": {
+  "struct": "ReplaceStakeholder",
+  "fields": [
+   [
+    "stakeholder",
+    "Stakeholder"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "stakeholder",
+   "replace-stakeholder",
+   "ReplacedStakeholder"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁💎replace-quality-record": {
+  "struct": "ReplaceQualityRecord",
+  "fields": [
+   [
+    "quality_record",
+    "QualityRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "quality-record",
+   "replace-quality-record",
+   "ReplacedQualityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁💪replace-resilience-requirement": {
+  "struct": "ReplaceResilienceRequirement",
+  "fields": [
+   [
+    "resilience_requirement",
+    "ResilienceRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "resilience-requirement",
+   "replace-resilience-requirement",
+   "ReplacedResilienceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁💭replace-assumption": {
+  "struct": "ReplaceAssumption",
+  "fields": [
+   [
+    "assumption",
+    "Assumption"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "assumption",
+   "replace-assumption",
+   "ReplacedAssumption"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁💰replace-cost-requirement": {
+  "struct": "ReplaceCostRequirement",
+  "fields": [
+   [
+    "cost_requirement",
+    "CostRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "cost-requirement",
+   "replace-cost-requirement",
+   "ReplacedCostRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📁replace-project": {
+  "struct": "ReplaceProject",
+  "fields": [
+   [
+    "new_project",
+    "ProjectDefinition"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "project",
+   "replace-project",
+   "ReplacedProject"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📄replace-document": {
+  "struct": "ReplaceDocument",
+  "fields": [
+   [
+    "document",
+    "ArtifactRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "document",
+   "replace-document",
+   "ReplacedDocument"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📅replace-schedule-requirement": {
+  "struct": "ReplaceScheduleRequirement",
+  "fields": [
+   [
+    "schedule_requirement",
+    "ScheduleRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "schedule-requirement",
+   "replace-schedule-requirement",
+   "ReplacedScheduleRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📈replace-growth-plan": {
+  "struct": "ReplaceGrowthPlan",
+  "fields": [
+   [
+    "growth_plan",
+    "GrowthPlan"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "growth-plan",
+   "replace-growth-plan",
+   "ReplacedGrowthPlan"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📊replace-performance-criterion": {
+  "struct": "ReplacePerformanceCriterion",
+  "fields": [
+   [
+    "performance_criterion",
+    "PerformanceCriterion"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "performance-criterion",
+   "replace-performance-criterion",
+   "ReplacedPerformanceCriterion"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📋replace-operational-requirement": {
+  "struct": "ReplaceOperationalRequirement",
+  "fields": [
+   [
+    "operational_requirement",
+    "OperationalRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "operational-requirement",
+   "replace-operational-requirement",
+   "ReplacedOperationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📌replace-requirement": {
+  "struct": "ReplaceRequirement",
+  "fields": [
+   [
+    "requirement",
+    "Requirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "requirement",
+   "replace-requirement",
+   "ReplacedRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📍replace-site-context": {
+  "struct": "ReplaceSiteContext",
+  "fields": [
+   [
+    "site_context",
+    "SiteContext"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "site-context",
+   "replace-site-context",
+   "ReplacedSiteContext"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📐replace-template-record": {
+  "struct": "ReplaceTemplateRecord",
+  "fields": [
+   [
+    "template_record",
+    "TemplateRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "template-record",
+   "replace-template-record",
+   "ReplacedTemplateRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📑replace-report-record": {
+  "struct": "ReplaceReportRecord",
+  "fields": [
+   [
+    "report_record",
+    "ReportRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "report-record",
+   "replace-report-record",
+   "ReplacedReportRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📒replace-audit-event": {
+  "struct": "ReplaceAuditEvent",
+  "fields": [
+   [
+    "audit_event",
+    "AuditEvent"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "audit-event",
+   "replace-audit-event",
+   "ReplacedAuditEvent"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📚replace-knowledge-record": {
+  "struct": "ReplaceKnowledgeRecord",
+  "fields": [
+   [
+    "knowledge_record",
+    "KnowledgeRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "knowledge-record",
+   "replace-knowledge-record",
+   "ReplacedKnowledgeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "program_knowledge",
+   "knowledge_child_from_records",
+   "mutation.target-missing",
+   "mutation.no-op",
+   "iter_mut"
+  ]
+ },
+ "🔁📜replace-regulatory-requirement": {
+  "struct": "ReplaceRegulatoryRequirement",
+  "fields": [
+   [
+    "regulatory_requirement",
+    "RegulatoryRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "regulatory-requirement",
+   "replace-regulatory-requirement",
+   "ReplacedRegulatoryRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📝replace-change-record": {
+  "struct": "ReplaceChangeRecord",
+  "fields": [
+   [
+    "change_record",
+    "ChangeRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "change-record",
+   "replace-change-record",
+   "ReplacedChangeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📡replace-communication-requirement": {
+  "struct": "ReplaceCommunicationRequirement",
+  "fields": [
+   [
+    "communication_requirement",
+    "CommunicationRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "communication-requirement",
+   "replace-communication-requirement",
+   "ReplacedCommunicationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📦replace-resource": {
+  "struct": "ReplaceResource",
+  "fields": [
+   [
+    "resource",
+    "Resource"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "resource",
+   "replace-resource",
+   "ReplacedResource"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁📶replace-status-record": {
+  "struct": "ReplaceStatusRecord",
+  "fields": [
+   [
+    "status_record",
+    "StatusRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "status-record",
+   "replace-status-record",
+   "ReplacedStatusRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔄replace-process": {
+  "struct": "ReplaceProcess",
+  "fields": [
+   [
+    "process",
+    "Process"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "process",
+   "replace-process",
+   "ReplacedProcess"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔍replace-search-filter": {
+  "struct": "ReplaceSearchFilter",
+  "fields": [
+   [
+    "search_filter",
+    "SearchFilter"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "search-filter",
+   "replace-search-filter",
+   "ReplacedSearchFilter"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔑replace-access-rule": {
+  "struct": "ReplaceAccessRule",
+  "fields": [
+   [
+    "access_rule",
+    "AccessRule"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "access-rule",
+   "replace-access-rule",
+   "ReplacedAccessRule"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔒replace-privacy-requirement": {
+  "struct": "ReplacePrivacyRequirement",
+  "fields": [
+   [
+    "privacy_requirement",
+    "PrivacyRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "privacy-requirement",
+   "replace-privacy-requirement",
+   "ReplacedPrivacyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔗replace-relationship": {
+  "struct": "ReplaceRelationship",
+  "fields": [
+   [
+    "relationship",
+    "Relationship"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "relationship",
+   "replace-relationship",
+   "ReplacedRelationship"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔢replace-quantity-requirement": {
+  "struct": "ReplaceQuantityRequirement",
+  "fields": [
+   [
+    "quantity_requirement",
+    "QuantityRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "quantity-requirement",
+   "replace-quantity-requirement",
+   "ReplacedQuantityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🔬replace-analysis-record": {
+  "struct": "ReplaceAnalysisRecord",
+  "fields": [
+   [
+    "analysis_record",
+    "AnalysisRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "analysis-record",
+   "replace-analysis-record",
+   "ReplacedAnalysisRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🗄️replace-storage-requirement": {
+  "struct": "ReplaceStorageRequirement",
+  "fields": [
+   [
+    "storage_requirement",
+    "StorageRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "storage-requirement",
+   "replace-storage-requirement",
+   "ReplacedStorageRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🗓️replace-meeting-record": {
+  "struct": "ReplaceMeetingRecord",
+  "fields": [
+   [
+    "meeting_record",
+    "MeetingRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "meeting-record",
+   "replace-meeting-record",
+   "ReplacedMeetingRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🗳️replace-survey": {
+  "struct": "ReplaceSurvey",
+  "fields": [
+   [
+    "survey",
+    "Survey"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "survey",
+   "replace-survey",
+   "ReplacedSurvey"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🚚replace-delivery-constraint": {
+  "struct": "ReplaceDeliveryConstraint",
+  "fields": [
+   [
+    "delivery_constraint",
+    "DeliveryConstraint"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "delivery-constraint",
+   "replace-delivery-constraint",
+   "ReplacedDeliveryConstraint"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🚧replace-constraint-record": {
+  "struct": "ReplaceConstraintRecord",
+  "fields": [
+   [
+    "constraint_record",
+    "ConstraintRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "constraint-record",
+   "replace-constraint-record",
+   "ReplacedConstraintRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🛂replace-compliance-record": {
+  "struct": "ReplaceComplianceRecord",
+  "fields": [
+   [
+    "compliance_record",
+    "ComplianceRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "compliance-record",
+   "replace-compliance-record",
+   "ReplacedComplianceRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🛎️replace-service-requirement": {
+  "struct": "ReplaceServiceRequirement",
+  "fields": [
+   [
+    "service_requirement",
+    "ServiceRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "service-requirement",
+   "replace-service-requirement",
+   "ReplacedServiceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🛠️replace-equipment": {
+  "struct": "ReplaceEquipment",
+  "fields": [
+   [
+    "equipment",
+    "Equipment"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "equipment",
+   "replace-equipment",
+   "ReplacedEquipment"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🛡️replace-security-requirement": {
+  "struct": "ReplaceSecurityRequirement",
+  "fields": [
+   [
+    "security_requirement",
+    "SecurityRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "security-requirement",
+   "replace-security-requirement",
+   "ReplacedSecurityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🤝replace-collaboration-record": {
+  "struct": "ReplaceCollaborationRecord",
+  "fields": [
+   [
+    "collaboration_record",
+    "CollaborationRecord"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "collaboration-record",
+   "replace-collaboration-record",
+   "ReplacedCollaborationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🦺replace-safety-requirement": {
+  "struct": "ReplaceSafetyRequirement",
+  "fields": [
+   [
+    "safety_requirement",
+    "SafetyRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "safety-requirement",
+   "replace-safety-requirement",
+   "ReplacedSafetyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🧑replace-user-profile": {
+  "struct": "ReplaceUserProfile",
+  "fields": [
+   [
+    "user_profile",
+    "UserProfile"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "user-profile",
+   "replace-user-profile",
+   "ReplacedUserProfile"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🧠replace-human-factor-requirement": {
+  "struct": "ReplaceHumanFactorRequirement",
+  "fields": [
+   [
+    "human_factor_requirement",
+    "HumanFactorRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "human-factor-requirement",
+   "replace-human-factor-requirement",
+   "ReplacedHumanFactorRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🧩replace-flexibility-requirement": {
+  "struct": "ReplaceFlexibilityRequirement",
+  "fields": [
+   [
+    "flexibility_requirement",
+    "FlexibilityRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "flexibility-requirement",
+   "replace-flexibility-requirement",
+   "ReplacedFlexibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🧭replace-wayfinding-requirement": {
+  "struct": "ReplaceWayfindingRequirement",
+  "fields": [
+   [
+    "wayfinding_requirement",
+    "WayfindingRequirement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "wayfinding-requirement",
+   "replace-wayfinding-requirement",
+   "ReplacedWayfindingRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔁🧱replace-program-element": {
+  "struct": "ReplaceProgramElement",
+  "fields": [
+   [
+    "program_element",
+    "ProgramElement"
+   ]
+  ],
+  "sem": [
+   "replace",
+   "program-element",
+   "replace-program-element",
+   "ReplacedProgramElement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔗🧲connect-adjacency": {
+  "struct": "ConnectAdjacency",
+  "fields": [
+   [
+    "adjacency",
+    "Adjacency"
+   ]
+  ],
+  "sem": [
+   "connect",
+   "adjacency",
+   "connect-adjacency",
+   "ConnectedAdjacency"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "added:",
+   "patched:",
+   "mutation.target-missing",
+   "mutation.no-op"
+  ]
+ },
+ "🔗🧵connect-trace": {
+  "struct": "ConnectTrace",
+  "fields": [
+   [
+    "trace",
+    "TraceLink"
+   ]
+  ],
+  "sem": [
+   "connect",
+   "trace",
+   "connect-trace",
+   "ConnectedTrace"
+  ],
+  "sig": [
+   "MutationOutcome::empty",
+   "absorb_messages",
+   "diff_patch",
+   "added:",
+   "patched:",
+   "mutation.no-op"
+  ]
+ },
+ "🗑️ℹ️delete-information-requirement": {
+  "struct": "DeleteInformationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "information-requirement",
+   "delete-information-requirement",
+   "DeletedInformationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️♻️delete-sustainability-requirement": {
+  "struct": "DeleteSustainabilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "sustainability-requirement",
+   "delete-sustainability-requirement",
+   "DeletedSustainabilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️♿delete-accessibility-requirement": {
+  "struct": "DeleteAccessibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "accessibility-requirement",
+   "delete-accessibility-requirement",
+   "DeletedAccessibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️⚔️delete-conflict": {
+  "struct": "DeleteConflict",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "conflict",
+   "delete-conflict",
+   "DeletedConflict"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️⚖️delete-option-evaluation": {
+  "struct": "DeleteOptionEvaluation",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "option-evaluation",
+   "delete-option-evaluation",
+   "DeletedOptionEvaluation"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️⚙️delete-function": {
+  "struct": "DeleteFunction",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "function",
+   "delete-function",
+   "DeletedFunction"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️⚠️delete-risk": {
+  "struct": "DeleteRisk",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "risk",
+   "delete-risk",
+   "DeletedRisk"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️✅delete-decision": {
+  "struct": "DeleteDecision",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "decision",
+   "delete-decision",
+   "DeletedDecision"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️✔️delete-validation-record": {
+  "struct": "DeleteValidationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "validation-record",
+   "delete-validation-record",
+   "DeletedValidationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️⭐delete-priority-record": {
+  "struct": "DeletePriorityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "priority-record",
+   "delete-priority-record",
+   "DeletedPriorityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🌊delete-flow-requirement": {
+  "struct": "DeleteFlowRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "flow-requirement",
+   "delete-flow-requirement",
+   "DeletedFlowRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🌿delete-environmental-requirement": {
+  "struct": "DeleteEnvironmentalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "environmental-requirement",
+   "delete-environmental-requirement",
+   "DeletedEnvironmentalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🎓delete-workshop": {
+  "struct": "DeleteWorkshop",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "workshop",
+   "delete-workshop",
+   "DeletedWorkshop"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🎬delete-scenario": {
+  "struct": "DeleteScenario",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "scenario",
+   "delete-scenario",
+   "DeletedScenario"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🏁delete-benchmark-record": {
+  "struct": "DeleteBenchmarkRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "benchmark-record",
+   "delete-benchmark-record",
+   "DeletedBenchmarkRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "program_benchmarks",
+   "benchmarks_child_from_records",
+   "mutation.target-missing",
+   "retain"
+  ]
+ },
+ "🗑️🏃delete-activity": {
+  "struct": "DeleteActivity",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "activity",
+   "delete-activity",
+   "DeletedActivity"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🏗️delete-infrastructure-requirement": {
+  "struct": "DeleteInfrastructureRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "infrastructure-requirement",
+   "delete-infrastructure-requirement",
+   "DeletedInfrastructureRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🏢delete-organizational-requirement": {
+  "struct": "DeleteOrganizationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "organizational-requirement",
+   "delete-organizational-requirement",
+   "DeletedOrganizationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🐛delete-issue": {
+  "struct": "DeleteIssue",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "issue",
+   "delete-issue",
+   "DeletedIssue"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️👍delete-approval-record": {
+  "struct": "DeleteApprovalRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "approval-record",
+   "delete-approval-record",
+   "DeletedApprovalRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️👥delete-stakeholder": {
+  "struct": "DeleteStakeholder",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "stakeholder",
+   "delete-stakeholder",
+   "DeletedStakeholder"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️💎delete-quality-record": {
+  "struct": "DeleteQualityRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "quality-record",
+   "delete-quality-record",
+   "DeletedQualityRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️💪delete-resilience-requirement": {
+  "struct": "DeleteResilienceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "resilience-requirement",
+   "delete-resilience-requirement",
+   "DeletedResilienceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️💭delete-assumption": {
+  "struct": "DeleteAssumption",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "assumption",
+   "delete-assumption",
+   "DeletedAssumption"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️💰delete-cost-requirement": {
+  "struct": "DeleteCostRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "cost-requirement",
+   "delete-cost-requirement",
+   "DeletedCostRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📄delete-document": {
+  "struct": "DeleteDocument",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "document",
+   "delete-document",
+   "DeletedDocument"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📅delete-schedule-requirement": {
+  "struct": "DeleteScheduleRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "schedule-requirement",
+   "delete-schedule-requirement",
+   "DeletedScheduleRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📈delete-growth-plan": {
+  "struct": "DeleteGrowthPlan",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "growth-plan",
+   "delete-growth-plan",
+   "DeletedGrowthPlan"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📊delete-performance-criterion": {
+  "struct": "DeletePerformanceCriterion",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "performance-criterion",
+   "delete-performance-criterion",
+   "DeletedPerformanceCriterion"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📋delete-operational-requirement": {
+  "struct": "DeleteOperationalRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "operational-requirement",
+   "delete-operational-requirement",
+   "DeletedOperationalRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📌delete-requirement": {
+  "struct": "DeleteRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "requirement",
+   "delete-requirement",
+   "DeletedRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📍delete-site-context": {
+  "struct": "DeleteSiteContext",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "site-context",
+   "delete-site-context",
+   "DeletedSiteContext"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📐delete-template-record": {
+  "struct": "DeleteTemplateRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "template-record",
+   "delete-template-record",
+   "DeletedTemplateRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📑delete-report-record": {
+  "struct": "DeleteReportRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "report-record",
+   "delete-report-record",
+   "DeletedReportRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📒delete-audit-event": {
+  "struct": "DeleteAuditEvent",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "audit-event",
+   "delete-audit-event",
+   "DeletedAuditEvent"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📚delete-knowledge-record": {
+  "struct": "DeleteKnowledgeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "knowledge-record",
+   "delete-knowledge-record",
+   "DeletedKnowledgeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "program_knowledge",
+   "knowledge_child_from_records",
+   "mutation.target-missing",
+   "retain"
+  ]
+ },
+ "🗑️📜delete-regulatory-requirement": {
+  "struct": "DeleteRegulatoryRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "regulatory-requirement",
+   "delete-regulatory-requirement",
+   "DeletedRegulatoryRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📝delete-change-record": {
+  "struct": "DeleteChangeRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "change-record",
+   "delete-change-record",
+   "DeletedChangeRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📡delete-communication-requirement": {
+  "struct": "DeleteCommunicationRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "communication-requirement",
+   "delete-communication-requirement",
+   "DeletedCommunicationRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📦delete-resource": {
+  "struct": "DeleteResource",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "resource",
+   "delete-resource",
+   "DeletedResource"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️📶delete-status-record": {
+  "struct": "DeleteStatusRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "status-record",
+   "delete-status-record",
+   "DeletedStatusRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔄delete-process": {
+  "struct": "DeleteProcess",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "process",
+   "delete-process",
+   "DeletedProcess"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔍delete-search-filter": {
+  "struct": "DeleteSearchFilter",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "search-filter",
+   "delete-search-filter",
+   "DeletedSearchFilter"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔑delete-access-rule": {
+  "struct": "DeleteAccessRule",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "access-rule",
+   "delete-access-rule",
+   "DeletedAccessRule"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔒delete-privacy-requirement": {
+  "struct": "DeletePrivacyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "privacy-requirement",
+   "delete-privacy-requirement",
+   "DeletedPrivacyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔗delete-relationship": {
+  "struct": "DeleteRelationship",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "relationship",
+   "delete-relationship",
+   "DeletedRelationship"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔢delete-quantity-requirement": {
+  "struct": "DeleteQuantityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "quantity-requirement",
+   "delete-quantity-requirement",
+   "DeletedQuantityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🔬delete-analysis-record": {
+  "struct": "DeleteAnalysisRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "analysis-record",
+   "delete-analysis-record",
+   "DeletedAnalysisRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🗄️delete-storage-requirement": {
+  "struct": "DeleteStorageRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "storage-requirement",
+   "delete-storage-requirement",
+   "DeletedStorageRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🗓️delete-meeting-record": {
+  "struct": "DeleteMeetingRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "meeting-record",
+   "delete-meeting-record",
+   "DeletedMeetingRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🗳️delete-survey": {
+  "struct": "DeleteSurvey",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "survey",
+   "delete-survey",
+   "DeletedSurvey"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🚚delete-delivery-constraint": {
+  "struct": "DeleteDeliveryConstraint",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "delivery-constraint",
+   "delete-delivery-constraint",
+   "DeletedDeliveryConstraint"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🚧delete-constraint-record": {
+  "struct": "DeleteConstraintRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "constraint-record",
+   "delete-constraint-record",
+   "DeletedConstraintRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🛂delete-compliance-record": {
+  "struct": "DeleteComplianceRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "compliance-record",
+   "delete-compliance-record",
+   "DeletedComplianceRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🛎️delete-service-requirement": {
+  "struct": "DeleteServiceRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "service-requirement",
+   "delete-service-requirement",
+   "DeletedServiceRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🛠️delete-equipment": {
+  "struct": "DeleteEquipment",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "equipment",
+   "delete-equipment",
+   "DeletedEquipment"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🛡️delete-security-requirement": {
+  "struct": "DeleteSecurityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "security-requirement",
+   "delete-security-requirement",
+   "DeletedSecurityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🤝delete-collaboration-record": {
+  "struct": "DeleteCollaborationRecord",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "collaboration-record",
+   "delete-collaboration-record",
+   "DeletedCollaborationRecord"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🦺delete-safety-requirement": {
+  "struct": "DeleteSafetyRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "safety-requirement",
+   "delete-safety-requirement",
+   "DeletedSafetyRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🧑delete-user-profile": {
+  "struct": "DeleteUserProfile",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "user-profile",
+   "delete-user-profile",
+   "DeletedUserProfile"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🧠delete-human-factor-requirement": {
+  "struct": "DeleteHumanFactorRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "human-factor-requirement",
+   "delete-human-factor-requirement",
+   "DeletedHumanFactorRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🧩delete-flexibility-requirement": {
+  "struct": "DeleteFlexibilityRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "flexibility-requirement",
+   "delete-flexibility-requirement",
+   "DeletedFlexibilityRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🧭delete-wayfinding-requirement": {
+  "struct": "DeleteWayfindingRequirement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "wayfinding-requirement",
+   "delete-wayfinding-requirement",
+   "DeletedWayfindingRequirement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ },
+ "🗑️🧱delete-program-element": {
+  "struct": "DeleteProgramElement",
+  "fields": [
+   [
+    "id",
+    "EntityId"
+   ]
+  ],
+  "sem": [
+   "delete",
+   "program-element",
+   "delete-program-element",
+   "DeletedProgramElement"
+  ],
+  "sig": [
+   "MutationOutcome::error",
+   "removed:",
+   "mutation.target-missing"
+  ]
+ }
+}

@@ -1,0 +1,8 @@
+{
+  "mutation": "removeDataProperty",
+  "entity": {
+    "entity": "edge",
+    "id": "shaft-to-capsule-a"
+  },
+  "key": "gap"
+}

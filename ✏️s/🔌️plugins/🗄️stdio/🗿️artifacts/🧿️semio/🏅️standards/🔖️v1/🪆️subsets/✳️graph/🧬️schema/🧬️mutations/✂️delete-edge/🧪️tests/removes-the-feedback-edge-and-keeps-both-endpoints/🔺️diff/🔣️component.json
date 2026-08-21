@@ -1,0 +1,19 @@
+{
+  "edges": {
+    "values": [
+      {
+        "id": {
+          "value": "e1"
+        },
+        "source": {
+          "value": "a"
+        },
+        "target": {
+          "value": "b"
+        },
+        "kind": "data",
+        "label": "A to B"
+      }
+    ]
+  }
+}

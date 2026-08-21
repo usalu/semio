@@ -741,8 +741,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -840,14 +840,14 @@ pub(crate) fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValue, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(JsonValue::Null),
-        1 => Ok(JsonValue::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        1 => Ok(JsonValue::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
         2 => Ok(JsonValue::Number { lexeme: read_str_lp(reader)? }),
         3 => Ok(JsonValue::String { value: read_str_lp(reader)? }),
         4 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 items.push(Box::pin(dec_json_value_bin(reader))?);
@@ -855,7 +855,7 @@ pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<J
             Ok(JsonValue::Array { items })
         }
         5 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut members = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 let key = read_str_lp(reader)?;
@@ -1000,10 +1000,10 @@ pub(crate) fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValueDiff, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         6 => Ok(JsonValueDiff::Replace { value: dec_json_value_bin(reader)? }),
-        1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
         2 => Ok(JsonValueDiff::Number { lexeme: read_str_lp(reader)? }),
         3 => Ok(JsonValueDiff::String { value: read_str_lp(reader)? }),
         4 => Ok(JsonValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader))? }),
@@ -1031,22 +1031,22 @@ fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(JsonArrayModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_json_value_bin(reader)?;
         added.push(JsonArrayAdded { index, item });
     }
@@ -1073,22 +1073,22 @@ fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(read_str_lp(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = read_str_lp(reader)?;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(JsonObjectModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let key = read_str_lp(reader)?;
         let item = dec_json_value_bin(reader)?;
         added.push(JsonObjectAdded { index, key, item });
@@ -1295,10 +1295,10 @@ mod tests {
         let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![str_("b"), str_("f"), str_("c")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1315,10 +1315,10 @@ mod tests {
         let base = snap(arr(vec![str_("a"), str_("b")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("g") }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![str_("a"), str_("b"), str_("g"), str_("f")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
@@ -1332,10 +1332,10 @@ mod tests {
         let base = snap(arr(vec![str_("a")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential, base);
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
@@ -1349,10 +1349,10 @@ mod tests {
             modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } } }],
             ..Default::default()
         });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![objv(vec![("x", num("1")), ("y", num("2"))])]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1370,10 +1370,10 @@ mod tests {
         let base = snap(arr(vec![num("1"), num("2")]));
         let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![num("2")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1550,7 +1550,7 @@ mod tests {
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = JsonDiff::between(&a, &b);
-        let object_diff = match diff.await.value {
+        let object_diff = match diff.value {
             Some(JsonValueDiff::Object { diff }) => diff,
             other => panic!("expected a top-level object diff, got {other:?}"),
         };
@@ -1595,12 +1595,12 @@ mod tests {
 
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = JsonDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = JsonDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = JsonDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = JsonDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

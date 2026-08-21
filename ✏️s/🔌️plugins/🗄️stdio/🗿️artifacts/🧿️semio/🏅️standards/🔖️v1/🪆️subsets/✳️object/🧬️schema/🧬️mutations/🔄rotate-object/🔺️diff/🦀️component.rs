@@ -15,7 +15,7 @@ pub fn diff(payload: &RotateObject, base: &SemioObjectSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object rotation has a non-finite component.".to_string(), ["transform".to_string()]);
     }
     if base.transform.rotation == r {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", "Object is already at this rotation.".to_string());
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this rotation.".to_string());
     }
     let mut transform = base.transform.clone();
     transform.rotation = r;

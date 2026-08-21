@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceMaterial",
+  "id": "steel",
+  "newMaterial": {
+    "id": "steel",
+    "name": "Steel S235",
+    "e": 210000000000.0,
+    "g": 78000000000.0,
+    "nu": 0.25,
+    "rho": 8000.0
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "dead",
+        "item": {
+          "id": "dead",
+          "name": "Dead",
+          "loads": [
+            {
+              "kind": "nodal",
+              "id": "l1",
+              "nodeId": "n2",
+              "dof": "Ty",
+              "value": -12.5
+            }
+          ],
+          "selfWeight": true
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

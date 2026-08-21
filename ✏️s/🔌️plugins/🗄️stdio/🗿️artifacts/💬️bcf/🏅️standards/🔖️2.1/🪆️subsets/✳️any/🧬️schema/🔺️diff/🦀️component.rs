@@ -107,28 +107,28 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at(["removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
         }
         if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at(["removed"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at(["modified"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
         }
     }
     let mut added_keys = Vec::new();
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || added_keys.contains(&key) || diff.removed.contains(&key) || diff.modified.iter().any(|modified| modified.key == key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").await.at(["added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").at(["added"]));
         }
         added_keys.push(key);
     }
@@ -1018,8 +1018,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1038,7 +1038,7 @@ fn write_opt_str(out: &mut Vec<u8>, opt: &Option<String>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    Ok(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
+    Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1054,9 +1054,9 @@ pub(crate) fn enc_point3_bin(p: &BcfPoint3, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPoint3, String> {
-    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
     Ok(BcfPoint3 { x, y, z })
 }
 
@@ -1082,9 +1082,9 @@ pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
-    match reader.read_u8().await.map_err(|e| e.to_string())? {
-        0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
-        1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())? }),
         other => Err(format!("camera binary: unknown tag {other}")),
     }
 }
@@ -1098,7 +1098,7 @@ fn enc_str_list_bin(items: &[String], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(read_str_lp(reader)?);
@@ -1113,7 +1113,7 @@ pub(crate) fn enc_visibility_bin(v: &BcfVisibility, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_visibility_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfVisibility, String> {
-    let default_visibility = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+    let default_visibility = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let exceptions = dec_str_list_bin(reader)?;
     Ok(BcfVisibility { default_visibility, exceptions })
 }
@@ -1143,7 +1143,7 @@ pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
 pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
     let selection = dec_str_list_bin(reader)?;
     let visibility = dec_visibility_bin(reader)?;
-    let coloring_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let coloring_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut coloring = Vec::with_capacity(coloring_count as usize);
     for _ in 0..coloring_count {
         coloring.push(dec_coloring_bin(reader)?);
@@ -1188,9 +1188,9 @@ pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
     let guid = read_str_lp(reader)?;
-    let camera = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None };
-    let components = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None };
-    let snapshot = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None };
+    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None };
+    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(BcfViewpoint { guid, camera, components, snapshot })
 }
 
@@ -1223,12 +1223,12 @@ pub(crate) fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTop
     let labels = dec_str_list_bin(reader)?;
     let creation_date = read_str_lp(reader)?;
     let creation_author = read_str_lp(reader)?;
-    let comment_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let comment_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut comments = Vec::with_capacity(comment_count as usize);
     for _ in 0..comment_count {
         comments.push(dec_comment_bin(reader)?);
     }
-    let viewpoint_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let viewpoint_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut viewpoints = Vec::with_capacity(viewpoint_count as usize);
     for _ in 0..viewpoint_count {
         viewpoints.push(dec_viewpoint_bin(reader)?);
@@ -1267,12 +1267,12 @@ pub(crate) fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
 pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let version = read_str_lp(reader)?;
-    let topic_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let topic_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut topics = Vec::with_capacity(topic_count as usize);
     for _ in 0..topic_count {
         topics.push(dec_topic_bin(reader)?);
     }
-    let part_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut parts = Vec::with_capacity(part_count as usize);
     for _ in 0..part_count {
         parts.push(dec_part_bin(reader)?);
@@ -1307,19 +1307,19 @@ fn dec_named_triple_bin<K, D, T>(
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -1344,7 +1344,7 @@ pub(crate) fn dec_comment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result
     let date = read_opt_str(reader)?;
     let author = read_opt_str(reader)?;
     let text = read_opt_str(reader)?;
-    let viewpoint_ref = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_opt_str(reader)?) } else { None };
+    let viewpoint_ref = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_opt_str(reader)?) } else { None };
     Ok(BcfCommentDiff { date, author, text, viewpoint_ref })
 }
 
@@ -1374,9 +1374,9 @@ pub(crate) fn enc_viewpoint_diff_bin(d: &BcfViewpointDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_viewpoint_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointDiff, String> {
-    let camera = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None }) } else { None };
-    let components = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None }) } else { None };
-    let snapshot = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None }) } else { None };
+    let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None }) } else { None };
+    let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None }) } else { None };
+    let snapshot = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None }) } else { None };
     Ok(BcfViewpointDiff { camera, components, snapshot })
 }
 
@@ -1389,7 +1389,7 @@ pub(crate) fn enc_part_diff_bin(d: &BcfPartDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartDiff, String> {
-    let data = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(BcfPartDiff { data })
 }
 
@@ -1438,11 +1438,11 @@ pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<B
     let description = read_opt_str(reader)?;
     let status = read_opt_str(reader)?;
     let priority = read_opt_str(reader)?;
-    let labels = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_str_list_bin(reader)?) } else { None };
+    let labels = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_str_list_bin(reader)?) } else { None };
     let creation_date = read_opt_str(reader)?;
     let creation_author = read_opt_str(reader)?;
-    let comments = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_comments_diff_bin(reader)?) } else { None };
-    let viewpoints = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_viewpoints_diff_bin(reader)?) } else { None };
+    let comments = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_comments_diff_bin(reader)?) } else { None };
+    let viewpoints = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_viewpoints_diff_bin(reader)?) } else { None };
     Ok(BcfTopicDiff { title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints })
 }
 

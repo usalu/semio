@@ -1,0 +1,55 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 6.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 3.5
+    }
+  ],
+  "elements": [],
+  "materials": [],
+  "sections": [],
+  "solids": [],
+  "supports": [],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [],
+      "selfWeight": true
+    },
+    {
+      "id": "wind",
+      "name": "Wind X",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "w1",
+          "nodeId": "n3",
+          "dof": "Tx",
+          "value": 7.5
+        }
+      ],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 4.0,
+      "y": 0.0
+    }
+  ],
+  "elements": [],
+  "regions": [],
+  "materials": [],
+  "sections": [],
+  "supports": [
+    {
+      "id": "s1",
+      "nodeId": "n1",
+      "fixed": [
+        "Tx",
+        "Ty"
+      ]
+    },
+    {
+      "id": "s2",
+      "nodeId": "n2",
+      "fixed": [
+        "Ty"
+      ]
+    }
+  ],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerBlendMode",
+  "layerId": "glow",
+  "newBlendMode": "screen"
+}

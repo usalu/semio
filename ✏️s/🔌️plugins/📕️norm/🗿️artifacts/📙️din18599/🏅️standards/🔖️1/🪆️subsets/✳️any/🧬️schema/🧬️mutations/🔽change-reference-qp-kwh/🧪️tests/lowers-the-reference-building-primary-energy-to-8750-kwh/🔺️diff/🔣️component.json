@@ -1,0 +1,16 @@
+{
+  "useClass": null,
+  "heatedAreaM2": null,
+  "occupants": null,
+  "hT": null,
+  "hV": null,
+  "climate": null,
+  "internalGainsWM2": null,
+  "solarGainsKwh": null,
+  "systemLossesKwh": null,
+  "renewableKwh": null,
+  "annualLimitKwh": null,
+  "energyCarrier": null,
+  "referenceQPKwh": 8750.0,
+  "selectedCheckIndex": null
+}

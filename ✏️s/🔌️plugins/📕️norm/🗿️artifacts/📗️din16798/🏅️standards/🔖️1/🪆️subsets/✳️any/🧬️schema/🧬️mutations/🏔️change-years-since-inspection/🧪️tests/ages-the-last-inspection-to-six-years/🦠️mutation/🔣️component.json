@@ -1,0 +1,4 @@
+{
+  "mutation": "changeYearsSinceInspection",
+  "newYearsSinceInspection": 6
+}

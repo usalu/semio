@@ -1,0 +1,4 @@
+{
+  "mutation": "changeCoolingGainsKwh",
+  "newCoolingGainsKwh": 7.5
+}

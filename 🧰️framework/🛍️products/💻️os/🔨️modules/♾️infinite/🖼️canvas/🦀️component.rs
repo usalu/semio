@@ -391,7 +391,7 @@ pub mod svg_icon {
     }
 
     fn to_bez_path(path: &usvg::Path) -> BezPath {
-        let mut local_path = BezPath::new();
+        let mut local_path = BezPath::new().await;
         let mut just_closed = false;
         let mut most_recent_initial = (0_f64, 0_f64);
         for elt in path.data().segments() {
@@ -995,7 +995,7 @@ pub mod camera {
     pub fn wheel_screen(camera: &mut Camera, viewport: &Viewport, sx: f64, sy: f64, delta_y: f64) {
         let zoom_factor = if delta_y < 0.0 { ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR } else { ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR };
         let next_zoom = clamp_zoom(camera.zoom * zoom_factor);
-        let screen = Point::new(sx, sy);
+        let screen = Point::new(sx, sy).await;
         let world_before = screen_to_world(camera, viewport, screen);
         camera.x = world_before.x - (sx - viewport.width as f64 / 2.0) / next_zoom;
         camera.y = world_before.y - (sy - viewport.height as f64 / 2.0) / next_zoom;

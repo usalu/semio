@@ -1,0 +1,29 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.html",
+    "doctype": "DOCTYPE html",
+    "root": {
+      "kind": "element",
+      "name": "html",
+      "attributes": [
+        {
+          "name": "lang",
+          "value": "de"
+        }
+      ],
+      "children": [
+        {
+          "kind": "element",
+          "name": "body",
+          "children": [
+            {
+              "kind": "text",
+              "text": "Hallo"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

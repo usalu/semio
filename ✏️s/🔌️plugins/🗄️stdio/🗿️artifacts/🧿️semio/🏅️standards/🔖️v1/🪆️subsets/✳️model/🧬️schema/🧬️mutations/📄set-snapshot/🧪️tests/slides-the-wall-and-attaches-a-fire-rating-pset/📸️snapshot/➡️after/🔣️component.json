@@ -1,0 +1,115 @@
+{
+  "schema": "stdio.semio.model",
+  "spatial": [
+    {
+      "id": "s-1",
+      "kind": "site",
+      "name": "Site",
+      "parentId": null,
+      "placement": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    },
+    {
+      "id": "b-1",
+      "kind": "building",
+      "name": "Block A",
+      "parentId": "s-1",
+      "placement": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    }
+  ],
+  "elements": [
+    {
+      "id": "w-1",
+      "class": {
+        "kind": "wall"
+      },
+      "placement": {
+        "translation": {
+          "x": 3.5,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      },
+      "geometry": {
+        "kind": "mesh",
+        "mesh_id": "m-1"
+      },
+      "spatialId": "b-1",
+      "psets": [
+        {
+          "name": "Pset_WallCommon",
+          "properties": [
+            {
+              "key": "FireRating",
+              "value": {
+                "kind": "text",
+                "value": "F30"
+              }
+            },
+            {
+              "key": "ThermalTransmittance",
+              "value": {
+                "kind": "number",
+                "value": 0.25
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "r-1",
+      "kind": {
+        "kind": "aggregates"
+      },
+      "from": "s-1",
+      "to": "b-1"
+    }
+  ]
+}

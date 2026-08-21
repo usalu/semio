@@ -1,0 +1,11 @@
+{
+  "CreateShell": {
+    "id": "s2",
+    "faces": [
+      {
+        "face": "f1",
+        "orientation": false
+      }
+    ]
+  }
+}

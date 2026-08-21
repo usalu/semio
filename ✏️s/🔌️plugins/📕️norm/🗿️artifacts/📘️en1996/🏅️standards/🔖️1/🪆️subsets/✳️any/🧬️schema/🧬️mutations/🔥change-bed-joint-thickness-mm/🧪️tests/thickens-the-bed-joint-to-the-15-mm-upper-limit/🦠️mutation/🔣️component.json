@@ -1,0 +1,4 @@
+{
+  "mutation": "changeBedJointThicknessMm",
+  "newBedJointThicknessMm": 15.0
+}

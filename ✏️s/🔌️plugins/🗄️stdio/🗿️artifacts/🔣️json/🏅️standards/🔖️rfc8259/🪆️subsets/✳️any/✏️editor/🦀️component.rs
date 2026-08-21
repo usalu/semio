@@ -126,7 +126,7 @@ impl ArtifactEditor for JsonAnyEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -136,7 +136,7 @@ impl ArtifactEditor for JsonAnyEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_json_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(JSON_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "json"])
+        .document(["semio", "stdio", "json"])
         .icon_id("list-tree")
         .mode_def(edit::definition())
         .default_mode_id(edit::JSON_EDIT_MODE_ID)
@@ -180,7 +180,7 @@ mod tests {
     async fn op_text_roundtrip() {
         let command = JsonAnyEditorCommand::SetNode { node_id: "k=a/i=0".into(), value: "hello world".into() };
         let printed = <JsonAnyEditorCommand as protocol::OpText>::print_op(&command);
-        let parsed = <JsonAnyEditorCommand as protocol::OpText>::parse_op(&printed).await.expect("parse ok");
+        let parsed = <JsonAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
         assert_eq!(parsed, command);
     }
 }

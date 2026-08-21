@@ -1,0 +1,15 @@
+{
+  "schema": "s.stdio.semio.image",
+  "width": 4,
+  "height": 2,
+  "colorspace": "rgb",
+  "bitDepth": 8,
+  "frames": [],
+  "icc": null,
+  "metadata": [
+    {
+      "key": "Author",
+      "value": "semio"
+    }
+  ]
+}

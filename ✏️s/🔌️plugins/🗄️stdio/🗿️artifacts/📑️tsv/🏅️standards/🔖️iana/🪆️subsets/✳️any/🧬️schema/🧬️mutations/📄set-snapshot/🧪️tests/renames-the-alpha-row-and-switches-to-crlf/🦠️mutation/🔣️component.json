@@ -1,0 +1,18 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.tsv",
+    "records": [
+      [
+        "id",
+        "name"
+      ],
+      [
+        "1",
+        "Beta"
+      ]
+    ],
+    "trailingNewline": true,
+    "lineEnding": "crlf"
+  }
+}

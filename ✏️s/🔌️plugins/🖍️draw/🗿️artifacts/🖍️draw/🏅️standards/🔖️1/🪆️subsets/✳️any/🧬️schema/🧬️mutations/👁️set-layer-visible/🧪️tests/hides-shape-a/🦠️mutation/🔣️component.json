@@ -1,0 +1,5 @@
+{
+  "mutation": "setLayerVisible",
+  "layerId": "shape-a",
+  "visible": false
+}

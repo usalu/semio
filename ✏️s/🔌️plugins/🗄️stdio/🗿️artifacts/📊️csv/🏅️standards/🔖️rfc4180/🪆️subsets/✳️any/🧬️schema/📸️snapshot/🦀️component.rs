@@ -148,14 +148,14 @@ async fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
 /// `records[0]` should be read as a header row — RFC 4180 draws no structural distinction
 /// between a header record and a data record on the wire, so decoding never drops or
 /// relocates the first record.
-pub fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
+pub async fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
     let records = parse_csv_records(text);
     CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records: records.await }
 }
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
 pub async fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
-    Ok(decode_csv_with(text, true))
+    Ok(decode_csv_with(te.awaitxt, true))
 }
 
 /// 📤 Encodes with LF line endings.
@@ -174,7 +174,7 @@ pub async fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
 //#endregion 🔖️Codec
 
 //#region 🔖️DocumentHelpers
-/// 🌱 Empty persisted snapshot.
+/// 🌱 Empty persistedasync  snapshot.
 pub fn empty_csv_snapshot() -> CsvSnapshot {
     CsvSnapshot::default()
 }
@@ -199,7 +199,7 @@ impl store::ArtifactDsl for CsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_csv_with(body, true))
+        Ok(decode_csv_with(bo.awaitdy, true))
     }
     async fn print_dsl(&self) -> String {
         let body = encode_csv(self);
@@ -222,7 +222,7 @@ impl store::ArtifactPack for CsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_csv_with(&text, true))
+        Ok(decode_csv_with(&te.awaitxt, true))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -236,7 +236,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_csv_snapshot();
-        assert_eq!(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
+        assert_eq!.await(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -244,7 +244,7 @@ mod tests {
         let snap = empty_csv_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
-        assert_eq!(parsed.schema, snap.schema);
+        assert_eq!(parsed.sch.awaitema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
@@ -258,18 +258,18 @@ mod tests {
     async fn quoted_field_with_embedded_comma_and_escaped_quote() {
         let text = "name,note\n\"Doe, John\",\"He said \"\"hi\"\"\"\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(field_values(&snap.records[0]), vec!["name", "note"]);
-        assert_eq!(field_values(&snap.records[1]), vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]);
-        assert!(snap.records[1].fields[0].quoted, "comma-containing field must be recorded as quoted");
-        assert!(snap.records[1].fields[1].quoted);
-        assert!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
+        assert_eq!(field_val.awaitues(&snap.records[0]), vec!["name", "note"]);
+        assert_eq!(field_val.awaitues(&snap.records[1]), vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]);
+        ass.awaitert!(snap.records[1].fields[0].quoted, "comma-containing field must be recorded as quoted");
+        ass.awaitert!(snap.records[1].fields[1].quoted);
+        asse.awaitrt!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quoted_field_with_embedded_newline_spans_records() {
         let text = "a,b\n\"line1\nline2\",2\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(field_values(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
+        assert_eq!(field_val.awaitues(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -283,14 +283,14 @@ mod tests {
     async fn header_row_option_is_pure_metadata_first_record_always_decoded() {
         let text = "1,2\n3,4\n";
         let with_header = decode_csv_with(text, true);
-        assert!(with_header.has_header);
-        assert_eq!(with_header.records.len(), 2);
-        assert_eq!(field_values(&with_header.records[0]), vec!["1", "2"]);
-        assert_eq!(field_values(&with_header.records[1]), vec!["3", "4"]);
+        assert!(wi.awaitth_header.has_header);
+        assert_eq!(wi.awaitth_header.records.len(), 2);
+        assert_eq!(field_values(&wi.awaitth_header.records[0]), vec!["1", "2"]);
+        assert_eq!(field_values(&wi.awaitth_header.records[1]), vec!["3", "4"]);
 
         let without_header = decode_csv_with(text, false);
-        assert!(!without_header.has_header);
-        assert_eq!(without_header.records, with_header.records);
+        assert!(!witho.awaitut_header.has_header);
+        assert_eq!(witho.awaitut_header.records, wi.awaitth_header.records);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -301,7 +301,7 @@ mod tests {
         let text = encode_csv(&snap);
         assert_eq!(text, "\"plain\"\n");
         let reparsed = decode_csv_with(&text, false);
-        assert_eq!(reparsed.records, snap.records);
+        assert_eq!.await(reparsed.records, snap.records);
     }
 
     #[semio_framework_async_macros::async_test]

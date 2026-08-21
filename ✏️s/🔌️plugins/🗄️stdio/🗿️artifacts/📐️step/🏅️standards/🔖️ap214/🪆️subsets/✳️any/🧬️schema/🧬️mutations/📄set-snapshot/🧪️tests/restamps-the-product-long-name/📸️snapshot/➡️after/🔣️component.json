@@ -1,0 +1,77 @@
+{
+  "schema": "stdio.step",
+  "header": {
+    "fileDescription": {
+      "description": [
+        "capsule shell"
+      ],
+      "implementationLevel": "2;1"
+    },
+    "fileName": {
+      "name": "capsule.stp",
+      "timestamp": "2026-08-21T00:00:00",
+      "author": [
+        "semio"
+      ],
+      "organization": [
+        "semio"
+      ],
+      "preprocessorVersion": "semio-stdio",
+      "originatingSystem": "semio",
+      "authorization": ""
+    },
+    "fileSchema": {
+      "schemas": [
+        "AUTOMOTIVE_DESIGN"
+      ]
+    }
+  },
+  "entities": [
+    {
+      "id": 1,
+      "name": "PRODUCT",
+      "args": [
+        {
+          "string": "capsule"
+        },
+        {
+          "string": "Capsule Unit A"
+        },
+        {
+          "string": ""
+        },
+        {
+          "aggregate": [
+            {
+              "reference": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "PRODUCT_CONTEXT",
+      "args": [
+        {
+          "string": ""
+        },
+        {
+          "reference": 3
+        },
+        {
+          "string": "mechanical"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "APPLICATION_CONTEXT",
+      "args": [
+        {
+          "string": "automotive design"
+        }
+      ]
+    }
+  ]
+}

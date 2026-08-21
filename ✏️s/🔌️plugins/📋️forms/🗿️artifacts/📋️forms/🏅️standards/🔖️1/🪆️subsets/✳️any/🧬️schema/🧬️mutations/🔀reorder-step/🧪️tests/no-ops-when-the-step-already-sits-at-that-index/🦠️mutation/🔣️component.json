@@ -1,0 +1,5 @@
+{
+  "mutation": "reorderStep",
+  "id": "step-photos",
+  "to_index": 1
+}

@@ -100,7 +100,7 @@ pub mod derived_composition {
         async fn conforming_document_composes_and_stamps_valid() {
             let text = conforming_xml_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let composed = XmlValidComposerComposition::compose(&sources).await.expect("clean document must compose to valid");
+            let composed = XmlValidComposerComposition::compose(&sources).expect("clean document must compose to valid");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -108,7 +108,7 @@ pub mod derived_composition {
         async fn missing_doctype_fails_compose_with_real_diagnostic() {
             let text = "<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("a document without a doctype must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("a document without a doctype must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -116,24 +116,24 @@ pub mod derived_composition {
         async fn root_name_mismatch_fails_compose_with_real_diagnostic() {
             let text = "<!DOCTYPE book>\n<root/>".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("a doctype/root name mismatch must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("a doctype/root name mismatch must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
             let text = conforming_xml_text();
-            let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parses");
+            let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");
             let bytes = <XmlSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = XmlValidValidator::validate(&IoPayload::Binary(bytes.await));
-            assert!(diagnostics.await.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a composer-clean document: {diagnostics:?}");
+            let diagnostics = XmlValidValidator::validate(&IoPayload::Binary(bytes));
+            assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a composer-clean document: {diagnostics:?}");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn negative_no_doctype_example_fails_compose_with_declared_hard_code() {
             let text = crate::artifacts::xml::standards::v1_0::subsets::valid::examples::no_doctype::PRIMARY_TEXT;
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(text) }];
-            let err = XmlValidComposerComposition::compose(&sources).await.expect_err("missing doctype must not stamp valid");
+            let err = XmlValidComposerComposition::compose(&sources).expect_err("missing doctype must not stamp valid");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.xml.valid.doctype-missing" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -163,21 +163,21 @@ pub mod derived_composition {
 
             async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
                 let text = asset.text.ok_or_else(|| "xml valid requires dsl text".to_string())?;
-                <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| e.to_string())
+                <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
             }
 
             async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-                Ok(store::ArtifactDsl::print_dsl(snapshot).await.into_bytes())
+                Ok(store::ArtifactDsl::print_dsl(snapshot).into_bytes())
             }
 
             async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
                 let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-                <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| e.to_string())
+                <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
             }
 
             async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
                 use protocol::Inference;
-                Self::Inference::infer(snapshot).await
+                Self::Inference::infer(snapshot)
             }
 
             async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
@@ -186,7 +186,7 @@ pub mod derived_composition {
 
             async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
                 let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
-                let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| vec![e.to_string()])?;
+                let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
                 let hard: Vec<String> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect();
                 if hard.is_empty() {
                     Ok(())
@@ -197,7 +197,7 @@ pub mod derived_composition {
 
             async fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String> {
                 let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-                let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| e.to_string())?;
+                let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())?;
                 Ok(check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect())
             }
         }

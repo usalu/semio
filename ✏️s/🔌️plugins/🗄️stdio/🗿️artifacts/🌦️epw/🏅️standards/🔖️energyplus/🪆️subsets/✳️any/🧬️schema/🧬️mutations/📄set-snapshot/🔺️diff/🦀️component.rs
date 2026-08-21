@@ -5,7 +5,7 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &EpwSnapshot, snapshot: &EpwSnapshot) -> protocol::MutationOutcome<EpwDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(EpwDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(EpwDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

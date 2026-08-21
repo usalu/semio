@@ -16,7 +16,7 @@ pub mod derived_construction {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
-        diagnostics.extend(outcome.messages().await.iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
             span: dsl::TextSpan::at(1, 1),
@@ -151,14 +151,14 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
-            let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().await.expect("conforming construction must build");
+            let snapshot = Ifc2x3Cv20BuilderConstruction::new().add_product(2, "IFCWALL", "Wall 1").build().expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 4);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let violating = Part21Instance { id: 99, entities: vec![("IFCSTRUCTURALANALYSISMODEL".into(), vec![])] };
-            let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().await.unwrap();
+            let mut snapshot = Ifc2x3Cv20BuilderConstruction::new().build().unwrap();
             snapshot.document.instances.push(violating);
             let (mutated, _diff) = Ifc2x3Cv20BuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("a structural entity must fail build()");

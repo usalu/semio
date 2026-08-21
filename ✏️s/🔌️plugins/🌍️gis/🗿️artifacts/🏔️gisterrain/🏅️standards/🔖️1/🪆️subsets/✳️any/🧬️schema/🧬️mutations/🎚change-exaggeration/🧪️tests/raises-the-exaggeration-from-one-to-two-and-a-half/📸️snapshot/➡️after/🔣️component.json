@@ -1,0 +1,15 @@
+{
+  "exaggeration": 2.5,
+  "importedFeaturesJson": "null",
+  "mesh": {
+    "childId": "gisterrain-mesh-derived",
+    "target": {
+      "artifactId": "gisterrain-mesh",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  }
+}

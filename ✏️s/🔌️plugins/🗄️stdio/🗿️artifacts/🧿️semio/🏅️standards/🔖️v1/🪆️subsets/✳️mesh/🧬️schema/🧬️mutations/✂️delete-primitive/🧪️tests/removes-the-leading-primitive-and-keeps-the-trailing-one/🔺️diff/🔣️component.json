@@ -1,0 +1,16 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "key": "mesh-a",
+        "diff": {
+          "primitives": {
+            "removed": [
+              "prim-a"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

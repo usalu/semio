@@ -1,0 +1,71 @@
+{
+  "schema": "block.2d",
+  "nodeKind": {
+    "id": "nk-valve",
+    "name": "gate",
+    "label": "Valve",
+    "variant": "a",
+    "description": "One inline valve node.",
+    "icon": "icon://valve",
+    "unit": "mm"
+  },
+  "presentation": {
+    "shape": "circle",
+    "radius": 0.5,
+    "color": "#2288cc",
+    "iconKind": "icon.valve"
+  },
+  "handleKinds": [
+    {
+      "id": "hk-signal",
+      "name": "signal",
+      "label": "Signal",
+      "color": "#ffcc00",
+      "defaultWireKind": "wire.link"
+    },
+    {
+      "id": "hk-power",
+      "name": "power",
+      "label": "Power",
+      "color": "#cc2222",
+      "defaultWireKind": "wire.bus"
+    }
+  ],
+  "handles": [
+    {
+      "id": "handle-in",
+      "handleKind": "hk-signal",
+      "angle": 0.0,
+      "radius": 0.5
+    }
+  ],
+  "compatibility": [
+    {
+      "id": "compat-signal-signal",
+      "source": "hk-signal",
+      "target": "hk-signal",
+      "bidirectional": true
+    }
+  ],
+  "attributes": [
+    {
+      "key": "material",
+      "value": "brass"
+    }
+  ],
+  "authors": [
+    {
+      "id": "author-ada",
+      "name": "Ada",
+      "email": "ada@example.org"
+    }
+  ],
+  "camera2d": {
+    "x": 0.0,
+    "y": 0.0,
+    "zoom": 1.0
+  },
+  "meta": {
+    "description": "Fixture base for the block2d mutation vocabulary."
+  }
+}

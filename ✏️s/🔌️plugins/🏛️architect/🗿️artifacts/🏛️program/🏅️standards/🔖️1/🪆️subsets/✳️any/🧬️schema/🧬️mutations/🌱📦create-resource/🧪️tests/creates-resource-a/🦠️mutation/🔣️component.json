@@ -1,0 +1,44 @@
+{
+  "mutation": "createResource",
+  "resource": {
+    "id": "resource-a",
+    "name": "Resource A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "",
+    "category": "",
+    "resourceType": "",
+    "quantity": {
+      "unit": ""
+    },
+    "mobility": null,
+    "sharingModel": null,
+    "allocation": null,
+    "elementIds": [],
+    "activityIds": [],
+    "userProfileIds": [],
+    "storageRequirementId": null,
+    "durability": null,
+    "cleaningRequirements": [],
+    "replacementCycle": null,
+    "costPerUnit": null,
+    "supplier": null,
+    "standards": [],
+    "ergonomicNotes": [],
+    "customization": [],
+    "disposalNotes": [],
+    "furnitureClass": null,
+    "ergonomicsRating": null,
+    "sharingRatio": null
+  }
+}

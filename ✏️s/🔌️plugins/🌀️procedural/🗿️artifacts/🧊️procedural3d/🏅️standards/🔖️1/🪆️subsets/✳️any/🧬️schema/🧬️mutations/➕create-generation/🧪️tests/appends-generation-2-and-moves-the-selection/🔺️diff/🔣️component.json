@@ -1,0 +1,35 @@
+{
+  "artifact": null,
+  "fixture": null,
+  "generation": {
+    "generations": [
+      {
+        "id": "gen-1",
+        "name": "Baseline",
+        "values": {
+          "storeys": 3.0
+        }
+      },
+      {
+        "id": "gen-2",
+        "name": "Taller",
+        "values": {
+          "storeys": 5.0
+        }
+      }
+    ],
+    "selectedGenerationId": "gen-2"
+  },
+  "selectedNodeIds": null,
+  "lodMode": null,
+  "showMode": null,
+  "selectionMethod": null,
+  "hoveredNodeId": null,
+  "graphCamera": null,
+  "previewCamera": null,
+  "sunJson": null,
+  "selectedGenerationId": null,
+  "generationPreviewText": null,
+  "activeUtilityId": null,
+  "locale": null
+}

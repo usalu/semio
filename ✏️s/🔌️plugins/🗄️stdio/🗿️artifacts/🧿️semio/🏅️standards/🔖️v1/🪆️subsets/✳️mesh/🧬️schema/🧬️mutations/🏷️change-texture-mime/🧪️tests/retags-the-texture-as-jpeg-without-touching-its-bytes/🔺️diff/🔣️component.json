@@ -1,0 +1,12 @@
+{
+  "textures": {
+    "modified": [
+      {
+        "key": "tex-a",
+        "diff": {
+          "mime": "image/jpeg"
+        }
+      }
+    ]
+  }
+}

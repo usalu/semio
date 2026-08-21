@@ -1,0 +1,7 @@
+{
+  "status": "rejected",
+  "code": "gltf.mutation.index-out-of-range",
+  "path": [
+    "document/scenes"
+  ]
+}

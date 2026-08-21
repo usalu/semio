@@ -1,0 +1,9 @@
+{
+  "mutation": "scaleAssets",
+  "asset_ids": [
+    "asset-hero"
+  ],
+  "sx": 2.0,
+  "sy": 2.0,
+  "sz": 2.0
+}

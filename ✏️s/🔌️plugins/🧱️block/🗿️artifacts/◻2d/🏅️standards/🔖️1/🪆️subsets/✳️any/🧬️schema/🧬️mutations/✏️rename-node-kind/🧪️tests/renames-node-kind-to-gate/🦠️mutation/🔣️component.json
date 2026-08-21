@@ -1,0 +1,4 @@
+{
+  "mutation": "renameNodeKind",
+  "newName": "gate"
+}

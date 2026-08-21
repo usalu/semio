@@ -1,0 +1,65 @@
+{
+  "designs": {
+    "values": [
+      {
+        "id": "d1",
+        "name": "Frame",
+        "pieces": [
+          {
+            "id": "p1",
+            "typeId": "t1",
+            "transform": {
+              "translation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              }
+            }
+          },
+          {
+            "id": "p2",
+            "typeId": "t2",
+            "transform": {
+              "translation": {
+                "x": 2.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              }
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "c1",
+            "connectingPieceId": "p1",
+            "connectingPort": "end",
+            "connectedPieceId": "p2",
+            "connectedPort": "start"
+          }
+        ]
+      }
+    ]
+  }
+}

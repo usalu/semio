@@ -1,0 +1,11 @@
+{
+  "mutation": "updateSfmParams",
+  "params": {
+    "ransacIterations": 2000,
+    "ransacThresholdPx": 1.5,
+    "minTrackLength": 4,
+    "baMaxIterations": 100,
+    "robustLoss": "cauchy",
+    "huberDeltaPx": 0.75
+  }
+}

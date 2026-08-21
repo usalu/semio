@@ -1,0 +1,5 @@
+{
+  "mutation": "renameShot",
+  "id": "shot-close",
+  "new_label": "Detail"
+}

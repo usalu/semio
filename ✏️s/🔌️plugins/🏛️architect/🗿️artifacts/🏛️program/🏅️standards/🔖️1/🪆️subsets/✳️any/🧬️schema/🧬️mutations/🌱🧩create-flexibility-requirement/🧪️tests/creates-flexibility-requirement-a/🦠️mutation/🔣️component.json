@@ -1,0 +1,37 @@
+{
+  "mutation": "createFlexibilityRequirement",
+  "flexibilityRequirement": {
+    "id": "flexibility-requirement-a",
+    "name": "Flexibility Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "flexibilityType": "",
+    "elementIds": [],
+    "adaptationScenarios": [],
+    "modularityLevel": null,
+    "reconfigurationTime": null,
+    "costOfChange": null,
+    "technologyReadiness": null,
+    "futureFunctionIds": [],
+    "demountablePartitions": false,
+    "raisedFloor": false,
+    "overheadServices": false,
+    "expansionDirection": [],
+    "contractionScenario": [],
+    "multiUsePotential": [],
+    "furnitureStrategy": [],
+    "infrastructureSpareCapacity": [],
+    "leaseImplications": [],
+    "ownerId": null
+  }
+}

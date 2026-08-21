@@ -1,0 +1,23 @@
+{
+  "artifact": null,
+  "schema": null,
+  "nodeKind": {
+    "id": "nk-valve",
+    "name": "valve",
+    "label": "Inline Valve",
+    "variant": "a",
+    "description": "One inline valve node.",
+    "icon": "icon://valve",
+    "unit": "mm"
+  },
+  "presentation": null,
+  "handleKinds": null,
+  "handles": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

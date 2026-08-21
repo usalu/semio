@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBlockVisible",
+  "id": "blk-image",
+  "newVisible": false
+}

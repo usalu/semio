@@ -104,7 +104,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -148,8 +148,8 @@ mod tests {
     async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("absent") });
-        assert!(delete.inverse(&base).await.is_empty(), "deleting an absent node has nothing to undo");
-        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
+        assert!(delete.inverse(&base).is_empty(), "deleting an absent node has nothing to undo");
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -157,7 +157,7 @@ mod tests {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         let undo = delete.inverse(&base);
-        assert_eq!(undo.await.len(), 2, "inverse must restore the node AND every severed edge");
+        assert_eq!(undo.len(), 2, "inverse must restore the node AND every severed edge");
         assert_eq!(
             undo[0],
             SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
@@ -189,7 +189,7 @@ mod tests {
         assert_eq!(after.nodes[0].position, SemioPoint2 { x: 99.0, y: -1.0 });
 
         let missing = SemioGraphMutation::ChangeNodeKind(change_node_kind::mutation::ChangeNodeKind { id: GraphNodeId::new("absent"), new_kind: "x".into() });
-        assert!(missing.inverse(&base).await.is_empty());
+        assert!(missing.inverse(&base).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -222,8 +222,8 @@ mod tests {
         assert_eq!(undo, vec![SemioGraphMutation::RemoveNodeProperty(remove_node_property::mutation::RemoveNodeProperty { node_id: GraphNodeId::new("n1"), index: 0 })]);
 
         let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::mutation::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), index: 0 });
-        assert!(remove.inverse(&base).await.is_empty());
-        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(remove.inverse(&base).is_empty());
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -246,7 +246,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioGraphMutation::kinds().await.len(), 11);
+        assert_eq!(SemioGraphMutation::kinds().len(), 11);
         let mutation = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         assert_eq!(mutation.semantics().kind, "delete-node");
         assert_eq!(mutation.semantics().record, "DeletedNode");
@@ -254,3 +254,36 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🏗️create-node/🧪️tests/appends-a-filter-node-to-the-end-of-the-node-set/🦀️component.rs"]
+    mod tests_create_node_appends_a_filter_node_to_the_end_of_the_node_set;
+    #[path = "🗑️delete-node/🧪️tests/removes-the-sink-node-and-severs-the-edge-into-it/🦀️component.rs"]
+    mod tests_delete_node_removes_the_sink_node_and_severs_the_edge_into_it;
+    #[path = "🔧change-node-kind/🧪️tests/retypes-the-source-node-without-relabelling-it/🦀️component.rs"]
+    mod tests_change_node_kind_retypes_the_source_node_without_relabelling_it;
+    #[path = "🖍️change-node-label/🧪️tests/relabels-the-source-node-without-retyping-it/🦀️component.rs"]
+    mod tests_change_node_label_relabels_the_source_node_without_retyping_it;
+    #[path = "📍move-node/🧪️tests/moves-the-sink-node-to-a-new-canvas-position/🦀️component.rs"]
+    mod tests_move_node_moves_the_sink_node_to_a_new_canvas_position;
+    #[path = "🔌add-node-port/🧪️tests/inserts-an-in-port-ahead-of-the-existing-out-port/🦀️component.rs"]
+    mod tests_add_node_port_inserts_an_in_port_ahead_of_the_existing_out_port;
+    #[path = "🔚remove-node-port/🧪️tests/detaches-the-trailing-out-port-from-the-source-node/🦀️component.rs"]
+    mod tests_remove_node_port_detaches_the_trailing_out_port_from_the_source_node;
+    #[path = "➕add-node-property/🧪️tests/inserts-a-weight-property-ahead-of-the-colour-property/🦀️component.rs"]
+    mod tests_add_node_property_inserts_a_weight_property_ahead_of_the_colour_property;
+    #[path = "➖remove-node-property/🧪️tests/detaches-the-trailing-weight-property-from-the-source-node/🦀️component.rs"]
+    mod tests_remove_node_property_detaches_the_trailing_weight_property_from_the_source_node;
+    #[path = "🔗create-edge/🧪️tests/connects-the-source-node-to-the-sink-node/🦀️component.rs"]
+    mod tests_create_edge_connects_the_source_node_to_the_sink_node;
+    #[path = "✂️delete-edge/🧪️tests/removes-the-feedback-edge-and-keeps-both-endpoints/🦀️component.rs"]
+    mod tests_delete_edge_removes_the_feedback_edge_and_keeps_both_endpoints;
+}
+//#endregion 🧪️FixtureTests

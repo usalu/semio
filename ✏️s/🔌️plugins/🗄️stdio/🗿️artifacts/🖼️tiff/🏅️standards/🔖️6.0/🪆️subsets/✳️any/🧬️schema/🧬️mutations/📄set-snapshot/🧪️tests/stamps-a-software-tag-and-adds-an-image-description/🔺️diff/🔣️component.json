@@ -1,0 +1,31 @@
+{
+  "ifds": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "modified": [
+            {
+              "tag": 305,
+              "kind": "ascii",
+              "values": {
+                "kind": "ascii",
+                "value": "semio 2"
+              }
+            }
+          ],
+          "added": [
+            {
+              "tag": 270,
+              "kind": "ascii",
+              "values": {
+                "kind": "ascii",
+                "value": "Two by two swatch"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

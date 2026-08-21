@@ -106,12 +106,12 @@ pub enum PdfMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
     let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -137,7 +137,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
             PdfMutation::RemoveDictEntry { id, path, key } => diff::diff_remove_dict_entry(base, *id, path, key),
             PdfMutation::SetTrailerEntry { key, value } => diff::diff_set_trailer_entry(base, key, value.clone()),
             PdfMutation::RemoveTrailerEntry { key } => diff::diff_remove_trailer_entry(base, key),
-        }).await
+        })
     }
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
@@ -514,7 +514,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trips(base: &PdfSnapshot, mutation: PdfMutation) {
         let diff = mutation.diff(base);
-        let mutated = diff.await.diff().apply(base).unwrap();
+        let mutated = diff.diff().apply(base).unwrap();
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
@@ -549,7 +549,7 @@ mod tests {
             let returned_diff = apply_pdf_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-            assert_eq!(snap, expected_diff.await.diff().apply(&base).unwrap(), "apply_pdf_mutation's snapshot mutation must equal diff.diff().apply(base) for {m:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).unwrap(), "apply_pdf_mutation's snapshot mutation must equal diff.diff().apply(base) for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -662,15 +662,29 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = PdfMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PdfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = PdfMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PdfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
     //#endregion op_codec_roundtrip_law
 }
 //#endregion Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/rotates-the-plan-page-and-titles-the-document/🦀️component.rs"]
+    mod tests_set_snapshot_rotates_the_plan_page_and_titles_the_document;
+}
+//#endregion 🧪️FixtureTests

@@ -1,0 +1,25 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": {
+    "added": [],
+    "removed": [
+      "b1"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

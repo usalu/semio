@@ -1,0 +1,22 @@
+{
+  "mutation": "createSavedCamera",
+  "saved_camera": {
+    "id": "cam-top",
+    "label": "Top",
+    "camera": {
+      "position": [
+        0.0,
+        0.0,
+        20.0
+      ],
+      "target": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "zoom": 1.0,
+      "fov": 50.0
+    }
+  },
+  "index": null
+}

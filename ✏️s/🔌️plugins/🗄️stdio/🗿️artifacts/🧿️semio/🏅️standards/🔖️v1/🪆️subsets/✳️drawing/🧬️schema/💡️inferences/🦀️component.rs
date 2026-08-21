@@ -34,7 +34,7 @@ pub struct SemioDrawingInference {
 
 impl protocol::Inference<SemioDrawingSnapshot> for SemioDrawingInference {
     async fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
-        Self { flattened_scene: store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, None).into_iter().await.await.await.collect() }
+        Self { flattened_scene: store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, None).into_iter().collect() }
     }
 }
 
@@ -58,7 +58,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::drawi
 
     async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
-        let flattened_scene = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, Some(cache)).into_iter().await.await.await.collect();
+        let flattened_scene = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, Some(cache)).into_iter().collect();
         SemioDrawingInference { flattened_scene }
     }
 }
@@ -123,7 +123,7 @@ mod tests {
         let inferred = SemioDrawingInference::infer(&snapshot);
         let direct = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
         for (key, value) in &direct {
-            assert_eq!(inferred.await.flattened_scene.get(key), Some(value), "inference must match infer_field exactly for {key}");
+            assert_eq!(inferred.flattened_scene.get(key), Some(value), "inference must match infer_field exactly for {key}");
         }
     }
 }

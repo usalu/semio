@@ -1,0 +1,29 @@
+{
+  "mutation": "replaceQc",
+  "qc": {
+    "reprojectionRmsPx": 0.25,
+    "gcpCheckpointRmse": null,
+    "watertight": {
+      "vertexCount": 512,
+      "triangleCount": 1020,
+      "boundaryEdgeCount": 0,
+      "boundaryLoopCount": 0,
+      "nonManifoldEdgeCount": 0,
+      "nonManifoldVertexCount": 0,
+      "connectedComponents": 1,
+      "consistentlyOriented": true,
+      "eulerCharacteristic": 2,
+      "genus": 0,
+      "signedVolume": 12.5,
+      "selfIntersectionPairs": 0,
+      "closedFallbackUsed": false,
+      "isClosed": true,
+      "isTwoManifold": true,
+      "isWatertight": true
+    },
+    "meanTrackLength": 8.0,
+    "registeredFrameRatio": 0.875,
+    "denseCoverageRatio": 0.5,
+    "warnings": []
+  }
+}

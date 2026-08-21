@@ -1,0 +1,11 @@
+{
+  "ReplaceSynapse": {
+    "synapse": {
+      "id": "link-ab",
+      "from": "note-a",
+      "to": "note-b",
+      "fromPort": "out",
+      "toPort": "alt"
+    }
+  }
+}

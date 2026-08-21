@@ -1,0 +1,17 @@
+{
+  "CreateProductGroup": {
+    "product_group": {
+      "id": "group.towel-radiators",
+      "names": {
+        "preferred": {
+          "locale": "en",
+          "text": "Towel radiators"
+        },
+        "short_name": null,
+        "alternatives": []
+      },
+      "dictionary_subject_id": null
+    },
+    "index": null
+  }
+}

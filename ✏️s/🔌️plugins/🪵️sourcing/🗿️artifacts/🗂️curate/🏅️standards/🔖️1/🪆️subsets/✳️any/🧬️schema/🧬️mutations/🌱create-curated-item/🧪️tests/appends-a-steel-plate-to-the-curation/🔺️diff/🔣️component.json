@@ -1,0 +1,19 @@
+{
+  "artifact": null,
+  "catalog": null,
+  "stockExtra": null,
+  "curated": {
+    "added": [
+      {
+        "objectId": "plate-steel-8",
+        "count": 24
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "filters": null,
+  "locale": null,
+  "contributionsJson": null
+}

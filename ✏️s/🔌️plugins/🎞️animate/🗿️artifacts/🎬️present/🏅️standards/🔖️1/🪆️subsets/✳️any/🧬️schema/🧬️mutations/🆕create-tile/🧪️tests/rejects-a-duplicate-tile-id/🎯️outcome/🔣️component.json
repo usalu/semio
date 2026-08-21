@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "path": [
+    "tiles",
+    "t-hero"
+  ]
+}

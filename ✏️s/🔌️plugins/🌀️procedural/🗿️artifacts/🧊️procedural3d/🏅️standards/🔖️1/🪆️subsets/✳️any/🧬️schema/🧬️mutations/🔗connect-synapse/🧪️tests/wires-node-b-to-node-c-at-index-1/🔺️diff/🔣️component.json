@@ -1,0 +1,63 @@
+{
+  "artifact": null,
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "node-a",
+        "text": "Base plate"
+      },
+      {
+        "kind": "inputNote",
+        "id": "node-b",
+        "text": "Column"
+      },
+      {
+        "kind": "inputNote",
+        "id": "node-c",
+        "text": "Capital"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "wire-ab",
+        "from": "node-a",
+        "to": "node-b",
+        "fromPort": "solid",
+        "toPort": "base"
+      },
+      {
+        "id": "wire-bc",
+        "from": "node-b",
+        "to": "node-c",
+        "fromPort": "solid",
+        "toPort": "base"
+      }
+    ],
+    "layout": {
+      "node-a": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "generation": null,
+  "selectedNodeIds": null,
+  "lodMode": null,
+  "showMode": null,
+  "selectionMethod": null,
+  "hoveredNodeId": null,
+  "graphCamera": null,
+  "previewCamera": null,
+  "sunJson": null,
+  "selectedGenerationId": null,
+  "generationPreviewText": null,
+  "activeUtilityId": null,
+  "locale": null
+}

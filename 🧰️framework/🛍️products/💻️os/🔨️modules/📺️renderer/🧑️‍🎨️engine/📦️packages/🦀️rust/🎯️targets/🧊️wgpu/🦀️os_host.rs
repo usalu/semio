@@ -19,11 +19,12 @@
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
 use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
+use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::AppRuntime;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use ui_render::FrameScheduler;
+use ui_render::{CursorRequest, FrameScheduler};
 
 //#region 🔖️OsHost
 
@@ -118,6 +119,29 @@ pub struct OsHost {
     /// `semio_framework_trace::Watchdog` with, so two consecutive frame-callback overruns are
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
+    /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
+    /// sink `WindowDelegate::handle_event`/`handle_metrics` write into instead of immediately spawning
+    /// a heap-allocated future per event. `redraw()` drains it once per frame and dispatches the whole
+    /// batch through a single `spawn_app_task` call — see `winit_app.rs`'s own `WindowDelegate for
+    /// OsHost` impl and `dispatch_drained_events` for why one batched dispatch, not a fully worker-side
+    /// one, is what this packet's boundary can honestly deliver (`AppRuntime` is `Rc<RefCell<_>>`, not
+    /// `Send`, so it cannot itself move to an OS worker thread without a much larger ownership rewrite
+    /// — see `📓️p3a-render-snapshot.md`).
+    pub events: ui_host::EventQueue,
+    /// 🎫️ Minted once, here, at `OsHost` construction — `OsHost` is owned exclusively by whatever
+    /// drives this crate's hand-rolled `WinitApp` event loop (see that file's own docstring on why it
+    /// cannot use `ui_host::NativeHost` directly), so this token's presence on `OsHost` is itself the
+    /// proof every `WindowDelegate` callback below runs on the thread that owns the window.
+    pub ui_token: ui_host::UiThreadToken,
+    /// 📸️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the atomically-published frame
+    /// artifact — see `🦀️render_snapshot.rs`'s own module docstring for what this genuinely achieves
+    /// today (a real, tested acquire/publish contract) versus what it does not yet (a worker-side
+    /// builder; blocked on `AppRuntime` being `Rc<RefCell<_>>`, not `Send`).
+    pub snapshot_sink: RenderSnapshotSink,
+    /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the non-blocking poll/resubmit
+    /// handle for `frame_job::FrameBuildJob` — see that file's own module docstring for exactly what
+    /// slice of `frame()` this runs off the UI thread today, and what still cannot.
+    pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
 }
 
 impl OsHost {
@@ -133,6 +157,10 @@ impl OsHost {
             wheel_zoom_settle: HashMap::new(),
             camera_settle: HashMap::new(),
             frame_generation: 0,
+            events: ui_host::EventQueue::new(),
+            ui_token: ui_host::UiThreadToken::mint_for_host(),
+            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, semio_framework_trace::Generation(0), 0, CursorRequest::Default, None)),
+            frame_build: crate::frame_job::FrameBuildHandle::new(),
         }
     }
 

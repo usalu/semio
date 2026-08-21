@@ -1,0 +1,8 @@
+{
+  "mutation": "updateAnalysisSettings",
+  "settings": {
+    "modalCount": 6,
+    "bucklingCount": 3,
+    "deformationScale": 25.0
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "material": 0,
+  "expectedDoubleSided": false,
+  "doubleSided": true,
+  "touchedPaths": [
+    "document/materials/0/doubleSided"
+  ]
+}

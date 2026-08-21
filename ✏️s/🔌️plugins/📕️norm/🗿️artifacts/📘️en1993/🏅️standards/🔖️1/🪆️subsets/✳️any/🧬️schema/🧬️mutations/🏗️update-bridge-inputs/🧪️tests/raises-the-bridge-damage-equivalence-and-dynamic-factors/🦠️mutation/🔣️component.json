@@ -1,0 +1,7 @@
+{
+  "UpdateBridgeInputs": {
+    "new_bridge_lambda": 1.5,
+    "new_bridge_phi_2": 1.25,
+    "new_bridge_delta_sigma_p_mpa": 45.0
+  }
+}

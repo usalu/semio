@@ -1,0 +1,25 @@
+{
+  "faces": {
+    "modified": [
+      {
+        "key": "f1",
+        "diff": {
+          "surface": {
+            "kind": "cylinder",
+            "origin": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "axis": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            },
+            "radius": 2.0
+          }
+        }
+      }
+    ]
+  }
+}

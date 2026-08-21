@@ -1,0 +1,22 @@
+{
+  "mutation": "createGcp",
+  "gcp": {
+    "id": "gcp-tower",
+    "name": "Tower",
+    "worldPosition": [
+      7.0,
+      8.0,
+      9.0
+    ],
+    "observations": [
+      {
+        "streamId": "stream-a",
+        "frameIndex": 0,
+        "pixel": [
+          5.0,
+          6.0
+        ]
+      }
+    ]
+  }
+}

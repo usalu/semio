@@ -1,0 +1,43 @@
+{
+  "mutation": "createUserProfile",
+  "userProfile": {
+    "id": "user-profile-a",
+    "name": "User Profile A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "category": "primary",
+    "demographic": null,
+    "ageRange": null,
+    "abilities": [],
+    "disabilities": [],
+    "occupation": null,
+    "roleTitle": null,
+    "department": null,
+    "mobilityProfile": [],
+    "sensoryProfile": [],
+    "cognitiveProfile": [],
+    "behavioralPatterns": [],
+    "usageFrequency": null,
+    "usageDuration": null,
+    "peakUsageTimes": [],
+    "technologyProficiency": null,
+    "preferences": [],
+    "painPoints": [],
+    "goals": [],
+    "activityIds": [],
+    "researchMethod": null,
+    "personaArchetype": null,
+    "validated": false,
+    "stakeholderIds": []
+  }
+}

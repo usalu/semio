@@ -48,7 +48,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("step")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::step::schema::step_artifact_schema_descriptor())
+        .schema(crate::artifacts::step::schema::step_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::step::schema::inferences::step_artifact_inference_descriptor()])
         .composers(crate::artifacts::step::engine::io_registry::entries())

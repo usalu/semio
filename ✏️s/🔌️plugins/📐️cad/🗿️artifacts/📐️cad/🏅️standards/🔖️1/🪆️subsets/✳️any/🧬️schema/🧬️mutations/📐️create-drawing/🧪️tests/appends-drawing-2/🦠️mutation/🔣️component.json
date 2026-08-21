@@ -1,0 +1,5 @@
+{
+  "mutation": "createDrawing",
+  "childId": "drawing-2",
+  "target": "cad-drawing-2!s.stdio.semio@v1/drawing"
+}

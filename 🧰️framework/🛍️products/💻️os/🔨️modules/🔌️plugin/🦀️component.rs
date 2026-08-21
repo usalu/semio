@@ -2251,7 +2251,7 @@ pub mod app {
         }
 
         /// 🏷️ Returns the claim namespace.
-        pub fn namespace(&self) -> &ArtifactIdentityNamespace {
+        pub async fn namespace(&self) -> &ArtifactIdentityNamespace {
             &self.namespace
         }
 
@@ -2331,7 +2331,7 @@ pub mod app {
         }
 
         /// 🧬️ Captures an actual typed function pointer erased to its process-local code address.
-        pub async fn from_function_pointer(function: *const ()) -> Self {
+        pub async async fn from_function_pointer(function: *const ()) -> Self {
             Self(function as usize)
         }
     }
@@ -6067,7 +6067,7 @@ pub mod app {
         }
 
         pub async fn action(&self, action: &str, args: Option<Value>) -> (ActionId, Option<UiValue>) {
-            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_value_to_ui_value))
+            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_val.awaitue_to_ui_value))
         }
     }
     //#endregion 🔖️ActionFactory
@@ -10958,10 +10958,10 @@ pub mod app {
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None);
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-            let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
+            let mut store = ArtifactStore::new(envelope).await.expe.awaitct("failed to create document store");
             let config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
-            let draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
-            let interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
+            let draft_store = store::DraftStore::new(draft_envelope).await.expe.awaitct("failed to create draft store");
+            let interaction_store = ConfigStore::new(interaction_envelope).await.expe.awaitct("failed to create interaction store");
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -14927,7 +14927,7 @@ pub mod app {
         /// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
         /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
         /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
-        /// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`.
+        /// always, plus Write when `rights == Rights::Write`) — see `capaasync bility_rows_for`.
         pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: &AppDefinition) -> PA {
@@ -14942,7 +14942,7 @@ pub mod app {
         }
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
-        /// §2.3 clause 4: a viewer's document store attaches Read only, never Write).
+        /// §2.3 clause 4: a viewer's document store attaches Read onasync ly, never Write).
         pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: &AppDefinition) -> PA {
@@ -15515,16 +15515,16 @@ pub mod app {
                                     dialect: STD1_ANY_DIALECT,
                                     schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/*").await, inferences: &[], inference_services: Vec::new() },
                                     io: IoDeclaration { native: native_codecs::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1").await, entries: &[] },
-                                    viewer: viewer_surface::<Std1AnyViewer, FixtureApps>(viewer_definition(STD1_ANY_DIALECT).await).await,
-                                    editor: editor_surface::<Std1AnyEditor, FixtureApps>(editor_definition(STD1_ANY_DIALECT).await).await,
+                                    viewer: viewer_surface::<Std1AnyViewer, FixtureApps>(viewer_definition(STD1_ANY_DIALECT).await),
+                                    editor: editor_surface::<Std1AnyEditor, FixtureApps>(editor_definition(STD1_ANY_DIALECT).await),
                                     examples: &[],
                                 },
                                 SubsetDeclaration {
                                     dialect: STD1_STRICT_DIALECT,
                                     schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/strict").await, inferences: &[], inference_services: Vec::new() },
                                     io: IoDeclaration { native: native_codecs::<Std1StrictSnapshot, Std1StrictMutation>("semio.testkit.w1c-fixture.std1-strict/v1").await, entries: std1_strict_entries() },
-                                    viewer: viewer_surface::<Std1StrictViewer, FixtureApps>(viewer_definition(STD1_STRICT_DIALECT).await).await,
-                                    editor: editor_surface::<Std1StrictEditor, FixtureApps>(editor_definition(STD1_STRICT_DIALECT).await).await,
+                                    viewer: viewer_surface::<Std1StrictViewer, FixtureApps>(viewer_definition(STD1_STRICT_DIALECT).await),
+                                    editor: editor_surface::<Std1StrictEditor, FixtureApps>(editor_definition(STD1_STRICT_DIALECT).await),
                                     examples: &[],
                                 },
                             ],
@@ -15536,8 +15536,8 @@ pub mod app {
                                 dialect: STD2_ANY_DIALECT,
                                 schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@2/*").await, inferences: &[], inference_services: Vec::new() },
                                 io: IoDeclaration { native: native_codecs::<Std2AnySnapshot, Std2AnyMutation>("semio.testkit.w1c-fixture.std2-any/v1").await, entries: &[] },
-                                viewer: viewer_surface::<Std2AnyViewer, FixtureApps>(viewer_definition(STD2_ANY_DIALECT).await).await,
-                                editor: editor_surface::<Std2AnyEditor, FixtureApps>(editor_definition(STD2_ANY_DIALECT).await).await,
+                                viewer: viewer_surface::<Std2AnyViewer, FixtureApps>(viewer_definition(STD2_ANY_DIALECT).await),
+                                editor: editor_surface::<Std2AnyEditor, FixtureApps>(editor_definition(STD2_ANY_DIALECT).await),
                                 examples: &[],
                             }],
                         },

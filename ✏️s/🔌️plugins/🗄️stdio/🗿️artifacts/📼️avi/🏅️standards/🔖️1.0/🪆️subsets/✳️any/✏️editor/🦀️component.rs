@@ -68,7 +68,7 @@ impl ArtifactEditor for AviEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -78,7 +78,7 @@ impl ArtifactEditor for AviEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_avi_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(AVI_DIALECT)
-        .await.document(["semio", "avi"])
+        .document(["semio", "avi"])
         .icon_id("play")
         .mode_def(edit::definition())
         .default_mode_id(edit::MODE_ID)

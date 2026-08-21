@@ -167,12 +167,12 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
 fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApplyResult<()> {
     let base_names: HashSet<&str> = base.iter().map(|entry| entry.name.as_str()).collect();
     if base_names.len() != base.len() {
-        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP snapshot contains duplicate entry names").await.at(["entries"]));
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP snapshot contains duplicate entry names").at(["entries"]));
     }
     let mut removed = HashSet::new();
     for name in &diff.removed {
         if !base_names.contains(name.as_str()) || !removed.insert(name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "ZIP entry removal is missing or duplicated").await.at(["entries", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "ZIP entry removal is missing or duplicated").at(["entries", "removed"]));
         }
     }
     let mut modified = HashSet::new();
@@ -180,11 +180,11 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
     let mut renamed = HashSet::new();
     for entry in &diff.modified {
         if !base_names.contains(entry.name.as_str()) || !modified.insert(entry.name.as_str()) || removed.contains(entry.name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "ZIP entry modification is missing, duplicated, or removed").await.at(["entries", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "ZIP entry modification is missing, duplicated, or removed").at(["entries", "modified"]));
         }
         if let Some(name) = &entry.diff.name {
             if name.is_empty() || (name != &entry.name && occupied.contains(name.as_str())) || !renamed.insert(name.as_str()) {
-                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry rename conflicts with an existing or repeated name").await.at(["entries", "modified"]));
+                return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry rename conflicts with an existing or repeated name").at(["entries", "modified"]));
             }
             occupied.remove(entry.name.as_str());
             occupied.insert(name.as_str());
@@ -192,7 +192,7 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
     }
     for entry in &diff.added {
         if entry.name.is_empty() || occupied.contains(entry.name.as_str()) || !occupied.insert(entry.name.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry addition conflicts with the target archive").await.at(["entries", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry addition conflicts with the target archive").at(["entries", "added"]));
         }
     }
     Ok(())
@@ -274,12 +274,12 @@ struct ZipDiffRecord {
 impl protocol::DiffCodec for ZipDiff {
     async fn print_diff(&self) -> String {
         let model = ZipDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical ZIP diff") };
-        dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document)
+        dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document).await
     }
 
     async fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
-        let model = ZipDiffRecord::__dsl_from_record(&record)?;
+        let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document }).await?;
+        let model = ZipDiffRecord::__dsl_from_record(&record).await?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 

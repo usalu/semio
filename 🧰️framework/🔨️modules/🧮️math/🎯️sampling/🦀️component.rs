@@ -3353,7 +3353,7 @@ impl FreqTable {
         Self::default()
     }
 
-    pub fn count(&self, token: TokenId) -> u32 {
+    pub async fn count(&self, token: TokenId) -> u32 {
         self.counts.get(&token).copied().unwrap_or(0)
     }
 
@@ -3493,7 +3493,7 @@ impl LogitsProcessor for RepetitionPenalty {
         let mut seen: std::collections::HashSet<TokenId> = std::collections::HashSet::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);
-            if self.counts.count(token) > 0 {
+            if self.counts.count(token).await > 0 {
                 seen.insert(token);
             }
         }
@@ -3577,7 +3577,7 @@ impl LogitsProcessor for PresencePenalty {
         let mut seen: std::collections::HashSet<TokenId> = std::collections::HashSet::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);
-            if self.counts.count(token) > 0 {
+            if self.counts.count(token).await > 0 {
                 seen.insert(token);
             }
         }
@@ -3651,7 +3651,7 @@ impl LogitsProcessor for FrequencyPenalty {
         let mut counts_by_token: std::collections::HashMap<TokenId, u32> = std::collections::HashMap::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);
-            counts_by_token.insert(token, self.counts.count(token));
+            counts_by_token.insert(token, self.counts.count(token).await);
         }
         ws.add_bias_over_live(|token| -penalty * counts_by_token.get(&token).copied().unwrap_or(0) as f32).await;
         Ok(())

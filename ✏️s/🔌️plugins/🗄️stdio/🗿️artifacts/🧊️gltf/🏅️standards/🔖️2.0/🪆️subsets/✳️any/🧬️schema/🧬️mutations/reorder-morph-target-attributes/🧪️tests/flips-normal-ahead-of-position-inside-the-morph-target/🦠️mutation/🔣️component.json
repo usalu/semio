@@ -1,0 +1,9 @@
+{
+  "mesh": 0,
+  "primitive": 0,
+  "target": 0,
+  "order": [
+    "NORMAL",
+    "POSITION"
+  ]
+}

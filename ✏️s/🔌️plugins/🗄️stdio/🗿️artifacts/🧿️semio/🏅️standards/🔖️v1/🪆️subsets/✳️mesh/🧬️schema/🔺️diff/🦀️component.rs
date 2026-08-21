@@ -724,8 +724,8 @@ pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec();
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1268,27 +1268,27 @@ mod tests {
         let a = snapshot_a();
         let b = snapshot_b();
         let cases =
-            vec![SemioMeshDiff::default(), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b).await, <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a).await, <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a).await];
+            vec![SemioMeshDiff::default(), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a), <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioMeshDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioMeshDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioMeshDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioMeshDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
 
         // Confirm nested + tri-state coverage genuinely got exercised above.
         let diff_ab = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
-        let meshes = diff_ab.await.meshes.as_ref().expect("meshes diff present");
+        let meshes = diff_ab.meshes.as_ref().expect("meshes diff present");
         let mesh_mod = meshes.modified.iter().find(|m| m.key == "m1").expect("m1 modified");
         let prims = mesh_mod.diff.primitives.as_ref().expect("primitives diff present");
         let prim_mod = prims.modified.iter().find(|p| p.key == "p1").expect("p1 modified");
         assert_eq!(prim_mod.diff.material_id, Some(None), "material_id tri-state Some(None) not exercised");
         let diff_ba = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a);
-        let prim_mod_ba = diff_ba.await.meshes.as_ref().unwrap().modified[0].diff.primitives.as_ref().unwrap().modified.iter().find(|p| p.key == "p1").unwrap();
+        let prim_mod_ba = diff_ba.meshes.as_ref().unwrap().modified[0].diff.primitives.as_ref().unwrap().modified.iter().find(|p| p.key == "p1").unwrap();
         assert_eq!(prim_mod_ba.diff.material_id, Some(Some("mat1".to_string())), "material_id tri-state Some(Some(_)) not exercised");
     }
 }

@@ -1,0 +1,47 @@
+{
+  "layers": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "root": {
+            "kind": "group",
+            "children": {
+              "removed": [
+                0
+              ],
+              "added": [
+                {
+                  "index": 2,
+                  "item": {
+                    "kind": "path",
+                    "segments": [
+                      {
+                        "kind": "moveTo",
+                        "to": {
+                          "x": 0.0,
+                          "y": 0.0
+                        }
+                      },
+                      {
+                        "kind": "lineTo",
+                        "to": {
+                          "x": 10.0,
+                          "y": 0.0
+                        }
+                      },
+                      {
+                        "kind": "close"
+                      }
+                    ],
+                    "style": "primary"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

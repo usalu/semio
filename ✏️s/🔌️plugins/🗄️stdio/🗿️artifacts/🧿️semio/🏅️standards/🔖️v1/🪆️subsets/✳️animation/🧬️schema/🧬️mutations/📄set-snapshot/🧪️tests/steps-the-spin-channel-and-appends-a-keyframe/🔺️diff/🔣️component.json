@@ -1,0 +1,40 @@
+{
+  "timelines": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "channels": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "interpolation": "step",
+                  "keyframes": {
+                    "added": [
+                      {
+                        "index": 2,
+                        "item": {
+                          "t": 2.0,
+                          "value": {
+                            "kind": "quat",
+                            "value": {
+                              "x": 0.0,
+                              "y": 0.0,
+                              "z": 1.0,
+                              "w": 0.0
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

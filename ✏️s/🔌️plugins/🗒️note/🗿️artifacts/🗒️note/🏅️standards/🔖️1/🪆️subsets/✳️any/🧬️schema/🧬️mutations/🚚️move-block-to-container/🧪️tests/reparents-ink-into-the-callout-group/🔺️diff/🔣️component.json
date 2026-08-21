@@ -1,0 +1,66 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [
+      {
+        "parentId": "blk-group",
+        "index": 0,
+        "block": {
+          "kind": "stroke",
+          "id": "blk-ink",
+          "name": "Sketch",
+          "x": 20.0,
+          "y": 160.0,
+          "width": 80.0,
+          "height": 40.0,
+          "rotation": 0.0,
+          "visible": true,
+          "locked": false,
+          "points": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              10.0,
+              10.0
+            ]
+          ],
+          "strokeWidth": 2.0,
+          "color": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    ],
+    "removed": [
+      "blk-ink"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null,
+  "selectedBlockIds": null,
+  "activeUtilityId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredBlockId": null
+}

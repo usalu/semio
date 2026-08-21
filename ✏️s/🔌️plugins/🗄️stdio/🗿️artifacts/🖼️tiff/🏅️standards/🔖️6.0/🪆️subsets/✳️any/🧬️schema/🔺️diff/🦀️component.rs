@@ -411,13 +411,13 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF IFD removal is missing or duplicated").await.at(["ifds", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF IFD removal is missing or duplicated").at(["ifds", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF IFD modification is missing, duplicated, or removed").await.at(["ifds", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF IFD modification is missing, duplicated, or removed").at(["ifds", "modified"]));
         }
         validate_tiff_tags(&base[entry.index].entries, &entry.diff)?;
     }
@@ -425,7 +425,7 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "TIFF IFD addition index is invalid or duplicated").await.at(["ifds", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "TIFF IFD addition index is invalid or duplicated").at(["ifds", "added"]));
         }
     }
     Ok(())
@@ -436,18 +436,18 @@ fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyRes
     let base_tags: std::collections::HashSet<u16> = base.iter().map(|tag| tag.tag).collect();
     let removed: std::collections::HashSet<u16> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|tag| !base_tags.contains(tag)) {
-        return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF tag removal is missing or duplicated").await.at(["entries", "removed"]));
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF tag removal is missing or duplicated").at(["entries", "removed"]));
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if !base_tags.contains(&entry.tag) || !modified.insert(entry.tag) || removed.contains(&entry.tag) || entry.kind != entry.values.kind() {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF tag modification is missing, duplicated, or removed").await.at(["entries", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF tag modification is missing, duplicated, or removed").at(["entries", "modified"]));
         }
     }
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if base_tags.contains(&entry.tag) || !added.insert(entry.tag) || entry.kind != entry.values.kind() {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "TIFF tag addition conflicts with the target state or has an invalid value kind").await.at(["entries", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "TIFF tag addition conflicts with the target state or has an invalid value kind").at(["entries", "added"]));
         }
     }
     Ok(())
@@ -627,8 +627,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -818,7 +818,7 @@ pub(crate) fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffValues, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     let count = |reader: &mut store::ByteReader<'_>| -> Result<u64, String> { semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string()) };
     match tag {
         0 => Ok(TiffValues::Byte(read_bytes_lp(reader)?)),
@@ -887,8 +887,8 @@ pub(crate) fn enc_tag_bin(t: &TiffTag, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag, String> {
-    let tag = reader.read_u16_le().await.map_err(|e| e.to_string())?;
-    let kind = TiffFieldType::from_u16(reader.read_u8().await.map_err(|e| e.to_string())? as u16)?;
+    let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+    let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
     let values = dec_values_bin(reader)?;
     Ok(TiffTag { tag, kind, values })
 }
@@ -901,7 +901,7 @@ pub(crate) fn enc_ifd_bin(ifd: &TiffIfd, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd, String> {
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entries = Vec::with_capacity(n as usize);
     for _ in 0..n {
         entries.push(dec_tag_bin(reader)?);
@@ -1005,24 +1005,24 @@ pub(crate) fn enc_tags_diff_bin(d: &TiffTagsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTagsDiff, String> {
-    let rn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rn as usize);
     for _ in 0..rn {
-        removed.push(reader.read_u16_le().await.map_err(|e| e.to_string())?);
+        removed.push(reader.read_u16_le().map_err(|e| e.to_string())?);
     }
-    let mn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mn as usize);
     for _ in 0..mn {
-        let tag = reader.read_u16_le().await.map_err(|e| e.to_string())?;
-        let kind = TiffFieldType::from_u16(reader.read_u8().await.map_err(|e| e.to_string())? as u16)?;
+        let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+        let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
         let values = dec_values_bin(reader)?;
         modified.push(TiffTagModified { tag, kind, values });
     }
-    let an = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let an = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(an as usize);
     for _ in 0..an {
-        let tag = reader.read_u16_le().await.map_err(|e| e.to_string())?;
-        let kind = TiffFieldType::from_u16(reader.read_u8().await.map_err(|e| e.to_string())? as u16)?;
+        let tag = reader.read_u16_le().map_err(|e| e.to_string())?;
+        let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| e.to_string())? as u16)?;
         let values = dec_values_bin(reader)?;
         added.push(TiffTagAdded { tag, kind, values });
     }
@@ -1032,7 +1032,7 @@ pub(crate) fn dec_tags_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Ti
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
-    d.removed.iter().for_each(|&i| { store::pack_rt::write_varint_u64(out, i as u64); });
+    d.removed.iter().for_each(|&i| store::pack_rt::write_varint_u64(out, i as u64));
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
     for m in &d.modified {
         store::pack_rt::write_varint_u64(out, m.index as u64);
@@ -1046,22 +1046,22 @@ pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfdsDiff, String> {
-    let rn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rn as usize);
     for _ in 0..rn {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let mn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mn = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mn as usize);
     for _ in 0..mn {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = dec_tags_diff_bin(reader)?;
         modified.push(TiffIfdModified { index, diff });
     }
-    let an = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let an = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(an as usize);
     for _ in 0..an {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let ifd = dec_ifd_bin(reader)?;
         added.push(TiffIfdAdded { index, ifd });
     }
@@ -1250,10 +1250,10 @@ mod handcrafted_diff_codec_tests {
         b.pixels = vec![9u8; 16];
         let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
 
-        let cases = vec![TiffDiff::default(), TiffDiff::between(&a, &b).await, TiffDiff::between(&b, &a).await, TiffDiff::between(&a, &c).await, TiffDiff::between(&c, &a)];
+        let cases = vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = TiffDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 

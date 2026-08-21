@@ -1,0 +1,172 @@
+{
+  "schema": "layout.layout",
+  "name": "Fixture Layout",
+  "grid": {
+    "baselineGrid": 12.0,
+    "baselineOffset": 0.0,
+    "snapToBaseline": true
+  },
+  "paragraphStyles": [],
+  "characterStyles": [],
+  "stories": [
+    {
+      "id": "story-1",
+      "content": "Alpha body.",
+      "styleRuns": []
+    },
+    {
+      "id": "story-2",
+      "content": "Spare body.",
+      "styleRuns": []
+    },
+    {
+      "id": "story-3",
+      "content": "Caption.",
+      "styleRuns": []
+    }
+  ],
+  "links": [
+    {
+      "id": "link-1",
+      "path": "alpha.png",
+      "hash": "hash-alpha",
+      "width": 800,
+      "height": 600,
+      "dpi": 300,
+      "colorProfile": null,
+      "state": null,
+      "proxyDataUrl": null
+    },
+    {
+      "id": "link-2",
+      "path": "spare.png",
+      "hash": "hash-spare",
+      "width": 400,
+      "height": 300,
+      "dpi": 72,
+      "colorProfile": null,
+      "state": null,
+      "proxyDataUrl": null
+    }
+  ],
+  "parentPages": [],
+  "spreads": [],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Cover",
+      "spreadId": "spread-1",
+      "parentPageId": null,
+      "width": 200.0,
+      "height": 300.0,
+      "margins": {
+        "top": 10.0,
+        "right": 10.0,
+        "bottom": 10.0,
+        "left": 10.0
+      },
+      "columns": {
+        "count": 1,
+        "gutter": 0.0
+      },
+      "guides": [],
+      "layerIds": [
+        "layer-1"
+      ],
+      "layers": [
+        {
+          "id": "layer-1",
+          "name": "Content",
+          "visible": true,
+          "locked": false,
+          "objectIds": [
+            "frame-rect",
+            "frame-text"
+          ]
+        }
+      ],
+      "frames": [
+        {
+          "kind": "rect",
+          "id": "frame-rect",
+          "layerId": "layer-1",
+          "bounds": {
+            "x": 20.0,
+            "y": 30.0,
+            "w": 60.0,
+            "h": 40.0,
+            "rotation": 0.0
+          },
+          "locked": null,
+          "visible": null,
+          "fill": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "stroke": null
+        },
+        {
+          "kind": "text",
+          "id": "frame-text",
+          "layerId": "layer-1",
+          "bounds": {
+            "x": 20.0,
+            "y": 90.0,
+            "w": 160.0,
+            "h": 120.0,
+            "rotation": 0.0
+          },
+          "locked": null,
+          "visible": null,
+          "storyId": "story-1",
+          "threadNext": null,
+          "columns": 1,
+          "inset": {
+            "x": 0.0,
+            "y": 0.0,
+            "w": 0.0,
+            "h": 0.0
+          },
+          "wrapMode": "box"
+        }
+      ],
+      "overrides": []
+    },
+    {
+      "id": "page-2",
+      "name": "Spare",
+      "spreadId": "spread-1",
+      "parentPageId": null,
+      "width": 200.0,
+      "height": 300.0,
+      "margins": {
+        "top": 10.0,
+        "right": 10.0,
+        "bottom": 10.0,
+        "left": 10.0
+      },
+      "columns": {
+        "count": 1,
+        "gutter": 0.0
+      },
+      "guides": [],
+      "layerIds": [
+        "layer-2"
+      ],
+      "layers": [
+        {
+          "id": "layer-2",
+          "name": "Content",
+          "visible": true,
+          "locked": false,
+          "objectIds": []
+        }
+      ],
+      "frames": [],
+      "overrides": []
+    }
+  ],
+  "printTarget": null
+}

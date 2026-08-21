@@ -1,0 +1,25 @@
+{
+  "schema": "energy.model",
+  "structure": {
+    "childId": "energy-scene-fixture-unresolved",
+    "target": {
+      "artifactId": "energy-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "zones": {
+    "childId": "energy-scene-fixture-unresolved",
+    "target": {
+      "artifactId": "energy-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  }
+}

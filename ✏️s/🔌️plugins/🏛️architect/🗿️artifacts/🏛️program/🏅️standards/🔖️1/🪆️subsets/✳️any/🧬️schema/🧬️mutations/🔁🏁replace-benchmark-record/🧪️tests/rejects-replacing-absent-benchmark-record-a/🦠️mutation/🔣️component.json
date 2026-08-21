@@ -1,0 +1,38 @@
+{
+  "mutation": "replaceBenchmarkRecord",
+  "benchmarkRecord": {
+    "id": "benchmark-record-a",
+    "name": "Benchmark Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "benchmarkName": "",
+    "sector": "",
+    "metric": "",
+    "value": 0.0,
+    "unit": "",
+    "sampleSize": null,
+    "source": null,
+    "collectionYear": null,
+    "geography": null,
+    "buildingType": null,
+    "confidence": null,
+    "methodology": null,
+    "applicableElementKinds": [],
+    "relatedRequirementIds": [],
+    "comparisonNotes": [],
+    "limitations": [],
+    "license": null,
+    "knowledgeId": null,
+    "lastVerified": null
+  }
+}

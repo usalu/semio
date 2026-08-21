@@ -1,0 +1,27 @@
+{
+  "id": "s.stdio.gltf.mutation.create-camera.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/cameras/0"
+  ],
+  "payload": {
+    "position": 0,
+    "projection": {
+      "Perspective": {
+        "yfov": 0.5,
+        "znear": 0.5
+      }
+    }
+  },
+  "operation": {
+    "kind": "insert",
+    "position": 0,
+    "item": {
+      "type": "perspective",
+      "perspective": {
+        "yfov": 0.5,
+        "znear": 0.5
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "stdio.semio.object",
+  "transform": {
+    "translation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "scale": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    }
+  },
+  "brep": {
+    "childId": "brep-1",
+    "target": {
+      "artifactId": "kitchen-sink-brep",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  },
+  "mesh": {
+    "childId": "mesh-1",
+    "target": {
+      "artifactId": "kitchen-sink-mesh",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "mesh"
+      }
+    }
+  }
+}

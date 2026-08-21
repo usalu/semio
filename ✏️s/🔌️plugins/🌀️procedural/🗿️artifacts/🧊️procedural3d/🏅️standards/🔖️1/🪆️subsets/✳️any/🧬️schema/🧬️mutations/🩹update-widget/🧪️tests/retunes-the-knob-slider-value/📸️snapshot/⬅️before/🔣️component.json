@@ -1,0 +1,44 @@
+{
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "node-a",
+        "text": "Base plate"
+      },
+      {
+        "kind": "inputSlider",
+        "id": "knob",
+        "value": 3.0,
+        "min": 0.0,
+        "max": 10.0,
+        "step": 0.5
+      }
+    ],
+    "synapses": [],
+    "layout": {
+      "node-a": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "generation": {
+    "generations": [
+      {
+        "id": "gen-1",
+        "name": "Baseline",
+        "values": {
+          "storeys": 3.0
+        }
+      }
+    ],
+    "selectedGenerationId": "gen-1"
+  }
+}

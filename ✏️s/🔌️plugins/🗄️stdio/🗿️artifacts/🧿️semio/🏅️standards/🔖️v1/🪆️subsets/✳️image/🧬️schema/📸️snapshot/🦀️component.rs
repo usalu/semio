@@ -295,8 +295,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -369,28 +369,28 @@ fn encode_image_snapshot_binary(s: &SemioImageSnapshot) -> Vec<u8> {
 fn decode_image_snapshot_binary(bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let width = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-    let height = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-    let colorspace = colorspace_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?)?;
-    let bit_depth = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let icc = match reader.read_u8().await.map_err(|e| e.to_string())? {
+    let width = reader.read_u32_le().map_err(|e| e.to_string())?;
+    let height = reader.read_u32_le().map_err(|e| e.to_string())?;
+    let colorspace = colorspace_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
+    let bit_depth = reader.read_u8().map_err(|e| e.to_string())?;
+    let icc = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
         1 => Some(read_bytes_lp(&mut reader)?),
         other => return Err(format!("unsupported icc presence tag {other}")),
     };
-    let frame_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let frame_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut frames = Vec::with_capacity(frame_count as usize);
     for _ in 0..frame_count {
-        let delay_ms = reader.read_u32_le().await.map_err(|e| e.to_string())?;
+        let delay_ms = reader.read_u32_le().map_err(|e| e.to_string())?;
         let rgba8 = read_bytes_lp(&mut reader)?;
         frames.push(SemioImageFrame { delay_ms, rgba8 });
     }
-    let metadata_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let metadata_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut metadata = Vec::with_capacity(metadata_count as usize);
     for _ in 0..metadata_count {
         let key = read_str_lp(&mut reader)?;
@@ -482,7 +482,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioImageSnapshot::default();
         let bytes = <SemioImageSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -490,7 +490,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioImageSnapshot::default();
         let text = <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -500,10 +500,10 @@ mod tests {
     async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioImageSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
         let text = <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back_text = <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back_text);
     }
 }

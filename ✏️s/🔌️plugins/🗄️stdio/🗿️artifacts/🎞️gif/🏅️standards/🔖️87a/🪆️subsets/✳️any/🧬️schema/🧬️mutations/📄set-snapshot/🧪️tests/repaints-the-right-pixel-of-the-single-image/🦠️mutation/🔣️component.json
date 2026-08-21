@@ -1,0 +1,39 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.gif",
+    "width": 2,
+    "height": 1,
+    "gct": {
+      "sorted": false,
+      "colors": [
+        {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        }
+      ]
+    },
+    "backgroundColorIndex": 0,
+    "pixelAspectRatio": 0,
+    "images": [
+      {
+        "left": 0,
+        "top": 0,
+        "width": 2,
+        "height": 1,
+        "interlace": false,
+        "lct": null,
+        "indices": [
+          0,
+          1
+        ]
+      }
+    ]
+  }
+}

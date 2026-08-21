@@ -1,0 +1,43 @@
+{
+  "artifact": null,
+  "manufacturerFile": null,
+  "catalog": null,
+  "editionProfile": null,
+  "correctionAsOf": null,
+  "strictMode": null,
+  "index": null,
+  "geometry": null,
+  "curves": {
+    "curve.kvs": {
+      "id": "curve.kvs",
+      "x_unit": {
+        "symbol": "%",
+        "kind": "Dimensionless",
+        "delta": true,
+        "si_factor": 0.01
+      },
+      "y_unit": {
+        "symbol": "m3/h",
+        "kind": "Volume",
+        "delta": false,
+        "si_factor": 1.0
+      },
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 50.0,
+          "y": 2.25
+        },
+        {
+          "x": 100.0,
+          "y": 4.5
+        }
+      ]
+    }
+  },
+  "limits": null,
+  "selectedCheckIndex": null
+}

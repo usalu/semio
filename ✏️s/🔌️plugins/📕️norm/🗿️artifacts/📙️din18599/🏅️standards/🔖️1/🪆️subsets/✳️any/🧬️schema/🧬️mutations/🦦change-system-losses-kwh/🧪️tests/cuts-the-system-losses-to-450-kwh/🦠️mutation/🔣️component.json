@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSystemLossesKwh",
+  "newSystemLossesKwh": 450.0
+}

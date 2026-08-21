@@ -1,0 +1,5 @@
+{
+  "mutation": "renameTemplateRecord",
+  "id": "template-record-a",
+  "newName": "Renamed Template Record A"
+}

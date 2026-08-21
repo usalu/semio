@@ -1,0 +1,11 @@
+{
+  "beforeFixtureJson": null,
+  "lhsJson": "{\"pattern\":{\"var\":\"c\",\"kind\":\"Piece\",\"near\":\"shaft\"}}",
+  "rhsJson": null,
+  "parameterBindings": null,
+  "ruleLayout": null,
+  "lodModeByWindow": null,
+  "beforePaneCamera": null,
+  "reorganizeEpoch": null,
+  "locale": null
+}

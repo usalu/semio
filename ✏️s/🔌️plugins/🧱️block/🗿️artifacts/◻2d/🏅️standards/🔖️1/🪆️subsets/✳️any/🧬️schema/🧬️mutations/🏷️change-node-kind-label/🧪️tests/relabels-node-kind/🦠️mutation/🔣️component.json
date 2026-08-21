@@ -1,0 +1,4 @@
+{
+  "mutation": "changeNodeKindLabel",
+  "newLabel": "Inline Valve"
+}

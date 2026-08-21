@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGripKindLabel",
+  "id": "gk-plug",
+  "newLabel": "Plug Rim"
+}

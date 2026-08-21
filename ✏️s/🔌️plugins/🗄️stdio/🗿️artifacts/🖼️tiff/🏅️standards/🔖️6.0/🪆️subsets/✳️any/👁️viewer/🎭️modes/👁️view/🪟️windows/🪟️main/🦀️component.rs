@@ -22,7 +22,7 @@ pub fn render(snapshot: &TiffSnapshot) -> UiNode {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &TiffSnapshot) -> ImageView {
-    let bytes = encode_tiff(snapshot).await.ok().unwrap_or_default();
+    let bytes = encode_tiff(snapshot).ok().unwrap_or_default();
     ImageView { width: 0, height: 0, mime: "image/tiff".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
 }
 

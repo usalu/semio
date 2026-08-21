@@ -15,11 +15,14 @@
 
 #[path = "🦀️backend_alias.rs"]
 mod backend_alias;
+#[path = "🦀️enqueue.rs"]
+mod enqueue;
 #[path = "🦀️event.rs"]
 mod event;
 #[path = "🦀️window.rs"]
 mod window;
 
 pub use backend_alias::*;
+pub use enqueue::*;
 pub use event::*;
 pub use window::*;

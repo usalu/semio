@@ -1,0 +1,32 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": null,
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": {
+    "entries": {
+      "asset-sketch": {
+        "mime": "image/jpeg",
+        "data": "c2tldGNo"
+      }
+    }
+  },
+  "linkedArtifact": null,
+  "selectedBlockIds": null,
+  "activeUtilityId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredBlockId": null
+}

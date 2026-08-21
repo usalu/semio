@@ -1,0 +1,38 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "stamp",
+        "patch": {
+          "name": null,
+          "visible": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformX": 16.0,
+          "transformY": -8.0,
+          "width": null,
+          "height": null,
+          "adjustmentKind": null
+        }
+      }
+    ],
+    "moved": []
+  },
+  "assets": null,
+  "selectedIds": null,
+  "activeUtilityId": null,
+  "brushSize": null,
+  "brushOpacity": null,
+  "compositeViewport": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredId": null
+}

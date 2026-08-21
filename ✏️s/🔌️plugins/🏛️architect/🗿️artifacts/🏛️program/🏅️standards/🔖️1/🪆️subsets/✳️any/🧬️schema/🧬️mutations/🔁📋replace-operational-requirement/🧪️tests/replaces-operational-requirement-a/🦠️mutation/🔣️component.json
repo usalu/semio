@@ -1,0 +1,45 @@
+{
+  "mutation": "replaceOperationalRequirement",
+  "operationalRequirement": {
+    "id": "operational-requirement-a",
+    "name": "Operational Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "operation": "Replaced Operational Requirement A",
+    "serviceLevel": null,
+    "operatingHours": null,
+    "staffing": {
+      "unit": ""
+    },
+    "maintenanceInterval": null,
+    "cleaningRegime": null,
+    "turnaroundTime": null,
+    "redundancy": null,
+    "uptimeTarget": null,
+    "responseTime": null,
+    "equipmentIds": [],
+    "elementIds": [],
+    "processIds": [],
+    "utilities": [],
+    "wasteStreams": [],
+    "contingencyPlan": [],
+    "trainingRequirements": [],
+    "sopReferences": [],
+    "kpiTargets": [],
+    "ownerId": null,
+    "serviceCategory": null,
+    "shiftPattern": null,
+    "slaTarget": null,
+    "escalationContactId": null
+  }
+}

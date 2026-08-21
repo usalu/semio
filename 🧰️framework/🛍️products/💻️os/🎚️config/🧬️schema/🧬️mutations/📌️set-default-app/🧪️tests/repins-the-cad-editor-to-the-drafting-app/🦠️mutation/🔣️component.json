@@ -1,0 +1,13 @@
+{
+  "mutation": "setDefaultApp",
+  "dialect": {
+    "artifactKind": "s.cad.cad",
+    "standard": "1",
+    "subset": "*"
+  },
+  "role": "editor",
+  "app": {
+    "pluginId": "drafting",
+    "appId": "s.cad.cad@1/*#editor"
+  }
+}

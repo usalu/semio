@@ -1,0 +1,19 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": [
+            {
+              "attributes": {},
+              "extensions": {
+                "KHR_draco_mesh_compression": {}
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

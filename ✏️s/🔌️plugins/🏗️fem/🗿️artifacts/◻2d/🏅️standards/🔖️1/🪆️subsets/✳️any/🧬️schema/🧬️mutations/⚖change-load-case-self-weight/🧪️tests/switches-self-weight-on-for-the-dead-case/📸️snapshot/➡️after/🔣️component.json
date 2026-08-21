@@ -1,0 +1,41 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "id": "n2",
+      "x": 4.0,
+      "y": 0.0
+    }
+  ],
+  "elements": [],
+  "regions": [],
+  "materials": [],
+  "sections": [],
+  "supports": [],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [
+        {
+          "kind": "nodal",
+          "id": "l1",
+          "nodeId": "n2",
+          "dof": "Ty",
+          "value": -12.5
+        }
+      ],
+      "selfWeight": true
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

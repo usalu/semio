@@ -1,0 +1,17 @@
+{
+  "operation": {
+    "scene": 0,
+    "data": {
+      "state": "present",
+      "value": {
+        "KHR_xmp_json_ld": {}
+      }
+    }
+  },
+  "after": {
+    "KHR_xmp_json_ld": {}
+  },
+  "touchedPaths": [
+    "document/scenes/*/extensions"
+  ]
+}

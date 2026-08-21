@@ -1,0 +1,43 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "blk-ink",
+        "patch": {
+          "blockJson": "{\"kind\":\"stroke\",\"id\":\"blk-ink\",\"name\":\"Sketch\",\"x\":32.0,\"y\":152.0,\"width\":80.0,\"height\":40.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"points\":[[0.0,0.0],[10.0,10.0]],\"strokeWidth\":2.0,\"color\":[0.0,0.0,0.0,1.0]}"
+        }
+      },
+      {
+        "id": "blk-group",
+        "patch": {
+          "blockJson": "{\"kind\":\"group\",\"id\":\"blk-group\",\"name\":\"Callout\",\"x\":352.0,\"y\":192.0,\"width\":280.0,\"height\":120.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"children\":[{\"kind\":\"image\",\"id\":\"blk-nested\",\"name\":\"Badge\",\"x\":362.0,\"y\":202.0,\"width\":60.0,\"height\":60.0,\"rotation\":0.0,\"visible\":true,\"locked\":false,\"imageKey\":\"asset-logo\"}]}"
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "gridVisible": null,
+  "gridSpacing": null,
+  "gridSubdivisions": null,
+  "gridOpacity": null,
+  "snapEnabled": null,
+  "snapGridSpacing": null,
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null,
+  "selectedBlockIds": null,
+  "activeUtilityId": null,
+  "engagementInput": null,
+  "cameraX": null,
+  "cameraY": null,
+  "cameraZoom": null,
+  "locale": null,
+  "hoveredBlockId": null
+}

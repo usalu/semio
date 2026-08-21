@@ -1,0 +1,13 @@
+{
+  "title": "Phase 5 Resumable Frame Transaction And Renderer",
+  "emoji": "🔄️",
+  "status": "open",
+  "description": "Phase 5 of the Interactive Job Runtime Refactor (master ticket 26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR).\n\nConvert the run-to-completion UI transaction into a persistent, worker-owned state machine.\n\nUiRuntime::transact currently drains projection deltas, routes all queued intents, reaches an effect fixpoint, presents every dirty surface and reconciles their trees as one synchronous transaction. Count limits exist (PROJECTION_DRAIN_LIMIT 256, EFFECT_STORM_BUDGET 64) but there is no elapsed-time yield point anywhere across it.\n\nIt becomes FrameTransaction::step() with cursor-resumable stages: DrainProjectionDeltas, RouteIntents, FlushEffects, PresentSurface, ReconcileTree, BuildRenderPackets, PublishSnapshot. Each stage has fuel, wall-time, item-count, node-count, allocation and patch-byte limits; stores its cursor before yielding; may publish a speculative overlay but publishes a committed scene only at a consistent transaction boundary; gives newly arrived input priority over continuing old reconciliation; and abandons obsolete work when a newer projection revision or window generation supersedes it. Deterministic ordering, atomic publication, the revision guards (is_stale_intent) and effect ordering must all be preserved - the transaction becomes resumable around them, not looser.\n\nAlso in scope: reconciliation and presentation resumable by node cursor; layout and text shaping chunked into jobs; tessellation, draw sorting and batching and GPU upload-packet preparation as jobs; multi-window and multi-surface scheduling on lanes.\n\nPhase 3 identified the concrete prerequisites this phase must resolve: chrome layout, text shaping and tessellation still run on the UI thread because render_chrome takes a mutable GpuContext and touches roughly 15 thread_local statics, and GPU submission is fused encode-submit-present in a single method.\n\nExit gate: input remains responsive during effect storms, large tree changes, resize storms and multi-window invalidation, and no transaction stage step reaches 8 ms.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2578"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪dbe0f63fdf0c46e29728938632a09069"
+  ]
+}

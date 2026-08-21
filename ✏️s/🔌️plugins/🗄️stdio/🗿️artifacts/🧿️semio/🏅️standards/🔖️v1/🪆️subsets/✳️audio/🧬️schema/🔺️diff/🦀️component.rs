@@ -606,8 +606,8 @@ fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec();
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
@@ -850,19 +850,19 @@ mod tests {
 
         let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
-        assert!(ab.await.sample_rate.is_some());
-        assert!(ab.await.format.is_some());
-        let channels_ab = ab.await.channels.as_ref().expect("channels must differ");
+        assert!(ab.sample_rate.is_some());
+        assert!(ab.format.is_some());
+        let channels_ab = ab.channels.as_ref().expect("channels must differ");
         assert!(!channels_ab.modified.is_empty(), "sweep must exercise a modified channel");
         assert!(!channels_ab.added.is_empty(), "sweep must exercise an added channel (b is longer)");
-        let tags_ab = ab.await.tags.as_ref().expect("tags must differ");
+        let tags_ab = ab.tags.as_ref().expect("tags must differ");
         assert!(!tags_ab.removed.is_empty(), "sweep must exercise a removed tag (b has none)");
 
         let ba = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
-        let channels_ba = ba.await.channels.as_ref().expect("channels must differ");
+        let channels_ba = ba.channels.as_ref().expect("channels must differ");
         assert!(!channels_ba.removed.is_empty(), "reverse direction must exercise a removed channel (a is shorter)");
-        let tags_ba = ba.await.tags.as_ref().expect("tags must differ");
+        let tags_ba = ba.tags.as_ref().expect("tags must differ");
         assert!(!tags_ba.added.is_empty(), "reverse direction must exercise an added tag");
 
         assert!(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
@@ -881,15 +881,15 @@ mod tests {
         b.channels.push(channel(4.0, 3));
         b.tags.push(SemioAudioTag { key: "artist".into(), value: "someone".into() });
 
-        let cases = vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b).await, <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a).await];
+        let cases = vec![SemioAudioDiff::default(), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b), <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioAudioDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioAudioDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioAudioDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioAudioDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -1,0 +1,11 @@
+{
+  "CreateSolid": {
+    "id": "so2",
+    "shells": [
+      {
+        "shell": "s1",
+        "isVoid": true
+      }
+    ]
+  }
+}

@@ -116,10 +116,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -131,10 +131,10 @@ mod tests {
         for bytes in [vec![], vec![0x00, 0x01, 0xFF, 0xFE], (0u8..=255).collect::<Vec<u8>>()] {
             let snap = BinarySnapshot { bytes: bytes.clone(), ..Default::default() };
             let dsl_text = store::ArtifactDsl::print_dsl(&snap);
-            let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).await.expect("parse");
+            let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
             assert_eq!(parsed, snap, "dsl round-trip mismatch for {bytes:?}");
             let packed = store::ArtifactPack::encode_pack(&snap);
-            let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode");
+            let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode");
             assert_eq!(decoded, snap, "pack round-trip mismatch for {bytes:?}");
         }
     }
@@ -170,7 +170,7 @@ mod tests {
         assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
         let ba = BinaryDiff::between(&b, &a);
         assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
-        assert!(!ab.await.splices.is_empty(), "sweep diff must carry at least one splice");
+        assert!(!ab.splices.is_empty(), "sweep diff must carry at least one splice");
 
         // 🔬️ Exercise insert/remove/replace explicitly via hand-built splices (not just the
         // minimal `between` form) to prove the mechanism itself, not just this one pair.
@@ -180,7 +180,7 @@ mod tests {
                 crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
             ],
         };
-        assert_eq!(hand_built.apply(&a).await.unwrap(), b);
+        assert_eq!(hand_built.apply(&a).unwrap(), b);
 
         assert!(BinaryDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
@@ -190,10 +190,10 @@ mod tests {
     async fn demo_snapshot_round_trip() {
         let snap = demo_binary_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed, snap);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🦑️DissolvedEngineTests
@@ -282,18 +282,18 @@ mod tests {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_binary_snapshot());
             let trace = dsl::walk_protocol(&pack_spec, &packed).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
-            assert_eq!(trace.consumed, packed.await.len(), "pack walk did not consume every byte");
+            assert_eq!(trace.consumed, packed.len(), "pack walk did not consume every byte");
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -310,11 +310,11 @@ mod tests {
 
             let demo = demo_binary_snapshot();
 
-            let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            let parsed = <BinarySnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_binary_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_binary_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            let decoded = <BinarySnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_binary_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_binary_snapshot()) drifted from the shipped .pack.semio fixture");
         }

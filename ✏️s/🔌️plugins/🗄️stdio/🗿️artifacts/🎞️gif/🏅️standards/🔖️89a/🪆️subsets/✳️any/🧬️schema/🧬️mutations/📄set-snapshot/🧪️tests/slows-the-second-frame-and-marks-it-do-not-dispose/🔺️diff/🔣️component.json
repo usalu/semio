@@ -1,0 +1,13 @@
+{
+  "frames": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "delayCs": 25,
+          "disposal": "doNotDispose"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "mutation": "replaceSecurityRequirement",
+  "securityRequirement": {
+    "id": "security-requirement-a",
+    "name": "Security Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "controlKind": "accessControl",
+    "threat": "Replaced Security Requirement A",
+    "riskLevel": "negligible",
+    "assetIds": [],
+    "zoneIds": [],
+    "accessLevel": "public",
+    "perimeterControls": [],
+    "surveillance": [],
+    "intrusionDetection": [],
+    "cybersecurity": [],
+    "screening": [],
+    "visitorManagement": [],
+    "keyManagement": [],
+    "standards": [],
+    "responseProcedures": [],
+    "drillFrequency": null,
+    "liaisonContacts": [],
+    "classifiedLevel": null,
+    "redundancy": [],
+    "auditRequirements": []
+  }
+}

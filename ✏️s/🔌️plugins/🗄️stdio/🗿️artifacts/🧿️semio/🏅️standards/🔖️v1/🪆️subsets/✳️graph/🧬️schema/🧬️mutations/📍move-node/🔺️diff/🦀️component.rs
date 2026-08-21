@@ -16,7 +16,7 @@ pub fn diff(payload: &MoveNode, base: &SemioGraphSnapshot) -> protocol::Mutation
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node \"{}\" target position ({}, {}) is not finite.", payload.id.value, payload.new_position.x, payload.new_position.y), [payload.id.value.clone()]);
     }
     if node.position == payload.new_position {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node \"{}\" is already at ({}, {}).", payload.id.value, payload.new_position.x, payload.new_position.y));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" is already at ({}, {}).", payload.id.value, payload.new_position.x, payload.new_position.y));
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.id).expect("checked above");

@@ -1,0 +1,10 @@
+{
+  "UpdateLimits": {
+    "new_limits": {
+      "max_file_bytes": 1048576,
+      "max_records": 4096,
+      "max_field_length": 512,
+      "max_nesting_depth": 8
+    }
+  }
+}

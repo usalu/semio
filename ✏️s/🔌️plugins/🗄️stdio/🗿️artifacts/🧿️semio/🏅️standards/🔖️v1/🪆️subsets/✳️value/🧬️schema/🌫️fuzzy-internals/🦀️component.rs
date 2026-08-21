@@ -2512,7 +2512,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn genetic_optimizer_improves_quadratic() {
             let opt = GeneticOptimizer { population_size: 20, generations: 30, mutation_rate: 0.2, crossover_rate: 0.7, bounds: vec![(-5.0, 5.0)], seed: 42 };
-            let (best, fit) = opt.optimize(|x| (x[0] - 2.0).powi(2)).await;
+            let (best, fit) = opt.optimize(|x| (x[0] - 2.0).powi(2));
             assert!(fit < 1.0);
             assert!((best[0] - 2.0).abs() < 1.5);
         }
@@ -2520,7 +2520,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn pso_optimizer_finds_minimum() {
             let opt = PsoOptimizer { swarm_size: 15, iterations: 40, inertia: 0.7, cognitive: 1.4, social: 1.4, bounds: vec![(-3.0, 3.0), (-3.0, 3.0)], seed: 7 };
-            let (best, fit) = opt.optimize(|x| x[0] * x[0] + x[1] * x[1]).await;
+            let (best, fit) = opt.optimize(|x| x[0] * x[0] + x[1] * x[1]);
             assert!(fit < 0.5);
             assert!(best[0].abs() < 1.0 && best[1].abs() < 1.0);
         }

@@ -1,0 +1,45 @@
+{
+  "artifact": null,
+  "fixture": {
+    "schema": "flow.fixture.revised",
+    "camera": {
+      "x": 0.0,
+      "y": 0.0,
+      "zoom": 1.0
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "note-a",
+        "text": "Alpha"
+      },
+      {
+        "kind": "inputNote",
+        "id": "note-b",
+        "text": "Beta"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "link-ab",
+        "from": "note-a",
+        "to": "note-b",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    ],
+    "layout": {
+      "note-a": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "generation": null,
+  "selectedIds": null,
+  "graphCamera": null,
+  "showMode": null,
+  "selectedGenerationId": null,
+  "generationPreviewText": null,
+  "locale": null
+}

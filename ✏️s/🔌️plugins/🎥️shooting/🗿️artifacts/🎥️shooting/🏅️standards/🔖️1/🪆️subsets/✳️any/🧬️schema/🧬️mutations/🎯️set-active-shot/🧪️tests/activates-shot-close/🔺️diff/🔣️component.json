@@ -1,0 +1,21 @@
+{
+  "artifact": null,
+  "schema": null,
+  "assets": null,
+  "savedCameras": null,
+  "scene": null,
+  "shots": null,
+  "activeShotId": "shot-close",
+  "activeAssetId": null,
+  "emblem": null,
+  "selectedShotIds": null,
+  "activeUtilityId": null,
+  "defaultShotFormat": null,
+  "defaultShotShape": null,
+  "defaultAssetFormat": null,
+  "centerModel": null,
+  "fitRevision": null,
+  "cameraDraftLabel": null,
+  "camera": null,
+  "locale": null
+}

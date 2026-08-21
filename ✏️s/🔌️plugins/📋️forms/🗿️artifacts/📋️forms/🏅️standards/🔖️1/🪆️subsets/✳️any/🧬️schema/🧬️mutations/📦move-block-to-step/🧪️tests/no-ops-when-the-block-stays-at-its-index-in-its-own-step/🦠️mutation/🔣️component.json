@@ -1,0 +1,7 @@
+{
+  "mutation": "moveBlockToStep",
+  "step_id": "step-basics",
+  "block_id": "q-site-name",
+  "to_step_id": "step-basics",
+  "index": 0
+}

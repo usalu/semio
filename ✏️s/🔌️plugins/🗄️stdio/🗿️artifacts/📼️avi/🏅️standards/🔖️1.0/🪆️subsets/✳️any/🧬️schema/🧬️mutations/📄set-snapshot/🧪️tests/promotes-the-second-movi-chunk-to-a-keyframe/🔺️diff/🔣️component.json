@@ -1,0 +1,27 @@
+{
+  "streams": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "chunks": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "data": [
+                    2,
+                    2,
+                    2,
+                    2
+                  ],
+                  "keyframe": true
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

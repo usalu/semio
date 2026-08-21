@@ -1,0 +1,71 @@
+{
+  "slides": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "shapes": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "shapeKind": "textBox",
+                  "blocks": {
+                    "modified": [
+                      {
+                        "index": 0,
+                        "diff": {
+                          "kind": "paragraph",
+                          "style_id": null,
+                          "runs": [
+                            {
+                              "text": "Final agenda",
+                              "style": {
+                                "bold": false,
+                                "italic": false,
+                                "underline": false,
+                                "size": null,
+                                "font": null,
+                                "color": null,
+                                "link": null
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "notes": {
+            "added": [
+              {
+                "index": 0,
+                "item": {
+                  "kind": "paragraph",
+                  "style_id": null,
+                  "runs": [
+                    {
+                      "text": "Keep this slide under a minute.",
+                      "style": {
+                        "bold": false,
+                        "italic": false,
+                        "underline": false,
+                        "size": null,
+                        "font": null,
+                        "color": null,
+                        "link": null
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

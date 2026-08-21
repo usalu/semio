@@ -1,0 +1,8 @@
+{
+  "mutation": "connectNodes",
+  "id": "edge-1",
+  "source": "node-a@out",
+  "target": "node-b@in",
+  "routeStyle": "bezier",
+  "properties": {}
+}

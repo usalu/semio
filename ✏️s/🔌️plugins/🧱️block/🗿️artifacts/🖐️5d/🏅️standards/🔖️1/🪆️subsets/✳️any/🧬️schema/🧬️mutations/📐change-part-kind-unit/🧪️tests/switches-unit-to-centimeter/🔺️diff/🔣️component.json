@@ -1,0 +1,26 @@
+{
+  "artifact": null,
+  "schema": null,
+  "partKind": {
+    "id": "pk-capsule",
+    "name": "capsule",
+    "label": "Capsule",
+    "variant": "a",
+    "description": "One habitation capsule.",
+    "icon": "icon://capsule",
+    "unit": "cm"
+  },
+  "part2d": null,
+  "part3d": null,
+  "representations": null,
+  "gripKinds": null,
+  "grips": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

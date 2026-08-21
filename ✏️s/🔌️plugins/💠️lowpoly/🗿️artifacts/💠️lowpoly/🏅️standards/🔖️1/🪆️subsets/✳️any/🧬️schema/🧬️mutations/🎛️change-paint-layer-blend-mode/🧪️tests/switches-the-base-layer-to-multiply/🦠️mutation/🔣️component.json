@@ -1,0 +1,7 @@
+{
+  "ChangePaintLayerBlendMode": {
+    "objectId": "obj-hull",
+    "index": 0,
+    "newBlendMode": "multiply"
+  }
+}

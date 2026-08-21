@@ -1,0 +1,15 @@
+{
+  "CreateNode": {
+    "id": {
+      "value": "c"
+    },
+    "kind": "filter",
+    "label": "Filter",
+    "position": {
+      "x": 2.0,
+      "y": 2.0
+    },
+    "ports": [],
+    "properties": []
+  }
+}

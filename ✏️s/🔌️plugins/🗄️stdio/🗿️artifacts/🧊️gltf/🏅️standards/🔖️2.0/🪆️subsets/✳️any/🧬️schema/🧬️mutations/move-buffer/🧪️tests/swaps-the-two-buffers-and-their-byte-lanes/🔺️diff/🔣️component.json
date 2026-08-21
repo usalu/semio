@@ -1,0 +1,19 @@
+{
+  "id": "s.stdio.gltf.mutation.move-buffer.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/buffers/0",
+    "document/buffers/1",
+    "buffers/0",
+    "buffers/1"
+  ],
+  "payload": {
+    "index": 0,
+    "position": 1
+  },
+  "operation": {
+    "kind": "move",
+    "index": 0,
+    "position": 1
+  }
+}

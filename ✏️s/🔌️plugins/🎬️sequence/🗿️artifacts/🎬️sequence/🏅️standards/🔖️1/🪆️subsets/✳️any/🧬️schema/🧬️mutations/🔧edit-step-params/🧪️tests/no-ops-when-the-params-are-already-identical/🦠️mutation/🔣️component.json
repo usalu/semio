@@ -1,0 +1,7 @@
+{
+  "mutation": "editStepParams",
+  "id": "step-log",
+  "params": {
+    "message": "hello sequence"
+  }
+}

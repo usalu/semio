@@ -1,0 +1,9 @@
+{
+  "mutation": "updatePresentation",
+  "newShape": "rectangle",
+  "newRadius": null,
+  "newWidth": 1.2,
+  "newHeight": 0.8,
+  "newColor": "#112233",
+  "newIconKind": null
+}

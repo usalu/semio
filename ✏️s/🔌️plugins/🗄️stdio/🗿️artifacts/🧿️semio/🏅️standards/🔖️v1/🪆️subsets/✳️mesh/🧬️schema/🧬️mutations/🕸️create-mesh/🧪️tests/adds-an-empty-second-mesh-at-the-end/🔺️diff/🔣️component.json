@@ -1,0 +1,13 @@
+{
+  "meshes": {
+    "added": [
+      {
+        "index": 1,
+        "item": {
+          "id": "mesh-b",
+          "primitives": []
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameRepresentation",
+  "id": "rep-shell",
+  "newName": "hull"
+}

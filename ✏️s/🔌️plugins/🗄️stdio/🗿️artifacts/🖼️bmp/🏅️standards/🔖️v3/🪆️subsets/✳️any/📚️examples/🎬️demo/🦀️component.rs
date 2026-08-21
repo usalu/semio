@@ -31,7 +31,7 @@ mod tests {
         use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::BmpInference;
         use crate::artifacts::bmp::BmpSnapshot;
         use protocol::Inference;
-        let snapshot = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
+        let snapshot = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(BmpInference::infer(&snapshot), BmpInference::infer(&snapshot));
     }
 

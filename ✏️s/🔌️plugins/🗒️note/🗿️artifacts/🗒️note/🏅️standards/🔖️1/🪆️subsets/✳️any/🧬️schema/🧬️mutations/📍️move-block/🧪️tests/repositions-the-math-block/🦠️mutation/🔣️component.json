@@ -1,0 +1,6 @@
+{
+  "mutation": "moveBlock",
+  "id": "blk-math",
+  "newX": 40.0,
+  "newY": 320.0
+}

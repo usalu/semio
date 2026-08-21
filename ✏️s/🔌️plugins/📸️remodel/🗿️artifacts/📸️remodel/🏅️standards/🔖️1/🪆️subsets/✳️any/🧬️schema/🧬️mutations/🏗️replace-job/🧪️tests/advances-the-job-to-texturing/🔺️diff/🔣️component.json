@@ -1,0 +1,44 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "calibration": null,
+  "params": null,
+  "gcps": null,
+  "job": {
+    "id": "job-a",
+    "stage": "texturing",
+    "progress01": 0.75,
+    "cancelRequested": false,
+    "stageCursor": 11,
+    "startedAtMs": 1000.0,
+    "error": null,
+    "cameraPosesPreview": [
+      {
+        "cameraId": "cam-a",
+        "rotationWxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "sparsePointCloudPreview": "AAAAPwAAgD4AAAA+AACAPwAAwD8AAABA"
+  },
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

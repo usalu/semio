@@ -1,0 +1,142 @@
+{
+  "schema": "puzzle.3d",
+  "domain": "architecture",
+  "meta": {
+    "kindCompatibility": [
+      {
+        "source": "vortex-kind-a",
+        "target": "vortex-kind-b",
+        "bidirectional": true,
+        "important": false,
+        "specificity": "vortex"
+      }
+    ]
+  },
+  "objects": [
+    {
+      "id": "object-a",
+      "label": "Alpha",
+      "objectKind": "object-kind-a",
+      "anchor": "fixed",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": 1.0,
+      "meshUrl": "mesh://alpha",
+      "vortices": [
+        {
+          "id": "vortex-1",
+          "vortexKind": "vortex-kind-a",
+          "position": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "locked": false
+        },
+        {
+          "id": "vortex-spare",
+          "vortexKind": "vortex-kind-a",
+          "position": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "hidden": false,
+          "locked": false
+        }
+      ],
+      "hidden": false,
+      "locked": false
+    },
+    {
+      "id": "object-b",
+      "objectKind": "object-kind-b",
+      "anchor": "fixed",
+      "origin": [
+        4.0,
+        0.0,
+        0.0
+      ],
+      "vortices": [
+        {
+          "id": "vortex-2",
+          "vortexKind": "vortex-kind-b",
+          "position": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "locked": false
+        }
+      ],
+      "hidden": false,
+      "locked": false
+    }
+  ],
+  "attractions": [
+    {
+      "id": "attraction-1",
+      "attracting": "object-a:vortex-1",
+      "attracted": "object-b:vortex-2",
+      "gap": 1.0,
+      "shift": 0.0,
+      "rise": 0.0,
+      "rotation": 0.0,
+      "turn": 0.0,
+      "tilt": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
+  "targetVolumes": [
+    {
+      "id": "volume-1",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "hidden": true,
+      "locked": false
+    }
+  ],
+  "references": [
+    {
+      "id": "reference-1",
+      "source": {
+        "url": "asset://plan.png",
+        "mediaKind": "image"
+      },
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "widthWorld": 10.0,
+      "locked": false,
+      "hidden": false
+    }
+  ]
+}

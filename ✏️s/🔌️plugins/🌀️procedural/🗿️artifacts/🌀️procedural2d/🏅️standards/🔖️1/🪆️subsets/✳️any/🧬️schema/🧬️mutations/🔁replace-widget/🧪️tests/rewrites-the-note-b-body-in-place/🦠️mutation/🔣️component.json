@@ -1,0 +1,9 @@
+{
+  "ReplaceWidget": {
+    "widget": {
+      "kind": "inputNote",
+      "id": "note-b",
+      "text": "Beta, revised"
+    }
+  }
+}

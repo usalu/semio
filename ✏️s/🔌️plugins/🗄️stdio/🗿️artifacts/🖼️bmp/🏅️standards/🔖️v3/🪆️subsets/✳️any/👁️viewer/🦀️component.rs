@@ -58,7 +58,7 @@ impl ArtifactViewer for BmpViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -68,7 +68,7 @@ impl ArtifactViewer for BmpViewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_bmp_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(BMP_DIALECT)
-        .await.document(["semio", "bmp"])
+        .document(["semio", "bmp"])
         .icon_id("image")
         .mode_def(view::definition())
         .default_mode_id(view::MODE_ID)

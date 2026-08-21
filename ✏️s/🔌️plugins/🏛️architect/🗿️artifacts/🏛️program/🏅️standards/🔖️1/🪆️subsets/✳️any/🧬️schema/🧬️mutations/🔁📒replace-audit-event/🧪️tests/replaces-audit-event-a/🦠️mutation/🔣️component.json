@@ -1,0 +1,39 @@
+{
+  "mutation": "replaceAuditEvent",
+  "auditEvent": {
+    "id": "audit-event-a",
+    "name": "Audit Event A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "action": "created",
+    "actorId": null,
+    "subjectId": "",
+    "subjectKind": "Replaced Audit Event A",
+    "timestamp": "",
+    "details": {
+      "text": ""
+    },
+    "beforeState": null,
+    "afterState": null,
+    "ipAddress": null,
+    "client": null,
+    "sessionId": null,
+    "changeRecordId": null,
+    "traceLink": null,
+    "success": false,
+    "errorMessage": null,
+    "correlationId": null,
+    "complianceTags": [],
+    "retentionUntil": null
+  }
+}

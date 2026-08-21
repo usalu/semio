@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSceneShadowEnabled",
+  "new_enabled": false
+}

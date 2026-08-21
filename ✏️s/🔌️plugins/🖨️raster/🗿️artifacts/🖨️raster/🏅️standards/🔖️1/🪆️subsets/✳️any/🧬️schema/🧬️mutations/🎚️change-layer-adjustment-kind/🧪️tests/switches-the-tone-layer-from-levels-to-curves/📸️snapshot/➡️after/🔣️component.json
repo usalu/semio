@@ -1,0 +1,43 @@
+{
+  "schema": "raster.document",
+  "id": "tone-study",
+  "title": "Tone Study",
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "plate",
+      "name": "Plate",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 512,
+      "height": 512,
+      "imageKey": null
+    },
+    {
+      "kind": "adjustment",
+      "id": "tone",
+      "name": "Tone",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "adjustmentKind": "curves",
+      "params": {}
+    }
+  ]
+}

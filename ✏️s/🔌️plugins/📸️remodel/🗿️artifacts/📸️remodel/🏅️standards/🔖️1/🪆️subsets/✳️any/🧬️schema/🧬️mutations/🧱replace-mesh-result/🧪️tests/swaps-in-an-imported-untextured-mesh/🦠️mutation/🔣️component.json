@@ -1,0 +1,19 @@
+{
+  "mutation": "replaceMeshResult",
+  "mesh": {
+    "mesh": {
+      "childId": "remodel-mesh-2f6c81b0d4a37e59",
+      "target": {
+        "artifactId": "remodel-mesh",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh"
+        }
+      }
+    },
+    "source": "imported",
+    "textureAssetId": null,
+    "watertight": null
+  }
+}

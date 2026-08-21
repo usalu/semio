@@ -1,0 +1,4 @@
+{
+  "mutation": "removeMetadataEntry",
+  "key": "Comment"
+}

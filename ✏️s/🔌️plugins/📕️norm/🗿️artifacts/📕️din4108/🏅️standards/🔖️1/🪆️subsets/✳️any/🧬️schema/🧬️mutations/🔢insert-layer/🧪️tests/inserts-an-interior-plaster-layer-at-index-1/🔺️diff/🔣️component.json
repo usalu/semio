@@ -1,0 +1,37 @@
+{
+  "artifact": null,
+  "category": null,
+  "layers": {
+    "values": [
+      {
+        "thicknessM": 0.24,
+        "lambdaWMk": 0.81
+      },
+      {
+        "thicknessM": 0.05,
+        "lambdaWMk": 0.25
+      },
+      {
+        "thicknessM": 0.14,
+        "lambdaWMk": 0.04
+      }
+    ]
+  },
+  "climate": null,
+  "airtightnessN50": null,
+  "psiTimesLSum": null,
+  "rhInt": null,
+  "catalogId": null,
+  "materialId": null,
+  "airtightnessClass": null,
+  "tIntC": null,
+  "solarAbsorptance": null,
+  "irradianceWM2": null,
+  "moistureMuExterior": null,
+  "moistureMuInterior": null,
+  "envelopeAreaM2": null,
+  "bb2DetailsConform": null,
+  "applicationType": null,
+  "declaredApplicationClass": null,
+  "selectedCheckIndex": null
+}

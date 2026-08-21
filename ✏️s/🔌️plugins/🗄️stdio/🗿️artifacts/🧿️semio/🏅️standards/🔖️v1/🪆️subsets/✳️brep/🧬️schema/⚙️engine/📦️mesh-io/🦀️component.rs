@@ -152,7 +152,7 @@ pub fn export_stl(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     if mesh.indices.len() < 3 {
         return Err(KernelError::InvalidInput("mesh has no triangles".into()));
     }
-    Ok(mesh_to_stl(&mesh_to_mesh_data(mesh)).await)
+    Ok(mesh_to_stl(&mesh_to_mesh_data(mesh)))
 }
 
 /// 📦 Decodes STL bytes (auto-detects binary vs ASCII).
@@ -174,20 +174,20 @@ pub fn export_obj(mesh: &TriangleMesh) -> Result<String, KernelError> {
 /// 📦 Parses OBJ text into a [`TriangleMesh`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn import_obj(text: &str) -> Result<TriangleMesh, KernelError> {
-    mesh_from_obj(text).await.map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
+    mesh_from_obj(text).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Encodes GLB from a [`TriangleMesh`] using [`GlbExporter`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn export_glb(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
     let data = mesh_to_mesh_data(mesh);
-    GlbExporter.export(&data).await.map_err(KernelError::Operation)
+    GlbExporter.export(&data).map_err(KernelError::Operation)
 }
 
 /// 📦 Decodes GLB into a [`TriangleMesh`] using [`GlbImporter`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
-    GlbImporter.import(data).await.map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
+    GlbImporter.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
 }
 
 /// 📦 Encodes DWG mesh bytes from a [`TriangleMesh`].

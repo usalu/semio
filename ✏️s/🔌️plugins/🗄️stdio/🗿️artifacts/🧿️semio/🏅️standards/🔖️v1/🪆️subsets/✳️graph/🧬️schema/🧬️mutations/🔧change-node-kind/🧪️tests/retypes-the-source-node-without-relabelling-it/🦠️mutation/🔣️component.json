@@ -1,0 +1,8 @@
+{
+  "ChangeNodeKind": {
+    "id": {
+      "value": "a"
+    },
+    "new_kind": "generator"
+  }
+}

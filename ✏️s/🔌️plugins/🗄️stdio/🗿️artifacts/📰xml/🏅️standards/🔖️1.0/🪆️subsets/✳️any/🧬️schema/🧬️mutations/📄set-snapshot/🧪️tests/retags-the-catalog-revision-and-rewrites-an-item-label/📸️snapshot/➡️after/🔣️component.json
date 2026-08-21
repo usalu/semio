@@ -1,0 +1,45 @@
+{
+  "schema": "stdio.xml",
+  "doc": {
+    "root": {
+      "kind": "element",
+      "name": "catalog",
+      "attrs": [
+        {
+          "name": "xmlns",
+          "value": "urn:semio:catalog"
+        },
+        {
+          "name": "revision",
+          "value": "2"
+        }
+      ],
+      "children": [
+        {
+          "kind": "element",
+          "name": "item",
+          "attrs": [
+            {
+              "name": "id",
+              "value": "i-1"
+            }
+          ],
+          "children": [
+            {
+              "kind": "text",
+              "text": "Brick, Glazed"
+            }
+          ]
+        },
+        {
+          "kind": "comment",
+          "text": " pending "
+        }
+      ]
+    },
+    "declaration": {
+      "version": "1.0",
+      "encoding": "UTF-8"
+    }
+  }
+}

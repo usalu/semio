@@ -1,0 +1,10 @@
+{
+  "operation": {
+    "node": 0,
+    "mesh": 0
+  },
+  "after": 0,
+  "touchedPaths": [
+    "document/nodes/*/mesh"
+  ]
+}

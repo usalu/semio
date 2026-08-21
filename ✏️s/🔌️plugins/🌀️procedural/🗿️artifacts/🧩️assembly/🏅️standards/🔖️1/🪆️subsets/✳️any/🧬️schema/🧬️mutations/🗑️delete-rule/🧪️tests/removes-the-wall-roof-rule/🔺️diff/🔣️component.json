@@ -1,0 +1,14 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [],
+  "edgesUpserted": [],
+  "weightsRemoved": [],
+  "weightsUpserted": [],
+  "rulesRemoved": [
+    "rule-wall-roof"
+  ],
+  "rulesUpserted": []
+}

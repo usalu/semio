@@ -1,0 +1,29 @@
+{
+  "mutation": "createObject",
+  "object": {
+    "id": "object-c",
+    "objectKind": "object-kind-c",
+    "anchor": "fixed",
+    "origin": [
+      8.0,
+      0.0,
+      0.0
+    ],
+    "vortices": [
+      {
+        "id": "vortex-3",
+        "vortexKind": "vortex-kind-a",
+        "position": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "hidden": false,
+        "locked": false
+      }
+    ],
+    "hidden": false,
+    "locked": false
+  },
+  "index": null
+}

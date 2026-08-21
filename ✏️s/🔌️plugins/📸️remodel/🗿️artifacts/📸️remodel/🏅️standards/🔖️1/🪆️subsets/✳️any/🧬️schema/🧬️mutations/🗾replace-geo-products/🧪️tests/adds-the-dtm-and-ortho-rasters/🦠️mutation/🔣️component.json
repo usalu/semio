@@ -1,0 +1,8 @@
+{
+  "mutation": "replaceGeoProducts",
+  "geo": {
+    "dsmAssetId": "asset-dsm",
+    "dtmAssetId": "asset-dtm",
+    "orthoAssetId": "asset-ortho"
+  }
+}

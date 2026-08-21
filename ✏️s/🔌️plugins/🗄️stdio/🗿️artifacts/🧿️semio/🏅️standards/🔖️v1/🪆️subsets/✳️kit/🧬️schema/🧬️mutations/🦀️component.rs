@@ -76,7 +76,7 @@ mod tests {
     /// (📌️important.md Trap #1).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
-        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
@@ -125,8 +125,8 @@ mod tests {
     async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioKitMutation::DeleteObject(delete_object::mutation::DeleteObject { child_id: "does-not-exist".into() });
-        assert!(delete.inverse(&base).await.is_empty());
-        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(delete.inverse(&base).is_empty());
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -169,8 +169,8 @@ mod tests {
     async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 99 });
-        assert!(unbind.inverse(&base).await.is_empty());
-        assert_eq!(unbind.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(unbind.inverse(&base).is_empty());
+        assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -217,10 +217,51 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioKitMutation::kinds().await.len(), 15);
+        assert_eq!(SemioKitMutation::kinds().len(), 15);
         let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 1 });
         assert_eq!(mutation.semantics().kind, "unbind-representation");
         assert_eq!(mutation.semantics().record, "UnboundRepresentation");
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "🏗️create-object/🧪️tests/attaches-a-second-object-child/🦀️component.rs"]
+    mod tests_create_object_attaches_a_second_object_child;
+    #[path = "🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/🦀️component.rs"]
+    mod tests_delete_object_detaches_the_only_object_child_and_keeps_the_model_child;
+    #[path = "🏛️create-model/🧪️tests/attaches-a-second-model-child/🦀️component.rs"]
+    mod tests_create_model_attaches_a_second_model_child;
+    #[path = "💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/🦀️component.rs"]
+    mod tests_delete_model_detaches_the_only_model_child_and_keeps_the_object_child;
+    #[path = "🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/🦀️component.rs"]
+    mod tests_create_properties_attaches_a_properties_child_to_a_kit_that_has_none;
+    #[path = "🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/🦀️component.rs"]
+    mod tests_delete_properties_detaches_the_properties_child_and_leaves_every_other_collection_alone;
+    #[path = "🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/🦀️component.rs"]
+    mod tests_bind_representation_binds_a_second_representation_to_an_existing_type;
+    #[path = "✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/🦀️component.rs"]
+    mod tests_unbind_representation_unbinds_the_leading_representation_and_keeps_the_trailing_one;
+    #[path = "📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/🦀️component.rs"]
+    mod tests_change_representation_pin_repins_the_representation_from_head_to_a_checkpoint;
+    #[path = "➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/🦀️component.rs"]
+    mod tests_add_type_appends_a_slab_type_to_the_catalogue;
+    #[path = "➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/🦀️component.rs"]
+    mod tests_remove_type_removes_the_column_type_and_keeps_the_beam_type;
+    #[path = "✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/🦀️component.rs"]
+    mod tests_rename_type_renames_the_beam_type_without_recategorising_it;
+    #[path = "🆕add-design/🧪️tests/adds-an-empty-roof-design/🦀️component.rs"]
+    mod tests_add_design_adds_an_empty_roof_design;
+    #[path = "🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/🦀️component.rs"]
+    mod tests_remove_design_removes_the_only_design_together_with_its_pieces;
+    #[path = "🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/🦀️component.rs"]
+    mod tests_edit_design_replaces_the_designs_pieces_and_connections_in_one_step;
+}
+//#endregion 🧪️FixtureTests

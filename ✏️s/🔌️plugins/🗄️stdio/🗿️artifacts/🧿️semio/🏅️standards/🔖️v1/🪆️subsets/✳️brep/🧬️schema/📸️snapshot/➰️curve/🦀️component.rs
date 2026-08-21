@@ -418,12 +418,12 @@ mod tests {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(53);
             for _ in 0..100 {
                 let frame =
-                    Frame3::from_normal(Pnt3::new(rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0), Vec3::new(rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
+                    Frame3::from_normal(Pnt3::new(rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0), Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
                         .unwrap();
-                let radius = 0.1 + rng.await.next_f64() * 10.0;
+                let radius = 0.1 + rng.next_f64() * 10.0;
                 let c = Curve3::Circle { frame, radius };
-                let a0 = rng.await.next_f64() * std::f64::consts::TAU;
-                let span = rng.await.next_f64() * std::f64::consts::TAU * 1.5;
+                let a0 = rng.next_f64() * std::f64::consts::TAU;
+                let span = rng.next_f64() * std::f64::consts::TAU * 1.5;
                 let domain = (a0, a0 + span);
                 let nurbs = c.to_nurbs(domain);
                 assert_nurbs_traces_circle(&nurbs, &frame, radius, domain, 25);

@@ -1,0 +1,8 @@
+{
+  "mutation": "deleteStep",
+  "pathRef": {
+    "owner": "step-3",
+    "slot": "then"
+  },
+  "id": "step-1"
+}

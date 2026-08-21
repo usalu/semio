@@ -1,0 +1,5 @@
+{
+  "mutation": "renameOptionEvaluation",
+  "id": "option-evaluation-a",
+  "newName": "Renamed Option Evaluation A"
+}

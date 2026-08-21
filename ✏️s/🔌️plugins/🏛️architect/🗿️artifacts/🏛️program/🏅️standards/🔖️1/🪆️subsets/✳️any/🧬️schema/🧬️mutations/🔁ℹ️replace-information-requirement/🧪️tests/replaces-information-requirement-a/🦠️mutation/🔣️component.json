@@ -1,0 +1,38 @@
+{
+  "mutation": "replaceInformationRequirement",
+  "informationRequirement": {
+    "id": "information-requirement-a",
+    "name": "Information Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "informationType": "Replaced Information Requirement A",
+    "format": null,
+    "sourceSystem": null,
+    "destinationSystems": [],
+    "updateFrequency": null,
+    "retentionPeriod": null,
+    "accessControls": [],
+    "classification": null,
+    "qualityCriteria": [],
+    "metadataRequirements": [],
+    "integrationPoints": [],
+    "backupRequirements": [],
+    "disasterRecovery": [],
+    "privacyControls": [],
+    "auditTrail": false,
+    "elementIds": [],
+    "stakeholderIds": [],
+    "standards": [],
+    "ownerId": null
+  }
+}

@@ -725,7 +725,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             .min_by(|a, b| {
                 let da = self.nodes.get(a).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
                 let db = self.nodes.get(b).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
-                da.partial_cmp(&db).await.await.unwrap_or(std::cmp::Ordering::Equal)
+                da.partial_cmp(&db).await.unwrap_or(std::cmp::Ordering::Equal)
             })
             .copied()
             .unwrap_or(members[0]);
@@ -820,8 +820,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.proximity_connection = None;
         self.selection_preview_points.clear();
         self.selection_preview_crossing = false;
-        let point = Point::new(world_x, world_y);
-        let screen = Point::new(screen_x, screen_y);
+        let point = Point::new(world_x, world_y).await;
+        let screen = Point::new(screen_x, screen_y).await;
         let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         let merge_from_modifiers = ctrl_or_meta || shift;
         let primary = button == 0;
@@ -858,7 +858,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
             Some(HitObject::Endpoint(ep)) => {
                 self.apply_pick_with_mode(HitObject::Endpoint(ep), merge_mode.as_str());
-                let hid = P::endpoint_as_u64(ep);
+                let hid = P::endpoint_as_u64(ep).await;
                 self.update_hover(Some(hid));
                 if primary && P::HAS_PORTS {
                     self.begin_draw_edge_from_handle(hid, point);
@@ -890,8 +890,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_move_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-        let point = Point::new(world_x, world_y);
-        let screen = Point::new(screen_x, screen_y);
+        let point = Point::new(world_x, world_y).await;
+        let screen = Point::new(screen_x, screen_y).await;
         match std::mem::replace(&mut self.interaction, InteractionMode::Idle) {
             InteractionMode::Pan { start_screen, cam_x, cam_y, zoom } => {
                 let dx = (screen.x - start_screen.x) / zoom;
@@ -1010,8 +1010,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-        let point = Point::new(world_x, world_y);
-        let screen = Point::new(screen_x, screen_y);
+        let point = Point::new(world_x, world_y).await;
+        let screen = Point::new(screen_x, screen_y).await;
         let grabbed = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
         let node_drag_proximity = self.proximity_connection.take();
         match grabbed {

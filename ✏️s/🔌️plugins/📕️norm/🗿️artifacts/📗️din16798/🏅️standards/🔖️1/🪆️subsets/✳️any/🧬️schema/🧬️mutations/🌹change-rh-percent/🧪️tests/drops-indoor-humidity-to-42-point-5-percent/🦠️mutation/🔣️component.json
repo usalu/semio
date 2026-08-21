@@ -1,0 +1,4 @@
+{
+  "mutation": "changeRhPercent",
+  "newRhPercent": 42.5
+}

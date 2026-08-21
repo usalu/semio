@@ -1,0 +1,8 @@
+{
+  "mutation": "replaceReferenceSource",
+  "id": "reference-1",
+  "newSource": {
+    "url": "asset://plan-v2.png",
+    "mediaKind": "image"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mutation": "addStep",
+  "step": {
+    "id": "s-review",
+    "title": "Review",
+    "blocks": []
+  }
+}

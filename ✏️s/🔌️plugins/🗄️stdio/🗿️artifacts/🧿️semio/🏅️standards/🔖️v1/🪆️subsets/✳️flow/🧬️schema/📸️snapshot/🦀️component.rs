@@ -232,8 +232,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -278,29 +278,29 @@ fn encode_flow_snapshot_binary(s: &SemioFlowSnapshot) -> Vec<u8> {
 fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let node_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let node_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut nodes = Vec::with_capacity(node_count as usize);
     for _ in 0..node_count {
         let id = read_str_lp(&mut reader)?;
         let kind = read_str_lp(&mut reader)?;
         let label = read_str_lp(&mut reader)?;
-        let param_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let param_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut params = Vec::with_capacity(param_count as usize);
         for _ in 0..param_count {
             let key = read_str_lp(&mut reader)?;
             let value = read_str_lp(&mut reader)?;
             params.push(FlowParam { key, value });
         }
-        let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
-        let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+        let x = reader.read_f64_le().map_err(|e| e.to_string())?;
+        let y = reader.read_f64_le().map_err(|e| e.to_string())?;
         nodes.push(FlowNode { id, kind, label, params, position: SemioPoint2 { x, y } });
     }
-    let edge_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let edge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(edge_count as usize);
     for _ in 0..edge_count {
         let id = read_str_lp(&mut reader)?;
@@ -405,7 +405,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = sample();
         let bytes = <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -413,7 +413,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = sample();
         let text = <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 

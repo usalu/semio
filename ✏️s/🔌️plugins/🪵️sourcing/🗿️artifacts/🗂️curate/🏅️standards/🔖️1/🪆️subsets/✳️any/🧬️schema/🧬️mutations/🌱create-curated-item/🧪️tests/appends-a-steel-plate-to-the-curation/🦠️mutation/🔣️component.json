@@ -1,0 +1,7 @@
+{
+  "mutation": "createCuratedItem",
+  "item": {
+    "objectId": "plate-steel-8",
+    "count": 24
+  }
+}

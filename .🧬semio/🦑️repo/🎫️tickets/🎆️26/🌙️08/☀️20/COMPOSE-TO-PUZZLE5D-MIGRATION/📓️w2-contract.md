@@ -253,3 +253,67 @@ Six mutations are **total functions** that cannot reject at all: `🌐change-dom
 severity (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️component.rs:228-235`). A `warn`
 no-op is **applied with an empty diff**, NOT rejected — so `🎯️outcome` gains an optional
 `messages: [{level, code}]` array to record it, and the applied/rejected binary is unchanged.
+
+---
+
+## D14 · `🔺️diff/🔣️component.json` is a CORE file, not a derived one (FROZEN — amends D12)
+
+Dev ruling: the serialized diff is **the most important file in a fixture**. It moves from the
+derived tier to the hand-authored core tier.
+
+`before`+`after` only prove the end state. The diff pins **which collections and fields the mutation
+is allowed to touch** — a mutation that reaches the right end state by rewriting the whole snapshot
+is a bug that only the diff catches. Confirmed against the legacy shape: compose's
+`nakagin-capsule-tower.deleted.design.diff.compose.json` is a sparse per-collection delta
+(`pieces.removed[]`, `pieces.updated[{piece,diff}]`) — precisely what each artifact's `<X>Diff`
+serializes today.
+
+Each applied case therefore carries `🔺️diff/🔣️component.json`, transcribed from exactly what that
+mutation's own `🔺️diff/🦀️component.rs` constructs. Rejected cases carry `🔺️diff/🚫️component.absent`.
+Three of the seven per-test assertions exist solely to police it: `produces_committed_diff`,
+`committed_diff_is_canonical`, `committed_diff_applies_to_after`.
+
+Only the text/binary encodings (`.patch.semio`, `.patch.spr.semio`, `.dsl.semio`, `.pack.semio`,
+`.op.semio`, `.spr.semio`) remain derived — those genuinely require the codecs.
+
+## D15 · Coverage is keyed on payload type, not variant name (FROZEN)
+
+The lint originally matched enum variants to leaf directories by variant NAME. That produced 22 false
+gaps. Two real patterns break it:
+
+- **Renamed payloads** — `SemioDrawingMutation::Group(group::mutation::GroupNodes)`. The leaf exists
+  and is covered; only the variant's own name differs from its payload struct.
+- **Delegating enums** — `SemioMutation::Brep(SemioBrepMutation)` and 17 siblings wrap OTHER subsets'
+  entire mutation enums. Those payloads are covered in the trees that own them; demanding a leaf
+  directory here is simply wrong.
+
+The rule is now: a variant is keyed by its **payload type**; a payload declared in no leaf of this
+tree is a delegation and not a gap; and the error that remains is the genuinely useful direction —
+**a leaf that no enum variant wraps**. That inverted check immediately found one real orphan:
+`🧰️framework/…/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy` declares `ChangeMergePolicy`
+which no variant references (it is also already de-asynced while its siblings are not).
+
+## D16 · `Option<Option<T>>` does not survive JSON — a schema defect found by the fixtures
+
+Reported independently by five separate lanes (cad, layout, note, draw, playbook, stdio formats,
+norm). For a tri-state field, `None` ("leave untouched") and `Some(None)` ("clear it") **both**
+serialize to `null`, and `null` decodes back to `None`. Any mutation that clears a field therefore
+produces a diff whose JSON form is inert.
+
+Ruling: fixtures **pin the limitation explicitly** rather than assert something false — the affected
+tests document that the in-memory diff carries `before → after` while the JSON-decoded diff is
+`Diff::default()`. The fix is upstream (`double_option`, or `skip_serializing_if` so an untouched
+slot is omitted rather than written as `null`), and when it lands those tests revert to the plain
+three-assertion form. Known affected: cad's four `delete-*-model`, stdio `✳️object`/`✳️kit`
+delete-properties, lowpoly `delete-mesh`, plus latent slots in draw, playbook and every norm artifact.
+
+### D15.1 · Enums live in more than one place per tree
+Refining D15 further: a leaf may declare its **own** wrapper enum instead of being wrapped by the
+mutations-root aggregate — `🧰️framework/…/🎚️config/…/🛡️change-merge-policy` owns
+`MergePolicyConfigMutation` in a file directly in its leaf directory, while its siblings are wrapped
+by `OpeningConfigMutation` in the root. The lint therefore collects variants from **every** enum in
+the tree: the root aggregate, each leaf's `🦠️mutation/🦀️component.rs`, and each leaf's own
+leaf-root `🦀️component.rs`.
+
+With D15 + D15.1 in place the lint reports **zero** false positives repo-wide; the only errors that
+remain are genuine uncovered leaves.

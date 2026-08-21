@@ -97,6 +97,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🧪️tests/rejects-a-duplicate-widget-id/🦀️component.rs"]
+                                    mod tests_rejects_a_duplicate_widget_id;
                                 }
                                 #[path = "."]
                                 pub mod delete_widget {
@@ -106,6 +109,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/rejects-deleting-a-missing-widget/🦀️component.rs"]
+                                    mod tests_rejects_deleting_a_missing_widget;
                                 }
                                 #[path = "."]
                                 pub mod reorder_widgets {
@@ -115,6 +121,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🪟️reorder-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️🪟️reorder-widgets/🧪️tests/clamps-an-out-of-range-index-onto-the-last-slot/🦀️component.rs"]
+                                    mod tests_clamps_an_out_of_range_index_onto_the_last_slot;
                                 }
                                 #[path = "."]
                                 pub mod replace_widget {
@@ -124,6 +133,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/replaces-a-note-with-an-identical-note/🦀️component.rs"]
+                                    mod tests_replaces_a_note_with_an_identical_note;
                                 }
                                 #[path = "."]
                                 pub mod connect_widgets {
@@ -133,6 +145,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-widgets/🧪️tests/refuses-a-parallel-synapse-as-a-no-op/🦀️component.rs"]
+                                    mod tests_refuses_a_parallel_synapse_as_a_no_op;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_widgets {
@@ -142,6 +157,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🧪️tests/rejects-disconnecting-a-missing-synapse/🦀️component.rs"]
+                                    mod tests_rejects_disconnecting_a_missing_synapse;
                                 }
                                 #[path = "."]
                                 pub mod reorder_synapses {
@@ -151,6 +169,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🧪️tests/keeps-the-leading-synapse-at-index-zero/🦀️component.rs"]
+                                    mod tests_keeps_the_leading_synapse_at_index_zero;
                                 }
                                 #[path = "."]
                                 pub mod update_synapse_endpoints {
@@ -160,6 +181,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🧪️tests/re-declares-the-same-endpoints/🦀️component.rs"]
+                                    mod tests_re_declares_the_same_endpoints;
                                 }
                                 #[path = "."]
                                 pub mod move_widgets {
@@ -169,6 +193,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🧪️tests/re-applies-the-current-layout-to-both-widgets/🦀️component.rs"]
+                                    mod tests_re_applies_the_current_layout_to_both_widgets;
                                 }
                                 // 🌉️ COMPOSITE — owns 🦠️mutation + 🧩️plan only (no 🔺️diff/↩️inverse: both fold from the plan).
                                 #[path = "."]
@@ -177,6 +204,9 @@ pub mod artifacts {
                                     pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧩️plan/🦀️component.rs"]
                                     pub mod plan;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧪️tests/rejects-duplicating-onto-a-taken-id/🦀️component.rs"]
+                                    mod tests_rejects_duplicating_onto_a_taken_id;
                                 }
                             }
                         }

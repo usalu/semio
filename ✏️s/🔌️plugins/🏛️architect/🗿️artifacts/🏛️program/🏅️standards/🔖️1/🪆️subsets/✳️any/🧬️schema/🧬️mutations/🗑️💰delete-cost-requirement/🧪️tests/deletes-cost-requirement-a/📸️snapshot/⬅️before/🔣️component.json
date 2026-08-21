@@ -1,0 +1,229 @@
+{
+  "schema": "architect.program",
+  "meta": {
+    "schema": "architect.program",
+    "documentId": "document-fixture",
+    "title": "Fixture Program",
+    "subtitle": null,
+    "purpose": {
+      "text": ""
+    },
+    "terminology": [],
+    "classification": [],
+    "industrySector": "",
+    "projectType": "",
+    "locale": "en",
+    "revision": "0",
+    "authorIds": [],
+    "sourceSystem": null,
+    "exportProfile": null,
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    }
+  },
+  "project": {
+    "id": "project-fixture",
+    "code": "FIX-000",
+    "clientName": "",
+    "ownerOrganization": "",
+    "briefSummary": {
+      "text": ""
+    },
+    "problemStatement": {
+      "text": ""
+    },
+    "vision": {
+      "text": ""
+    },
+    "mission": {
+      "text": ""
+    },
+    "objectives": [],
+    "successCriteria": [],
+    "projectPriorities": [],
+    "completionCriteria": [],
+    "decisionCriteria": [],
+    "scopeInclusions": [],
+    "scopeExclusions": [],
+    "assumptions": [],
+    "constraintsSummary": [],
+    "dependencies": [],
+    "deliverables": [],
+    "phases": [],
+    "geographicContext": {
+      "text": ""
+    },
+    "developmentContext": {
+      "text": ""
+    },
+    "operationalContext": {
+      "text": ""
+    },
+    "regulatoryContext": [],
+    "fundingModel": "",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    }
+  },
+  "stakeholders": [],
+  "users": [],
+  "activities": [],
+  "functions": [],
+  "elements": [],
+  "quantities": [],
+  "relationships": [],
+  "adjacencies": [],
+  "processes": [],
+  "flows": [],
+  "accessRules": [],
+  "operations": [],
+  "equipment": [],
+  "resources": [],
+  "storage": [],
+  "environmental": [],
+  "humanFactors": [],
+  "accessibility": [],
+  "privacy": [],
+  "safety": [],
+  "security": [],
+  "regulatory": [],
+  "siteContext": [],
+  "organizational": [],
+  "services": [],
+  "infrastructure": [],
+  "information": [],
+  "communication": [],
+  "wayfinding": [],
+  "schedules": [],
+  "flexibility": [],
+  "growth": [],
+  "sustainability": [],
+  "resilience": [],
+  "costs": [
+    {
+      "id": "cost-requirement-a",
+      "name": "Cost Requirement A",
+      "status": "draft",
+      "priority": "preferred",
+      "ownership": {
+        "ownerId": null,
+        "authorityId": null,
+        "consultantIds": [],
+        "participantIds": []
+      },
+      "timestamps": {
+        "created": "1970-01-01T00:00:00Z",
+        "updated": "1970-01-01T00:00:00Z"
+      },
+      "costItem": "",
+      "basis": "capital",
+      "amount": null,
+      "currency": "",
+      "quantityBasis": null,
+      "unitCost": null,
+      "contingencyPercent": null,
+      "escalationRate": null,
+      "fundingSource": null,
+      "elementIds": [],
+      "requirementIds": [],
+      "phase": null,
+      "cashFlowProfile": [],
+      "valueEngineeringNotes": [],
+      "benchmarkRef": null,
+      "approvalStatus": "pending",
+      "ownerId": null,
+      "assumptions": [],
+      "sensitivityFactors": []
+    }
+  ],
+  "delivery": [],
+  "risks": [],
+  "conflicts": [],
+  "requirements": [],
+  "priorities": [],
+  "scenarios": [],
+  "options": [],
+  "decisions": [],
+  "validations": [],
+  "performance": [],
+  "quality": [],
+  "artifacts": [],
+  "assumptions": [],
+  "constraints": [],
+  "complianceRecords": [],
+  "approvals": [],
+  "meetings": [],
+  "changes": [],
+  "collaboration": [],
+  "analyses": [],
+  "reports": [],
+  "searchFilters": [],
+  "statusRecords": [],
+  "workshops": [],
+  "surveys": [],
+  "issues": [],
+  "auditEvents": [],
+  "templates": [],
+  "knowledge": {
+    "childId": "architect-knowledge-7904dd65836c8ff4",
+    "target": {
+      "artifactId": "architect-program-knowledge",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "benchmarks": {
+    "childId": "architect-benchmarks-7904dd65836c8ff4",
+    "target": {
+      "artifactId": "architect-program-benchmarks",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "traces": [],
+  "governance": {
+    "id": "governance-fixture",
+    "framework": "ISO 9001",
+    "roles": [],
+    "responsibilities": [],
+    "approvalMatrix": [],
+    "escalationPaths": [],
+    "meetingCadence": [],
+    "decisionRights": [],
+    "changeControlProcess": [],
+    "qualityPolicy": {
+      "text": ""
+    },
+    "riskAppetite": null,
+    "complianceObligations": [],
+    "auditSchedule": null,
+    "documentControl": [],
+    "stakeholderEngagementPlan": [],
+    "ethicsPolicy": [],
+    "dataGovernance": [],
+    "ownerId": null,
+    "reviewCycle": null,
+    "reviewHierarchy": [],
+    "policyOwnershipId": null,
+    "requirementOwnershipId": null,
+    "riskOwnershipId": null,
+    "reportingFrequency": null,
+    "accountabilityRules": [],
+    "exceptionManagement": [],
+    "governancePerformance": []
+  }
+}

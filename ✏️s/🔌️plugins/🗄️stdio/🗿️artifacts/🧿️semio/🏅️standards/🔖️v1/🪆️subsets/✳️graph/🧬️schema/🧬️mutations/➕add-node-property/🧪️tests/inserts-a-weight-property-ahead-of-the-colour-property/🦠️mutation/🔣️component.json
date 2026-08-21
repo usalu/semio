@@ -1,0 +1,15 @@
+{
+  "AddNodeProperty": {
+    "node_id": {
+      "value": "a"
+    },
+    "index": 0,
+    "property": {
+      "key": "weight",
+      "value": {
+        "kind": "float",
+        "lexeme": "0.5"
+      }
+    }
+  }
+}

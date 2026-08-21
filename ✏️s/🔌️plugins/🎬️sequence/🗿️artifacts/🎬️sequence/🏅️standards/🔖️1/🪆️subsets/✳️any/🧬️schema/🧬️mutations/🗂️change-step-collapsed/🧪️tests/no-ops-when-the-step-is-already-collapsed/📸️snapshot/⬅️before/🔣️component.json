@@ -1,0 +1,14 @@
+{
+  "schema": "sequence.sequence",
+  "content": {
+    "childId": "sequence-content-change-step-collapsed-identical",
+    "target": {
+      "artifactId": "sequence-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "mutation": "createConstraintRecord",
+  "constraintRecord": {
+    "id": "constraint-record-a",
+    "name": "Constraint Record A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "constraintType": "",
+    "summary": {
+      "text": ""
+    },
+    "severity": "negligible",
+    "affectedEntityIds": [],
+    "source": null,
+    "regulatoryBasis": [],
+    "mitigationOptions": [],
+    "ownerId": null,
+    "effectiveDate": null,
+    "expiryDate": null,
+    "waiverStatus": null,
+    "waiverApprover": null,
+    "impactAssessment": null,
+    "resolutionPlan": [],
+    "relatedRequirementIds": [],
+    "relatedDecisionIds": [],
+    "monitoringFrequency": null,
+    "complianceStatus": "pending",
+    "exceptions": [],
+    "traceLinks": [],
+    "escalationContactId": null
+  }
+}

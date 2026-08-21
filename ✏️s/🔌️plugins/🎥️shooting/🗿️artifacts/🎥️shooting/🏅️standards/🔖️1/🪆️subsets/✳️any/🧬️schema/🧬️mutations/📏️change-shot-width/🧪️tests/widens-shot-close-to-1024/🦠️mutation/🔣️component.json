@@ -1,0 +1,5 @@
+{
+  "mutation": "changeShotWidth",
+  "id": "shot-close",
+  "new_width": 1024
+}

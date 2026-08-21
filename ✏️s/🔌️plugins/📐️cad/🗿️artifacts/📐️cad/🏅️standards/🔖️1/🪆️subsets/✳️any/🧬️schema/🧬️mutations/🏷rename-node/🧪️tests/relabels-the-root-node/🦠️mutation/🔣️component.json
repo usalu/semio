@@ -1,0 +1,5 @@
+{
+  "mutation": "renameNode",
+  "nodeId": "node-1",
+  "newLabel": "Assembly Root"
+}

@@ -125,7 +125,7 @@ impl ArtifactEditor for DocxEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -135,7 +135,7 @@ impl ArtifactEditor for DocxEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_docx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DOCX_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "docx"])
+        .document(["semio", "stdio", "docx"])
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::DOCX_EDIT_MODE_ID)
@@ -191,7 +191,7 @@ mod tests {
     async fn op_text_roundtrip() {
         let command = DocxEditorCommand::SetPage { index: 2, text: "a\nmulti line value".into() };
         let printed = <DocxEditorCommand as protocol::OpText>::print_op(&command);
-        let parsed = <DocxEditorCommand as protocol::OpText>::parse_op(&printed).await.expect("parse ok");
+        let parsed = <DocxEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
         assert_eq!(parsed, command);
     }
 }

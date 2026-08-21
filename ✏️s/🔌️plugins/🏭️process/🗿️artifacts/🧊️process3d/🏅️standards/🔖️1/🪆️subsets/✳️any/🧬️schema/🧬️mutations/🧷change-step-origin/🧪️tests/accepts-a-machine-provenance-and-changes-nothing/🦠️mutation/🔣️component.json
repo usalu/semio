@@ -1,0 +1,8 @@
+{
+  "mutation": "changeStepOrigin",
+  "id": "step-1",
+  "newOrigin": {
+    "machineId": "saw",
+    "capabilityId": "cut"
+  }
+}

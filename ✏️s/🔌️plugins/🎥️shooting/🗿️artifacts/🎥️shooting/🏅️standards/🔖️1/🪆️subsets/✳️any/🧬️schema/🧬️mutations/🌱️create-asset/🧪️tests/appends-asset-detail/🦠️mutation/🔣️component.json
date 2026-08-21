@@ -1,0 +1,17 @@
+{
+  "mutation": "createAsset",
+  "asset": {
+    "id": "asset-detail",
+    "name": "Detail",
+    "url": "/mesh/detail.glb",
+    "format": "glb",
+    "origin": [
+      0.0,
+      4.0,
+      0.0
+    ],
+    "orientation": null,
+    "scale": null
+  },
+  "index": 0
+}

@@ -26,7 +26,7 @@ pub fn diff(payload: &DeleteVertex, base: &SemioBrepSnapshot) -> protocol::Mutat
     if dependent_edges.is_empty() {
         outcome
     } else {
-        outcome.await.info("mutation.cascade", format!("Deleting vertex \"{}\" also removed {} connected edge(s): {}.", payload.id, dependent_edges.len(), dependent_edges.join(", ")))
+        outcome.info("mutation.cascade", format!("Deleting vertex \"{}\" also removed {} connected edge(s): {}.", payload.id, dependent_edges.len(), dependent_edges.join(", ")))
     }
 }
 //#endregion 🔖️Diff

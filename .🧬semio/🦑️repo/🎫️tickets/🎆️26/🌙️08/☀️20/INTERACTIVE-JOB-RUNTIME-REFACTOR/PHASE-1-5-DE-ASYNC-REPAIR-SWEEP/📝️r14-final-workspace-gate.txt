@@ -1,0 +1,15 @@
+error: could not compile `semio-framework-os-kernel` (lib test) due to 9 previous errors; 20 warnings emitted
+error: could not compile `semio-s-imperative` (lib) due to 2 previous errors
+error: could not compile `semio-s-imperative` (lib test) due to 2 previous errors; 1 warning emitted
+error: could not compile `semio-s-plugin-cad-aec-building-energy` (lib test) due to 4 previous errors
+error: could not compile `semio-framework-os-mcp` (lib) due to 22 previous errors; 4 warnings emitted
+error: could not compile `semio-framework-os-mcp` (lib test) due to 22 previous errors; 8 warnings emitted
+error: could not compile `semio-s-plugin-cad-aec-building-structure` (lib test) due to 4 previous errors
+error: could not compile `semio-s-plugin-cad-spatial-shape` (lib test) due to 4 previous errors
+error: could not compile `semio-framework-os-infinite` (lib) due to 820 previous errors
+error: could not compile `semio-framework-os-infinite` (lib test) due to 1103 previous errors; 19 warnings emitted
+error: could not compile `semio-framework-plugin` (lib test) due to 140 previous errors; 42 warnings emitted
+error: could not compile `semio-compose-rs` (lib) due to 17 previous errors; 89 warnings emitted
+error: could not compile `semio-compose-rs` (lib test) due to 34 previous errors; 160 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib) due to 4827 previous errors; 22 warnings emitted
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 9537 previous errors; 25 warnings emitted

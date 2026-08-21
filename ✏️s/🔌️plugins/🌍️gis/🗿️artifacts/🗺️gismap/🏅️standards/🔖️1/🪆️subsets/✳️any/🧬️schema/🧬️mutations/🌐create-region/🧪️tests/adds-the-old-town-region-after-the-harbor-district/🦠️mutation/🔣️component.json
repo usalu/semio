@@ -1,0 +1,12 @@
+{
+  "CreateRegion": {
+    "index": 1,
+    "item": {
+      "id": "region-old-town",
+      "data": {
+        "areaKm2": 1.25,
+        "kind": "district"
+      }
+    }
+  }
+}

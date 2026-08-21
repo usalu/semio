@@ -1,0 +1,10 @@
+{
+  "CreateWidget": {
+    "index": 2,
+    "widget": {
+      "kind": "inputNote",
+      "id": "note-c",
+      "text": "Gamma"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "mutation": "createHandle",
+  "handle": {
+    "id": "handle-out",
+    "handleKind": "hk-power",
+    "angle": 3.0,
+    "radius": 0.5
+  }
+}

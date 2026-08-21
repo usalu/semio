@@ -392,15 +392,24 @@ async fn forms_scene_id(steps: &[FormStep]) -> String {
     format!("forms-scene-{:016x}", hasher.finish())
 }
 
+/// 📝 Seeds the scratch cache for a handle — the id-keyed twin of [`forms_children_from_steps`],
+/// for the case where the handle already EXISTS (a snapshot decoded from persisted JSON, whose
+/// `child_id` this process never minted) and its steps must be brought into the working scene
+/// before any read path can see them. Mirrors dag's `cache_dag_content` and playbook's
+/// `cache_playbook_steps`.
+pub async fn cache_forms_steps(child_id: &str, steps: Vec<FormStep>) {
+    FORMS_SCRATCH.with(|cache| {
+        cache.borrow_mut().insert(child_id.to_string(), FormsWorkingScene { steps });
+    });
+}
+
 /// 🏗️ Mints both composed-child handles for a `steps` tree AND seeds the scratch cache in one
 /// call — the standard way every mutation-diff/fixture builder in this plugin creates
 /// `structure`/`results` field values; never construct these handles without also caching, or
 /// `forms_steps` will read back empty.
 pub async fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, FormsResultsChild) {
     let scene_id = forms_scene_id(steps);
-    FORMS_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), FormsWorkingScene { steps: steps.to_vec() });
-    });
+    cache_forms_steps(&scene_id, steps.to_vec());
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("forms-{subset}"), dialect: dialect_for(subset) };
     (store::ArtifactChild::new(scene_id.clone(), target_for("value")), store::ArtifactChild::new(scene_id, target_for("table")))

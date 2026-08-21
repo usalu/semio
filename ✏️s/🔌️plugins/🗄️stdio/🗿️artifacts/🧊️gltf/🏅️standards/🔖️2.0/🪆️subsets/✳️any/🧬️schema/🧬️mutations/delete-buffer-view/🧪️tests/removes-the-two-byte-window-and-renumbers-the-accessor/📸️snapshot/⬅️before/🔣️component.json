@@ -1,0 +1,41 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "accessors": [
+      {
+        "bufferView": 1,
+        "componentType": 5126,
+        "count": 1,
+        "type": "SCALAR"
+      }
+    ],
+    "bufferViews": [
+      {
+        "buffer": 0,
+        "byteLength": 2
+      },
+      {
+        "buffer": 0,
+        "byteLength": 4
+      }
+    ],
+    "buffers": [
+      {
+        "byteLength": 4,
+        "uri": "data:application/octet-stream;base64,AAAAAA=="
+      }
+    ]
+  },
+  "buffers": [
+    [
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "sourceForm": "json"
+}

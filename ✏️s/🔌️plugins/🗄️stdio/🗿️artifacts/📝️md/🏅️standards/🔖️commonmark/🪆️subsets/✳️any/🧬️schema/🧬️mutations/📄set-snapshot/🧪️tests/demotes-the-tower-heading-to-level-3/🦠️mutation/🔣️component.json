@@ -1,0 +1,27 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.md",
+    "blocks": [
+      {
+        "kind": "heading",
+        "level": 3,
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Capsule Tower"
+          }
+        ]
+      },
+      {
+        "kind": "paragraph",
+        "inlines": [
+          {
+            "kind": "text",
+            "text": "Built in 1972."
+          }
+        ]
+      }
+    ]
+  }
+}

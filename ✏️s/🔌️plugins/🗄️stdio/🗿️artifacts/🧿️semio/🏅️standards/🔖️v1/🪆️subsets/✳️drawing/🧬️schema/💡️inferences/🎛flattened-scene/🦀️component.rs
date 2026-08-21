@@ -301,12 +301,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.styles[0].stroke_width = Some(99.0);
-        let before = cache.await.stats();
+        let before = cache.stats();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
+        let after = cache.stats();
 
-        assert_eq!(after.await.misses - before.await.misses, 1, "only the leaf referencing the changed style may miss");
-        assert_eq!(after.await.hits - before.await.hits, 3, "root + the unrelated nested Group + the unrelated nested Text (its sibling subtree) must all remain cache hits");
+        assert_eq!(after.misses - before.misses, 1, "only the leaf referencing the changed style may miss");
+        assert_eq!(after.hits - before.hits, 3, "root + the unrelated nested Group + the unrelated nested Text (its sibling subtree) must all remain cache hits");
         assert_eq!(values[&key_for(0, &[0])].resolved_style.as_ref().unwrap().stroke_width, Some(99.0));
     }
 
@@ -321,12 +321,12 @@ mod tests {
         let mut changed = base.clone();
         let DrawNode::Group { transform, .. } = &mut changed.layers[0].root else { panic!() };
         transform.translation.x = 999.0;
-        let before = cache.await.stats();
+        let before = cache.stats();
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
+        let after = cache.stats();
 
-        assert_eq!(after.await.misses - before.await.misses, 4, "root + its 3 descendants all depend on the root's world transform");
-        assert_eq!(after.await.hits - before.await.hits, 0, "a root-wide change leaves nothing warm");
+        assert_eq!(after.misses - before.misses, 4, "root + its 3 descendants all depend on the root's world transform");
+        assert_eq!(after.hits - before.hits, 0, "a root-wide change leaves nothing warm");
     }
 
     /// 🤝️ Sibling law: two INDEPENDENT leaves (each referencing its own style, under different
@@ -365,12 +365,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.styles[0].stroke_width = Some(42.0); // only sibling 0 (style "s1") is affected
-        let before = cache.await.stats();
+        let before = cache.stats();
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
+        let after = cache.stats();
 
-        assert_eq!(after.await.misses - before.await.misses, 1, "only sibling 0 (which references the changed style) may miss");
-        assert_eq!(after.await.hits - before.await.hits, 2, "root + sibling 1 (which references a different, untouched style) must remain cache hits");
+        assert_eq!(after.misses - before.misses, 1, "only sibling 0 (which references the changed style) may miss");
+        assert_eq!(after.hits - before.hits, 2, "root + sibling 1 (which references a different, untouched style) must remain cache hits");
         assert_eq!(values[&key_for(0, &[1])], sibling_before, "sibling 1's flattened value must be byte-identical — it never depended on sibling 0's style");
     }
     //#endregion 🧪️IncrementalityLaw

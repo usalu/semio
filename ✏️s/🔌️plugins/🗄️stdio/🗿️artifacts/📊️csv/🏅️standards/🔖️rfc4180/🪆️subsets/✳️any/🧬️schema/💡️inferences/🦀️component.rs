@@ -129,7 +129,7 @@ mod tests {
 
             // Spr (mutations binary facet) — a real, non-trivial mutation.
             let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
-            let op_bytes = <CsvMutation as OpBinary>::encode_op(&mutation).await.expect("encode_op");
+            let op_bytes = <CsvMutation as OpBinary>::encode_op(&mutation).expect("encode_op");
             let spr_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
             assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
@@ -137,7 +137,7 @@ mod tests {
             // Diff binary facet.
             let mut before = snap.clone();
             let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut before, &mutation);
-            let diff_bytes = <CsvDiff as DiffCodec>::encode_diff(diff.diff().await).await.expect("encode_diff");
+            let diff_bytes = <CsvDiff as DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
             let diff_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
             assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame");
@@ -149,10 +149,10 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fixture_honesty_law() {
             let demo = snapshot::demo_csv_snapshot();
-            assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).await.unwrap(), demo.await);
+            assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap(), demo);
             assert_eq!(<snapshot::CsvSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::csv::examples::demo::PRIMARY_TEXT);
 
-            assert_eq!(<snapshot::CsvSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::csv::examples::demo::PACK_BYTES).await.unwrap(), demo.await);
+            assert_eq!(<snapshot::CsvSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::csv::examples::demo::PACK_BYTES).unwrap(), demo);
             assert_eq!(<snapshot::CsvSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::csv::examples::demo::PACK_BYTES.to_vec());
         }
 

@@ -1,0 +1,29 @@
+{
+  "mutation": "createRegion",
+  "region": {
+    "id": "slab",
+    "name": "Floor slab",
+    "outline": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        4.0,
+        0.0
+      ],
+      [
+        4.0,
+        2.0
+      ],
+      [
+        0.0,
+        2.0
+      ]
+    ],
+    "holes": [],
+    "thickness": 0.25,
+    "materialId": "c30",
+    "meshSize": 0.5
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n3",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 3.5
+    }
+  ],
+  "elements": [
+    {
+      "kind": "frame",
+      "id": "f1",
+      "start": "n1",
+      "end": "n3",
+      "materialId": "steel",
+      "sectionId": "hea200",
+      "roll": 0.0
+    }
+  ],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S235",
+      "e": 210000000000.0,
+      "g": 81000000000.0,
+      "nu": 0.25,
+      "rho": 8000.0
+    },
+    {
+      "id": "alu",
+      "name": "Aluminium EN AW-6082",
+      "e": 70000000000.0,
+      "g": 26000000000.0,
+      "nu": 0.25,
+      "rho": 2700.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "hea200",
+      "name": "HEA 200",
+      "area": 0.00538,
+      "iy": 0.00003692,
+      "iz": 0.00001336,
+      "j": 0.0000208
+    }
+  ],
+  "solids": [],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

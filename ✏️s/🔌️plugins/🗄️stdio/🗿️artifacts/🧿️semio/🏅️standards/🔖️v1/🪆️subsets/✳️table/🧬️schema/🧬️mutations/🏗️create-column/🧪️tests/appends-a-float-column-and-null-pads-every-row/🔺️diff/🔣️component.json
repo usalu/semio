@@ -1,0 +1,40 @@
+{
+  "columns": {
+    "values": [
+      {
+        "name": "city",
+        "kind": "str"
+      },
+      {
+        "name": "area",
+        "kind": "float"
+      }
+    ]
+  },
+  "rows": {
+    "values": [
+      {
+        "cells": [
+          {
+            "kind": "str",
+            "value": "Hannover"
+          },
+          {
+            "kind": "null"
+          }
+        ]
+      },
+      {
+        "cells": [
+          {
+            "kind": "str",
+            "value": "Berlin"
+          },
+          {
+            "kind": "null"
+          }
+        ]
+      }
+    ]
+  }
+}

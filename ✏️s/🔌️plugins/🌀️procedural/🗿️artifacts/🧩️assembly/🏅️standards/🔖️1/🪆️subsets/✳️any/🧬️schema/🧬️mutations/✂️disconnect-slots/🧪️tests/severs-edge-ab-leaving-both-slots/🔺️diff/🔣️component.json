@@ -1,0 +1,14 @@
+{
+  "schema": null,
+  "seed": null,
+  "slotsRemoved": [],
+  "slotsUpserted": [],
+  "edgesRemoved": [
+    "edge-ab"
+  ],
+  "edgesUpserted": [],
+  "weightsRemoved": [],
+  "weightsUpserted": [],
+  "rulesRemoved": [],
+  "rulesUpserted": []
+}

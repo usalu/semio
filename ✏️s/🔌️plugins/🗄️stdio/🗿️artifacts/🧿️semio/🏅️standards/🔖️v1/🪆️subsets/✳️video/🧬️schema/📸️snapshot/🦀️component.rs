@@ -242,8 +242,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -298,25 +298,25 @@ fn encode_video_snapshot_binary(s: &SemioVideoSnapshot) -> Vec<u8> {
 fn decode_video_snapshot_binary(bytes: &[u8]) -> Result<SemioVideoSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let stream_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let stream_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut streams = Vec::with_capacity(stream_count as usize);
     for _ in 0..stream_count {
-        let kind = kind_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?)?;
+        let kind = kind_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
         let codec = read_str_lp(&mut reader)?;
-        let width = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-        let height = reader.read_u32_le().await.map_err(|e| e.to_string())?;
-        let num = i64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.num: truncated".to_string())?);
-        let den = i64::from_le_bytes(reader.read_bytes(8).await.map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.den: truncated".to_string())?);
-        let sample_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let width = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let height = reader.read_u32_le().map_err(|e| e.to_string())?;
+        let num = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.num: truncated".to_string())?);
+        let den = i64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "rate.den: truncated".to_string())?);
+        let sample_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
         let mut samples = Vec::with_capacity(sample_count as usize);
         for _ in 0..sample_count {
-            let pts = reader.read_u64_le().await.map_err(|e| e.to_string())?;
-            let key = match reader.read_u8().await.map_err(|e| e.to_string())? {
+            let pts = reader.read_u64_le().map_err(|e| e.to_string())?;
+            let key = match reader.read_u8().map_err(|e| e.to_string())? {
                 0 => false,
                 1 => true,
                 other => return Err(format!("sample key: bad tag {other}")),
@@ -419,7 +419,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -427,7 +427,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 

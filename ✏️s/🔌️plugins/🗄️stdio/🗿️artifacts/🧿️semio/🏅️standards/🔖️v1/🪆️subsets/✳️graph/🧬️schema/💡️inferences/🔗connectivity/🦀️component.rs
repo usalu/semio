@@ -154,9 +154,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn connected_nodes_share_a_component_and_isolated_node_gets_its_own() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&two_component_snapshot(), None);
-        let a = values.await.get("a").expect("a present");
-        let b = values.await.get("b").expect("b present");
-        let c = values.await.get("c").expect("c present");
+        let a = values.get("a").expect("a present");
+        let b = values.get("b").expect("b present");
+        let c = values.get("c").expect("c present");
         assert_eq!(a.component, b.component, "a and b are connected by e1");
         assert_ne!(a.component, c.component, "c is isolated");
         assert_eq!(a.degree, 1);
@@ -169,13 +169,13 @@ mod tests {
         let mut snapshot = two_component_snapshot();
         snapshot.edges.push(edge("e2", "c", "c"));
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, None);
-        assert_eq!(values.await.get("c").expect("c present").degree, 2);
+        assert_eq!(values.get("c").expect("c present").degree, 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&SemioGraphSnapshot::default(), None);
-        assert!(values.await.is_empty());
+        assert!(values.is_empty());
     }
     //#endregion 🧪️Honesty
 
@@ -196,11 +196,11 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_component_snapshot();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
-        let before = cache.await.stats();
+        let before = cache.stats();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
-        let after = cache.await.stats();
-        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.await.hits - before.await.hits, 3, "all three nodes must be cache hits");
+        let after = cache.stats();
+        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.hits - before.hits, 3, "all three nodes must be cache hits");
     }
 
     /// 🌐️ Unlike `📊moments`/`🎲entropy` (per-key independence), connectivity is a WHOLE-GRAPH
@@ -215,12 +215,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.edges.push(edge("e2", "b", "c"));
-        let before = cache.await.stats();
+        let before = cache.stats();
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&changed, Some(&mut cache));
-        let after = cache.await.stats();
+        let after = cache.stats();
 
-        assert_eq!(after.await.misses - before.await.misses, 3, "adding one edge must miss all three entries, not just the two it touches");
-        assert_eq!(values.await.get("a").map(|v| v.component), values.await.get("c").map(|v| v.component), "a and c are now connected through b");
+        assert_eq!(after.misses - before.misses, 3, "adding one edge must miss all three entries, not just the two it touches");
+        assert_eq!(values.get("a").map(|v| v.component), values.get("c").map(|v| v.component), "a and c are now connected through b");
     }
 
     /// 🪤 The regression test for the collision trap documented on `dep_input`: `infer_field`'s
@@ -237,7 +237,7 @@ mod tests {
         let cached = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
         let pure = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, None);
         assert_eq!(cached, pure, "every key's cached value must equal its own pure recompute, not some other key's");
-        assert_ne!(cached.await.get("a"), cached.await.get("c"), "a (degree 1, in a's component) and c (degree 0, isolated) must not collide");
+        assert_ne!(cached.get("a"), cached.get("c"), "a (degree 1, in a's component) and c (degree 0, isolated) must not collide");
     }
     //#endregion 🧪️IncrementalityLaw
 }

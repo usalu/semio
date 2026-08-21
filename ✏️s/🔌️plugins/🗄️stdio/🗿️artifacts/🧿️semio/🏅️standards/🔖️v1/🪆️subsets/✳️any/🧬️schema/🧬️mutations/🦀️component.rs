@@ -80,10 +80,10 @@ impl Mutation<SemioSnapshot> for SemioMutation {
         match (self, &base.subset) {
             (SemioMutation::NoMutation, _) => protocol::MutationOutcome::new(SemioDiff::NoChange).await,
             (SemioMutation::SetSnapshot { snapshot }, _) => protocol::MutationOutcome::new(SemioDiff::Replace(Box::new(snapshot.clone()))).await,
-            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b).await.map(SemioDiff::Brep),
-            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b).await.map(SemioDiff::Mesh),
-            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b).await.map(SemioDiff::Model),
-            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b).await.map(SemioDiff::Value),
+            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b).await.map(SemioDiff::Brep).await,
+            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b).await.map(SemioDiff::Mesh).await,
+            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b).await.map(SemioDiff::Model).await,
+            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b).await.map(SemioDiff::Value).await,
             (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b).await.map(SemioDiff::Document),
             (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b).await.map(SemioDiff::Cad),
             (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b).await.map(SemioDiff::Drawing),
@@ -107,24 +107,24 @@ impl Mutation<SemioSnapshot> for SemioMutation {
         match (self, &base.subset) {
             (SemioMutation::NoMutation, _) => vec![SemioMutation::NoMutation],
             (SemioMutation::SetSnapshot { .. }, _) => vec![SemioMutation::SetSnapshot { snapshot: base.clone() }],
-            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Brep).collect(),
-            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Mesh).collect(),
-            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Model).collect(),
-            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Value).collect(),
-            (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Document).collect(),
-            (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Cad).collect(),
-            (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Drawing).collect(),
-            (SemioMutation::Image(m), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Image).collect(),
-            (SemioMutation::Video(m), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Video).collect(),
-            (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Audio).collect(),
-            (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Animation).collect(),
-            (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Presentation).collect(),
-            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Flow).collect(),
-            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Text).collect(),
-            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Table).collect(),
-            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Graph).collect(),
-            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Object).collect(),
-            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(m, b).into_iter().await.await.await.map(SemioMutation::Kit).collect(),
+            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Brep).collect(),
+            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Mesh).collect(),
+            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Model).collect(),
+            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Value).collect(),
+            (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Document).collect(),
+            (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Cad).collect(),
+            (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Drawing).collect(),
+            (SemioMutation::Image(m), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Image).collect(),
+            (SemioMutation::Video(m), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Video).collect(),
+            (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Audio).collect(),
+            (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Animation).collect(),
+            (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Presentation).collect(),
+            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Flow).collect(),
+            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Text).collect(),
+            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Table).collect(),
+            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Graph).collect(),
+            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Object).collect(),
+            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::inverse(m, b).into_iter().map(SemioMutation::Kit).collect(),
             // 🛡️ Same kind-mismatch fallback as `diff()` above.
             _ => vec![SemioMutation::NoMutation],
         }
@@ -136,7 +136,7 @@ impl Mutation<SemioSnapshot> for SemioMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> protocol::MutationOutcome<SemioDiff> {
     let outcome = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot);
-    outcome.await.apply_to(snapshot)
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -204,7 +204,7 @@ fn mutation_tag(m: &SemioMutation) -> u8 {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
     let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
-    text.await.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
+    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
@@ -219,7 +219,7 @@ fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
         i += 2;
     }
     let text = String::from_utf8(bytes).map_err(|e| format!("setSnapshot: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.map_err(|e| format!("setSnapshot: dsl decode: {e}"))
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("setSnapshot: dsl decode: {e}"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -257,24 +257,24 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
     match tag {
         "setSnapshot" => Ok(SemioMutation::SetSnapshot { snapshot: dec_hex_snapshot(rest)? }),
-        "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "value" => Ok(SemioMutation::Value(SemioValueMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "image" => Ok(SemioMutation::Image(SemioImageMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "video" => Ok(SemioMutation::Video(SemioVideoMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "table" => Ok(SemioMutation::Table(SemioTableMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "graph" => Ok(SemioMutation::Graph(SemioGraphMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
-        "kit" => Ok(SemioMutation::Kit(SemioKitMutation::parse_op(rest).await.map_err(|e| e.to_string())?)),
+        "brep" => Ok(SemioMutation::Brep(SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "mesh" => Ok(SemioMutation::Mesh(SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "model" => Ok(SemioMutation::Model(SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "value" => Ok(SemioMutation::Value(SemioValueMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "document" => Ok(SemioMutation::Document(SemioDocumentMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "cad" => Ok(SemioMutation::Cad(SemioCadMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "drawing" => Ok(SemioMutation::Drawing(SemioDrawingMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "image" => Ok(SemioMutation::Image(SemioImageMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "video" => Ok(SemioMutation::Video(SemioVideoMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "audio" => Ok(SemioMutation::Audio(SemioAudioMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "animation" => Ok(SemioMutation::Animation(SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "presentation" => Ok(SemioMutation::Presentation(SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "flow" => Ok(SemioMutation::Flow(SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "text" => Ok(SemioMutation::Text(SemioTextMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "table" => Ok(SemioMutation::Table(SemioTableMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "graph" => Ok(SemioMutation::Graph(SemioGraphMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "object" => Ok(SemioMutation::Object(SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())?)),
+        "kit" => Ok(SemioMutation::Kit(SemioKitMutation::parse_op(rest).map_err(|e| e.to_string())?)),
         other => Err(format!("semio mutation: unknown tag {other:?}")),
     }
 }
@@ -432,12 +432,12 @@ mod tests {
 
         let no_mut = SemioMutation::NoMutation;
         let d0 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&no_mut, &base);
-        assert_eq!(d0.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert_eq!(d0.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 
         let target = flow_base();
         let set_snap = SemioMutation::SetSnapshot { snapshot: target.clone() };
         let d1 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&set_snap, &base);
-        assert_eq!(d1.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), target);
+        assert_eq!(d1.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), target);
         let inv1 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&set_snap, &base);
         let mut round = target.clone();
         let _ = apply_semio_mutation(&mut round, &inv1[0]);
@@ -445,13 +445,13 @@ mod tests {
 
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 96_000 });
         let d2 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
-        assert!(matches!(d2.await.diff(), SemioDiff::Audio(_)));
+        assert!(matches!(d2.diff(), SemioDiff::Audio(_)));
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &wrapped);
-        assert_eq!(d2.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(d2.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, d2);
         let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
-        assert_eq!(inv2.await.len(), 1);
+        assert_eq!(inv2.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv2[0]);
         assert_eq!(restored, base);
@@ -483,8 +483,8 @@ mod tests {
         let base = flow_base();
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 1 });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
-        assert_eq!(diff.await.diff(), &SemioDiff::NoChange);
-        assert!(diff.await.messages().await.iter().any(|message| message.code.0 == "mutation.target-missing"));
+        assert_eq!(diff.diff(), &SemioDiff::NoChange);
+        assert!(diff.messages().await.iter().any(|message| message.code.0 == "mutation.target-missing"));
         assert_eq!(diff.await.diff().apply(&base).unwrap(), base);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
         assert_eq!(inv, vec![SemioMutation::NoMutation]);
@@ -743,3 +743,12 @@ mod tests {
     }
 }
 //#endregion 🔖️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦀️component.rs"]
+mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
+//#endregion 🧪️FixtureCases

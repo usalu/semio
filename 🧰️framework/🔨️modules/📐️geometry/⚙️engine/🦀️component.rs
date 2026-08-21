@@ -943,7 +943,7 @@ pub mod geom_sel {
         false
     }
 
-    pub async fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
+    pub fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
         let xs = [c.p0.x, c.p1.x, c.p2.x, c.p3.x];
         let ys = [c.p0.y, c.p1.y, c.p2.y, c.p3.y];
         WorldBox {

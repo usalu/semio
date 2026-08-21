@@ -75,12 +75,12 @@ pub enum TiffMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
     let outcome = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -99,7 +99,7 @@ impl Mutation<TiffSnapshot> for TiffMutation {
             TiffMutation::SetTag { ifd_index, tag, kind, values } => diff::diff_set_tag(base, *ifd_index, *tag, *kind, values.clone()),
             TiffMutation::RemoveTag { ifd_index, tag } => diff::diff_remove_tag(base, *ifd_index, *tag),
             TiffMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
-        }).await
+        })
     }
 
     /// ↩️ Handcrafted, index/tag-aware mutation-level inverses. Out-of-range targets invert to
@@ -214,8 +214,8 @@ fn enc_snapshot_bin(s: &TiffSnapshot, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, String> {
     let schema = read_str_lp(reader)?;
-    let byte_order = if reader.read_u8().await.map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
-    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let byte_order = if reader.read_u8().map_err(|e| e.to_string())? == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian };
+    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut ifds = Vec::with_capacity(n as usize);
     for _ in 0..n {
         ifds.push(dec_ifd_bin(reader)?);
@@ -409,7 +409,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_tiff_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_tiff_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.await.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -462,8 +462,8 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.await.diff().apply(&base).unwrap();
-            let inv_d = d.await.diff().inverse(&base);
+            let mutated = d.diff().apply(&base).unwrap();
+            let inv_d = d.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).unwrap(), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -473,12 +473,12 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.await.diff().apply(base).unwrap();
+        let mid = d1.diff().apply(base).unwrap();
         let d2 = m2.diff(&mid);
-        let sequential = d2.await.diff().apply(&mid).unwrap();
+        let sequential = d2.diff().apply(&mid).unwrap();
 
-        let mut merged = d1.await.diff().clone();
-        merged.absorb(d2.await.diff().clone());
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
         assert_eq!(merged.apply(base).unwrap(), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -516,21 +516,21 @@ mod tests {
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }.diff(&base);
-        let s1 = d1.await.diff().apply(&base).unwrap();
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a2".into()) }.diff(&s1);
-        let s2 = d2.await.diff().apply(&s1).unwrap();
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = TiffMutation::RemoveTag { ifd_index: 0, tag: 296 }.diff(&s2);
-        let s3 = d3.await.diff().apply(&s2).unwrap();
+        let s3 = d3.diff().apply(&s2).unwrap();
 
         // (d1∘d2)∘d3
-        let mut left = d1.await.diff().clone();
-        left.absorb(d2.await.diff().clone());
-        left.absorb(d3.await.diff().clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.await.diff().clone();
-        d23.absorb(d3.await.diff().clone());
-        let mut right = d1.await.diff().clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).unwrap(), s3);
@@ -559,10 +559,10 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let bytes = crate::artifacts::tiff::engine::encode_tiff(&base_snapshot()).await.expect("encode synthetic fixture");
-        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).await.expect("decode fixture");
-        let reencoded = crate::artifacts::tiff::engine::encode_tiff(&decoded).await.expect("re-encode fixture");
-        let redecoded = crate::artifacts::tiff::engine::decode_tiff(&reencoded).await.expect("re-decode fixture");
+        let bytes = crate::artifacts::tiff::engine::encode_tiff(&base_snapshot()).expect("encode synthetic fixture");
+        let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode fixture");
+        let reencoded = crate::artifacts::tiff::engine::encode_tiff(&decoded).expect("re-encode fixture");
+        let redecoded = crate::artifacts::tiff::engine::decode_tiff(&reencoded).expect("re-decode fixture");
         // Engine's EncodeScopeNote: encode always canonicalizes to a single IFD/single strip —
         // pixel CONTENT + carried non-core tags are the retained invariant.
         assert_eq!(decoded.width(), redecoded.width());
@@ -584,18 +584,18 @@ mod tests {
         assert_eq!(backward.apply(&b).unwrap(), a, "between(b,a).apply(&b) must equal a");
         assert!(TiffDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
-        assert_eq!(forward.await.byte_order, Some(TiffByteOrder::BigEndian));
-        assert_eq!(backward.await.byte_order, Some(TiffByteOrder::LittleEndian));
-        assert!(forward.await.pixels.is_some(), "pixels must be diffed");
-        assert!(backward.await.pixels.is_some());
+        assert_eq!(forward.byte_order, Some(TiffByteOrder::BigEndian));
+        assert_eq!(backward.byte_order, Some(TiffByteOrder::LittleEndian));
+        assert!(forward.pixels.is_some(), "pixels must be diffed");
+        assert!(backward.pixels.is_some());
 
         // ifds (index-keyed): forward shows removed(IFD1)+modified(IFD0); backward shows
         // added(IFD1)+modified(IFD0) — the split-across-both-directions workaround.
-        let fwd_ifds = forward.await.ifds.as_ref().expect("ifds diff present (forward)");
+        let fwd_ifds = forward.ifds.as_ref().expect("ifds diff present (forward)");
         assert_eq!(fwd_ifds.removed, vec![1]);
         assert_eq!(fwd_ifds.modified.len(), 1);
         assert!(fwd_ifds.added.is_empty());
-        let bwd_ifds = backward.await.ifds.as_ref().expect("ifds diff present (backward)");
+        let bwd_ifds = backward.ifds.as_ref().expect("ifds diff present (backward)");
         assert!(bwd_ifds.removed.is_empty());
         assert_eq!(bwd_ifds.modified.len(), 1);
         assert_eq!(bwd_ifds.added.len(), 1);
@@ -666,15 +666,24 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = TiffMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = TiffMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = TiffMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = TiffMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
     //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/stamps-a-software-tag-and-adds-an-image-description/🦀️component.rs"]
+mod set_snapshot_stamps_a_software_tag_and_adds_an_image_description;
+//#endregion 🧪️FixtureCases

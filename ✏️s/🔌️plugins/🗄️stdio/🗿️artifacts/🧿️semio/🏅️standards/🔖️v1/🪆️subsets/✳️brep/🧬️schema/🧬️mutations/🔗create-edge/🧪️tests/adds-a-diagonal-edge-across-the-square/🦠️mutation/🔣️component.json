@@ -1,0 +1,20 @@
+{
+  "CreateEdge": {
+    "id": "e5",
+    "start_vertex": "v1",
+    "end_vertex": "v3",
+    "curve": {
+      "kind": "line",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "direction": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    }
+  }
+}

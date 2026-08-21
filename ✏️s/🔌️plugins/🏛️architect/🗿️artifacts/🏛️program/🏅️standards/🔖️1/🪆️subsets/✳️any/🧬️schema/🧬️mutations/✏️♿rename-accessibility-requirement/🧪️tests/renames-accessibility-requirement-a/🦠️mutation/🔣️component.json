@@ -1,0 +1,5 @@
+{
+  "mutation": "renameAccessibilityRequirement",
+  "id": "accessibility-requirement-a",
+  "newName": "Renamed Accessibility Requirement A"
+}

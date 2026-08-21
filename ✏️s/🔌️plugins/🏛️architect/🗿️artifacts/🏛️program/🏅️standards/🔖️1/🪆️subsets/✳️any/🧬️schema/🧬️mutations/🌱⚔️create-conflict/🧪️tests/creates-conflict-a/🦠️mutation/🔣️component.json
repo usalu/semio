@@ -1,0 +1,40 @@
+{
+  "mutation": "createConflict",
+  "conflict": {
+    "id": "conflict-a",
+    "name": "Conflict A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "kind": "adjacency",
+    "summary": {
+      "text": ""
+    },
+    "entityAId": "",
+    "entityBId": "",
+    "severity": "cosmetic",
+    "detectedBy": null,
+    "detectionDate": null,
+    "tradeOffOptions": [],
+    "recommendedResolution": null,
+    "decisionId": null,
+    "stakeholderIds": [],
+    "requirementIds": [],
+    "costImpact": null,
+    "scheduleImpact": null,
+    "qualityImpact": [],
+    "resolutionStatus": "pending",
+    "ownerId": null,
+    "escalationLevel": null,
+    "relatedRiskIds": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mutation": "createGripKind",
+  "gripKind": {
+    "id": "gk-hook",
+    "name": "hook",
+    "label": "Hook",
+    "color": "#5533aa",
+    "defaultRopeKind": "rope.link"
+  }
+}

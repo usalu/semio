@@ -49,60 +49,118 @@ impl WindowDelegate for OsHost {
         &mut self.scheduler
     }
 
-    /// 📥️ Every normalized event marks the window dirty — the coarse-but-correct rule this packet
-    /// ships with: any pointer/key/scroll/ime event is assumed to potentially change something on
-    /// screen (hover state alone routinely does). A future pass could narrow this per event kind; see
-    /// this file's own report deviations for why that narrowing is deferred rather than guessed at
-    /// without the compiler/runtime to verify it against.
-    // 🚫️async: U1 — sync fn; the spawned future is the boundary-async exception U1 itself carves out.
+    /// 📥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the enqueue-only replacement
+    /// for the old "spawn one heap-allocated future per event" path — every event now goes through
+    /// [`ui_host::EventQueue::enqueue`], which coalesces replaceable state (pointer move, scroll) into
+    /// fixed `Copy` slots and bounds discrete events (pointer down/up, key, ime, paste) to
+    /// [`ui_host::DISCRETE_QUEUE_CAPACITY`] — a genuine reduction from "one allocation per pointer-move
+    /// tick during a drag" to "zero allocations for replaceable state, one bounded push for discrete
+    /// events." `redraw()` (below) drains this queue once per frame and dispatches the WHOLE batch
+    /// through a single `spawn_app_task` call, same coarse "any input event may have changed something"
+    /// invalidation rule as before. Wrapped in a `semio_framework_trace::Watchdog` against
+    /// `InteractiveStage::UiEvent`'s 1ms soft target — the ticket's own UI-event-callback gate.
+    // 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
+    // async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
+        let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_event", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
         self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
-        let runtime = self.runtime.clone();
-        crate::spawn_app_task(async move {
-            let Some(runtime) = Some(runtime) else { return };
-            let Ok(mut app) = runtime.try_borrow_mut() else { return };
-            dispatch_normalized_event(&mut app, event).await;
-        });
+        if self.events.enqueue(self.ui_token, event) == ui_host::EnqueueOutcome::Overflow {
+            crate::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
+        }
     }
 
+    /// 📐️ P3a: also funnels through the enqueue-only [`ui_host::EventQueue`] (`enqueue_metrics`, so a
+    /// resize storm coalesces to the latest sample the same way pointer move does — see that struct's
+    /// own test coverage). The `app.resize(..)` call stays immediate rather than deferred: this
+    /// crate's GPU surface must be reconfigured before the next `render_frame` submission or the
+    /// backend rejects the mismatched surface/window size, which is the platform constraint the design
+    /// doc's §6 table calls "GPU resource creation... depends, may need locking in native" — resizing
+    /// the surface synchronously here IS that lock, kept minimal (no layout, no tessellation, no
+    /// allocation beyond what `wgpu`'s own surface reconfiguration already does).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
         self.scheduler.invalidate(InvalidationReason::VIEWPORT);
+        self.events.enqueue_metrics(self.ui_token, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         if let Ok(mut app) = self.runtime.try_borrow_mut() {
             let (width, height) = metrics.logical_size();
             app.resize(width, height, metrics.scale_factor);
         }
     }
 
-    /// 🖼️ Builds one frame via the existing `AppRuntime::frame()` (unchanged — product behaviour
-    /// stays put per this packet's own OWNS list) and re-arms this file's deadline sources.
-    ///
-    /// **Known fidelity loss — `ui_render::CursorRequest` (5 variants) vs `SemioCursor` (13
-    /// variants).** `AppRuntime::frame()` already applies its own richer cursor internally via
-    /// `ui_wgpu::wgpu::apply_window_cursor` before this method returns; the `RedrawOutcome.cursor`
-    /// handed back here is a best-effort narrowing of that SAME already-applied cursor
-    /// (`semio_cursor_to_request` below), not an independent decision, so a caller re-applying it
-    /// (`ui_host::apply_window_cursor`, if this delegate is ever driven through `NativeHost` instead
-    /// of this file's own hand-rolled loop) is idempotent for the 5 shared variants and only loses
-    /// fidelity — never fights — the 8 that don't map (resize handles, crosshair, not-allowed, move):
-    /// those fall back to `Default`. `AppRuntime`'s own richer set-cursor call already ran, so THIS
-    /// file's own loop (which never re-applies `RedrawOutcome.cursor` — see `WinitApp::window_event`
-    /// below) never actually exercises the lossy path; it exists only for a caller that goes through
-    /// `ui_host::NativeHost` in the future.
+    /// 🖼️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): now explicitly split into
+    /// `build_and_publish_snapshot` (drains enqueued input, builds via `AppRuntime::frame()`, publishes
+    /// a [`crate::render_snapshot::RenderSnapshot`]) and `present_snapshot` (acquires the sink, applies
+    /// its directives). See `🦀️render_snapshot.rs`'s own module docstring for the honest scope note:
+    /// BOTH still run on this call, on this thread, because `AppRuntime` cannot move to a worker as-is
+    /// (`Rc<RefCell<_>>`, not `Send`) and GPU submission lives inside `ui_wgpu`, outside this packet's
+    /// boundary. The split is real in the CODE (two named functions, a real publish/acquire crossing
+    /// between them through the sink) even though it is not yet real in THREADING — the seam a worker
+    /// slots into once that ownership blocker is resolved.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let now = self.clock.now_seconds();
+        self.build_and_publish_snapshot();
+        self.present_snapshot(now)
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn close_requested(&mut self) -> bool {
+        true
+    }
+}
+
+/// 🖼️ P3a: `build_and_publish_snapshot`/`present_snapshot` are inherent methods (not part of
+/// `WindowDelegate` — that trait only names `redraw`), split out so a future worker-side builder can
+/// call `build_and_publish_snapshot`'s eventual replacement independently of `present_snapshot`, which
+/// must stay UI-thread-only.
+impl OsHost {
+    /// 🏗️ The BUILD half — drains enqueued input, calls the existing `AppRuntime::frame()` (unchanged
+    /// product behaviour — chrome layout/tessellation/GPU submission all still happen inside it, see
+    /// `📓️p3a-render-snapshot.md` for what Phase 5 still owes), and publishes the result.
+    ///
+    /// **Known fidelity loss — `ui_render::CursorRequest` (5 variants) vs `SemioCursor` (13
+    /// variants).** `AppRuntime::frame()` already applies its own richer cursor internally via
+    /// `ui_wgpu::wgpu::apply_window_cursor` before this method returns; the published snapshot's cursor
+    /// is a best-effort narrowing of that SAME already-applied cursor (`semio_cursor_to_request`
+    /// below), not an independent decision — see `present_snapshot`'s own doc for the idempotency
+    /// argument this fidelity loss never actually exercises on this file's own hand-rolled loop.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn build_and_publish_snapshot(&mut self) {
+        if !self.events.is_empty() {
+            let generation = self.events.current_generation();
+            let drained = self.events.drain(ui_host::WorkerContext::new(generation));
+            let runtime = self.runtime.clone();
+            crate::spawn_app_task(async move {
+                let Ok(mut app) = runtime.try_borrow_mut() else { return };
+                dispatch_drained_events(&mut app, drained).await;
+            });
+        }
+        // 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): a genuine, if narrow, worker
+        // hop — see `🦀️frame_job.rs`'s own module docstring for exactly what this covers (the World3D
+        // camera-dispatch-deadline scan) and, more importantly, what it does not (chrome layout/
+        // tessellation/GPU submission, still all inside `app.frame()` below, still all on this thread).
+        // `poll_and_resubmit` never blocks: it returns this tick's fresh result if the previous job
+        // finished, or the last one it has otherwise — `frame()` itself re-validates every candidate
+        // against live state, so a stale result here is a harmless one-tick delay, not a correctness
+        // bug (see that module's doc for why).
+        let build_inputs = self
+            .runtime
+            .try_borrow()
+            .map(|app| crate::frame_job::FrameBuildInputs { world3d_camera_dispatch_deadlines_ms: app.world3d_camera_dispatch_deadlines_ms.clone(), wheel_zoom_deadline_ms: app.wheel_zoom_deadline_ms, now_ms: crate::app_now_ms() })
+            .unwrap_or_default();
+        let build_operation = render_frame_operation_id();
+        let build_generation = semio_framework_trace::Generation(self.frame_generation);
+        let build_directives = self.frame_build.poll_and_resubmit(build_inputs, build_operation, build_generation);
         let last_cursor = if let Ok(mut app) = self.runtime.try_borrow_mut() {
             // ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): `AppRuntime::frame()`
-            // is this crate's whole renderer frame callback today — input processing, chrome
+            // is this crate's whole renderer frame-BUILD callback today — input processing, chrome
             // layout/tessellation AND the GPU `render_frame` submission, still one undivided call on
             // this thread (native winit thread or the wasm main thread; `frame()` is called from
-            // nowhere else — see `📦️glue.rs`'s own audit). Splitting that apart onto workers (frame
-            // BUILDING off this thread, this thread only submitting an already-prepared packet) is
-            // Phase 3/5's job, explicitly NOT this packet's. This wrap only makes an overrun VISIBLE —
-            // any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8ms) is
-            // recorded as a `ContractViolation`, which is exactly the instrumentation Phase 3's exit
-            // gate reads, without changing what runs where.
+            // nowhere else — see `📦️glue.rs`'s own audit). Splitting the GPU submission itself further
+            // off this call needs `ui_wgpu` (outside this packet's boundary) to expose a separate
+            // encode/submit seam — flagged for Phase 5 in `📓️p3a-render-snapshot.md`. This wrap makes
+            // an overrun VISIBLE — any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`
+            // (8ms) is recorded as a `ContractViolation`, queryable by this packet's exit gate.
             let _watchdog = semio_framework_trace::Watchdog::start(
                 "os_renderer_frame",
                 render_frame_operation_id(),
@@ -110,11 +168,26 @@ impl WindowDelegate for OsHost {
                 semio_framework_trace::InteractiveStage::UiPresent,
             );
             self.frame_generation = self.frame_generation.wrapping_add(1);
-            app.frame();
+            app.frame(&build_directives);
             app.last_cursor.map(|(cursor, _)| cursor)
         } else {
             None
         };
+        let cursor = last_cursor.map(semio_cursor_to_request).unwrap_or_default();
+        let revision = self.snapshot_sink.next_revision();
+        let generation = semio_framework_trace::Generation(self.frame_generation);
+        let timestamp_us = (self.now_seconds() * 1_000_000.0) as u64;
+        self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, generation, timestamp_us, cursor, None));
+    }
+
+    /// 📤️ The PRESENT half — atomically acquires the newest published snapshot (never blocks, never
+    /// waits: if nothing newer landed since the last call it re-presents the same one — the ticket's
+    /// governing rule verbatim) and applies its cursor/IME directives plus this file's deadline
+    /// sources. This is the bounded, ≤2ms-budget half of `redraw` — everything expensive already
+    /// happened in `build_and_publish_snapshot`.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
+        let snapshot = self.snapshot_sink.acquire();
 
         // ⌨️ Deviation from the packet brief's literal "only while a caret is visible": AppRuntime's
         // own focus/caret-presence signal is not exposed at this layer (see report — a real, scoped
@@ -128,13 +201,7 @@ impl WindowDelegate for OsHost {
             self.scheduler.request_deadline(now + crate::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
 
-        let cursor = last_cursor.map(semio_cursor_to_request).unwrap_or_default();
-        RedrawOutcome { cursor, ime: None }
-    }
-
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn close_requested(&mut self) -> bool {
-        true
+        RedrawOutcome { cursor: snapshot.cursor, ime: snapshot.ime }
     }
 }
 
@@ -157,8 +224,30 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// `handle_key`). `PointerButton::{Primary,Secondary,Middle}` → `{0,2,1}` matches the DOM
 /// `MouseEvent.button` convention `AppRuntime`'s own `i16` button parameter already assumed
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
-// 🚫️async: U1 — the fn itself is sync at its call boundary (spawned by `handle_event` above); the
-// `.await`s inside it are the same boundary-async exception `AppRuntime`'s own methods already are.
+/// 📤️ P3a: replays one [`ui_host::DrainedEvents`] batch — the coalesced pointer-move/scroll samples
+/// (if any landed since the last drain) followed by every discrete event in arrival order — through
+/// the same [`dispatch_normalized_event`] every individual event used to go through one at a time.
+/// Reconstructing a synthetic [`DispatchEvent`] for the coalesced samples keeps this a thin adapter
+/// with zero duplicated dispatch logic, per CLAUDE.md's "if code is repeated, it MUST be close to
+/// each other" — there is exactly one place that knows how to turn a `DispatchEvent` into `AppRuntime`
+/// calls.
+// 🚫️async: U1 — sync fn boundary (spawned once per drain by `redraw` above); the `.await`s inside are
+// the same boundary-async exception `AppRuntime`'s own methods already are.
+async fn dispatch_drained_events(app: &mut AppRuntime, drained: ui_host::DrainedEvents) {
+    if let Some(sample) = drained.pointer_move {
+        dispatch_normalized_event(app, DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y }).await;
+    }
+    if let Some(sample) = drained.scroll {
+        dispatch_normalized_event(app, DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y }).await;
+    }
+    for discrete in drained.discrete {
+        dispatch_normalized_event(app, discrete.event).await;
+    }
+}
+
+// 🚫️async: U1 — the fn itself is sync at its call boundary (spawned by `dispatch_drained_events`
+// above); the `.await`s inside it are the same boundary-async exception `AppRuntime`'s own methods
+// already are.
 async fn dispatch_normalized_event(app: &mut AppRuntime, event: DispatchEvent) {
     match event {
         DispatchEvent::PointerMove { x, y, .. } => {
@@ -387,6 +476,12 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
         if self.window.is_some() {
             return;
         }
+        // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): registers THIS thread —
+        // winit's callback thread, the only thread `resumed`/`window_event`/`about_to_wait` ever run
+        // on — as the UI thread with `semio-framework-trace`'s thread-role census, so
+        // `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
+        // process from this point on. Exactly once, first callback, before any event can be normalized.
+        semio_framework_trace::register_ui_thread();
         // 🔔️ Real cross-thread waker installed exactly once, before the first `spawn_app_task` future
         // is ever queued (boot itself queues one just below) — see `ProxyWaker`'s own docstring.
         #[cfg(not(target_arch = "wasm32"))]

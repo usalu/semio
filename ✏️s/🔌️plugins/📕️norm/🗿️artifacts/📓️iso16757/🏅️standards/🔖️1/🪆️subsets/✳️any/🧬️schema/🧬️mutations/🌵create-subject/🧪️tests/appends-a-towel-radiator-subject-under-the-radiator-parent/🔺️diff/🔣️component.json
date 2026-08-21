@@ -1,0 +1,57 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": {
+    "reference": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "subjects": [
+      {
+        "id": "subject.radiator",
+        "kind": "ProductClass",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Radiator"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "definition": {
+          "locale": "en",
+          "text": "Space heating emitter"
+        },
+        "parent_id": null
+      },
+      {
+        "id": "subject.towel-radiator",
+        "kind": "ProductSpecialization",
+        "names": {
+          "preferred": {
+            "locale": "en",
+            "text": "Towel radiator"
+          },
+          "short_name": null,
+          "alternatives": []
+        },
+        "definition": {
+          "locale": "en",
+          "text": "Space heating emitter doubling as a towel rail"
+        },
+        "parent_id": "subject.radiator"
+      }
+    ],
+    "relationships": [],
+    "properties": [],
+    "controlled_lists": [],
+    "meta_subjects": []
+  },
+  "geometry": null,
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null,
+  "selectedCheckIndex": null
+}

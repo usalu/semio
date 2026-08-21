@@ -467,11 +467,11 @@ mod tests {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(61);
             for _ in 0..100 {
                 let frame =
-                    Frame3::from_normal(Pnt3::new(rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0, rng.await.next_f64() * 4.0 - 2.0), Vec3::new(rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
+                    Frame3::from_normal(Pnt3::new(rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0, rng.next_f64() * 4.0 - 2.0), Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5).normalized().unwrap_or(Vec3::Z))
                         .unwrap();
-                let radius = 0.5 + rng.await.next_f64() * 5.0;
+                let radius = 0.5 + rng.next_f64() * 5.0;
                 let c = Curve3::Circle { frame, radius };
-                let target = Pnt3::new(rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0, rng.await.next_f64() * 20.0 - 10.0);
+                let target = Pnt3::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
                 let (_, dist) = closest_point(&c, (0.0, std::f64::consts::TAU), target, 32);
                 let oracle_dist = (0..=100000).map(|i| c.eval(std::f64::consts::TAU * i as f64 / 100000.0).distance(target)).fold(f64::INFINITY, f64::min);
                 assert!((dist - oracle_dist).abs() < 1e-4, "mismatch: newton={dist} oracle={oracle_dist}");

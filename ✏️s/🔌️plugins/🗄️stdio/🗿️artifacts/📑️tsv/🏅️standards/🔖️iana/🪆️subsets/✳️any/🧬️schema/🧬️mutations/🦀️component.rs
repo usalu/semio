@@ -54,12 +54,12 @@ pub enum TsvMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
     let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -228,7 +228,7 @@ mod tests {
         ];
         for m in variants {
             let diff = m.diff(&base);
-            let expected = diff.await.diff().apply(&base).unwrap();
+            let expected = diff.diff().apply(&base).unwrap();
 
             let mut via_apply = base.clone();
             let returned_diff = apply_tsv_mutation(&mut via_apply, &m);
@@ -260,8 +260,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.await.diff().apply(&base).unwrap();
-            let back = d.await.diff().inverse(&base).apply(&mid).unwrap();
+            let mid = d.diff().apply(&base).unwrap();
+            let back = d.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -273,54 +273,54 @@ mod tests {
         let base = base_snapshot();
 
         let d1 = TsvMutation::InsertRow { index: 2, row: row(&["ins", "x"]) }.diff(&base);
-        let mid = d1.await.diff().apply(&base).unwrap();
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::RemoveRow { index: 0 }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).unwrap();
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         let d1 = TsvMutation::InsertRow { index: 2, row: row(&["f", "x"]) }.diff(&base);
-        let mid = d1.await.diff().apply(&base).unwrap();
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::InsertRow { index: 2, row: row(&["g", "y"]) }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).unwrap();
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
         let d1 = TsvMutation::InsertRow { index: 1, row: row(&["orig", "x"]) }.diff(&base);
-        let mid = d1.await.diff().apply(&base).unwrap();
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::SetCell { row_index: 1, field_index: 0, value: "patched".into() }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).unwrap();
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetCell absorb mismatch");
         assert_eq!(after.records[1][0], "patched");
 
         let d1 = TsvMutation::SetCell { row_index: 1, field_index: 0, value: "will-vanish".into() }.diff(&base);
-        let mid = d1.await.diff().apply(&base).unwrap();
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::RemoveRow { index: 1 }.diff(&mid);
-        let after = d2.await.diff().apply(&mid).unwrap();
-        let mut composed = d1.await.diff().clone();
-        composed.absorb(d2.await.diff().clone());
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         let base = base_snapshot();
         let d1 = TsvMutation::InsertRow { index: 0, row: row(&["a", "x"]) }.diff(&base);
-        let s1 = d1.await.diff().apply(&base).unwrap();
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::SetCell { row_index: 0, field_index: 0, value: "a2".into() }.diff(&s1);
-        let s2 = d2.await.diff().apply(&s1).unwrap();
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = TsvMutation::RemoveRow { index: 2 }.diff(&s2);
-        let s3 = d3.await.diff().apply(&s2).unwrap();
+        let s3 = d3.diff().apply(&s2).unwrap();
 
-        let mut left = d1.await.diff().clone();
-        left.absorb(d2.await.diff().clone());
-        left.absorb(d3.await.diff().clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.await.diff().clone();
-        d23.absorb(d3.await.diff().clone());
-        let mut right = d1.await.diff().clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).unwrap(), s3);
@@ -358,8 +358,8 @@ mod tests {
         let d_ba = TsvDiff::between(&b, &a);
         assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
 
-        assert!(d_ab.await.trailing_newline.is_some(), "trailing_newline must be populated");
-        assert!(d_ab.await.line_ending.is_some(), "line_ending must be populated");
+        assert!(d_ab.trailing_newline.is_some(), "trailing_newline must be populated");
+        assert!(d_ab.line_ending.is_some(), "line_ending must be populated");
         // 🧭️ `TsvDiff::between` is positional (rows have no stable identity beyond position, same
         // as epw's own `EpwDiff::between`) — `min_len` only compares shared index range, so a
         // single `between()` call populates `removed` XOR `added` (whichever side is longer),
@@ -368,7 +368,7 @@ mod tests {
         // above). `sweep_a`/`sweep_b` rows are all 2 columns wide, so every index is a same-width
         // positional comparison: `modified` is what's populated here; `removed`-only/`added`-only
         // are exercised on their own just below via genuinely shorter/longer row lists.
-        let records = d_ab.await.records.as_ref().expect("records diff must be populated");
+        let records = d_ab.records.as_ref().expect("records diff must be populated");
         assert!(records.removed.is_empty(), "equal-length, equal-width row lists: no positional removal");
         assert!(!records.modified.is_empty(), "modified must be non-empty (every row differs positionally)");
         assert!(records.added.is_empty(), "equal-length, equal-width row lists: no positional addition");
@@ -380,14 +380,14 @@ mod tests {
         let mut shorter = a.clone();
         shorter.records.pop();
         let d_shrink = TsvDiff::between(&a, &shorter);
-        let shrink_records = d_shrink.await.records.as_ref().expect("records diff must be populated");
+        let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
         assert!(!shrink_records.removed.is_empty(), "a shorter row list must produce a removed entry");
         assert_eq!(d_shrink.apply(&a).unwrap(), shorter);
 
         let mut longer = a.clone();
         longer.records.push(row(&["extra", "z"]));
         let d_grow = TsvDiff::between(&a, &longer);
-        let grow_records = d_grow.await.records.as_ref().expect("records diff must be populated");
+        let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
         assert!(!grow_records.added.is_empty(), "a longer row list must produce an added entry");
         assert_eq!(d_grow.apply(&a).unwrap(), longer);
 
@@ -412,15 +412,29 @@ mod tests {
         ];
         for m in mutations {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = TsvMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = TsvMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = TsvMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = TsvMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/renames-the-alpha-row-and-switches-to-crlf/🦀️component.rs"]
+    mod tests_set_snapshot_renames_the_alpha_row_and_switches_to_crlf;
+}
+//#endregion 🧪️FixtureTests

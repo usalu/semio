@@ -498,10 +498,10 @@ mod tests {
         b.unknown_chunks.push(RiffChunk { fourcc: "JUNK".into(), data: vec![1] });
 
         let d = <AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &b);
-        assert!(d.await.main_header.is_some());
-        assert!(d.await.streams.is_some());
-        assert!(d.await.idx1_present.is_some());
-        assert!(d.await.unknown_chunks.is_some());
+        assert!(d.main_header.is_some());
+        assert!(d.streams.is_some());
+        assert!(d.idx1_present.is_some());
+        assert!(d.unknown_chunks.is_some());
         assert_eq!(d.apply(&a).unwrap(), b);
         assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&b, &a).apply(&b).unwrap(), a);
         assert!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &a).is_empty());

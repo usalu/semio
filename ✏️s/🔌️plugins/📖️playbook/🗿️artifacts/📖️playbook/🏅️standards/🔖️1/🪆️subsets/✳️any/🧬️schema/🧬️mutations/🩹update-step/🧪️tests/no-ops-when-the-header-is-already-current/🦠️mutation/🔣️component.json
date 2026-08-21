@@ -1,0 +1,6 @@
+{
+  "mutation": "updateStep",
+  "stepId": "s-intro",
+  "title": "Intro",
+  "description": "Warm up the room."
+}

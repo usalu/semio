@@ -92,6 +92,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🧪️tests/no-ops-when-the-frame-is-already-identical/🦀️component.rs"]
+                                    mod tests_no_ops_when_the_frame_is_already_identical;
                                 }
                                 #[path = "."]
                                 pub mod replace_source {
@@ -101,6 +104,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼replace-source/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼replace-source/🧪️tests/no-ops-when-the-source-is-already-identical/🦀️component.rs"]
+                                    mod tests_no_ops_when_the_source_is_already_identical;
                                 }
                                 #[path = "."]
                                 pub mod create_tile {
@@ -110,6 +116,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🧪️tests/rejects-a-duplicate-tile-id/🦀️component.rs"]
+                                    mod tests_rejects_a_duplicate_tile_id;
                                 }
                                 #[path = "."]
                                 pub mod delete_tile {
@@ -119,6 +128,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-tile/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-tile/🧪️tests/rejects-deleting-a-missing-tile/🦀️component.rs"]
+                                    mod tests_rejects_deleting_a_missing_tile;
                                 }
                                 #[path = "."]
                                 pub mod delete_tiles {
@@ -128,6 +140,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🧪️tests/rejects-when-every-addressed-tile-is-missing/🦀️component.rs"]
+                                    mod tests_rejects_when_every_addressed_tile_is_missing;
                                 }
                                 #[path = "."]
                                 pub mod rename_tile {
@@ -137,6 +152,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏rename-tile/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏rename-tile/🧪️tests/no-ops-when-the-tile-already-has-that-name/🦀️component.rs"]
+                                    mod tests_no_ops_when_the_tile_already_has_that_name;
                                 }
                                 #[path = "."]
                                 pub mod resize_tile_crop {
@@ -146,6 +164,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂resize-tile-crop/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂resize-tile-crop/🧪️tests/rejects-a-zero-width-crop/🦀️component.rs"]
+                                    mod tests_rejects_a_zero_width_crop;
                                 }
                                 #[path = "."]
                                 pub mod reorder_tiles {
@@ -155,6 +176,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/no-ops-when-the-tile-is-already-at-that-index/🦀️component.rs"]
+                                    mod tests_no_ops_when_the_tile_is_already_at_that_index;
                                 }
                                 #[path = "."]
                                 pub mod replace_tiles {
@@ -164,6 +188,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🧪️tests/no-ops-when-the-collection-is-already-empty/🦀️component.rs"]
+                                    mod tests_no_ops_when_the_collection_is_already_empty;
                                 }
                             }
                         }

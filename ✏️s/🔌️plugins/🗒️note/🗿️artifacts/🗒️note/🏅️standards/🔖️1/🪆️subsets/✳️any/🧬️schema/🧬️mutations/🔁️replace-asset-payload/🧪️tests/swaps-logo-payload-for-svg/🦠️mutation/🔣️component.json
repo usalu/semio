@@ -1,0 +1,8 @@
+{
+  "mutation": "replaceAssetPayload",
+  "key": "asset-logo",
+  "newAsset": {
+    "mime": "image/svg+xml",
+    "data": "PHN2Zy8+"
+  }
+}

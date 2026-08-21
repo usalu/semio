@@ -1,0 +1,5 @@
+{
+  "mutation": "changeObjectLocked",
+  "id": "object-a",
+  "newLocked": true
+}

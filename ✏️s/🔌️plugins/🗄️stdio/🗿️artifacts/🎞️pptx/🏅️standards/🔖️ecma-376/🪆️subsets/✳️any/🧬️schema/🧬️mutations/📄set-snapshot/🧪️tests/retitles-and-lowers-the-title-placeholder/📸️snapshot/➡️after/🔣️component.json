@@ -1,0 +1,66 @@
+{
+  "schema": "stdio.pptx",
+  "opc": {
+    "parts": [],
+    "contentTypes": {
+      "defaults": [
+        [
+          "xml",
+          "application/xml"
+        ],
+        [
+          "rels",
+          "application/vnd.openxmlformats-package.relationships+xml"
+        ]
+      ],
+      "overrides": [
+        [
+          "/ppt/presentation.xml",
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"
+        ]
+      ]
+    },
+    "relationships": {},
+    "comment": ""
+  },
+  "xmlParts": [],
+  "presentation": {
+    "slides": [
+      {
+        "shapes": [
+          {
+            "shapeKind": "placeholder",
+            "kind": "title",
+            "textFrame": [
+              {
+                "runs": [
+                  {
+                    "text": "Nakagin Capsule Tower",
+                    "bold": false,
+                    "italic": false
+                  }
+                ]
+              }
+            ],
+            "position": {
+              "x": 0,
+              "y": 457200,
+              "cx": 9144000,
+              "cy": 1143000
+            }
+          },
+          {
+            "shapeKind": "picture",
+            "blipRelId": "rId2",
+            "position": {
+              "x": 0,
+              "y": 1143000,
+              "cx": 9144000,
+              "cy": 4000000
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -32,7 +32,7 @@ where
     P::Endpoint: From<NodeId>,
 {
     let Some((old_source, old_target)) = src.edge_endpoints(edge_id) else { return };
-    let attrs = src.edge_attrs(edge_id).await.cloned().unwrap_or_else(PropertyBag::new);
+    let attrs = src.edge_attrs(edge_id).cloned().unwrap_or_else(PropertyBag::new);
     let new_source = translate_endpoint::<P>(old_source, node_map, handle_map);
     let new_target = translate_endpoint::<P>(old_target, node_map, handle_map);
     dst.add_edge_with(new_source, new_target, attrs);
@@ -44,7 +44,7 @@ fn copy_nodes_from<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: 
     let mut node_map = BTreeMap::new();
     let mut handle_map = BTreeMap::new();
     for id in ids {
-        let attrs = src.node_attrs(id).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = src.node_attrs(id).cloned().unwrap_or_else(PropertyBag::new);
         let new_id = dst.add_node_with_id(id, attrs);
         node_map.insert(id, new_id);
         if P::HAS_PORTS {
@@ -67,7 +67,7 @@ where
     let mut node_map = BTreeMap::new();
     let mut handle_map = BTreeMap::new();
     for id in src.nodes() {
-        let attrs = src.node_attrs(id).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = src.node_attrs(id).cloned().unwrap_or_else(PropertyBag::new);
         let new_id = dst.add_node_with(attrs);
         node_map.insert(id, new_id);
         if P::HAS_PORTS {
@@ -91,7 +91,7 @@ pub fn union<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
-    let g_nodes: BTreeSet<NodeId> = g.nodes().collect().await.await.await;
+    let g_nodes: BTreeSet<NodeId> = g.nodes().collect();
     if h.nodes().any(|n| g_nodes.contains(&n)) {
         return Err(GraphError::AmbiguousSolution("union requires g and h to have disjoint node id sets".to_string()));
     }
@@ -144,8 +144,8 @@ where
     P::Endpoint: From<NodeId>,
 {
     let mut dst: Storage<P, D> = Storage::new();
-    let g_nodes: BTreeSet<NodeId> = g.nodes().collect().await.await.await;
-    let common: Vec<NodeId> = h.nodes().filter(|n| g_nodes.contains(n)).await.await.collect();
+    let g_nodes: BTreeSet<NodeId> = g.nodes().collect();
+    let common: Vec<NodeId> = h.nodes().filter(|n| g_nodes.contains(n)).collect();
     let (node_map, handle_map) = copy_nodes_from(&mut dst, g, common);
     for edge in g.edges() {
         if !node_map.contains_key(&edge.u) || !node_map.contains_key(&edge.v) {
@@ -183,12 +183,12 @@ where
     P::Endpoint: From<NodeId>,
 {
     let mut dst: Storage<P, D> = Storage::new();
-    let all_nodes: BTreeSet<NodeId> = g.nodes().chain(h.nodes()).await.await.await.collect();
+    let all_nodes: BTreeSet<NodeId> = g.nodes().chain(h.nodes()).collect();
     let mut node_map = BTreeMap::new();
     let mut g_handle_map = BTreeMap::new();
     let mut h_handle_map = BTreeMap::new();
     for id in all_nodes {
-        let attrs = g.node_attrs(id).await.or_else(|| h.node_attrs(id)).cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = g.node_attrs(id).or_else(|| h.node_attrs(id)).cloned().unwrap_or_else(PropertyBag::new);
         let new_id = dst.add_node_with_id(id, attrs);
         node_map.insert(id, new_id);
         if P::HAS_PORTS {
@@ -229,9 +229,9 @@ where
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn complement<P: PortModel, D: Directedness>(g: &Storage<P, D>) -> Storage<Normal, D> {
     let mut dst: Storage<Normal, D> = Storage::new();
-    let nodes: Vec<NodeId> = g.nodes().collect().await.await.await;
+    let nodes: Vec<NodeId> = g.nodes().collect();
     for &n in &nodes {
-        let attrs = g.node_attrs(n).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = g.node_attrs(n).cloned().unwrap_or_else(PropertyBag::new);
         dst.add_node_with_id(n, attrs);
     }
     if D::DIRECTED {
@@ -264,7 +264,7 @@ where
     let (node_map, handle_map) = copy_nodes_from(&mut dst, g, g.nodes());
     for edge in g.edges() {
         let Some((old_source, old_target)) = g.edge_endpoints(edge.id) else { continue };
-        let attrs = g.edge_attrs(edge.id).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = g.edge_attrs(edge.id).cloned().unwrap_or_else(PropertyBag::new);
         let new_source = translate_endpoint::<P>(old_target, &node_map, &handle_map);
         let new_target = translate_endpoint::<P>(old_source, &node_map, &handle_map);
         dst.add_edge_with(new_source, new_target, attrs);
@@ -296,8 +296,8 @@ fn product_skeleton<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal,
 /// 🔗️ Shared quadruple-loop edge builder for the four products below: wires `(u1, v1)-(u2, v2)` whenever `include` says so. Deliberately not optimized past `O(|Vg|² · |Vh|²)` — products are meant for small graphs here (see module docs).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_product_edges<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>, dst: &mut Storage<Normal, D>, map: &BTreeMap<(NodeId, NodeId), NodeId>, mut include: impl FnMut(NodeId, NodeId, NodeId, NodeId) -> bool) {
-    let g_nodes: Vec<NodeId> = g.nodes().collect().await.await.await;
-    let h_nodes: Vec<NodeId> = h.nodes().collect().await.await.await;
+    let g_nodes: Vec<NodeId> = g.nodes().collect();
+    let h_nodes: Vec<NodeId> = h.nodes().collect();
     for &u1 in &g_nodes {
         for &v1 in &h_nodes {
             for &u2 in &g_nodes {
@@ -372,9 +372,9 @@ fn bfs_within<D: Directedness>(g: &Storage<Normal, D>, src: NodeId, k: usize) ->
 pub fn power<D: Directedness>(g: &Storage<Normal, D>, k: usize) -> Storage<Normal, D> {
     assert!(k >= 1, "power requires k >= 1");
     let mut dst: Storage<Normal, D> = Storage::new();
-    let nodes: Vec<NodeId> = g.nodes().collect().await.await.await;
+    let nodes: Vec<NodeId> = g.nodes().collect();
     for &n in &nodes {
-        let attrs = g.node_attrs(n).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = g.node_attrs(n).cloned().unwrap_or_else(PropertyBag::new);
         dst.add_node_with_id(n, attrs);
     }
     for &src in &nodes {
@@ -402,7 +402,7 @@ where
         if n == v {
             continue;
         }
-        let mut attrs = g.node_attrs(n).await.cloned().unwrap_or_else(PropertyBag::new);
+        let mut attrs = g.node_attrs(n).cloned().unwrap_or_else(PropertyBag::new);
         if n == u {
             if let Some(v_attrs) = g.node_attrs(v) {
                 let mut merged = v_attrs.clone();
@@ -478,7 +478,7 @@ pub fn quotient_graph<P: PortModel, D: Directedness>(g: &Storage<P, D>, partitio
 pub fn line_graph<D: Directedness>(g: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<EdgeId, NodeId>) {
     let mut dst: Storage<Normal, D> = Storage::new();
     let mut node_of_edge: BTreeMap<EdgeId, NodeId> = BTreeMap::new();
-    let edges: Vec<_> = g.edges().collect().await.await.await;
+    let edges: Vec<_> = g.edges().collect();
     for edge in &edges {
         node_of_edge.insert(edge.id, dst.add_node());
     }
@@ -509,11 +509,11 @@ pub fn line_graph<D: Directedness>(g: &Storage<Normal, D>) -> (Storage<Normal, D
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn mycielskian<D: Directedness>(g: &Storage<Normal, D>) -> Storage<Normal, D> {
     let mut dst: Storage<Normal, D> = Storage::new();
-    let nodes: Vec<NodeId> = g.nodes().collect().await.await.await;
+    let nodes: Vec<NodeId> = g.nodes().collect();
     let mut original_id = BTreeMap::new();
     let mut shadow_id = BTreeMap::new();
     for &n in &nodes {
-        let attrs = g.node_attrs(n).await.cloned().unwrap_or_else(PropertyBag::new);
+        let attrs = g.node_attrs(n).cloned().unwrap_or_else(PropertyBag::new);
         original_id.insert(n, dst.add_node_with_id(n, attrs));
     }
     for &n in &nodes {
@@ -563,7 +563,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn union_of_disjoint_graphs_merges_everything() {
         let g = und_edge(0, 1);
-        let mut h: Storage<Normal, Undirected> = Storage::new().await;
+        let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(10, PropertyBag::new());
         h.add_node_with_id(11, PropertyBag::new());
         h.add_edge(10, 11);
@@ -585,12 +585,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn compose_lets_h_overwrite_shared_node_and_edge_attrs() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         g.add_node_with_id(0, attrs_of(&[("color", "red")]));
         g.add_node_with_id(1, PropertyBag::new());
         g.add_edge_with(0, 1, attrs_of(&[("kind", "g")]));
 
-        let mut h: Storage<Normal, Undirected> = Storage::new().await;
+        let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(0, attrs_of(&[("color", "blue")]));
         h.add_node_with_id(1, PropertyBag::new());
         h.add_node_with_id(2, PropertyBag::new());
@@ -598,9 +598,9 @@ mod tests {
 
         let composed = semio_compose_rs(&g, &h);
         assert_eq!(composed.node_count(), 3);
-        assert_eq!(composed.node_attrs(0).await.unwrap().get("color").unwrap().as_str(), Some("blue"));
+        assert_eq!(composed.node_attrs(0).unwrap().get("color").unwrap().as_str(), Some("blue"));
         let edge = composed.edges_between(0, 1).next().unwrap();
-        assert_eq!(composed.edge_attrs(edge.id).await.unwrap().get("kind").unwrap().as_str(), Some("h"));
+        assert_eq!(composed.edge_attrs(edge.id).unwrap().get("kind").unwrap().as_str(), Some("h"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -614,14 +614,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn intersection_keeps_only_shared_nodes_and_edges() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
         g.add_edge(0, 1);
         g.add_edge(1, 2);
 
-        let mut h: Storage<Normal, Undirected> = Storage::new().await;
+        let mut h: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 3] {
             h.add_node_with_id(id, PropertyBag::new());
         }
@@ -635,14 +635,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn difference_keeps_gs_nodes_and_only_gs_own_edges() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
         g.add_edge(0, 1);
         g.add_edge(1, 2);
 
-        let mut h: Storage<Normal, Undirected> = Storage::new().await;
+        let mut h: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1] {
             h.add_node_with_id(id, PropertyBag::new());
         }
@@ -658,7 +658,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn symmetric_difference_keeps_edges_unique_to_either_side() {
         let g = und_edge(0, 1);
-        let mut h: Storage<Normal, Undirected> = Storage::new().await;
+        let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(0, PropertyBag::new());
         h.add_node_with_id(1, PropertyBag::new());
         h.add_node_with_id(2, PropertyBag::new());
@@ -677,7 +677,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn complement_of_a_path_matches_a_hand_count() {
         // 🔺️ Path 0-1-2 (undirected, 3 nodes, 2 edges) has C(3,2)-2 = 1 missing pair: 0-2.
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
@@ -692,7 +692,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn reverse_round_trips_the_edge_set() {
-        let mut g: Storage<Normal, Directed> = Storage::new().await;
+        let mut g: Storage<Normal, Directed> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
@@ -704,8 +704,8 @@ mod tests {
         assert!(once.edges_between(2, 1).next().is_some());
 
         let twice = reverse(&once);
-        let original: BTreeSet<(NodeId, NodeId)> = g.edges().map(|e| (e.u, e.v)).await.await.collect();
-        let round_tripped: BTreeSet<(NodeId, NodeId)> = twice.edges().map(|e| (e.u, e.v)).await.await.collect();
+        let original: BTreeSet<(NodeId, NodeId)> = g.edges().map(|e| (e.u, e.v)).collect();
+        let round_tripped: BTreeSet<(NodeId, NodeId)> = twice.edges().map(|e| (e.u, e.v)).collect();
         assert_eq!(original, round_tripped);
     }
     // #endsubregion
@@ -758,7 +758,7 @@ mod tests {
     // #subregion Power
     #[semio_framework_async_macros::async_test]
     async fn power_connects_nodes_within_k_hops() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
             g.add_node_with_id(id, PropertyBag::new());
         }
@@ -778,7 +778,7 @@ mod tests {
     // #subregion Contraction
     #[semio_framework_async_macros::async_test]
     async fn contracted_nodes_merges_v_into_u_and_respects_self_loops_flag() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
@@ -798,14 +798,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn contracted_edge_contracts_its_own_endpoints() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }
         let e = g.add_edge(0, 1);
         g.add_edge(1, 2);
 
-        let contracted = contracted_edge(&g, e.await, false).expect("edge exists");
+        let contracted = contracted_edge(&g, e, false).expect("edge exists");
         assert_eq!(contracted.node_count(), 2);
 
         let err = contracted_edge(&g, 9999, false).expect_err("missing edge id");
@@ -814,7 +814,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn quotient_graph_connects_blocks_that_have_a_crossing_edge() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2, 3] {
             g.add_node_with_id(id, PropertyBag::new());
         }
@@ -832,7 +832,7 @@ mod tests {
     // #subregion LineGraph
     #[semio_framework_async_macros::async_test]
     async fn line_graph_of_a_triangle_is_itself_a_triangle() {
-        let mut g: Storage<Normal, Undirected> = Storage::new().await;
+        let mut g: Storage<Normal, Undirected> = Storage::new();
         for id in [0, 1, 2] {
             g.add_node_with_id(id, PropertyBag::new());
         }

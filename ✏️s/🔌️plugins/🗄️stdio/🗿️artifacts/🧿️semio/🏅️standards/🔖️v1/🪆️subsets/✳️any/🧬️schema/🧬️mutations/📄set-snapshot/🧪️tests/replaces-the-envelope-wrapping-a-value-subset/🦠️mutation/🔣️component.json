@@ -1,0 +1,42 @@
+{
+  "mutation": "setSnapshot",
+  "payload": {
+    "snapshot": {
+      "schema": "stdio.semio",
+      "subset": {
+        "subset": "value",
+        "schema": "stdio.semio.value",
+        "root": {
+          "kind": "map",
+          "entries": [
+            {
+              "key": "title",
+              "value": {
+                "kind": "str",
+                "value": "Envelope Fixture"
+              }
+            },
+            {
+              "key": "count",
+              "value": {
+                "kind": "int",
+                "lexeme": "42"
+              }
+            }
+          ]
+        },
+        "nodes": [
+          {
+            "id": {
+              "value": "n-1"
+            },
+            "value": {
+              "kind": "bool",
+              "value": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}

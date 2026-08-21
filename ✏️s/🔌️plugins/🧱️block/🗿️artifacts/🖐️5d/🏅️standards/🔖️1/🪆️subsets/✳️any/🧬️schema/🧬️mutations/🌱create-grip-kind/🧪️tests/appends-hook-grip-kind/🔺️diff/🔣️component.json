@@ -1,0 +1,31 @@
+{
+  "artifact": null,
+  "schema": null,
+  "partKind": null,
+  "part2d": null,
+  "part3d": null,
+  "representations": null,
+  "gripKinds": {
+    "added": [
+      {
+        "id": "gk-hook",
+        "name": "hook",
+        "label": "Hook",
+        "color": "#5533aa",
+        "defaultRopeKind": "rope.link"
+      }
+    ],
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "grips": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "camera3d": null,
+  "meta": null,
+  "selectedIds": null,
+  "locale": null
+}

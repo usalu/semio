@@ -1,0 +1,19 @@
+{
+  "schema": "s.stdio.semio.table",
+  "columns": [
+    {
+      "name": "city",
+      "kind": "str"
+    }
+  ],
+  "rows": [
+    {
+      "cells": [
+        {
+          "kind": "str",
+          "value": "Hannover"
+        }
+      ]
+    }
+  ]
+}

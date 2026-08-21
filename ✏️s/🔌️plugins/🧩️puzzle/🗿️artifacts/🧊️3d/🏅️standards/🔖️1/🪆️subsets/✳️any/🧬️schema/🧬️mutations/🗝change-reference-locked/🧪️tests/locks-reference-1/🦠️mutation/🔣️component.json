@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReferenceLocked",
+  "id": "reference-1",
+  "newLocked": true
+}

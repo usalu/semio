@@ -1,0 +1,19 @@
+{
+  "CreateGeometry": {
+    "geometry": {
+      "id": "geom.valve.80",
+      "bbox": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "min_z": 0.0,
+        "max_x": 0.5,
+        "max_y": 0.75,
+        "max_z": 0.25
+      },
+      "connections": [],
+      "parameters": {
+        "scale": 1.0
+      }
+    }
+  }
+}

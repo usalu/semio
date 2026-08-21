@@ -1,0 +1,24 @@
+{
+  "catalog": {
+    "childId": "catalog-fixture-timber-kit",
+    "target": {
+      "artifactId": "catalog-fixture-timber-kit",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "kit"
+      }
+    }
+  },
+  "stockExtra": [],
+  "curated": [
+    {
+      "objectId": "beam-glulam-240",
+      "count": 12
+    },
+    {
+      "objectId": "panel-clt-3000",
+      "count": 4
+    }
+  ]
+}

@@ -85,13 +85,13 @@ pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: u
     let mut removed = std::collections::BTreeSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at(target.clone()));
         }
     }
     let mut modified = std::collections::BTreeSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at(target.clone()));
         }
     }
     let mut added = std::collections::BTreeSet::new();
@@ -100,7 +100,7 @@ pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: u
     additions.sort_unstable();
     for index in additions {
         if index > length || !added.insert(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
         }
         length += 1;
     }
@@ -118,21 +118,21 @@ where
     for item in base {
         let key = key_of_base(item);
         if base_keys.contains(&key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-base-key", format!("base key {key:?} is duplicated")).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-base-key", format!("base key {key:?} is duplicated")).at(target.clone()));
         }
         base_keys.push(key);
     }
     let mut removed = Vec::new();
     for key in &diff.removed {
         if !base_keys.contains(key) || removed.contains(key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-key", format!("remove key {key:?} is absent or duplicated")).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-key", format!("remove key {key:?} is absent or duplicated")).at(target.clone()));
         }
         removed.push(key.clone());
     }
     let mut modified = Vec::new();
     for entry in &diff.modified {
         if !base_keys.contains(&entry.key) || removed.contains(&entry.key) || modified.contains(&entry.key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-key", format!("modify key {:?} is absent, removed, or duplicated", entry.key)).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-key", format!("modify key {:?} is absent, removed, or duplicated", entry.key)).at(target.clone()));
         }
         modified.push(entry.key.clone());
     }
@@ -140,7 +140,7 @@ where
     for item in &diff.added {
         let key = key_of_added(item);
         if base_keys.contains(&key) || added.contains(&key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).await.at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).at(target.clone()));
         }
         added.push(key);
     }

@@ -1,0 +1,42 @@
+{
+  "mutation": "createFlowRequirement",
+  "flowRequirement": {
+    "id": "flow-requirement-a",
+    "name": "Flow Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "fromElementId": "",
+    "toElementId": "",
+    "kind": "people",
+    "flowType": "",
+    "direction": "oneWay",
+    "volume": {
+      "unit": ""
+    },
+    "peakRate": null,
+    "clearWidthM": null,
+    "clearHeightM": null,
+    "separationRequirements": [],
+    "accessLevel": "public",
+    "timeWindows": [],
+    "equipmentClearance": null,
+    "signageRequired": false,
+    "escortRequired": false,
+    "emergencyRoute": false,
+    "barrierFree": false,
+    "monitoringRequired": false,
+    "processId": null,
+    "conflictIds": [],
+    "verificationMethod": null
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "positions": null,
+  "routes": {
+    "added": [],
+    "removed": [],
+    "patched": [],
+    "reordered": [
+      "route-bus",
+      "route-ferry",
+      "route-tram"
+    ]
+  },
+  "regions": null,
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

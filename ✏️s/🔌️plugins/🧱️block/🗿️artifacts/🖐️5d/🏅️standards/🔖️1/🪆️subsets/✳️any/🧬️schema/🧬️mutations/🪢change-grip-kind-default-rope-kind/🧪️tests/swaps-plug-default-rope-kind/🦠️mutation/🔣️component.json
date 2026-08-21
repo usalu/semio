@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGripKindDefaultRopeKind",
+  "id": "gk-plug",
+  "newDefaultRopeKind": "rope.heavy"
+}

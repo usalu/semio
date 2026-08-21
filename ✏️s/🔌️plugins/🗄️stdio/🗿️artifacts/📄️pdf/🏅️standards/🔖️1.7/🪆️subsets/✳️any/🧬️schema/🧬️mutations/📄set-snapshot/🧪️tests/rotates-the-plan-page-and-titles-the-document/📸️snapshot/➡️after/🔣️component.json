@@ -1,0 +1,31 @@
+{
+  "schema": "stdio.pdf.1.7",
+  "declaredVersion": "1.7",
+  "pages": [
+    {
+      "mediaBox": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "rotate": 0,
+      "text": "Cover"
+    },
+    {
+      "mediaBox": [
+        0.0,
+        0.0,
+        612.0,
+        792.0
+      ],
+      "rotate": 90,
+      "text": "Plan"
+    }
+  ],
+  "info": {
+    "title": "Capsule Tower"
+  },
+  "objects": [],
+  "trailer": []
+}

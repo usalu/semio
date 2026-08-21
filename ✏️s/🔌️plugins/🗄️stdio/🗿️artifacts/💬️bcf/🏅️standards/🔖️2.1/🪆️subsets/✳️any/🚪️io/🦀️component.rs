@@ -446,12 +446,12 @@ pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
         entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
     }
     let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).await.map_err(|e| e.to_string())
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| e.to_string())?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| e.to_string())?;
 
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -626,7 +626,7 @@ mod tests {
             entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "stray/notes.txt".into(), data: b"not a topic".to_vec(), ..Default::default() }],
             comment: String::new(),
         };
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).await.unwrap();
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).unwrap();
         let decoded = decode_bcf(&bytes).unwrap();
         assert!(decoded.topics.is_empty());
         assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
@@ -645,11 +645,11 @@ mod tests {
         let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed, snap);
 
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -679,7 +679,7 @@ mod tests {
             let returned = apply_bcf_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(snap, expected_diff.await.diff().apply(&base).expect("diff must apply to base"), "apply mismatch for {m:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply mismatch for {m:?}");
         }
     }
     //#endregion
@@ -714,8 +714,8 @@ mod tests {
             }
 
             let d = m.diff(&base);
-            let after = d.await.diff().apply(&base).expect("diff must apply to base");
-            let d_inv = d.await.diff().inverse(&base);
+            let after = d.diff().apply(&base).expect("diff must apply to base");
+            let d_inv = d.diff().inverse(&base);
             assert_eq!(d_inv.apply(&after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
         }
     }
@@ -733,7 +733,7 @@ mod tests {
         // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
         // no interaction), net effect must match sequential application.
         let d1 = BcfMutation::InsertTopic { topic: sample_topic("t2") }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("d1 must apply to base");
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::RemoveTopic { guid: "t1".into() }.diff(&mid);
         assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
@@ -741,7 +741,7 @@ mod tests {
         // patch into the carried `added` payload, not become a dangling `modified` entry.
         let comment = sample_comment("c9", None);
         let d1 = BcfMutation::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("d1 must apply to base");
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }.diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -754,7 +754,7 @@ mod tests {
         // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
         // annihilate to a plain removal, not a dangling modify+remove pair.
         let d1 = BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }.diff(&base);
-        let mid = d1.await.diff().apply(&base).expect("d1 must apply to base");
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }.diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -765,18 +765,18 @@ mod tests {
 
         // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let d1 = BcfMutation::SetVersion { version: "2.2".into() }.diff(&base);
-        let mid1 = d1.await.diff().apply(&base).expect("d1 must apply to base");
+        let mid1 = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::InsertTopic { topic: sample_topic("t3") }.diff(&mid1);
-        let mid2 = d2.await.diff().apply(&mid1).expect("d2 must apply to mid1");
+        let mid2 = d2.diff().apply(&mid1).expect("d2 must apply to mid1");
         let d3 = BcfMutation::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }.diff(&mid2);
 
-        let mut left = d1.await.diff().clone();
-        MutationDiff::absorb(&mut left, d2.await.diff().clone());
-        MutationDiff::absorb(&mut left, d3.await.diff().clone());
+        let mut left = d1.diff().clone();
+        MutationDiff::absorb(&mut left, d2.diff().clone());
+        MutationDiff::absorb(&mut left, d3.diff().clone());
 
-        let mut d2_d3 = d2.await.diff().clone();
-        MutationDiff::absorb(&mut d2_d3, d3.await.diff().clone());
-        let mut right = d1.await.diff().clone();
+        let mut d2_d3 = d2.diff().clone();
+        MutationDiff::absorb(&mut d2_d3, d3.diff().clone());
+        let mut right = d1.diff().clone();
         MutationDiff::absorb(&mut right, d2_d3);
 
         assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must be associative");
@@ -933,8 +933,8 @@ mod tests {
         assert!(BcfDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Every top-level field patched.
-        assert!(forward.await.version.is_some(), "version field not swept");
-        let topics_diff = forward.await.topics.as_ref().expect("topics diff present");
+        assert!(forward.version.is_some(), "version field not swept");
+        let topics_diff = forward.topics.as_ref().expect("topics diff present");
         assert!(!topics_diff.removed.is_empty(), "topics.removed not swept");
         assert!(!topics_diff.added.is_empty(), "topics.added not swept");
         let keep_diff = &topics_diff.modified.iter().find(|m| m.key == "keep").expect("keep topic modified").diff;
@@ -965,7 +965,7 @@ mod tests {
         assert_eq!(kept_vp_diff.components, Some(None), "viewpoint.components tri-state Some(None) not swept");
         assert_eq!(kept_vp_diff.snapshot, Some(None), "viewpoint.snapshot tri-state Some(None) not swept");
 
-        let parts_diff = forward.await.parts.as_ref().expect("parts diff present");
+        let parts_diff = forward.parts.as_ref().expect("parts diff present");
         assert!(!parts_diff.removed.is_empty(), "parts.removed not swept");
         assert!(!parts_diff.added.is_empty(), "parts.added not swept");
         let kept_part_diff = &parts_diff.modified.iter().find(|m| m.key == "part-keep.txt").expect("part-keep modified").diff;
@@ -1013,12 +1013,12 @@ mod tests {
         ];
         for m in mutations {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = BcfMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = BcfMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = BcfMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = BcfMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
@@ -1034,15 +1034,15 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        let cases = vec![BcfDiff::default(), BcfDiff::between(&a, &b).await, BcfDiff::between(&b, &a).await, BcfDiff::between(&a, &a).await];
+        let cases = vec![BcfDiff::default(), BcfDiff::between(&a, &b), BcfDiff::between(&b, &a), BcfDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = BcfDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = BcfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = BcfDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = BcfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -1095,7 +1095,7 @@ mod tests {
 
             let demo = demo_bcf_snapshot();
             let bytes = encode_bcf(&demo).expect("encode demo bcf");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).await.expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
 
             let mut checked = 0;
             for entry in &zip.entries {
@@ -1156,14 +1156,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -1182,11 +1182,11 @@ mod tests {
 
             let demo = demo_bcf_snapshot();
 
-            let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_bcf_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_bcf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_bcf_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_bcf_snapshot()) drifted from the shipped .pack.semio fixture");
         }

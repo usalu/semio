@@ -1,0 +1,130 @@
+{
+  "manufacturerFile": {
+    "header_version": "3805",
+    "manufacturer": "DEMO",
+    "building_system_number": {
+      "system_code": "420",
+      "subsystem": "10",
+      "sequence": 1
+    },
+    "created": "2026-07-22",
+    "charset": "UTF-8",
+    "record_count": 2,
+    "extensions": {
+      "fields": {}
+    }
+  },
+  "catalog": {
+    "file": {
+      "header_version": "3805",
+      "manufacturer": "DEMO",
+      "building_system_number": {
+        "system_code": "420",
+        "subsystem": "10",
+        "sequence": 1
+      },
+      "created": "2026-07-22",
+      "charset": "UTF-8",
+      "record_count": 2,
+      "extensions": {
+        "fields": {}
+      }
+    },
+    "products": [],
+    "extensions": {
+      "fields": {}
+    }
+  },
+  "editionProfile": {
+    "8": "Legacy"
+  },
+  "correctionAsOf": {
+    "year": 2024,
+    "month": 1
+  },
+  "strictMode": false,
+  "index": {
+    "entries": []
+  },
+  "geometry": {
+    "geom.valve.50": {
+      "id": "geom.valve.50",
+      "bbox": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "min_z": 0.0,
+        "max_x": 0.25,
+        "max_y": 0.5,
+        "max_z": 0.125
+      },
+      "connections": [
+        {
+          "id": "in",
+          "medium": "water",
+          "position": [
+            0.0,
+            0.25,
+            0.0625
+          ],
+          "direction": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "diameter_mm": 50.0
+        },
+        {
+          "id": "out",
+          "medium": "water",
+          "position": [
+            0.25,
+            0.25,
+            0.0625
+          ],
+          "direction": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "diameter_mm": 50.0
+        }
+      ],
+      "parameters": {
+        "scale": 1.0
+      }
+    }
+  },
+  "curves": {
+    "curve.kvs": {
+      "id": "curve.kvs",
+      "x_unit": {
+        "symbol": "%",
+        "kind": "Dimensionless",
+        "delta": true,
+        "si_factor": 0.01
+      },
+      "y_unit": {
+        "symbol": "m3/h",
+        "kind": "Volume",
+        "delta": false,
+        "si_factor": 1.0
+      },
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 100.0,
+          "y": 4.5
+        }
+      ]
+    }
+  },
+  "limits": {
+    "max_file_bytes": 16777216,
+    "max_records": 100000,
+    "max_field_length": 8192,
+    "max_nesting_depth": 32
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeDomain",
+  "newDomain": "engineering"
+}

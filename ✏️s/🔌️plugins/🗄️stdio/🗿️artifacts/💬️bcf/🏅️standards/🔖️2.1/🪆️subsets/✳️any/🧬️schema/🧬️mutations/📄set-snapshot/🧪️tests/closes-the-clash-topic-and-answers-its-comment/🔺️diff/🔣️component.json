@@ -1,0 +1,22 @@
+{
+  "topics": {
+    "modified": [
+      {
+        "key": "3a1c0c0e-0000-4000-8000-000000000001",
+        "diff": {
+          "status": "Closed",
+          "comments": {
+            "modified": [
+              {
+                "key": "3a1c0c0e-0000-4000-8000-000000000002",
+                "diff": {
+                  "text": "Rerouted the duct above the beam."
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

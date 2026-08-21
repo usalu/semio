@@ -60,6 +60,9 @@ pub mod create_widget {
     pub mod diff;
     #[path = "🌱create-widget/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "🌱create-widget/🧪️tests/inserts-node-c-at-index-2/🦀️component.rs"]
+    mod tests_inserts_node_c_at_index_2;
 }
 
 #[path = "."]
@@ -70,6 +73,9 @@ pub mod connect_synapse {
     pub mod diff;
     #[path = "🔗connect-synapse/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "🔗connect-synapse/🧪️tests/wires-node-b-to-node-c-at-index-1/🦀️component.rs"]
+    mod tests_wires_node_b_to_node_c_at_index_1;
 }
 
 #[path = "."]
@@ -80,6 +86,9 @@ pub mod create_generation {
     pub mod diff;
     #[path = "➕create-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "➕create-generation/🧪️tests/appends-generation-2-and-moves-the-selection/🦀️component.rs"]
+    mod tests_appends_generation_2_and_moves_the_selection;
 }
 
 #[path = "."]
@@ -90,6 +99,9 @@ pub mod delete_generation {
     pub mod diff;
     #[path = "🗑delete-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "🗑delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back/🦀️component.rs"]
+    mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
 #[path = "."]
@@ -100,6 +112,9 @@ pub mod rename_generation {
     pub mod diff;
     #[path = "🏷rename-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "🏷rename-generation/🧪️tests/retitles-generation-1-via-new-name/🦀️component.rs"]
+    mod tests_retitles_generation_1_via_new_name;
 }
 
 #[path = "."]
@@ -110,6 +125,9 @@ pub mod change_generation_value {
     pub mod diff;
     #[path = "🔧change-generation-value/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[cfg(test)]
+    #[path = "🔧change-generation-value/🧪️tests/raises-the-storeys-answer-in-generation-1/🦀️component.rs"]
+    mod tests_raises_the_storeys_answer_in_generation_1;
 }
 //#endregion 🔖️NewLeaves
 

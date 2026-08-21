@@ -1,0 +1,38 @@
+{
+  "mutation": "createPerformanceCriterion",
+  "performanceCriterion": {
+    "id": "performance-criterion-a",
+    "name": "Performance Criterion A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "criterion": "",
+    "metric": "",
+    "target": null,
+    "unit": null,
+    "minimum": null,
+    "maximum": null,
+    "measurementMethod": null,
+    "frequency": null,
+    "requirementIds": [],
+    "elementIds": [],
+    "baseline": null,
+    "benchmarkRef": null,
+    "weight": null,
+    "dataSource": null,
+    "reportingCadence": null,
+    "ownerId": null,
+    "verificationPlan": null,
+    "penaltyThreshold": null,
+    "incentiveThreshold": null
+  }
+}

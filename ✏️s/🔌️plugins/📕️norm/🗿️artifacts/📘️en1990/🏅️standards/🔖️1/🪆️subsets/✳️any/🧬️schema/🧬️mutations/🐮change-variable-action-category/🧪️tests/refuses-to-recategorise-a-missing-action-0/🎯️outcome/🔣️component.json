@@ -1,0 +1,10 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-missing"
+    }
+  ]
+}

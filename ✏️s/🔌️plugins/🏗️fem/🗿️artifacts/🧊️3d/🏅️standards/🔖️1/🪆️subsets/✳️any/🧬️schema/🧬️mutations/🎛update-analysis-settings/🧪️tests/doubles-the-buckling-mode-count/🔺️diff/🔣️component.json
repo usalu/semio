@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 6,
+    "deformationScale": 50.0
+  },
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

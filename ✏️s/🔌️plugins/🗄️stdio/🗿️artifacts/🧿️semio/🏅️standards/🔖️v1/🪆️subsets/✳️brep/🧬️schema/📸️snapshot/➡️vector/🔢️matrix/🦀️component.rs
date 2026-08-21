@@ -369,10 +369,10 @@ mod tests {
         async fn trsf_inverse_round_trips_random_points() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
             for _ in 0..200 {
-                let axis = Vec3::new(rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5, rng.await.next_f64() - 0.5);
-                let angle = rng.await.next_f64() * std::f64::consts::TAU;
-                let t = Trsf { rotation: Quat::from_axis_angle(axis, angle), translation: Vec3::new(rng.await.next_f64() * 10.0, rng.await.next_f64() * 10.0, rng.await.next_f64() * 10.0), scale: 0.1 + rng.await.next_f64() * 5.0 };
-                let p = Pnt3::new(rng.await.next_f64() * 10.0 - 5.0, rng.await.next_f64() * 10.0 - 5.0, rng.await.next_f64() * 10.0 - 5.0);
+                let axis = Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5);
+                let angle = rng.next_f64() * std::f64::consts::TAU;
+                let t = Trsf { rotation: Quat::from_axis_angle(axis, angle), translation: Vec3::new(rng.next_f64() * 10.0, rng.next_f64() * 10.0, rng.next_f64() * 10.0), scale: 0.1 + rng.next_f64() * 5.0 };
+                let p = Pnt3::new(rng.next_f64() * 10.0 - 5.0, rng.next_f64() * 10.0 - 5.0, rng.next_f64() * 10.0 - 5.0);
                 let round_trip = t.inverse().apply_point(t.apply_point(p));
                 assert!(round_trip.distance(p) < 1e-7, "round trip drifted: {round_trip:?} vs {p:?}");
             }

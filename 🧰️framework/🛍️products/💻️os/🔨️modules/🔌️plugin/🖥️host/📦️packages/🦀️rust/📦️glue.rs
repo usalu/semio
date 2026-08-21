@@ -47,6 +47,9 @@ pub mod opening_config {
             pub mod inverse;
             #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs"]
             pub mod mutation;
+            #[cfg(test)]
+            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🧪️tests/repins-the-cad-editor-to-the-drafting-app/🦀️component.rs"]
+            mod tests_repins_the_cad_editor_to_the_drafting_app;
         }
 
         #[path = "."]
@@ -57,6 +60,9 @@ pub mod opening_config {
             pub mod inverse;
             #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦠️mutation/🦀️component.rs"]
             pub mod mutation;
+            #[cfg(test)]
+            #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧪️tests/unpins-the-cad-editor-and-keeps-the-viewer-pin/🦀️component.rs"]
+            mod tests_unpins_the_cad_editor_and_keeps_the_viewer_pin;
         }
     }
 }

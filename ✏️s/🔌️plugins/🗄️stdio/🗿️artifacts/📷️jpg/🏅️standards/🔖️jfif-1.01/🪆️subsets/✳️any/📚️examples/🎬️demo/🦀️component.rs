@@ -31,7 +31,7 @@ mod tests {
         use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::JpgInference;
         use crate::artifacts::jpg::JpgSnapshot;
         use protocol::Inference;
-        let snapshot = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
+        let snapshot = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
         assert_eq!(JpgInference::infer(&snapshot), JpgInference::infer(&snapshot));
     }
 

@@ -1002,32 +1002,32 @@ fn validate_index_triple(base_len: usize, removed: &[usize], modified: &[usize],
     let mut removed_set = HashSet::new();
     for &index in removed {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec![field.to_string(), index.to_string()]));
         }
         if !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec![field.to_string(), index.to_string()]));
         }
     }
     let mut modified_set = HashSet::new();
     for &index in modified {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec![field.to_string(), index.to_string()]));
         }
         if removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec![field.to_string(), index.to_string()]));
         }
         if !modified_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec![field.to_string(), index.to_string()]));
         }
     }
     let final_len = base_len - removed_set.len() + added.len();
     let mut added_set = HashSet::new();
     for &index in added {
         if index >= final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec![field.to_string(), index.to_string()]));
         }
         if !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await.at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec![field.to_string(), index.to_string()]));
         }
     }
     Ok(())
@@ -1042,33 +1042,33 @@ fn validate_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> MutationApplyRe
 fn validate_named_keys<K: Eq + std::hash::Hash + Clone>(base: &[K], removed: &[K], modified: &[K], added: &[K], field: &str) -> MutationApplyResult<()> {
     let base_set: HashSet<K> = base.iter().cloned().collect();
     if base_set.len() != base.len() {
-        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "base collection contains duplicate keys").await.at([field]));
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "base collection contains duplicate keys").at([field]));
     }
     let mut removed_set = HashSet::new();
     for key in removed {
         if !base_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at([field]));
         }
         if !removed_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at([field]));
         }
     }
     let mut modified_set = HashSet::new();
     for key in modified {
         if !base_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at([field]));
         }
         if removed_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at([field]));
         }
         if !modified_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at([field]));
         }
     }
     let mut added_set = HashSet::new();
     for key in added {
         if base_set.contains(key) || !added_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await.at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at([field]));
         }
     }
     Ok(())
@@ -1646,8 +1646,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1663,7 +1663,7 @@ pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().await.map_err(|e| e.to_string())
+    reader.read_f64_le().map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_pdf_decimal_bin(out: &mut Vec<u8>, value: &PdfDecimal) {
@@ -1673,9 +1673,9 @@ pub(crate) fn write_pdf_decimal_bin(out: &mut Vec<u8>, value: &PdfDecimal) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_pdf_decimal_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDecimal, String> {
-    let negative = reader.read_u8().await.map_err(|error| error.to_string())? != 0;
+    let negative = reader.read_u8().map_err(|error| error.to_string())? != 0;
     let coefficient = read_str_lp(reader)?;
-    let scale = reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32;
+    let scale = reader.read_varint_u64().map_err(|error| error.to_string())? as u32;
     if coefficient.is_empty() || !coefficient.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err("invalid PDF decimal coefficient".into());
     }
@@ -1716,18 +1716,18 @@ pub(crate) fn enc_stream_filters_bin(filters: &[PdfStreamFilter], out: &mut Vec<
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_stream_filters_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfStreamFilter>, String> {
-    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())?;
+    let count = reader.read_varint_u64().map_err(|error| error.to_string())?;
     let mut filters = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        filters.push(match reader.read_u8().await.map_err(|error| error.to_string())? {
+        filters.push(match reader.read_u8().map_err(|error| error.to_string())? {
             0 => {
-                let predictor = match reader.read_u8().await.map_err(|error| error.to_string())? {
+                let predictor = match reader.read_u8().map_err(|error| error.to_string())? {
                     0 => None,
                     1 => Some(PdfPredictor {
-                        predictor: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
-                        colors: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
-                        bits_per_component: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
-                        columns: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
+                        predictor: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        colors: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        bits_per_component: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        columns: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
                     }),
                     tag => return Err(format!("flate predictor presence: unknown tag {tag}")),
                 };
@@ -1757,8 +1757,8 @@ pub(crate) fn enc_objref_bin(r: &ObjRef, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_objref_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjRef, String> {
-    let num = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let gen = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let num = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let gen = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
     Ok(ObjRef { num, gen })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1786,9 +1786,9 @@ pub(crate) fn enc_path_segment_bin(seg: &PdfPathSegment, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPathSegment, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(PdfPathSegment::ArrayIndex { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize }),
+        0 => Ok(PdfPathSegment::ArrayIndex { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
         1 => Ok(PdfPathSegment::DictKey { key: read_str_lp(reader)? }),
         other => Err(format!("path segment binary: unknown tag {other}")),
     }
@@ -1802,7 +1802,7 @@ pub(crate) fn enc_path_bin(path: &[PdfPathSegment], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfPathSegment>, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
         path.push(dec_path_segment_bin(reader)?);
@@ -1880,16 +1880,16 @@ pub(crate) fn enc_pdf_object_bin(v: &PdfObject, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObject, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(PdfObject::Null),
-        1 => Ok(PdfObject::Bool(reader.read_u8().await.map_err(|e| e.to_string())? != 0)),
-        2 => Ok(PdfObject::Int(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
+        1 => Ok(PdfObject::Bool(reader.read_u8().map_err(|e| e.to_string())? != 0)),
+        2 => Ok(PdfObject::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
         3 => Ok(PdfObject::Real(read_pdf_decimal_bin(reader)?)),
         4 => Ok(PdfObject::Str(read_bytes_lp(reader)?)),
         5 => Ok(PdfObject::Name(read_str_lp(reader)?)),
         6 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 items.push(Box::pin(dec_pdf_object_bin(reader))?);
@@ -1897,7 +1897,7 @@ pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<P
             Ok(PdfObject::Array(items))
         }
         7 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut entries = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 entries.push(Box::pin(dec_dict_entry_bin(reader))?);
@@ -1906,7 +1906,7 @@ pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<P
         }
         8 => Ok(PdfObject::Ref(dec_objref_bin(reader)?)),
         9 => {
-            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut dict = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 dict.push(dec_dict_entry_bin(reader)?);
@@ -1931,8 +1931,8 @@ pub(crate) fn enc_pdf_page_bin(p: &PdfPage, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_pdf_page_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPage, String> {
     let media_box = dec_box_bin(reader)?;
-    let crop_box = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None };
-    let rotate = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let crop_box = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None };
+    let rotate = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
     let text = read_str_lp(reader)?;
     Ok(PdfPage { media_box, crop_box, rotate, text })
 }
@@ -1973,20 +1973,20 @@ pub(crate) fn enc_pdf_snapshot_bin(s: &PdfSnapshot, out: &mut Vec<u8>) {
 pub(crate) fn dec_pdf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let declared_version = read_str_lp(reader)?;
-    let page_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let page_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut pages = Vec::with_capacity(page_count as usize);
     for _ in 0..page_count {
         pages.push(dec_pdf_page_bin(reader)?);
     }
     let info = dec_pdf_info_bin(reader)?;
-    let obj_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let obj_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut objects = Vec::with_capacity(obj_count as usize);
     for _ in 0..obj_count {
         let id = dec_objref_bin(reader)?;
         let value = dec_pdf_object_bin(reader)?;
         objects.push(PdfIndirectObject { id, value });
     }
-    let trailer_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let trailer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut trailer = Vec::with_capacity(trailer_count as usize);
     for _ in 0..trailer_count {
         trailer.push(dec_dict_entry_bin(reader)?);
@@ -2266,16 +2266,16 @@ fn enc_page_diff_bin(d: &PdfPageDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_page_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPageDiff, String> {
     let mut d = PdfPageDiff::default();
-    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
         d.media_box = Some(dec_box_bin(reader)?);
     }
-    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
-        d.crop_box = Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None });
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.crop_box = Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None });
     }
-    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
-        d.rotate = Some(reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32);
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
+        d.rotate = Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32);
     }
-    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
         d.text = Some(read_str_lp(reader)?);
     }
     Ok(d)
@@ -2299,22 +2299,22 @@ fn enc_pages_diff_bin(d: &PdfPagesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_pages_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPagesDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = dec_page_diff_bin(reader)?;
         modified.push(PdfPageModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let page = dec_pdf_page_bin(reader)?;
         added.push(PdfPageAdded { index, page });
     }
@@ -2341,22 +2341,22 @@ fn enc_dict_diff_bin(d: &PdfDictDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_dict_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(read_str_lp(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = read_str_lp(reader)?;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(PdfDictModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let key = read_str_lp(reader)?;
         let item = dec_pdf_object_bin(reader)?;
         added.push(PdfDictAdded { index, key, item });
@@ -2383,22 +2383,22 @@ fn enc_array_diff_bin(d: &PdfArrayDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfArrayDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(PdfArrayModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let item = dec_pdf_object_bin(reader)?;
         added.push(PdfArrayAdded { index, item });
     }
@@ -2463,11 +2463,11 @@ fn enc_value_diff_bin(d: &PdfValueDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(PdfValueDiff::Replace { value: dec_pdf_object_bin(reader)? }),
-        1 => Ok(PdfValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(PdfValueDiff::Int { value: reader.read_varint_i64().await.map_err(|e| e.to_string())? }),
+        1 => Ok(PdfValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(PdfValueDiff::Int { value: reader.read_varint_i64().map_err(|e| e.to_string())? }),
         3 => Ok(PdfValueDiff::Real { value: read_pdf_decimal_bin(reader)? }),
         4 => Ok(PdfValueDiff::Str { value: read_bytes_lp(reader)? }),
         5 => Ok(PdfValueDiff::Name { value: read_str_lp(reader)? }),
@@ -2475,9 +2475,9 @@ fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff
         7 => Ok(PdfValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader))? }),
         8 => Ok(PdfValueDiff::Dict { diff: Box::pin(dec_dict_diff_bin(reader))? }),
         9 => {
-            let dict = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
-            let data = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
-            let filters = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_stream_filters_bin(reader)?) } else { None };
+            let dict = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
+            let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+            let filters = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_stream_filters_bin(reader)?) } else { None };
             Ok(PdfValueDiff::Stream { dict, data, filters })
         }
         other => Err(format!("value diff binary: unknown tag {other}")),
@@ -2504,22 +2504,22 @@ fn enc_objects_diff_bin(d: &PdfObjectsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObjectsDiff, String> {
-    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_objref_bin(reader)?);
     }
-    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let id = dec_objref_bin(reader)?;
         let diff = dec_value_diff_bin(reader)?;
         modified.push(PdfObjectModified { id, diff });
     }
-    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let id = dec_objref_bin(reader)?;
         let value = dec_pdf_object_bin(reader)?;
         added.push(PdfObjectAdded { index, id, value });
@@ -2717,15 +2717,15 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = a_snapshot();
         let b = b_snapshot();
-        let cases = vec![PdfDiff::default(), PdfDiff::between(&a, &b).await, PdfDiff::between(&b, &a).await, PdfDiff::between(&a, &a).await];
+        let cases = vec![PdfDiff::default(), PdfDiff::between(&a, &b), PdfDiff::between(&b, &a), PdfDiff::between(&a, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = PdfDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = PdfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = PdfDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = PdfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -2734,7 +2734,7 @@ mod handcrafted_diff_codec_tests {
         let base = PdfSnapshot::default();
         let diff = PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff::default() }], ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, PdfSnapshot::default());
     }
 }
@@ -2848,10 +2848,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b"), page([0.0; 4], None, 0, "c")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert_eq!(p.removed, vec![0]);
@@ -2867,10 +2867,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "g") }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => assert_eq!(p.added.len(), 2, "both inserts must survive"),
             None => panic!("expected pages diff"),
@@ -2882,10 +2882,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 0, page: page([0.0; 4], None, 0, "x") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(90), ..Default::default() } }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert!(p.modified.is_empty(), "the patch must land INSIDE the carried added payload");
@@ -2900,10 +2900,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(180), ..Default::default() } }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert_eq!(p.removed, vec![0]);
@@ -2949,10 +2949,10 @@ mod tests {
             modified: vec![PdfObjectModified { id: oref(5, 0), diff: PdfValueDiff::Dict { diff: PdfDictDiff { added: vec![PdfDictAdded { index: 1, key: "Y".into(), item: PdfObject::Int(2) }], ..Default::default() } } }],
             ..Default::default()
         });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => {
                 assert!(o.modified.is_empty());
@@ -2967,10 +2967,10 @@ mod tests {
         let base = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { modified: vec![PdfObjectModified { id: oref(1, 0), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { removed: vec![oref(1, 0)], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => {
                 assert_eq!(o.removed, vec![oref(1, 0)]);
@@ -2985,10 +2985,10 @@ mod tests {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: PdfObject::Int(1) }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 1, id: oref(6, 0), value: PdfObject::Int(2) }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => assert_eq!(o.added.len(), 2),
             None => panic!("expected objects diff"),
@@ -3029,10 +3029,10 @@ mod tests {
             }),
             ..Default::default()
         };
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.trailer {
             Some(t) => {
                 assert!(t.modified.is_empty());
@@ -3047,10 +3047,10 @@ mod tests {
         let base = PdfSnapshot { trailer: vec![entry("A", PdfObject::Int(1)), entry("B", PdfObject::Int(2))], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { modified: vec![PdfDictModified { key: "A".into(), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() }), ..Default::default() };
         let d2 = PdfDiff { trailer: Some(PdfDictDiff { removed: vec!["A".into()], ..Default::default() }), ..Default::default() };
-        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).await.unwrap(), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.trailer {
             Some(t) => {
                 assert_eq!(t.removed, vec!["A".to_string()]);
@@ -3101,19 +3101,19 @@ mod tests {
     async fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let ab = PdfDiff::between(&a, &b);
-        assert!(ab.await.declared_version.is_some(), "declaredVersion must be present");
-        assert!(ab.await.info.is_some(), "info must be present (weak whole-value replace)");
+        assert!(ab.declared_version.is_some(), "declaredVersion must be present");
+        assert!(ab.info.is_some(), "info must be present (weak whole-value replace)");
 
-        let pages = ab.await.pages.as_ref().expect("pages diff must be present");
+        let pages = ab.pages.as_ref().expect("pages diff must be present");
         assert!(!pages.modified.is_empty(), "expected a modified page (every field changed)");
         assert!(!pages.removed.is_empty(), "a has more pages than b -> removed tail expected in between(a,b)");
-        let ba_pages = PdfDiff::between(&b, &a).await.pages.expect("pages diff must be present");
+        let ba_pages = PdfDiff::between(&b, &a).pages.expect("pages diff must be present");
         assert!(!ba_pages.added.is_empty(), "b has fewer pages than a -> added tail expected in between(b,a)");
         let pmod = &pages.modified[0].diff;
         assert!(pmod.media_box.is_some() && pmod.crop_box.is_some() && pmod.rotate.is_some() && pmod.text.is_some(), "every PdfPageDiff field must be exercised: {pmod:?}");
         assert_eq!(pmod.crop_box, Some(Some([1.0, 1.0, 50.0, 50.0])), "crop_box tri-state None->Some must round-trip");
 
-        let objects = ab.await.objects.as_ref().expect("objects diff must be present");
+        let objects = ab.objects.as_ref().expect("objects diff must be present");
         assert!(!objects.removed.is_empty(), "obj id=2 only in a -> removed");
         assert!(!objects.modified.is_empty(), "obj id=1 changed in both -> modified");
         assert!(!objects.added.is_empty(), "obj id=3 only in b -> added");
@@ -3125,7 +3125,7 @@ mod tests {
             other => panic!("expected a recursive Dict value diff for obj id=1, got {other:?}"),
         }
 
-        let trailer = ab.await.trailer.as_ref().expect("trailer diff must be present");
+        let trailer = ab.trailer.as_ref().expect("trailer diff must be present");
         assert!(!trailer.removed.is_empty(), "Extra must be removed");
         assert!(!trailer.modified.is_empty(), "Size must be modified");
         assert!(!trailer.added.is_empty(), "Prev must be added");

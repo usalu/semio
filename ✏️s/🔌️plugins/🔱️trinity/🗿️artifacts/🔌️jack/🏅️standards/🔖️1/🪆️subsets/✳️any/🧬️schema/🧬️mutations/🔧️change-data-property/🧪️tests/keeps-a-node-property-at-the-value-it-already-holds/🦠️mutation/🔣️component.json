@@ -1,0 +1,9 @@
+{
+  "mutation": "changeDataProperty",
+  "entity": {
+    "entity": "node",
+    "id": "capsule-a"
+  },
+  "key": "label",
+  "new_value": "Capsule A"
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameHandleKind",
+  "id": "hk-power",
+  "newName": "mains"
+}

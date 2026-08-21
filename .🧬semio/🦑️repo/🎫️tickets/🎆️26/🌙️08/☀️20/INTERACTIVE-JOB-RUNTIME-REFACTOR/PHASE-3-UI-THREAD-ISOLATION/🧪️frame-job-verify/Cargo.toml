@@ -1,0 +1,17 @@
+[workspace]
+
+[package]
+name = "p3b-frame-job-verify"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust", package = "semio-framework-trace" }
+semio-framework-async = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
+semio-framework-job = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

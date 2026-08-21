@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "schema": null,
+  "partKind": null,
+  "part2d": null,
+  "part3d": null,
+  "representations": null,
+  "gripKinds": null,
+  "grips": null,
+  "compatibility": null,
+  "attributes": null,
+  "authors": null,
+  "camera2d": null,
+  "camera3d": null,
+  "meta": {
+    "description": "Reviewed during the fixture pass."
+  },
+  "selectedIds": null,
+  "locale": null
+}

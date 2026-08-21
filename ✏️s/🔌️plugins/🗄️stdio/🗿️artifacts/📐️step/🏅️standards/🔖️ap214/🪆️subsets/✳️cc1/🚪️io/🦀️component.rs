@@ -114,7 +114,7 @@ pub mod derived_composition {
         async fn composer_injects_file_schema_and_stamps_clean_document() {
             let bytes = clean_bytes();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = StepCc1ComposerComposition::compose(&sources).await.expect("a document with no illegal representation must compose to cc1");
+            let composed = StepCc1ComposerComposition::compose(&sources).expect("a document with no illegal representation must compose to cc1");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::file_schema_contains(&composed.snapshot.to_part21_document(), "AUTOMOTIVE_DESIGN"), "composer must inject FILE_SCHEMA=AUTOMOTIVE_DESIGN");
         }
@@ -125,7 +125,7 @@ pub mod derived_composition {
             // skipped this subset's own composer genuinely lacks the injection.
             let bytes = clean_bytes();
             let diagnostics = StepCc1Validator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.await.iter().any(|d| d.code.0 == crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::CODE_FILE_SCHEMA), "got {diagnostics:?}");
+            assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::CODE_FILE_SCHEMA), "got {diagnostics:?}");
         }
     }
 }

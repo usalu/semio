@@ -1,0 +1,19 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "scene": 1,
+    "scenes": [
+      {
+        "name": "b"
+      },
+      {
+        "name": "a"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

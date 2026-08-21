@@ -1,0 +1,16 @@
+{
+  "artifact": null,
+  "catalog": null,
+  "stockExtra": null,
+  "curated": {
+    "added": [],
+    "removed": [
+      "panel-clt-3000"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "filters": null,
+  "locale": null,
+  "contributionsJson": null
+}

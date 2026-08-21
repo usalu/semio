@@ -1,0 +1,4 @@
+{
+  "mutation": "disconnectNodes",
+  "edgeId": "edge-severed"
+}

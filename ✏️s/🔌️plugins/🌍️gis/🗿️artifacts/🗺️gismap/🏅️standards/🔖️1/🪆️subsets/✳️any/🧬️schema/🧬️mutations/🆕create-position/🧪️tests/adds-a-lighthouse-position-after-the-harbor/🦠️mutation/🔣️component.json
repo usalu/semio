@@ -1,0 +1,13 @@
+{
+  "CreatePosition": {
+    "index": 1,
+    "item": {
+      "id": "pos-lighthouse",
+      "data": {
+        "kind": "lighthouse",
+        "lat": 54.0,
+        "lon": 8.5
+      }
+    }
+  }
+}

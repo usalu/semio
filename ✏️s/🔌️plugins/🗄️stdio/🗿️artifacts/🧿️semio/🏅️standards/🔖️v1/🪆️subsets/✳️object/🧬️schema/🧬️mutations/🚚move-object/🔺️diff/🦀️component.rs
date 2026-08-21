@@ -15,7 +15,7 @@ pub fn diff(payload: &MoveObject, base: &SemioObjectSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", "Object translation has a non-finite component.".to_string(), ["transform".to_string()]);
     }
     if base.transform.translation == t {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", "Object is already at this translation.".to_string());
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Object is already at this translation.".to_string());
     }
     let mut transform = base.transform.clone();
     transform.translation = t;

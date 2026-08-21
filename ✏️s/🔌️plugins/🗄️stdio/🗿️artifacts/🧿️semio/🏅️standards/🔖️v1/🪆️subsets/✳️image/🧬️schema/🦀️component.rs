@@ -189,7 +189,7 @@ pub mod derived_construction {
                 .set_icc(Some(vec![1, 2, 3]))
                 .add_metadata("Title", "test")
                 .build()
-                .await.expect("build");
+                .expect("build");
             assert_eq!(snapshot.width, 2);
             assert_eq!(snapshot.height, 2);
             assert_eq!(snapshot.colorspace, SemioColorspace::Rgba);

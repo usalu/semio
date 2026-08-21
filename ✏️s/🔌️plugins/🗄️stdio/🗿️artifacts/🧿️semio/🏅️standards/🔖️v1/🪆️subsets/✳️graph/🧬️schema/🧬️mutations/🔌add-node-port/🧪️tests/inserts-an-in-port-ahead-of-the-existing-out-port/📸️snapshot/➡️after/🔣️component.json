@@ -1,0 +1,55 @@
+{
+  "schema": "s.stdio.semio.graph",
+  "nodes": [
+    {
+      "id": {
+        "value": "a"
+      },
+      "kind": "source",
+      "label": "Source",
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "ports": [
+        {
+          "name": "reset",
+          "kind": "in"
+        },
+        {
+          "name": "out",
+          "kind": "out"
+        }
+      ],
+      "properties": []
+    },
+    {
+      "id": {
+        "value": "b"
+      },
+      "kind": "sink",
+      "label": "Sink",
+      "position": {
+        "x": 4.0,
+        "y": 0.0
+      },
+      "ports": [],
+      "properties": []
+    }
+  ],
+  "edges": [
+    {
+      "id": {
+        "value": "e1"
+      },
+      "source": {
+        "value": "a"
+      },
+      "target": {
+        "value": "b"
+      },
+      "kind": "data",
+      "label": "A to B"
+    }
+  ]
+}

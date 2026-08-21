@@ -1,0 +1,34 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "ipe200",
+        "item": {
+          "id": "ipe200",
+          "name": "IPE 200 reinforced",
+          "area": 0.0035,
+          "iy": 0.0000255
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null,
+  "resultSourceId": null,
+  "resultMode": null,
+  "resultModeIndex": null,
+  "camera": null,
+  "locale": null,
+  "solverResultsJson": null,
+  "meshPreviewJson": null
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVortexKindLabel",
+  "id": "door",
+  "newLabel": "Front Door"
+}

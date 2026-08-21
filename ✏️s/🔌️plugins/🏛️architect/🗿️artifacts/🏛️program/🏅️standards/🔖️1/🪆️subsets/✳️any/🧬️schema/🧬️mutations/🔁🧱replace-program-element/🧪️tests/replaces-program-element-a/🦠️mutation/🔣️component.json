@@ -1,0 +1,52 @@
+{
+  "mutation": "replaceProgramElement",
+  "programElement": {
+    "id": "program-element-a",
+    "name": "Program Element A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "Replaced Program Element A",
+    "kind": "building",
+    "parentId": null,
+    "level": null,
+    "area": {
+      "unit": ""
+    },
+    "volume": {
+      "unit": ""
+    },
+    "height": {
+      "unit": ""
+    },
+    "occupancy": {
+      "unit": ""
+    },
+    "functionIds": [],
+    "activityIds": [],
+    "userProfileIds": [],
+    "adjacencyIds": [],
+    "quantityIds": [],
+    "requirementIds": [],
+    "locationHint": null,
+    "orientation": null,
+    "daylightRequirement": null,
+    "acousticClass": null,
+    "securityZone": null,
+    "flexibilityNotes": [],
+    "growthAllocation": null,
+    "circulationRole": null,
+    "visibilityLevel": null,
+    "adjacencyPreferences": [],
+    "environmentalZone": null
+  }
+}

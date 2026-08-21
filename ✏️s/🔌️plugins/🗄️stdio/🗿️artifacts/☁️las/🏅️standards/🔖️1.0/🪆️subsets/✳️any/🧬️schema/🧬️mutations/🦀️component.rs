@@ -127,7 +127,7 @@ impl Mutation<LasSnapshot> for LasMutation {
             LasMutation::InsertPoint { index, point } => diff::diff_insert_point(base, *index, point.clone()),
             LasMutation::RemovePoint { index } => diff::diff_remove_point(base, *index),
             LasMutation::SetPoint { index, point } => diff::diff_set_point(base, *index, point.clone()),
-        }).await
+        })
     }
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
@@ -521,12 +521,12 @@ impl protocol::OpBinary for LasMutation {
 /// 🧪️ Moved out of `mod tests` (was originally local to it) so `demo_mutation_cases()` below can
 /// share the exact same fixtures `mod tests` itself uses — single source of truth, per CLAUDE.md.
 #[cfg(test)]
-pub(crate) fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
+pub(crate) async fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
     LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
 }
 
 #[cfg(test)]
-pub(crate) fn point(seed: u8) -> LasPoint {
+pub(crate) async fn point(seed: u8) -> LasPoint {
     LasPoint {
         x: 100.0 + seed as f64,
         y: -50.0 + seed as f64 * 0.5,
@@ -561,14 +561,14 @@ pub(crate) async fn base_snapshot() -> LasSnapshot {
 /// array (`SetPointsByReturn`), and a point/VLR carrying both tri-state-capable fields set
 /// (`gps_time`/`rgb`).
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<LasMutation> {
     let base = base_snapshot();
     let mut rich_point = point(9);
-    rich_point.await.gps_time = Some(1234.5);
-    rich_point.await.rgb = Some((11, 22, 33));
+    rich_point.gps_time = Some(1234.5);
+    rich_point.rgb = Some((11, 22, 33));
     vec![
         LasMutation::NoMutation,
-        LasMutation::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.await.header.clone() }, ..base.clone() } },
+        LasMutation::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.header.clone() }, ..base.clone() } },
         LasMutation::SetVersion { major: 1, minor: 4 },
         LasMutation::SetSystemIdentifier { system_identifier: "semio".into() },
         LasMutation::SetSoftwareInfo { generating_software: "semio-las-writer".into() },
@@ -581,7 +581,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
         LasMutation::SetVlrData { index: 0, data: b"patched".to_vec() },
         LasMutation::InsertPoint { index: 1, point: rich_point.clone() },
         LasMutation::RemovePoint { index: 0 },
-        LasMutation::SetPoint { index: 0, point: rich_point.await },
+        LasMutation::SetPoint { index: 0, point: rich_point },
     ]
 }
 //#endregion 🔖️SharedFixtures
@@ -601,7 +601,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_las_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_las_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.await.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -658,8 +658,8 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.await.diff().apply(&base).expect("valid forward diff");
-            let inv_d = d.await.diff().inverse(&base);
+            let mutated = d.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -668,12 +668,12 @@ mod tests {
     //#region 🔖️absorb_law
     async fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.await.diff().apply(base).expect("valid first diff");
+        let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.await.diff().apply(&mid).expect("valid second diff");
+        let sequential = d2.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.await.diff().clone();
-        merged.absorb(d2.await.diff().clone());
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -713,24 +713,24 @@ mod tests {
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = LasMutation::SetSystemIdentifier { system_identifier: "one".into() }.diff(&base);
-        let mid1 = d1.await.diff().apply(&base).expect("valid first diff");
+        let mid1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = LasMutation::InsertPoint { index: 0, point: point(9) }.diff(&mid1);
-        let mid2 = d2.await.diff().apply(&mid1).expect("valid second diff");
+        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
         let d3 = LasMutation::SetPoint { index: 0, point: point(7) }.diff(&mid2);
 
         // (d1∘d2)∘d3
-        let mut left = d1.await.diff().clone();
-        left.absorb(d2.await.diff().clone());
-        left.absorb(d3.await.diff().clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.await.diff().clone();
-        d23.absorb(d3.await.diff().clone());
-        let mut right = d1.await.diff().clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.await.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -739,13 +739,13 @@ mod tests {
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
-        b.await.header.creation_year = 2030;
-        b.await.vlrs.remove(0);
-        b.await.vlrs[0].description = "modified".into();
-        b.await.vlrs.push(vlr("NEW", 300, b"new-vlr"));
-        b.await.points.remove(0);
-        b.await.points[0].classification = 250;
-        b.await.points.push(point(50));
+        b.header.creation_year = 2030;
+        b.vlrs.remove(0);
+        b.vlrs[0].description = "modified".into();
+        b.vlrs.push(vlr("NEW", 300, b"new-vlr"));
+        b.points.remove(0);
+        b.points[0].classification = 250;
+        b.points.push(point(50));
 
         let d = LasDiff::between(&a, &b);
         assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
@@ -910,34 +910,34 @@ mod tests {
         assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Every header scalar must be diffed forward.
-        assert!(forward.await.version_major.is_some());
-        assert!(forward.await.version_minor.is_some());
-        assert!(forward.await.system_identifier.is_some());
-        assert!(forward.await.generating_software.is_some());
-        assert!(forward.await.creation_day_of_year.is_some());
-        assert!(forward.await.creation_year.is_some());
-        assert!(forward.await.header_size.is_some());
-        assert!(forward.await.offset_to_point_data.is_some());
-        assert!(forward.await.point_data_format_id.is_some());
-        assert!(forward.await.point_data_record_length.is_some());
-        assert!(forward.await.points_by_return.is_some());
-        assert!(forward.await.x_scale.is_some());
-        assert!(forward.await.y_scale.is_some());
-        assert!(forward.await.z_scale.is_some());
-        assert!(forward.await.x_offset.is_some());
-        assert!(forward.await.y_offset.is_some());
-        assert!(forward.await.z_offset.is_some());
-        assert!(forward.await.max_x.is_some());
-        assert!(forward.await.min_x.is_some());
-        assert!(forward.await.max_y.is_some());
-        assert!(forward.await.min_y.is_some());
-        assert!(forward.await.max_z.is_some());
-        assert!(forward.await.min_z.is_some());
-        assert!(forward.await.number_of_vlrs.is_some(), "number_of_vlrs must be diffed (2 -> 1)");
-        assert!(forward.await.number_of_point_records.is_some(), "number_of_point_records must be diffed (2 -> 3)");
+        assert!(forward.version_major.is_some());
+        assert!(forward.version_minor.is_some());
+        assert!(forward.system_identifier.is_some());
+        assert!(forward.generating_software.is_some());
+        assert!(forward.creation_day_of_year.is_some());
+        assert!(forward.creation_year.is_some());
+        assert!(forward.header_size.is_some());
+        assert!(forward.offset_to_point_data.is_some());
+        assert!(forward.point_data_format_id.is_some());
+        assert!(forward.point_data_record_length.is_some());
+        assert!(forward.points_by_return.is_some());
+        assert!(forward.x_scale.is_some());
+        assert!(forward.y_scale.is_some());
+        assert!(forward.z_scale.is_some());
+        assert!(forward.x_offset.is_some());
+        assert!(forward.y_offset.is_some());
+        assert!(forward.z_offset.is_some());
+        assert!(forward.max_x.is_some());
+        assert!(forward.min_x.is_some());
+        assert!(forward.max_y.is_some());
+        assert!(forward.min_y.is_some());
+        assert!(forward.max_z.is_some());
+        assert!(forward.min_z.is_some());
+        assert!(forward.number_of_vlrs.is_some(), "number_of_vlrs must be diffed (2 -> 1)");
+        assert!(forward.number_of_point_records.is_some(), "number_of_point_records must be diffed (2 -> 3)");
 
         // vlrs: a has 2, b has 1 (SHRINKS) -- index 0 modified in every field, index 1 removed.
-        let vd: &LasVlrsDiff = forward.await.vlrs.as_ref().expect("vlrs diff must be present");
+        let vd: &LasVlrsDiff = forward.vlrs.as_ref().expect("vlrs diff must be present");
         assert_eq!(vd.modified.len(), 1, "exactly one VLR must be modified");
         assert_eq!(vd.modified[0].index, 0);
         assert_eq!(vd.removed, vec![1], "a->b (shrinking) must show the removed VLR");
@@ -950,13 +950,13 @@ mod tests {
 
         // Backward direction: vlrs GROW 1 -> 2, proving `added` (the tail the forward direction
         // structurally could not show).
-        let vd_back: &LasVlrsDiff = backward.await.vlrs.as_ref().expect("vlrs diff must be present");
+        let vd_back: &LasVlrsDiff = backward.vlrs.as_ref().expect("vlrs diff must be present");
         assert_eq!(vd_back.added.len(), 1, "b->a (growing) must show the added (formerly-removed) VLR");
         assert_eq!(vd_back.added[0].index, 1);
         assert!(vd_back.removed.is_empty(), "b->a (growing) must not show a removed VLR");
 
         // points: a has 2, b has 3 -- index 0 modified (incl. both tri-states), index 2 added.
-        let pd: &LasPointsDiff = forward.await.points.as_ref().expect("points diff must be present");
+        let pd: &LasPointsDiff = forward.points.as_ref().expect("points diff must be present");
         assert_eq!(pd.modified.len(), 1, "exactly one point must be modified");
         assert_eq!(pd.modified[0].index, 0);
         assert_eq!(pd.added.len(), 1, "exactly one point must be added");
@@ -979,7 +979,7 @@ mod tests {
 
         // Backward direction: points shrink 3 -> 2, proving `removed` (the tail the forward
         // direction structurally could not show).
-        let pd_back: &LasPointsDiff = backward.await.points.as_ref().expect("points diff must be present");
+        let pd_back: &LasPointsDiff = backward.points.as_ref().expect("points diff must be present");
         assert_eq!(pd_back.removed, vec![2], "b->a (shrinking) must show the removed (formerly-added) point");
     }
     //#endregion 🔖️field_sweep
@@ -990,13 +990,13 @@ mod tests {
         let mut snap = base.clone();
         let outcome = apply_las_mutation(&mut snap, &LasMutation::RemoveVlr { index: 99 });
         assert_eq!(snap, base);
-        assert_eq!(outcome.await.messages()[0].target, vec!["vlrs", "99"]);
+        assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
         let outcome = apply_las_mutation(&mut snap, &LasMutation::SetPoint { index: 99, point: point(1) });
         assert_eq!(snap, base);
-        assert_eq!(outcome.await.messages()[0].target, vec!["points", "99"]);
+        assert_eq!(outcome.messages()[0].target, vec!["points", "99"]);
         let outcome = apply_las_mutation(&mut snap, &LasMutation::SetVlrData { index: 99, data: vec![1] });
         assert_eq!(snap, base);
-        assert_eq!(outcome.await.messages()[0].target, vec!["vlrs", "99"]);
+        assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
     }
 
     //#region 🔖️op_text_binary_roundtrip_law
@@ -1008,15 +1008,29 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = LasMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = LasMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = LasMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = LasMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
     //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/lifts-the-second-point-and-stretches-the-z-bound/🦀️component.rs"]
+    mod tests_set_snapshot_lifts_the_second_point_and_stretches_the_z_bound;
+}
+//#endregion 🧪️FixtureTests

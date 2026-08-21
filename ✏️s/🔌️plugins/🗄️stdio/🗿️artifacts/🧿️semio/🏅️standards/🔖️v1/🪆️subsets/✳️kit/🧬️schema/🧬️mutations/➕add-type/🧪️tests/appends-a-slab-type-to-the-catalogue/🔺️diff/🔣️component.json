@@ -1,0 +1,21 @@
+{
+  "types": {
+    "values": [
+      {
+        "id": "t1",
+        "name": "Beam",
+        "category": "structure"
+      },
+      {
+        "id": "t2",
+        "name": "Column",
+        "category": "structure"
+      },
+      {
+        "id": "t3",
+        "name": "Slab",
+        "category": "structure"
+      }
+    ]
+  }
+}

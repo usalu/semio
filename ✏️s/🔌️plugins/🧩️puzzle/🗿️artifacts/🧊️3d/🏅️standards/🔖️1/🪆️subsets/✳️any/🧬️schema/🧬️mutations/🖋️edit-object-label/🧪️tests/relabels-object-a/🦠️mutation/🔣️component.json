@@ -1,0 +1,5 @@
+{
+  "mutation": "editObjectLabel",
+  "id": "object-a",
+  "newLabel": "Alpha Prime"
+}

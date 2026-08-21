@@ -1,0 +1,10 @@
+{
+  "CreateStory": {
+    "story": {
+      "id": "story-3",
+      "content": "Caption.",
+      "styleRuns": []
+    },
+    "index": 2
+  }
+}

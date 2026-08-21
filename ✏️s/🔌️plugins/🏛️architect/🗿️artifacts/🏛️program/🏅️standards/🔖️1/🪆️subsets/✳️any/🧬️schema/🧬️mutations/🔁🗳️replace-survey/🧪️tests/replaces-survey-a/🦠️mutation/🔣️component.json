@@ -1,0 +1,38 @@
+{
+  "mutation": "replaceSurvey",
+  "survey": {
+    "id": "survey-a",
+    "name": "Survey A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "surveyType": "Replaced Survey A",
+    "title": "",
+    "objectives": [],
+    "questions": [],
+    "targetAudience": [],
+    "distributionChannels": [],
+    "launchDate": null,
+    "closeDate": null,
+    "responseCount": 0,
+    "responseRate": null,
+    "findings": [],
+    "themes": [],
+    "recommendations": [],
+    "confidentiality": null,
+    "consentProcess": [],
+    "analysisId": null,
+    "workshopId": null,
+    "ownerId": null,
+    "surveyStatus": "draft"
+  }
+}

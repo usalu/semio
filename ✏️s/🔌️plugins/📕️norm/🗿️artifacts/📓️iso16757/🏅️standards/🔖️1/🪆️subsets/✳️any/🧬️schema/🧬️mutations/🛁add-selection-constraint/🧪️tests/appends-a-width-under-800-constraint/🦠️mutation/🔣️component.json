@@ -1,0 +1,12 @@
+{
+  "AddSelectionConstraint": {
+    "constraint": {
+      "property_id": "prop.width",
+      "operator": "LessThan",
+      "value": {
+        "kind": "decimal",
+        "value": 800.0
+      }
+    }
+  }
+}

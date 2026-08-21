@@ -1,0 +1,33 @@
+{
+  "artifact": null,
+  "workshop": {
+    "machines": []
+  },
+  "stockId": null,
+  "stockLabel": null,
+  "stockPose": null,
+  "stockSolid": null,
+  "steps": null,
+  "toolSolids": null,
+  "resolvedUpTo": null,
+  "selectedId": null,
+  "selectedFaceId": null,
+  "activeUtilityId": null,
+  "selectionMethod": null,
+  "engagementInput": null,
+  "cameraPositionX": null,
+  "cameraPositionY": null,
+  "cameraPositionZ": null,
+  "cameraTargetX": null,
+  "cameraTargetY": null,
+  "cameraTargetZ": null,
+  "cameraFov": null,
+  "sunEnabled": null,
+  "sunAzimuth": null,
+  "sunElevation": null,
+  "sunIntensity": null,
+  "sunColor": null,
+  "locale": null,
+  "contributionsJson": null,
+  "hoveredId": null
+}

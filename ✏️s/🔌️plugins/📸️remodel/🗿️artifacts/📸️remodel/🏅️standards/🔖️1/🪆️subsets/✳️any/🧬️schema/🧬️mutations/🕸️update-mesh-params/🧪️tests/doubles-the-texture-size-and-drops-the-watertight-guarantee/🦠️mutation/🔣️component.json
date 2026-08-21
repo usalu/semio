@@ -1,0 +1,14 @@
+{
+  "mutation": "updateMeshParams",
+  "params": {
+    "tsdfVoxelSizeMm": 2.5,
+    "tsdfTruncationMm": 10.0,
+    "decimateTargetTriangles": 100000,
+    "smoothingIterations": 4,
+    "textureEnabled": true,
+    "textureSize": 4096,
+    "guaranteeWatertight": false,
+    "holeFillMaxBoundaryVerts": 1024,
+    "selfIntersectionCheck": true
+  }
+}

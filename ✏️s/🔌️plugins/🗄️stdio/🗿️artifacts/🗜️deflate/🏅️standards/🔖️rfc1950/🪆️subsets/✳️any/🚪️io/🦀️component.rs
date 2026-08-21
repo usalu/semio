@@ -122,7 +122,7 @@ impl<'a> BitReader<'a> {
     async fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0, cur: 0, nbits: 0 }
     }
-    fn read_bits(&mut self, count: u8) -> Result<u32, String> {
+    async fn read_bits(&mut self, count: u8) -> Result<u32, String> {
         let mut out = 0u32;
         for i in 0..count {
             if self.nbits == 0 {
@@ -215,7 +215,7 @@ impl HuffDecoder {
         }
         let mut acc = 0u32;
         for len in 1..=self.max_bits {
-            let bit = br.read_bits(1)?;
+            let bit = br.read_bits(1).await?;
             acc |= bit << (len - 1);
             if let Some(Some((sym, l))) = self.table.get(acc as usize) {
                 if *l == len {
@@ -554,7 +554,7 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
             let mut length = LEN_BASE[idx] as usize;
             let extra = LEN_EXTRA[idx];
             if extra > 0 {
-                length += br.read_bits(extra)? as usize;
+                length += br.read_bits(extra).await? as usize;
             }
             let dsym = dist.decode(br).await? as usize;
             if dsym >= DIST_BASE.len() {
@@ -563,7 +563,7 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
             let mut distance = DIST_BASE[dsym] as usize;
             let dextra = DIST_EXTRA[dsym];
             if dextra > 0 {
-                distance += br.read_bits(dextra)? as usize;
+                distance += br.read_bits(dextra).await? as usize;
             }
             if distance == 0 || distance > out.len() {
                 return Err("invalid backreference".into());
@@ -580,13 +580,13 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
 }
 
 async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
-    let hlit = br.read_bits(5)? as usize + 257;
-    let hdist = br.read_bits(5)? as usize + 1;
-    let hclen = br.read_bits(4)? as usize + 4;
+    let hlit = br.read_bits(5).await? as usize + 257;
+    let hdist = br.read_bits(5).await? as usize + 1;
+    let hclen = br.read_bits(4).await? as usize + 4;
     const ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
     let mut cl_lens = vec![0u8; 19];
     for i in 0..hclen {
-        cl_lens[ORDER[i]] = br.read_bits(3)? as u8;
+        cl_lens[ORDER[i]] = br.read_bits(3).await? as u8;
     }
     let cl_dec = HuffDecoder::from_lengths(&cl_lens).await?;
     let mut lens = Vec::with_capacity(hlit + hdist);
@@ -595,16 +595,16 @@ async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<()
         match sym {
             0..=15 => lens.push(sym as u8),
             16 => {
-                let rep = br.read_bits(2)? as usize + 3;
+                let rep = br.read_bits(2).await? as usize + 3;
                 let prev = *lens.last().ok_or("bad repeat")?;
                 lens.extend(std::iter::repeat(prev).take(rep));
             }
             17 => {
-                let rep = br.read_bits(3)? as usize + 3;
+                let rep = br.read_bits(3).await? as usize + 3;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             18 => {
-                let rep = br.read_bits(7)? as usize + 11;
+                let rep = br.read_bits(7).await? as usize + 11;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             _ => return Err("bad code-length symbol".into()),
@@ -623,8 +623,8 @@ pub async fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
     let mut br = BitReader::new(data).await;
     let mut out = Vec::new();
     loop {
-        let bfinal = br.read_bits(1)?;
-        let btype = br.read_bits(2)?;
+        let bfinal = br.read_bits(1).await?;
+        let btype = br.read_bits(2).await?;
         match btype {
             0 => inflate_block_stored(&mut br, &mut out).await?,
             1 => {
@@ -881,9 +881,9 @@ mod codec_tests {
         Match { output: usize, length: usize, distance: usize },
     }
 
-    fn trace_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder, tokens: &mut Vec<TraceToken>) -> Result<(), String> {
+    async fn trace_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder, tokens: &mut Vec<TraceToken>) -> Result<(), String> {
         loop {
-            let sym = lit.decode(br).await? as usize;
+            let sym = lit.decode(br)? as usize;
             if sym < 256 {
                 tokens.push(TraceToken::Literal { output: out.len(), byte: sym as u8 });
                 out.push(sym as u8);
@@ -895,7 +895,7 @@ mod codec_tests {
                 if LEN_EXTRA[idx] > 0 {
                     length += br.read_bits(LEN_EXTRA[idx])? as usize;
                 }
-                let dsym = dist.decode(br).await? as usize;
+                let dsym = dist.decode(br)? as usize;
                 let mut distance = DIST_BASE[dsym] as usize;
                 if DIST_EXTRA[dsym] > 0 {
                     distance += br.read_bits(DIST_EXTRA[dsym])? as usize;
@@ -910,36 +910,36 @@ mod codec_tests {
         }
     }
 
-    fn trace_first_dynamic_block_details(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>, Vec<TraceToken>), String> {
+    async fn trace_first_dynamic_block_details(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>, Vec<TraceToken>), String> {
         let mut br = BitReader::new(data);
-        let _final = br.await.read_bits(1)?;
-        if br.await.read_bits(2)? != 2 {
+        let _final = br.read_bits(1)?;
+        if br.read_bits(2)? != 2 {
             return Err("first block is not dynamic".into());
         }
-        let hlit = br.await.read_bits(5)? as usize + 257;
-        let hdist = br.await.read_bits(5)? as usize + 1;
-        let hclen = br.await.read_bits(4)? as usize + 4;
+        let hlit = br.read_bits(5)? as usize + 257;
+        let hdist = br.read_bits(5)? as usize + 1;
+        let hclen = br.read_bits(4)? as usize + 4;
         const ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
         let mut cl_lens = vec![0u8; 19];
         for index in 0..hclen {
-            cl_lens[ORDER[index]] = br.await.read_bits(3)? as u8;
+            cl_lens[ORDER[index]] = br.read_bits(3)? as u8;
         }
-        let cl = HuffDecoder::from_lengths(&cl_lens).await?;
+        let cl = HuffDecoder::from_lengths(&cl_lens)?;
         let mut lens = Vec::with_capacity(hlit + hdist);
         while lens.len() < hlit + hdist {
             match cl.decode(&mut br)? as usize {
                 symbol @ 0..=15 => lens.push(symbol as u8),
                 16 => {
-                    let repeat = br.await.read_bits(2)? as usize + 3;
+                    let repeat = br.read_bits(2)? as usize + 3;
                     let previous = *lens.last().ok_or("trace repeat without previous length")?;
                     lens.extend(std::iter::repeat(previous).take(repeat));
                 }
                 17 => {
-                    let repeat = br.await.read_bits(3)? as usize + 3;
+                    let repeat = br.read_bits(3)? as usize + 3;
                     lens.extend(std::iter::repeat(0).take(repeat));
                 }
                 18 => {
-                    let repeat = br.await.read_bits(7)? as usize + 11;
+                    let repeat = br.read_bits(7)? as usize + 11;
                     lens.extend(std::iter::repeat(0).take(repeat));
                 }
                 _ => return Err("invalid trace code-length symbol".into()),
@@ -947,19 +947,19 @@ mod codec_tests {
         }
         let lit_lengths = lens[..hlit].to_vec();
         let dist_lengths = lens[hlit..hlit + hdist].to_vec();
-        let lit = HuffDecoder::from_lengths(&lit_lengths).await?;
-        let dist = HuffDecoder::from_lengths(&dist_lengths).await?;
+        let lit = HuffDecoder::from_lengths(&lit_lengths)?;
+        let dist = HuffDecoder::from_lengths(&dist_lengths)?;
         let mut out = Vec::new();
         let mut tokens = Vec::new();
         trace_codes(&mut br, &mut out, &lit, &dist, &mut tokens)?;
         Ok((lit_lengths, dist_lengths, tokens))
     }
 
-    fn trace_first_dynamic_block(data: &[u8]) -> Result<Vec<TraceToken>, String> {
+    async fn trace_first_dynamic_block(data: &[u8]) -> Result<Vec<TraceToken>, String> {
         Ok(trace_first_dynamic_block_details(data)?.2)
     }
 
-    fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
+    async fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
         let mut offset = 0usize;
         while archive.get(offset..offset + 4) == Some(b"PK\x03\x04") {
             let compressed = u32::from_le_bytes(archive[offset + 18..offset + 22].try_into().ok()?) as usize;
@@ -997,15 +997,15 @@ mod codec_tests {
     }
 
     async fn zlib_tuned_sync(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
-        deflate_raw_tuned(input, 8, good, lazy, nice, chain, true).await.expect("tuned raw DEFLATE")
+        deflate_raw_tuned(input, 8, good, lazy, nice, chain, true).expect("tuned raw DEFLATE")
     }
 
     async fn zlib_tuned_finish(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
-        deflate_raw_tuned(input, 8, good, lazy, nice, chain, false).await.expect("tuned raw DEFLATE")
+        deflate_raw_tuned(input, 8, good, lazy, nice, chain, false).expect("tuned raw DEFLATE")
     }
 
     async fn zlib_tuned_finish_memory(input: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
-        deflate_raw_tuned(input, memory, good, lazy, nice, chain, false).await.expect("tuned raw DEFLATE")
+        deflate_raw_tuned(input, memory, good, lazy, nice, chain, false).expect("tuned raw DEFLATE")
     }
 
     async fn token_divergence(expected: &[TraceToken], candidate: &[TraceToken]) -> usize {
@@ -1026,7 +1026,7 @@ mod codec_tests {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["[Content_Types].xml", "ppt/presentation.xml", "ppt/slides/slide1.xml", "ppt/slides/slide39.xml"] {
             let expected = raw_zip_member(&archive, path).expect("raw fixture member");
-            let input = inflate_raw(expected).await.expect("inflate fixture member");
+            let input = inflate_raw(expected).expect("inflate fixture member");
             let candidate = miniz_probe_sync(&input, 100);
             let expected_tokens = trace_first_dynamic_block(expected).expect("expected token trace");
             let candidate_tokens = trace_first_dynamic_block(&candidate).expect("candidate token trace");
@@ -1034,7 +1034,7 @@ mod codec_tests {
             eprintln!(
                 "[DEBUG] token_trace path={path} expected_bytes={} candidate_bytes={} expected_tokens={} candidate_tokens={} first={first} expected={:?} candidate={:?}",
                 expected.len(),
-                candidate.await.len(),
+                candidate.len(),
                 expected_tokens.len(),
                 candidate_tokens.len(),
                 expected_tokens.get(first),
@@ -1047,14 +1047,14 @@ mod codec_tests {
             let candidate_first = token_at_output(&candidate_tokens, output);
             eprintln!(
                 "[DEBUG] token_context path={path} output={output} expected={:?} candidate={:?}",
-                &expected_tokens[first.await.saturating_sub(4)..(first + 5).min(expected_tokens.len())],
-                &candidate_tokens[candidate_first.await.saturating_sub(4)..(candidate_first + 5).min(candidate_tokens.len())]
+                &expected_tokens[first.saturating_sub(4)..(first + 5).min(expected_tokens.len())],
+                &candidate_tokens[candidate_first.saturating_sub(4)..(candidate_first + 5).min(candidate_tokens.len())]
             );
             for level in 1..=9 {
                 let zlib = zlib_level(&input, level);
                 let zlib_tokens = trace_first_dynamic_block(&zlib).expect("zlib token trace");
                 let divergence = token_divergence(&expected_tokens, &zlib_tokens);
-                eprintln!("[DEBUG] token_zlib path={path} level={level} bytes={} tokens={} first={divergence} expected={:?} candidate={:?}", zlib.await.len(), zlib_tokens.len(), expected_tokens.get(divergence), zlib_tokens.get(divergence));
+                eprintln!("[DEBUG] token_zlib path={path} level={level} bytes={} tokens={} first={divergence} expected={:?} candidate={:?}", zlib.len(), zlib_tokens.len(), expected_tokens.get(divergence), zlib_tokens.get(divergence));
             }
         }
     }
@@ -1066,7 +1066,7 @@ mod codec_tests {
             .into_iter()
             .map(|path| {
                 let expected = raw_zip_member(&archive, path).expect("raw fixture member");
-                let input = inflate_raw(expected).await.expect("inflate fixture member");
+                let input = inflate_raw(expected).expect("inflate fixture member");
                 let tokens = trace_first_dynamic_block(expected).expect("fixture token trace");
                 (path, input, tokens)
             })
@@ -1095,8 +1095,8 @@ mod codec_tests {
         eprintln!("[DEBUG] zlib_tune best={best:?} paths={:?}", members.iter().map(|member| member.0).collect::<Vec<_>>());
         for (path, input, _) in &members {
             let expected = raw_zip_member(&archive, path).expect("raw fixture member");
-            let candidate = zlib_tuned_sync(input, best.1, best.2, best.3, best.4);
-            let prefix = expected.iter().zip(&candidate).await.await.await.await.position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
+            let candidate = zlib_tuned_sync(input, best.1, best.2, b.awaitest.3, best.4);
+            let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
             eprintln!("[DEBUG] zlib_tune_exact path={path} expected={} candidate={} prefix={prefix} exact={}", expected.len(), candidate.await.len(), expected == candidate);
         }
     }
@@ -1207,7 +1207,7 @@ mod codec_tests {
             let candidate = zlib_tuned_finish_memory(&input, memory, 4, 4, 258, 4096);
             let tokens = trace_first_dynamic_block(&candidate).expect("memory OLE token trace");
             let divergence = token_divergence(&expected_tokens, &tokens);
-            let prefix = expected.iter().zip(&cand.awaitidate).await.await.position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
+            let prefix = expected.iter().zip(&cand.awaitidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
             eprintln!("[DEBUG] bin_memory memory={memory} bytes={} tokens={} first_token={divergence} prefix={prefix} exact={}", candidate.await.len(), tokens.len(), candidate == expected);
         }
         let candidate = deflate_raw_tuned(&input, 7, 4, 4, 258, 4096, true).await.expect("memory-seven sync OLE");

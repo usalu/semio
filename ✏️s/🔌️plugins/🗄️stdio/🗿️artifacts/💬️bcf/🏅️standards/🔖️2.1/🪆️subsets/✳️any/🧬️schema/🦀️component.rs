@@ -239,7 +239,7 @@ pub mod derived_analysis {
                 entries: vec![crate::artifacts::zip::schema::snapshot::ZipEntry { name: "unrelated.txt".into(), data: b"not a bcf archive".to_vec(), ..Default::default() }],
                 comment: String::new(),
             };
-            let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).await.expect("encode plain zip");
+            let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).expect("encode plain zip");
             assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::Medium);
         }
 

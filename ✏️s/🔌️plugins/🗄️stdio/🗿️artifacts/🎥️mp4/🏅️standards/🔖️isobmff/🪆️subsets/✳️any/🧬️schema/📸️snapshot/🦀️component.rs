@@ -284,8 +284,8 @@ impl store::ArtifactDsl for Mp4Snapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document }).await?;
+        Self::__dsl_from_record(&record).await
     }
 
     async fn print_dsl(&self) -> String {
@@ -308,7 +308,7 @@ impl store::ArtifactPack for Mp4Snapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).await.map_err(store::text_error_to_pack_error)
     }
 
     async fn record_spec() -> Option<dsl::RecordSpec> {
@@ -344,7 +344,7 @@ mod tests {
     async fn json_pack_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -352,7 +352,7 @@ mod tests {
     async fn dsl_text_round_trips_via_real_mp4_bytes() {
         let snap = sample_snapshot();
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -360,7 +360,7 @@ mod tests {
     async fn default_snapshot_round_trips_through_real_codec() {
         let snap = Mp4Snapshot::default();
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -403,14 +403,14 @@ mod tests {
     async fn exact_fixture_survives_pack_and_dsl_codecs() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let snapshot = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).await.expect("decode exact MP4 fixture");
+        let snapshot = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
-        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode pack");
+        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode pack");
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&from_pack), bytes);
 
         let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("parse dsl");
+        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse dsl");
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&from_dsl), bytes);
     }
 }

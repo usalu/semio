@@ -1,0 +1,36 @@
+{
+  "nodes": [],
+  "elements": [],
+  "regions": [],
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel S235",
+      "e": 210000000000.0,
+      "nu": 0.25,
+      "rho": 8000.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "ipe200",
+      "name": "IPE 200",
+      "area": 0.00285,
+      "iy": 0.00001943
+    },
+    {
+      "id": "ipe300",
+      "name": "IPE 300",
+      "area": 0.00538,
+      "iy": 0.00008356
+    }
+  ],
+  "supports": [],
+  "loadCases": [],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

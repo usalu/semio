@@ -7,7 +7,7 @@ use crate::artifacts::csv::CsvSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &CsvSnapshot, next: &CsvSnapshot) -> protocol::MutationOutcome<CsvDiff> {
     if base == next {
-        return protocol::MutationOutcome::new(CsvDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(CsvDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, next))
 }

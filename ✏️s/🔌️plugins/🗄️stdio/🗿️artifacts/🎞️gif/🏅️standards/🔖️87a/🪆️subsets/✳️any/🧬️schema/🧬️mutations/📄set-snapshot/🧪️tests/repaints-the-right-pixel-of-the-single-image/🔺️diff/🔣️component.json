@@ -1,0 +1,15 @@
+{
+  "images": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "indices": [
+            0,
+            1
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "s.stdio.gltf.mutation.move-accessor.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/accessors/0",
+    "document/accessors/1"
+  ],
+  "payload": {
+    "index": 0,
+    "position": 1
+  },
+  "operation": {
+    "kind": "move",
+    "index": 0,
+    "position": 1
+  }
+}

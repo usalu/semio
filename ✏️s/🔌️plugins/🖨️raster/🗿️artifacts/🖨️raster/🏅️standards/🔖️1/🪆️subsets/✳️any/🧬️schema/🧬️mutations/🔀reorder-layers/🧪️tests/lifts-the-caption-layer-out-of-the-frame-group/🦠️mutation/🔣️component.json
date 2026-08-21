@@ -1,0 +1,6 @@
+{
+  "mutation": "reorderLayers",
+  "layerId": "caption",
+  "parentId": null,
+  "index": 0
+}

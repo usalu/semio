@@ -1057,24 +1057,24 @@ fn validate_jpg_frame(base: Option<&JpgFrameHeader>, change: Option<&JpgFrameCha
         JpgFrameChange::Replace { .. } => Ok(()),
         JpgFrameChange::Modify(fields) => {
             let Some(base) = base else {
-                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame modification requires an existing frame").await.at(["frame"]));
+                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame modification requires an existing frame").at(["frame"]));
             };
             let Some(components) = &fields.components else { return Ok(()) };
             let removed: std::collections::HashSet<u8> = components.removed.iter().copied().collect();
             if removed.len() != components.removed.len() || components.removed.iter().any(|id| base.components.iter().all(|component| component.id != *id)) {
-                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame component removal is missing or duplicated").await.at(["frame", "components"]));
+                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame component removal is missing or duplicated").at(["frame", "components"]));
             }
             let mut modified = std::collections::HashSet::new();
             for entry in &components.modified {
                 if base.components.iter().all(|component| component.id != entry.id) || !modified.insert(entry.id) || removed.contains(&entry.id) {
-                    return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG frame component modification is missing, duplicated, or removed").await.at(["frame", "components"]));
+                    return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG frame component modification is missing, duplicated, or removed").at(["frame", "components"]));
                 }
             }
             let final_len = base.components.len().saturating_sub(components.removed.len()).saturating_add(components.added.len());
             let mut added_ids = std::collections::HashSet::new();
             for entry in &components.added {
                 if entry.index > final_len || !added_ids.insert(entry.item.id) || base.components.iter().any(|component| component.id == entry.item.id) {
-                    return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG frame component addition conflicts with the target state").await.at(["frame", "components"]));
+                    return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG frame component addition conflicts with the target state").at(["frame", "components"]));
                 }
             }
             Ok(())
@@ -1087,18 +1087,18 @@ fn validate_jpg_quant_tables(base: &[JpgQuantTable], diff: &JpgQuantTablesDiff) 
     let base_ids: std::collections::HashSet<u8> = base.iter().map(|table| table.id).collect();
     let removed: std::collections::HashSet<u8> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|id| !base_ids.contains(id)) {
-        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG quantization-table removal is missing or duplicated").await.at(["quantTables"]));
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG quantization-table removal is missing or duplicated").at(["quantTables"]));
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if !base_ids.contains(&entry.id) || !modified.insert(entry.id) || removed.contains(&entry.id) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG quantization-table modification is missing, duplicated, or removed").await.at(["quantTables"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG quantization-table modification is missing, duplicated, or removed").at(["quantTables"]));
         }
     }
     let mut added_ids = std::collections::HashSet::new();
     for entry in &diff.added {
         if base_ids.contains(&entry.item.id) || !added_ids.insert(entry.item.id) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG quantization-table addition conflicts with the target state").await.at(["quantTables", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG quantization-table addition conflicts with the target state").at(["quantTables", "added"]));
         }
     }
     validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["quantTables", "added"])
@@ -1109,19 +1109,19 @@ fn validate_jpg_huffman_tables(base: &[JpgHuffmanTable], diff: &JpgHuffmanTables
     let base_keys: std::collections::HashSet<JpgHuffmanTableKey> = base.iter().map(huffman_key).collect();
     let removed: std::collections::HashSet<JpgHuffmanTableKey> = diff.removed.iter().copied().collect();
     if removed.len() != diff.removed.len() || diff.removed.iter().any(|key| !base_keys.contains(key)) {
-        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG Huffman-table removal is missing or duplicated").await.at(["huffmanTables"]));
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG Huffman-table removal is missing or duplicated").at(["huffmanTables"]));
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if !base_keys.contains(&entry.key) || !modified.insert(entry.key) || removed.contains(&entry.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG Huffman-table modification is missing, duplicated, or removed").await.at(["huffmanTables"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG Huffman-table modification is missing, duplicated, or removed").at(["huffmanTables"]));
         }
     }
     let mut added_keys = std::collections::HashSet::new();
     for entry in &diff.added {
         let key = huffman_key(&entry.item);
         if base_keys.contains(&key) || !added_keys.insert(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG Huffman-table addition conflicts with the target state").await.at(["huffmanTables", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG Huffman-table addition conflicts with the target state").at(["huffmanTables", "added"]));
         }
     }
     validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["huffmanTables", "added"])
@@ -1140,7 +1140,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     Ok(())
@@ -1158,13 +1158,13 @@ where
     let mut removed_set = std::collections::HashSet::new();
     for &index in removed {
         if index >= base_len || !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG collection removal is missing or duplicated").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     let mut modified_set = std::collections::HashSet::new();
     for index in modified {
         if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG collection modification is missing, duplicated, or removed").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
         }
     }
     let added: Vec<usize> = added.into_iter().collect();
@@ -1172,7 +1172,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
         }
     }
     Ok(())
@@ -1417,8 +1417,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 /// 🏳️ Generic `Option<T>` presence-byte codec (`0`/`1` + payload) — the binary twin of the text
 /// side's `encode_option`/`decode_option`, used for every tri-state/plain-optional field below.
@@ -1431,7 +1431,7 @@ pub(crate) fn write_opt<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_opt<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    let has = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let has = reader.read_u8().map_err(|e| e.to_string())?;
     if has != 0 {
         Ok(Some(dec(reader)?))
     } else {
@@ -1451,7 +1451,7 @@ pub(crate) fn enc_version_bin(v: &(u8, u8), out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_version_bin(reader: &mut store::ByteReader<'_>) -> Result<(u8, u8), String> {
-    Ok((reader.read_u8().await.map_err(|e| e.to_string())?, reader.read_u8().await.map_err(|e| e.to_string())?))
+    Ok((reader.read_u8().map_err(|e| e.to_string())?, reader.read_u8().map_err(|e| e.to_string())?))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_density_units_bin(u: &JfifDensityUnits, out: &mut Vec<u8>) {
@@ -1459,7 +1459,7 @@ pub(crate) fn enc_density_units_bin(u: &JfifDensityUnits, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_density_units_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifDensityUnits, String> {
-    JfifDensityUnits::from_u8(reader.read_u8().await.map_err(|e| e.to_string())?)
+    JfifDensityUnits::from_u8(reader.read_u8().map_err(|e| e.to_string())?)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_huffman_class_bin(c: &JpgHuffmanClass, out: &mut Vec<u8>) {
@@ -1467,7 +1467,7 @@ pub(crate) fn enc_huffman_class_bin(c: &JpgHuffmanClass, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_huffman_class_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanClass, String> {
-    JpgHuffmanClass::from_u8(reader.read_u8().await.map_err(|e| e.to_string())?)
+    JpgHuffmanClass::from_u8(reader.read_u8().map_err(|e| e.to_string())?)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_thumbnail_bin(t: &JfifThumbnail, out: &mut Vec<u8>) {
@@ -1477,8 +1477,8 @@ pub(crate) fn enc_thumbnail_bin(t: &JfifThumbnail, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_thumbnail_bin(reader: &mut store::ByteReader<'_>) -> Result<JfifThumbnail, String> {
-    let width = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let height = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let width = reader.read_u8().map_err(|e| e.to_string())?;
+    let height = reader.read_u8().map_err(|e| e.to_string())?;
     let rgb_data = read_bytes_lp(reader)?;
     Ok(JfifThumbnail { width, height, rgb_data })
 }
@@ -1492,10 +1492,10 @@ fn enc_frame_component_bin(c: &JpgFrameComponent, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_frame_component_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameComponent, String> {
     Ok(JpgFrameComponent {
-        id: reader.read_u8().await.map_err(|e| e.to_string())?,
-        h_sampling: reader.read_u8().await.map_err(|e| e.to_string())?,
-        v_sampling: reader.read_u8().await.map_err(|e| e.to_string())?,
-        quant_table_id: reader.read_u8().await.map_err(|e| e.to_string())?,
+        id: reader.read_u8().map_err(|e| e.to_string())?,
+        h_sampling: reader.read_u8().map_err(|e| e.to_string())?,
+        v_sampling: reader.read_u8().map_err(|e| e.to_string())?,
+        quant_table_id: reader.read_u8().map_err(|e| e.to_string())?,
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1510,10 +1510,10 @@ pub(crate) fn enc_frame_header_bin(f: &JpgFrameHeader, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_frame_header_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameHeader, String> {
-    let precision = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let width = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let height = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let precision = reader.read_u8().map_err(|e| e.to_string())?;
+    let width = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let height = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut components = Vec::with_capacity(count as usize);
     for _ in 0..count {
         components.push(dec_frame_component_bin(reader)?);
@@ -1530,11 +1530,11 @@ pub(crate) fn enc_quant_table_bin(t: &JpgQuantTable, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_quant_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTable, String> {
-    let id = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let precision = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let id = reader.read_u8().map_err(|e| e.to_string())?;
+    let precision = reader.read_u8().map_err(|e| e.to_string())?;
     let mut values = [0u16; 64];
     for v in values.iter_mut() {
-        *v = reader.read_u16_le().await.map_err(|e| e.to_string())?;
+        *v = reader.read_u16_le().map_err(|e| e.to_string())?;
     }
     Ok(JpgQuantTable { id, precision, values })
 }
@@ -1547,9 +1547,9 @@ pub(crate) fn enc_huffman_table_bin(t: &JpgHuffmanTable, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_huffman_table_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTable, String> {
-    let id = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let id = reader.read_u8().map_err(|e| e.to_string())?;
     let class = dec_huffman_class_bin(reader)?;
-    let bits_vec = reader.read_bytes(16).await.map_err(|e| e.to_string())?.to_vec();
+    let bits_vec = reader.read_bytes(16).map_err(|e| e.to_string())?.to_vec();
     let bits: [u8; 16] = bits_vec.try_into().map_err(|_| "huffman bits: expected 16 bytes".to_string())?;
     let values = read_bytes_lp(reader)?;
     Ok(JpgHuffmanTable { id, class, bits, values })
@@ -1562,7 +1562,7 @@ pub(crate) fn enc_huffman_key_bin(k: &JpgHuffmanTableKey, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_huffman_key_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableKey, String> {
     let class = dec_huffman_class_bin(reader)?;
-    let id = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let id = reader.read_u8().map_err(|e| e.to_string())?;
     Ok(JpgHuffmanTableKey { class, id })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1572,7 +1572,7 @@ pub(crate) fn enc_segment_bin(s: &JpgSegment, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegment, String> {
-    let marker = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let marker = reader.read_u8().map_err(|e| e.to_string())?;
     let data = read_bytes_lp(reader)?;
     Ok(JpgSegment { marker, data })
 }
@@ -1940,21 +1940,21 @@ fn enc_components_diff_bin(d: &JpgComponentsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_components_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentsDiff, String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(reader.read_u8().await.map_err(|e| e.to_string())?);
+        removed.push(reader.read_u8().map_err(|e| e.to_string())?);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let id = reader.read_u8().await.map_err(|e| e.to_string())?;
+        let id = reader.read_u8().map_err(|e| e.to_string())?;
         modified.push(JpgComponentModified { id, diff: dec_component_diff_bin(reader)? });
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         added.push(JpgComponentAdded { index, item: dec_frame_component_bin(reader)? });
     }
     Ok(JpgComponentsDiff { removed, modified, added })
@@ -2001,21 +2001,21 @@ fn enc_quant_tables_diff_bin(d: &JpgQuantTablesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_quant_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTablesDiff, String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(reader.read_u8().await.map_err(|e| e.to_string())?);
+        removed.push(reader.read_u8().map_err(|e| e.to_string())?);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let id = reader.read_u8().await.map_err(|e| e.to_string())?;
+        let id = reader.read_u8().map_err(|e| e.to_string())?;
         modified.push(JpgQuantTableModified { id, diff: dec_quant_table_diff_bin(reader)? });
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         added.push(JpgQuantTableAdded { index, item: dec_quant_table_bin(reader)? });
     }
     Ok(JpgQuantTablesDiff { removed, modified, added })
@@ -2055,21 +2055,21 @@ fn enc_huffman_tables_diff_bin(d: &JpgHuffmanTablesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_huffman_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTablesDiff, String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
         removed.push(dec_huffman_key_bin(reader)?);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
         let key = dec_huffman_key_bin(reader)?;
         modified.push(JpgHuffmanTableModified { key, diff: dec_huffman_table_diff_bin(reader)? });
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         added.push(JpgHuffmanTableAdded { index, item: dec_huffman_table_bin(reader)? });
     }
     Ok(JpgHuffmanTablesDiff { removed, modified, added })
@@ -2103,21 +2103,21 @@ fn enc_other_segments_diff_bin(d: &JpgOtherSegmentsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_other_segments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgOtherSegmentsDiff, String> {
-    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
-    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         modified.push(JpgSegmentModified { index, diff: dec_segment_diff_bin(reader)? });
     }
-    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         added.push(JpgSegmentAdded { index, item: dec_segment_bin(reader)? });
     }
     Ok(JpgOtherSegmentsDiff { removed, modified, added })
@@ -2140,7 +2140,7 @@ fn enc_frame_change_bin(fc: &JpgFrameChange, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_frame_change_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameChange, String> {
-    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(JpgFrameChange::Modify(dec_frame_fields_diff_bin(reader)?)),
         1 => Ok(JpgFrameChange::Replace { frame: read_opt(reader, dec_frame_header_bin)? }),
@@ -2150,8 +2150,8 @@ fn dec_frame_change_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameCh
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_frame_fields_diff_bin(fd: &JpgFrameFieldsDiff, out: &mut Vec<u8>) {
     write_opt(out, &fd.precision, |v, out| out.push(*v));
-    write_opt(out, &fd.width, |v, out| { store::pack_rt::write_varint_u64(out, *v as u64); });
-    write_opt(out, &fd.height, |v, out| { store::pack_rt::write_varint_u64(out, *v as u64); });
+    write_opt(out, &fd.width, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
+    write_opt(out, &fd.height, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
     write_opt(out, &fd.components, enc_components_diff_bin);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2382,7 +2382,7 @@ impl protocol::DiffCodec for JpgDiff {
             enc_huffman_tables_diff_bin(v, &mut out);
         }
         if let Some(v) = &self.restart_interval {
-            write_opt(&mut out, v, |ri, out| { store::pack_rt::write_varint_u64(out, *ri as u64); });
+            write_opt(&mut out, v, |ri, out| store::pack_rt::write_varint_u64(out, *ri as u64));
         }
         if let Some(v) = &self.other_segments {
             enc_other_segments_diff_bin(v, &mut out);
@@ -2574,10 +2574,10 @@ mod handcrafted_diff_codec_tests {
         let a = snap_a();
         let b = snap_b();
         let c = snap_c();
-        let cases = vec![JpgDiff::default(), JpgDiff::between(&a, &b).await, JpgDiff::between(&b, &a).await, JpgDiff::between(&a, &c).await, JpgDiff::between(&c, &a)];
+        let cases = vec![JpgDiff::default(), JpgDiff::between(&a, &b), JpgDiff::between(&b, &a), JpgDiff::between(&a, &c), JpgDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
             let parsed = JpgDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 

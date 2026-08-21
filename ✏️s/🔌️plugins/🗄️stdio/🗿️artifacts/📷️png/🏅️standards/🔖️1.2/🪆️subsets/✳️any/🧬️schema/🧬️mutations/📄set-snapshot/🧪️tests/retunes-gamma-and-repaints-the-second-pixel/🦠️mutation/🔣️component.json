@@ -1,0 +1,58 @@
+{
+  "mutation": "setSnapshot",
+  "snapshot": {
+    "schema": "stdio.png",
+    "width": 2,
+    "height": 1,
+    "bitDepth": 8,
+    "colorType": "rgba",
+    "interlace": false,
+    "plte": null,
+    "trns": null,
+    "gama": 45455,
+    "chrm": null,
+    "srgb": null,
+    "phys": null,
+    "time": null,
+    "bkgd": null,
+    "textChunks": [
+      {
+        "keyword": "Title",
+        "value": "Two Pixel Swatch",
+        "compressed": false,
+        "kind": "text",
+        "languageTag": "",
+        "translatedKeyword": ""
+      }
+    ],
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255
+    ],
+    "chunkOrder": [
+      {
+        "chunk": "ihdr"
+      },
+      {
+        "chunk": "gama"
+      },
+      {
+        "chunk": "text",
+        "index": 0
+      },
+      {
+        "chunk": "idat"
+      },
+      {
+        "chunk": "iend"
+      }
+    ],
+    "unknownChunks": []
+  }
+}

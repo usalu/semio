@@ -1,0 +1,15 @@
+{
+  "UpdateMemberProperties": {
+    "new_n_ed_kn": 650.0,
+    "new_m_ed_knm": 200.0,
+    "new_v_ed_kn": 110.0,
+    "new_a_mm2": 6000.0,
+    "new_a_v_mm2": 3000.0,
+    "new_w_pl_mm3": 640000.0,
+    "new_f_y_mpa": 460.0,
+    "new_f_u_mpa": 540.0,
+    "new_chi": 0.875,
+    "new_a_net_mm2": 5100.0,
+    "new_tension_n_ed_kn": 520.0
+  }
+}

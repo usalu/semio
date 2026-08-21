@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeMaterialMetallic, base: &SemioMeshSnapshot) -> proto
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if material.metallic == payload.new_metallic {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Material \"{}\" metallic factor is already {}.", payload.id, payload.new_metallic));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" metallic factor is already {}.", payload.id, payload.new_metallic));
     }
     if !payload.new_metallic.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material \"{}\" metallic factor {} is not finite.", payload.id, payload.new_metallic), [payload.id.clone()]);

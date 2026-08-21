@@ -1,0 +1,5 @@
+{
+  "mutation": "changeNodeAbbreviation",
+  "id": "node-a",
+  "newAbbreviation": "AL"
+}

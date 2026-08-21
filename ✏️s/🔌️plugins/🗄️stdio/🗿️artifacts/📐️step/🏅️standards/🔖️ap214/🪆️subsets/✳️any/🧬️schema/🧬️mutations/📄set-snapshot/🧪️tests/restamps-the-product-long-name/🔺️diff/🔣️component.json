@@ -1,0 +1,21 @@
+{
+  "entities": {
+    "modified": [
+      {
+        "id": 1,
+        "diff": {
+          "args": {
+            "modified": [
+              {
+                "index": 1,
+                "value": {
+                  "string": "Capsule Unit A"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

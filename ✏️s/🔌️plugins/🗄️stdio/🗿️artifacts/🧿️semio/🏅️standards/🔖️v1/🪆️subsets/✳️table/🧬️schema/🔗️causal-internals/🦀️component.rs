@@ -80,7 +80,7 @@ impl CausalDag {
             }
         }
         let adj = semio_framework_graph::algorithms::adjacency(n, edges, true);
-        let topo = semio_framework_graph::algorithms::topo_sort(&adj).await.map_err(|e| CausalError::NotADag(e.cycle))?;
+        let topo = semio_framework_graph::algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
         let mut parents = vec![Vec::new(); n];
         let mut children = vec![Vec::new(); n];
         for &(a, b) in edges {
@@ -1511,7 +1511,7 @@ fn bootstrap_ci(
     let n = data.n_rows();
     let mut estimates = Vec::with_capacity(opts.replicates);
     for _ in 0..opts.replicates {
-        let indices: Vec<usize> = (0..n).map(|_| semio_framework_plugin::resolve_ready(rng.await.next_range(0, n as u64)) as usize).collect();
+        let indices: Vec<usize> = (0..n).map(|_| semio_framework_plugin::resolve_ready(rng.next_range(0, n as u64)) as usize).collect();
         if let Ok(resampled) = data.select_rows(&indices) {
             if let Ok(estimate) = point_fn(&resampled) {
                 estimates.push(estimate);
@@ -1854,8 +1854,8 @@ mod tests {
         table.push_continuous("y", y).unwrap();
         table.push_continuous("z", z).unwrap();
         let ci = FisherZ::for_table(&table, &[0, 1, 2]).unwrap();
-        let marginal = ci.test(&table, 0, 2, &[]).await.unwrap();
-        let conditional = ci.test(&table, 0, 2, &[1]).await.unwrap();
+        let marginal = ci.test(&table, 0, 2, &[]).unwrap();
+        let conditional = ci.test(&table, 0, 2, &[1]).unwrap();
         assert!(marginal.p_value < 0.05, "x,z should look dependent marginally");
         assert!(conditional.p_value > 0.05, "x,z should look independent given y on a chain");
     }
@@ -2040,7 +2040,7 @@ mod tests {
     async fn wrong_column_type_errors() {
         let mut table = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::new();
         table.push_continuous("x", vec![1.0, 2.0]).unwrap();
-        let err = GSquared.test(&table, 0, 0, &[]).await.unwrap_err();
+        let err = GSquared.test(&table, 0, 0, &[]).unwrap_err();
         assert!(matches!(err, CausalError::Tabular(_)));
     }
 

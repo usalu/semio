@@ -1,0 +1,5 @@
+{
+  "mutation": "renameGrowthPlan",
+  "id": "growth-plan-a",
+  "newName": "Renamed Growth Plan A"
+}

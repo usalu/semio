@@ -1,0 +1,4 @@
+{
+  "mutation": "changeFireResistanceMin",
+  "newFireResistanceMin": 90
+}

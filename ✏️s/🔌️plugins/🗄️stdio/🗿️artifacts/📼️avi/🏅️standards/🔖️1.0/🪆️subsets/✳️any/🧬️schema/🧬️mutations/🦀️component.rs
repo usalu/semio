@@ -90,7 +90,7 @@ impl Mutation<AviSnapshot> for AviMutation {
             }
             AviMutation::AddUnknownChunk { index, item } => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }), ..AviDiff::default() },
             AviMutation::RemoveUnknownChunk { index } => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..AviDiff::default() },
-        }).await
+        })
     }
 
     async fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
@@ -134,12 +134,12 @@ impl Mutation<AviSnapshot> for AviMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> protocol::MutationOutcome<AviDiff> {
     let outcome = <AviMutation as Mutation<AviSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Mutation
@@ -237,13 +237,13 @@ mod tests {
         for m in variants {
             let mut snap = base.clone();
             let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&m, &snap);
-            let expected = diff.await.diff().apply(&snap).unwrap();
+            let expected = diff.diff().apply(&snap).unwrap();
             let returned = apply_avi_mutation(&mut snap, &m);
             assert_eq!(returned, diff, "apply_avi_mutation must return the SAME diff as Mutation::diff for {m:?}");
             assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
             let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&m, &base);
-            assert_eq!(inv.await.len(), 1);
+            assert_eq!(inv.len(), 1);
             let mut round = snap.clone();
             apply_avi_mutation(&mut round, &inv[0]);
             assert_eq!(round, base, "inverse_law failed for {m:?}");
@@ -271,7 +271,7 @@ mod tests {
         next.main_header.width = 999;
         let mutation = AviMutation::SetSnapshot { snapshot: next.clone() };
         let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&mutation, &base);
-        assert_eq!(diff.await.diff().apply(&base).unwrap(), next);
+        assert_eq!(diff.diff().apply(&base).unwrap(), next);
         let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&mutation, &base);
         let mut round = next.clone();
         apply_avi_mutation(&mut round, &inv[0]);
@@ -290,14 +290,23 @@ mod tests {
             AviMutation::SetChunkKeyframe { stream_index: 0, index: 0, keyframe: true },
         ] {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = AviMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = AviMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m);
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = AviMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = AviMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m);
         }
     }
 }
 //#endregion 🔖️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/promotes-the-second-movi-chunk-to-a-keyframe/🦀️component.rs"]
+mod set_snapshot_promotes_the_second_movi_chunk_to_a_keyframe;
+//#endregion 🧪️FixtureCases

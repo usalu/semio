@@ -126,7 +126,7 @@ impl ArtifactEditor for XmlAnyEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -136,7 +136,7 @@ impl ArtifactEditor for XmlAnyEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_xml_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XML_EDITOR_DIALECT)
-        .await.document(["semio", "stdio", "xml"])
+        .document(["semio", "stdio", "xml"])
         .icon_id("list-tree")
         .mode_def(edit::definition())
         .default_mode_id(edit::XML_EDIT_MODE_ID)
@@ -180,7 +180,7 @@ mod tests {
     async fn op_text_roundtrip() {
         let command = XmlAnyEditorCommand::SetNode { node_id: "0/2".into(), value: "hello world".into() };
         let printed = <XmlAnyEditorCommand as protocol::OpText>::print_op(&command);
-        let parsed = <XmlAnyEditorCommand as protocol::OpText>::parse_op(&printed).await.expect("parse ok");
+        let parsed = <XmlAnyEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
         assert_eq!(parsed, command);
     }
 }

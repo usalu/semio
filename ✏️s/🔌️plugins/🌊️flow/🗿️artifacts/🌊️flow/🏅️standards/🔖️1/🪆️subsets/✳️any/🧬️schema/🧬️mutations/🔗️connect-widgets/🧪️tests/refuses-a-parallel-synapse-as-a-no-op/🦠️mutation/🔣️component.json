@@ -1,0 +1,9 @@
+{
+  "mutation": "connectWidgets",
+  "index": 1,
+  "id": "synapse-2",
+  "from": "note-alpha",
+  "fromPort": "out",
+  "to": "note-beta",
+  "toPort": "in"
+}

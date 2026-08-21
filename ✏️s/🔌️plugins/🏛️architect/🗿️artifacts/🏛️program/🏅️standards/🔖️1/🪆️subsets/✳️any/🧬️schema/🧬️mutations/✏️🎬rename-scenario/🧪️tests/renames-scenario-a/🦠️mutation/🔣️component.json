@@ -1,0 +1,5 @@
+{
+  "mutation": "renameScenario",
+  "id": "scenario-a",
+  "newName": "Renamed Scenario A"
+}

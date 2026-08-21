@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeMaterialBaseColor, base: &SemioMeshSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if material.base_color == payload.new_base_color {
-        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Material \"{}\" base color is unchanged.", payload.id));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" base color is unchanged.", payload.id));
     }
     let c = payload.new_base_color;
     if !c.r.is_finite() || !c.g.is_finite() || !c.b.is_finite() || !c.a.is_finite() {

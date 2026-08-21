@@ -42,7 +42,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("xlsx")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .await.schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor())
+        .schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::inferences::xlsx_artifact_inference_descriptor()])
         .composers(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry::entries())

@@ -569,7 +569,7 @@ mod tests {
     async fn codec_round_trip() {
         let snap = crate::artifacts::gltf::engine::empty_gltf_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         // P2-FG3: `ArtifactPack::encode_pack`/`decode_pack` now route through the REAL `.glb`
         // binary container (`encode_glb`/`decode_glb`), not the prior JSON-as-"binary" shortcut —
@@ -577,7 +577,7 @@ mod tests {
         // glb container now), which is the one field expected to legitimately differ from `snap`'s
         // own `Json` provenance; document/buffers/schema stay byte-for-byte lossless.
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded.schema, snap.schema);
         assert_eq!(decoded.document, snap.document);
         assert_eq!(decoded.buffers, snap.buffers);
@@ -953,7 +953,7 @@ mod tests {
             let grammar = dsl::parse_grammar(mutation_transport::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let forward = alpha_mode_mutation();
-            let inverse = forward.inverse(&material_snapshot()).await.pop().expect("inverse envelope");
+            let inverse = forward.inverse(&material_snapshot()).pop().expect("inverse envelope");
             for mutation in [forward, inverse] {
                 let printed = mutation.print_op();
                 assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?}");
@@ -969,12 +969,12 @@ mod tests {
             assert!(matches!(GltfMutation::new(mutation::ID, 1, vec![0; GLTF_MUTATION_MAX_PAYLOAD_BYTES + 1]), Err(GltfMutationRegistryError::BudgetExceeded("payload"))));
 
             let text = mutation.print_op();
-            assert_eq!(GltfMutation::parse_op(&text).await.expect("text round trip"), mutation);
-            let binary = mutation.encode_op().await.expect("binary encode");
-            assert_eq!(GltfMutation::decode_op(&binary).await.expect("binary round trip"), mutation);
+            assert_eq!(GltfMutation::parse_op(&text).expect("text round trip"), mutation);
+            let binary = mutation.encode_op().expect("binary encode");
+            assert_eq!(GltfMutation::decode_op(&binary).expect("binary round trip"), mutation);
             let mut trailing = binary;
             trailing.push(0);
-            assert!(GltfMutation::decode_op(&trailing).await.is_err(), "binary envelope accepted trailing data");
+            assert!(GltfMutation::decode_op(&trailing).is_err(), "binary envelope accepted trailing data");
         }
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output
@@ -1004,16 +1004,16 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutation_transport::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             let forward = alpha_mode_mutation();
-            let inverse = forward.inverse(&material_snapshot()).await.pop().expect("inverse envelope");
+            let inverse = forward.inverse(&material_snapshot()).pop().expect("inverse envelope");
             for mutation in [forward, inverse] {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -1031,7 +1031,7 @@ mod tests {
 
             let demo = crate::artifacts::gltf::engine::demo_gltf_snapshot();
 
-            let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gltf_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gltf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
@@ -1039,7 +1039,7 @@ mod tests {
             // which always reports `source_form: Glb` (the byte form genuinely IS a glb container
             // now) — the one field expected to legitimately differ from `demo`'s own `Json`
             // provenance, same treatment `codec_round_trip` gives.
-            let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded.schema, demo.schema, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s schema");
             assert_eq!(decoded.document, demo.document, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s document");
             assert_eq!(decoded.buffers, demo.buffers, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s buffers");

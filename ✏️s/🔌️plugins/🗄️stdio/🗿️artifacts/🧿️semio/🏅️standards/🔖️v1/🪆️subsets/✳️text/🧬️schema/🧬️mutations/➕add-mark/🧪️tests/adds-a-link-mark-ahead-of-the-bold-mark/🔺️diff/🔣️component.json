@@ -1,0 +1,20 @@
+{
+  "runs": {
+    "values": [
+      {
+        "language": "en",
+        "content": "semio",
+        "marks": [
+          {
+            "kind": "link",
+            "href": "https://semio.tech"
+          },
+          {
+            "kind": "bold",
+            "href": ""
+          }
+        ]
+      }
+    ]
+  }
+}

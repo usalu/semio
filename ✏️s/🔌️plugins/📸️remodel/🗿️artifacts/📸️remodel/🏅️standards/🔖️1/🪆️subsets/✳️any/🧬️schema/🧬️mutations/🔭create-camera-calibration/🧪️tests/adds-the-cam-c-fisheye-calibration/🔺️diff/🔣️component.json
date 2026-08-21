@@ -1,0 +1,95 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "streams": null,
+  "assets": null,
+  "calibration": {
+    "cameras": [
+      {
+        "id": "cam-a",
+        "label": "Front",
+        "model": "brownConrady",
+        "fx": 1000.0,
+        "fy": 1000.0,
+        "cx": 512.0,
+        "cy": 384.0,
+        "skew": 0.0,
+        "distortion": [
+          0.0625,
+          -0.03125,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": 0.5,
+        "locked": false
+      },
+      {
+        "id": "cam-b",
+        "label": "Side",
+        "model": "pinhole",
+        "fx": 800.0,
+        "fy": 800.0,
+        "cx": 320.0,
+        "cy": 240.0,
+        "skew": 0.0,
+        "distortion": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": null,
+        "locked": true
+      },
+      {
+        "id": "cam-c",
+        "label": "Top",
+        "model": "fisheye",
+        "fx": 700.0,
+        "fy": 700.0,
+        "cx": 256.0,
+        "cy": 256.0,
+        "skew": 0.0,
+        "distortion": [
+          0.125,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rmsReprojectionPx": null,
+        "locked": false
+      }
+    ],
+    "rig": [
+      {
+        "cameraId": "cam-a",
+        "rotationWxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translationM": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "params": null,
+  "gcps": null,
+  "job": null,
+  "results": null,
+  "selection": null,
+  "activeUtilityId": null,
+  "reportTable": null,
+  "frameCursor": null,
+  "camera": null,
+  "layers": null,
+  "locale": null
+}

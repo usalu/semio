@@ -1,0 +1,5 @@
+{
+  "mutation": "renameCollaborationRecord",
+  "id": "collaboration-record-a",
+  "newName": "Renamed Collaboration Record A"
+}

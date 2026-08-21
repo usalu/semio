@@ -1,0 +1,5 @@
+{
+  "mutation": "changeStreamSync",
+  "id": "stream-a",
+  "newSyncOffsetMs": -7.5
+}

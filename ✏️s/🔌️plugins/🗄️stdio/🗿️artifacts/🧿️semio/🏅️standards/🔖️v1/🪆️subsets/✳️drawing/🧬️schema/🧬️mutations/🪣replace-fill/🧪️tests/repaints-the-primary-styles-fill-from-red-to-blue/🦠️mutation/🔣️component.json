@@ -1,0 +1,11 @@
+{
+  "ReplaceFill": {
+    "style_name": "primary",
+    "new_fill": {
+      "r": 0.0,
+      "g": 0.5,
+      "b": 1.0,
+      "a": 1.0
+    }
+  }
+}

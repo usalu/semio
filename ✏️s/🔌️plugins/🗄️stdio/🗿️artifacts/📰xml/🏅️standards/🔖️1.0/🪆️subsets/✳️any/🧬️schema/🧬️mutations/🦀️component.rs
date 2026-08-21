@@ -100,12 +100,12 @@ pub enum XmlMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -293,10 +293,10 @@ fn enc_node_path_bin(p: &XmlNodePath, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNodePath, String> {
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        path.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
+        path.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
     Ok(XmlNodePath(path))
 }
@@ -320,9 +320,9 @@ pub(crate) fn enc_xml_snapshot_bin(s: &XmlSnapshot, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
     let schema = read_str_lp(reader)?;
-    let root = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
-    let doctype = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
-    let declaration = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
+    let root = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+    let doctype = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
+    let declaration = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_declaration_bin(reader)?) } else { None };
     let prolog = dec_prolog_bin(reader)?;
     Ok(XmlSnapshot { schema, doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root, doctype, declaration, prolog } })
 }
@@ -446,7 +446,7 @@ impl protocol::OpBinary for XmlMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<XmlMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
-    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(r#"<root a="1"><child x="0"/></root>"#).await.unwrap();
+    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(r#"<root a="1"><child x="0"/></root>"#).unwrap();
     vec![
         XmlMutation::NoMutation,
         XmlMutation::SetSnapshot { snapshot: base },
@@ -478,14 +478,23 @@ mod op_codec_tests {
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = XmlMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = XmlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = XmlMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = XmlMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureCases
+/// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so
+/// `📦️glue.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
+/// directory).
+#[cfg(test)]
+#[path = "📄set-snapshot/🧪️tests/retags-the-catalog-revision-and-rewrites-an-item-label/🦀️component.rs"]
+mod set_snapshot_retags_the_catalog_revision_and_rewrites_an_item_label;
+//#endregion 🧪️FixtureCases

@@ -68,7 +68,7 @@ pub fn render(document: &Ifc2x3Snapshot) -> UiNode {
         camera_json: world3d_camera_json(IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,
         instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None).await,
+        selection_json: world3d_selection_json("rectangle", &[], None),
     };
     MeshWindowKit::render(&view)
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "renameRegulatoryRequirement",
+  "id": "regulatory-requirement-a",
+  "newName": "Renamed Regulatory Requirement A"
+}

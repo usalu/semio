@@ -1,0 +1,14 @@
+{
+  "schema": "sequence.sequence",
+  "content": {
+    "childId": "sequence-content-create-step-duplicate",
+    "target": {
+      "artifactId": "sequence-content",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  }
+}

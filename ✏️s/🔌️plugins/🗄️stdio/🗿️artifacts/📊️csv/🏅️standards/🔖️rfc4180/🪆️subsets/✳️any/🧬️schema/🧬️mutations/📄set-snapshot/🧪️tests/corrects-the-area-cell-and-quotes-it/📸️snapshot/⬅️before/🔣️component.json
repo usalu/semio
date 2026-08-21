@@ -1,0 +1,30 @@
+{
+  "schema": "stdio.csv",
+  "hasHeader": true,
+  "records": [
+    {
+      "fields": [
+        {
+          "value": "city",
+          "quoted": false
+        },
+        {
+          "value": "area",
+          "quoted": false
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "value": "Hannover",
+          "quoted": false
+        },
+        {
+          "value": "204",
+          "quoted": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "vertices": {
+    "removed": [
+      "v2"
+    ]
+  },
+  "edges": {
+    "removed": [
+      "e1",
+      "e2"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "mutation": "createSustainabilityRequirement",
+  "sustainabilityRequirement": {
+    "id": "sustainability-requirement-a",
+    "name": "Sustainability Requirement A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "topic": "",
+    "target": null,
+    "metric": null,
+    "baseline": null,
+    "targetValue": null,
+    "unit": null,
+    "certification": [],
+    "standards": [],
+    "elementIds": [],
+    "strategies": [],
+    "materialsPreferences": [],
+    "energyStrategy": [],
+    "waterStrategy": [],
+    "wasteStrategy": [],
+    "biodiversity": [],
+    "embodiedCarbon": null,
+    "operationalCarbon": null,
+    "reportingRequirements": [],
+    "verificationPlan": null,
+    "ownerId": null
+  }
+}

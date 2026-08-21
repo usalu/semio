@@ -1,0 +1,20 @@
+{
+  "artifact": null,
+  "positions": {
+    "added": [],
+    "removed": [
+      "pos-lighthouse"
+    ],
+    "patched": [],
+    "reordered": null
+  },
+  "routes": null,
+  "regions": null,
+  "layerVisibility": null,
+  "layerStrokeScale": null,
+  "cameraJson": null,
+  "renderMode": null,
+  "vectorStyle": null,
+  "lodMode": null,
+  "locale": null
+}

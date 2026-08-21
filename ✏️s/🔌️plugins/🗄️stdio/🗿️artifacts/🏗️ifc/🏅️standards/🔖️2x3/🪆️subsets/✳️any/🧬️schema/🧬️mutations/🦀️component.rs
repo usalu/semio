@@ -259,7 +259,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 /// the recursive `List`/`Typed` cases) and `UpsertInstance`'s bare `Part21Instance` payload (incl. a
 /// real COMPLEX 2-entity instance) are exercised at least once.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
+pub(crate) async async fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
         Ifc2x3Mutation::NoMutation,
         Ifc2x3Mutation::SetSnapshot { snapshot: crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot() },
@@ -297,11 +297,11 @@ mod tests {
     use super::*;
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
-    use std::sync::OnceLock;
+    use std::sync::OnceLock;async 
 
     fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
-    }
+    }async 
 
     fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
@@ -315,8 +315,8 @@ mod tests {
 
     async fn assert_exact(label: &str, actual: &[u8]) {
         let expected = exact_fixture_bytes();
-        let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
-        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
+        let first_difference = actual.iter().zip(exp.awaitected).position(|(left, right)| left != right);
+        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", ex.awaitpected.len(), actual.len(),);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -362,11 +362,11 @@ mod tests {
         let mutations = demo_mutation_cases();
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
             let parsed = Ifc2x3Mutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e:?}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e:?}"));
             let decoded = Ifc2x3Mutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e:?}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
@@ -413,7 +413,7 @@ mod tests {
         let reparsed = crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).await.expect("re-import supported dirty export");
         assert_eq!(reparsed.document.header, changed.document.header);
 
-        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().await.await.await.next().expect("inverse mutation");
+        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
         let d2 = Mutation::diff(&inverse_mutation, &changed);
         let restored = MutationDiff::apply(d2.diff(), &changed).expect("valid inverse diff");
         assert!(restored == imported, "inverse mutation must restore imported snapshot and provenance");
@@ -500,7 +500,7 @@ mod tests {
         let changed_outcome = Mutation::diff(&mutation, &imported);
         let changed = MutationDiff::apply(&changed_outcome.await.diff().await, &imported).expect("valid upsert diff");
         assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
-        let inverse = Mutation::inverse(&mutation, &imported).into_iter().await.await.await.next().expect("inverse");
+        let inverse = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse");
         let restored_outcome = Mutation::diff(&inverse, &changed);
         let restored = MutationDiff::apply(restored_outcome.diff(), &changed).expect("valid inverse diff");
         assert_eq!(restored, imported);
@@ -513,3 +513,17 @@ mod tests {
     //#endregion 🔖️LosslessLogicalModel
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
+// one case per mutation leaf. Wired HERE and not in `📦️glue.rs`: that file is shared with the
+// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
+// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
+// directory, which is what makes the leaf-relative path below resolve.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📄set-snapshot/🧪️tests/renames-the-ifcproject-instance/🦀️component.rs"]
+    mod tests_set_snapshot_renames_the_ifcproject_instance;
+}
+//#endregion 🧪️FixtureTests

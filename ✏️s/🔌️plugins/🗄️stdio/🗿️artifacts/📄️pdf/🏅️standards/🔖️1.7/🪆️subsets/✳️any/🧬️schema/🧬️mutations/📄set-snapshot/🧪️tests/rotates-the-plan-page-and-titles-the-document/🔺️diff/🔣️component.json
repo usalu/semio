@@ -1,0 +1,15 @@
+{
+  "info": {
+    "title": "Capsule Tower"
+  },
+  "pages": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "rotate": 90
+        }
+      }
+    ]
+  }
+}

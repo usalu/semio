@@ -252,3 +252,56 @@ mod tests {
     //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures — one case per `change-*` leaf, each self-wired here so the
+/// shared plugin-root `📦️glue.rs` stays untouched while the other norm artifacts land theirs.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "⛰️change-fatigue-detail/🧪️tests/switches-fatigue-detail-to-flange-butt-weld/🦀️component.rs"]
+    mod tests_change_fatigue_detail_switches_fatigue_detail_to_flange_butt_weld;
+    #[path = "🌊change-span-m/🧪️tests/lengthens-span-to-12-m/🦀️component.rs"]
+    mod tests_change_span_m_lengthens_span_to_12_m;
+    #[path = "🌍️change-e-cm-mpa/🧪️tests/raises-concrete-modulus-to-35000-mpa/🦀️component.rs"]
+    mod tests_change_e_cm_mpa_raises_concrete_modulus_to_35000_mpa;
+    #[path = "🌎️change-delta-tau-stud-mpa/🧪️tests/raises-stud-shear-stress-range-to-110-mpa/🦀️component.rs"]
+    mod tests_change_delta_tau_stud_mpa_raises_stud_shear_stress_range_to_110_mpa;
+    #[path = "🌏️change-delta-sigma-mpa/🧪️tests/raises-steel-stress-range-to-96-mpa/🦀️component.rs"]
+    mod tests_change_delta_sigma_mpa_raises_steel_stress_range_to_96_mpa;
+    #[path = "🌐change-h-sc-mm/🧪️tests/lengthens-stud-to-125-mm/🦀️component.rs"]
+    mod tests_change_h_sc_mm_lengthens_stud_to_125_mm;
+    #[path = "🌰change-d-mm/🧪️tests/thickens-stud-shank-to-22-mm/🦀️component.rs"]
+    mod tests_change_d_mm_thickens_stud_shank_to_22_mm;
+    #[path = "🌼change-fy-mpa/🧪️tests/upgrades-steel-yield-to-460-mpa/🦀️component.rs"]
+    mod tests_change_fy_mpa_upgrades_steel_yield_to_460_mpa;
+    #[path = "🍄change-v-ed-kn/🧪️tests/raises-design-shear-to-225-kn/🦀️component.rs"]
+    mod tests_change_v_ed_kn_raises_design_shear_to_225_kn;
+    #[path = "🏔️change-n-cycles-stud/🧪️tests/raises-stud-cycle-count-to-5000000/🦀️component.rs"]
+    mod tests_change_n_cycles_stud_raises_stud_cycle_count_to_5000000;
+    #[path = "🏕️change-eta/🧪️tests/raises-shear-connection-degree-to-0-875/🦀️component.rs"]
+    mod tests_change_eta_raises_shear_connection_degree_to_0_875;
+    #[path = "🏖️change-insulation-thickness-mm/🧪️tests/thickens-fire-insulation-to-40-mm/🦀️component.rs"]
+    mod tests_change_insulation_thickness_mm_thickens_fire_insulation_to_40_mm;
+    #[path = "🏜️change-v-ed-per-stud-kn/🧪️tests/raises-per-stud-shear-to-62-5-kn/🦀️component.rs"]
+    mod tests_change_v_ed_per_stud_kn_raises_per_stud_shear_to_62_5_kn;
+    #[path = "🏝️change-m-pla/🧪️tests/raises-steel-plastic-moment-to-128-knm/🦀️component.rs"]
+    mod tests_change_m_pla_raises_steel_plastic_moment_to_128_knm;
+    #[path = "🏞️change-annex/🧪️tests/switches-national-annex-to-en/🦀️component.rs"]
+    mod tests_change_annex_switches_national_annex_to_en;
+    #[path = "🏟️change-fire-rating/🧪️tests/upgrades-fire-rating-to-r90/🦀️component.rs"]
+    mod tests_change_fire_rating_upgrades_fire_rating_to_r90;
+    #[path = "🐚change-m-pl-rd/🧪️tests/raises-plastic-moment-resistance-to-375-knm/🦀️component.rs"]
+    mod tests_change_m_pl_rd_raises_plastic_moment_resistance_to_375_knm;
+    #[path = "🐝change-deck-type/🧪️tests/switches-deck-to-re-entrant/🦀️component.rs"]
+    mod tests_change_deck_type_switches_deck_to_re_entrant;
+    #[path = "🐞change-vl-rd/🧪️tests/raises-longitudinal-shear-resistance-to-240-kn/🦀️component.rs"]
+    mod tests_change_vl_rd_raises_longitudinal_shear_resistance_to_240_kn;
+    #[path = "🗻change-m-ed-knm/🧪️tests/raises-design-moment-to-320-knm/🦀️component.rs"]
+    mod tests_change_m_ed_knm_raises_design_moment_to_320_knm;
+    #[path = "🪨change-fu-mpa/🧪️tests/upgrades-stud-ultimate-strength-to-500-mpa/🦀️component.rs"]
+    mod tests_change_fu_mpa_upgrades_stud_ultimate_strength_to_500_mpa;
+    #[path = "🪵change-f-ck-mpa/🧪️tests/upgrades-concrete-cylinder-strength-to-40-mpa/🦀️component.rs"]
+    mod tests_change_f_ck_mpa_upgrades_concrete_cylinder_strength_to_40_mpa;
+}
+//#endregion 🧪️FixtureTests

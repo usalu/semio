@@ -1,0 +1,20 @@
+{
+  "mutation": "replaceKindCatalogs",
+  "newCatalogs": {
+    "nodes": [],
+    "handles": [
+      {
+        "id": "handle-kind-a",
+        "compatibleWith": [
+          "handle-kind-b"
+        ],
+        "description": "Alpha port",
+        "icon": "circle",
+        "color": "#3366ff",
+        "defaultWireKind": "wire-kind-a"
+      }
+    ],
+    "edges": [],
+    "wires": []
+  }
+}

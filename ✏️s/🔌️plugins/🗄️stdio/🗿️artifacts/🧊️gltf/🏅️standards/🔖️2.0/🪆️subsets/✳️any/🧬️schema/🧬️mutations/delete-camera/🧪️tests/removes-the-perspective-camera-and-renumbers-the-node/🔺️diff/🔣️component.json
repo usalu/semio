@@ -1,0 +1,21 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-camera.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/cameras/0"
+  ],
+  "payload": {
+    "index": 0
+  },
+  "operation": {
+    "kind": "delete",
+    "index": 0,
+    "removed": {
+      "type": "perspective",
+      "perspective": {
+        "yfov": 0.5,
+        "znear": 0.5
+      }
+    }
+  }
+}

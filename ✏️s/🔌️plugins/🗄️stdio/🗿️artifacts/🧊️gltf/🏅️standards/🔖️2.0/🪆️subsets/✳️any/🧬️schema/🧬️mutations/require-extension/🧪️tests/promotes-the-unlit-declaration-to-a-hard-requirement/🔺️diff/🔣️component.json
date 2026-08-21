@@ -1,0 +1,6 @@
+{
+  "extensionsRequired": [
+    "KHR_materials_unlit",
+    "KHR_texture_transform"
+  ]
+}

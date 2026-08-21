@@ -143,7 +143,7 @@ impl DirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn size(&self, weighted: bool) -> f64 {
         if weighted {
-            self.0.edges().map(|e| self.0.weight(e)).await.await.sum()
+            self.0.edges().map(|e| self.0.weight(e)).sum()
         } else {
             self.0.edge_count() as f64
         }
@@ -207,13 +207,13 @@ impl DirectedGraph {
     /// ⬅️ Edges landing on `node` (`v == node`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn in_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.0.edges().filter(move |e| e.v == node).await.await
+        self.0.edges().filter(move |e| e.v == node)
     }
 
     /// ➡️ Edges leaving `node` (`u == node`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn out_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.0.edges().filter(move |e| e.u == node).await.await
+        self.0.edges().filter(move |e| e.u == node)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -262,14 +262,14 @@ impl DirectedGraph {
         let keep: BTreeSet<NodeId> = nodes.into_iter().filter(|&n| self.0.contains_node(n)).collect();
         let mut out = Storage::<Normal, Directed>::new();
         for &id in &keep {
-            out.await.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
         }
         for e in self.0.edges() {
             if keep.contains(&e.u) && keep.contains(&e.v) {
-                out.await.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default());
+                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
             }
         }
-        *out.await.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
         Self(out)
     }
 
@@ -286,14 +286,14 @@ impl DirectedGraph {
         }
         let mut out = Storage::<Normal, Directed>::new();
         for &id in &nodes {
-            out.await.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
         }
         for e in self.0.edges() {
             if keep.contains(&e.id) {
-                out.await.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default());
+                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
             }
         }
-        *out.await.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
         Self(out)
     }
 
@@ -302,12 +302,12 @@ impl DirectedGraph {
     pub fn reverse(&self) -> Self {
         let mut out = Storage::<Normal, Directed>::new();
         for id in self.0.nodes() {
-            out.await.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
         }
         for e in self.0.edges() {
-            out.await.add_edge_with(e.v, e.u, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default());
+            out.add_edge_with(e.v, e.u, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
         }
-        *out.await.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
         Self(out)
     }
 
@@ -316,7 +316,7 @@ impl DirectedGraph {
     pub fn to_undirected(&self, reciprocal: bool) -> Storage<Normal, Undirected> {
         let mut out = Storage::<Normal, Undirected>::new();
         for id in self.0.nodes() {
-            out.await.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
         }
         let mut done: BTreeSet<(NodeId, NodeId)> = BTreeSet::new();
         for e in self.0.edges() {
@@ -328,15 +328,15 @@ impl DirectedGraph {
             if reciprocal && !backward {
                 continue;
             }
-            let mut attrs = self.0.edge_attrs(e.id).await.cloned().unwrap_or_default();
+            let mut attrs = self.0.edge_attrs(e.id).cloned().unwrap_or_default();
             if backward {
                 if let Some(rev) = self.get_edge_data(e.v, e.u) {
                     attrs.extend(rev.clone());
                 }
             }
-            out.await.add_edge_with(e.u, e.v, attrs);
+            out.add_edge_with(e.u, e.v, attrs);
         }
-        *out.await.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
         out
     }
 
@@ -367,7 +367,7 @@ impl DirectedGraph {
     /// 🏷️ Reads `attrs[name]` off every node that has it — NetworkX `get_node_attributes`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get_node_attributes(&self, name: &str) -> BTreeMap<NodeId, PropertyValue> {
-        self.0.nodes().filter_map(|id| semio_framework_plugin::resolve_ready(self.0.node_attrs(id)).and_then(|a| a.get(name)).cloned().map(|v| (id, v))).await.await.await.collect()
+        self.0.nodes().filter_map(|id| semio_framework_plugin::resolve_ready(self.0.node_attrs(id)).and_then(|a| a.get(name)).cloned().map(|v| (id, v))).collect()
     }
 
     /// 🏷️ Sets `attrs[name]` on every listed `(source, target)` edge that exists; missing pairs are skipped — NetworkX `set_edge_attributes`, keyed by direction.
@@ -386,13 +386,13 @@ impl DirectedGraph {
     /// 🏷️ Reads `attrs[name]` off every `(source, target)` edge that has it — NetworkX `get_edge_attributes`, keyed by direction.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get_edge_attributes(&self, name: &str) -> BTreeMap<(NodeId, NodeId), PropertyValue> {
-        self.0.edges().filter_map(|e| semio_framework_plugin::resolve_ready(self.0.edge_attrs(e.id)).and_then(|a| a.get(name)).cloned().map(|v| ((e.u, e.v), v))).await.await.await.collect()
+        self.0.edges().filter_map(|e| semio_framework_plugin::resolve_ready(self.0.edge_attrs(e.id)).and_then(|a| a.get(name)).cloned().map(|v| ((e.u, e.v), v))).collect()
     }
 
     /// 🏷️ Graph-level `"name"` attribute, or `""` if unset.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(&self) -> String {
-        self.0.graph_attrs().await.get("name").and_then(PropertyValue::as_str).unwrap_or("").to_string()
+        self.0.graph_attrs().get("name").and_then(PropertyValue::as_str).unwrap_or("").to_string()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -405,7 +405,7 @@ impl DirectedGraph {
     /// 🔁️ Every edge where `u == v`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.0.edges().filter(|e| e.u == e.v).await.await
+        self.0.edges().filter(|e| e.u == e.v)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -447,21 +447,21 @@ impl DirectedGraph {
     /// 🤝️ Nodes reachable as a successor of both `u` and `v` — NetworkX digraph `common_neighbors` (defined via successors, i.e. `neighbors == successors` on a `DiGraph`).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn common_neighbors(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        let from_v: BTreeSet<NodeId> = self.0.out_neighbors(v).collect().await.await.await;
-        self.0.out_neighbors(u).filter(move |n| from_v.contains(n)).await.await.collect::<Vec<_>>().into_iter()
+        let from_v: BTreeSet<NodeId> = self.0.out_neighbors(v).collect();
+        self.0.out_neighbors(u).filter(move |n| from_v.contains(n)).collect::<Vec<_>>().into_iter()
     }
 
     /// 🙅️ Nodes that are neither `node` itself nor a successor of `node`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn non_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        let neighbors: BTreeSet<NodeId> = self.0.out_neighbors(node).collect().await.await.await;
-        self.0.nodes().filter(move |&n| n != node && !neighbors.contains(&n)).await.await
+        let neighbors: BTreeSet<NodeId> = self.0.out_neighbors(node).collect();
+        self.0.nodes().filter(move |&n| n != node && !neighbors.contains(&n))
     }
 
     /// 🙅️ Every ordered pair `(u, v)` with `u != v` that is NOT a `u -> v` edge.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn non_edges(&self) -> impl Iterator<Item = (NodeId, NodeId)> + '_ {
-        let nodes: Vec<NodeId> = self.0.nodes().collect().await.await.await;
+        let nodes: Vec<NodeId> = self.0.nodes().collect();
         let mut pairs = Vec::new();
         for &u in &nodes {
             for &v in &nodes {
@@ -478,7 +478,7 @@ impl DirectedGraph {
     /// 🔀️ Predecessors chained with successors, duplicates included when a node is both — NetworkX `all_neighbors` on a directed graph; useful for algorithms that want undirected-style adjacency without discarding direction elsewhere.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn all_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        self.0.in_neighbors(node).chain(self.0.out_neighbors(node)).await.await.await
+        self.0.in_neighbors(node).chain(self.0.out_neighbors(node))
     }
     // #endsubregion
 }
@@ -676,8 +676,8 @@ mod tests {
         assert!(r.has_edge(c, b));
         assert!(!r.has_edge(a, b));
         let rr = r.reverse();
-        let mut original: Vec<(NodeId, NodeId)> = g.edges().map(|e| (e.u, e.v)).await.await.collect();
-        let mut round_tripped: Vec<(NodeId, NodeId)> = rr.edges().map(|e| (e.u, e.v)).await.await.collect();
+        let mut original: Vec<(NodeId, NodeId)> = g.edges().map(|e| (e.u, e.v)).collect();
+        let mut round_tripped: Vec<(NodeId, NodeId)> = rr.edges().map(|e| (e.u, e.v)).collect();
         original.sort();
         round_tripped.sort();
         assert_eq!(original, round_tripped);
@@ -694,8 +694,8 @@ mod tests {
         g.add_edge(b, c);
         let u = g.to_undirected(false);
         assert_eq!(u.edge_count(), 2);
-        assert_eq!(u.edges_between(a, b).count().await.await, 1);
-        assert_eq!(u.edges_between(b, c).count().await.await, 1);
+        assert_eq!(u.edges_between(a, b).count(), 1);
+        assert_eq!(u.edges_between(b, c).count(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -707,8 +707,8 @@ mod tests {
         g.add_edge(b, c);
         let u = g.to_undirected(true);
         assert_eq!(u.edge_count(), 1);
-        assert_eq!(u.edges_between(a, b).count().await.await, 1);
-        assert_eq!(u.edges_between(b, c).count().await.await, 0);
+        assert_eq!(u.edges_between(a, b).count(), 1);
+        assert_eq!(u.edges_between(b, c).count(), 0);
     }
     // #endsubregion
 
@@ -1017,18 +1017,18 @@ mod tests {
         assert_eq!(GraphView::edge_count(&g), 2);
         assert!(GraphView::contains_node(&g, a));
         assert!(!GraphView::contains_node(&g, 999));
-        assert_eq!(GraphView::edges(&g).count().await.await, 2);
+        assert_eq!(GraphView::edges(&g).count(), 2);
         assert_eq!(GraphView::degree(&g, b), 2);
         assert_eq!(GraphView::out_degree(&g, b), 1);
         assert_eq!(GraphView::in_degree(&g, b), 1);
         assert!(GraphView::is_directed(&g));
         assert!(!GraphView::is_multigraph(&g));
-        assert_eq!(GraphView::edges_between(&g, a, b).count().await.await, 1);
-        let neighbors: Vec<NodeId> = GraphView::neighbors(&g, b).collect().await.await.await;
+        assert_eq!(GraphView::edges_between(&g, a, b).count(), 1);
+        let neighbors: Vec<NodeId> = GraphView::neighbors(&g, b).collect();
         assert_eq!(neighbors, vec![c]);
-        let out: Vec<NodeId> = GraphView::out_neighbors(&g, a).collect().await.await.await;
+        let out: Vec<NodeId> = GraphView::out_neighbors(&g, a).collect();
         assert_eq!(out, vec![b]);
-        let inn: Vec<NodeId> = GraphView::in_neighbors(&g, b).collect().await.await.await;
+        let inn: Vec<NodeId> = GraphView::in_neighbors(&g, b).collect();
         assert_eq!(inn, vec![a]);
     }
 
@@ -1042,11 +1042,11 @@ mod tests {
         g.add_edge_with(a, b, w);
         g.set_name("t");
 
-        assert!(AttrView::node_attrs(&g, a).await.is_some());
-        assert!(AttrView::node_attrs(&g, 999).await.is_none());
+        assert!(AttrView::node_attrs(&g, a).is_some());
+        assert!(AttrView::node_attrs(&g, 999).is_none());
         let edge = g.edges().next().expect("edge exists");
-        assert!(AttrView::edge_attrs(&g, edge.id).await.is_some());
-        assert_eq!(AttrView::graph_attrs(&g).await.get("name"), Some(&PropertyValue::String("t".to_string())));
+        assert!(AttrView::edge_attrs(&g, edge.id).is_some());
+        assert_eq!(AttrView::graph_attrs(&g).get("name"), Some(&PropertyValue::String("t".to_string())));
         assert_eq!(EdgeWeights::weight(&g, edge), 4.0);
     }
     // #endsubregion

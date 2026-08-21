@@ -1,0 +1,6 @@
+{
+  "mutation": "resizeBlock",
+  "id": "blk-image",
+  "newWidth": 320.0,
+  "newHeight": 200.0
+}

@@ -1,0 +1,11 @@
+{
+  "types": {
+    "values": [
+      {
+        "id": "t1",
+        "name": "Beam",
+        "category": "structure"
+      }
+    ]
+  }
+}

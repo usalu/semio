@@ -1,0 +1,22 @@
+{
+  "id": "s.stdio.gltf.mutation.delete-buffer.v1",
+  "version": 1,
+  "touchedPaths": [
+    "document/buffers/0",
+    "buffers/0"
+  ],
+  "payload": {
+    "index": 0
+  },
+  "operation": {
+    "kind": "delete",
+    "index": 0,
+    "removed": {
+      "byteLength": 2
+    },
+    "bytes": [
+      10,
+      20
+    ]
+  }
+}

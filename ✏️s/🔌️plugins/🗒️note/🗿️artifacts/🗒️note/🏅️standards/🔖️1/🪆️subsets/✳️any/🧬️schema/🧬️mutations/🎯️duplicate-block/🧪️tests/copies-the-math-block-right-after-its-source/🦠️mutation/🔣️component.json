@@ -1,0 +1,18 @@
+{
+  "mutation": "duplicateBlock",
+  "sourceId": "blk-math",
+  "block": {
+    "kind": "math",
+    "id": "blk-math-copy",
+    "name": "Formula copy",
+    "x": 0.0,
+    "y": 400.0,
+    "width": 200.0,
+    "height": 80.0,
+    "rotation": 0.0,
+    "visible": true,
+    "locked": false,
+    "tex": "E = mc^2",
+    "displayMode": true
+  }
+}

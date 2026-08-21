@@ -146,7 +146,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
     let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
-    outcome.await.apply_to(snapshot)
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -426,7 +426,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_image_mutation(&mut via_apply, &mutation);
@@ -451,8 +451,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
-            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
+            let next = MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -467,7 +467,7 @@ mod tests {
         let mut snap = fixture();
         apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "x".into() });
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -477,15 +477,52 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in sample_mutations() {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioImageMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioImageMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioImageMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioImageMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
 }
 //#endregion 🔖️Tests
+
+//#region 🧪️FixtureTests
+/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
+/// — one case per triad leaf, self-wired here rather than in `📦️glue.rs` so this subset owns its
+/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
+/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory. Each case file
+/// additionally mounts its OWN leaf `🔺️diff` module, because the enum arms above carry no guard
+/// branches — the leaves own every diagnostic.
+#[cfg(test)]
+#[path = "."]
+mod fixture_tests {
+    #[path = "📸️set-snapshot/🧪️tests/retargets-the-document-onto-a-grayscale-sixteen-bit-variant/🦀️component.rs"]
+    mod tests_set_snapshot_retargets_the_document_onto_a_grayscale_sixteen_bit_variant;
+    #[path = "📐️set-dimensions/🧪️tests/widens-the-frameless-canvas-to-four-by-two/🦀️component.rs"]
+    mod tests_set_dimensions_widens_the_frameless_canvas_to_four_by_two;
+    #[path = "🌈️set-colorspace/🧪️tests/records-the-source-colorspace-as-rgba/🦀️component.rs"]
+    mod tests_set_colorspace_records_the_source_colorspace_as_rgba;
+    #[path = "🔢️set-bit-depth/🧪️tests/raises-the-source-bit-depth-to-sixteen/🦀️component.rs"]
+    mod tests_set_bit_depth_raises_the_source_bit_depth_to_sixteen;
+    #[path = "🎨️set-icc/🧪️tests/attaches-an-icc-profile-where-there-was-none/🦀️component.rs"]
+    mod tests_set_icc_attaches_an_icc_profile_where_there_was_none;
+    #[path = "➕️insert-frame/🧪️tests/appends-a-second-frame-at-the-end/🦀️component.rs"]
+    mod tests_insert_frame_appends_a_second_frame_at_the_end;
+    #[path = "📄remove-frame/🧪️tests/removes-the-leading-frame/🦀️component.rs"]
+    mod tests_remove_frame_removes_the_leading_frame;
+    #[path = "🔀️move-frame/🧪️tests/moves-the-last-frame-to-the-front/🦀️component.rs"]
+    mod tests_move_frame_moves_the_last_frame_to_the_front;
+    #[path = "⏱️set-frame-delay/🧪️tests/slows-the-second-frame-down/🦀️component.rs"]
+    mod tests_set_frame_delay_slows_the_second_frame_down;
+    #[path = "🟪️set-frame-pixels/🧪️tests/repaints-the-only-frame-black/🦀️component.rs"]
+    mod tests_set_frame_pixels_repaints_the_only_frame_black;
+    #[path = "🏷️set-metadata-entry/🧪️tests/rewrites-the-existing-author-entry/🦀️component.rs"]
+    mod tests_set_metadata_entry_rewrites_the_existing_author_entry;
+    #[path = "🗑️remove-metadata-entry/🧪️tests/removes-the-comment-entry-and-keeps-the-author-entry/🦀️component.rs"]
+    mod tests_remove_metadata_entry_removes_the_comment_entry_and_keeps_the_author_entry;
+}
+//#endregion 🧪️FixtureTests

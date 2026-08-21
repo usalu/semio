@@ -1,0 +1,25 @@
+{
+  "edges": {
+    "modified": [
+      {
+        "key": "e1",
+        "diff": {
+          "curve": {
+            "kind": "circle",
+            "center": {
+              "x": 0.5,
+              "y": 0.0,
+              "z": 0.0
+            },
+            "axis": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            },
+            "radius": 0.5
+          }
+        }
+      }
+    ]
+  }
+}

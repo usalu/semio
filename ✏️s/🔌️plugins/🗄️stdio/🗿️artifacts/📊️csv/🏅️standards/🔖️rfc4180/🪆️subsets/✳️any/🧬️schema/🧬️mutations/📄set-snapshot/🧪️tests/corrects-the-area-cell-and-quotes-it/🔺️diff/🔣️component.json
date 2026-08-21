@@ -1,0 +1,18 @@
+{
+  "records": {
+    "modified": [
+      {
+        "index": 1,
+        "diff": {
+          "fields": [
+            null,
+            {
+              "value": "204.1",
+              "quoted": true
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

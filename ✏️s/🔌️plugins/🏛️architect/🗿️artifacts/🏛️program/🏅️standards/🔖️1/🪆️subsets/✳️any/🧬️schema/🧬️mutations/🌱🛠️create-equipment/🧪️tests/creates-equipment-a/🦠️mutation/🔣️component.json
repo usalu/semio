@@ -1,0 +1,45 @@
+{
+  "mutation": "createEquipment",
+  "equipment": {
+    "id": "equipment-a",
+    "name": "Equipment A",
+    "status": "draft",
+    "priority": "preferred",
+    "ownership": {
+      "ownerId": null,
+      "authorityId": null,
+      "consultantIds": [],
+      "participantIds": []
+    },
+    "timestamps": {
+      "created": "1970-01-01T00:00:00Z",
+      "updated": "1970-01-01T00:00:00Z"
+    },
+    "code": "",
+    "category": "",
+    "manufacturer": null,
+    "model": null,
+    "quantity": {
+      "unit": ""
+    },
+    "dimensions": null,
+    "weightKg": null,
+    "powerKw": null,
+    "utilityConnections": [],
+    "ventilation": null,
+    "noiseLevelDb": null,
+    "clearance": null,
+    "mounting": null,
+    "elementIds": [],
+    "activityIds": [],
+    "maintenanceAccess": [],
+    "lifecycleYears": null,
+    "replacementCost": null,
+    "standards": [],
+    "supplier": null,
+    "activityLinkIds": [],
+    "installationRequirements": [],
+    "commissioningNotes": [],
+    "spareParts": []
+  }
+}

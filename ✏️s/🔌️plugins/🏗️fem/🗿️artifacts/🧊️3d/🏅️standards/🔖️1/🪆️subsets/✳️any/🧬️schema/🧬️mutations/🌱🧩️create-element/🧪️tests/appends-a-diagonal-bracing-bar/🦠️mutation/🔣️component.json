@@ -1,0 +1,11 @@
+{
+  "mutation": "createElement",
+  "element": {
+    "kind": "bar",
+    "id": "b1",
+    "start": "n2",
+    "end": "n3",
+    "materialId": "steel",
+    "sectionId": "hea200"
+  }
+}

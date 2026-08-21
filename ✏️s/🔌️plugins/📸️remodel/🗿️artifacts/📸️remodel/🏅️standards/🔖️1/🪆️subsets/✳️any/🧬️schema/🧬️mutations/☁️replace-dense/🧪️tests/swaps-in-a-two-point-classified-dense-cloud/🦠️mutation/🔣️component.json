@@ -1,0 +1,9 @@
+{
+  "mutation": "replaceDense",
+  "dense": {
+    "positions": "AACAPwAAAAAAAAAAAAAAAAAAgD8AAAAA",
+    "colors": "ECAwQFBg",
+    "confidence": "AABAPwAAAD8=",
+    "classification": "AgY="
+  }
+}

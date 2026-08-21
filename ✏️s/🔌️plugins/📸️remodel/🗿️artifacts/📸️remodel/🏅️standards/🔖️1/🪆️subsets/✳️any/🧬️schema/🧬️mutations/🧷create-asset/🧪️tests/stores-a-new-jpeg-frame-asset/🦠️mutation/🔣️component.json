@@ -1,0 +1,10 @@
+{
+  "mutation": "createAsset",
+  "key": "asset-b",
+  "asset": {
+    "mime": "image/jpeg",
+    "data": "ZnJhbWUtYg==",
+    "width": 640,
+    "height": 480
+  }
+}

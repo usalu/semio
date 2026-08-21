@@ -1,0 +1,94 @@
+{
+  "schema": "cad.document",
+  "id": "cad-fixture",
+  "shapeModel": {
+    "childId": "shape-model-2",
+    "target": {
+      "artifactId": "cad-shape-2",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "model"
+      }
+    }
+  },
+  "buildingModel": {
+    "childId": "building-model-1",
+    "target": {
+      "artifactId": "cad-building-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "model"
+      }
+    }
+  },
+  "energyModel": {
+    "childId": "energy-model-1",
+    "target": {
+      "artifactId": "cad-energy-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "model"
+      }
+    }
+  },
+  "structureClassicModel": {
+    "childId": "structure-classic-model-1",
+    "target": {
+      "artifactId": "cad-structure-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "model"
+      }
+    }
+  },
+  "drawings": [
+    {
+      "childId": "drawing-1",
+      "target": {
+        "artifactId": "cad-drawing-1",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "drawing"
+        }
+      }
+    }
+  ],
+  "referencesByModelDefinitionId": {
+    "spatial.shape": [
+      {
+        "id": "ref-1",
+        "sourceUrl": "https://example.test/plan.png",
+        "mediaKind": "image",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orientation": null,
+        "scale": 1.5,
+        "widthWorld": 8.0,
+        "hidden": false,
+        "locked": true,
+        "opacity": 0.5
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node-1",
+      "label": "Root",
+      "kind": "group"
+    },
+    {
+      "id": "node-2",
+      "label": "Base Plate",
+      "kind": "solid"
+    }
+  ],
+  "activeModelDefinitionId": "spatial.shape"
+}

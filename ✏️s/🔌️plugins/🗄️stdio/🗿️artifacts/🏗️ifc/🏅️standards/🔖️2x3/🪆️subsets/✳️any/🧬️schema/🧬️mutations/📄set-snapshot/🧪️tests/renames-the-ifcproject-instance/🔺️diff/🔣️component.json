@@ -1,0 +1,21 @@
+{
+  "upsertedInstances": [
+    {
+      "id": 1,
+      "entities": [
+        [
+          "IFCPROJECT",
+          [
+            {
+              "Str": "0Xk$Q1nMz9wgLp2vBcRt4A"
+            },
+            "Unset",
+            {
+              "Str": "Nakagin Capsule Tower"
+            }
+          ]
+        ]
+      ]
+    }
+  ]
+}

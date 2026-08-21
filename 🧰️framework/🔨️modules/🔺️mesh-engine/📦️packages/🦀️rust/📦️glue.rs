@@ -395,7 +395,7 @@ pub async fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f3
 //#endregion Primitives
 
 //#region Obj
-pub fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
+pub async fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
     let mut out = format!("o {object_name}\n");
     for chunk in mesh.positions.chunks_exact(3) {
         out.push_str(&format!("v {} {} {}\n", chunk[0], chunk[1], chunk[2]));
@@ -763,7 +763,7 @@ pub async fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
     out
 }
 
-pub fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
+pub async fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
     if bytes.len() < 84 {
         return Err("stl: truncated header".into());
     }
@@ -841,7 +841,7 @@ impl MeshExporter for ObjExporter {
         "obj"
     }
     async fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
-        Ok(mesh_to_obj(mesh, "mesh").into_bytes())
+        Ok(mesh_to_obj(mesh, "mesh").await.into_bytes())
     }
 }
 
@@ -892,7 +892,7 @@ impl MeshImporter for StlImporter {
         "stl"
     }
     async fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
-        mesh_from_stl(bytes)
+        mesh_from_stl(bytes).await
     }
 }
 //#endregion MeshCodec

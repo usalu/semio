@@ -728,10 +728,10 @@ mod tests {
     async fn snapshot_dsl_and_pack_round_trip() {
         let snapshot = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]) };
         let text = store::ArtifactDsl::print_dsl(&snapshot);
-        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed, snapshot);
         let bytes = store::ArtifactPack::encode_pack(&snapshot);
-        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snapshot);
     }
 
@@ -744,10 +744,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -755,10 +755,10 @@ mod tests {
     async fn nontrivial_nested_value_round_trip() {
         let snap = demo_json_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
+        let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(parsed.value, snap.value);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded.value, snap.value);
     }
 }
