@@ -25,8 +25,8 @@
 //! frame — as the authoritative source of "where is the replica" on the receive path. The
 //! `resume_token` this crate ISSUES (`issue_resume_token`, on the send path, `Welcome.resume_token`)
 //! is fully real: `ResumeToken::encode` is public and exercised end to end.
-use crate::*;
 use crate::db_durability::Frontier;
+use crate::*;
 /// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
 /// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
@@ -223,7 +223,8 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
         return Ok(if missing.is_empty() { BootstrapPlan::None } else { BootstrapPlan::Tail { envelopes: missing } });
     }
     let generation = snapshots
-        .latest_generation(&state.frontier.document).await?
+        .latest_generation(&state.frontier.document)
+        .await?
         .ok_or_else(|| DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
     let bytes = snapshots.read_generation(&state.frontier.document, generation).await?;
     let pack_hash = *blake3::hash(&bytes).as_bytes();
@@ -320,9 +321,9 @@ pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, do
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ArtifactId;
     use db_storage::MemoryStorage;
     use db_wal::{ArtifactWal, GroupCommitPolicy, WalRecord};
+    use ArtifactId;
 
     //#region 🧸️Fixtures
     async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {

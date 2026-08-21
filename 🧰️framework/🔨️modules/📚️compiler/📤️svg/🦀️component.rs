@@ -4,9 +4,9 @@
 //! what this repo's existing `vello_svg::append_tree` / animate's path collector already consume,
 //! replacing `typst_svg::svg_merged`'s role for the two Typst call sites.
 
-use base64::Engine;
 use crate::math::{FontKind, MathBox, PlacedItem};
 use crate::text::Font;
+use base64::Engine;
 
 //#region 🔖️Options
 #[derive(Clone, Copy, Debug)]
@@ -61,13 +61,7 @@ fn write_glyph(out: &mut String, fonts: &FontSet<'_>, placement: &GlyphPlacement
     // Font design space is Y-up; SVG is Y-down. The glyph's own outline is in raw font units
     // (unscaled) — one transform per placement does the translate, unit scale, extra vertical
     // stretch (`scale_y`, from stretchy delimiters/radicals), and the Y-flip together.
-    out.push_str(&format!(
-        r#"<path transform="translate({:.3} {:.3}) scale({:.6} {:.6})" d="{path}"/>"#,
-        placement.x * font_size_pt,
-        -placement.y * font_size_pt,
-        scale,
-        -scale * placement.scale_y
-    ));
+    out.push_str(&format!(r#"<path transform="translate({:.3} {:.3}) scale({:.6} {:.6})" d="{path}"/>"#, placement.x * font_size_pt, -placement.y * font_size_pt, scale, -scale * placement.scale_y));
 }
 
 fn write_rule(out: &mut String, x: f32, y: f32, width: f32, height: f32, font_size_pt: f32) {
@@ -102,10 +96,7 @@ pub fn render_svg(math_box: &MathBox, fonts: &FontSet<'_>, options: SvgOptions) 
         }
     }
 
-    format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width_pt:.3} {height_pt:.3}" width="{width_pt:.3}" height="{height_pt:.3}"><g transform="translate({:.3} {baseline_y:.3})" fill="currentColor">{body}</g></svg>"#,
-        options.margin_pt,
-    )
+    format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width_pt:.3} {height_pt:.3}" width="{width_pt:.3}" height="{height_pt:.3}"><g transform="translate({:.3} {baseline_y:.3})" fill="currentColor">{body}</g></svg>"#, options.margin_pt,)
 }
 //#endregion 🔖️Render
 

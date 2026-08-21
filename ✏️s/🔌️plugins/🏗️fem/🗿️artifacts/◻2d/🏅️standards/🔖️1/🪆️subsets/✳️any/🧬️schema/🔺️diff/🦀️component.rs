@@ -1,6 +1,6 @@
 //! 🧬️ Fem2d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport, FemRegion, };
+use crate::artifacts::fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -10,23 +10,40 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::fem2d::schema::Fem2dArtifact>>,
-    #[state(artifact)] pub nodes: Option<Fem2dNodesDelta>,
-    #[state(artifact)] pub elements: Option<Fem2dElementsDelta>,
-    #[state(artifact)] pub regions: Option<Fem2dRegionsDelta>,
-    #[state(artifact)] pub materials: Option<Fem2dMaterialsDelta>,
-    #[state(artifact)] pub sections: Option<Fem2dSectionsDelta>,
-    #[state(artifact)] pub supports: Option<Fem2dSupportsDelta>,
-    #[state(artifact)] pub load_cases: Option<Fem2dLoadCasesDelta>,
-    #[state(artifact)] pub combinations: Option<Fem2dCombinationsDelta>,
-    #[state(artifact)] pub analysis: Option<FemAnalysisSettings>,
-    #[state(presence)] pub result_source_id: Option<Option<String>>,
-    #[state(presence)] pub result_mode: Option<String>,
-    #[state(presence)] pub result_mode_index: Option<u32>,
-    #[state(config)] pub camera: Option<FemCamera>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(artifact)] pub solver_results_json: Option<String>,
-    #[state(artifact)] pub mesh_preview_json: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::fem2d::schema::Fem2dArtifact>>,
+    #[state(artifact)]
+    pub nodes: Option<Fem2dNodesDelta>,
+    #[state(artifact)]
+    pub elements: Option<Fem2dElementsDelta>,
+    #[state(artifact)]
+    pub regions: Option<Fem2dRegionsDelta>,
+    #[state(artifact)]
+    pub materials: Option<Fem2dMaterialsDelta>,
+    #[state(artifact)]
+    pub sections: Option<Fem2dSectionsDelta>,
+    #[state(artifact)]
+    pub supports: Option<Fem2dSupportsDelta>,
+    #[state(artifact)]
+    pub load_cases: Option<Fem2dLoadCasesDelta>,
+    #[state(artifact)]
+    pub combinations: Option<Fem2dCombinationsDelta>,
+    #[state(artifact)]
+    pub analysis: Option<FemAnalysisSettings>,
+    #[state(presence)]
+    pub result_source_id: Option<Option<String>>,
+    #[state(presence)]
+    pub result_mode: Option<String>,
+    #[state(presence)]
+    pub result_mode_index: Option<u32>,
+    #[state(config)]
+    pub camera: Option<FemCamera>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(artifact)]
+    pub solver_results_json: Option<String>,
+    #[state(artifact)]
+    pub mesh_preview_json: Option<String>,
 }
 //#endregion 🔖️Diff
 

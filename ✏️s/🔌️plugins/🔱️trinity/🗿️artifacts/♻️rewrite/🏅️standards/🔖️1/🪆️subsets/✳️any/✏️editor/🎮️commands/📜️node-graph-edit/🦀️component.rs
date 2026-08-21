@@ -1,11 +1,11 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `node-graph-edit`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::{Graph, JackSnapshot};
-use crate::artifacts::rewrite::schema::Rhs;
 use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
+use crate::artifacts::rewrite::schema::Rhs;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::Value;
 

@@ -3,11 +3,11 @@
 //! window binds these to its own pane; nothing here is pane-specific.
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
+use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
-use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use semio_framework_plugin::{build_board2d_scene, create_default_layout, Board2dScene, LocalizedLabel, ModeDefinition, ToolRef, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowLayout};
 use serde_json::{json, Value};
 
@@ -21,12 +21,7 @@ pub async fn definition() -> ModeDefinition {
 
 /// 🪟️ Triptych play layout: a wide interactive overview beside the detail and selection panes.
 pub async fn layout() -> WindowLayout {
-    create_default_layout(
-        &[overview::WINDOW_KIND_ID.into(), detail::WINDOW_KIND_ID.into(), selection::WINDOW_KIND_ID.into()],
-        "row",
-        Some(&[50.0, 25.0, 25.0]),
-        Some(&["Overview".into(), "Detail".into(), "Selection".into()]),
-    )
+    create_default_layout(&[overview::WINDOW_KIND_ID.into(), detail::WINDOW_KIND_ID.into(), selection::WINDOW_KIND_ID.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))
 }
 //#endregion 🔖️Definition
 

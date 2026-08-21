@@ -11,9 +11,6 @@ pub async fn diff(payload: &CreatePosition, base: &GisMapSnapshot) -> protocol::
     if base.positions.iter().any(|feature| feature.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A position with id \"{}\" already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(GisMapDiff {
-        positions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(GisMapDiff { positions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

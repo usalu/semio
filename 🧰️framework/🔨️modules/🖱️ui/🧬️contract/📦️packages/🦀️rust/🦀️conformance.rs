@@ -280,7 +280,8 @@ mod tests {
                 }
             }
         }
-        let expected: BTreeSet<&str> = ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "tree", "treeSection", "treeItem", "image", "surface", "extension"].into_iter().collect();
+        let expected: BTreeSet<&str> =
+            ["container", "text", "button", "separator", "input", "select", "toggle", "keyValueList", "slider", "numberStepper", "ring", "iconSelect", "tree", "treeSection", "treeItem", "image", "surface", "extension"].into_iter().collect();
         let missing: Vec<&&str> = expected.iter().filter(|tag| !seen.contains(**tag)).collect();
         assert!(missing.is_empty(), "Component variants with no fixture anywhere in the corpus: {missing:?}");
     }

@@ -8,9 +8,9 @@
 //! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`RingMeta`, `WidgetContext`);
 //! `crate::wgpu::geometry`/`crate::wgpu::input` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::wgpu::widgets::{RingMeta, WidgetContext};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
+use crate::wgpu::widgets::{RingMeta, WidgetContext};
 
 pub(crate) fn render_ring<E: Clone>(id: &str, t: f64, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let cx = bounds.x + bounds.w * 0.5;

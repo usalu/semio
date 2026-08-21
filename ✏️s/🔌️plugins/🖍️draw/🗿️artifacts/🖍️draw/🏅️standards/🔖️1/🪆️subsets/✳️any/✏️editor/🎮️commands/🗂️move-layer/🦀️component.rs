@@ -1,11 +1,11 @@
 //! 🗂️ 🗂️ Draw play app commands command — `move-layer`.
 
-use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
-use crate::artifacts::draw::schema::{find_draw_layer, find_draw_layer_location};
 use crate::artifacts::draw::op::DrawMutation;
+use crate::artifacts::draw::schema::{find_draw_layer, find_draw_layer_location};
 use crate::artifacts::draw::DrawSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
+use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocumentHelpers
@@ -29,16 +29,6 @@ async fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, dr
     (None, document.layers.len())
 }
 //#endregion 🔖️DocumentHelpers
-
-
-
-
-
-
-
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "move-layer")]

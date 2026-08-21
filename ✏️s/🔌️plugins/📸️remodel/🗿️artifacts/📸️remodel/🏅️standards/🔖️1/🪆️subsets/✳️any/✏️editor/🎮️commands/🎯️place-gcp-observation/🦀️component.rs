@@ -1,10 +1,10 @@
 //! 🎯️ 🎯️ Remodel play app commands command — `place-gcp-observation`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::add_gcp_observation;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{GcpObservation, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

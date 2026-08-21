@@ -45,10 +45,7 @@ async fn drops_the_handle_and_leaves_every_reference_dangling() {
 async fn inverse_is_empty_against_a_cold_working_scene_cache() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        inverse.is_empty(),
-        "delete-asset cannot invert a handle whose real ImageAsset bytes were never minted in this process, got {inverse:?}"
-    );
+    assert!(inverse.is_empty(), "delete-asset cannot invert a handle whose real ImageAsset bytes were never minted in this process, got {inverse:?}");
     let applied = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     assert_ne!(applied, base, "the forward delete is real even though it is not invertible from a cold cache");
 }
@@ -63,11 +60,7 @@ async fn declared_applied_outcome_counts_four_stale_references() {
     let codes: Vec<&str> = produced.messages().iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.cascade"], "an in-use asset reports exactly one cascade note");
     assert_eq!(produced.messages()[0].level, protocol::Severity::Info, "the stale-reference report is informational, not a rejection");
-    assert!(
-        produced.messages()[0].message.contains("4 stale reference(s)"),
-        "three frame references plus the mesh texture make four, got {:?}",
-        produced.messages()[0].message
-    );
+    assert!(produced.messages()[0].message.contains("4 stale reference(s)"), "three frame references plus the mesh texture make four, got {:?}", produced.messages()[0].message);
     assert!(produced.diff().streams.is_none() && produced.diff().results.is_none(), "delete-asset writes assets alone — the cascade is reported, never applied");
 }
 

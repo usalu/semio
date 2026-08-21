@@ -1,8 +1,8 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
-extern crate semio_framework_os_kernel as protocol_core;
-extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as protocol_core;
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `store`
 // alias (same pattern every plugin's own glue.rs already uses) so `🔁️workflow/🦀️component.rs`'s
 // `store::ArtifactPack`/`store::ArtifactDsl`/etc. references resolve once mounted below — this
@@ -58,8 +58,7 @@ pub mod interaction {
 #[path = "../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs"]
 pub mod workflow;
 
-
-pub use action_bus::{ActionBus, ActionHandler, optional_json_to_dsl};
+pub use action_bus::{optional_json_to_dsl, ActionBus, ActionHandler};
 pub use dsl::{from_dsl_value, to_dsl_value, DslValue};
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity, TextError, TextSpan};
 
@@ -69,10 +68,8 @@ pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, 
 // dedicated engine crate (consumed only from artifact facet code / engine-to-engine callers such
 // as brep tessellation) — no longer part of this framework module's own re-export surface.
 pub use semio_framework_mesh_engine::{
-    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_ico_sphere,
-    mesh_plane, mesh_to_glb, mesh_to_obj, mesh_from_obj, mesh_to_stl, mesh_from_stl, mesh_torus, mesh_uv_sphere, MeshData,
-    MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
-    IoError,
+    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_indexed_with_face_groups, mesh_from_kind, mesh_from_obj, mesh_from_stl, mesh_ico_sphere, mesh_plane, mesh_to_glb, mesh_to_obj, mesh_to_stl, mesh_torus,
+    mesh_uv_sphere, GlbExporter, GlbImporter, IoError, MeshData, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
 };
 // 🚪️ DWG codec (`dwg_to_bytes`/`dwg_from_bytes`/`mesh_to_dwg_drawing`/…) DELETED (ticket 26/08/12/
 // DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave DEDUP): `🔺️mesh/🦀️component.rs`
@@ -88,37 +85,120 @@ pub use semio_framework_mesh_engine::{
 // CommandFieldSpec/CommandVariantSpec/CommandGrammar relocated from `mesh` into `manifest` (ticket
 // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a) — reachable below via `pub use manifest::*;`
 // instead, so no external call site needs to change.
+pub use interaction::*;
 pub use io::{
-    StandardId, SubsetId, Dialect, ArtifactDialect,
-    AnalyzeSource, Confidence as IoConfidence, Analysis, ComposeSource, Composition, ComposeError,
-    IoPayload, ErasedComposeSource, ComposedArtifact, ComposerEntry,
-    IoDirection, IoKey, IoResolveError,
-    register_composer_entries, register_composer_entry_refs, preflight_composer_entry_refs, resolve as io_resolve, dialects_for as io_dialects_for,
-    io_keys_for, list_composer_entries, io_dispatch, io_compose_via, set_io_fallback_dispatcher, IoFallback, IoFallbackDispatcher,
-    WireComposeSource, WireComposedArtifact, wire_list_composer_entries, wire_artifact_compose, wire_decode_composed_artifact,
-    SubsetValidator, SubsetValidatorEntry, subset_validator_entry_of, register_subset_validator, register_subset_validators, preflight_subset_validators,
-    FormatDescriptor, FormatRegistryError, register_format_descriptors, preflight_format_descriptors, format_descriptor, normalize_format_kind, format_accept_filter, formats_csv,
+    dialects_for as io_dialects_for,
+    format_accept_filter,
+    format_descriptor,
+    formats_csv,
+    io_compose_via,
+    io_dispatch,
+    io_keys_for,
+    list_composer_entries,
+    normalize_format_kind,
+    preflight_composer_entry_refs,
+    preflight_format_descriptors,
+    preflight_subset_validators,
+    register_composer_entries,
+    register_composer_entry_refs,
+    register_format_descriptors,
+    register_subset_validator,
+    register_subset_validators,
+    resolve as io_resolve,
+    resolve_ready,
+    set_io_fallback_dispatcher,
+    subset_validator_entry_of,
+    wire_artifact_compose,
+    wire_decode_composed_artifact,
+    wire_list_composer_entries,
+    Analysis,
+    AnalyzeSource,
+    ArtifactDialect,
+    AsyncComposeFn,
+    ComposeError,
     // 🌀️ `io-async-signatures`: the async `ComposerEntry.compose` plumbing — see that module's own
     // doc comments (`ComposeFuture`/`AsyncComposeFn`/`resolve_ready`) for what each does.
-    ComposeFuture, AsyncComposeFn, resolve_ready,
+    ComposeFuture,
+    ComposeSource,
+    ComposedArtifact,
+    ComposerEntry,
+    Composition,
+    Confidence as IoConfidence,
+    Dialect,
+    ErasedComposeSource,
+    FormatDescriptor,
+    FormatRegistryError,
+    IoDirection,
+    IoFallback,
+    IoFallbackDispatcher,
+    IoKey,
+    IoPayload,
+    IoResolveError,
+    StandardId,
+    SubsetId,
+    SubsetValidator,
+    SubsetValidatorEntry,
+    WireComposeSource,
+    WireComposedArtifact,
 };
-pub use platform::{PanelVisibility, Platform, PlatformSpec};
-pub use workflow::*;
-pub use manifest::*;
 pub use manifest as ui;
-pub use interaction::*;
 pub use manifest::kernel::{
-    ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
-    CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
-    ActionRequest, InvocationId, InvocationResult, Effect, HybridLogicalTimestamp, IconRenderExportItem, InverseMutation,
-    KernelMutation, ArtifactDiff, ArtifactHandle, ArtifactId, ArtifactKind,
-    ArtifactVersion, MutationId, PhysicalSize, PluginInstanceId, PresencePeer,
-    PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer,
-    Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
-    WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
+    decode_presence_peer,
+    encode_presence_peer,
+    ActionContext,
+    ActionDef,
+    ActionId,
+    ActionInvocation,
+    ActionRequest,
+    ActorId,
+    AppEvent,
+    AppInstanceId,
+    Appearance,
+    ArtifactDiff,
+    ArtifactHandle,
+    ArtifactId,
+    ArtifactKind,
+    ArtifactVersion,
+    AssetHandle,
+    Capability,
+    CapabilityGrant,
+    CapabilityRequirement,
+    CapabilityToken,
+    CommandContext,
+    CommandId,
+    CommandInvocation,
+    Effect,
+    HybridLogicalTimestamp,
+    IconRenderExportItem,
+    InverseMutation,
+    InvocationId,
+    InvocationResult,
+    KernelMutation,
+    MutationId,
+    PhysicalSize,
+    PluginInstanceId,
+    PresencePeer,
+    PresenceUi,
+    PresenceViewKind,
+    PresenceWindowView,
     // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet A3-kernel-types: `RequestId`
     // is the completion-correlation id every `req`-carrying `Effect` variant now needs at its call
     // site — re-exported here so plugin call sites can name it as `semio_framework::RequestId` /
     // `semio_framework_plugin::RequestId` without a separate import.
     RequestId,
+    Rights,
+    SchemaId,
+    SchemaVersion,
+    Scope,
+    UndoGroup,
+    UndoPolicy,
+    WindowEvent,
+    WindowHandle,
+    WindowInput,
+    WindowKindDef,
+    WindowKindId,
+    WindowOutput,
 };
+pub use manifest::*;
+pub use platform::{PanelVisibility, Platform, PlatformSpec};
+pub use workflow::*;

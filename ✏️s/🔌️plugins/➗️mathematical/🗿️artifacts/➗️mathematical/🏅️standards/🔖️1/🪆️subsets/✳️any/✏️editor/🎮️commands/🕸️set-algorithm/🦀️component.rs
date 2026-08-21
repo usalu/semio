@@ -1,10 +1,10 @@
 //! 🕸️ 🕸️ Mathematical play app commands command — `set-algorithm`.
 
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::MathematicalSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -24,10 +24,10 @@ pub async fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, MathematicalS
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::mathematical::{mathematical_graph, MathematicalCamera};
     use crate::editor::mathematical::commands::{node_graph_edit, node_graph_viewport, set_directed};
     use crate::editor::mathematical::testkit::{dispatch, math_app, MathApp};
     use crate::editor::mathematical::MathematicalCommand;
-    use crate::artifacts::mathematical::{mathematical_graph, MathematicalCamera};
 
     async fn node_graph_edit(operation: serde_json::Value) -> MathematicalCommand {
         MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: serde_json::to_string(&vec![operation]).unwrap() })
@@ -106,7 +106,13 @@ mod tests {
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before, before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })),
+            |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[semio_framework_async_macros::async_test]
@@ -124,7 +130,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_mathematical() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| {
+            mathematical_graph(&app.snapshot().expect("projection")).nodes.len()
+        });
     }
 }
 //#endregion 🧪️Tests

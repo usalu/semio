@@ -26,11 +26,7 @@ pub async fn diff(payload: &ChangeCoefficient, base: &MathematicalSnapshot) -> p
     if current_numer == payload.numer && current_denom == payload.denom {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Coefficient {} is already {}/{}.", payload.label.0, payload.numer, payload.denom));
     }
-    let new_kind = if payload.denom == "1" {
-        EquationNodeKind::Integer { lexeme: payload.numer.clone() }
-    } else {
-        EquationNodeKind::Rational { numer: payload.numer.clone(), denom: payload.denom.clone() }
-    };
+    let new_kind = if payload.denom == "1" { EquationNodeKind::Integer { lexeme: payload.numer.clone() } } else { EquationNodeKind::Rational { numer: payload.numer.clone(), denom: payload.denom.clone() } };
     equation.replace(payload.label, new_kind);
     protocol::MutationOutcome::new(MathematicalDiff { equation: Some(equation), ..Default::default() })
 }

@@ -157,11 +157,9 @@ pub mod model {
 }
 //#endregion 🔖️Model
 
+use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, Hlc};
 use error::{DirectoryError, DirectoryResult};
 use model::*;
-use directory::os_directory::{
-    DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, Hlc,
-};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -327,13 +325,7 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
             let space_id = Uuid::now_v7().to_string();
             let owner_role = if space_kind == DirectorySpaceKind::Archive { DirectorySpaceRole::Spectator } else { DirectorySpaceRole::Author };
             let events = vec![
-                new_event(
-                    clock,
-                    actor,
-                    Some(space_id.clone()),
-                    Some(owner_user_id.clone()),
-                    DirectoryEventBody::SpaceCreated { space_id: space_id.clone(), name, space_kind, visibility, owner_user_id: owner_user_id.clone() },
-                ),
+                new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::SpaceCreated { space_id: space_id.clone(), name, space_kind, visibility, owner_user_id: owner_user_id.clone() }),
                 new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::MemberUpserted { space_id, user_id: owner_user_id, role: owner_role }),
             ];
             Ok(Decision { events, result: None })

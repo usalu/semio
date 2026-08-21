@@ -11,14 +11,14 @@
 
 #[path = "."]
 pub mod codec {
-  #[path = "../../⚙️codec/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../⚙️codec/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 
-  #[path = "../../⚙️codec/🆔️ids/🦀️component.rs"]
-  pub mod ids;
+    #[path = "../../⚙️codec/🆔️ids/🦀️component.rs"]
+    pub mod ids;
 
-  pub use self::ids::*;
+    pub use self::ids::*;
 }
 
 #[path = "../../🚰️source/🦀️component.rs"]
@@ -56,18 +56,18 @@ pub mod conflict;
 
 #[path = "."]
 pub mod wire {
-  #[path = "../../🧾️wire/🦀️component.rs"]
-  mod codec;
-  pub use codec::*;
+    #[path = "../../🧾️wire/🦀️component.rs"]
+    mod codec;
+    pub use codec::*;
 
-  #[path = "../../📡️wire/🦀️component.rs"]
-  mod frames;
-  pub use frames::*;
+    #[path = "../../📡️wire/🦀️component.rs"]
+    mod frames;
+    pub use frames::*;
 
-  // 🧬️ The facade has always surfaced ids/crypto/dictionary through `wire::`.
-  pub use super::crypto::*;
-  pub use super::dictionary::*;
-  pub use super::ids::*;
+    // 🧬️ The facade has always surfaced ids/crypto/dictionary through `wire::`.
+    pub use super::crypto::*;
+    pub use super::dictionary::*;
+    pub use super::ids::*;
 }
 
 #[path = "../../📐️format/🦀️component.rs"]

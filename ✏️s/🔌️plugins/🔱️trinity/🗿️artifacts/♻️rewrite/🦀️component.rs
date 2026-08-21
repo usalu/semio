@@ -1,6 +1,5 @@
 //! ♻️ `trinity.rewrite.rule` artifact — document entities (constitutional: general).
 
-
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use serde::{Deserialize, Serialize};
@@ -58,7 +57,6 @@ impl From<LayoutPoint> for (f64, f64) {
         (point.x, point.y)
     }
 }
-
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 

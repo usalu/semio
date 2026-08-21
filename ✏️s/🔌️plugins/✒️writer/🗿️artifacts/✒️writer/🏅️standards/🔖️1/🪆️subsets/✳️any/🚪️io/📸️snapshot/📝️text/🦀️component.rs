@@ -14,17 +14,31 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`'s own `enc_child`/`dec_child`, the
 /// working reference for a composite subset's handle codec) — a handle is exactly two strings
 /// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
-async fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+async fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-async fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
-async fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+async fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+async fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
+async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
 
-async fn enc_child(c: &WriterDocumentChild) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+async fn enc_child(c: &WriterDocumentChild) -> String {
+    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
+}
 async fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
@@ -42,15 +56,27 @@ async fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String
     let mut saw_schema = false;
     for line in body.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
-        if let Some(rest) = line.strip_prefix("schema=") { snapshot.schema = dec_str(rest)?; saw_schema = true; }
-        else if let Some(rest) = line.strip_prefix("id=") { snapshot.id = dec_str(rest)?; }
-        else if let Some(rest) = line.strip_prefix("languageId=") { snapshot.language_id = dec_str(rest)?; }
-        else if let Some(rest) = line.strip_prefix("uri=") { snapshot.uri = dec_str(rest)?; }
-        else if let Some(rest) = line.strip_prefix("document=") { snapshot.document = dec_child(rest)?; }
-        else { return Err(format!("writer snapshot: unknown line {line:?}")); }
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("schema=") {
+            snapshot.schema = dec_str(rest)?;
+            saw_schema = true;
+        } else if let Some(rest) = line.strip_prefix("id=") {
+            snapshot.id = dec_str(rest)?;
+        } else if let Some(rest) = line.strip_prefix("languageId=") {
+            snapshot.language_id = dec_str(rest)?;
+        } else if let Some(rest) = line.strip_prefix("uri=") {
+            snapshot.uri = dec_str(rest)?;
+        } else if let Some(rest) = line.strip_prefix("document=") {
+            snapshot.document = dec_child(rest)?;
+        } else {
+            return Err(format!("writer snapshot: unknown line {line:?}"));
+        }
     }
-    if !saw_schema { return Err("writer snapshot: missing schema line".to_string()); }
+    if !saw_schema {
+        return Err("writer snapshot: missing schema line".to_string());
+    }
     Ok(snapshot)
 }
 //#endregion 🔖️TextPrimitives
@@ -74,12 +100,7 @@ impl store::ArtifactDsl for WriterSnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_writer_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -162,13 +183,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
     async fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text(
-            "writer.document",
-            "jack",
-            "jack",
-            "writer://jack",
-            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
-        )
+        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -210,4 +225,3 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
-

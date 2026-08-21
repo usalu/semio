@@ -31,10 +31,9 @@
 #![allow(clippy::too_many_arguments)]
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
-
 
 //#region ⚡️SimulationEngine
 #[path = "../../🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs"]
@@ -192,7 +191,6 @@ pub use zone_air::*;
 pub use zone_hvac::*;
 //#endregion 🔖️FlatReExports
 
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -220,20 +218,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod entries {
                                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗃entries/🦀️component.rs"]
@@ -257,18 +255,18 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod replace_model {
-                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/degrades-an-empty-model-payload-to-a-no-op/🦀️component.rs"]
                                     mod tests_degrades_an_empty_model_payload_to_a_no_op;
@@ -431,16 +429,63 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-        pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot;
-        pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::EnergyModelMutation;
+        pub mod op {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::model::standards::v1::subsets::any::schema::diff::EnergyModelDiff;
-
+        pub use crate::artifacts::model::standards::v1::subsets::any::schema::mutations::EnergyModelMutation;
+        pub use crate::artifacts::model::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot;
 
         #[path = "."]
         pub mod examples {

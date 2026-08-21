@@ -72,13 +72,7 @@ pub fn patch_byte_estimate(patch: &crate::UiPatch) -> usize {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn op_text_bytes(op: &crate::UiPatchOp) -> usize {
     match op {
-        crate::UiPatchOp::Upsert(record) => {
-            record.key.len()
-                + component_text_bytes(&record.component)
-                + accessibility_text_bytes(&record.accessibility)
-                + bindings_text_bytes(&record.bindings)
-                + menu_text_bytes(&record.menu)
-        }
+        crate::UiPatchOp::Upsert(record) => record.key.len() + component_text_bytes(&record.component) + accessibility_text_bytes(&record.accessibility) + bindings_text_bytes(&record.bindings) + menu_text_bytes(&record.menu),
         crate::UiPatchOp::SetComponent { component, .. } => component_text_bytes(component),
         crate::UiPatchOp::SetChildren { children, .. } => children.len() * size_of::<crate::UiNodeId>(),
         crate::UiPatchOp::SetAccessibility { accessibility, .. } => accessibility_text_bytes(accessibility),
@@ -198,7 +192,11 @@ fn validate_state(state: &crate::UiSnapshotState, limits: &UiDocumentLimits) -> 
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn to_result(violations: Vec<UiContractViolation>) -> Result<(), Vec<UiContractViolation>> {
-    if violations.is_empty() { Ok(()) } else { Err(violations) }
+    if violations.is_empty() {
+        Ok(())
+    } else {
+        Err(violations)
+    }
 }
 
 /// 🌲️ One stack frame of the iterative preorder walk `validate_core` runs — explicit, not recursive,
@@ -295,16 +293,27 @@ fn validate_core<V: Borrow<crate::UiNodeRecord>>(root: Option<crate::UiNodeId>, 
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum PatchRejection {
-    RevisionMismatch { expected: crate::UiRevision, actual: crate::UiRevision },
+    RevisionMismatch {
+        expected: crate::UiRevision,
+        actual: crate::UiRevision,
+    },
     /// 🕳️ An op named a [`crate::UiNodeId`] that has no record in the receiver's current state — only
     /// possible for ops that mutate an existing node ([`crate::UiPatchOp::SetComponent`]/
     /// [`crate::UiPatchOp::SetLayout`]/[`crate::UiPatchOp::SetActivity`]/
     /// [`crate::UiPatchOp::SetChildren`]/[`crate::UiPatchOp::SetStyle`]/
     /// [`crate::UiPatchOp::SetAccessibility`]/[`crate::UiPatchOp::SetBindings`]/
     /// [`crate::UiPatchOp::SetMenu`]); `Upsert`/`Remove`/`SetRoot` never fail this way.
-    UnknownNode { id: crate::UiNodeId },
-    QuotaExceeded { quota: QuotaKind, actual: usize, max: usize },
-    InvariantViolated { violations: Vec<UiContractViolation> },
+    UnknownNode {
+        id: crate::UiNodeId,
+    },
+    QuotaExceeded {
+        quota: QuotaKind,
+        actual: usize,
+        max: usize,
+    },
+    InvariantViolated {
+        violations: Vec<UiContractViolation>,
+    },
 }
 
 /// 🛡️ Which [`UiDocumentLimits`] field a [`PatchRejection::QuotaExceeded`] names — only the four
@@ -535,15 +544,7 @@ mod tests {
 
     #[test]
     fn apply_patch_remove_deletes_whole_orphaned_subtree() {
-        let mut state = state_with(
-            0,
-            vec![
-                container(0, "root", crate::ContainerRole::Plain, &[1]),
-                container(1, "mid", crate::ContainerRole::Group, &[2, 3]),
-                leaf(2, "a"),
-                leaf(3, "b"),
-            ],
-        );
+        let mut state = state_with(0, vec![container(0, "root", crate::ContainerRole::Plain, &[1]), container(1, "mid", crate::ContainerRole::Group, &[2, 3]), leaf(2, "a"), leaf(3, "b")]);
         let limits = UiDocumentLimits::default();
         let patch = crate::UiPatch {
             surface: state.surface.clone(),
@@ -614,12 +615,7 @@ mod tests {
         let state = state_with(0, vec![container(0, "root", crate::ContainerRole::Plain, &[1]), container(1, "a", crate::ContainerRole::Plain, &[])]);
         let limits = UiDocumentLimits::default();
         let rejection = assert_unchanged(&state, |draft| {
-            let patch = crate::UiPatch {
-                surface: draft.surface.clone(),
-                base_revision: draft.revision,
-                revision: draft.revision.next(),
-                ops: vec![crate::UiPatchOp::SetChildren { id: crate::UiNodeId(1), children: vec![crate::UiNodeId(0)] }],
-            };
+            let patch = crate::UiPatch { surface: draft.surface.clone(), base_revision: draft.revision, revision: draft.revision.next(), ops: vec![crate::UiPatchOp::SetChildren { id: crate::UiNodeId(1), children: vec![crate::UiNodeId(0)] }] };
             apply_patch(draft, &patch, &limits)
         });
         match rejection {
@@ -647,12 +643,7 @@ mod tests {
         let state = state_with(0, vec![leaf(0, "root")]);
         let limits = UiDocumentLimits { max_patch_ops: 1, ..UiDocumentLimits::default() };
         let rejection = assert_unchanged(&state, |draft| {
-            let patch = crate::UiPatch {
-                surface: draft.surface.clone(),
-                base_revision: draft.revision,
-                revision: draft.revision.next(),
-                ops: vec![crate::UiPatchOp::Upsert(leaf(1, "a")), crate::UiPatchOp::Upsert(leaf(2, "b"))],
-            };
+            let patch = crate::UiPatch { surface: draft.surface.clone(), base_revision: draft.revision, revision: draft.revision.next(), ops: vec![crate::UiPatchOp::Upsert(leaf(1, "a")), crate::UiPatchOp::Upsert(leaf(2, "b"))] };
             apply_patch(draft, &patch, &limits)
         });
         assert!(matches!(rejection, PatchRejection::QuotaExceeded { quota: QuotaKind::PatchOps, actual: 2, max: 1 }));
@@ -718,7 +709,8 @@ mod tests {
         let state = state_with(0, vec![container(0, "root", crate::ContainerRole::Plain, &[1]), container(1, "mid", crate::ContainerRole::Plain, &[])]);
         let limits = UiDocumentLimits { max_depth: 0, ..UiDocumentLimits::default() };
         let rejection = assert_unchanged(&state, |draft| {
-            let patch = crate::UiPatch { surface: draft.surface.clone(), base_revision: draft.revision, revision: draft.revision.next(), ops: vec![crate::UiPatchOp::SetActivity { id: crate::UiNodeId(1), activity: crate::Activity::Idle, disabled: false }] };
+            let patch =
+                crate::UiPatch { surface: draft.surface.clone(), base_revision: draft.revision, revision: draft.revision.next(), ops: vec![crate::UiPatchOp::SetActivity { id: crate::UiNodeId(1), activity: crate::Activity::Idle, disabled: false }] };
             apply_patch(draft, &patch, &limits)
         });
         match rejection {
@@ -731,26 +723,14 @@ mod tests {
     //#region 🔖️ValidateSnapshot
     #[test]
     fn validate_snapshot_catches_dangling_child_reference() {
-        let snapshot = crate::UiSnapshot {
-            surface: crate::SurfaceId::from("s"),
-            revision: crate::UiRevision(0),
-            root: crate::UiNodeId(0),
-            nodes: vec![container(0, "root", crate::ContainerRole::Plain, &[404])],
-            layout_epoch: 0,
-        };
+        let snapshot = crate::UiSnapshot { surface: crate::SurfaceId::from("s"), revision: crate::UiRevision(0), root: crate::UiNodeId(0), nodes: vec![container(0, "root", crate::ContainerRole::Plain, &[404])], layout_epoch: 0 };
         let violations = validate_snapshot(&snapshot, &UiDocumentLimits::default()).expect_err("expected violations");
         assert!(violations.iter().any(|v| matches!(v, UiContractViolation::OrphanChild { parent: crate::UiNodeId(0), child: crate::UiNodeId(404) })));
     }
 
     #[test]
     fn validate_snapshot_catches_node_unreachable_from_root() {
-        let snapshot = crate::UiSnapshot {
-            surface: crate::SurfaceId::from("s"),
-            revision: crate::UiRevision(0),
-            root: crate::UiNodeId(0),
-            nodes: vec![leaf(0, "root"), leaf(99, "stray")],
-            layout_epoch: 0,
-        };
+        let snapshot = crate::UiSnapshot { surface: crate::SurfaceId::from("s"), revision: crate::UiRevision(0), root: crate::UiNodeId(0), nodes: vec![leaf(0, "root"), leaf(99, "stray")], layout_epoch: 0 };
         let violations = validate_snapshot(&snapshot, &UiDocumentLimits::default()).expect_err("expected violations");
         assert!(violations.iter().any(|v| matches!(v, UiContractViolation::DanglingRoot { node: crate::UiNodeId(99) })));
     }

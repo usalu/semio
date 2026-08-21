@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DeleteTargetVolume` — a real removal, never a whole-snapshot capture.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dTargetVolumesDelta, Puzzle3dDiff};
+use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dTargetVolumesDelta};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

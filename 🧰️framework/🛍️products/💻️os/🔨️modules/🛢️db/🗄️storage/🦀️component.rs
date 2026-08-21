@@ -49,14 +49,14 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 
-use crate::*;
-use crate::db_ids::{check_len, DbError, ArtifactId};
 use crate::db_durability::{DurabilityClass, EpochFence};
+use crate::db_ids::{check_len, ArtifactId, DbError};
+use crate::*;
 use pack::{ByteRange, ContentHash};
+use semio_framework_async::{Lane, WorkerPool};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use semio_framework_async::{Lane, WorkerPool};
 
 /// @emoji 📊️ This crate's one blocking-bridge queue depth signal — every [`run_blocking_op`]
 /// submission increments it, every completion decrements it, so the Phase 1 exit gate can observe
@@ -1113,233 +1113,239 @@ impl MemoryStorage {
 
 impl WalStorage for MemoryStorage {
     async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let mut wal = lock(&self.wal);
-            let segments = wal.entry(document.clone()).or_default();
-            if segments.contains_key(&index) {
-                return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
-            }
-            segments.insert(index, MemWalSegment { bytes: Vec::new(), sealed: false });
-            Ok(())
+        let mut wal = lock(&self.wal);
+        let segments = wal.entry(document.clone()).or_default();
+        if segments.contains_key(&index) {
+            return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
         }
+        segments.insert(index, MemWalSegment { bytes: Vec::new(), sealed: false });
+        Ok(())
+    }
 
     async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
-            let mut wal = lock(&self.wal);
-            let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            if segment.sealed {
-                return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
-            }
-            segment.bytes.extend_from_slice(bytes);
-            Ok(segment.bytes.len() as u64)
+        let mut wal = lock(&self.wal);
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        if segment.sealed {
+            return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
         }
+        segment.bytes.extend_from_slice(bytes);
+        Ok(segment.bytes.len() as u64)
+    }
 
     async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ Nothing is ever persisted, so every durability class is trivially satisfied in-process.
-        { Ok(()) }
+        {
+            Ok(())
+        }
     }
 
     async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let mut wal = lock(&self.wal);
-            let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            segment.sealed = true;
-            Ok(())
-        }
+        let mut wal = lock(&self.wal);
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        segment.sealed = true;
+        Ok(())
+    }
 
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
-            check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
-            let wal = lock(&self.wal);
-            let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            let start = range.offset as usize;
-            let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
-            if end > segment.bytes.len() {
-                return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", segment.bytes.len())));
-            }
-            Ok(segment.bytes[start..end].to_vec())
+        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+        let wal = lock(&self.wal);
+        let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let start = range.offset as usize;
+        let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
+        if end > segment.bytes.len() {
+            return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", segment.bytes.len())));
         }
+        Ok(segment.bytes[start..end].to_vec())
+    }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            let wal = lock(&self.wal);
-            let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            Ok(segment.bytes.len() as u64)
-        }
+        let wal = lock(&self.wal);
+        let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        Ok(segment.bytes.len() as u64)
+    }
 
     async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let wal = lock(&self.wal);
-            let mut indices: Vec<u64> = wal.get(document).map(|segments| segments.keys().copied().collect()).unwrap_or_default();
-            indices.sort_unstable();
-            Ok(indices)
-        }
+        let wal = lock(&self.wal);
+        let mut indices: Vec<u64> = wal.get(document).map(|segments| segments.keys().copied().collect()).unwrap_or_default();
+        indices.sort_unstable();
+        Ok(indices)
+    }
 
     async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            let mut wal = lock(&self.wal);
-            let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            if segment.sealed {
-                return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
-            }
-            let new_len = new_len as usize;
-            if new_len > segment.bytes.len() {
-                return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
-            }
-            segment.bytes.truncate(new_len);
-            Ok(())
+        let mut wal = lock(&self.wal);
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        if segment.sealed {
+            return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
         }
+        let new_len = new_len as usize;
+        if new_len > segment.bytes.len() {
+            return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
+        }
+        segment.bytes.truncate(new_len);
+        Ok(())
+    }
 
     async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let mut wal = lock(&self.wal);
-            if let Some(segments) = wal.get_mut(document) {
-                segments.remove(&index);
-            }
-            Ok(())
+        let mut wal = lock(&self.wal);
+        if let Some(segments) = wal.get_mut(document) {
+            segments.remove(&index);
         }
+        Ok(())
+    }
 }
 
 impl SnapshotStorage for MemoryStorage {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
-            let mut snapshots = lock(&self.snapshots);
-            snapshots.entry(document.clone()).or_default().insert(generation, bytes.to_vec());
-            Ok(())
-        }
+        let mut snapshots = lock(&self.snapshots);
+        snapshots.entry(document.clone()).or_default().insert(generation, bytes.to_vec());
+        Ok(())
+    }
 
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-            let snapshots = lock(&self.snapshots);
-            snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
-        }
+        let snapshots = lock(&self.snapshots);
+        snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
+    }
 
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            let snapshots = lock(&self.snapshots);
-            Ok(snapshots.get(document).and_then(|generations| generations.keys().max().copied()))
-        }
+        let snapshots = lock(&self.snapshots);
+        Ok(snapshots.get(document).and_then(|generations| generations.keys().max().copied()))
+    }
 
     async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let snapshots = lock(&self.snapshots);
-            let mut generations: Vec<u64> = snapshots.get(document).map(|generations| generations.keys().copied().collect()).unwrap_or_default();
-            generations.sort_unstable();
-            Ok(generations)
-        }
+        let snapshots = lock(&self.snapshots);
+        let mut generations: Vec<u64> = snapshots.get(document).map(|generations| generations.keys().copied().collect()).unwrap_or_default();
+        generations.sort_unstable();
+        Ok(generations)
+    }
 
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            let mut snapshots = lock(&self.snapshots);
-            if let Some(generations) = snapshots.get_mut(document) {
-                generations.remove(&generation);
-            }
-            Ok(())
+        let mut snapshots = lock(&self.snapshots);
+        if let Some(generations) = snapshots.get_mut(document) {
+            generations.remove(&generation);
         }
+        Ok(())
+    }
 }
 
 impl PayloadStorage for MemoryStorage {
     async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-            let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-            let mut payloads = lock(&self.payloads);
-            payloads.entry(hash).or_insert_with(|| bytes.to_vec());
-            Ok(hash)
-        }
+        check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
+        let hash = ContentHash(*blake3::hash(bytes).as_bytes());
+        let mut payloads = lock(&self.payloads);
+        payloads.entry(hash).or_insert_with(|| bytes.to_vec());
+        Ok(hash)
+    }
 
     async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let payloads = lock(&self.payloads);
-            payloads.get(hash).cloned().ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
-        }
+        let payloads = lock(&self.payloads);
+        payloads.get(hash).cloned().ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
+    }
 
-    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> { Ok(lock(&self.payloads).contains_key(hash)) }
+    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+        Ok(lock(&self.payloads).contains_key(hash))
+    }
 
     async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            lock(&self.payloads).remove(hash);
-            Ok(())
-        }
+        lock(&self.payloads).remove(hash);
+        Ok(())
+    }
 
     async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let payloads = lock(&self.payloads);
-            payloads.get(hash).map(|bytes| bytes.len() as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
-        }
+        let payloads = lock(&self.payloads);
+        payloads.get(hash).map(|bytes| bytes.len() as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
+    }
 }
 
 impl CatalogStorage for MemoryStorage {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> { Ok(lock(&self.catalog).clone()) }
+    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+        Ok(lock(&self.catalog).clone())
+    }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
-            check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
-            let mut catalog = lock(&self.catalog);
-            let current_fence = catalog.as_ref().map_or(EpochFence::INITIAL, |(_, fence)| *fence);
-            expected.check(current_fence)?;
-            let new_fence = expected.next();
-            *catalog = Some((new_bytes.to_vec(), new_fence));
-            Ok(new_fence)
-        }
+        check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
+        let mut catalog = lock(&self.catalog);
+        let current_fence = catalog.as_ref().map_or(EpochFence::INITIAL, |(_, fence)| *fence);
+        expected.check(current_fence)?;
+        let new_fence = expected.next();
+        *catalog = Some((new_bytes.to_vec(), new_fence));
+        Ok(new_fence)
+    }
 }
 
 impl IndexStorage for MemoryStorage {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
-            let mut runs = lock(&self.index_runs);
-            runs.entry(document.clone()).or_default().insert(run_id, bytes.to_vec());
-            Ok(())
-        }
+        let mut runs = lock(&self.index_runs);
+        runs.entry(document.clone()).or_default().insert(run_id, bytes.to_vec());
+        Ok(())
+    }
 
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-            let runs = lock(&self.index_runs);
-            runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
-        }
+        let runs = lock(&self.index_runs);
+        runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
+    }
 
     async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let runs = lock(&self.index_runs);
-            let mut ids: Vec<u64> = runs.get(document).map(|runs| runs.keys().copied().collect()).unwrap_or_default();
-            ids.sort_unstable();
-            Ok(ids)
-        }
+        let runs = lock(&self.index_runs);
+        let mut ids: Vec<u64> = runs.get(document).map(|runs| runs.keys().copied().collect()).unwrap_or_default();
+        ids.sort_unstable();
+        Ok(ids)
+    }
 
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            let mut runs = lock(&self.index_runs);
-            if let Some(runs) = runs.get_mut(document) {
-                runs.remove(&run_id);
-            }
-            Ok(())
+        let mut runs = lock(&self.index_runs);
+        if let Some(runs) = runs.get_mut(document) {
+            runs.remove(&run_id);
         }
+        Ok(())
+    }
 }
 
 impl LeaseStorage for MemoryStorage {
     async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let mut leases = lock(&self.leases);
-            let fence = match leases.get(resource) {
-                Some(info) if now_ms < info.expires_at_ms => {
-                    if info.holder != holder {
-                        return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
-                    }
-                    info.fence
+        let mut leases = lock(&self.leases);
+        let fence = match leases.get(resource) {
+            Some(info) if now_ms < info.expires_at_ms => {
+                if info.holder != holder {
+                    return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
                 }
-                Some(info) => info.fence.next(),
-                None => EpochFence::INITIAL,
-            };
-            leases.insert(resource.to_string(), LeaseInfo { resource: resource.to_string(), holder: holder.to_string(), fence, expires_at_ms: now_ms + ttl_ms });
-            Ok(fence)
-        }
+                info.fence
+            }
+            Some(info) => info.fence.next(),
+            None => EpochFence::INITIAL,
+        };
+        leases.insert(resource.to_string(), LeaseInfo { resource: resource.to_string(), holder: holder.to_string(), fence, expires_at_ms: now_ms + ttl_ms });
+        Ok(fence)
+    }
 
     async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let mut leases = lock(&self.leases);
-            let info = leases.get_mut(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-            if now_ms >= info.expires_at_ms {
-                return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
-            }
-            if info.holder != holder {
-                return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-            }
-            fence.check(info.fence)?;
-            info.expires_at_ms = now_ms + ttl_ms;
-            Ok(())
+        let mut leases = lock(&self.leases);
+        let info = leases.get_mut(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+        if now_ms >= info.expires_at_ms {
+            return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
         }
+        if info.holder != holder {
+            return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
+        }
+        fence.check(info.fence)?;
+        info.expires_at_ms = now_ms + ttl_ms;
+        Ok(())
+    }
 
     async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let mut leases = lock(&self.leases);
-            let info = leases.get(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-            if info.holder != holder {
-                return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-            }
-            fence.check(info.fence)?;
-            leases.remove(resource);
-            Ok(())
+        let mut leases = lock(&self.leases);
+        let info = leases.get(resource).ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+        if info.holder != holder {
+            return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
         }
+        fence.check(info.fence)?;
+        leases.remove(resource);
+        Ok(())
+    }
 
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let leases = lock(&self.leases);
-            Ok(leases.get(resource).filter(|info| now_ms < info.expires_at_ms).cloned())
-        }
+        let leases = lock(&self.leases);
+        Ok(leases.get(resource).filter(|info| now_ms < info.expires_at_ms).cloned())
+    }
 }
 
 impl MemoryStorage {
@@ -1363,9 +1369,9 @@ impl MemoryStorage {
 /// blocking the calling async task's own thread — see the module doc's "Async-first" section.
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
 mod fs_storage {
-    use super::{run_blocking_op, ByteRange, ContentHash, DbError, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
-    use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use super::check_len;
+    use super::{run_blocking_op, ArtifactId, ByteRange, ContentHash, DbError, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
+    use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use semio_framework_async::WorkerPool;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::path::{Path, PathBuf};
@@ -1374,7 +1380,7 @@ mod fs_storage {
     /// @emoji 🚨️ Wraps a `std::io::Error` into `DbError::Io` — the only place `std::io::Error` is
     /// allowed to appear, per the contract's no-`std::io::Error`-in-public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-    // 🚫️async: E4 fn-pointer slot
+                                             // 🚫️async: E4 fn-pointer slot
     fn io_err(err: std::io::Error) -> DbError {
         DbError::Io(err.to_string())
     }
@@ -1688,7 +1694,9 @@ mod fs_storage {
             let root = self.root.clone();
             let document = document.clone();
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await }
+            {
+                run_blocking_op(pool.as_deref(), move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await
+            }
         }
 
         async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
@@ -1772,14 +1780,18 @@ mod fs_storage {
             let root = self.root.clone();
             let document = document.clone();
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await }
+            {
+                run_blocking_op(pool.as_deref(), move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await
+            }
         }
 
         async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await }
+            {
+                run_blocking_op(pool.as_deref(), move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await
+            }
         }
 
         async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
@@ -1843,7 +1855,9 @@ mod fs_storage {
             let root = self.root.clone();
             let hash = *hash;
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || Ok(payload_path(&root, &hash).exists())).await }
+            {
+                run_blocking_op(pool.as_deref(), move || Ok(payload_path(&root, &hash).exists())).await
+            }
         }
 
         async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
@@ -1880,7 +1894,9 @@ mod fs_storage {
         async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let root = self.root.clone();
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || read_root_sync(&root)).await }
+            {
+                run_blocking_op(pool.as_deref(), move || read_root_sync(&root)).await
+            }
         }
 
         async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
@@ -1973,7 +1989,9 @@ mod fs_storage {
             let root = self.root.clone();
             let document = document.clone();
             let pool = self.pool.clone();
-            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await }
+            {
+                run_blocking_op(pool.as_deref(), move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await
+            }
         }
 
         async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
@@ -2089,7 +2107,6 @@ mod fs_storage {
             }
         }
     }
-
 }
 
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]

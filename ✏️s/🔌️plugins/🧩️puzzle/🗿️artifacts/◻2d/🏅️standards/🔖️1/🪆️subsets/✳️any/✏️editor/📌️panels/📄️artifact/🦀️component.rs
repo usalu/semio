@@ -43,24 +43,14 @@ pub async fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_action(
-                id.to_string(),
-                Label::data(node_label(node)),
-                node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string),
-                puzzle2d_interaction_select(PUZZLE2D_GRANULARITY_NODE, id),
-            ))
+            Some(tree_item_with_action(id.to_string(), Label::data(node_label(node)), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_interaction_select(PUZZLE2D_GRANULARITY_NODE, id)))
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_action(
-                id.to_string(),
-                Label::data(edge_label(edge, fixture)),
-                edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
-                puzzle2d_interaction_select(PUZZLE2D_GRANULARITY_NODE, id),
-            ))
+            Some(tree_item_with_action(id.to_string(), Label::data(edge_label(edge, fixture)), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_interaction_select(PUZZLE2D_GRANULARITY_NODE, id)))
         })
         .collect();
     PanelTreeBuilder::new("puzzle2d-play-document")

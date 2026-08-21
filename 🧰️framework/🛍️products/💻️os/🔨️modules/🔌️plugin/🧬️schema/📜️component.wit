@@ -909,10 +909,14 @@ interface reactor {
     max-patch-bytes: u32,
     max-frames: u32,
   }
+  record job-checkpoint {
+    state: list<u8>,
+    applied-progress: u64,
+  }
   variant turn-status {
     idle,
     more-work,
-    checkpoint-ready,
+    checkpoint-ready(job-checkpoint),
     faulted(list<u8>),
   }
   /// 👥️ One RENDER-PLANE presence signal produced by this turn — pack-encoded

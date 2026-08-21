@@ -9,21 +9,20 @@
 //! `render` → body-key → node, plus `import_media`'s `"chapters:in"` importer (an editor-level override,
 //! not a command).
 
+use crate::artifacts::playbook::flatten_playbook_blocks;
+use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
+use crate::artifacts::playbook::schema::default_block;
+use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, set_locale, update_playbook};
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
-use crate::artifacts::playbook::flatten_playbook_blocks;
-use crate::artifacts::playbook::schema::default_block;
-use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
-use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
-use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, Dialect, Editor, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaError, MediaPayload, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -126,7 +125,14 @@ impl ArtifactEditor for PlaybookPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &PlaybookCommand, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &PlaybookCommand,
+        doc: &ArtifactView<'_, PlaybookSnapshot>,
+        cfg: &ConfigView<'_, PlaybookConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -279,8 +285,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::playbook::testkit::{dispatch, playbook_app};
     use crate::artifacts::playbook::op::AddBlock;
+    use crate::editor::playbook::testkit::{dispatch, playbook_app};
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{MediaClass, MediaForm};
 
@@ -302,7 +308,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+            store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
     }
 

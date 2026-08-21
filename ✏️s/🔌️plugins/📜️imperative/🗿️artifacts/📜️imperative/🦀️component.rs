@@ -26,7 +26,8 @@ pub use neural_engine::{Dictionary, Registry, Value};
 /// this artifact's own schema declares (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the
 /// canonical surface id is `s.imperative.imperative@1/*#editor` / `s.imperative.imperative@1/*#viewer`.
-pub const IMPERATIVE_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.imperative.imperative", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const IMPERATIVE_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.imperative.imperative", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 /// 🌱️ View of a snapshot seed map as a neural [`Dictionary`] for execution.
 pub async fn seed_dictionary(seed: &BTreeMap<String, Value>) -> Dictionary {

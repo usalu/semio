@@ -120,7 +120,7 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 impl Mutation<PdfSnapshot> for PdfMutation {
     type Diff = PdfDiff;
 
-    async fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
             PdfMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -142,7 +142,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
     /// every variant, proven by `mutation_apply_inverse_round_trips_every_variant` below.
-    async fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
         match self {
             PdfMutation::NoMutation => vec![PdfMutation::NoMutation],
             PdfMutation::SetSnapshot { .. } => vec![PdfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -314,10 +314,10 @@ fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
 }
 
 impl OpText for PdfMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_pdf_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_pdf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -330,7 +330,7 @@ impl OpText for PdfMutation {
 /// genuine LEB128-varint/length-prefixed recursive binary (reusing the diff facet's own
 /// `pub(crate)` primitives), never the text form's bytes.
 impl OpBinary for PdfMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             PdfMutation::NoMutation => 0,
             PdfMutation::SetSnapshot { .. } => 1,
@@ -356,7 +356,7 @@ impl OpBinary for PdfMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_pdf_page_bin(page, &mut out);
             }
-            PdfMutation::RemovePage { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64).await,
+            PdfMutation::RemovePage { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
             PdfMutation::SetPageMediaBox { index, media_box } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_box_bin(media_box, &mut out);
@@ -402,39 +402,39 @@ impl OpBinary for PdfMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("op format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
         }
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
             0 => Ok(PdfMutation::NoMutation),
             1 => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             2 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let page = dec_pdf_page_bin(&mut reader).map_err(|e| malformed("op page", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(PdfMutation::InsertPage { index, page })
             }
-            3 => Ok(PdfMutation::RemovePage { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            3 => Ok(PdfMutation::RemovePage { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             4 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let media_box = dec_box_bin(&mut reader).map_err(|e| malformed("op media_box", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(PdfMutation::SetPageMediaBox { index, media_box })
             }
             5 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let has = reader.read_u8().await.map_err(|e| malformed("op crop_box presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let has = reader.read_u8().map_err(|e| malformed("op crop_box presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 if has > 1 {
-                    return Err(malformed("op crop_box presence", reader.position().await - 1, format!("expected 0 or 1, got {has}")));
+                    return Err(malformed("op crop_box presence", reader.position() - 1, format!("expected 0 or 1, got {has}")));
                 }
                 let crop_box = if has != 0 { Some(dec_box_bin(&mut reader).map_err(|e| malformed("op crop_box", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(PdfMutation::SetPageCropBox { index, crop_box })
             }
             6 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(PdfMutation::AppendPageContent { index, text })
             }
@@ -471,8 +471,8 @@ impl OpBinary for PdfMutation {
             14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             other => Err(malformed("op tag", 1, format!("unknown PdfMutation tag {other}"))),
         }?;
-        if reader.remaining().await != 0 {
-            return Err(malformed("op trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining().await)));
+        if reader.remaining() != 0 {
+            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
         Ok(mutation)
     }

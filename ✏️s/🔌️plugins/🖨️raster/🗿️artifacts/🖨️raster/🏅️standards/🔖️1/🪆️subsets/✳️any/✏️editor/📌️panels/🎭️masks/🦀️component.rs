@@ -1,9 +1,9 @@
 //! 🎭️ Raster play app panel — masked layers.
 
+use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{mask_row_id, RASTER_TREE_PREFIX};
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode};
 
 //#region 🔖️Constants
@@ -21,10 +21,7 @@ pub async fn definition() -> PanelTabDefinition {
 async fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterPlayLabels) {
     if let RasterLayerNode::Pixel { id, name, mask, .. } | RasterLayerNode::Group { id, name, mask, .. } = layer {
         if mask.as_ref().is_some_and(|mask| mask.enabled) {
-            items.push(UiTreeItemNode {
-                icon_id: Some("scan".into()),
-                ..tree_item_desc(mask_row_id(id), Label::data(format!("{name} {}", labels.mask_suffix.as_str())), Some("mask".into()))
-            });
+            items.push(UiTreeItemNode { icon_id: Some("scan".into()), ..tree_item_desc(mask_row_id(id), Label::data(format!("{name} {}", labels.mask_suffix.as_str())), Some("mask".into())) });
         }
     }
     if let RasterLayerNode::Group { children, .. } = layer {

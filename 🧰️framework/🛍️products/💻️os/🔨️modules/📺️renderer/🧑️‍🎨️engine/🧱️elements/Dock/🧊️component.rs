@@ -9,7 +9,8 @@
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
-    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
+    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
+    WindowLayoutWindowNode, WindowStackCorner,
 };
 
 pub type DockPath = Vec<usize>;
@@ -59,12 +60,7 @@ fn flat_index_for_corner_insert(windows: &[DockStackTab], corner: WindowStackCor
 }
 
 fn tabs_by_corner(windows: &[DockStackTab]) -> [(WindowStackCorner, Vec<&DockStackTab>); 4] {
-    let mut groups: [(WindowStackCorner, Vec<&DockStackTab>); 4] = [
-        (WindowStackCorner::TopLeft, Vec::new()),
-        (WindowStackCorner::TopRight, Vec::new()),
-        (WindowStackCorner::BottomLeft, Vec::new()),
-        (WindowStackCorner::BottomRight, Vec::new()),
-    ];
+    let mut groups: [(WindowStackCorner, Vec<&DockStackTab>); 4] = [(WindowStackCorner::TopLeft, Vec::new()), (WindowStackCorner::TopRight, Vec::new()), (WindowStackCorner::BottomLeft, Vec::new()), (WindowStackCorner::BottomRight, Vec::new())];
     for tab in windows {
         let slot = match tab.corner {
             WindowStackCorner::TopLeft => 0,
@@ -293,13 +289,7 @@ impl DockState {
     }
 
     /// 🧭️ Per-corner tab-bar hit regions (and tab widths) for dock drop targeting.
-    pub fn stack_corner_tab_bar_rects(
-        &self,
-        bounds: Rect,
-        theme: &Theme,
-        atlas: &mut FontAtlas,
-        window_labels: &HashMap<String, String>,
-    ) -> Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)> {
+    pub fn stack_corner_tab_bar_rects(&self, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>) -> Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)> {
         let mut out = Vec::new();
         if let Some(path) = &self.maximized_stack {
             if let Some(DockNode::Stack { windows, .. }) = node_at(&self.root, path) {
@@ -620,40 +610,18 @@ fn axis_from_children(kind: &str, children: &[WindowLayoutChild], size: Option<f
 }
 
 fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
-    let windows: Vec<DockStackTab> = stack
-        .children
-        .iter()
-        .map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft)))
-        .collect();
-    let active = stack
-        .active_window_kind_id
-        .clone()
-        .filter(|id| windows.iter().any(|w| w.window_id == *id))
-        .or_else(|| windows.first().map(|w| w.window_id.clone()))
-        .unwrap_or_default();
+    let windows: Vec<DockStackTab> = stack.children.iter().map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft))).collect();
+    let active = stack.active_window_kind_id.clone().filter(|id| windows.iter().any(|w| w.window_id == *id)).or_else(|| windows.first().map(|w| w.window_id.clone())).unwrap_or_default();
     DockNode::Stack { windows, active }
 }
 
-
 fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode {
-        kind: "window".into(),
-        window_kind_id: tab.window_id.clone(),
-        title: None,
-        instance_id: None,
-        template_id: None,
-        corner: Some(tab.corner),
-    }
+    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: tab.window_id.clone(), title: None, instance_id: None, template_id: None, corner: Some(tab.corner) }
 }
 
 pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
     match node {
-        DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: Some(active.clone()),
-            children: windows.iter().map(layout_window_node).collect(),
-        }),
+        DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
         DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
         DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
     }
@@ -661,12 +629,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
 
 fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
     match node {
-        DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: Some(size as f64),
-            active_window_kind_id: Some(active.clone()),
-            children: windows.iter().map(layout_window_node).collect(),
-        }),
+        DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size as f64), active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
         DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
         DockNode::Column(children) => {
             WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
@@ -747,13 +710,7 @@ pub fn compute_tab_insert_index(pointer_x: f32, tab_bar: Rect, tab_widths: &[f32
     tab_widths.len()
 }
 
-pub fn compute_dock_drop_zone(
-    pointer_x: f32,
-    pointer_y: f32,
-    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
-    bodies: &[(DockPath, Rect, String)],
-    canvas: Rect,
-) -> Option<DockDropZone> {
+pub fn compute_dock_drop_zone(pointer_x: f32, pointer_y: f32, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect) -> Option<DockDropZone> {
     for (path, corner, rect, widths) in tab_bars {
         if rect.contains(pointer_x, pointer_y) {
             let index = compute_tab_insert_index(pointer_x, *rect, widths, 4.0);
@@ -784,13 +741,7 @@ pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
 }
 
 /// @emoji 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
-pub fn drop_zone_indicator_rect(
-    zone: &DockDropZone,
-    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
-    bodies: &[(DockPath, Rect, String)],
-    canvas: Rect,
-    gap: f32,
-) -> Option<Rect> {
+pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect, gap: f32) -> Option<Rect> {
     match zone {
         DockDropZone::Tab { stack_path, corner, index } => {
             let (_, _, tab_bar, widths) = tab_bars.iter().find(|(path, bar_corner, _, _)| path == stack_path && bar_corner == corner)?;
@@ -851,15 +802,7 @@ fn dock_tab_action_width(theme: &Theme) -> f32 {
     14.0 + theme.padding_standard
 }
 
-fn collect_corner_tab_bars_for_stack(
-    path: &DockPath,
-    windows: &[DockStackTab],
-    bounds: Rect,
-    theme: &Theme,
-    atlas: &mut FontAtlas,
-    window_labels: &HashMap<String, String>,
-    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
-) {
+fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
     let tab_h = theme.control_height;
     let pad = 8.0;
     for (corner, tabs) in tabs_by_corner(windows) {
@@ -882,15 +825,7 @@ fn collect_corner_tab_bars_for_stack(
     }
 }
 
-fn collect_stack_corner_tab_bars(
-    node: &DockNode,
-    bounds: Rect,
-    path: &[usize],
-    theme: &Theme,
-    atlas: &mut FontAtlas,
-    window_labels: &HashMap<String, String>,
-    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
-) {
+fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
     match node {
         DockNode::Row(children) => {
             let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
@@ -1036,13 +971,8 @@ fn diff_dock_node(old: &DockNode, next: DockNode) -> DockNode {
             if old_windows == next_windows {
                 return old.clone();
             }
-            let same_membership = old_windows.len() == next_windows.len()
-                && old_windows.iter().all(|tab| next_windows.iter().any(|next| next.window_id == tab.window_id));
-            let active = if same_membership && old_windows.iter().any(|tab| tab.window_id == *old_active) {
-                old_active.clone()
-            } else {
-                next_active.clone()
-            };
+            let same_membership = old_windows.len() == next_windows.len() && old_windows.iter().all(|tab| next_windows.iter().any(|next| next.window_id == tab.window_id));
+            let active = if same_membership && old_windows.iter().any(|tab| tab.window_id == *old_active) { old_active.clone() } else { next_active.clone() };
             DockNode::Stack { windows: next_windows.clone(), active }
         }
         (DockNode::Row(old_children), DockNode::Row(next_children)) => DockNode::Row(diff_axis_children(old_children, next_children)),
@@ -1118,17 +1048,7 @@ fn render_node(state: &DockState, ctx: &mut DockRenderContext<'_>, node: &DockNo
 const SPLIT_VIS_PX: f32 = 6.0;
 const SPLIT_HIT_MIN_PX: f32 = 20.0;
 
-fn render_axis(
-    state: &DockState,
-    ctx: &mut DockRenderContext<'_>,
-    children: &[(DockNode, f32)],
-    bounds: Rect,
-    path: &[usize],
-    horizontal: bool,
-    body_fill: bool,
-    render_body: &mut dyn FnMut(Rect, &str),
-    outer_split: Option<(DockPath, usize, bool)>,
-) {
+fn render_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str), outer_split: Option<(DockPath, usize, bool)>) {
     let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
     if horizontal {
         let mut x = bounds.x;
@@ -1307,26 +1227,12 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
                 let action_hovered = action_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
                 let action_tint = chrome_item_text(theme, false, action_hovered);
                 let _ = paint_dock_tab_icon(ctx, icon_id, action_rect.x + theme.padding_standard * 0.5, action_rect, action_tint);
-                ctx.input.register_hit(HitTarget {
-                    rect: action_rect,
-                    event: None,
-                    control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)),
-                    kind: HitKind::Button,
-                    drag_axis: None,
-                    drag_data: None,
-                });
+                ctx.input.register_hit(HitTarget { rect: action_rect, event: None, control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 content_x += action_w;
             }
             let select_w = (tab.rect.w - action_w * 3.0).max(theme.padding_standard * 2.0);
             let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
-            ctx.input.register_hit(HitTarget {
-                rect: select_rect,
-                event: None,
-                control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)),
-                kind: HitKind::Window,
-                drag_axis: None,
-                drag_data: None,
-            });
+            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
         }
         ctx.draw.end_glass_content();
     }
@@ -1379,11 +1285,7 @@ impl WindowSilhouette {
         let height = bounds.h.max(0.0);
         let top_depth = top.depth.max(0.0).min(height);
         let bottom_depth = bottom.depth.max(0.0).min((height - top_depth).max(0.0));
-        Self {
-            bounds,
-            top: WindowSilhouetteEdge::new(top_depth, Self::normalize_spans(top.spans, width)),
-            bottom: WindowSilhouetteEdge::new(bottom_depth, Self::normalize_spans(bottom.spans, width)),
-        }
+        Self { bounds, top: WindowSilhouetteEdge::new(top_depth, Self::normalize_spans(top.spans, width)), bottom: WindowSilhouetteEdge::new(bottom_depth, Self::normalize_spans(bottom.spans, width)) }
     }
 
     /// 🪟️ Projects measured top/bottom chip spans into the normalized v1 model.
@@ -1395,13 +1297,7 @@ impl WindowSilhouette {
     pub fn from_measured_top(bounds: Rect, tabs_w: f32, controls_w: f32, depth: f32) -> Self {
         let tabs_right = tabs_w.max(0.0).min(bounds.w);
         let controls_left = (bounds.w - controls_w.max(0.0)).max(tabs_right).min(bounds.w);
-        Self::from_measured_edges(
-            bounds,
-            vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)],
-            Vec::new(),
-            depth,
-            0.0,
-        )
+        Self::from_measured_edges(bounds, vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)], Vec::new(), depth, 0.0)
     }
 
     fn normalize_spans(spans: Vec<WindowSilhouetteSpan>, width: f32) -> Vec<WindowSilhouetteSpan> {
@@ -1458,12 +1354,7 @@ impl WindowSilhouette {
 
     /// 🪟️ Returns the chrome-safe center band for dock targets and auxiliary rails.
     pub fn safe_body_rect(&self) -> Rect {
-        Rect::new(
-            self.bounds.x,
-            self.bounds.y + self.top.depth,
-            self.bounds.w,
-            (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0),
-        )
+        Rect::new(self.bounds.x, self.bounds.y + self.top.depth, self.bounds.w, (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0))
     }
 
     /// 🪟️ Returns the normalized document-layout clearances `(top, bottom)`.
@@ -1531,14 +1422,7 @@ struct StackCapLayout {
     bottom_spans: Vec<WindowSilhouetteSpan>,
 }
 
-fn layout_stack_cap(
-    windows: &[DockStackTab],
-    labels: &HashMap<String, String>,
-    icon_ids: &HashMap<String, String>,
-    atlas: &mut FontAtlas,
-    theme: &Theme,
-    bounds: Rect,
-) -> StackCapLayout {
+fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect) -> StackCapLayout {
     let tab_h = theme.control_height;
     let mut groups = Vec::new();
     let mut top_spans = Vec::new();
@@ -1666,7 +1550,6 @@ mod tests {
         DockNode::Stack { windows: tabs(ids), active: active.into() }
     }
 
-
     use crate::shell::ShellState;
     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
@@ -1784,10 +1667,7 @@ mod tests {
     #[test]
     fn window_silhouette_clip_union_excludes_cap_gap() {
         let silhouette = WindowSilhouette::from_measured_top(Rect::new(10.0, 20.0, 300.0, 200.0), 80.0, 60.0, 32.0);
-        assert_eq!(
-            silhouette.content_clip_rects(),
-            vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]
-        );
+        assert_eq!(silhouette.content_clip_rects(), vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]);
         assert_eq!(silhouette.content_bounds(), Rect::new(10.0, 20.0, 300.0, 200.0));
         assert_eq!(silhouette.safe_body_rect(), Rect::new(10.0, 52.0, 300.0, 168.0));
         assert!(!silhouette.content_clip_rects().iter().any(|rect| rect.contains(150.0, 30.0)));
@@ -1797,10 +1677,7 @@ mod tests {
     fn window_silhouette_v1_matches_typescript_fixture_for_merging_bottom_and_containment() {
         let normalized = WindowSilhouette::new(
             Rect::new(0.0, 0.0, 200.0, 100.0),
-            WindowSilhouetteEdge::new(
-                24.0,
-                vec![WindowSilhouetteSpan::new(160.0, 220.0), WindowSilhouetteSpan::new(60.25, 90.0), WindowSilhouetteSpan::new(0.0, 60.0), WindowSilhouetteSpan::new(90.25, 120.0)],
-            ),
+            WindowSilhouetteEdge::new(24.0, vec![WindowSilhouetteSpan::new(160.0, 220.0), WindowSilhouetteSpan::new(60.25, 90.0), WindowSilhouetteSpan::new(0.0, 60.0), WindowSilhouetteSpan::new(90.25, 120.0)]),
             WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
         );
         assert_eq!(normalized.top.spans, vec![WindowSilhouetteSpan::new(0.0, 120.0), WindowSilhouetteSpan::new(160.0, 200.0)]);
@@ -1809,10 +1686,7 @@ mod tests {
             WindowSilhouetteEdge::new(24.0, vec![WindowSilhouetteSpan::new(160.0, 200.0), WindowSilhouetteSpan::new(0.0, 60.0)]),
             WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
         );
-        assert_eq!(
-            silhouette.glass_regions(),
-            vec![Rect::new(0.0, 0.0, 60.0, 24.0), Rect::new(160.0, 0.0, 40.0, 24.0), Rect::new(0.0, 84.0, 40.0, 16.0), Rect::new(80.0, 84.0, 40.0, 16.0)]
-        );
+        assert_eq!(silhouette.glass_regions(), vec![Rect::new(0.0, 0.0, 60.0, 24.0), Rect::new(160.0, 0.0, 40.0, 24.0), Rect::new(0.0, 84.0, 40.0, 16.0), Rect::new(80.0, 84.0, 40.0, 16.0)]);
         assert_eq!(silhouette.safe_clearances(), (24.0, 16.0));
         assert!(silhouette.contains(20.0, 12.0));
         assert!(!silhouette.contains(140.0, 12.0));
@@ -1850,10 +1724,7 @@ mod tests {
     #[test]
     fn apply_drop_tab_moves_window_to_target_corner() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
-        dock.root = DockNode::Row(vec![
-            (stack_tabs(&["a", "x"], "a"), 0.5),
-            (stack_tabs(&["b"], "b"), 0.5),
-        ]);
+        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]);
         assert!(dock.remove_window("a"));
         let payload = tab_payload("a", vec![0], 0);
         let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::BottomRight, index: 0 };
@@ -1877,11 +1748,7 @@ mod tests {
         let icon_ids = HashMap::new();
         let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
         dock.paint_chrome(&mut ctx, bounds, true);
-        let fill = draw
-            .layers
-            .iter()
-            .find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h]))
-            .expect("full silhouette content fill");
+        let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
         assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(3));
         assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
     }
@@ -2263,7 +2130,10 @@ mod tests {
         let actions = vec![
             ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
             ActionDefinition {
-                args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
+                args: vec![
+                    ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
+                    ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) },
+                ],
                 keys: Some("mod+e".into()),
                 ..ActionDefinition::new_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
             },

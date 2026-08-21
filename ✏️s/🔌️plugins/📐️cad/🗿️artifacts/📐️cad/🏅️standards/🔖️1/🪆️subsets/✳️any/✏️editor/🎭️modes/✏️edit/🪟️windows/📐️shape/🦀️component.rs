@@ -1,11 +1,11 @@
 //! 📐️ CAD play app — the Shape window: the `spatial.shape` pane's world-3d viewport.
 
+use crate::artifacts::cad::CadPaneId;
+use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::options;
 use crate::editor::cad::terminology::CadLabels;
-use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::{CadPlayRuntime, CadPlayView};
-use crate::artifacts::cad::CadPaneId;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
 use ui_wgpu::wgpu::SurfaceKind;
 

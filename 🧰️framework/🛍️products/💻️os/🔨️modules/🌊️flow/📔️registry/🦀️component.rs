@@ -5,15 +5,12 @@ use neural_engine as neural;
 use std::collections::BTreeMap;
 use std::sync::{Arc, LazyLock, Mutex};
 
-use neural::{
-    Dictionary, EvalError, NeuralCache, OperatorImpl, OperatorInfo,
-};
 use flow_extension_sdk::FlowExtensionManifest;
+use neural::{Dictionary, EvalError, NeuralCache, OperatorImpl, OperatorInfo};
 use serde::{Deserialize, Serialize};
 
 use crate::catalogue::*;
 use crate::host::*;
-
 
 // #region 🔖️ExtensionRegistry
 /// 🧩️ One installable flow extension (built-in or contributed).
@@ -48,27 +45,19 @@ pub(crate) struct FlowExtensionRegistryState {
     pub(crate) generation: u64,
 }
 
-pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
-    contributed: BTreeMap::new(),
-    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
-    generation: 0,
-}));
+pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> =
+    LazyLock::new(|| Mutex::new(FlowExtensionRegistryState { contributed: BTreeMap::new(), registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())), generation: 0 }));
 
 /// 🔗 Host-linked extension installers — real `OperatorImpl`s compiled into the consuming plugin
 /// (procedural/flow). Preferred over `ContributedExtensionStub` until extension-world WIT invoke is wired.
 type LinkedFlowExtensionInstall = fn(&mut neural::Registry);
 
-static LINKED_FLOW_EXTENSION_INSTALLERS: LazyLock<Mutex<BTreeMap<String, LinkedFlowExtensionInstall>>> =
-    LazyLock::new(|| Mutex::new(BTreeMap::new()));
+static LINKED_FLOW_EXTENSION_INSTALLERS: LazyLock<Mutex<BTreeMap<String, LinkedFlowExtensionInstall>>> = LazyLock::new(|| Mutex::new(BTreeMap::new()));
 
 /// 🔗 Registers an in-process installer for `extension_id` (e.g. `"brep"`, `"math"`).
 pub fn register_linked_flow_extension_installer(extension_id: impl Into<String>, install: LinkedFlowExtensionInstall) {
-    LINKED_FLOW_EXTENSION_INSTALLERS
-        .lock()
-        .expect("linked flow extension installers")
-        .insert(extension_id.into(), install);
+    LINKED_FLOW_EXTENSION_INSTALLERS.lock().expect("linked flow extension installers").insert(extension_id.into(), install);
 }
-
 
 /// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
 pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
@@ -100,11 +89,7 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         }
         let extension_id = manifest.id.clone();
         let operator_id = info.id.clone();
-        registry.register_operator(
-            info,
-            vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
-            &[],
-        );
+        registry.register_operator(info, vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }], &[]);
     }
     let _ = plugin_id;
     registry.finalize();
@@ -205,10 +190,7 @@ pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) {
     let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
     let id = manifest.id.clone();
     let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
-    state.contributed.insert(
-        id,
-        ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() },
-    );
+    state.contributed.insert(id, ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() });
     rebuild_flow_extension_registry(&mut state);
 }
 
@@ -267,19 +249,7 @@ pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
             id: extension.clone(),
             title: titleize_extension(&extension),
             groups: vec![],
-            items: items
-                .into_iter()
-                .map(|info| CatalogueItem {
-                    kind: "neuron".into(),
-                    neuron_kind: Some(info.id),
-                    action: None,
-                    format: None,
-                    name: info.name,
-                    abbreviation: info.abbreviation,
-                    icon: info.icon,
-                    summary: info.summary,
-                })
-                .collect(),
+            items: items.into_iter().map(|info| CatalogueItem { kind: "neuron".into(), neuron_kind: Some(info.id), action: None, format: None, name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary }).collect(),
         })
         .collect()
 }

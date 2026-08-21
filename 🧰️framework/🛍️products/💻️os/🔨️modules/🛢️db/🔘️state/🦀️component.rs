@@ -3,11 +3,12 @@
 //! weight-balanced-by-height `PTree`, and an adjacency-map `PGraph`, plus the content-addressing
 //! (`blake3`) primitives and `TouchedRegion` descriptors the rest of the family builds document
 //! overlays and conflict detection on top of. No `im`/`im-rc`/`rpds`/`imbl` dependency — every
-//! structure below is `Rc`-based path-copying, written against the frozen contract at
+//! `PMap` uses `Arc`-based path-copying so document authority state can move between process-pool
+//! turns; the other single-owner structures remain `Rc`-based. All follow the frozen contract at
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_state` row).
 //!
-//! 🎯️ Design choice: every structure clones in O(1) (an `Rc` bump) regardless of whether its
+//! 🎯️ Design choice: every structure clones in O(1) (an `Arc` or `Rc` bump) regardless of whether its
 //! element types implement `Clone` — `Clone` is implemented by hand rather than derived, since a
 //! derived impl would wrongly require `K: Clone, V: Clone` just to bump a reference count. Mutating
 //! operations (`insert`/`push_back`/`insert` text/…) are the ones that need `Clone` element bounds,
@@ -22,6 +23,7 @@
 
 use crate::db_ids::DbError;
 use std::rc::Rc;
+use std::sync::Arc;
 
 //#region 🔖️Pages
 /// @emoji 📇️ A type that can serialize itself into a byte buffer in a canonical, deterministic
@@ -163,36 +165,36 @@ enum HamtNode<K, V> {
     },
     Branch {
         bitmap: u32,
-        children: Vec<Rc<HamtNode<K, V>>>,
+        children: Vec<Arc<HamtNode<K, V>>>,
     },
 }
 
-fn hamt_branch_from_two<K: Clone + Eq, V: Clone>(depth: u8, h1: u64, k1: K, v1: V, h2: u64, k2: K, v2: V) -> Rc<HamtNode<K, V>> {
+fn hamt_branch_from_two<K: Clone + Eq, V: Clone>(depth: u8, h1: u64, k1: K, v1: V, h2: u64, k2: K, v2: V) -> Arc<HamtNode<K, V>> {
     if depth >= HAMT_MAX_DEPTH {
-        return Rc::new(HamtNode::Collision { entries: vec![(h1, k1, v1), (h2, k2, v2)] });
+        return Arc::new(HamtNode::Collision { entries: vec![(h1, k1, v1), (h2, k2, v2)] });
     }
     let i1 = hamt_index(h1, depth);
     let i2 = hamt_index(h2, depth);
     if i1 == i2 {
         let child = hamt_branch_from_two(depth + 1, h1, k1, v1, h2, k2, v2);
-        Rc::new(HamtNode::Branch { bitmap: 1u32 << i1, children: vec![child] })
+        Arc::new(HamtNode::Branch { bitmap: 1u32 << i1, children: vec![child] })
     } else {
-        let leaf1 = Rc::new(HamtNode::Leaf { hash: h1, key: k1, value: v1 });
-        let leaf2 = Rc::new(HamtNode::Leaf { hash: h2, key: k2, value: v2 });
+        let leaf1 = Arc::new(HamtNode::Leaf { hash: h1, key: k1, value: v1 });
+        let leaf2 = Arc::new(HamtNode::Leaf { hash: h2, key: k2, value: v2 });
         let bitmap = (1u32 << i1) | (1u32 << i2);
         let children = if i1 < i2 { vec![leaf1, leaf2] } else { vec![leaf2, leaf1] };
-        Rc::new(HamtNode::Branch { bitmap, children })
+        Arc::new(HamtNode::Branch { bitmap, children })
     }
 }
 
-fn hamt_insert<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, hash: u64, key: K, value: V) -> Rc<HamtNode<K, V>> {
+fn hamt_insert<K: Clone + Eq, V: Clone>(node: &Arc<HamtNode<K, V>>, depth: u8, hash: u64, key: K, value: V) -> Arc<HamtNode<K, V>> {
     match node.as_ref() {
-        HamtNode::Empty => Rc::new(HamtNode::Leaf { hash, key, value }),
+        HamtNode::Empty => Arc::new(HamtNode::Leaf { hash, key, value }),
         HamtNode::Leaf { hash: h, key: k, value: v } => {
             if key == *k {
-                Rc::new(HamtNode::Leaf { hash, key, value })
+                Arc::new(HamtNode::Leaf { hash, key, value })
             } else if *h == hash || depth >= HAMT_MAX_DEPTH {
-                Rc::new(HamtNode::Collision { entries: vec![(*h, k.clone(), v.clone()), (hash, key, value)] })
+                Arc::new(HamtNode::Collision { entries: vec![(*h, k.clone(), v.clone()), (hash, key, value)] })
             } else {
                 hamt_branch_from_two(depth, *h, k.clone(), v.clone(), hash, key, value)
             }
@@ -204,7 +206,7 @@ fn hamt_insert<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, ha
             } else {
                 new_entries.push((hash, key, value));
             }
-            Rc::new(HamtNode::Collision { entries: new_entries })
+            Arc::new(HamtNode::Collision { entries: new_entries })
         }
         HamtNode::Branch { bitmap, children } => {
             let i = hamt_index(hash, depth);
@@ -214,11 +216,11 @@ fn hamt_insert<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, ha
                 let updated = hamt_insert(&children[pos], depth + 1, hash, key, value);
                 let mut new_children = children.clone();
                 new_children[pos] = updated;
-                Rc::new(HamtNode::Branch { bitmap: *bitmap, children: new_children })
+                Arc::new(HamtNode::Branch { bitmap: *bitmap, children: new_children })
             } else {
                 let mut new_children = children.clone();
-                new_children.insert(pos, Rc::new(HamtNode::Leaf { hash, key, value }));
-                Rc::new(HamtNode::Branch { bitmap: bitmap | bit, children: new_children })
+                new_children.insert(pos, Arc::new(HamtNode::Leaf { hash, key, value }));
+                Arc::new(HamtNode::Branch { bitmap: bitmap | bit, children: new_children })
             }
         }
     }
@@ -248,7 +250,7 @@ fn hamt_get<'a, K: Eq, V>(node: &'a HamtNode<K, V>, depth: u8, hash: u64, key: &
     }
 }
 
-fn hamt_remove<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, hash: u64, key: &K) -> Option<Rc<HamtNode<K, V>>> {
+fn hamt_remove<K: Clone + Eq, V: Clone>(node: &Arc<HamtNode<K, V>>, depth: u8, hash: u64, key: &K) -> Option<Arc<HamtNode<K, V>>> {
     match node.as_ref() {
         HamtNode::Empty => None,
         HamtNode::Leaf { hash: h, key: k, .. } => {
@@ -265,11 +267,11 @@ fn hamt_remove<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, ha
                 new_entries.remove(pos);
                 if new_entries.len() == 1 {
                     let (h, k, v) = new_entries.into_iter().next().expect("checked len == 1 above");
-                    Some(Rc::new(HamtNode::Leaf { hash: h, key: k, value: v }))
+                    Some(Arc::new(HamtNode::Leaf { hash: h, key: k, value: v }))
                 } else if new_entries.is_empty() {
                     None
                 } else {
-                    Some(Rc::new(HamtNode::Collision { entries: new_entries }))
+                    Some(Arc::new(HamtNode::Collision { entries: new_entries }))
                 }
             }
         },
@@ -288,16 +290,16 @@ fn hamt_remove<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, ha
                     } else {
                         let mut new_children = children.clone();
                         new_children.remove(pos);
-                        Some(Rc::new(HamtNode::Branch { bitmap: new_bitmap, children: new_children }))
+                        Some(Arc::new(HamtNode::Branch { bitmap: new_bitmap, children: new_children }))
                     }
                 }
                 Some(new_child) => {
-                    if Rc::ptr_eq(&new_child, &children[pos]) {
+                    if Arc::ptr_eq(&new_child, &children[pos]) {
                         Some(node.clone())
                     } else {
                         let mut new_children = children.clone();
                         new_children[pos] = new_child;
-                        Some(Rc::new(HamtNode::Branch { bitmap: *bitmap, children: new_children }))
+                        Some(Arc::new(HamtNode::Branch { bitmap: *bitmap, children: new_children }))
                     }
                 }
             }
@@ -323,17 +325,17 @@ fn hamt_collect<'a, K, V>(node: &'a HamtNode<K, V>, out: &mut Vec<(&'a K, &'a V)
 }
 
 /// @emoji 🗺️ A persistent (immutable, structurally-shared) hash map: a 32-way HAMT. Every
-/// mutating method returns a new `PMap`; unaffected subtrees are shared via `Rc` with the map(s)
+/// mutating method returns a new `PMap`; unaffected subtrees are shared via `Arc` with the map(s)
 /// it was derived from, so a chain of `n` single-key edits allocates `O(n log n)` nodes total,
 /// not `O(n²)`.
 pub struct PMap<K, V> {
-    root: Rc<HamtNode<K, V>>,
+    root: Arc<HamtNode<K, V>>,
     len: usize,
 }
 
 impl<K, V> PMap<K, V> {
     pub fn new() -> Self {
-        PMap { root: Rc::new(HamtNode::Empty), len: 0 }
+        PMap { root: Arc::new(HamtNode::Empty), len: 0 }
     }
 
     pub fn len(&self) -> usize {
@@ -390,7 +392,7 @@ impl<K: Clone + Eq + std::hash::Hash, V: Clone> PMap<K, V> {
         let hash = hash_key(key);
         match hamt_remove(&self.root, 0, hash, key) {
             Some(root) => PMap { root, len: self.len - 1 },
-            None => PMap { root: Rc::new(HamtNode::Empty), len: 0 },
+            None => PMap { root: Arc::new(HamtNode::Empty), len: 0 },
         }
     }
 }

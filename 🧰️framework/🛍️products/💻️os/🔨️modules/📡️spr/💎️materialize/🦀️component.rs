@@ -11,8 +11,8 @@
 //! `decode_base`'s caller knows how to turn embedded bytes into `P`.
 
 use crate::os_pack::{ByteReader, ByteWriter};
-use crate::os_spr::wire::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
+use crate::os_spr::wire::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use std::collections::HashMap;
 
 //#region 🔖️Snapshot
@@ -78,28 +78,28 @@ struct SnapshotHeader {
 /// embedded body *within `payload`* (so a caller already holding a `&'a [u8]` payload can slice it
 /// zero-copy) — `None` iff `body_kind == SidecarPack`, which never embeds a body.
 async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize, usize)>), ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format != 1 {
         return Err(malformed("snapshot format", format!("unsupported format {format}")));
     }
-    let anchor_tag = input.read_u8().await?;
+    let anchor_tag = input.read_u8()?;
     let anchor_checkpoint_id = match anchor_tag {
         0 => {
-            let len = input.read_varint_u64().await? as usize;
-            let bytes = input.read_bytes(len).await?;
+            let len = input.read_varint_u64()? as usize;
+            let bytes = input.read_bytes(len)?;
             Some(std::str::from_utf8(bytes).map_err(|_| malformed("snapshot checkpoint_id utf8", "invalid utf-8"))?.to_string())
         }
         1 => None,
         other => return Err(malformed("snapshot anchor_tag", format!("unknown anchor tag {other:#x}"))),
     };
-    let edit_ordinal = input.read_varint_u64().await?;
-    let body_kind = body_kind_from_byte(input.read_u8().await?).await?;
-    let body_hash = input.read_array32().await?;
+    let edit_ordinal = input.read_varint_u64()?;
+    let body_kind = body_kind_from_byte(input.read_u8()?).await?;
+    let body_hash = input.read_array32()?;
     let body_span = if body_kind != SnapshotBodyKind::SidecarPack {
-        let len = input.read_varint_u64().await? as usize;
-        let start = input.position().await;
-        input.read_bytes(len).await?; // bounds-checked; establishes the span is actually present
+        let len = input.read_varint_u64()? as usize;
+        let start = input.position();
+        input.read_bytes(len)?; // bounds-checked; establishes the span is actually present
         Some((start, len))
     } else {
         None
@@ -113,25 +113,25 @@ async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize
 /// most once per snapshot and gains nothing from dictionary interning; `checkpoint_id` is always
 /// tag-0 raw text.
 pub async fn encode_snapshot(record: &SnapshotRecord) -> Vec<u8> {
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     match &record.anchor_checkpoint_id {
         Some(id) => {
-            out.write_u8(0).await;
-            out.write_varint_u64(id.len() as u64).await;
-            out.write_bytes(id.as_bytes()).await;
+            out.write_u8(0);
+            out.write_varint_u64(id.len() as u64);
+            out.write_bytes(id.as_bytes());
         }
-        None => out.write_u8(1).await,
+        None => out.write_u8(1),
     }
-    out.write_varint_u64(record.edit_ordinal).await;
-    out.write_u8(body_kind_to_byte(record.body_kind).await).await;
-    out.write_bytes(&record.body_hash).await;
+    out.write_varint_u64(record.edit_ordinal);
+    out.write_u8(body_kind_to_byte(record.body_kind).await);
+    out.write_bytes(&record.body_hash);
     if record.body_kind != SnapshotBodyKind::SidecarPack {
         let body = record.body.as_deref().unwrap_or(&[]);
-        out.write_varint_u64(body.len() as u64).await;
-        out.write_bytes(body).await;
+        out.write_varint_u64(body.len() as u64);
+        out.write_bytes(body);
     }
-    out.into_bytes().await
+    out.into_bytes()
 }
 
 /// @emoji 👓️ The owning twin of `parse_snapshot`, for callers (e.g. `protocol_cli inspect`) that
@@ -148,20 +148,20 @@ pub async fn decode_snapshot(payload: &[u8]) -> Result<SnapshotRecord, ProtocolE
 /// is fully pinned by that crate's own `//#region 🔖️Codec` doc comment, so this stays in lockstep by
 /// construction, not by convention.
 async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed("dict record format", format!("unsupported format {format}")));
     }
-    let base_count = input.read_varint_u64().await? as u32;
-    let count = input.read_varint_u64().await?;
+    let base_count = input.read_varint_u64()? as u32;
+    let count = input.read_varint_u64()?;
     // 🎯️ Never `Vec::with_capacity(count)`: `count` is untrusted input read before any bound check
     // against the (already frame-limited) payload — an adversarial huge varint must not itself
     // trigger a huge allocation before the loop's own bounds-checked reads would fail it anyway.
     let mut entries: Vec<String> = Vec::new();
     for _ in 0..count {
-        let len = input.read_varint_u64().await? as usize;
-        let bytes = input.read_bytes(len).await?;
+        let len = input.read_varint_u64()? as usize;
+        let bytes = input.read_bytes(len)?;
         entries.push(std::str::from_utf8(bytes).map_err(|_| malformed("dict entry utf8", "invalid utf-8"))?.to_string());
     }
     dict.extend(base_count, entries).await
@@ -473,7 +473,12 @@ async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(Di
 /// (default limits — no `limits` parameter on this frozen signature) so a torn live tail is silently
 /// excluded rather than surfaced as an error, matching how every other reader in this crate family
 /// treats the boundary `crate::os_spr::format::recover` establishes.
-pub async fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl AsyncFnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
+pub async fn materialize_with<P, E>(
+    plan: MaterializePlan<'_>,
+    protocol_bytes: &[u8],
+    decode_base: impl FnOnce(&[u8]) -> Result<P, E>,
+    mut apply_edit: impl AsyncFnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>,
+) -> Result<(P, MaterializeReport), E>
 where
     E: From<ProtocolError>,
 {
@@ -528,9 +533,9 @@ where
 mod tests {
     use super::*;
     use crate::os_pack::CodecId;
-    use crate::os_spr::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
     use crate::os_spr::format::{SprWriter, WriteOptions};
     use crate::os_spr::history::{HistoryChange, HistoryCheckpoint, HistoryEdit, HistoryLog, OpPayload};
+    use crate::os_spr::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
 
     //#region 🔖️Snapshot
     async fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
@@ -576,17 +581,7 @@ mod tests {
 
     //#region 🔖️Plan
     async fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
-        HistoryEdit {
-            id: id.to_string(),
-            actor: None,
-            started_at: format!("t-{id}"),
-            finished_at: None,
-            coalesce_key: None,
-            description: None,
-            ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }],
-            inverse: Vec::new(),
-            meta: None,
-        }
+        HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None }
     }
 
     async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {

@@ -1,7 +1,7 @@
 //! 🧬️ Mathematical artifact schema — every field with its state class.
 
-use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
+use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -57,16 +57,7 @@ impl MathematicalArtifact {
 
     async fn default_ui() -> Self {
         let default_snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(MathematicalGraph::default(), MathematicalGeometry::default());
-        Self {
-            notation: default_snapshot.notation,
-            results: default_snapshot.results,
-            computed: default_snapshot.computed,
-            equation: default_snapshot.equation,
-            camera_x: 0.0,
-            camera_y: 0.0,
-            camera_zoom: 1.0,
-            locale: "en-US".into(),
-        }
+        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

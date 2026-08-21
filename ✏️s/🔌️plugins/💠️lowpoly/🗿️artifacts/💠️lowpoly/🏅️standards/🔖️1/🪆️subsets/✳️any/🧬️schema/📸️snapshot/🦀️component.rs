@@ -31,41 +31,55 @@ impl Default for LowpolySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️CodecPrimitives
-async fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+async fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+pub(crate) async fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 
-pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
+}
 pub(crate) async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 pub(crate) async fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
-    match c { Some(c) => enc_child(c), None => "[]".to_string() }
+    match c {
+        Some(c) => enc_child(c),
+        None => "[]".to_string(),
+    }
 }
 pub(crate) async fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    if s == "[]" { return Ok(None); }
+    if s == "[]" {
+        return Ok(None);
+    }
     Ok(Some(dec_child(s)?))
 }
 
 pub(crate) async fn enc_lowpoly_transform(t: &LowpolyTransform) -> String {
-    format!(
-        "[{},{},{},{},{},{},{},{},{}]",
-        t.position[0], t.position[1], t.position[2],
-        t.rotation[0], t.rotation[1], t.rotation[2],
-        t.scale[0], t.scale[1], t.scale[2],
-    )
+    format!("[{},{},{},{},{},{},{},{},{}]", t.position[0], t.position[1], t.position[2], t.rotation[0], t.rotation[1], t.rotation[2], t.scale[0], t.scale[1], t.scale[2],)
 }
 pub(crate) async fn dec_lowpoly_transform(s: &str) -> Result<LowpolyTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -106,11 +120,7 @@ pub(crate) async fn dec_paint_layer_list(s: &str) -> Result<Vec<LowpolyPaintLaye
 /// `✏️editor/🖌️session::LowpolyScratch`'s session-local `mesh_workspace` cache, ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` round-trip law fix round 2).
 pub(crate) async fn enc_object(o: &LowpolyObject) -> String {
-    format!(
-        "[{},{},{},{},{},{}]",
-        enc_str(&o.id), enc_str(&o.name), enc_lowpoly_transform(&o.transform), o.smooth_shading,
-        enc_child_opt(&o.mesh), enc_paint_layer_list(&o.paint_layers),
-    )
+    format!("[{},{},{},{},{},{}]", enc_str(&o.id), enc_str(&o.name), enc_lowpoly_transform(&o.transform), o.smooth_shading, enc_child_opt(&o.mesh), enc_paint_layer_list(&o.paint_layers),)
 }
 pub(crate) async fn dec_object(s: &str) -> Result<LowpolyObject, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
@@ -143,15 +153,18 @@ async fn parse_lowpoly_snapshot_body(body: &str) -> Result<LowpolySnapshot, Stri
     let mut objects = Vec::new();
     for line in body.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
-        if let Some(rest) = line.strip_prefix("schema=") { schema = Some(dec_str(rest)?); }
-        else if let Some(rest) = line.strip_prefix("objects=") { objects = dec_object_list(rest)?; }
-        else { return Err(format!("lowpoly snapshot: unknown line {line:?}")); }
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("schema=") {
+            schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("objects=") {
+            objects = dec_object_list(rest)?;
+        } else {
+            return Err(format!("lowpoly snapshot: unknown line {line:?}"));
+        }
     }
-    Ok(LowpolySnapshot {
-        schema: schema.ok_or_else(|| "lowpoly snapshot: missing schema line".to_string())?,
-        objects,
-    })
+    Ok(LowpolySnapshot { schema: schema.ok_or_else(|| "lowpoly snapshot: missing schema line".to_string())?, objects })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -164,10 +177,16 @@ async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, St
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
 
-pub(crate) async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+pub(crate) async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+    write_str_lp(out, &r.to_uri());
+}
 pub(crate) async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
@@ -182,13 +201,20 @@ pub(crate) async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<
 }
 pub(crate) async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
-        Some(c) => { out.push(1); write_child(out, c); }
+        Some(c) => {
+            out.push(1);
+            write_child(out, c);
+        }
         None => out.push(0),
     }
 }
 pub(crate) async fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
     let presence = reader.read_u8().map_err(|e| e.to_string())?;
-    if presence == 0 { Ok(None) } else { Ok(Some(read_child(reader)?)) }
+    if presence == 0 {
+        Ok(None)
+    } else {
+        Ok(Some(read_child(reader)?))
+    }
 }
 
 async fn write_lowpoly_transform(out: &mut Vec<u8>, t: &LowpolyTransform) {
@@ -218,7 +244,9 @@ async fn read_paint_layer(reader: &mut store::ByteReader<'_>) -> Result<LowpolyP
 }
 async fn write_paint_layer_list(out: &mut Vec<u8>, list: &[LowpolyPaintLayer]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
-    for l in list { write_paint_layer(out, l); }
+    for l in list {
+        write_paint_layer(out, l);
+    }
 }
 async fn read_paint_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<LowpolyPaintLayer>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -244,7 +272,9 @@ async fn read_object(reader: &mut store::ByteReader<'_>) -> Result<LowpolyObject
 }
 async fn write_object_list(out: &mut Vec<u8>, list: &[LowpolyObject]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
-    for o in list { write_object(out, o); }
+    for o in list {
+        write_object(out, o);
+    }
 }
 async fn read_object_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<LowpolyObject>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -262,7 +292,9 @@ async fn decode_lowpoly_snapshot_binary(bytes: &[u8]) -> Result<LowpolySnapshot,
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
     let schema = read_str_lp(&mut reader)?;
     let objects = read_object_list(&mut reader)?;
     Ok(LowpolySnapshot { schema, objects })
@@ -275,7 +307,9 @@ async fn decode_lowpoly_snapshot_binary(bytes: &[u8]) -> Result<LowpolySnapshot,
 /// the derive to bind against; see this file's own module doc comment.
 impl store::ArtifactDsl for LowpolySnapshot {
     const EXTENSION: &'static str = "lowpoly";
-    async fn envelope_id() -> &'static str { "lowpoly.lowpoly" }
+    async fn envelope_id() -> &'static str {
+        "lowpoly.lowpoly"
+    }
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -285,11 +319,7 @@ impl store::ArtifactDsl for LowpolySnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_lowpoly_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -298,22 +328,13 @@ impl store::ArtifactPack for LowpolySnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_lowpoly_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_lowpoly_snapshot_binary(&inner).map_err(store::PackError::Schema)

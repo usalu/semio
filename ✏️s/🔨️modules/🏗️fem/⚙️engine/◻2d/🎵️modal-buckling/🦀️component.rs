@@ -1,9 +1,9 @@
 //! 🎵️ FEM 2D module engine — modal/buckling analysis bridge (pure FE algorithm, moved out of the
 //! artifact tree).
 
+use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad};
 use crate::fem2d_engine::meshing::build_nodes_and_elements;
 use crate::fem2d_engine::Fem2dError;
-use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad};
 use crate::model::{Dof, Element, Elements, MemberUdl, Node, Support};
 use std::collections::HashMap;
 

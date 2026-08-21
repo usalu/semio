@@ -8,8 +8,8 @@
 //! same trinity-wide gap), so this static scene can no longer compute which variable to highlight.
 //! `occurrences_json` is left unset until a future wave threads interaction state through `render`.
 
-use crate::editor::rewrite::config::RewriteConfig;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfig;
 use semio_framework_plugin::{build_text_editor_scene, TextEditorScene, UiNode};
 
 pub(crate) async fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiNode {

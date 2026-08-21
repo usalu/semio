@@ -1,7 +1,5 @@
 //! En1994 — document entities (constitutional: general).
 
-
-
 //#region 🔖️Types
 
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
@@ -17,11 +15,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const EN1994_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
-    artifact_kind: "s.norm.en1994",
-    standard: semio_framework_plugin::app::StandardId("1"),
-    subset: semio_framework_plugin::app::SubsetId::ANY,
-};
+pub const EN1994_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1994", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub const EN1994_DOCUMENT_SCHEMA: &str = "semio.norm.en1994/v1";
 
 //#region 🪪️Declaration

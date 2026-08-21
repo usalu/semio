@@ -14,7 +14,7 @@
 
 use crate::artifacts::puzzle3d::schema::inferences::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
 use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dSnapshot, Puzzle5dScale};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by
@@ -156,9 +156,7 @@ async fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &H
                     queue.push_back(neighbor_id);
                     continue;
                 };
-                let current_grip_id = if design_parent_id == current_id { design_parent_grip } else {
-                    parse_endpoint(&fastener.target).map(|(_, grip)| grip).unwrap_or("")
-                };
+                let current_grip_id = if design_parent_id == current_id { design_parent_grip } else { parse_endpoint(&fastener.target).map(|(_, grip)| grip).unwrap_or("") };
                 let current_part = part_map.get(current_id.as_str()).expect("current");
                 let grip = current_part.grips.iter().find(|grip| grip.id == current_grip_id);
                 let parent_t = grip.map(grip_t).unwrap_or(0.0);
@@ -233,20 +231,7 @@ mod tests {
                     }],
                 },
             ],
-            fasteners: vec![Puzzle5dFastener {
-                id: "f".into(),
-                source: "p:top".into(),
-                target: "c:bottom".into(),
-                fastener_kind: None,
-                gap: 0.0,
-                shift: 0.0,
-                rise: 0.0,
-                rotation: 0.0,
-                turn: 0.0,
-                tilt: 0.0,
-                x: 1.5,
-                y: 2.5,
-            }],
+            fasteners: vec![Puzzle5dFastener { id: "f".into(), source: "p:top".into(), target: "c:bottom".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 }],
         };
         flatten_snapshot_inplace(&mut snapshot);
         let child = snapshot.parts.iter().find(|part| part.id == "c").expect("c");

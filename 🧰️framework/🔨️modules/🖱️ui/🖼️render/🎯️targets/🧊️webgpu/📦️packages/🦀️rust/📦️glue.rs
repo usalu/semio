@@ -28,17 +28,23 @@
 //#region 🔖️Backend
 
 #[cfg(target_arch = "wasm32")]
-#[path = "🦀️surface_state.rs"]
-mod surface_state;
+#[path = "🦀️backend.rs"]
+mod backend;
+#[cfg(target_arch = "wasm32")]
+#[path = "🦀️buffers.rs"]
+mod buffers;
+#[cfg(target_arch = "wasm32")]
+#[path = "🦀️frame.rs"]
+mod frame;
+#[cfg(target_arch = "wasm32")]
+#[path = "🦀️gpu_context.rs"]
+mod gpu_context;
 #[cfg(target_arch = "wasm32")]
 #[path = "🦀️gpu_types.rs"]
 mod gpu_types;
 #[cfg(target_arch = "wasm32")]
 #[path = "🦀️gpu_uniforms.rs"]
 mod gpu_uniforms;
-#[cfg(target_arch = "wasm32")]
-#[path = "🦀️gpu_context.rs"]
-mod gpu_context;
 #[cfg(target_arch = "wasm32")]
 #[path = "🦀️pipelines.rs"]
 mod pipelines;
@@ -49,14 +55,8 @@ mod resources;
 #[path = "🦀️scene_target.rs"]
 mod scene_target;
 #[cfg(target_arch = "wasm32")]
-#[path = "🦀️buffers.rs"]
-mod buffers;
-#[cfg(target_arch = "wasm32")]
-#[path = "🦀️frame.rs"]
-mod frame;
-#[cfg(target_arch = "wasm32")]
-#[path = "🦀️backend.rs"]
-mod backend;
+#[path = "🦀️surface_state.rs"]
+mod surface_state;
 
 #[cfg(target_arch = "wasm32")]
 pub use backend::WebGpuBackend;

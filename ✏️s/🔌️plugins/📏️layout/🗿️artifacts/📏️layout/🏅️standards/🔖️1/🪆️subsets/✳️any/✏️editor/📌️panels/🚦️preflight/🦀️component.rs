@@ -4,9 +4,9 @@
 //! artifact engine: it takes `&LayoutLabels`, an app-owned terminology type, and artifacts must never
 //! depend on apps.
 
+use crate::artifacts::layout::{Frame, LayoutSnapshot};
 use crate::editor::layout::layout_action;
 use crate::editor::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
-use crate::artifacts::layout::{Frame, LayoutSnapshot};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

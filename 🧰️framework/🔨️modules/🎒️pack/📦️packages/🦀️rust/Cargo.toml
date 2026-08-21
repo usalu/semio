@@ -29,10 +29,9 @@ semio-framework-replication = { workspace = true }
 semio-framework-async = { workspace = true }
 blake3 = "1"
 futures-lite = "2"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
 thiserror = "2.0.12"
 ureq = { version = "2", optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

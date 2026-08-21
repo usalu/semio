@@ -12,8 +12,7 @@ pub async fn register() {}
 /// of a hand-rolled structural converter.
 pub async fn deserialize(from: &JsonSnapshot) -> Result<ImperativeSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let out: ImperativeSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("imperative<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let out: ImperativeSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("imperative<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 

@@ -42,43 +42,19 @@ pub struct VcsArtifact {
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(),
-            title: "VCS Demo".into(),
-            counter: 0,
-            notes: String::new(),
-            status: "new".into(),
-            tags: Vec::new(),
-            selected_checkpoint_ids: Vec::new(),
-            locale: "en-US".into(),
-        }
+        Self { schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new(), locale: "en-US".into() }
     }
 }
 
 impl VcsArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
-        crate::artifacts::vcs::VcsSnapshot {
-            schema: self.schema.clone(),
-            title: self.title.clone(),
-            counter: self.counter,
-            notes: self.notes.clone(),
-            status: self.status.clone(),
-            tags: self.tags.clone(),
-        }
+        crate::artifacts::vcs::VcsSnapshot { schema: self.schema.clone(), title: self.title.clone(), counter: self.counter, notes: self.notes.clone(), status: self.status.clone(), tags: self.tags.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            title: snapshot.title,
-            counter: snapshot.counter,
-            notes: snapshot.notes,
-            status: snapshot.status,
-            tags: snapshot.tags,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

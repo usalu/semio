@@ -1083,8 +1083,8 @@ pub mod finite {
     //! the modular layer that `factor.rs` lifts via Hensel's lemma to factor over `Z`/`Q`.
 
     use crate::polynomial::univariate::PolyU;
-    use number::ModInt;
     use geometry::random::Rng;
+    use number::ModInt;
 
     // #region 🔖️PolyModPow
     pub async fn poly_mod_pow(base: &PolyU<ModInt>, exp: u64, modulus: &PolyU<ModInt>) -> PolyU<ModInt> {
@@ -1336,8 +1336,8 @@ pub mod factor {
 
     use crate::polynomial::finite::factor_mod_p;
     use crate::polynomial::univariate::PolyU;
-    use number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
     use geometry::random::Rng;
+    use number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
 
     // #region 🔖️Conversions
     async fn to_modp(f: &PolyU<Integer>, p: u64) -> PolyU<ModInt> {

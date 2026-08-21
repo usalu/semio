@@ -6,7 +6,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -24,7 +24,7 @@ pub async fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot
     if payload.name.trim().is_empty() {
         let current_name = cfg.snapshot.directory().spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": current_name })).ok();
-        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(125),  dialog_id: "renameSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(125), dialog_id: "renameSpace".into(), args }));
     }
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": payload.name })).ok();
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.rename-space".into(), args }))
@@ -50,7 +50,8 @@ mod tests {
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
             "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Old Name", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
             "recordedAtMs": 1000
-        }).to_string();
+        })
+        .to_string();
         let config = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &HomeConfig::default()).diff().clone();
         let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: String::new() }, &config);
         let (dialog_id, args) = match &emit.effects[0] {

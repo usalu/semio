@@ -45,10 +45,7 @@ async fn replaces_cam_a_in_place_with_the_refined_record() {
 async fn inverse_is_the_same_verb_carrying_the_base_camera_record() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::UpdateCameraCalibration(payload)] if payload.camera.id == "cam-a" && payload.camera.fx == 1000.0),
-        "update-camera-calibration inverts to itself with the base fx of 1000, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::UpdateCameraCalibration(payload)] if payload.camera.id == "cam-a" && payload.camera.fx == 1000.0), "update-camera-calibration inverts to itself with the base fx of 1000, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");
@@ -63,11 +60,7 @@ async fn declared_applied_outcome_clears_all_three_guards() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(declared["status"], "applied", "update-camera-calibration/refines-the-cam-a-focal-length-and-rms declares an applied outcome");
     let produced = produced();
-    assert!(
-        produced.messages().is_empty(),
-        "an existing, genuinely different, finite camera record raises none of mutation.target-missing / mutation.no-op / mutation.invariant, got {:?}",
-        produced.messages()
-    );
+    assert!(produced.messages().is_empty(), "an existing, genuinely different, finite camera record raises none of mutation.target-missing / mutation.no-op / mutation.invariant, got {:?}", produced.messages());
     let calibration = produced.diff().calibration.as_ref().expect("update-camera-calibration writes the calibration field");
     assert_eq!(calibration.cameras.len(), 2, "the delta carries the whole camera list, not just the edited record");
     assert!(produced.diff().params.is_none(), "update-camera-calibration writes calibration alone");

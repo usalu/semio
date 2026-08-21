@@ -288,12 +288,13 @@ impl VulkanBackend {
         self.swapchain_image_views = Vec::with_capacity(self.swapchain_images.len());
         self.framebuffers = Vec::with_capacity(self.swapchain_images.len());
         for &image in &self.swapchain_images {
-            let view_info = vk::ImageViewCreateInfo::default()
-                .image(image)
-                .view_type(vk::ImageViewType::TYPE_2D)
-                .format(format.format)
-                .components(vk::ComponentMapping::default())
-                .subresource_range(vk::ImageSubresourceRange { aspect_mask: vk::ImageAspectFlags::COLOR, base_mip_level: 0, level_count: 1, base_array_layer: 0, layer_count: 1 });
+            let view_info = vk::ImageViewCreateInfo::default().image(image).view_type(vk::ImageViewType::TYPE_2D).format(format.format).components(vk::ComponentMapping::default()).subresource_range(vk::ImageSubresourceRange {
+                aspect_mask: vk::ImageAspectFlags::COLOR,
+                base_mip_level: 0,
+                level_count: 1,
+                base_array_layer: 0,
+                layer_count: 1,
+            });
             // 🔓️ SAFETY: `image` is one of `swapchain_images`, owned by `self.swapchain` (never
             // destroyed by the caller — swapchain images are owned by the swapchain itself).
             let view = unsafe { self.device.create_image_view(&view_info, None)? };
@@ -330,11 +331,27 @@ impl VulkanBackend {
 /// shape for "clear and present", vulkan-tutorial's `createRenderPass` ported).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn create_render_pass(device: &ash::Device, format: vk::Format) -> Result<vk::RenderPass, vk::Result> {
-    let attachment = vk::AttachmentDescription::default().format(format).samples(vk::SampleCountFlags::TYPE_1).load_op(vk::AttachmentLoadOp::CLEAR).store_op(vk::AttachmentStoreOp::STORE).stencil_load_op(vk::AttachmentLoadOp::DONT_CARE).stencil_store_op(vk::AttachmentStoreOp::DONT_CARE).initial_layout(vk::ImageLayout::UNDEFINED).final_layout(vk::ImageLayout::PRESENT_SRC_KHR);
+    let attachment = vk::AttachmentDescription::default()
+        .format(format)
+        .samples(vk::SampleCountFlags::TYPE_1)
+        .load_op(vk::AttachmentLoadOp::CLEAR)
+        .store_op(vk::AttachmentStoreOp::STORE)
+        .stencil_load_op(vk::AttachmentLoadOp::DONT_CARE)
+        .stencil_store_op(vk::AttachmentStoreOp::DONT_CARE)
+        .initial_layout(vk::ImageLayout::UNDEFINED)
+        .final_layout(vk::ImageLayout::PRESENT_SRC_KHR);
     let color_ref = vk::AttachmentReference { attachment: 0, layout: vk::ImageLayout::COLOR_ATTACHMENT_OPTIMAL };
     let color_refs = [color_ref];
     let subpass = vk::SubpassDescription::default().pipeline_bind_point(vk::PipelineBindPoint::GRAPHICS).color_attachments(&color_refs);
-    let dependency = vk::SubpassDependency { src_subpass: vk::SUBPASS_EXTERNAL, dst_subpass: 0, src_stage_mask: vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT, dst_stage_mask: vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT, src_access_mask: vk::AccessFlags::empty(), dst_access_mask: vk::AccessFlags::COLOR_ATTACHMENT_WRITE, dependency_flags: vk::DependencyFlags::empty() };
+    let dependency = vk::SubpassDependency {
+        src_subpass: vk::SUBPASS_EXTERNAL,
+        dst_subpass: 0,
+        src_stage_mask: vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT,
+        dst_stage_mask: vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT,
+        src_access_mask: vk::AccessFlags::empty(),
+        dst_access_mask: vk::AccessFlags::COLOR_ATTACHMENT_WRITE,
+        dependency_flags: vk::DependencyFlags::empty(),
+    };
     let attachments = [attachment];
     let subpasses = [subpass];
     let dependencies = [dependency];
@@ -436,7 +453,11 @@ impl VulkanBackend {
 
         let clear_value = vk::ClearValue { color: vk::ClearColorValue { float32: CLEAR_COLOR } };
         let clear_values = [clear_value];
-        let render_pass_begin = vk::RenderPassBeginInfo::default().render_pass(self.render_pass).framebuffer(self.framebuffers[image_index as usize]).render_area(vk::Rect2D { offset: vk::Offset2D { x: 0, y: 0 }, extent: self.swapchain_extent }).clear_values(&clear_values);
+        let render_pass_begin = vk::RenderPassBeginInfo::default()
+            .render_pass(self.render_pass)
+            .framebuffer(self.framebuffers[image_index as usize])
+            .render_area(vk::Rect2D { offset: vk::Offset2D { x: 0, y: 0 }, extent: self.swapchain_extent })
+            .clear_values(&clear_values);
         // 🔓️ SAFETY: `command_buffer` is recording; `self.framebuffers[image_index as usize]` is
         // compatible with `self.render_pass` (both built together in `recreate_swapchain`) and sized
         // to `self.swapchain_extent`, matching `render_area`.

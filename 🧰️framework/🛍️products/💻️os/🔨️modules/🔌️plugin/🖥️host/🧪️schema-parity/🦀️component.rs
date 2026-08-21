@@ -52,9 +52,7 @@ mod tests {
     }
 
     async fn record_fields<'a>(resolve: &'a Resolve, ty: &Type) -> &'a [Field] {
-        let Type::Id(id) = ty else {
-            panic!("expected a named record type, found {ty:?}")
-        };
+        let Type::Id(id) = ty else { panic!("expected a named record type, found {ty:?}") };
         match &resolve.types[*id].kind {
             TypeDefKind::Record(record) => &record.fields,
             other => panic!("expected a record, found {other:?}"),
@@ -98,17 +96,11 @@ mod tests {
         }
 
         async fn interface(&self, name: &str) -> InterfaceId {
-            *self.resolve.packages[self.package]
-                .interfaces
-                .get(name)
-                .unwrap_or_else(|| panic!("interface `{name}` must exist in 🧬️schema/📜️component.wit"))
+            *self.resolve.packages[self.package].interfaces.get(name).unwrap_or_else(|| panic!("interface `{name}` must exist in 🧬️schema/📜️component.wit"))
         }
 
         async fn world(&self, name: &str) -> WorldId {
-            *self.resolve.packages[self.package]
-                .worlds
-                .get(name)
-                .unwrap_or_else(|| panic!("world `{name}` must exist in 🧬️schema/📜️component.wit"))
+            *self.resolve.packages[self.package].worlds.get(name).unwrap_or_else(|| panic!("world `{name}` must exist in 🧬️schema/📜️component.wit"))
         }
 
         async fn effect_variant_cases(&self) -> &[wit_parser::Case] {
@@ -161,30 +153,20 @@ mod tests {
                     case.name, async_name
                 )
             });
-            assert_eq!(
-                function.kind,
-                FunctionKind::AsyncFreestanding,
-                "`host-async.{async_name}` must be declared `async func`"
-            );
+            assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`host-async.{async_name}` must be declared `async func`");
 
             let expected_params: Vec<&Field> = fields.iter().filter(|field| field.name != "req").collect();
-            assert_eq!(
-                function.params.len(),
-                expected_params.len(),
-                "`host-async.{async_name}` param count must match `{}`'s fields minus `req`",
-                case.name
-            );
+            assert_eq!(function.params.len(), expected_params.len(), "`host-async.{async_name}` param count must match `{}`'s fields minus `req`", case.name);
             for (param, field) in function.params.iter().zip(expected_params.iter()) {
+                assert_eq!(&param.name, &field.name, "`host-async.{async_name}` param name must match `{}.{}`'s field name", case.name, field.name);
                 assert_eq!(
-                    &param.name, &field.name,
-                    "`host-async.{async_name}` param name must match `{}.{}`'s field name",
-                    case.name, field.name
-                );
-                assert_eq!(
-                    canonical_type(&fixture.resolve, param.ty).await, canonical_type(&fixture.resolve, field.ty).await,
+                    canonical_type(&fixture.resolve, param.ty).await,
+                    canonical_type(&fixture.resolve, field.ty).await,
                     "`host-async.{async_name}` param `{}` must reuse the SAME type as `{}.{}` — a new \
                      type here would be exactly the drift the `*-params` refactor exists to prevent",
-                    param.name, case.name, field.name
+                    param.name,
+                    case.name,
+                    field.name
                 );
             }
 
@@ -194,11 +176,28 @@ mod tests {
         // 🧬️ Positive sanity: the ~21 canonical `*-params`-wrapped effects really were exercised
         // above, not silently skipped by an empty `effect` variant or a payload-resolution bug.
         for expected in [
-            "storage-read", "storage-write", "storage-delete", "blob-load", "blob-write",
-            "http-request", "document-read", "document-write", "link-resolve", "registry-query",
-            "io-compose", "io-run", "cache-derive", "cache-read", "invoke-extension", "open-window",
-            "open-dialog", "dispatch-action", "spawn-plugin-instance", "request-file-open",
-            "request-media-frames", "request-capability",
+            "storage-read",
+            "storage-write",
+            "storage-delete",
+            "blob-load",
+            "blob-write",
+            "http-request",
+            "document-read",
+            "document-write",
+            "link-resolve",
+            "registry-query",
+            "io-compose",
+            "io-run",
+            "cache-derive",
+            "cache-read",
+            "invoke-extension",
+            "open-window",
+            "open-dialog",
+            "dispatch-action",
+            "spawn-plugin-instance",
+            "request-file-open",
+            "request-media-frames",
+            "request-capability",
         ] {
             assert!(checked.contains(expected), "expected effect case `{expected}` to have been checked");
         }
@@ -213,11 +212,7 @@ mod tests {
         let fixture = SchemaFixture::load().await;
         let host_async = &fixture.resolve.interfaces[fixture.interface("host-async").await];
 
-        let case = fixture
-            .effect_variant_cases()
-            .await.iter()
-            .find(|case| case.name == "spawn-job")
-            .expect("`spawn-job` case must exist in `effects.effect`");
+        let case = fixture.effect_variant_cases().await.iter().find(|case| case.name == "spawn-job").expect("`spawn-job` case must exist in `effects.effect`");
         let fields = record_fields(&fixture.resolve, case.ty.as_ref().expect("spawn-job carries a payload")).await;
         assert!(
             !fields.iter().any(|field| field.name == "req"),
@@ -248,11 +243,7 @@ mod tests {
         let emit: &Function = host_async.functions.get("emit").expect("`host-async.emit` must exist");
         assert_eq!(emit.kind, FunctionKind::Freestanding, "`emit` must be fire-and-forget, not `async func`");
         assert_eq!(emit.params.len(), 1, "`emit` must take exactly the `effect` variant");
-        assert_eq!(
-            canonical_type(&fixture.resolve, emit.params[0].ty).await,
-            canonical_type(&fixture.resolve, Type::Id(effect_type_id)).await,
-            "`emit`'s parameter must be THE SAME `effect` type `effects.effect` defines, not a copy"
-        );
+        assert_eq!(canonical_type(&fixture.resolve, emit.params[0].ty).await, canonical_type(&fixture.resolve, Type::Id(effect_type_id)).await, "`emit`'s parameter must be THE SAME `effect` type `effects.effect` defines, not a copy");
 
         assert!(host_async.functions.contains_key("emit-patch"), "`host-async.emit-patch` must exist");
     }
@@ -299,9 +290,7 @@ mod tests {
             }
         }
 
-        let export_names = |world: &World| -> BTreeSet<String> {
-            world.exports.keys().map(|key| world_key_name(&fixture.resolve, key)).collect()
-        };
+        let export_names = |world: &World| -> BTreeSet<String> { world.exports.keys().map(|key| world_key_name(&fixture.resolve, key)).collect() };
 
         // 🚪️ Every import whose interface declares at least one function — the ONLY imports a
         // generated `Host` trait actually needs an `impl` for.
@@ -332,11 +321,7 @@ mod tests {
 
         let expected_exports: BTreeSet<String> = ["reactor", "jobs", "checkpoint", "describe"].into_iter().map(String::from).collect();
         assert_eq!(export_names(actor), expected_exports, "the collapse changed `world actor`'s IMPORTS, never its exports");
-        assert_eq!(
-            functional_import_names(actor),
-            BTreeSet::from(["pure".to_string(), "host-async".to_string()]),
-            "`world actor` must import exactly `pure` and `host-async` for anything callable — this is the collapse's actual functional change"
-        );
+        assert_eq!(functional_import_names(actor), BTreeSet::from(["pure".to_string(), "host-async".to_string()]), "`world actor` must import exactly `pure` and `host-async` for anything callable — this is the collapse's actual functional change");
         // 🧬️ Positive sanity: this world DOES pull in type-only interfaces transitively (proving
         // the distinction above is real, not vacuously true because nothing showed up here).
         assert!(!type_only_import_names(actor).is_empty(), "expected `world actor` to have at least one type-only implicit import");
@@ -355,31 +340,18 @@ mod tests {
 
         let mut seen: BTreeSet<String> = BTreeSet::new();
         for item in actor.exports.values() {
-            let wit_parser::WorldItem::Interface { id, .. } = item else {
-                panic!("`world actor` must export interfaces only, never a bare func or type")
-            };
+            let wit_parser::WorldItem::Interface { id, .. } = item else { panic!("`world actor` must export interfaces only, never a bare func or type") };
             let interface = &fixture.resolve.interfaces[*id];
             let interface_name = interface.name.clone().unwrap_or_default();
             for function in interface.functions.values() {
-                assert_eq!(
-                    function.kind,
-                    FunctionKind::AsyncFreestanding,
-                    "`{interface_name}.{}` must be declared `async func` — a sync export is uncallable on the async-configured Store `host-async` requires (S7)",
-                    function.name
-                );
+                assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`{interface_name}.{}` must be declared `async func` — a sync export is uncallable on the async-configured Store `host-async` requires (S7)", function.name);
                 seen.insert(format!("{interface_name}.{}", function.name));
             }
         }
 
         // 🧬️ Positive sanity: all seven exports really were walked, not silently skipped by an
         // empty export map or a `WorldItem` shape this loop does not recognise.
-        let expected: BTreeSet<String> = [
-            "reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job",
-            "checkpoint.checkpoint", "checkpoint.restore", "describe.describe",
-        ]
-        .into_iter()
-        .map(String::from)
-        .collect();
+        let expected: BTreeSet<String> = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
         assert_eq!(seen, expected, "`world actor`'s export surface is exactly these seven functions");
 
         // 🚫️ The deliberate sync survivors, asserted explicitly so a future blanket "make every
@@ -410,14 +382,8 @@ mod tests {
             }
             assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`host-async.{}` must be declared `async func`", function.name);
             let result = function.result.unwrap_or_else(|| panic!("`host-async.{}` must return a `result<_, _>`, not nothing", function.name));
-            let Type::Id(id) = canonical_type(&fixture.resolve, result).await else {
-                panic!("`host-async.{}` must return a `result<_, _>`, found a primitive", function.name)
-            };
-            assert!(
-                matches!(fixture.resolve.types[id].kind, TypeDefKind::Result(_)),
-                "`host-async.{}` must return a `result<_, _>` so a host fault propagates instead of decoding as a default value",
-                function.name
-            );
+            let Type::Id(id) = canonical_type(&fixture.resolve, result).await else { panic!("`host-async.{}` must return a `result<_, _>`, found a primitive", function.name) };
+            assert!(matches!(fixture.resolve.types[id].kind, TypeDefKind::Result(_)), "`host-async.{}` must return a `result<_, _>` so a host fault propagates instead of decoding as a default value", function.name);
             checked += 1;
         }
         assert_eq!(checked, 24, "expected all 24 fallible `host-async` imports to have been checked");

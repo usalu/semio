@@ -14,21 +14,37 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::writer::schema::WriterArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub id: Option<String>,
-    #[state(artifact)] pub language_id: Option<String>,
-    #[state(artifact)] pub uri: Option<String>,
-    #[state(artifact)] pub document: Option<WriterDocumentChild>,
-    #[state(presence)] pub editor_selection: Option<Option<WriterEditorSelection>>,
-    #[state(presence)] pub editor_settings: Option<WriterEditorSettings>,
-    #[state(config)] pub format_signal: Option<u32>,
-    #[state(config)] pub lint_signal: Option<u32>,
-    #[state(config)] pub revision: Option<u32>,
-    #[state(config)] pub engagement_input: Option<String>,
-    #[state(config)] pub camera_x: Option<f64>,
-    #[state(config)] pub camera_y: Option<f64>,
-    #[state(config)] pub camera_zoom: Option<f64>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::writer::schema::WriterArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub id: Option<String>,
+    #[state(artifact)]
+    pub language_id: Option<String>,
+    #[state(artifact)]
+    pub uri: Option<String>,
+    #[state(artifact)]
+    pub document: Option<WriterDocumentChild>,
+    #[state(presence)]
+    pub editor_selection: Option<Option<WriterEditorSelection>>,
+    #[state(presence)]
+    pub editor_settings: Option<WriterEditorSettings>,
+    #[state(config)]
+    pub format_signal: Option<u32>,
+    #[state(config)]
+    pub lint_signal: Option<u32>,
+    #[state(config)]
+    pub revision: Option<u32>,
+    #[state(config)]
+    pub engagement_input: Option<String>,
+    #[state(config)]
+    pub camera_x: Option<f64>,
+    #[state(config)]
+    pub camera_y: Option<f64>,
+    #[state(config)]
+    pub camera_zoom: Option<f64>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

@@ -16,7 +16,8 @@ pub async fn definition() -> PanelTabDefinition {
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(PROCEDURAL_3D_PLAY_BODY_CATALOGUE.into()),
-        children: Vec::new()}
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -33,7 +34,12 @@ pub async fn render(labels: &Procedural3dLabels) -> UiNode {
             section.items.iter().map(|item| {
                 let action_kind = if item.kind == "neuron" { format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add")) } else { item.kind.clone() };
                 let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
-                tree_item_with_icon(format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)), semio_framework_plugin::Label::data(item.name.clone()), Some(icon), procedural3d_action("addWidget", Some(json!({ "kind": action_kind }))))
+                tree_item_with_icon(
+                    format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
+                    semio_framework_plugin::Label::data(item.name.clone()),
+                    Some(icon),
+                    procedural3d_action("addWidget", Some(json!({ "kind": action_kind }))),
+                )
             })
         })
         .collect();

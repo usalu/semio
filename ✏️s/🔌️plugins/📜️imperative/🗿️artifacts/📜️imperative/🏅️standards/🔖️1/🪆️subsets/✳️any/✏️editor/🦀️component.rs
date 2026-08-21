@@ -7,37 +7,36 @@
 //! `ImperativeCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
+use crate::artifacts::imperative::mutations::ImperativeMutation;
+use crate::artifacts::imperative::schema::default_snapshot;
+use crate::artifacts::imperative::{ImperativeSnapshot, Step, IMPERATIVE_DOCUMENT_SCHEMA};
 use crate::editor::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::editor::imperative::presence::{ImperativePresence, ImperativePresenceMutation};
+use crate::editor::imperative::engine::imperative_io;
 use crate::editor::imperative::modes::edit;
 use crate::editor::imperative::modes::edit::windows::{main, script};
 use crate::editor::imperative::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::editor::imperative::presence::{ImperativePresence, ImperativePresenceMutation};
 use crate::editor::imperative::terminology::imperative_labels;
-use crate::artifacts::imperative::schema::default_snapshot;
-use crate::editor::imperative::engine::imperative_io;
-use crate::artifacts::imperative::mutations::ImperativeMutation;
-use crate::artifacts::imperative::{ImperativeSnapshot, Step, IMPERATIVE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, ArtifactView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+};
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
 // `semio_framework::*` elsewhere) — see `crate::artifacts::imperative::IMPERATIVE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
-use store::EngineHandles;
 use serde_json::Value;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
-pub use main::{IMPERATIVE_PLAY_BODY_MAIN, IMPERATIVE_PLAY_WINDOW_MAIN};
-pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
 pub use catalogue_panel::IMPERATIVE_PLAY_BODY_CATALOGUE;
 pub use document_panel::IMPERATIVE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::IMPERATIVE_PLAY_BODY_INSPECTOR;
+pub use main::{IMPERATIVE_PLAY_BODY_MAIN, IMPERATIVE_PLAY_WINDOW_MAIN};
+pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory `📌️panels/*` builds its item
 /// actions with.
@@ -145,7 +144,14 @@ impl ArtifactEditor for ImperativePlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &ImperativeCommand, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &ImperativeCommand,
+        doc: &ArtifactView<'_, ImperativeSnapshot>,
+        cfg: &ConfigView<'_, ImperativeConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

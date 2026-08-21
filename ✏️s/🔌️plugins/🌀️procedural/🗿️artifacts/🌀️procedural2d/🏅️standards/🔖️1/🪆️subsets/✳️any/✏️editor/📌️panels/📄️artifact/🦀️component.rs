@@ -1,8 +1,8 @@
 //! 📄️ Procedural2d play app panel — the document tree: widgets of the current fixture.
 
+use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use crate::editor::procedural2d::config::Procedural2dConfig;
 use crate::editor::procedural2d::terminology::Procedural2dLabels;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
 use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -11,7 +11,13 @@ pub const PROCEDURAL2D_PLAY_BODY_DOCUMENT: &str = "procedural2d.play.document";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PROCEDURAL2D_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(PROCEDURAL2D_PLAY_BODY_DOCUMENT.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -23,10 +29,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
 pub async fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), Label::data(widget_id(widget).to_string()))).collect();
-    PanelTreeBuilder::new("procedural2d-play-document")
-        .section_or_placeholder("procedural2d-play-document.widgets", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, widget_items, labels.none)
-        .interaction_domain("graph")
-        .build()
+    PanelTreeBuilder::new("procedural2d-play-document").section_or_placeholder("procedural2d-play-document.widgets", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, widget_items, labels.none).interaction_domain("graph").build()
 }
 //#endregion 🔖️Render
 

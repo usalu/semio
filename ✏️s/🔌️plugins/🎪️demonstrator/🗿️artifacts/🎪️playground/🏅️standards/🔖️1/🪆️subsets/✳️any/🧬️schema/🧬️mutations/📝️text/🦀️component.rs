@@ -3,8 +3,8 @@
 //! `../🦀️component.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted
 //! here, one keyword per semantic verb, grammar `keyword key1=value1 ...`.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -70,10 +70,7 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 

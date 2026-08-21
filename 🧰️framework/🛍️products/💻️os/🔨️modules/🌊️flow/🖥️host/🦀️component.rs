@@ -1,31 +1,25 @@
 //! 🖥️ Flow host: canvas editing, evaluation session, and host errors.
 
 use crate::infinite::board::ports::directed_dag as dag;
-use crate::infinite::canvas as canvas;
+use crate::infinite::canvas;
 use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use dag::{
-    dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle,
-};
+use dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
-use neural::{
-    channel_output, compute_dirty_set, Atom, BudgetedEval, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
-    INPUT_KIND, OUTPUT_KIND,
-};
+use neural::{channel_output, compute_dirty_set, Atom, BudgetedEval, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
-use crate::catalogue::*;
-use crate::registry::*;
 use crate::bridge::*;
+use crate::catalogue::*;
 use crate::drawing::*;
-use crate::vcs::*;
 use crate::os_store::{create_document_envelope, ArtifactCommand};
-
+use crate::registry::*;
+use crate::vcs::*;
 
 // #region ⚠️ Errors
 /// 🧯️ `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
@@ -1886,10 +1880,7 @@ static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, HashSet<String>>>> = L
 static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
 
 fn sync_flow_geometry_retention() {
-    let merged: HashSet<String> = FLOW_SESSION_GEOMETRY
-        .lock()
-        .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
-        .unwrap_or_default();
+    let merged: HashSet<String> = FLOW_SESSION_GEOMETRY.lock().map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect()).unwrap_or_default();
     let live: Vec<String> = merged.into_iter().collect();
     crate::retain_geometry_handles(&live);
 }
@@ -2081,22 +2072,9 @@ fn preview_mesh_json_has_geometry(output_json: &str) -> bool {
     if value.get("error").is_some() {
         return false;
     }
-    let positions = value
-        .get("positions")
-        .and_then(|v| v.as_array())
-        .map(|a| a.len())
-        .unwrap_or(0);
-    let indices = value
-        .get("indices")
-        .and_then(|v| v.as_array())
-        .map(|a| a.len())
-        .unwrap_or(0);
-    let edges = value
-        .get("edgePositions")
-        .or_else(|| value.get("edge_positions"))
-        .and_then(|v| v.as_array())
-        .map(|a| a.len())
-        .unwrap_or(0);
+    let positions = value.get("positions").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
+    let indices = value.get("indices").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
+    let edges = value.get("edgePositions").or_else(|| value.get("edge_positions")).and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
     (indices > 0 && positions >= 9) || edges >= 6 || (positions >= 3 && indices == 0)
 }
 
@@ -2282,7 +2260,6 @@ mod tests {
         Err(EvalError::UnknownKind(kind.into()))
     }
 
-
     /// 🧪️ Installs first-party light flow extension manifests + real in-process ops for fixture tests.
     /// 🧪️ Installs first-party light (+brep) flow extension manifests and real in-process ops for fixture tests.
     fn install_first_party_light_flow_extensions_for_tests() {
@@ -2314,7 +2291,6 @@ mod tests {
             state.generation += 1;
         });
     }
-
 
     fn fixture_kind_infos_json() -> String {
         install_first_party_light_flow_extensions_for_tests();

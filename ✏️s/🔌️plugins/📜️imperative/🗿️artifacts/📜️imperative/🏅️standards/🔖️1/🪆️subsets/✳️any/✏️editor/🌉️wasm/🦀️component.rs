@@ -3,8 +3,8 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
-    use crate::editor::imperative::engine::{ImperativeCoreError, ImperativeHost};
     use crate::artifacts::imperative::PathRef;
+    use crate::editor::imperative::engine::{ImperativeCoreError, ImperativeHost};
     use std::cell::RefCell;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;

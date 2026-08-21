@@ -139,7 +139,11 @@ async fn removes_exactly_the_addressed_region_and_leaves_its_kind_sibling() {
     assert!(produced.messages().is_empty(), "delete-region/removes-the-old-town-region: deleting a present id must be diagnostic-free, got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("delete-region writes a regions delta");
     assert_eq!(delta.removed, vec!["region-old-town".to_string()], "delete-region/removes-the-old-town-region: exactly the payload's own id is removed");
-    assert_eq!(after.regions.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>(), vec!["region-harbor-district".to_string()], "delete-region/removes-the-old-town-region: the sibling region of the same kind must survive — deletion is by id, never by payload");
+    assert_eq!(
+        after.regions.iter().map(|feature| feature.id.clone()).collect::<Vec<_>>(),
+        vec!["region-harbor-district".to_string()],
+        "delete-region/removes-the-old-town-region: the sibling region of the same kind must survive — deletion is by id, never by payload"
+    );
     assert!(delta.added.is_empty() && delta.patched.is_empty() && delta.reordered.is_none(), "delete-region/removes-the-old-town-region: a delete must not add, patch or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "delete-region/removes-the-old-town-region: delete-region must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation());

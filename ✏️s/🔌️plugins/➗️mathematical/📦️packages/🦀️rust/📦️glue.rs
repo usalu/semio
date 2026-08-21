@@ -9,18 +9,17 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_schema as schema;
 extern crate semio_framework_number as number;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<MathematicalMutation, MathematicalConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
-
 // 🚚 Wave M3a (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): `cas`/
 // `polynomial` migrated verbatim from `🧮️math`'s crate root (files physically relocated under
 // `🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/`, the facet's
@@ -123,168 +122,168 @@ pub mod artifacts {
                                 pub use component::*;
                                 #[path = "."]
                                 pub mod change_graph_directed {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-graph-directed/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-graph-directed/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-graph-directed/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-graph-directed/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-graph-directed/🧪️tests/keeps-an-already-directed-graph-directed/🦀️component.rs"]
                                     mod tests_keeps_an_already_directed_graph_directed;
                                 }
                                 #[path = "."]
                                 pub mod update_graph_algorithm {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧪️tests/restates-the-unset-algorithm-and-its-absent-seed/🦀️component.rs"]
                                     mod tests_restates_the_unset_algorithm_and_its_absent_seed;
                                 }
                                 #[path = "."]
                                 pub mod replace_graph {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-graph/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-graph/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-graph/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-graph/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-graph/🧪️tests/replays-the-identical-empty-graph/🦀️component.rs"]
                                     mod tests_replays_the_identical_empty_graph;
                                 }
                                 #[path = "."]
                                 pub mod create_node {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️create-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️create-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️create-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️create-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️component.rs"]
                                     mod tests_rejects_a_duplicate_node_id;
                                 }
                                 #[path = "."]
                                 pub mod delete_node {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌️delete-node/🧪️tests/rejects-deleting-a-node-that-is-not-in-the-graph/🦀️component.rs"]
                                     mod tests_rejects_deleting_a_node_that_is_not_in_the_graph;
                                 }
                                 #[path = "."]
                                 pub mod delete_nodes {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-nodes/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-nodes/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-nodes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-nodes/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-nodes/🧪️tests/rejects-a-bulk-delete-where-every-id-is-absent/🦀️component.rs"]
                                     mod tests_rejects_a_bulk_delete_where_every_id_is_absent;
                                 }
                                 #[path = "."]
                                 pub mod change_node_label {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-label/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-label/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-label/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-label/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-node-label/🧪️tests/rejects-relabelling-a-node-that-is-not-in-the-graph/🦀️component.rs"]
                                     mod tests_rejects_relabelling_a_node_that_is_not_in_the_graph;
                                 }
                                 #[path = "."]
                                 pub mod move_node {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕹️move-node/🧪️tests/rejects-moving-a-node-that-is-not-in-the-graph/🦀️component.rs"]
                                     mod tests_rejects_moving_a_node_that_is_not_in_the_graph;
                                 }
                                 #[path = "."]
                                 pub mod connect_nodes {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-nodes/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-nodes/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-nodes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-nodes/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-nodes/🧪️tests/rejects-an-edge-between-two-absent-endpoints/🦀️component.rs"]
                                     mod tests_rejects_an_edge_between_two_absent_endpoints;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_nodes {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-nodes/🧪️tests/rejects-severing-an-edge-that-is-not-in-the-graph/🦀️component.rs"]
                                     mod tests_rejects_severing_an_edge_that_is_not_in_the_graph;
                                 }
                                 #[path = "."]
                                 pub mod replace_points {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️replace-points/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️replace-points/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️replace-points/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️replace-points/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️replace-points/🧪️tests/replays-the-identical-empty-point-cloud/🦀️component.rs"]
                                     mod tests_replays_the_identical_empty_point_cloud;
                                 }
                                 #[path = "."]
                                 pub mod insert_point {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-point/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-point/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-point/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-point/🧪️tests/seeds-the-empty-cloud-with-its-first-point/🦀️component.rs"]
                                     mod tests_seeds_the_empty_cloud_with_its_first_point;
                                 }
                                 #[path = "."]
                                 pub mod remove_point {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-point/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-point/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-point/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-point/🧪️tests/rejects-removing-a-point-from-an-empty-cloud/🦀️component.rs"]
                                     mod tests_rejects_removing_a_point_from_an_empty_cloud;
                                 }
                                 #[path = "."]
                                 pub mod move_point {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️move-point/🧪️tests/rejects-moving-a-point-that-is-not-in-the-cloud/🦀️component.rs"]
                                     mod tests_rejects_moving_a_point_that_is_not_in_the_cloud;
@@ -294,12 +293,12 @@ pub mod artifacts {
                                 // pattern end-to-end.
                                 #[path = "."]
                                 pub mod change_coefficient {
-                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-coefficient/🧪️tests/raises-the-leading-coefficient-to-three-halves/🦀️component.rs"]
                                     mod tests_raises_the_leading_coefficient_to_three_halves;
@@ -313,31 +312,31 @@ pub mod artifacts {
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod import {
@@ -466,20 +465,42 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::mutations::text::*; pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::MathematicalMutation; }
-        pub mod dsl { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::mutations::binary::*; }
-        pub mod pack { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::binary::*; }
-        pub mod diff { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::diff::text::*; } }
-        pub mod mutations { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::*; }
-        pub mod snapshot {
-            pub mod schema { pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::*; }
-            pub mod pack { pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::binary::*; }
+        pub mod op {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::mutations::text::*;
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::MathematicalMutation;
         }
-        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::MathematicalSnapshot;
-        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::MathematicalMutation;
+        pub mod dsl {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::mutations::binary::*;
+        }
+        pub mod pack {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::diff::text::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::*;
+        }
+        pub mod snapshot {
+            pub mod schema {
+                pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::mathematical::standards::v1::subsets::any::io::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::diff::MathematicalDiff;
-
+        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::mutations::MathematicalMutation;
+        pub use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::MathematicalSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -526,20 +547,20 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact/🦀️component.rs"]
-            pub mod set_artifact;
-            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-algorithm/🦀️component.rs"]
-            pub mod set_algorithm;
-            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-directed/🦀️component.rs"]
-            pub mod set_directed;
             #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
             pub mod node_graph_edit;
             #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-points/🦀️component.rs"]
-            pub mod set_points;
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-algorithm/🦀️component.rs"]
+            pub mod set_algorithm;
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact/🦀️component.rs"]
+            pub mod set_artifact;
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-directed/🦀️component.rs"]
+            pub mod set_directed;
             #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-points/🦀️component.rs"]
+            pub mod set_points;
         }
 
         #[path = "."]
@@ -552,10 +573,10 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️component.rs"]
-                    pub mod graph;
                     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️geometry/🦀️component.rs"]
                     pub mod geometry;
+                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️component.rs"]
+                    pub mod graph;
                 }
             }
         }
@@ -599,13 +620,13 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
+    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_mathematical_demo_session;
     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_mathematical_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_mathematical_demo_tests;
-    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_mathematical_demo_session;
 }
 //#endregion 📚️Examples
 

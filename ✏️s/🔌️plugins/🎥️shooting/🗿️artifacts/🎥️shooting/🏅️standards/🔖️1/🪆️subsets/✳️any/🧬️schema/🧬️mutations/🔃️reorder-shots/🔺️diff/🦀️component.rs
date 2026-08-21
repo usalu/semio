@@ -2,8 +2,8 @@
 //! when the resulting order is unchanged.
 
 use super::mutation::ReorderShots;
+use crate::artifacts::shooting::diff::{ShootingDiff, ShootingShotsDelta};
 use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::{ShootingShotsDelta, ShootingDiff};
 
 pub async fn diff(payload: &ReorderShots, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.shots.iter().any(|shot| shot.id == payload.id) {

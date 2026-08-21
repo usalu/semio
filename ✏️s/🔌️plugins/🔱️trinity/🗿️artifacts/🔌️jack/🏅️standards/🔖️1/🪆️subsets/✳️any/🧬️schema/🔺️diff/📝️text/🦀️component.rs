@@ -12,13 +12,11 @@ use crate::artifacts::jack::schema::JackArtifact;
 use crate::artifacts::jack::{Edge, JackSnapshot, Node};
 use protocol::MutationDiff;
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 //#region 🔖️Apply
 impl JackDiff {
@@ -56,11 +54,7 @@ impl JackDiff {
             if let Some(modes) = &self.lod_mode_by_window {
                 for (key, value) in modes {
                     if value.is_none() && !next.lod_mode_by_window.contains_key(key) {
-                        return Err(protocol::MutationApplyError::new(
-                            "mutation.apply.missing-target",
-                            "removed window LOD mode does not exist",
-                        )
-                        .at(["lodModeByWindow".to_string(), key.clone()]));
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed window LOD mode does not exist").at(["lodModeByWindow".to_string(), key.clone()]));
                     }
                 }
                 for (key, value) in modes {
@@ -180,20 +174,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn jack_diff_absorb_merges_content() {
         let mut diff = JackDiff::default();
-        let other = diff_replace_content(
-            vec![Node {
-                id: "x".into(),
-                kind: "Piece".into(),
-                name: "x".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 1.0,
-                height: 1.0,
-                properties: Default::default(),
-                ports: vec![],
-            }],
-            vec![],
-        );
+        let other = diff_replace_content(vec![Node { id: "x".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: Default::default(), ports: vec![] }], vec![]);
         diff.absorb(other.clone());
         assert_eq!(diff.content, other.content);
     }

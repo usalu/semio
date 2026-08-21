@@ -1,8 +1,8 @@
 //! 📄️ Shooting play app panel — the document tree: shots and assets of the current snapshot.
 
+use crate::artifacts::shooting::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
-use crate::artifacts::shooting::ShootingSnapshot;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 
@@ -12,7 +12,13 @@ pub const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(SHOOTING_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(SHOOTING_PLAY_BODY_DOCUMENT.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -34,11 +40,8 @@ pub async fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> UiN
         .iter()
         .map(|shot| crate::editor::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::shooting_action("setShotSelection", Some(json!({ "shotIds": [shot.id] })))))
         .collect();
-    let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
-        .assets
-        .iter()
-        .map(|asset| crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id)))
-        .collect();
+    let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> =
+        snapshot.assets.iter().map(|asset| crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))).collect();
     PanelTreeBuilder::new("shooting-play-document").section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items).section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items).build()
 }
 //#endregion 🔖️Render

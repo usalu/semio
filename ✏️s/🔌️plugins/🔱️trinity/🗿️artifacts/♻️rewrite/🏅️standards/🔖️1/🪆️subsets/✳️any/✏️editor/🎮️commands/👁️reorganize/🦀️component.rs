@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Trinity Rewrite app command — `reorganize`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) async fn reorganize(reorganize_epoch: u64) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {

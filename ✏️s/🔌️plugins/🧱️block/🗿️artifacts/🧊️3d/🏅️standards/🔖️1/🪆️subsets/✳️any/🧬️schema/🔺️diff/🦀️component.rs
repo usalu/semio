@@ -1,7 +1,7 @@
 //! 🧬️ Block3d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
+use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -12,28 +12,50 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::block3d::schema::Block3dArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub object_kind: Option<BlockKindIdentity>,
-    #[state(artifact)] pub representations: Option<Block3dRepresentationsDelta>,
-    #[state(artifact)] pub vortex_kinds: Option<Block3dVortexKindsDelta>,
-    #[state(artifact)] pub vortices: Option<Block3dVorticesDelta>,
-    #[state(artifact)] pub compatibility: Option<Block3dCompatibilityDelta>,
-    #[state(artifact)] pub attributes: Option<Block3dAttributesDelta>,
-    #[state(artifact)] pub authors: Option<Block3dAuthorList>,
-    #[state(artifact)] pub camera3d: Option<BlockCamera3d>,
-    #[state(artifact)] pub meta: Option<BlockMeta>,
-    #[state(presence)] pub selected_ids: Option<Block3dStringList>,
-    #[state(presence)] pub active_representation_id: Option<Option<String>>,
-    #[state(presence)] pub wanted_tags: Option<Block3dStringList>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(config)] pub windows: Option<Block3dWindowsList>,
-    #[state(config)] pub brush_vortex_kind_id: Option<Option<String>>,
-    #[state(config)] pub brush_radius: Option<f64>,
-    #[state(config)] pub brush_flip: Option<bool>,
-    #[state(artifact)] pub brush_preview: Option<Option<Block3dBrushPreview>>,
-    #[state(config)] pub camera: Option<Option<BlockCamera3d>>,
-    #[state(artifact)] pub hovered_vortex_full_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::block3d::schema::Block3dArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub object_kind: Option<BlockKindIdentity>,
+    #[state(artifact)]
+    pub representations: Option<Block3dRepresentationsDelta>,
+    #[state(artifact)]
+    pub vortex_kinds: Option<Block3dVortexKindsDelta>,
+    #[state(artifact)]
+    pub vortices: Option<Block3dVorticesDelta>,
+    #[state(artifact)]
+    pub compatibility: Option<Block3dCompatibilityDelta>,
+    #[state(artifact)]
+    pub attributes: Option<Block3dAttributesDelta>,
+    #[state(artifact)]
+    pub authors: Option<Block3dAuthorList>,
+    #[state(artifact)]
+    pub camera3d: Option<BlockCamera3d>,
+    #[state(artifact)]
+    pub meta: Option<BlockMeta>,
+    #[state(presence)]
+    pub selected_ids: Option<Block3dStringList>,
+    #[state(presence)]
+    pub active_representation_id: Option<Option<String>>,
+    #[state(presence)]
+    pub wanted_tags: Option<Block3dStringList>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(config)]
+    pub windows: Option<Block3dWindowsList>,
+    #[state(config)]
+    pub brush_vortex_kind_id: Option<Option<String>>,
+    #[state(config)]
+    pub brush_radius: Option<f64>,
+    #[state(config)]
+    pub brush_flip: Option<bool>,
+    #[state(artifact)]
+    pub brush_preview: Option<Option<Block3dBrushPreview>>,
+    #[state(config)]
+    pub camera: Option<Option<BlockCamera3d>>,
+    #[state(artifact)]
+    pub hovered_vortex_full_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 
@@ -84,7 +106,6 @@ pub struct Block3dRepresentationsPatch {
     pub replacement: Option<BlockRepresentation>,
 }
 
-
 /// 📂 Identified-collection delta for VortexKinds.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -109,7 +130,6 @@ pub struct Block3dVortexKindsPatchEntry {
 pub struct Block3dVortexKindsPatch {
     pub replacement: Option<Block3dVortexKind>,
 }
-
 
 /// 📂 Identified-collection delta for Vortices.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -136,7 +156,6 @@ pub struct Block3dVorticesPatch {
     pub replacement: Option<Block3dVortexTemplate>,
 }
 
-
 /// 📂 Identified-collection delta for Compatibility.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -161,7 +180,6 @@ pub struct Block3dCompatibilityPatchEntry {
 pub struct Block3dCompatibilityPatch {
     pub replacement: Option<BlockCompatibilityRule>,
 }
-
 
 /// 📂 Identified-collection delta for Attributes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

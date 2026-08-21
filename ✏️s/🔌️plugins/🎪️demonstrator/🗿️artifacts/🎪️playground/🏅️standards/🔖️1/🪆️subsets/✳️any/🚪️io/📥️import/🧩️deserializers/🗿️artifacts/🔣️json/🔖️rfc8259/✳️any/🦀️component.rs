@@ -5,8 +5,7 @@ use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
 use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
-    let mut out: PlaygroundSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("playground<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: PlaygroundSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("playground<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = PLAYGROUND_DOCUMENT_SCHEMA.into();
     }

@@ -44,9 +44,9 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 
-use crate::*;
-use crate::db_ids::*;
 use crate::db_durability::Frontier;
+use crate::db_ids::*;
+use crate::*;
 use protocol::MutationDiff as _;
 
 use dsl::DslValue;
@@ -489,10 +489,9 @@ impl Default for ArtifactEngineConfig<AllowAll, NullVersionGraph> {
 
 /// @emoji 🎭️ The document authority's real, synchronous pipeline: one open document's WAL,
 /// materialized state, causal dependency bookkeeping, previews, and outbox — everything
-/// `ArtifactAuthority` (the `db_actor`-mailbox wrapper below) drives from its own dedicated
-/// thread. Deliberately NOT `Send` (see `ArtifactAuthority`'s doc for why: `DocumentState` embeds
-/// `db_state::PMap`, which is `Rc`-based) — usable directly, single-threaded, wherever a mailbox
-/// isn't needed (e.g. this crate's own tests).
+/// `ArtifactAuthority` (the `db_actor`-mailbox wrapper below) drives in finite process-pool turns.
+/// The engine is moved only between serialized turns; callers can also use it directly wherever a
+/// mailbox is unnecessary (for example this crate's own tests).
 pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
@@ -518,9 +517,8 @@ const MAX_RECENT_TOUCHES: usize = 256;
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    // 🚫️async: E5 executor bridge — `ArtifactEngine`'s methods run only on `ArtifactAuthority`'s
-    // own dedicated actor thread (R4 clause 2/4: the thread IS the executor for this bridge), so
-    // they stay plain sync fns and drive their async storage calls via `db_actor::block_on`.
+    // 🚫️async: E5 executor bridge — an authority pool turn is a synchronous job, so the
+    // engine drives its async storage calls to completion inside that finite turn.
     pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
@@ -533,7 +531,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// (per `db_wal::ArtifactWal::open`), then replays only the `WAL_COMMAND` records committed
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
-    // 🚫️async: E5 executor bridge — see `create`'s doc; same actor-thread bridge.
+    // 🚫️async: E5 executor bridge — see `create`'s doc; same finite-turn bridge.
     pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let mut report = MaterializeReport::default();
@@ -745,11 +743,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // so this can't stay an `Iterator::map` chain (R10 residue shape 1: `.await` inside a sync
         // closure) — hoisted into an explicit async loop instead.
         let mut messages: Vec<protocol::MutationMessage> = Vec::new();
-        for record in db_conflict::ConflictDetector::new()
-            .detect(&probe)
-            .iter()
-            .filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str()))
-        {
+        for record in db_conflict::ConflictDetector::new().detect(&probe).iter().filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str())) {
             messages.push(grade_conflict_record(record).await);
         }
         if let Some(worst) = protocol::worst_level(&messages).await {
@@ -817,10 +811,15 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
         for (envelope, _, _) in &newly_applied {
-            match self.config.version_graph.record_change(
-                &self.document,
-                ChangeRecord { parent: None, content_hash: self.state.content_hash().await, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
-            ).await {
+            match self
+                .config
+                .version_graph
+                .record_change(
+                    &self.document,
+                    ChangeRecord { parent: None, content_hash: self.state.content_hash().await, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
+                )
+                .await
+            {
                 Ok(_) | Err(DbError::Unimplemented(_)) => {}
                 Err(other) => return Err(other),
             }
@@ -987,16 +986,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms).await,
         };
-        self.previews.publish(db_preview::PublishPreviewRequest {
-            document: self.document.clone(),
-            actor: ActorId("preview".to_string()),
-            key: format!("preview-{now_ms}"),
-            base: self.frontier.clone(),
-            envelope,
-            touched,
-            ttl_ms: None,
-            now_ms,
-        })
+        self.previews.publish(db_preview::PublishPreviewRequest { document: self.document.clone(), actor: ActorId("preview".to_string()), key: format!("preview-{now_ms}"), base: self.frontier.clone(), envelope, touched, ttl_ms: None, now_ms })
     }
 
     /// @emoji 🌫️ The value a preview would show at `path`: the preview's own diff if it touches
@@ -1122,8 +1112,7 @@ pub struct MaterializeReport {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Actor
-/// @emoji 📨️ A message crossing `ArtifactAuthority`'s mailbox — deliberately `Send` (unlike
-/// `ArtifactEngine` itself, see `ArtifactAuthority`'s doc).
+/// @emoji 📨️ A `Send` message crossing `ArtifactAuthority`'s bounded mailbox.
 pub enum ArtifactMessage {
     Submit {
         batch: CommandBatch,
@@ -1154,62 +1143,151 @@ pub enum ArtifactMessage {
     },
 }
 
-/// @emoji 🎭️ A live handle to one document's authority actor, running the `db_actor` mailbox on a
-/// dedicated OS thread.
-///
-/// 🎯️ Design choice (why this does NOT implement `db_actor::Actor`): `db_actor::Actor: Send +
-/// 'static`, but `ArtifactEngine` structurally cannot be `Send` — `DocumentState` embeds
-/// `db_state::PMap`, which is `Rc`-based (`db_state`'s own module doc: cheap `O(1)` clone via
-/// reference-count bump, deliberately not thread-safe). Rather than fight that (e.g. by
-/// re-wrapping every persistent structure in `Arc`, undermining `db_state`'s whole design), this
-/// type embraces it: `spawn` takes a `Send` CONSTRUCTION CLOSURE (not a pre-built engine), builds
-/// the `ArtifactEngine` on its own dedicated thread, and never moves it again — only
-/// `ArtifactMessage`s (themselves `Send`) ever cross the mailbox boundary. That is exactly the
-/// isolation property the actor pattern exists to provide; it just isn't expressible through
-/// `db_actor::Actor`'s particular trait shape for a `!Send` actor body, so this crate builds
-/// directly on `db_actor`'s lower-level mailbox primitives (`mailbox`/`Address`/`Receiver`/
-/// `oneshot`/`block_on`) instead.
+/// @emoji 🎭️ A live handle to one document's authority actor. Each admitted mailbox message wakes
+/// one finite `WorkerPool` turn; no job waits for the next message and no authority owns an OS
+/// thread. `db_state::PMap` uses `Arc`-shared HAMT nodes, making the engine movable between turns
+/// without sharing mutable actor state or weakening its single-consumer mailbox semantics.
 pub struct ArtifactAuthority {
     address: db_actor::Address<ArtifactMessage>,
-    handle: Option<std::thread::JoinHandle<()>>,
+    cancel: Arc<dyn Fn() + Send + Sync>,
+    done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
+}
+
+struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
+    pool: Arc<semio_framework_async::WorkerPool>,
+    address: db_actor::Address<ArtifactMessage>,
+    receiver: db_actor::Receiver<ArtifactMessage>,
+    builder: std::sync::Mutex<Option<Box<dyn FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send>>>,
+    engine: std::sync::Mutex<Option<ArtifactEngine<A, V>>>,
+    ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), DbError>>>>,
+    done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
+    scheduled: std::sync::atomic::AtomicBool,
+    cancelled: std::sync::atomic::AtomicBool,
+    terminal: std::sync::atomic::AtomicBool,
+}
+
+impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.terminal.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let runner = self.clone();
+        self.pool.submit(semio_framework_async::Lane::UserVisible, Box::new(move || runner.run_turn()));
+    }
+
+    fn cancel(self: &Arc<Self>) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.schedule();
+    }
+
+    fn finish(&self) {
+        if !self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            self.engine.lock().unwrap().take();
+            if let Some(done) = self.done.lock().unwrap().take() {
+                done.send(());
+            }
+        }
+    }
+
+    fn run_turn(self: Arc<Self>) {
+        use std::panic::AssertUnwindSafe;
+        use std::sync::atomic::Ordering;
+
+        if let Some(build) = self.builder.lock().unwrap().take() {
+            match std::panic::catch_unwind(AssertUnwindSafe(build)) {
+                Ok(Ok(engine)) => {
+                    *self.engine.lock().unwrap() = Some(engine);
+                    if let Some(ready) = self.ready.lock().unwrap().take() {
+                        ready.send(Ok(()));
+                    }
+                }
+                Ok(Err(error)) => {
+                    if let Some(ready) = self.ready.lock().unwrap().take() {
+                        ready.send(Err(error));
+                    }
+                    self.finish();
+                    return;
+                }
+                Err(_) => {
+                    if let Some(ready) = self.ready.lock().unwrap().take() {
+                        ready.send(Err(DbError::Internal("document authority construction panicked".to_string())));
+                    }
+                    self.finish();
+                    return;
+                }
+            }
+        }
+        if self.cancelled.load(Ordering::Acquire) {
+            self.finish();
+            return;
+        }
+        let envelope = self.receiver.try_recv();
+        if let Some(envelope) = envelope {
+            let handled = {
+                let mut engine = self.engine.lock().unwrap();
+                let engine = engine.as_mut().expect("ArtifactRunner is scheduled only after construction");
+                std::panic::catch_unwind(AssertUnwindSafe(|| match envelope.payload {
+                    ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(db_actor::block_on(engine.submit(batch, options, now_ms))),
+                    ArtifactMessage::Query { path, reply } => reply.send(db_actor::block_on(engine.get(&path))),
+                    ArtifactMessage::Frontier { reply } => reply.send(db_actor::block_on(engine.frontier())),
+                    ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(db_actor::block_on(engine.query(query, consistency))),
+                    ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(db_actor::block_on(engine.snapshot_now(now_ms))),
+                    ArtifactMessage::DrainOutbox { reply } => reply.send(db_actor::block_on(engine.drain_outbox())),
+                }))
+            };
+            if handled.is_err() {
+                self.address.close();
+                self.finish();
+                return;
+            }
+        }
+        if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
+            self.finish();
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.address.has_messages() {
+            self.schedule();
+        }
+    }
 }
 
 impl ArtifactAuthority {
-    /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
-    /// that construction succeeds or fails — a caller never holds a `ArtifactAuthority` whose
-    /// engine failed to open.
-    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
+    /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
+    /// a caller never receives an authority whose engine failed to open.
+    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static>(
+        pool: Arc<semio_framework_async::WorkerPool>,
+        build: impl FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send + 'static,
+        capacities: MailboxCapacities,
+    ) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
-        let handle = std::thread::Builder::new()
-            .name("db-document-actor".to_string())
-            .spawn(move || {
-                let mut engine = match build() {
-                    Ok(engine) => engine,
-                    Err(err) => {
-                        ready_tx.send(Err(err));
-                        return;
-                    }
-                };
-                ready_tx.send(Ok(()));
-                while let Some(envelope) = receiver.recv_blocking() {
-                    match envelope.payload {
-                        // 🚫️async: E5 executor bridge — this dedicated actor thread IS the
-                        // executor (R4 clause 2/4), so `ArtifactEngine`'s real `async fn` methods
-                        // are driven via `db_actor::block_on` rather than `.await`.
-                        ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(db_actor::block_on(engine.submit(batch, options, now_ms))),
-                        ArtifactMessage::Query { path, reply } => reply.send(db_actor::block_on(engine.get(&path))),
-                        ArtifactMessage::Frontier { reply } => reply.send(db_actor::block_on(engine.frontier())),
-                        ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(db_actor::block_on(engine.query(query, consistency))),
-                        ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(db_actor::block_on(engine.snapshot_now(now_ms))),
-                        ArtifactMessage::DrainOutbox { reply } => reply.send(db_actor::block_on(engine.drain_outbox())),
-                    }
-                }
-            })
-            .expect("db_artifact: failed to spawn document actor thread");
+        let (done_tx, done_rx) = db_actor::oneshot();
+        let runner = Arc::new(ArtifactRunner {
+            pool,
+            address: address.clone(),
+            receiver,
+            builder: std::sync::Mutex::new(Some(Box::new(build))),
+            engine: std::sync::Mutex::new(None),
+            ready: std::sync::Mutex::new(Some(ready_tx)),
+            done: std::sync::Mutex::new(Some(done_tx)),
+            scheduled: std::sync::atomic::AtomicBool::new(false),
+            cancelled: std::sync::atomic::AtomicBool::new(false),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let weak = Arc::downgrade(&runner);
+        address.set_consumer_wake(Arc::new(move || {
+            if let Some(runner) = weak.upgrade() {
+                runner.schedule();
+            }
+        }));
+        let runner_for_cancel = runner.clone();
+        let cancel: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_cancel.cancel());
+        runner.schedule();
 
-        match db_actor::block_on(ready_rx) {
-            Ok(Ok(())) => Ok(ArtifactAuthority { address, handle: Some(handle) }),
+        match ready_rx.await {
+            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, done: std::sync::Mutex::new(Some(done_rx)) }),
             Ok(Err(err)) => Err(err),
             Err(_) => Err(DbError::Closed),
         }
@@ -1240,11 +1318,13 @@ impl ArtifactAuthority {
         self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::DrainOutbox { reply })
     }
 
-    /// @emoji 🚪️ Closes the mailbox and joins the actor thread — graceful shutdown.
-    pub async fn shutdown(mut self) {
+    /// @emoji 🚪️ Closes the mailbox, cancels any future turn, and awaits the finite in-flight turn.
+    pub async fn shutdown(self) {
         self.address.close();
-        if let Some(handle) = self.handle.take() {
-            let _ = handle.join();
+        (self.cancel)();
+        let done = self.done.lock().unwrap().take();
+        if let Some(done) = done {
+            let _ = done.await;
         }
     }
 }
@@ -1611,10 +1691,11 @@ mod tests {
 
     //#region 🔖️Actor
     #[semio_framework_async_macros::async_test]
-    async fn document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread() {
+    async fn document_authority_submits_and_queries_over_finite_pool_turns() {
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
         let storage = storage().await;
         let document = document_id().await;
-        let authority = ArtifactAuthority::spawn(move || ArtifactEngine::create(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
+        let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))]).await]).await.unwrap();
         let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).await.unwrap();
@@ -1630,12 +1711,15 @@ mod tests {
         assert_eq!(generation, 0);
 
         authority.shutdown().await;
+        pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
-        let result = ArtifactAuthority::spawn(|| -> Result<ArtifactEngine<AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
+        let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
+        let result = ArtifactAuthority::spawn(pool.clone(), || -> Result<ArtifactEngine<AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
         assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
+        pool.shutdown();
     }
     //#endregion 🔖️Actor
 }

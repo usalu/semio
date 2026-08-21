@@ -10,10 +10,6 @@ pub async fn inverse(payload: &MoveWidgets, base: &FlowSnapshot) -> Vec<FlowMuta
         return Vec::new();
     }
     let scene = flow_working_scene(base);
-    let entries = payload
-        .entries
-        .iter()
-        .map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: scene.layout.get(&entry.id).cloned() })
-        .collect();
+    let entries = payload.entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: scene.layout.get(&entry.id).cloned() }).collect();
     vec![FlowMutation::MoveWidgets(MoveWidgets { entries })]
 }

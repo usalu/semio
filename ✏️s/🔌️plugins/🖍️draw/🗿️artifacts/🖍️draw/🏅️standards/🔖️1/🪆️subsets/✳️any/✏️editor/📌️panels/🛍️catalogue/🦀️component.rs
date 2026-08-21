@@ -1,9 +1,9 @@
 //! 🛍️ Draw play app panel — the layer-kind catalogue (constitutional: was `ui`'s `Panels` region,
 //! catalogue half).
 
+use crate::artifacts::draw::{DrawSnapshot, DRAW_BOOLEAN_OPERATIONS};
 use crate::editor::draw::draw_play_action;
 use crate::editor::draw::terminology::DrawPlayLabels;
-use crate::artifacts::draw::{DrawSnapshot, DRAW_BOOLEAN_OPERATIONS};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use std::collections::HashMap;
 

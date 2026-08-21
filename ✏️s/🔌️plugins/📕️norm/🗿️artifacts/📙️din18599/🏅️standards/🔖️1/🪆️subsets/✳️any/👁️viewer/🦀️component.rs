@@ -4,13 +4,11 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::din18599::{DIN18599_DIALECT, DIN18599_DOCUMENT_SCHEMA};
 use crate::artifacts::din18599::Din18599Snapshot;
+use crate::artifacts::din18599::{DIN18599_DIALECT, DIN18599_DOCUMENT_SCHEMA};
 use crate::viewer::din18599::modes::view;
 use crate::viewer::din18599::modes::view::windows::report;
-use semio_framework_plugin::{
-    ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer,
-};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️component.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
 use semio_framework_plugin::app::{Dialect, InteractionView};

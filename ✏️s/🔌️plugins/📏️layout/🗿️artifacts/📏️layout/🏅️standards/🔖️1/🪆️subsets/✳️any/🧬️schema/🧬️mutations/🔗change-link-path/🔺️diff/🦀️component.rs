@@ -13,10 +13,7 @@ pub async fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapsh
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Link \"{}\" already has path \"{}\".", payload.id, payload.new_path));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        links: Some(LayoutLinksDelta {
-            patched: vec![LayoutLinkPatchEntry { id: payload.id.clone(), patch: ImageLinkPatch { path: Some(payload.new_path.clone()) } }],
-            ..Default::default()
-        }),
+        links: Some(LayoutLinksDelta { patched: vec![LayoutLinkPatchEntry { id: payload.id.clone(), patch: ImageLinkPatch { path: Some(payload.new_path.clone()) } }], ..Default::default() }),
         ..Default::default()
     })
 }

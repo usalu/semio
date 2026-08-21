@@ -1,10 +1,10 @@
 //! ❓️ ❓️ Forms play app commands command — `drop-question-kind`.
 
+use crate::artifacts::forms::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
-use crate::artifacts::forms::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -182,11 +182,6 @@ async fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, targ
 }
 //#endregion 🔖️Shell
 
-
-
-
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "drop-question-kind")]
 pub struct DropQuestionKind {
@@ -206,9 +201,5 @@ pub async fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnap
     };
     let index = resolve_question_insert_index(spec, &step_id, &payload.target_id, &payload.drop_position);
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    Ok(Emit {
-        artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })],
-        config_mutations: reset_try_config_mutations(),
-        ..Default::default()
-    })
+    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })], config_mutations: reset_try_config_mutations(), ..Default::default() })
 }

@@ -1,10 +1,10 @@
 //! ✍️ ✍️ Writer play app commands command — `format-document`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::artifacts::writer::schema::format_writer_text;
 use crate::artifacts::writer::op::{EditText, WriterMutation};
+use crate::artifacts::writer::schema::format_writer_text;
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

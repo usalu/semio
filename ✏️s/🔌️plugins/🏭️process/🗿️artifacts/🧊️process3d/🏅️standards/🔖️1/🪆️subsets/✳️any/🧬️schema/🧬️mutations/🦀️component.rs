@@ -35,22 +35,22 @@ use serde::{Deserialize, Serialize};
 // directly in the plugin's `📦️glue.rs` (this facet's fan-out ticket, SEMANTIC-MUTATIONS-OVERHAUL
 // wave-C, owns `📦️glue.rs` for this plugin); `use super::<kind>;` below brings each sibling into
 // this file's scope so the enum body can reference `<kind>::mutation::<Type>`.
-use super::create_step;
-use super::delete_step;
-use super::rename_step;
+use super::change_cursor;
+use super::change_machine_icon;
 use super::change_step_enabled;
 use super::change_step_origin;
-use super::replace_step_measure;
-use super::reorder_steps;
-use super::create_machine;
-use super::delete_machine;
-use super::rename_machine;
-use super::change_machine_icon;
-use super::replace_machine_capabilities;
-use super::move_stock;
 use super::change_stock_label;
+use super::create_machine;
+use super::create_step;
+use super::delete_machine;
+use super::delete_step;
+use super::move_stock;
+use super::rename_machine;
+use super::rename_step;
+use super::reorder_steps;
+use super::replace_machine_capabilities;
+use super::replace_step_measure;
 use super::replace_stock_solid;
-use super::change_cursor;
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
@@ -83,25 +83,25 @@ pub enum Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, WorkshopMachine};
+    use change_cursor::mutation::ChangeCursor;
     use change_machine_icon::mutation::ChangeMachineIcon;
     use change_step_enabled::mutation::ChangeStepEnabled;
     use change_step_origin::mutation::ChangeStepOrigin;
     use change_stock_label::mutation::ChangeStockLabel;
+    use create_machine::mutation::CreateMachine;
+    use create_step::mutation::CreateStep;
     use delete_machine::mutation::DeleteMachine;
     use delete_step::mutation::DeleteStep;
-    use create_machine::mutation::CreateMachine;
+    use move_stock::mutation::MoveStock;
     use protocol::Mutation;
+    use protocol::SemanticMutation;
     use rename_machine::mutation::RenameMachine;
     use rename_step::mutation::RenameStep;
-    use replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
-    use replace_stock_solid::mutation::ReplaceStockSolid;
     use reorder_steps::mutation::ReorderSteps;
-    use change_cursor::mutation::ChangeCursor;
+    use replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
     use replace_step_measure::mutation::ReplaceStepMeasure;
-    use move_stock::mutation::MoveStock;
-    use create_step::mutation::CreateStep;
+    use replace_stock_solid::mutation::ReplaceStockSolid;
 
     async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -112,12 +112,10 @@ mod tests {
     }
 
     async fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(base, mutation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");

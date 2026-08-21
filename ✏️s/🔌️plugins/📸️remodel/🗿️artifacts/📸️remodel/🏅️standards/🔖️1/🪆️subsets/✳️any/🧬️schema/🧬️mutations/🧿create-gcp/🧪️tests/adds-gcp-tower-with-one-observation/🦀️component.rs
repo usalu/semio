@@ -47,10 +47,7 @@ async fn appends_the_gcp_together_with_its_observation() {
 async fn inverse_is_a_single_delete_of_gcp_tower() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::DeleteGcp(payload)] if payload.id == "gcp-tower"),
-        "create-gcp's inverse for a fresh id is one delete-gcp for that id, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::DeleteGcp(payload)] if payload.id == "gcp-tower"), "create-gcp's inverse for a fresh id is one delete-gcp for that id, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

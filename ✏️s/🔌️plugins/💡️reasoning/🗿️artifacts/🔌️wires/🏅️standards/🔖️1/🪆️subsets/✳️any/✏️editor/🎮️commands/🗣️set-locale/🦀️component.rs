@@ -1,9 +1,9 @@
 //! 🗣️ 🗣️ Wires play app commands command — `set-locale`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

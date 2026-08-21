@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteGrip` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block5d::diff::Block5dDiff;
-use crate::artifacts::block5d::diff::{Block5dGripsDelta};
+use crate::artifacts::block5d::diff::Block5dGripsDelta;
 use crate::artifacts::block5d::Block5dSnapshot;
 
 //#region 🔖️Diff

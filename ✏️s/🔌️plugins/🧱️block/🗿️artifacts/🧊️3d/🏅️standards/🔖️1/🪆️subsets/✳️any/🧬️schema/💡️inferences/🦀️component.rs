@@ -124,11 +124,7 @@ mod tests {
     }
 
     async fn snapshot_with_vortices(vortices: Vec<Block3dVortexTemplate>) -> Block3dSnapshot {
-        Block3dSnapshot {
-            object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() },
-            vortices,
-            ..Block3dSnapshot::default()
-        }
+        Block3dSnapshot { object_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, vortices, ..Block3dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures
 

@@ -1,10 +1,10 @@
 //! 🏙️ 🏙️ S Home launcher app command — `create-studio`.
 
-use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::mutations::change_catalog_generation;
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::VcsError;
@@ -22,12 +22,7 @@ pub struct CreateStudio {
 async fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_name: &str) -> Result<semio_framework_os::OsSpaceCatalogEntry, VcsError> {
     use semio_framework_os::{create_os_space, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
-    let owner = SpaceUser {
-        id: if owner_id.is_empty() { "local".into() } else { owner_id.into() },
-        name: if owner_name.is_empty() { name.into() } else { owner_name.into() },
-        avatar: None,
-        role: SpaceRole::Author,
-    };
+    let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let entry = create_os_space(name, SpaceKind::Atelier, SpaceVisibility::Private, owner, port.clone())?;
     crate::register_studio_port(&entry.id, port);
     Ok(entry)

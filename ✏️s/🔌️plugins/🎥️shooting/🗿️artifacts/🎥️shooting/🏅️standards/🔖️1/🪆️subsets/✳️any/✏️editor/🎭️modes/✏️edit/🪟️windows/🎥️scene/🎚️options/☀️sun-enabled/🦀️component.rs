@@ -1,13 +1,20 @@
 //! ☀️ Scene-window option — the sun-enabled toggle.
 //! Its command handler lives in `🎮️commands/☀️scene::toggle_sun`.
 
-use crate::editor::shooting::terminology::ShootingLabels;
 use crate::artifacts::shooting::ShootingSnapshot;
+use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
-    WindowMeasure::Toggle { id: "shooting.measure.sun-enabled".into(), icon_id: "sun".into(), label: Some(labels.measure_sun.into()), pressed: snapshot.scene.sun.enabled, text: None, on_change: crate::editor::shooting::shooting_action("toggleSun", None) }
+    WindowMeasure::Toggle {
+        id: "shooting.measure.sun-enabled".into(),
+        icon_id: "sun".into(),
+        label: Some(labels.measure_sun.into()),
+        pressed: snapshot.scene.sun.enabled,
+        text: None,
+        on_change: crate::editor::shooting::shooting_action("toggleSun", None),
+    }
 }
 //#endregion 🔖️Measure
 
@@ -15,8 +22,8 @@ pub async fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Wi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::shooting::terminology::shooting_play_labels;
     use crate::editor::shooting::config::ShootingConfig;
+    use crate::editor::shooting::terminology::shooting_play_labels;
 
     #[semio_framework_async_macros::async_test]
     async fn sun_enabled_measure_mirrors_the_fixture_default_off() {

@@ -2,7 +2,6 @@
 //! exactly one `NodeKind`: its identity, rim presentation, and the `HandleKind` templates placed on
 //! that rim.
 
-
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 

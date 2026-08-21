@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `RenameBlock`. Error `target-missing` when absent, Warning `no-op`
 //! when already at that name.
 use super::mutation::RenameBlock;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &RenameBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -14,7 +14,14 @@ pub async fn diff(payload: &RenameBlock, base: &NoteSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" already has name \"{}\".", payload.id, payload.new_name));
     }
     let mut updated = block.clone();
-    match &mut updated { crate::artifacts::note::NoteBlockNode::Text { name, .. } | crate::artifacts::note::NoteBlockNode::Image { name, .. } | crate::artifacts::note::NoteBlockNode::Table { name, .. } | crate::artifacts::note::NoteBlockNode::Math { name, .. } | crate::artifacts::note::NoteBlockNode::Ink { name, .. } | crate::artifacts::note::NoteBlockNode::Group { name, .. } => *name = payload.new_name.clone(), }
+    match &mut updated {
+        crate::artifacts::note::NoteBlockNode::Text { name, .. }
+        | crate::artifacts::note::NoteBlockNode::Image { name, .. }
+        | crate::artifacts::note::NoteBlockNode::Table { name, .. }
+        | crate::artifacts::note::NoteBlockNode::Math { name, .. }
+        | crate::artifacts::note::NoteBlockNode::Ink { name, .. }
+        | crate::artifacts::note::NoteBlockNode::Group { name, .. } => *name = payload.new_name.clone(),
+    }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }
 //#endregion 🔖️Diff

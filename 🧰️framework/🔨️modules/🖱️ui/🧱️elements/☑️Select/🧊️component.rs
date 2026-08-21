@@ -9,10 +9,10 @@
 //! `SelectItem`, `draw_text`, `draw_text_on`); `crate::wgpu::chrome`/`crate::wgpu::input`/`crate::wgpu::theme` are the
 //! other top-level engine mods `widgets` itself also depends on.
 
-use crate::wgpu::widgets::{draw_text, draw_text_on, SelectItem, WidgetContext};
 use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::theme::Level;
+use crate::wgpu::widgets::{draw_text, draw_text_on, SelectItem, WidgetContext};
 
 pub(crate) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem], placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let open = *ctx.open_selects.get(id).unwrap_or(&false);
@@ -22,7 +22,15 @@ pub(crate) fn render_select<E: Clone>(id: &str, value: &str, items: &[SelectItem
     let label = items.iter().find(|item| item.value == value).map_or(placeholder.unwrap_or("Select…"), |item| item.label.as_str());
     draw_text(ctx, label, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
     if let Some(icons) = ctx.icons {
-        crate::wgpu::chrome::push_icon(ctx.draw, icons, "chevron-down", bounds.x + bounds.w - ctx.theme.padding_standard - crate::wgpu::chrome::ICON_TINY, bounds.y + (bounds.h - crate::wgpu::chrome::ICON_TINY) * 0.5, crate::wgpu::chrome::ICON_TINY, ctx.theme.text_element);
+        crate::wgpu::chrome::push_icon(
+            ctx.draw,
+            icons,
+            "chevron-down",
+            bounds.x + bounds.w - ctx.theme.padding_standard - crate::wgpu::chrome::ICON_TINY,
+            bounds.y + (bounds.h - crate::wgpu::chrome::ICON_TINY) * 0.5,
+            crate::wgpu::chrome::ICON_TINY,
+            ctx.theme.text_element,
+        );
     }
     ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(id.to_string()), kind: HitKind::Select, drag_axis: None, drag_data: None });
     if open {

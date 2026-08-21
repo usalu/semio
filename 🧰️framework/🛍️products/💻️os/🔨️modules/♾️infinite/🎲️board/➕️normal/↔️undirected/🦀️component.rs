@@ -361,11 +361,11 @@ pub mod fixture_layout {
     // #endregion fixture_layout
 }
 
+pub use crate::infinite::board::*;
 pub use fixture_layout::{
     apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_force_graph_layout_to_fixture_v1_value_resolved, apply_redraw_layout_to_fixture_v1_json, resolve_node_id_endpoint, ForceGraphLayoutOptions,
     UndirectedGraphError,
 };
-pub use crate::infinite::board::*;
 
 /// ↔ Node graph engine without ports; endpoints are unordered node pairs.
 pub type UndirectedGraphEngine = GraphEngine<Normal, Undirected>;

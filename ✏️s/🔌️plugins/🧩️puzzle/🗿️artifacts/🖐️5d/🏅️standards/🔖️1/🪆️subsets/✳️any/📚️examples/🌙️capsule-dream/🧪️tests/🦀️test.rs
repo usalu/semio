@@ -15,8 +15,7 @@ async fn flatten_matches_golden_poses_to_1e4() {
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");
     let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
-    let golden: serde_json::Map<String, serde_json::Value> =
-        serde_json::from_str(include_str!("../🖼️assets/🏅golden-poses.json")).expect("golden json");
+    let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_str(include_str!("../🖼️assets/🏅golden-poses.json")).expect("golden json");
     assert_eq!(golden.len(), 2880);
     let mut center_mismatches = 0usize;
     let mut origin_mismatches = 0usize;
@@ -24,19 +23,13 @@ async fn flatten_matches_golden_poses_to_1e4() {
         let expected = golden.get(&part.id).expect("golden");
         let origin = expected.get("origin").and_then(|v| v.as_array()).unwrap();
         let center = expected.get("center").unwrap();
-        let ex = [
-            origin[0].as_f64().unwrap(),
-            origin[1].as_f64().unwrap(),
-            origin[2].as_f64().unwrap(),
-        ];
+        let ex = [origin[0].as_f64().unwrap(), origin[1].as_f64().unwrap(), origin[2].as_f64().unwrap()];
         let cx = center.get("x").and_then(|v| v.as_f64()).unwrap();
         let cy = center.get("y").and_then(|v| v.as_f64()).unwrap();
         if (part.part_2d.x - cx).abs() > 1e-4 || (part.part_2d.y - cy).abs() > 1e-4 {
             center_mismatches += 1;
         }
-        let err = (part.part_3d.origin[0] - ex[0]).abs()
-            .max((part.part_3d.origin[1] - ex[1]).abs())
-            .max((part.part_3d.origin[2] - ex[2]).abs());
+        let err = (part.part_3d.origin[0] - ex[0]).abs().max((part.part_3d.origin[1] - ex[1]).abs()).max((part.part_3d.origin[2] - ex[2]).abs());
         if err > 1e-4 {
             origin_mismatches += 1;
         }
@@ -56,10 +49,7 @@ async fn op_pack_and_spr_assets_are_nonempty() {
 async fn inference_default_law() {
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
-    assert_eq!(
-        Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()),
-        Puzzle5dInference::default()
-    );
+    assert_eq!(Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()), Puzzle5dInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

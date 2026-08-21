@@ -36,7 +36,12 @@ fn applied() -> CadSnapshot {
 async fn clears_the_building_slot_only() {
     let after = applied();
     assert!(after.building_model.is_none(), "delete-building-model must empty the fixed slot");
-    assert!(after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("shape-model-1") && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1") && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"), "delete-building-model must leave the other three fixed model slots occupied");
+    assert!(
+        after.shape_model.as_ref().map(|c| c.child_id.as_str()) == Some("shape-model-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1")
+            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"),
+        "delete-building-model must leave the other three fixed model slots occupied"
+    );
     assert_eq!(after.drawings.len(), 1, "delete-building-model must not touch the drawings child collection");
     assert_eq!(after.nodes.len(), 2, "delete-building-model must not cascade into the node tree");
     assert_eq!(after, expected_after(), "delete-building-model/vacates-the-building-slot: applied state differs from the committed after-snapshot");

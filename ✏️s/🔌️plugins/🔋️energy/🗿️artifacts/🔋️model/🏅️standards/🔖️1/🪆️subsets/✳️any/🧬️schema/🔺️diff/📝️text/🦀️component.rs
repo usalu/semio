@@ -12,7 +12,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 //#region 🔖️Apply
 impl EnergyModelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
@@ -88,10 +87,7 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
-    EnergyModelDiff {
-        artifact: Some(Box::new(EnergyModelArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    EnergyModelDiff { artifact: Some(Box::new(EnergyModelArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🏢️ Whole-model replacement diff — mints+caches `structure`/`zones` together from `model` via
@@ -105,10 +101,7 @@ pub async fn diff_from_model(model: &crate::model::Model) -> EnergyModelDiff {
 
 /// 📋️ Preview results-json field delta (not applied by MutationDiff).
 pub async fn diff_set_results_json(results_json: impl Into<String>) -> EnergyModelDiff {
-    EnergyModelDiff {
-        results_json: Some(results_json.into()),
-        ..Default::default()
-    }
+    EnergyModelDiff { results_json: Some(results_json.into()), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 
@@ -130,9 +123,7 @@ mod tests {
         let diff = diff_set_results_json("{\"ok\":true}");
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
         let artifact = EnergyModelArtifact::from_snapshot(base);
-        let next = diff
-            .apply_to_artifact(&artifact)
-            .expect("valid artifact diff");
+        let next = diff.apply_to_artifact(&artifact).expect("valid artifact diff");
         assert_eq!(next.results_json, "{\"ok\":true}");
     }
 

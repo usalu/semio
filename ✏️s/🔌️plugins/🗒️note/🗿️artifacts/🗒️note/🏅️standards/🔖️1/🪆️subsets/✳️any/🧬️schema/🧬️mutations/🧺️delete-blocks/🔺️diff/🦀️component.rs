@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `DeleteBlocks`. Error `target-missing` when none of the addressed
 //! blocks exist, Warning `partial` when some do not.
 use super::mutation::DeleteBlocks;
+use crate::artifacts::note::schema::diff::note_block_removed_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_removed_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteBlocks, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

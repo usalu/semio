@@ -48,13 +48,9 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::CreateLayer(restore)] = inverse.as_slice() else {
-        panic!("delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must be exactly one create-layer step, got {inverse:?}")
-    };
+    let [RasterMutation::CreateLayer(restore)] = inverse.as_slice() else { panic!("delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must be exactly one create-layer step, got {inverse:?}") };
     assert_eq!((restore.parent_id.as_deref(), restore.index), (None, 1), "delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must carry the group's own pre-delete address");
-    let RasterLayerNode::Group { id, children, .. } = &*restore.layer else {
-        panic!("delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must carry the removed GROUP node, not a bare placeholder")
-    };
+    let RasterLayerNode::Group { id, children, .. } = &*restore.layer else { panic!("delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must carry the removed GROUP node, not a bare placeholder") };
     assert_eq!(id, "frame", "delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must re-create the deleted id");
     assert_eq!(children.len(), 2, "delete-layer/deletes-the-frame-group-and-its-nested-children: the inverse must carry the whole cascaded subtree, not just the group shell");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -120,7 +116,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-layer/deletes-the-frame-group-and-its-nested-children: committed diff did not carry before to after");
 }

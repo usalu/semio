@@ -70,7 +70,9 @@ async fn module_id_at_pattern_index(snapshot: &AssemblySnapshot, pattern: crate:
 pub enum AssemblySolveResult {
     #[default]
     Unsolved,
-    Solved { assignments: BTreeMap<String, String> },
+    Solved {
+        assignments: BTreeMap<String, String>,
+    },
 }
 
 pub struct AssemblySolve;
@@ -94,12 +96,7 @@ impl store::InferredField<AssemblySnapshot> for AssemblySolve {
     async fn compute(snapshot: &AssemblySnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         match compile_and_solve(snapshot, snapshot.seed) {
             Ok(crate::wfc_engine::outcome::SolveOutcome::Solved(solution)) => {
-                let assignments = snapshot
-                    .slots
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(index, slot)| solution.assignment.get(index).and_then(|&pattern| module_id_at_pattern_index(snapshot, pattern)).map(|module_id| (slot.id.clone(), module_id)))
-                    .collect();
+                let assignments = snapshot.slots.iter().enumerate().filter_map(|(index, slot)| solution.assignment.get(index).and_then(|&pattern| module_id_at_pattern_index(snapshot, pattern)).map(|module_id| (slot.id.clone(), module_id))).collect();
                 AssemblySolveResult::Solved { assignments }
             }
             _ => AssemblySolveResult::Unsolved,

@@ -7,8 +7,7 @@ pub async fn register() {}
 pub async fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, store::TextError> {
     let _ = STDIO_PLY_DOCUMENT_SCHEMA;
     let bytes = <LowpolySnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <PlySnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <PlySnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &LowpolySnapshot) -> Result<Vec<u8>, store::TextError> {

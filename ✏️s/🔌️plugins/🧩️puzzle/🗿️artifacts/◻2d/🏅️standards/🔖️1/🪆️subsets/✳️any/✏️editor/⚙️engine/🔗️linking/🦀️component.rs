@@ -4,10 +4,13 @@
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[allow(clippy::approx_constant, reason = "3.14159 is verbatim fixture data (a handle angle in a scene JSON literal), carried over unchanged from the pre-consolidation engine crate; swapping in std::f64::consts::PI would alter the recorded test input.")]
+#[allow(
+    clippy::approx_constant,
+    reason = "3.14159 is verbatim fixture data (a handle angle in a scene JSON literal), carried over unchanged from the pre-consolidation engine crate; swapping in std::f64::consts::PI would alter the recorded test input."
+)]
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
-    
+
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{
         distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction, NodeDescJson, NodeShape, SceneDescriptorJson,

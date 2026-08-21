@@ -1,10 +1,10 @@
 //! 🗂️ 🗂️ Fem2d play app commands command — `remove-selection`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_region, delete_section, delete_support};
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -48,8 +48,8 @@ pub async fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnaps
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::fem2d::commands::{add_node, add_region};
     use crate::editor::fem2d::commands::add_load_case;
+    use crate::editor::fem2d::commands::{add_node, add_region};
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
     use crate::editor::fem2d::Fem2dCommand;
 

@@ -153,5 +153,9 @@ async fn patches_only_the_harbor_payload_and_inverts_to_the_base_payload() {
     assert_eq!(undo.id, "pos-harbor", "replace-position-data/rewrites-the-harbor-position-payload: the inverse addresses the same position");
     assert_eq!(undo.new_data, base.positions[0].data, "replace-position-data/rewrites-the-harbor-position-payload: the inverse restores BASE's payload, not the diff's");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("replace", "position-data", "replace-position-data", "ReplacedPositionData"), "replace-position-data/rewrites-the-harbor-position-payload: the fixture must be bound to replace-position-data's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("replace", "position-data", "replace-position-data", "ReplacedPositionData"),
+        "replace-position-data/rewrites-the-harbor-position-payload: the fixture must be bound to replace-position-data's own descriptor"
+    );
 }

@@ -15,7 +15,9 @@ use crate::editor::playground::commands::change_schema;
 use crate::editor::playground::modes::edit;
 use crate::editor::playground::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode,
+};
 use serde_json::Value;
 use store::EngineHandles;
 
@@ -61,9 +63,7 @@ impl ArtifactEditor for PlaygroundEditor {
     async fn command_from_action(action: &str, args: Option<&Value>) -> Result<PlaygroundCommand, Fault> {
         let args = args.cloned().unwrap_or(Value::Null);
         match action {
-            "changeSchema" => Ok(PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema {
-                new_schema: args.get("newSchema").or_else(|| args.get("new_schema")).and_then(Value::as_str).unwrap_or_default().to_string(),
-            })),
+            "changeSchema" => Ok(PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: args.get("newSchema").or_else(|| args.get("new_schema")).and_then(Value::as_str).unwrap_or_default().to_string() })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -71,7 +71,14 @@ impl ArtifactEditor for PlaygroundEditor {
         }
     }
 
-    async fn handle(command: &PlaygroundCommand, doc: &ArtifactView<'_, PlaygroundSnapshot>, cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<PlaygroundMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &PlaygroundCommand,
+        doc: &ArtifactView<'_, PlaygroundSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<PlaygroundMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

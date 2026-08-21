@@ -1,11 +1,11 @@
 //! 🧩️ 🧩️ Procedural3d play app commands command — `add-widget`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -14,7 +14,8 @@ use serde_json::json;
 pub struct AddWidget {
     pub kind: String,
     pub x: Option<f64>,
-    pub y: Option<f64>}
+    pub y: Option<f64>,
+}
 
 /// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).

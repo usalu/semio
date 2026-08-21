@@ -179,7 +179,12 @@ impl HistoryLogGen {
                 let end = (boundary + profile.checkpoint_every).min(edits.len());
                 let change_id = next_ident(&mut rng, "change", index, profile.adversarial).await;
                 let edit_ids: Vec<String> = edits[boundary..end].iter().map(|edit| edit.id.clone()).collect();
-                changes.push(crate::os_spr::HistoryChange { id: change_id.clone(), saved_at: next_timestamp(&mut rng, profile.adversarial).await, edit_ids, description: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None } });
+                changes.push(crate::os_spr::HistoryChange {
+                    id: change_id.clone(),
+                    saved_at: next_timestamp(&mut rng, profile.adversarial).await,
+                    edit_ids,
+                    description: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None },
+                });
 
                 let checkpoint_id = next_ident(&mut rng, "checkpoint", index, profile.adversarial).await;
                 let author_count = rng.next_range(3).await as usize;
@@ -264,7 +269,7 @@ impl OpDagGen {
                 dependencies,
                 diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
                 inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
-                timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10).await,
+                timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
             });
         }
         self.state = rng.0;
@@ -515,9 +520,9 @@ pub async fn assert_op_text_round_trip<Op>(op: &Op)
 where
     Op: crate::os_spr::OpText + Clone + PartialEq + std::fmt::Debug,
 {
-    let line = op.print_op().await;
+    let line = op.print_op();
     assert!(!line.contains('\n'), "OpText::print_op output must never contain a newline, got {line:?}");
-    let parsed = Op::parse_op(&line).await.unwrap_or_else(|error| panic!("OpText::parse_op failed to parse its own print_op output {line:?}: {error:?}"));
+    let parsed = Op::parse_op(&line).unwrap_or_else(|error| panic!("OpText::parse_op failed to parse its own print_op output {line:?}: {error:?}"));
     assert_eq!(&parsed, op, "OpText::parse_op(op.print_op()) must recover an equal operation");
 }
 
@@ -530,11 +535,11 @@ where
     P: PartialEq + std::fmt::Debug,
     D: crate::os_spr::MutationDiff<P> + Clone,
 {
-    let mid = d1.apply(base).await.expect("first valid diff must apply");
-    let sequential = d2.apply(&mid).await;
+    let mid = d1.apply(base).expect("first valid diff must apply");
+    let sequential = d2.apply(&mid);
     let mut absorbed = d1;
-    absorbed.absorb(d2).await;
-    let composed = absorbed.apply(base).await;
+    absorbed.absorb(d2);
+    let composed = absorbed.apply(base);
     assert_eq!(composed, sequential, "absorb(d1, d2).apply(base) must equal d2.apply(&d1.apply(base))");
 }
 
@@ -548,14 +553,14 @@ where
     Op: crate::os_spr::Mutation<P>,
 {
     use crate::os_spr::MutationDiff;
-    let forward = mutation.diff(base).await;
-    let rejected = forward.messages().await.iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
-    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {:?}", forward.messages().await);
-    let mut state = forward.diff().await.apply(base).await.expect("valid forward diff must apply");
-    let mut backward = mutation.inverse(base).await;
+    let forward = mutation.diff(base);
+    let rejected = forward.messages().iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {:?}", forward.messages());
+    let mut state = forward.diff().apply(base).expect("valid forward diff must apply");
+    let mut backward = mutation.inverse(base);
     backward.reverse();
     for undo in &backward {
-        state = undo.diff(&state).await.diff().await.apply(&state).await.expect("valid inverse diff must apply");
+        state = undo.diff(&state).diff().apply(&state).expect("valid inverse diff must apply");
     }
     assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
 }
@@ -565,11 +570,11 @@ where
 pub async fn assert_diff_algebra_between_law<P, D>(a: &P, b: &P)
 where
     P: Clone + PartialEq + std::fmt::Debug,
-    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P> + std::future::Future,
 {
-    let delta = D::between(a, b).await;
-    assert_eq!(delta.apply(a).await.as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
-    assert!(D::between(a, a).await.is_empty().await, "DiffAlgebra::between(a, a) must be empty");
+    let delta = D::between(a, b);
+    assert_eq!(delta.apply(a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
+    assert!(D::between(a, a).is_empty(), "DiffAlgebra::between(a, a) must be empty");
 }
 
 /// ✅️ LAW: `d.inverse(base).apply(&d.apply(base)) == *base` — [`crate::os_spr::DiffAlgebra`]'s
@@ -577,10 +582,10 @@ where
 pub async fn assert_diff_algebra_inverse_law<P, D>(base: &P, d: &D)
 where
     P: Clone + PartialEq + std::fmt::Debug,
-    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P> + std::future::Future,
 {
-    let after = d.apply(base).await.expect("valid diff must apply");
-    let restored = d.inverse(base).await.apply(&after).await;
+    let after = d.apply(base).expect("valid diff must apply");
+    let restored = d.inverse(base).apply(&after);
     assert_eq!(restored.as_ref(), Ok(base), "d.inverse(base).apply(&d.apply(base)) must equal base");
 }
 
@@ -677,10 +682,10 @@ where
     Op: crate::os_spr::Mutation<P>,
     Op::Diff: PartialEq + std::fmt::Debug + Default,
 {
-    let outcome = mutation.diff(base).await;
-    let has_missing_target_error = outcome.messages().await.iter().any(|message| message.level == crate::os_dsl::Severity::Error && message.code.0 == "mutation.target-missing");
-    assert!(has_missing_target_error, "a mutation targeting an absent element must carry an Error message with code 'mutation.target-missing', got {:?}", outcome.messages().await);
-    assert_eq!(outcome.diff().await, &Op::Diff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
+    let outcome = mutation.diff(base);
+    let has_missing_target_error = outcome.messages().iter().any(|message| message.level == crate::os_dsl::Severity::Error && message.code.0 == "mutation.target-missing");
+    assert!(has_missing_target_error, "a mutation targeting an absent element must carry an Error message with code 'mutation.target-missing', got {:?}", outcome.messages());
+    assert_eq!(outcome.diff(), &Op::Diff::default(), "a mutation.target-missing outcome must carry no change (diff == Diff::default())");
 }
 
 /// ✅️ LAW (§C2 law 1): whenever `outcome.worst_level()` is `Fatal`, `outcome.diff() ==
@@ -689,8 +694,8 @@ pub async fn assert_fatal_never_applies<D>(outcome: &crate::os_spr::MutationOutc
 where
     D: PartialEq + std::fmt::Debug + Default,
 {
-    if outcome.worst_level().await == Some(crate::os_dsl::Severity::Fatal) {
-        assert_eq!(outcome.diff().await, &D::default(), "a Fatal outcome must carry diff == D::default()");
+    if outcome.worst_level() == Some(crate::os_dsl::Severity::Fatal) {
+        assert_eq!(outcome.diff(), &D::default(), "a Fatal outcome must carry diff == D::default()");
     }
 }
 
@@ -701,10 +706,10 @@ where
     Op: crate::os_spr::Mutation<P>,
     Op::Diff: PartialEq + std::fmt::Debug,
 {
-    let a = mutation.diff(base).await;
-    let b = mutation.diff(base).await;
-    assert_eq!(a.diff().await, b.diff().await, "diff(op, base) must be deterministic across repeated invocations");
-    assert_eq!(a.messages().await, b.messages().await, "messages(op, base) must be deterministic across repeated invocations");
+    let a = mutation.diff(base);
+    let b = mutation.diff(base);
+    assert_eq!(a.diff(), b.diff(), "diff(op, base) must be deterministic across repeated invocations");
+    assert_eq!(a.messages(), b.messages(), "messages(op, base) must be deterministic across repeated invocations");
 }
 //#endregion 🔖️Outcome
 
@@ -1001,7 +1006,8 @@ mod tests {
              \x20\x20set bar = 2\n\
              edit \"e1\" started=\"2026-07-27T00:00:01Z\" finished=\"2026-07-27T00:00:05Z\"\n\
              \x20\x20noop\n",
-        ).await;
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1254,7 +1260,11 @@ mod tests {
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::Bye, crate::os_spr::Lane::Command)).await;
         assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, crate::os_spr::Lane::Preview)).await;
         let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
-        assert_wire_frame_round_trip(&WireFrameSample::Server(crate::os_spr::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: crate::os_spr::Bootstrap::Tail }, crate::os_spr::Lane::Command)).await;
+        assert_wire_frame_round_trip(&WireFrameSample::Server(
+            crate::os_spr::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: crate::os_spr::Bootstrap::Tail },
+            crate::os_spr::Lane::Command,
+        ))
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1321,7 +1331,8 @@ mod tests {
                 let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).await.absorb_messages([message_at_level(level).await]).await;
                 outcome.is_applicable(policy).await
             },
-        ).await;
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1343,7 +1354,8 @@ mod tests {
                 let index: i64 = payload.strip_prefix("index:").unwrap().parse().unwrap();
                 state + index
             })
-        }).await;
+        })
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1410,7 +1422,8 @@ mod tests {
             let mut sorted = order.to_vec();
             sorted.sort_unstable();
             (sorted.clone(), sorted.iter().map(|i| format!("edit-{i}")).collect(), Vec::new())
-        }).await;
+        })
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1519,7 +1532,8 @@ mod tests {
         let log = HistoryLogGen::new(25).await.generate(&typical_profile().await).await;
         let bytes = write_history_log(&log, true).await;
         let limits = crate::os_spr::ProtocolLimits::default();
-        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
+        let report =
+            fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| crate::os_io::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "crate::os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
     }
     //#endregion 🔖️Corrupt

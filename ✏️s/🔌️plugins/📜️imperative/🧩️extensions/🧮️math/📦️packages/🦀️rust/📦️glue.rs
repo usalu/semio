@@ -3,4 +3,3 @@
 #[path = "../../🦀️component.rs"]
 mod component;
 pub use component::*;
-

@@ -12,7 +12,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::home::schema::diff::*;
 
-
 //#region 🔖️Apply
 impl SHomeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.

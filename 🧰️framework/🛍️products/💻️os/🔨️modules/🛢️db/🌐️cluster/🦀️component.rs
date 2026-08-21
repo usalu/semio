@@ -21,8 +21,8 @@
 //! Every genuinely content-addressed hash in the family (payloads, snapshots, WAL chains) already
 //! flows through `db_storage`/`db_wal`/`db_sync`, which this crate reuses via their public APIs
 //! rather than re-deriving.
-use crate::*;
 use crate::db_durability::Frontier;
+use crate::*;
 use db_storage::SnapshotStorage as _;
 /// @emoji 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
@@ -310,9 +310,7 @@ pub struct ReplicaStatus {
 /// `BoundedStaleness`'s floor, or an empty replica set).
 pub async fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, DbError> {
     match intent {
-        ReadIntent::Canonical | ReadIntent::Preview => {
-            replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no leader available to serve a canonical/preview read".to_string()))
-        }
+        ReadIntent::Canonical | ReadIntent::Preview => replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no leader available to serve a canonical/preview read".to_string())),
         ReadIntent::BoundedStaleness { at_least } => {
             // 🎯️ A document-mismatched frontier can never dominate `at_least` — treated as
             // non-qualifying (`unwrap_or(false)`) rather than propagating the error, since a

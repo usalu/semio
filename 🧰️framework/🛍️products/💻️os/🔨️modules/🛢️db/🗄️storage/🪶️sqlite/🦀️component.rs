@@ -45,8 +45,8 @@
 //#region 🔖️SqliteStorage
 #[cfg(not(target_arch = "wasm32"))]
 mod sqlite_storage {
-    use crate::db_ids::{check_len, DbError, ArtifactId};
     use crate::db_durability::{DurabilityClass, EpochFence};
+    use crate::db_ids::{check_len, ArtifactId, DbError};
     use crate::db_storage::{run_blocking_op, CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -247,7 +247,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
             // 🎯️ See module doc's "Durability choice": `synchronous = FULL` already fsyncs every
             // commit, so every class this crate could be asked to sync to is already satisfied.
-            { Ok(()) }
+            {
+                Ok(())
+            }
         }
 
         async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
@@ -778,7 +780,8 @@ CREATE TABLE IF NOT EXISTS lease (
             {
                 run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
-                    let existing: Option<(String, i64, i64)> = conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> =
+                        conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
                     Ok(existing.and_then(
                         |(holder, epoch, expires_at_ms)| {
                             if (now_ms as i64) < expires_at_ms {
@@ -1010,8 +1013,7 @@ CREATE TABLE IF NOT EXISTS lease (
         //#region 🔖️DbBackend
         #[semio_framework_async_macros::async_test]
         async fn db_backend_accessors_and_capabilities() {
-            let storage: crate::db_storage::DbBackend =
-                crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(None, &sqlite_scratch_path("umbrella"))).await.unwrap());
+            let storage: crate::db_storage::DbBackend = crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(None, &sqlite_scratch_path("umbrella"))).await.unwrap());
             let document: ArtifactId = "doc-umbrella".into();
             block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
             block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, b"root")).await.unwrap();

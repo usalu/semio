@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeMetaDescription` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::{BlockMeta};
+use crate::BlockMeta;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::ChangeMetaDescription, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

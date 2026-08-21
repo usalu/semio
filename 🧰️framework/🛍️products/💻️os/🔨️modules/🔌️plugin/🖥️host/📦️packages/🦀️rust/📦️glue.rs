@@ -5,9 +5,9 @@
 // concrete enum (`GuestRuntimes`), so the future's concrete type is known at each call site and
 // `Send` falls out of the compiler's own analysis, never a bound on the trait method itself.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 #[path = "../../🦀️component.rs"]
 mod component;
 pub use component::*;

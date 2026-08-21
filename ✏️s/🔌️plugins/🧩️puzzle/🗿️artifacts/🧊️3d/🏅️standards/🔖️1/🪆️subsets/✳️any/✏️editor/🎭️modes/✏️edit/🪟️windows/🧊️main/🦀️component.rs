@@ -12,12 +12,12 @@
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::modes::edit::options;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
+use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::editor::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture,
-    Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, resolve_object_mesh_url, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dObject, Puzzle3dScene, Puzzle3dVortex,
+    PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
-use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, UiNode,
     WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
@@ -211,11 +211,7 @@ async fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id:
     };
     for entry in entries {
         if entry.get("id").and_then(|value| value.as_str()) == Some(kind_id) {
-            return fields
-                .iter()
-                .find_map(|field| entry.get(*field).and_then(|value| value.as_str()).filter(|text| !text.is_empty()))
-                .unwrap_or(fallback)
-                .to_string();
+            return fields.iter().find_map(|field| entry.get(*field).and_then(|value| value.as_str()).filter(|text| !text.is_empty())).unwrap_or(fallback).to_string();
         }
     }
     fallback.into()

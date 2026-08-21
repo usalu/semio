@@ -1,9 +1,9 @@
 //! 🧪️ 🧪️ Forms play app commands command — `set-try-values`.
 
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::{try_values_json_text, try_values_map};
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -27,9 +27,9 @@ pub async fn handle(payload: &SetTryValues, _doc: &ArtifactView<'_, FormsSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::forms::forms_steps;
     use crate::editor::forms::testkit::{dispatch, forms_app, render};
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_TRY};
-    use crate::artifacts::forms::forms_steps;
     use serde_json::Map;
 
     async fn seed_example(app: &mut crate::editor::forms::testkit::FormsApp, example_id: &str) {

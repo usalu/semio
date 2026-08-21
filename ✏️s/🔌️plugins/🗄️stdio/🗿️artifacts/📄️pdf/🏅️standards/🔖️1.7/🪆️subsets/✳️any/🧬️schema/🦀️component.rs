@@ -129,17 +129,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -208,7 +208,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
                         crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(text.as_bytes()).await.map_err(|error| format!("{error:?}"))
                     } else {
-                        <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|error| error.to_string())
+                        <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
@@ -219,7 +219,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Binary(bytes) => match if crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes).await.is_some() {
                         crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(bytes).await.map_err(|error| format!("{error:?}"))
                     } else {
-                        <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await.map_err(|error| error.to_string())
+                        <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {

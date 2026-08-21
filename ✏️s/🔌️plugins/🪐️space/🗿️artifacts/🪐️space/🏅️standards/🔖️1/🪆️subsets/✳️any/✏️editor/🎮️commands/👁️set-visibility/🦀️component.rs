@@ -24,7 +24,6 @@ pub async fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapsh
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn set_visibility_relays_the_directory_command() {

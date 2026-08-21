@@ -28,11 +28,14 @@
 //! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(target_os = "macos")]
+#[path = "🦀️backend.rs"]
+mod backend;
+#[cfg(target_os = "macos")]
+#[path = "🦀️frame_buffers.rs"]
+mod frame_buffers;
+#[cfg(target_os = "macos")]
 #[path = "🦀️msl.rs"]
 mod msl;
-#[cfg(target_os = "macos")]
-#[path = "🦀️types.rs"]
-mod types;
 #[cfg(target_os = "macos")]
 #[path = "🦀️pipelines.rs"]
 mod pipelines;
@@ -43,14 +46,11 @@ mod resources;
 #[path = "🦀️scene_target.rs"]
 mod scene_target;
 #[cfg(target_os = "macos")]
-#[path = "🦀️frame_buffers.rs"]
-mod frame_buffers;
+#[path = "🦀️types.rs"]
+mod types;
 #[cfg(target_os = "macos")]
 #[path = "🦀️world3d.rs"]
 mod world3d;
-#[cfg(target_os = "macos")]
-#[path = "🦀️backend.rs"]
-mod backend;
 
 #[cfg(target_os = "macos")]
 pub use backend::{MetalBackend, MetalGraphicsError};

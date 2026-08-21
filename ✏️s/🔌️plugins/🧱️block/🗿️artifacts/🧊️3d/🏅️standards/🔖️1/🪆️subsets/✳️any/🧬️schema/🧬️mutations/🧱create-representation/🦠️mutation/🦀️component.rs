@@ -2,7 +2,7 @@
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::{BlockRepresentation};
+use crate::BlockRepresentation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

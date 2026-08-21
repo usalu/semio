@@ -1332,7 +1332,8 @@ mod tests {
     #[test]
     fn projected_aabb_skips_far_instance() {
         let mesh = test_box_mesh();
-        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+        let draws =
+            vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);
         let camera = Camera3d::default();

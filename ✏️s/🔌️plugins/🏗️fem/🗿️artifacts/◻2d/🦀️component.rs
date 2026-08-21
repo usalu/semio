@@ -1,6 +1,5 @@
 //! 📐️ FEM 2D artifact — document entities (constitutional: general).
 
-
 use crate::model::Dof;
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +12,7 @@ pub const FEM_2D_SCHEMA: &str = "fem.2d";
 /// `FEM2D_DIALECT` in this subset's own `🚪️io/🦀️component.rs` (an older, unrelated 2-part io/composer
 /// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
 /// file can read it without ever importing through the sibling editor module.
-pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem2d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem2d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 // #region 🔖️Document
 /// 📍️ A structural node in plan (x, y in meters).

@@ -1,8 +1,8 @@
 //! 🎯️ Remodel play app panel — the Calibration tab: per-camera intrinsics, rig extrinsics and ground
 //! control points.
 
-use crate::editor::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::RemodelSnapshot;
+use crate::editor::remodel::terminology::RemodelLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants

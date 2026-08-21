@@ -1,7 +1,7 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
-use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, Block3dSnapshot};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
+use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKindExtra, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
@@ -13,28 +13,51 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block3d")]
 pub struct Block3dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub object_kind: BlockKindIdentity,
-    #[state(artifact)] pub representations: Vec<BlockRepresentation>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.kit")] pub catalog: store::ArtifactChild<SemioKitSnapshot>,
-    #[state(artifact)] pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
-    #[state(artifact)] pub vortices: Vec<Block3dVortexTemplate>,
-    #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
-    #[state(artifact)] pub attributes: Vec<BlockAttribute>,
-    #[state(artifact)] pub authors: Vec<BlockAuthor>,
-    #[state(artifact)] pub camera3d: BlockCamera3d,
-    #[state(artifact)] pub meta: BlockMeta,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub active_representation_id: Option<String>,
-    #[state(presence)] pub wanted_tags: Vec<String>,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub windows: Vec<Block3dWindowView>,
-    #[state(config)] pub brush_vortex_kind_id: Option<String>,
-    #[state(config)] pub brush_radius: f64,
-    #[state(config)] pub brush_flip: bool,
-    #[state(artifact)] pub brush_preview: Option<Block3dBrushPreview>,
-    #[state(config)] pub camera: Option<BlockCamera3d>,
-    #[state(artifact)] pub hovered_vortex_full_id: Option<String>,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub object_kind: BlockKindIdentity,
+    #[state(artifact)]
+    pub representations: Vec<BlockRepresentation>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.kit")]
+    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    #[state(artifact)]
+    pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
+    #[state(artifact)]
+    pub vortices: Vec<Block3dVortexTemplate>,
+    #[state(artifact)]
+    pub compatibility: Vec<BlockCompatibilityRule>,
+    #[state(artifact)]
+    pub attributes: Vec<BlockAttribute>,
+    #[state(artifact)]
+    pub authors: Vec<BlockAuthor>,
+    #[state(artifact)]
+    pub camera3d: BlockCamera3d,
+    #[state(artifact)]
+    pub meta: BlockMeta,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(presence)]
+    pub active_representation_id: Option<String>,
+    #[state(presence)]
+    pub wanted_tags: Vec<String>,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub windows: Vec<Block3dWindowView>,
+    #[state(config)]
+    pub brush_vortex_kind_id: Option<String>,
+    #[state(config)]
+    pub brush_radius: f64,
+    #[state(config)]
+    pub brush_flip: bool,
+    #[state(artifact)]
+    pub brush_preview: Option<Block3dBrushPreview>,
+    #[state(config)]
+    pub camera: Option<BlockCamera3d>,
+    #[state(artifact)]
+    pub hovered_vortex_full_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -146,8 +169,8 @@ pub async fn block3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::block3d::{Block3dDiff, Block3dMutation, Block3dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Block3dBuilderConstruction {
@@ -159,8 +182,12 @@ pub mod derived_construction {
         type Snapshot = Block3dSnapshot;
         type Mutation = Block3dMutation;
         type Diff = Block3dDiff;
-        async fn empty() -> Self { Self { snapshot: Block3dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Block3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Block3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -171,24 +198,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -197,8 +221,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::block3d::Block3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Block3dParts {

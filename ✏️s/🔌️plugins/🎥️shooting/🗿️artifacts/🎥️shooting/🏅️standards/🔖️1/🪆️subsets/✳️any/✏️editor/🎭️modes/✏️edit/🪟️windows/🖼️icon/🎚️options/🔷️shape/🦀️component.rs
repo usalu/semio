@@ -1,8 +1,8 @@
 //! 🔷️ Icon-window option — the active shot's clip-shape select.
 //! Its command handler lives in `🎮️commands/📷️shot::set_active_shot_shape`.
 
-use crate::editor::shooting::terminology::ShootingLabels;
 use crate::artifacts::shooting::ShootingSnapshot;
+use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure

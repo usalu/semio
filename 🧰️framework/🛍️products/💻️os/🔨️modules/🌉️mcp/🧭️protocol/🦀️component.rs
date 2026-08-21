@@ -10,12 +10,12 @@
 //! client installed in this repo today is legacy-era — see D1's SDK survey), not a compatibility
 //! shim: CLAUDE.md's "no legacy support" rule does not apply to an external protocol we do not own.
 
+use crate::workspace::GatewayBackends;
 use schemars::JsonSchema;
+use semio_framework_dispatch_macros::dyn_enum;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
-use crate::workspace::GatewayBackends;
-use semio_framework_dispatch_macros::dyn_enum;
 
 pub use crate::errors::{GatewayError, GatewayErrorCode};
 pub use crate::schema::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
@@ -205,10 +205,26 @@ pub fn is_valid_tool_name(name: &str) -> bool {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ContentBlock {
-    Text { text: String },
-    Image { data: String, #[serde(rename = "mimeType")] mime_type: String },
-    Audio { data: String, #[serde(rename = "mimeType")] mime_type: String },
-    ResourceLink { uri: String, #[serde(default, skip_serializing_if = "Option::is_none")] name: Option<String>, #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")] mime_type: Option<String> },
+    Text {
+        text: String,
+    },
+    Image {
+        data: String,
+        #[serde(rename = "mimeType")]
+        mime_type: String,
+    },
+    Audio {
+        data: String,
+        #[serde(rename = "mimeType")]
+        mime_type: String,
+    },
+    ResourceLink {
+        uri: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        name: Option<String>,
+        #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
+        mime_type: Option<String>,
+    },
     Resource {
         uri: String,
         #[serde(default, rename = "mimeType", skip_serializing_if = "Option::is_none")]
@@ -692,11 +708,7 @@ impl McpServer {
         if SUPPORTED_PROTOCOL_VERSIONS.contains(&requested) {
             return None;
         }
-        Some(DispatchOutcome::Error(
-            UNSUPPORTED_PROTOCOL_VERSION,
-            format!("unsupported protocol version: {requested}"),
-            Some(serde_json::json!({ "supported": SUPPORTED_PROTOCOL_VERSIONS, "requested": requested })),
-        ))
+        Some(DispatchOutcome::Error(UNSUPPORTED_PROTOCOL_VERSION, format!("unsupported protocol version: {requested}"), Some(serde_json::json!({ "supported": SUPPORTED_PROTOCOL_VERSIONS, "requested": requested }))))
     }
 
     fn handle_server_discover(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
@@ -973,20 +985,14 @@ mod quick {
     #[test]
     fn calling_an_unregistered_tool_is_a_protocol_error() {
         let mut server = McpServer::with_defaults();
-        let response = server
-            .dispatch(&request(Some(1), METHOD_TOOLS_CALL, Some(serde_json::json!({ "name": "does_not_exist", "arguments": {} }))))
-            .unwrap();
+        let response = server.dispatch(&request(Some(1), METHOD_TOOLS_CALL, Some(serde_json::json!({ "name": "does_not_exist", "arguments": {} })))).unwrap();
         assert!(response.is_error(), "unknown tool must be a JSON-RPC protocol error, not a successful isError result");
     }
 
     #[test]
     fn a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true() {
         let mut tools = InMemoryToolRegistry::new();
-        tools
-            .register(Tool::new("flaky_tool", serde_json::json!({"type": "object"})), |_arguments| {
-                CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::PreconditionFailed, "not ready"))
-            })
-            .unwrap();
+        tools.register(Tool::new("flaky_tool", serde_json::json!({"type": "object"})), |_arguments| CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::PreconditionFailed, "not ready"))).unwrap();
         let mut server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend));
         let response = server.dispatch(&request(Some(1), METHOD_TOOLS_CALL, Some(serde_json::json!({ "name": "flaky_tool", "arguments": {} })))).unwrap();
         assert!(!response.is_error(), "a tool's own failure must stay a JSON-RPC success envelope");

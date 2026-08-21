@@ -35,9 +35,7 @@ pub async fn default_snapshot() -> SequenceSnapshot {
             SequenceStep {
                 id: "step-1".into(),
                 kind: "state.set".into(),
-                params: crate::artifacts::sequence::StepParams::new()
-                    .insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into())))
-                    .insert("value", neural_engine::Value::Atom(neural_engine::Atom::Integer(0))),
+                params: crate::artifacts::sequence::StepParams::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into()))).insert("value", neural_engine::Value::Atom(neural_engine::Atom::Integer(0))),
                 x: 0.0,
                 y: 0.0,
                 slot: None,
@@ -87,4 +85,3 @@ impl SequenceSnapshot {
     }
 }
 //#endregion 🔖️Fixture
-

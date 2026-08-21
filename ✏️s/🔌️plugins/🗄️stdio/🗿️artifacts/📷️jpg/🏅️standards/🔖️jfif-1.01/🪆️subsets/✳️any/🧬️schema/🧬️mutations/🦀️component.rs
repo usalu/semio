@@ -100,13 +100,13 @@ pub enum JpgMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (png/csv precedent).
 pub async fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> protocol::MutationOutcome<JpgDiff> {
-    let outcome = <JpgMutation as Mutation<JpgSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+    let outcome = <JpgMutation as Mutation<JpgSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -115,7 +115,7 @@ pub async fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutati
 impl Mutation<JpgSnapshot> for JpgMutation {
     type Diff = JpgDiff;
 
-    async fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JpgMutation::NoMutation => JpgDiff::default(),
             JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -134,7 +134,7 @@ impl Mutation<JpgSnapshot> for JpgMutation {
 
     /// ↩️ Handcrafted, id/index-aware mutation-level inverses. Out-of-range/nonexistent targets
     /// invert to `NoMutation` (nothing to undo).
-    async fn inverse(&self, base: &JpgSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &JpgSnapshot) -> Vec<Self> {
         match self {
             JpgMutation::NoMutation => vec![JpgMutation::NoMutation],
             JpgMutation::SetSnapshot { .. } => vec![JpgMutation::SetSnapshot { snapshot: base.clone() }],
@@ -247,7 +247,7 @@ async fn dec_jpg_snapshot(s: &str) -> Result<JpgSnapshot, String> {
     })
 }
 
-async fn print_jpg_mutation(m: &JpgMutation) -> String {
+fn print_jpg_mutation(m: &JpgMutation) -> String {
     match m {
         JpgMutation::NoMutation => "no-mutation".to_string(),
         JpgMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_jpg_snapshot(snapshot)),
@@ -295,11 +295,11 @@ async fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
 }
 
 impl OpText for JpgMutation {
-    async fn print_op(&self) -> String {
-        print_jpg_mutation(self).await
+    fn print_op(&self) -> String {
+        print_jpg_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_jpg_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_jpg_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -337,32 +337,32 @@ async fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
         diff::enc_segment_bin(seg, out);
     }
 }
-async fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
+fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapshot, String> {
     let schema = String::from_utf8(diff::read_bytes_lp(reader)?).map_err(|e| e.to_string())?;
-    let width = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
-    let height = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let width = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let height = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
     let pixels = diff::read_bytes_lp(reader)?;
     let re_encode_quality = diff::read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?;
     let jfif_version = diff::dec_version_bin(reader)?;
     let jfif_density_units = diff::dec_density_units_bin(reader)?;
-    let jfif_x_density = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
-    let jfif_y_density = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let jfif_x_density = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let jfif_y_density = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
     let jfif_thumbnail = diff::read_opt(reader, diff::dec_thumbnail_bin)?;
     let frame = diff::read_opt(reader, diff::dec_frame_header_bin)?;
-    let sof_marker = reader.read_u8().await.map_err(|e| e.to_string())?;
-    let arithmetic = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
-    let qc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let sof_marker = reader.read_u8().map_err(|e| e.to_string())?;
+    let arithmetic = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let qc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut quant_tables = Vec::with_capacity(qc as usize);
     for _ in 0..qc {
         quant_tables.push(diff::dec_quant_table_bin(reader)?);
     }
-    let hc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let hc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut huffman_tables = Vec::with_capacity(hc as usize);
     for _ in 0..hc {
         huffman_tables.push(diff::dec_huffman_table_bin(reader)?);
     }
     let restart_interval = diff::read_opt(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16))?;
-    let sc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let sc = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut other_segments = Vec::with_capacity(sc as usize);
     for _ in 0..sc {
         other_segments.push(diff::dec_segment_bin(reader)?);
@@ -380,7 +380,7 @@ async fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgS
 /// provide — no opaque tail anywhere in this frame (jpg has no self-recursive mutation payload,
 /// unlike xml's `XmlMutation`).
 impl OpBinary for JpgMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         match self {
             JpgMutation::NoMutation => {
@@ -438,33 +438,33 @@ impl OpBinary for JpgMutation {
         }
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(JpgMutation::NoMutation),
-            1 => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot_bin(&mut reader).await.map_err(|e| malformed("op set-snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            1 => Ok(JpgMutation::SetSnapshot { snapshot: dec_jpg_snapshot_bin(&mut reader).map_err(|e| malformed("op set-snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             2 => {
                 let version = diff::dec_version_bin(&mut reader).map_err(|e| malformed("op version", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let density_units = diff::dec_density_units_bin(&mut reader).map_err(|e| malformed("op density-units", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let x_density = reader.read_varint_u64().await.map_err(|e| malformed("op x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
-                let y_density = reader.read_varint_u64().await.map_err(|e| malformed("op y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
+                let x_density = reader.read_varint_u64().map_err(|e| malformed("op x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
+                let y_density = reader.read_varint_u64().map_err(|e| malformed("op y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16;
                 let thumbnail = diff::read_opt(&mut reader, diff::dec_thumbnail_bin).map_err(|e| malformed("op thumbnail", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail })
             }
             3 => Ok(JpgMutation::SetQuantTable { table: diff::dec_quant_table_bin(&mut reader).map_err(|e| malformed("op quant-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            4 => Ok(JpgMutation::RemoveQuantTable { id: reader.read_u8().await.map_err(|e| malformed("op quant-id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? }),
+            4 => Ok(JpgMutation::RemoveQuantTable { id: reader.read_u8().map_err(|e| malformed("op quant-id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? }),
             5 => Ok(JpgMutation::SetHuffmanTable { table: diff::dec_huffman_table_bin(&mut reader).map_err(|e| malformed("op huffman-table", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             6 => Ok(JpgMutation::RemoveHuffmanTable { key: diff::dec_huffman_key_bin(&mut reader).map_err(|e| malformed("op huffman-key", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             7 => Ok(JpgMutation::SetRestartInterval { restart_interval: diff::read_opt(&mut reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("op restart-interval", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             8 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let segment = diff::dec_segment_bin(&mut reader).map_err(|e| malformed("op segment", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JpgMutation::InsertOtherSegment { index, segment })
             }
-            9 => Ok(JpgMutation::RemoveOtherSegment { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            9 => Ok(JpgMutation::RemoveOtherSegment { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             10 => Ok(JpgMutation::SetPixels { pixels: diff::read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             11 => Ok(JpgMutation::SetReEncodeQuality { quality: diff::read_opt(&mut reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).map_err(|e| malformed("op quality", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             other => Err(malformed("op tag", 1, format!("unknown JpgMutation tag {other}"))),

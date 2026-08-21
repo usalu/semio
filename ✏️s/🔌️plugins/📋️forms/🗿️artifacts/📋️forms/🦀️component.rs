@@ -21,8 +21,7 @@ pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
 /// without ever importing through the sibling editor module. `artifact_kind` matches
 /// `#[artifact_schema(id = "s.forms.forms")]` on `FormsArtifact` (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`);
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const FORMS_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const FORMS_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.forms.forms", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub use crate::artifacts::forms::schema::diff::FormsDiff;
 pub use crate::artifacts::forms::schema::mutations::FormMutation;
 pub use crate::artifacts::forms::schema::snapshot::FormsSnapshot;

@@ -113,17 +113,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -203,7 +203,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
                         crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).await.map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
                     } else {
-                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await
+                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
@@ -211,7 +211,7 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await.or_else(|_| semio_framework_plugin::resolve_ready(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes)).map_err(store::PackError::Schema)) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| semio_framework_plugin::resolve_ready(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes)).map_err(store::PackError::Schema)) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;

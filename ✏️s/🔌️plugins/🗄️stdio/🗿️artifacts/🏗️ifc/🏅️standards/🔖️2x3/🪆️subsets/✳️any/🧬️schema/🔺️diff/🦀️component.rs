@@ -114,7 +114,7 @@ fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2
 }
 
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
-    async fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
+    fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
         validate_ifc2x3_diff(self, base)?;
         Ok(apply_ifc2x3_diff_unchecked(self, base))
     }
@@ -122,7 +122,7 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
     /// index-keyed one): `other`'s removal of an id cancels any pending upsert of that id in
     /// `self` (and vice versa — a later upsert of a formerly-removed id un-removes it).
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
         }
@@ -160,12 +160,12 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
 impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// 🔁️ Same `apply`+`between` composition proof `txt::TxtDiff::inverse` uses: `next =
     /// self.apply(base)`, so `between(next, base)` is by definition the diff that restores `base`.
-    async fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
+    fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
         let next = apply_ifc2x3_diff_unchecked(self, base);
-        Self::between(&next, base).await
+        Self::between(&next, base)
     }
 
-    async fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
+    fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
         let schema = if base.schema != other.schema { Some(other.schema.clone()) } else { None };
         let header = if base.document.header != other.document.header { Some(other.document.header.clone()) } else { None };
         let base_order = base.document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
@@ -191,7 +191,7 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
         Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.schema.is_none() && self.header.is_none() && self.removed_instances.is_empty() && self.upserted_instances.is_empty() && self.edm_preamble.is_none() && self.instance_order.is_none()
     }
 }
@@ -836,10 +836,10 @@ fn parse_ifc2x3_diff(line: &str) -> Result<Ifc2x3Diff, String> {
 }
 
 impl protocol::DiffCodec for Ifc2x3Diff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_ifc2x3_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ifc2x3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ REAL binary frame (`format u8 | flags u8 | field payloads...`), matching
@@ -851,7 +851,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
     /// all the way down — only the innermost recursive `Part21Value::List`/`Typed` payload bottoms
     /// out via `enc_part21_value_bin`'s own recursive call (not an opaque tail: `Part21Value` is
     /// fully spec-expressible per variant).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.schema.is_some() as u8)
             | ((self.header.is_some() as u8) << 1)
             | ((!self.removed_instances.is_empty() as u8) << 2)
@@ -891,24 +891,24 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("diff format", 0, format!("unsupported format {format}")));
         }
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         if flags & !0b0011_1111 != 0 {
             return Err(malformed("diff flags", 1, "unknown flag bits".into()));
         }
         let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).map_err(|e| malformed("diff schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).map_err(|e| malformed("diff header", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let removed_instances = if flags & 4 != 0 {
-            let count = reader.read_varint_u64().await.map_err(|e| malformed("diff removed count", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let count = reader.read_varint_u64().map_err(|e| malformed("diff removed count", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             let mut v = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                v.push(reader.read_varint_u64().await.map_err(|e| malformed("diff removed id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?);
+                v.push(reader.read_varint_u64().map_err(|e| malformed("diff removed id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?);
             }
             v
         } else {
@@ -916,26 +916,26 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         };
         let upserted_instances = if flags & 8 != 0 { dec_instance_list_bin(&mut reader).map_err(|e| malformed("diff upserted", semio_framework_plugin::resolve_ready(reader.position()), e))? } else { Vec::new() };
         let edm_preamble = if flags & 16 != 0 {
-            Some(match reader.read_u8().await.map_err(|e| malformed("diff EDM preamble presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? {
+            Some(match reader.read_u8().map_err(|e| malformed("diff EDM preamble presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? {
                 0 => None,
                 1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|e| malformed("diff EDM preamble", semio_framework_plugin::resolve_ready(reader.position()), e))?),
-                tag => return Err(malformed("diff EDM preamble presence", reader.position().await, format!("unknown tag {tag}"))),
+                tag => return Err(malformed("diff EDM preamble presence", reader.position(), format!("unknown tag {tag}"))),
             })
         } else {
             None
         };
         let instance_order = if flags & 32 != 0 {
-            let count = reader.read_varint_u64().await.map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?;
+            let count = reader.read_varint_u64().map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?;
             let mut order = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                order.push(reader.read_varint_u64().await.map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?);
+                order.push(reader.read_varint_u64().map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?);
             }
             Some(order)
         } else {
             None
         };
         if reader.remaining() != 0 {
-            return Err(malformed("diff trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining())));
+            return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
         Ok(Ifc2x3Diff { schema, header, removed_instances, upserted_instances, edm_preamble, instance_order })
     }

@@ -5,8 +5,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-
 use crate::artifacts::gisterrain::schema::GisTerrainArtifact;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use protocol::MutationDiff;
@@ -87,10 +85,7 @@ pub async fn diff_imported_features_json(features_json: String) -> GisTerrainDif
 }
 
 pub async fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
-    GisTerrainDiff {
-        artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    GisTerrainDiff { artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔹Helpers
 
@@ -117,9 +112,7 @@ mod tests {
         let replacement = GisTerrainSnapshot {
             exaggeration: replacement_exaggeration,
             imported_features_json: replacement_imported_features_json.clone(),
-            mesh: Some(crate::artifacts::gisterrain::gis_terrain_mesh_child_handle(
-                &crate::artifacts::gisterrain::gis_terrain_mesh_content_key(replacement_exaggeration, &replacement_imported_features_json),
-            )),
+            mesh: Some(crate::artifacts::gisterrain::gis_terrain_mesh_child_handle(&crate::artifacts::gisterrain::gis_terrain_mesh_content_key(replacement_exaggeration, &replacement_imported_features_json))),
         };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));

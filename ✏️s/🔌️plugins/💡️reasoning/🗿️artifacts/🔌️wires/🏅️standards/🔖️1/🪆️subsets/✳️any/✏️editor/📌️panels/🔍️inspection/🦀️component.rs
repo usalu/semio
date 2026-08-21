@@ -250,8 +250,7 @@ mod tests {
         // 📜️ The `.wires` fixture is handcrafted in `crate::artifacts::wires::dsl`'s DSL — parse it,
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
         // shape `from_fixture_json` has always expected.
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
-            .expect("valid metabolism fixture mutations");
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let json = serde_json::to_string(&crate::artifacts::wires::schema::dsl_to_json(&document.wires_fixture)).expect("json");
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.topics.len(), 7);

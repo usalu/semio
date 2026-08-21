@@ -1,9 +1,9 @@
 //! 💾️ 💾️ S Studio app command — `export-studio-dsl`.
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::host::{export_os_space_dsl};
+use semio_framework_os::host::export_os_space_dsl;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 use serde::{Deserialize, Serialize};
 

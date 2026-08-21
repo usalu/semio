@@ -3,9 +3,9 @@
 //! object/vortex distribution tree, and (only while there are candidates for the hovered vortex) the
 //! placement picker.
 
+use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_brush_target_vortex, puzzle3d_distribution_group, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
-use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use semio_framework_plugin::{LocalizedLabel, MeasureSelectItem, UtilityDefinition, WindowMeasure};
 
 pub const UTILITY_ID: &str = "brush";

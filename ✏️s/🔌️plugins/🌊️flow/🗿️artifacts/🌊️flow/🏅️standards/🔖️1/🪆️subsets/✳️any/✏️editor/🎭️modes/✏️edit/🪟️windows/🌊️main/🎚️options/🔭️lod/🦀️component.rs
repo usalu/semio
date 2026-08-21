@@ -2,8 +2,8 @@
 //! Its command handler lives in `🎮️commands/🔭️set-lod-mode`.
 
 use crate::editor::flow::config::FlowConfig;
-use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::flow_action;
+use crate::editor::flow::terminology::FlowPlayLabels;
 use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::{json, Value};

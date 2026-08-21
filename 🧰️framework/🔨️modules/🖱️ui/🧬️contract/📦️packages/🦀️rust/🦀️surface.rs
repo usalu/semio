@@ -290,7 +290,23 @@ mod tests {
     fn apply_patch_accepts_a_set_component_carrying_an_unrecognised_doc_schema() {
         let mut state = crate::UiSnapshotState::new(crate::SurfaceId::from("s"));
         state.root = Some(crate::UiNodeId(0));
-        state.nodes.insert(crate::UiNodeId(0), crate::UiNodeRecord { id: crate::UiNodeId(0), key: "root".into(), component: crate::Component::Separator(crate::SeparatorProps {}), layout: Default::default(), style: Default::default(), activity: Default::default(), disabled: false, transition: None, accessibility: Default::default(), bindings: Vec::new(), menu: None, children: Vec::new() });
+        state.nodes.insert(
+            crate::UiNodeId(0),
+            crate::UiNodeRecord {
+                id: crate::UiNodeId(0),
+                key: "root".into(),
+                component: crate::Component::Separator(crate::SeparatorProps {}),
+                layout: Default::default(),
+                style: Default::default(),
+                activity: Default::default(),
+                disabled: false,
+                transition: None,
+                accessibility: Default::default(),
+                bindings: Vec::new(),
+                menu: None,
+                children: Vec::new(),
+            },
+        );
         let limits = crate::UiDocumentLimits::default();
 
         let surface = crate::Component::Surface(SurfaceProps { kind: SurfaceKind::Canvas2d, doc_schema: "nonsense@not-a-version".into(), doc: SurfaceDoc::default(), bindings: Vec::new() });

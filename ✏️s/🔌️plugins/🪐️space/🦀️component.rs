@@ -14,17 +14,17 @@
 //! in the move: every call site always passed `&HomeApp::default()`, so it never varied and coupling this
 //! plugin-root file to `editor::home::HomeApp` for it would have bought nothing.
 
-use semio_framework_os::{
-    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_snapshot, empty_workflow_snapshot, encode_backbone_payload,
-    export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, ArtifactBody,
-    CollectionEntry, CollectionMutation, CollectionSnapshot, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceSnapshot,
-    SpaceRole, SpaceUser, SpaceVisibility, WorkflowSnapshot, WorkflowMutation, OS_SPACE_SCHEMA, S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
-};
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_os::{document_backbone_ref, VcsError};
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+use semio_framework_os::{
+    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_snapshot, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack,
+    list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, DraftCatalog,
+    MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, WorkflowMutation, WorkflowSnapshot, OS_SPACE_SCHEMA,
+    S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
+};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os::{document_backbone_ref, VcsError};
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::{app_labels, ExecutionMode, Plugin};
 use std::collections::{HashMap, HashSet};
@@ -100,7 +100,14 @@ async fn catalog_port_concrete() -> Arc<BackbonePorts> {
         // itself is a fresh space with no workflow artifact wired in yet (`create_os_space`'s own doc: a
         // space only auto-creates its default collection, never a workflow artifact — that stays a
         // later, explicit user action).
-        let demo_name = { let demo = parse_demo_space_document(); if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name } };
+        let demo_name = {
+            let demo = parse_demo_space_document();
+            if demo.name.trim().is_empty() {
+                "Demo Studio".into()
+            } else {
+                demo.name
+            }
+        };
         let mut projection = empty_space_snapshot(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
         // 🪪️ Deliberately NOT threaded to a real session identity (unlike
         // `create_and_register_ephemeral_studio`'s `owner_id`/`owner_name`): this seed runs once, lazily,
@@ -195,12 +202,7 @@ pub(crate) async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbon
 /// correct behavior when there is no signed-in session (no hub reachable) — the local-only path this
 /// ticket's brief requires stays working unchanged in that case.
 pub(crate) async fn create_and_register_ephemeral_studio(name: &str, owner_id: &str, owner_name: &str) -> String {
-    let owner = SpaceUser {
-        id: if owner_id.is_empty() { "local".into() } else { owner_id.into() },
-        name: if owner_name.is_empty() { name.into() } else { owner_name.into() },
-        avatar: None,
-        role: SpaceRole::Author,
-    };
+    let owner = SpaceUser { id: if owner_id.is_empty() { "local".into() } else { owner_id.into() }, name: if owner_name.is_empty() { name.into() } else { owner_name.into() }, avatar: None, role: SpaceRole::Author };
     let mut projection = empty_space_snapshot(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
     projection.users.push(owner);
     let draft = ephemeral_draft_catalog().create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms(), None);

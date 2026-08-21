@@ -13,30 +13,30 @@
 //!    `winit`, no actor kernel, no os-kernel `dsl` — so this compiles for `wasm32-wasip2` guests and
 //!    `wasm32-unknown-unknown` browsers by construction, and a CI `cargo tree` assertion keeps it so.
 
-#[path = "🦀️document.rs"]
-mod document;
-#[path = "🦀️component.rs"]
-mod component;
-#[path = "🦀️layout.rs"]
-mod layout;
-#[path = "🦀️style.rs"]
-mod style;
-#[path = "🦀️action.rs"]
-mod action;
 #[path = "🦀️accessibility.rs"]
 mod accessibility;
-#[path = "🦀️presence.rs"]
-mod presence;
-#[path = "🦀️surface.rs"]
-mod surface;
-#[path = "🦀️limits.rs"]
-mod limits;
+#[path = "🦀️action.rs"]
+mod action;
 #[path = "🦀️builder.rs"]
 mod builder;
+#[path = "🦀️component.rs"]
+mod component;
 /// 🧪️ Loads and asserts against `📚️examples/🧪️conformance/` — entirely `#[cfg(test)]` inside, so it
 /// mounts unconditionally here without affecting the wasm check targets (see the file's own header).
 #[path = "🦀️conformance.rs"]
 mod conformance;
+#[path = "🦀️document.rs"]
+mod document;
+#[path = "🦀️layout.rs"]
+mod layout;
+#[path = "🦀️limits.rs"]
+mod limits;
+#[path = "🦀️presence.rs"]
+mod presence;
+#[path = "🦀️style.rs"]
+mod style;
+#[path = "🦀️surface.rs"]
+mod surface;
 
 pub use accessibility::*;
 pub use action::*;

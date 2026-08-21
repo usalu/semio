@@ -9,25 +9,25 @@
 //! relocated from the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES),
 //! since an `AppIo` surface is app behaviour, not artifact data.
 
+use crate::artifacts::gismap::op::GisMapMutation;
+use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
 use crate::editor::gis2d::commands::{example, features, locale, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure,
-    INTERACTION_SELECT_ACTION_ID,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    tree_item, tree_item_with_action, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    SelectionSpec, UiNode, UiTreeItemNode, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
@@ -126,10 +126,7 @@ pub async fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
 pub async fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
-    Media {
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) },
-    }
+    Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) } }
 }
 //#endregion 🔖️Io
 
@@ -307,9 +304,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "setActiveExample" => Ok(Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
-            "patchPositions" => Ok(Gis2dCommand::PatchPositions(patch_positions::PatchPositions {
-                positions_json: str_arg(&["positionsJson", "positions_json"]).or_else(|| args.get("positions").map(ToString::to_string)).unwrap_or_else(|| "[]".into()),
-            })),
+            "patchPositions" => {
+                Ok(Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: str_arg(&["positionsJson", "positions_json"]).or_else(|| args.get("positions").map(ToString::to_string)).unwrap_or_else(|| "[]".into()) }))
+            }
             "patchRoutes" => Ok(Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes {
                 route_ids: {
                     let mut ids = string_list("routeIds");
@@ -321,26 +318,19 @@ impl ArtifactEditor for Gis2dPlayApp {
                 field: str_arg(&["field"]).unwrap_or_default(),
                 value: str_arg(&["value"]).unwrap_or_default(),
             })),
-            "patchRoute" => Ok(Gis2dCommand::PatchRoute(patch_route::PatchRoute {
-                route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(),
-                field: str_arg(&["field"]).unwrap_or_default(),
-                value: str_arg(&["value"]).unwrap_or_default(),
-            })),
+            "patchRoute" => Ok(Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(), field: str_arg(&["field"]).unwrap_or_default(), value: str_arg(&["value"]).unwrap_or_default() })),
             "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility(toggle_layer_visibility::ToggleLayerVisibility { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default() })),
             "fitWorld" => Ok(Gis2dCommand::FitWorld(fit_world::FitWorld {})),
             "setCamera" => {
-                let camera_json = str_arg(&["cameraJson", "camera_json"])
-                    .or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() }))
-                    .unwrap_or_else(|| "{}".into());
+                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
                 Ok(Gis2dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
             "setRenderMode" => Ok(Gis2dCommand::SetRenderMode(set_render_mode::SetRenderMode { value: str_arg(&["value", "renderMode", "render_mode"]).unwrap_or_default() })),
             "setVectorStyle" => Ok(Gis2dCommand::SetVectorStyle(set_vector_style::SetVectorStyle { value: str_arg(&["value", "vectorStyle", "vector_style"]).unwrap_or_default() })),
             "setLodMode" => Ok(Gis2dCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
-            "focusFeature" => Ok(Gis2dCommand::FocusFeature(focus_feature::FocusFeature {
-                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
-                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
-            })),
+            "focusFeature" => {
+                Ok(Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(), feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()) }))
+            }
             "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(), value: f64_arg(&["value"]).unwrap_or(1.0) })),
             "setLocale" => Ok(Gis2dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "openSource" => Ok(Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default() })),
@@ -351,7 +341,14 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    async fn handle(command: &Gis2dCommand, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Gis2dCommand,
+        doc: &ArtifactView<'_, GisMapSnapshot>,
+        cfg: &ConfigView<'_, Gis2dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -558,22 +555,8 @@ mod tests {
 
     /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
     /// manifest action id. Pinned so a reordered/renamed row is caught here, not in production.
-    const WIRE_KEYWORDS: &[&str] = &[
-        "active-example",
-        "patch-positions",
-        "patch-routes",
-        "patch-route",
-        "toggle-layer-visibility",
-        "fit-world",
-        "camera",
-        "render-mode",
-        "vector-style",
-        "lod-mode",
-        "focus-feature",
-        "layer-stroke-scale",
-        "locale",
-        "open-source",
-    ];
+    const WIRE_KEYWORDS: &[&str] =
+        &["active-example", "patch-positions", "patch-routes", "patch-route", "toggle-layer-visibility", "fit-world", "camera", "render-mode", "vector-style", "lod-mode", "focus-feature", "layer-stroke-scale", "locale", "open-source"];
 
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_and_cover_every_row() {

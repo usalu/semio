@@ -1,9 +1,9 @@
 //! 👁️ Procedural2d play app — the preview window: the evaluated 2D canvas.
 
-use crate::editor::procedural2d::config::Procedural2dConfig;
-use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::editor::procedural2d::config::Procedural2dConfig;
+use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::Value;
@@ -30,7 +30,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

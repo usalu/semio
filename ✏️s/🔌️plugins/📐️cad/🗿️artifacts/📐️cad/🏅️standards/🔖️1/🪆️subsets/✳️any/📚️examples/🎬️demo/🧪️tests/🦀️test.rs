@@ -70,8 +70,8 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         // this demo fixture's `CadSnapshot` no longer carries inline. `RenameNode` is real and
         // unaffected (node data was never part of the deleted inline object list) and exercises the
         // identical sample-mutation-roundtrip law this spec is for.
-        use crate::artifacts::cad::CadMutation;
         use crate::artifacts::cad::mutations::rename_node::mutation::RenameNode;
+        use crate::artifacts::cad::CadMutation;
         let Some(node) = snapshot.nodes.first() else {
             return Vec::new();
         };
@@ -79,10 +79,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-        std::str::from_utf8(bytes)
-            .map_err(|e| vec![e.to_string()])
-            .and_then(|text| crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| vec![e.to_string()]))
-            .map(|_| ())
+        std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
     }
 
     async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

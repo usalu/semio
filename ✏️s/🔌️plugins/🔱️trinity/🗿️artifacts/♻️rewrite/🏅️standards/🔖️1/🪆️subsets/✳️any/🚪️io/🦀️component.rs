@@ -1,12 +1,16 @@
 //! 🚪️ IO s.rewrite (1/✳️any) — registration now flows through this module's own `io_registry::entries()`,
 //! wired into `.composers(…)` by the artifact root's `declaration()`, not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"] }
-pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"]
+}
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::rewrite::RewriteSnapshot;
     use crate::artifacts::rewrite::standards::v1::subsets::any::schema::RewriteAnalyzer;
+    use crate::artifacts::rewrite::RewriteSnapshot;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.rewrite", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DOCX: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -14,7 +18,6 @@ pub mod derived_composition {
     const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct RewriteComposerComposition;
 
@@ -83,7 +86,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "RewriteComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -94,10 +96,10 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::rewrite::standards::v1::subsets::any::schema::RewriteComposer as RewriteAnyComposer;
     use crate::artifacts::rewrite::standards::v1::subsets::any::schema::RewriteBuilder as RewriteAnyBuilder;
+    use crate::artifacts::rewrite::standards::v1::subsets::any::schema::RewriteComposer as RewriteAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -138,56 +140,59 @@ pub mod io_registry {
 
     const EXPORT_TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
     async fn compose_export_txt(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     async fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_DOCX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     async fn compose_export_docx(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::docx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_DOCX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::docx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_DOCX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::rewrite::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
-
     pub async fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<RewriteAnyComposer>(),
-            ComposerEntry { writes: EXPORT_TXT_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_txt },
-            ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_pdf },
-            ComposerEntry { writes: EXPORT_DOCX_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_docx },
-            ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_md },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<RewriteAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_TXT_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_txt },
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_pdf },
+                    ComposerEntry { writes: EXPORT_DOCX_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_docx },
+                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_md },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[REWRITE_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

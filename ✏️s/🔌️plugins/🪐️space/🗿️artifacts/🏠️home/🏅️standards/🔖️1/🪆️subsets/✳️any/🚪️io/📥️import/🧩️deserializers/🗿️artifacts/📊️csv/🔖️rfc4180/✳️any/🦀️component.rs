@@ -16,6 +16,5 @@ pub async fn deserialize(from: &CsvSnapshot) -> Result<SHomeSnapshot, store::Tex
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<SHomeSnapshot, store::TextError> {
-    <SHomeSnapshot as store::ArtifactPack>::decode_pack(bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <SHomeSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }

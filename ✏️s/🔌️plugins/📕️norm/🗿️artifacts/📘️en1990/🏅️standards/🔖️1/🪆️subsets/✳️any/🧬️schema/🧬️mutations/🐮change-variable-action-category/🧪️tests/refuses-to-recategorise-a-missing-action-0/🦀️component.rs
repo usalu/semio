@@ -77,11 +77,8 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "rejected", "change-variable-action-category/refuses-to-recategorise-a-missing-action-0: this case exists to pin a rejection");
     let code = outcome.get("code").and_then(serde_json::Value::as_str).expect("a rejected outcome carries a machine-readable code");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -112,7 +109,10 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     assert_eq!(DIFF_ABSENT.len(), 0, "change-variable-action-category/refuses-to-recategorise-a-missing-action-0: the absence marker must carry no bytes at all");
     let produced = serde_json::to_value(En1990Diff::default()).expect("default diff encodes");
-    assert!(produced.as_object().is_some_and(|fields| fields.values().all(serde_json::Value::is_null)), "change-variable-action-category/refuses-to-recategorise-a-missing-action-0: the default diff must serialize as an all-null object, never as an omitted-field one");
+    assert!(
+        produced.as_object().is_some_and(|fields| fields.values().all(serde_json::Value::is_null)),
+        "change-variable-action-category/refuses-to-recategorise-a-missing-action-0: the default diff must serialize as an all-null object, never as an omitted-field one"
+    );
 }
 
 /// 🩹 Applying the rejection's own (default) diff to `before` yields the committed `after`.

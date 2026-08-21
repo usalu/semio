@@ -1,9 +1,9 @@
 //! 🔍️ Block 3D play app panel — the inspector: the object kind's identity fields, active-representation
 //! select, plus a vortex count.
 
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::block3d_action;
 use crate::editor::block3d::terminology::Block3dLabels;
-use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

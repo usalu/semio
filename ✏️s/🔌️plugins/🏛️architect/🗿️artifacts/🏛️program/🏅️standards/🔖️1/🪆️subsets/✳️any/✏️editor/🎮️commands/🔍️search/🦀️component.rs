@@ -2,10 +2,10 @@
 //! appending the query to the config's search history.
 
 pub mod query {
-    use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

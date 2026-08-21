@@ -1,8 +1,8 @@
 //! 📄️ Animate present app panel — the document tree: tiles of the current deck.
 
+use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::terminology::AnimatePresentLabels;
 use crate::editor::animate::PRESENT_INTERACTION_DOMAIN;
-use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -11,7 +11,13 @@ pub const PRESENT_PLAY_BODY_DOCUMENT: &str = "animate.present.play.document";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PRESENT_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(PRESENT_PLAY_BODY_DOCUMENT.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -22,10 +28,7 @@ pub async fn definition() -> PanelTabDefinition {
 pub async fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
     let items: Vec<UiTreeItemNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::data(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))).collect();
-    PanelTreeBuilder::new("animate-present-play")
-        .section_or_placeholder("animate-present-play.tiles", Some(labels.tiles_section.into()), true, items, labels.no_tiles)
-        .interaction_domain(PRESENT_INTERACTION_DOMAIN)
-        .build()
+    PanelTreeBuilder::new("animate-present-play").section_or_placeholder("animate-present-play.tiles", Some(labels.tiles_section.into()), true, items, labels.no_tiles).interaction_domain(PRESENT_INTERACTION_DOMAIN).build()
 }
 //#endregion 🔖️Render
 

@@ -6,12 +6,12 @@
 //! back out to the owner-root tree). The grouping modules carry `#[path = "."]` so their own names
 //! are not spliced into that base directory.
 
-extern crate infinite_canvas as infinite_board_port_directed_normal;
 extern crate infinite_canvas as infinite_board_port_directed;
+extern crate infinite_canvas as infinite_board_port_directed_normal;
 #[allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
 // 📌️ Command handler functions (`🎮️commands/<verb-noun>/component.rs`) are decomposed out of a
@@ -19,7 +19,6 @@ extern crate semio_framework_schema as schema;
 // Fault>` signature is dictated by the dispatch call site (some commands DO fail; others never do),
 // so per-function `Ok(...)`-only bodies are intentional, not a mistake to unwrap.
 #[allow(clippy::unnecessary_wraps)]
-
 //#region 🔤️Jack kernel
 // 🫀️ Cross-artifact query-language kernel, physically homed under `jack`'s own artifact `🧬️schema`
 // (the DSL it implements is literally the "jack query language" per every file's own docstring)
@@ -31,12 +30,12 @@ extern crate semio_framework_schema as schema;
 // site elsewhere in the crate needed to change.
 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🦀️component.rs"]
 pub mod ast;
-#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️component.rs"]
-pub mod lexer;
 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🦀️component.rs"]
 pub mod executor;
 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/🦀️component.rs"]
 pub mod language_service;
+#[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️component.rs"]
+pub mod lexer;
 pub use language_service as core;
 //#endregion 🔤️Jack kernel
 
@@ -73,20 +72,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod bounds {
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs"]
@@ -110,90 +109,90 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod edit_before_fixture {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-before-fixture/🧪️tests/swaps-in-a-two-node-before-graph/🦀️component.rs"]
                                     mod tests_swaps_in_a_two_node_before_graph;
                                 }
                                 #[path = "."]
                                 pub mod edit_lhs {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️edit-lhs/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️edit-lhs/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️edit-lhs/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️edit-lhs/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️edit-lhs/🧪️tests/narrows-the-lhs-pattern-to-a-shaft-neighbour/🦀️component.rs"]
                                     mod tests_narrows_the_lhs_pattern_to_a_shaft_neighbour;
                                 }
                                 #[path = "."]
                                 pub mod edit_rhs {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️edit-rhs/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️edit-rhs/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️edit-rhs/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️edit-rhs/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️edit-rhs/🧪️tests/rewrites-the-rhs-to-set-a-second-property/🦀️component.rs"]
                                     mod tests_rewrites_the_rhs_to_set_a_second_property;
                                 }
                                 #[path = "."]
                                 pub mod change_parameter_binding {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🧪️tests/retitles-the-caption-binding/🦀️component.rs"]
                                     mod tests_retitles_the_caption_binding;
                                 }
                                 #[path = "."]
                                 pub mod remove_parameter_binding {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🧪️tests/drops-the-repeat-binding/🦀️component.rs"]
                                     mod tests_drops_the_repeat_binding;
                                 }
                                 #[path = "."]
                                 pub mod change_rule_layout_point {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🧪️tests/nudges-the-capsule-var-off-the-shaft/🦀️component.rs"]
                                     mod tests_nudges_the_capsule_var_off_the_shaft;
                                 }
                                 #[path = "."]
                                 pub mod remove_rule_layout_point {
-                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🧪️tests/clears-the-shaft-layout-point/🦀️component.rs"]
                                     mod tests_clears_the_shaft_layout_point;
@@ -356,16 +355,63 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-        pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::RewriteSnapshot;
-        pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+        pub mod op {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::diff::RewriteDiff;
-
+        pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+        pub use crate::artifacts::rewrite::standards::v1::subsets::any::schema::snapshot::RewriteSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -407,20 +453,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
@@ -450,102 +496,102 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod create_node {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-node/🧪️tests/rejects-a-node-id-the-scene-already-holds/🦀️component.rs"]
                                     mod tests_rejects_a_node_id_the_scene_already_holds;
                                 }
                                 #[path = "."]
                                 pub mod delete_node {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/rejects-deleting-a-node-the-scene-never-had/🦀️component.rs"]
                                     mod tests_rejects_deleting_a_node_the_scene_never_had;
                                 }
                                 #[path = "."]
                                 pub mod create_edge {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️create-edge/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️create-edge/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️create-edge/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️create-edge/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️create-edge/🧪️tests/rejects-an-edge-whose-endpoints-are-absent/🦀️component.rs"]
                                     mod tests_rejects_an_edge_whose_endpoints_are_absent;
                                 }
                                 #[path = "."]
                                 pub mod delete_edge {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/rejects-cutting-an-edge-the-scene-never-had/🦀️component.rs"]
                                     mod tests_rejects_cutting_an_edge_the_scene_never_had;
                                 }
                                 #[path = "."]
                                 pub mod rename_node {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node/🧪️tests/keeps-the-name-a-node-already-carries/🦀️component.rs"]
                                     mod tests_keeps_the_name_a_node_already_carries;
                                 }
                                 #[path = "."]
                                 pub mod move_node {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-node/🧪️tests/keeps-a-node-at-the-point-it-already-occupies/🦀️component.rs"]
                                     mod tests_keeps_a_node_at_the_point_it_already_occupies;
                                 }
                                 #[path = "."]
                                 pub mod change_data_property {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-data-property/🧪️tests/keeps-a-node-property-at-the-value-it-already-holds/🦀️component.rs"]
                                     mod tests_keeps_a_node_property_at_the_value_it_already_holds;
                                 }
                                 #[path = "."]
                                 pub mod remove_data_property {
-                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-data-property/🧪️tests/keeps-an-edge-without-the-property-it-never-had/🦀️component.rs"]
                                     mod tests_keeps_an_edge_without_the_property_it_never_had;
@@ -732,16 +778,63 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-        pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-        pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+        pub mod op {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::jack::standards::v1::subsets::any::schema::diff::JackDiff;
-
+        pub use crate::artifacts::jack::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+        pub use crate::artifacts::jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -952,27 +1045,27 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-            #[path = "."]
-            pub(crate) mod graph {
-                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod graph {
+                        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod editor {
-                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod editor {
+                        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod results {
-                #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-        }
+                    #[path = "."]
+                    pub(crate) mod results {
+                        #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
+                }
             }
         }
 
@@ -1145,48 +1238,48 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-            #[path = "."]
-            pub(crate) mod before {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⬅️before/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod before {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⬅️before/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod after {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⏭️after/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod after {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⏭️after/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod lhs {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👈️lhs/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod lhs {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👈️lhs/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod rhs {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/➡️rhs/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod rhs {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/➡️rhs/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod jack {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔎️jack/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
+                    #[path = "."]
+                    pub(crate) mod jack {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔎️jack/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
 
-            #[path = "."]
-            pub(crate) mod parameters {
-                #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎛️parameters/🦀️component.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-        }
+                    #[path = "."]
+                    pub(crate) mod parameters {
+                        #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎛️parameters/🦀️component.rs"]
+                        mod component;
+                        pub(crate) use component::*;
+                    }
+                }
             }
         }
 
@@ -1283,20 +1376,20 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
-    pub mod art_rewrite_demo;
-    #[cfg(test)]
-    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
-    mod art_rewrite_demo_tests;
+    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_jack_demo_session;
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_rewrite_demo_session;
     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_jack_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_jack_demo_tests;
-    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_rewrite_demo_session;
-    #[path = "../../🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_jack_demo_session;
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_rewrite_demo;
+    #[cfg(test)]
+    #[path = "../../🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
+    mod art_rewrite_demo_tests;
 }
 //#endregion 📚️Examples
 

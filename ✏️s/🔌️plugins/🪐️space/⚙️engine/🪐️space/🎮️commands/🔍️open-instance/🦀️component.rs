@@ -2,7 +2,7 @@
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Effect, Emit, Fault};
 
 use serde::{Deserialize, Serialize};
 
@@ -46,9 +46,9 @@ pub async fn apply(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapsh
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::demo_space_projection;
     use crate::engine::space::testkit::{apply_config, seed_draw_plugin, studio_emit};
     use crate::engine::space::SpaceCommand;
-    use crate::demo_space_projection;
 
     #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {

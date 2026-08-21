@@ -17,25 +17,19 @@ pub struct PlaygroundArtifact {
 //#region 🔖️Conversions
 impl Default for PlaygroundArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA.into(),
-        }
+        Self { schema: crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA.into() }
     }
 }
 
 impl PlaygroundArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
-        crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
-            schema: self.schema.clone(),
-        }
+        crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot { schema: self.schema.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
     pub async fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-        }
+        Self { schema: snapshot.schema }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -92,10 +86,10 @@ pub async fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDe
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
     use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
     use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct PlaygroundBuilderConstruction {
@@ -107,8 +101,12 @@ pub mod derived_construction {
         type Snapshot = PlaygroundSnapshot;
         type Mutation = PlaygroundMutation;
         type Diff = PlaygroundDiff;
-        async fn empty() -> Self { Self { snapshot: PlaygroundSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: PlaygroundSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -119,24 +117,21 @@ pub mod derived_construction {
             let outcome = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <PlaygroundDiff as protocol::MutationDiff<PlaygroundSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -144,8 +139,8 @@ pub mod derived_construction {
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct PlaygroundParts {

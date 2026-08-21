@@ -232,7 +232,7 @@ pub fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimiti
 
 //#region 🔖️Apply
 impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
-    async fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
+    fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
@@ -249,7 +249,7 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.meshes = match (self.meshes.take(), other.meshes) {
             (None, b) => b,
             (a, None) => a,
@@ -350,12 +350,12 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
     /// own `DiffAlgebra::inverse` uses — recomputing via a real `between()` call sidesteps having
     /// to hand-derive `NamedAdded<T>` position math for the undo direction): `mid = self.apply(base)`,
     /// then `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
-    async fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
-        let mid = self.apply(base).await.unwrap();
-        Self::between(&mid, base).await
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
+        let mid = self.apply(base).unwrap();
+        Self::between(&mid, base)
     }
 
-    async fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
+    fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
         SemioMeshDiff {
             meshes: between_named(&base.meshes, &other.meshes, |m| m.id.clone(), between_mesh),
             materials: between_named(&base.materials, &other.materials, |m| m.id.clone(), between_material),
@@ -363,7 +363,7 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
     }
 }
@@ -1057,10 +1057,10 @@ fn parse_mesh_diff(line: &str) -> Result<SemioMeshDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioMeshDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_mesh_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_mesh_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -1072,7 +1072,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
     /// trailing `bytes` because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
     /// conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s pilot report).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.meshes.is_some() {
@@ -1096,7 +1096,7 @@ impl protocol::DiffCodec for SemioMeshDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

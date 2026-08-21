@@ -5,15 +5,15 @@
 //! nondeterminism into the ranking is a `Vec`/`BTreeMap`/`BTreeSet`, and every tie is broken by
 //! capability id (`Ord` on `String`) so two searches over the same catalog always agree byte-for-byte.
 
-use crate::catalog::{Catalog, CapabilityDefinition, CapabilityOwner};
+use crate::catalog::{CapabilityDefinition, CapabilityOwner, Catalog};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Tokenizer
 /// 🌐️ English + German stopwords — short, closed, deliberately conservative (a false-positive
 /// stopword would silently swallow a real query term; missing one just costs a little precision).
 const STOPWORDS: &[&str] = &[
-    "the", "a", "an", "of", "to", "in", "on", "for", "and", "or", "is", "are", "with", "by", "at", "from", "this", "that", "it", "as", "be",
-    "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "eines", "und", "oder", "mit", "für", "von", "zu", "im", "am", "ist", "sind",
+    "the", "a", "an", "of", "to", "in", "on", "for", "and", "or", "is", "are", "with", "by", "at", "from", "this", "that", "it", "as", "be", "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "eines", "und", "oder", "mit",
+    "für", "von", "zu", "im", "am", "ist", "sind",
 ];
 
 /// 🧩️ Lowercases, splits on every non-alphanumeric boundary (covers kebab-case AND snake_case for

@@ -15,9 +15,7 @@ pub struct NormPresence {}
 
 impl protocol::MutationDiff<NormPresence> for NormPresence {
     async fn apply(&self, base: &NormPresence) -> protocol::MutationApplyResult<NormPresence> {
-        Ok({
-            base.clone()
-        })
+        Ok({ base.clone() })
     }
     async fn absorb(&mut self, _other: Self) {}
 }

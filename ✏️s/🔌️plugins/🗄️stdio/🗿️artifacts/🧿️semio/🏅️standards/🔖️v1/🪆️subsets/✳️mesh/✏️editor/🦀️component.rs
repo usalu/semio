@@ -40,12 +40,12 @@ pub enum SemioMeshEditCommand {
 }
 
 impl protocol::OpBinary for SemioMeshEditCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let SemioMeshEditCommand::SetVertex(args) = self;
         let payload = serde_json::json!({ "meshIndex": args.mesh_index, "primitiveIndex": args.primitive_index, "vertexIndex": args.vertex_index, "point": args.point });
         Ok(serde_json::to_vec(&payload).unwrap_or_default())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: error.to_string() })?;
         let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
@@ -103,7 +103,7 @@ impl ArtifactEditor for SemioMeshEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 

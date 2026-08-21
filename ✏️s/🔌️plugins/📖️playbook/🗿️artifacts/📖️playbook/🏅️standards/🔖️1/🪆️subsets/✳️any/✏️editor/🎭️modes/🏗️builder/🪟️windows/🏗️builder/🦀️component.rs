@@ -1,7 +1,7 @@
 //! 🏗️ Playbook play app — the builder window: the drag/drop Blockly-like form authoring surface.
 
-use crate::editor::playbook::config::PlaybookConfig;
 use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
+use crate::editor::playbook::config::PlaybookConfig;
 use semio_framework::parse_contributions;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -103,10 +103,7 @@ mod tests {
         let mut config = PlaybookConfig::default();
         let entry = ProgramContributionEntry {
             plugin_id: "playbook-module-procedural".into(),
-            topic_contribution: Some(TopicContribution::new(
-                "playbook.blockKind",
-                serde_json::json!({ "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building" }),
-            )),
+            topic_contribution: Some(TopicContribution::new("playbook.blockKind", serde_json::json!({ "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building" }))),
         };
         config.contributions_json = serde_json::to_string(&vec![entry]).unwrap();
         let palette = build_palette(&config);

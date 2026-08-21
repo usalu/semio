@@ -38,10 +38,10 @@ pub async fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &Write
     mutation.inverse(snapshot)
 }
 
-pub use super::rename_writer::mutation::{rename_writer, RenameWriter};
-pub use super::change_uri::mutation::{change_uri, ChangeUri};
 pub use super::change_language::mutation::{change_language, ChangeLanguage};
+pub use super::change_uri::mutation::{change_uri, ChangeUri};
 pub use super::edit_text::mutation::{edit_text, EditText};
+pub use super::rename_writer::mutation::{rename_writer, RenameWriter};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
@@ -75,14 +75,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
         let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_and_cache("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
-        assert_eq!(
-            WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot),
-            vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]
-        );
-        assert_eq!(
-            WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot),
-            vec![WriterMutation::EditText(EditText { text: "old text".into() })]
-        );
+        assert_eq!(WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot), vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]);
+        assert_eq!(WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot), vec![WriterMutation::EditText(EditText { text: "old text".into() })]);
     }
 
     #[semio_framework_async_macros::async_test]

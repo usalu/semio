@@ -2,7 +2,7 @@
 //! runner". `check()` is pure and deterministic (no LLM, no network) — every finding is derived
 //! entirely from the compiled `Catalog`'s own data.
 
-use crate::catalog::{Catalog, CapabilityDefinition, CapabilityKind, CapabilityOwner, CatalogSource};
+use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog, CatalogSource};
 use semio_framework::manifest::{ApprovalMode, UndoMode};
 use semio_framework::{Locale, Terminology};
 use std::collections::BTreeMap;
@@ -32,9 +32,7 @@ impl Finding {
 /// 📇️ `📋️master.md` §3.4's scope table, right-hand `CapabilityId`s — every value a `CapabilityPolicy`
 /// is allowed to name. `fs.read:*`/`fs.write:*`/`http:*`/`secrets:*` are prefix families (the table's
 /// own `<root>`/`<origin>`/`<name>` placeholders).
-const KNOWN_EXACT_SCOPES: [&str; 12] = [
-    "documents.read", "documents.write", "jobs.spawn", "shell.observe", "shell.control", "ui.window", "ui.dialog", "shell.navigate", "shell.raw", "shell.clipboard", "packages.install", "process.spawn",
-];
+const KNOWN_EXACT_SCOPES: [&str; 12] = ["documents.read", "documents.write", "jobs.spawn", "shell.observe", "shell.control", "ui.window", "ui.dialog", "shell.navigate", "shell.raw", "shell.clipboard", "packages.install", "process.spawn"];
 const KNOWN_SCOPE_PREFIXES: [&str; 4] = ["fs.read:", "fs.write:", "http:", "secrets:"];
 
 fn is_known_scope(scope: &str) -> bool {

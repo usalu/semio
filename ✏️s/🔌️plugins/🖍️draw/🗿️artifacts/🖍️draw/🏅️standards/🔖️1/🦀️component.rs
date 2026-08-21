@@ -13,9 +13,5 @@ use semio_framework_plugin::StandardId;
 /// `📓️recipe-subset.md` §4b). `extensions: ["draw"]` is the real, carried-over value (the codec
 /// row's own claim).
 pub async fn standard() -> StandardDeclaration {
-    StandardDeclaration {
-        id: StandardId("1"),
-        media: MediaDeclaration { mimes: &["application/vnd.semio.draw+json"], extensions: &["draw"] },
-        subsets: vec![subsets::any::subset()],
-    }
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.draw+json"], extensions: &["draw"] }, subsets: vec![subsets::any::subset()] }
 }

@@ -142,14 +142,10 @@ mod tests {
     }
 
     async fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
-        let forward = vcs::apply_mutation(base, mutation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward

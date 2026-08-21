@@ -1,13 +1,13 @@
 //! 📄️ Layout play app panel — the document tree: spreads, pages, frames, parent pages, layers,
 //! stories, links and styles of the current layout document.
 
+use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::{layout_action, layout_select_action_args, LAYOUT_INTERACTION_ELEMENTS};
-use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-    INTERACTION_SELECT_ACTION_ID,
+    tree_item_desc, tree_item_with_action, ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::json;
 
@@ -240,8 +240,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn layout_labels_translate_document_tree_in_german() {
-        use crate::editor::layout::testkit::dispatch;
         use crate::editor::layout::commands::set_locale;
+        use crate::editor::layout::testkit::dispatch;
         use crate::editor::layout::LayoutCommand;
         let mut app = layout_app();
         dispatch(&mut app, LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));

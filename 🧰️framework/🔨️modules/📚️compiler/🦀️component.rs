@@ -18,7 +18,6 @@ struct Fonts {
     emoji: Font<'static>,
 }
 
-
 /// @emoji 🌍️ Lazily parses the embedded font set once per process — every `compile_snippet_to_svg`
 /// call after the first reuses the same parsed `Font`s.
 fn fonts() -> &'static Fonts {

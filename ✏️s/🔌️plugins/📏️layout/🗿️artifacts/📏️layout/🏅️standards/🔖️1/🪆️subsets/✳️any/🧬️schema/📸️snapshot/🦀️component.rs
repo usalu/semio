@@ -1,9 +1,6 @@
 //! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::layout::{
-    CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle,
-    ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -334,12 +331,7 @@ impl store::ArtifactDsl for LayoutSnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_layout_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -348,22 +340,13 @@ impl store::ArtifactPack for LayoutSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_layout_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_layout_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -381,16 +364,7 @@ mod round_trip_tests {
         let mut snapshot = empty_layout_snapshot();
         snapshot.schema = LAYOUT_DOCUMENT_SCHEMA.into();
         snapshot.name = "Composed".into();
-        snapshot.paragraph_styles = vec![ParagraphStyle {
-            id: "paragraph.body".into(),
-            name: "Body".into(),
-            font_family: "Layout Sans".into(),
-            font_size: 12.0,
-            font_weight: 400,
-            leading: 14.4,
-            tracking: 0.0,
-            alignment: "left".into(),
-        }];
+        snapshot.paragraph_styles = vec![ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() }];
         snapshot.pages = vec![Page {
             id: "page-1".into(),
             name: "Page 1".into(),
@@ -414,15 +388,8 @@ mod round_trip_tests {
             }],
             overrides: Vec::new(),
         }];
-        snapshot.background_drawing = Some(store::ArtifactChild::new(
-            "child-drawing-1".to_string(),
-            store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri"),
-        ));
-        snapshot.referenced_model = Some(store::ArtifactLink {
-            target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"),
-            pin: store::LinkPin::Head,
-            role: "model".into(),
-        });
+        snapshot.background_drawing = Some(store::ArtifactChild::new("child-drawing-1".to_string(), store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")));
+        snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
         snapshot
     }
 

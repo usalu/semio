@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the guard compares whole `Option<String>` values and the two differ, so `change-selection-series`'s `mutation.no-op` warning cannot fire");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the guard compares whole `Option<String>` values and the two differ, so `change-selection-series`'s `mutation.no-op` warning cannot fire"
+    );
     assert!(produced.messages().is_empty(), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: an accepted change-selection-series emits no diagnostics at all");
 }
 

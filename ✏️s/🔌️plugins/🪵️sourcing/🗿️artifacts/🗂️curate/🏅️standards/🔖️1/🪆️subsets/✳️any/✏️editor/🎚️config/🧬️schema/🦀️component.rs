@@ -7,9 +7,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sourcing.curate.config")]
 pub struct SourcingCurateConfig {
-    #[state(config)] pub filters: Filters,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub contributions_json: String,
+    #[state(config)]
+    pub filters: Filters,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub contributions_json: String,
 }
 
 //#region 🔖️AppSchemaDescriptor
@@ -40,4 +43,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️AppSchemaDescriptor
-

@@ -15,14 +15,14 @@
 //! were previously `widgets`-module-private); `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::text`/
 //! `crate::wgpu::theme` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::wgpu::widgets::{
-    draw_icon, draw_text, measure_text_width, render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TreeItem, TreeSection, WidgetContext, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT,
-    TREE_SECTION_GAP, TREE_TOGGLE_WIDTH,
-};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
+use crate::wgpu::widgets::{
+    draw_icon, draw_text, measure_text_width, render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TreeItem, TreeSection, WidgetContext, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT,
+    TREE_SECTION_GAP, TREE_TOGGLE_WIDTH,
+};
 use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
 

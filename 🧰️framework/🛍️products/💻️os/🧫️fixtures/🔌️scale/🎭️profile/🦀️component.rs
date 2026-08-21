@@ -49,14 +49,7 @@ pub struct FixtureConfig {
 
 impl Default for FixtureConfig {
     fn default() -> Self {
-        Self {
-            profile: Profile::default(),
-            cpu_busy_ms: 5,
-            ui_patches_per_turn: 1,
-            hang_overrun_multiplier: 3,
-            crash_after_turns: 1,
-            io_capability_id: "scale-fixture.io".to_string(),
-        }
+        Self { profile: Profile::default(), cpu_busy_ms: 5, ui_patches_per_turn: 1, hang_overrun_multiplier: 3, crash_after_turns: 1, io_capability_id: "scale-fixture.io".to_string() }
     }
 }
 //#endregion 🔖️Config
@@ -201,11 +194,7 @@ fn turn_ui(budget: TurnBudget) -> TurnOutcome {
             let base_revision = state.revision;
             state.revision += 1;
             let bytes = format!("{{\"revision\":{}}}", state.revision).into_bytes();
-            let bytes = if (bytes.len() as u32) > budget.max_patch_bytes.max(1) {
-                bytes[..(budget.max_patch_bytes.max(1) as usize).min(bytes.len())].to_vec()
-            } else {
-                bytes
-            };
+            let bytes = if (bytes.len() as u32) > budget.max_patch_bytes.max(1) { bytes[..(budget.max_patch_bytes.max(1) as usize).min(bytes.len())].to_vec() } else { bytes };
             patches.push(PlainPatch { surface_instance: 0, surface: 0, revision: state.revision, base_revision, bytes });
         }
         state.turns += 1;

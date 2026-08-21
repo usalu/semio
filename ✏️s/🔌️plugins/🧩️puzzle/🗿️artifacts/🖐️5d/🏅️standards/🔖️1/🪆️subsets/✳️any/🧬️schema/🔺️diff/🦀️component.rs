@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle5d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart};
 use crate::artifacts::puzzle5d::schema::Puzzle5dArtifact;
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart};
 use artifact_schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
@@ -12,43 +12,79 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dDiff {
-    #[state(artifact)] pub artifact: Option<Box<Puzzle5dArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub domain: Option<String>,
-    #[state(artifact)] pub label: Option<Option<String>>,
-    #[state(artifact)] pub meta: Option<Puzzle5dMeta>,
+    #[state(artifact)]
+    pub artifact: Option<Box<Puzzle5dArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub domain: Option<String>,
+    #[state(artifact)]
+    pub label: Option<Option<String>>,
+    #[state(artifact)]
+    pub meta: Option<Puzzle5dMeta>,
     #[child(kind = "s.stdio.semio.kit")]
-    #[state(artifact)] pub kind_catalogs: Option<Option<store::ArtifactChild<SemioKitSnapshot>>>,
-    #[state(artifact)] pub kind_catalogs_extra: Option<Option<Puzzle5dKindCatalogsExtra>>,
-    #[state(artifact)] pub kind_compatibility: Option<Puzzle5dKindCompatibilityList>,
-    #[state(artifact)] pub parts: Option<Puzzle5dPartsDelta>,
-    #[state(artifact)] pub fasteners: Option<Puzzle5dFastenersDelta>,
-    #[state(presence)] pub selected_part_ids: Option<Puzzle5dStringList>,
-    #[state(presence)] pub selected_grip_ids: Option<Puzzle5dStringList>,
-    #[state(presence)] pub selected_fastener_ids: Option<Puzzle5dStringList>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub camera2d_x: Option<f64>,
-    #[state(config)] pub camera2d_y: Option<f64>,
-    #[state(config)] pub camera2d_zoom: Option<f64>,
-    #[state(config)] pub camera3d_position_x: Option<f64>,
-    #[state(config)] pub camera3d_position_y: Option<f64>,
-    #[state(config)] pub camera3d_position_z: Option<f64>,
-    #[state(config)] pub camera3d_target_x: Option<f64>,
-    #[state(config)] pub camera3d_target_y: Option<f64>,
-    #[state(config)] pub camera3d_target_z: Option<f64>,
-    #[state(config)] pub camera3d_zoom: Option<f64>,
-    #[state(config)] pub selection_method: Option<String>,
-    #[state(config)] pub grid_snap_enabled: Option<bool>,
-    #[state(config)] pub grid_factor: Option<f64>,
-    #[state(config)] pub suggestion_offset: Option<f64>,
-    #[state(config)] pub overlap_budget: Option<f64>,
-    #[state(config)] pub fill_count: Option<u32>,
-    #[state(config)] pub brush_candidate_index: Option<u32>,
-    #[state(config)] pub lod_mode: Option<String>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(config)] pub runtime_extras_json: Option<String>,
-    #[state(artifact)] pub hovered_part_id: Option<Option<String>>,
-    #[state(artifact)] pub preview_seq: Option<i64>,
+    #[state(artifact)]
+    pub kind_catalogs: Option<Option<store::ArtifactChild<SemioKitSnapshot>>>,
+    #[state(artifact)]
+    pub kind_catalogs_extra: Option<Option<Puzzle5dKindCatalogsExtra>>,
+    #[state(artifact)]
+    pub kind_compatibility: Option<Puzzle5dKindCompatibilityList>,
+    #[state(artifact)]
+    pub parts: Option<Puzzle5dPartsDelta>,
+    #[state(artifact)]
+    pub fasteners: Option<Puzzle5dFastenersDelta>,
+    #[state(presence)]
+    pub selected_part_ids: Option<Puzzle5dStringList>,
+    #[state(presence)]
+    pub selected_grip_ids: Option<Puzzle5dStringList>,
+    #[state(presence)]
+    pub selected_fastener_ids: Option<Puzzle5dStringList>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub camera2d_x: Option<f64>,
+    #[state(config)]
+    pub camera2d_y: Option<f64>,
+    #[state(config)]
+    pub camera2d_zoom: Option<f64>,
+    #[state(config)]
+    pub camera3d_position_x: Option<f64>,
+    #[state(config)]
+    pub camera3d_position_y: Option<f64>,
+    #[state(config)]
+    pub camera3d_position_z: Option<f64>,
+    #[state(config)]
+    pub camera3d_target_x: Option<f64>,
+    #[state(config)]
+    pub camera3d_target_y: Option<f64>,
+    #[state(config)]
+    pub camera3d_target_z: Option<f64>,
+    #[state(config)]
+    pub camera3d_zoom: Option<f64>,
+    #[state(config)]
+    pub selection_method: Option<String>,
+    #[state(config)]
+    pub grid_snap_enabled: Option<bool>,
+    #[state(config)]
+    pub grid_factor: Option<f64>,
+    #[state(config)]
+    pub suggestion_offset: Option<f64>,
+    #[state(config)]
+    pub overlap_budget: Option<f64>,
+    #[state(config)]
+    pub fill_count: Option<u32>,
+    #[state(config)]
+    pub brush_candidate_index: Option<u32>,
+    #[state(config)]
+    pub lod_mode: Option<String>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(config)]
+    pub runtime_extras_json: Option<String>,
+    #[state(artifact)]
+    pub hovered_part_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub preview_seq: Option<i64>,
 }
 //#endregion 🔖️Diff
 
@@ -60,7 +96,6 @@ pub struct Puzzle5dDiff {
 pub struct Puzzle5dKindCompatibilityList {
     pub values: Vec<Puzzle5dKindCompatibility>,
 }
-
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -120,4 +155,3 @@ pub struct Puzzle5dFastenerPatch {
 }
 
 //#endregion 🔖️DeltaHelpers
-

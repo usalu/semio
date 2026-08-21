@@ -10,44 +10,82 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::lowpoly::schema::LowpolyArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub objects: Option<LowpolyObjectsDelta>,
-    #[state(presence)] pub active_object_id: Option<Option<String>>,
-    #[state(presence)] pub selection: Option<crate::artifacts::lowpoly::LowpolySelection>,
-    #[state(presence)] pub selected_object_ids: Option<LowpolyStringList>,
-    #[state(presence)] pub paint_utility: Option<String>,
-    #[state(presence)] pub active_paint_layer: Option<u32>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub show_edges: Option<bool>,
-    #[state(config)] pub sun_enabled: Option<bool>,
-    #[state(config)] pub sun_azimuth: Option<f64>,
-    #[state(config)] pub sun_elevation: Option<f64>,
-    #[state(config)] pub sun_intensity: Option<f64>,
-    #[state(config)] pub sun_color: Option<String>,
-    #[state(config)] pub world_camera_position_x: Option<f64>,
-    #[state(config)] pub world_camera_position_y: Option<f64>,
-    #[state(config)] pub world_camera_position_z: Option<f64>,
-    #[state(config)] pub world_camera_target_x: Option<f64>,
-    #[state(config)] pub world_camera_target_y: Option<f64>,
-    #[state(config)] pub world_camera_target_z: Option<f64>,
-    #[state(config)] pub world_camera_fov: Option<f64>,
-    #[state(config)] pub utility_params_json: Option<String>,
-    #[state(config)] pub paint_color_r: Option<u32>,
-    #[state(config)] pub paint_color_g: Option<u32>,
-    #[state(config)] pub paint_color_b: Option<u32>,
-    #[state(config)] pub paint_color_a: Option<u32>,
-    #[state(config)] pub selection_method: Option<String>,
-    #[state(config)] pub selection_mode_default: Option<String>,
-    #[state(config)] pub engagement_input: Option<String>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(artifact)] pub hovered_object_id: Option<Option<String>>,
-    #[state(artifact)] pub hovered_target_object_id: Option<Option<String>>,
-    #[state(artifact)] pub hovered_target_mode: Option<Option<String>>,
-    #[state(artifact)] pub hovered_target_id: Option<Option<u32>>,
-    #[state(artifact)] pub stroke_drag_active: Option<bool>,
-    #[state(artifact)] pub transform_drag_active: Option<bool>,
-    #[state(artifact)] pub preview_seq: Option<i64>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::lowpoly::schema::LowpolyArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub objects: Option<LowpolyObjectsDelta>,
+    #[state(presence)]
+    pub active_object_id: Option<Option<String>>,
+    #[state(presence)]
+    pub selection: Option<crate::artifacts::lowpoly::LowpolySelection>,
+    #[state(presence)]
+    pub selected_object_ids: Option<LowpolyStringList>,
+    #[state(presence)]
+    pub paint_utility: Option<String>,
+    #[state(presence)]
+    pub active_paint_layer: Option<u32>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub show_edges: Option<bool>,
+    #[state(config)]
+    pub sun_enabled: Option<bool>,
+    #[state(config)]
+    pub sun_azimuth: Option<f64>,
+    #[state(config)]
+    pub sun_elevation: Option<f64>,
+    #[state(config)]
+    pub sun_intensity: Option<f64>,
+    #[state(config)]
+    pub sun_color: Option<String>,
+    #[state(config)]
+    pub world_camera_position_x: Option<f64>,
+    #[state(config)]
+    pub world_camera_position_y: Option<f64>,
+    #[state(config)]
+    pub world_camera_position_z: Option<f64>,
+    #[state(config)]
+    pub world_camera_target_x: Option<f64>,
+    #[state(config)]
+    pub world_camera_target_y: Option<f64>,
+    #[state(config)]
+    pub world_camera_target_z: Option<f64>,
+    #[state(config)]
+    pub world_camera_fov: Option<f64>,
+    #[state(config)]
+    pub utility_params_json: Option<String>,
+    #[state(config)]
+    pub paint_color_r: Option<u32>,
+    #[state(config)]
+    pub paint_color_g: Option<u32>,
+    #[state(config)]
+    pub paint_color_b: Option<u32>,
+    #[state(config)]
+    pub paint_color_a: Option<u32>,
+    #[state(config)]
+    pub selection_method: Option<String>,
+    #[state(config)]
+    pub selection_mode_default: Option<String>,
+    #[state(config)]
+    pub engagement_input: Option<String>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(artifact)]
+    pub hovered_object_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub hovered_target_object_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub hovered_target_mode: Option<Option<String>>,
+    #[state(artifact)]
+    pub hovered_target_id: Option<Option<u32>>,
+    #[state(artifact)]
+    pub stroke_drag_active: Option<bool>,
+    #[state(artifact)]
+    pub transform_drag_active: Option<bool>,
+    #[state(artifact)]
+    pub preview_seq: Option<i64>,
 }
 //#endregion 🔖️Diff
 

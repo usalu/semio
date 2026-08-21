@@ -6,18 +6,14 @@ use neural_engine as neural;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use dag::{
-    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
-    slider_widget_height, slider_widget_width, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec,
+    computation_node_height, computation_node_width, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, DagNodeKind, DagNodeSpec,
+    DagPreviewContent, IoPortSpec,
 };
 use graph::manifest::{PropertyBag, PropertyValue};
-use neural::{
-    cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND,
-    INPUT_KIND, OUTPUT_KIND,
-};
+use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 use crate::host::*;
-
 
 // #region 🔖️Document
 fn default_slider_value() -> f64 {

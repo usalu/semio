@@ -1,10 +1,10 @@
 //! ❓️ ❓️ Forms play app commands command — `add-question`.
 
+use crate::artifacts::forms::schema::{create_form_id, update_block_operation, value_to_dsl};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
-use crate::artifacts::forms::schema::{create_form_id, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -158,11 +158,6 @@ pub async fn patch_building_component_param(spec: &FormsSnapshot, question_id: &
 }
 //#endregion 🔖️Shell
 
-
-
-
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "add-question")]
 pub struct AddQuestion {
@@ -191,13 +186,13 @@ pub async fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::forms::testkit::{dispatch, forms_app};
-    use crate::editor::forms::FormsCommand;
-    use AddQuestion;
     use crate::editor::forms::commands::drop_question_kind::DropQuestionKind;
     use crate::editor::forms::commands::move_question::MoveQuestion;
     use crate::editor::forms::commands::patch_questions::PatchQuestions;
     use crate::editor::forms::commands::remove_question::RemoveQuestion;
+    use crate::editor::forms::testkit::{dispatch, forms_app};
+    use crate::editor::forms::FormsCommand;
+    use AddQuestion;
 
     #[semio_framework_async_macros::async_test]
     async fn add_question_action_appends_question() {
@@ -210,7 +205,13 @@ mod tests {
     async fn add_question_undo_redo_round_trip() {
         let mut app = forms_app();
         let before = crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }), |app| crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len(), before, before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
+            |app| crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
+            before,
+            before + 1,
+        );
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the dropped question is no longer

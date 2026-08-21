@@ -13,13 +13,7 @@ pub async fn diff_update_page_columns(payload: &UpdatePageColumns, base: &Layout
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has those columns.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
-                id: payload.id.clone(),
-                patch: PagePatch { columns_count: Some(payload.count), columns_gutter: Some(payload.gutter), ..Default::default() },
-            }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { columns_count: Some(payload.count), columns_gutter: Some(payload.gutter), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

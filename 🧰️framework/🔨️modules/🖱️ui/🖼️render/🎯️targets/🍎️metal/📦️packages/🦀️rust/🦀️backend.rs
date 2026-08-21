@@ -26,10 +26,15 @@ use crate::scene_target::SceneTarget;
 use crate::world3d::WorldGlobalsRing;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, ProtocolObject};
-use objc2_metal::{MTLBlitCommandEncoder, MTLBuffer, MTLCommandBuffer, MTLCommandEncoder, MTLCommandQueue, MTLDevice, MTLLoadAction, MTLOrigin, MTLPixelFormat, MTLPrimitiveType, MTLRenderCommandEncoder, MTLRenderPassDescriptor, MTLStoreAction, MTLTexture};
+use objc2_metal::{
+    MTLBlitCommandEncoder, MTLBuffer, MTLCommandBuffer, MTLCommandEncoder, MTLCommandQueue, MTLDevice, MTLLoadAction, MTLOrigin, MTLPixelFormat, MTLPrimitiveType, MTLRenderCommandEncoder, MTLRenderPassDescriptor, MTLStoreAction, MTLTexture,
+};
 use objc2_quartz_core::{CAMetalDrawable, CAMetalLayer};
 use raw_window_handle::{RawWindowHandle, WindowHandle};
-use ui_render::{BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, SurfaceFormat, TextureId};
+use ui_render::{
+    BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, SurfaceFormat,
+    TextureId,
+};
 
 #[cfg(feature = "backend-testing")]
 use ui_render::ReadbackImage;
@@ -642,13 +647,8 @@ impl GraphicsBackend for MetalBackend {
         self.capture_readback(&command_buffer, &drawable_texture);
         command_buffer.presentDrawable(drawable.as_ref());
         command_buffer.commit();
-        let stats = FrameStats {
-            encode_duration_seconds: 0.0,
-            submit_duration_seconds: 0.0,
-            present_duration_seconds: 0.0,
-            draw_call_count: packet.batches.len() as u32,
-            instance_count: (packet.quad_instances.len() + packet.vector_vertices.len()) as u32,
-        };
+        let stats =
+            FrameStats { encode_duration_seconds: 0.0, submit_duration_seconds: 0.0, present_duration_seconds: 0.0, draw_call_count: packet.batches.len() as u32, instance_count: (packet.quad_instances.len() + packet.vector_vertices.len()) as u32 };
         Ok(RenderReport::Presented { stats })
     }
 

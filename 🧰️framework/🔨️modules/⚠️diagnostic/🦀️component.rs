@@ -1,9 +1,9 @@
 //! ⚠️ Text errors, structured diagnostics, fault reporting, and parse limits.
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
+pub use crate::span::TextSpan;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-pub use crate::span::TextSpan;
 
 //#region 🔖️Errors
 /// @emoji 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
@@ -233,16 +233,7 @@ impl From<String> for Fault {
 
 impl Fault {
     pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
-        Self {
-            origin,
-            code: code.into(),
-            severity: Severity::Error,
-            message: message.into(),
-            scope: FaultScope::default(),
-            span: None,
-            causes: Vec::new(),
-            retryable: false,
-        }
+        Self { origin, code: code.into(), severity: Severity::Error, message: message.into(), scope: FaultScope::default(), span: None, causes: Vec::new(), retryable: false }
     }
 
     pub fn with_scope(mut self, scope: FaultScope) -> Self {
@@ -279,16 +270,7 @@ pub trait FaultFrom {
     where
         Self: Sized,
     {
-        Fault {
-            origin: self.fault_origin(),
-            code: self.fault_code(),
-            severity: self.fault_severity(),
-            message: self.fault_message(),
-            scope: self.fault_scope(),
-            span: self.fault_span(),
-            causes: self.fault_causes(),
-            retryable: self.fault_retryable(),
-        }
+        Fault { origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: self.fault_scope(), span: self.fault_span(), causes: self.fault_causes(), retryable: self.fault_retryable() }
     }
 }
 

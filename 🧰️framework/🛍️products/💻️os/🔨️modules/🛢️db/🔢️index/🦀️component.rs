@@ -15,9 +15,9 @@
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
 
-use crate::*;
 use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, ActorId, DbError, ArtifactId};
+use crate::db_ids::{check_len, ActorId, ArtifactId, DbError};
+use crate::*;
 use db_storage::IndexStorage;
 use pack::{crc32c, ByteReader, ByteWriter};
 
@@ -1082,7 +1082,8 @@ impl<'a, S: IndexStorage> PreviewIndex<'a, S> {
         let mut prefix = actor.0.as_bytes().to_vec();
         prefix.push(0u8);
         self.handle
-            .scan_prefix(&prefix).await?
+            .scan_prefix(&prefix)
+            .await?
             .into_iter()
             .map(|(key, value)| {
                 let preview_key = String::from_utf8(key[prefix.len()..].to_vec()).map_err(|_| DbError::Corrupt("preview index key suffix is not valid utf-8".to_string()))?;

@@ -56,10 +56,12 @@ Landed:
 Verified by the coordinator (not merely reported): the five core Phase 1 crates build clean; production shard and forwarder threads are gone; `ThreadPlan`/`ThreadBudget` survive only in doc prose.
 
 Open items before the Phase 1 gate can close:
-- `ManualRuntime::drive()` polls with a no-op waker and cannot observe completions from the real cross-thread pool — 2 debug-only test failures in the plugin host, passing in release. Spans the async and services crates.
-- `WorkerPool::shutdown()` deadlock flagged by P1f, unfixed.
+- ~~`ManualRuntime::drive()` polls with a no-op waker and cannot observe completions from the real cross-thread pool.~~ **Closed 2026-08-21:** task-specific retained wakers plus an epoch/condition-variable wake path now observe real cross-thread completion; plugin-host is 141/0/1 in both debug and release.
+- ~~`WorkerPool::shutdown()` deadlock flagged by P1f.~~ **Closed 2026-08-21:** shutdown drains the timer wheel before joining; focused in-flight-timer shutdown coverage passes in debug and release.
+- Low-priority admission's check-then-increment race is closed with an atomic RAII reservation held for the whole job. Async is 43/43 and services is 30/30 in both debug and release; async clippy and both wasm targets are clean. Services wasm remains blocked by 15 existing actor-glue errors.
 - `ComputePool::run_blocking` retains an opaque `FnOnce` signature (now a pool submission rather than a thread). The governing rule wants opaque blocking closures gone from interactive paths — carry into Phase 3 with the capability tokens.
-- Thread census re-run to prove "UI thread + pool workers only".
+- P1h removed four of the six residual production sites: pack retry sleep now uses the shared `TimerWheel`; store-sync uses bounded `WorkerPool` actor turns; DB artifact authority and the feature-gated DB actor use injected bounded pool turns. Their owned production census is zero, and every `ArtifactHost::new` callsite now injects a shared pool. Debug/release pack and OS-kernel checks pass natively; OS-kernel sync passes debug/release on `wasm32-unknown-unknown`. The literal "UI thread + pool workers only" gate is still **not met** because Shell identity bootstrap and Shell directory streaming remain, alongside the separately classified renderer-kernel and registered process-I/O boundaries. Exact architecture, commands, current de-async blockers, and census: `PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1h-residual-threads.md`.
+- P1i removed the two Shell residuals: identity bootstrap is a deadline/cancellation-aware retained-waker `Lane::Io` future, and directory delivery is a Send-capable bounded state machine driven by finite pool turns and `TimerWheel` wakeups. Shell identity/directory production contains zero spawn, blocking receive, or local executor sites; native OS-kernel and browser-wasm kernel library checks pass. Full renderer/test execution remains masked by unrelated Phase 1.5 syntax/stale-await failures. The strongest repository-wide literal gate still sees separately owned renderer-kernel and procedural-WFC CPU threads plus classified process/CLI I/O boundaries. Exact evidence: `PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1i-shell-threads.md`.
 
 ## CRITICAL FINDING — the repo did not build at baseline
 
@@ -242,7 +244,7 @@ Now **198 findings**: 142 non-allowlisted blocking bridges (was 121), 36 sync-fi
 
 **Bad, and partly self-inflicted:** blocking bridges rose 121 → 142. A known contributor is packet P1e, which wrapped **17 `ParallelRuntime` call sites in `pollster::block_on`** because the type's methods became async. That runs directly against the rule that `block_on` is confined to approved process and test entry points. Phase 3 must remove these rather than let them settle — flagged here so the increase is not mistaken for drift.
 
-**Remaining Semio-owned thread creation outside the pool** (8 sites): renderer Shell ×2 (`🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3305,3363`), `🎒️pack/🌐️http/🦀️component.rs:189`, repo CLI `⌨️cli/…/📦️glue.rs:759`, and 4 in `🧫️fixtures/🔌️asyncprobe/**` (test fixtures, including a `tokio::runtime::Builder`). The fixtures are legitimately outside the interactive runtime; the other four are real Phase 3 work.
+**Remaining literal thread creation outside the pool after P1h:** the pack HTTP retry site is gone. Production Semio-owned sites still include renderer Shell identity bootstrap and directory streaming plus repo CLI; asyncprobe fixture spawns are test fixtures. Separately, the renderer kernel thread and plugin process-transport reader threads remain registered platform/process boundaries. P1h's four owned source files contain zero production spawns; see `PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1h-residual-threads.md` for the exact census and classifications.
 
 ### Measurement caveat
 

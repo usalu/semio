@@ -10,11 +10,7 @@ pub async fn diff(payload: &super::mutation::MoveBlock, base: &PlaybookSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.from_step_id), [payload.from_step_id.clone()]);
     };
     let Some(position) = from_step.blocks.iter().position(|block| block.id == payload.block_id) else {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.from_step_id),
-            [payload.from_step_id.clone(), payload.block_id.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.from_step_id), [payload.from_step_id.clone(), payload.block_id.clone()]);
     };
     if payload.from_step_id == payload.to_step_id {
         let step = steps.iter_mut().find(|step| step.id == payload.from_step_id).expect("from_step_id already located above");

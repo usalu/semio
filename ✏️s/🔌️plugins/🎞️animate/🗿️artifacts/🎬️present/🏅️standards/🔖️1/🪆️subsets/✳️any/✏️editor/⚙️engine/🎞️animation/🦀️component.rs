@@ -2452,9 +2452,9 @@ pub mod animations_catalog {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::editor::animate::engine::text::color::Color;
         use crate::editor::animate::engine::geometry::geometry::circle;
         use crate::editor::animate::engine::scene::sobject::VSobject;
+        use crate::editor::animate::engine::text::color::Color;
 
         #[semio_framework_async_macros::async_test]
         async fn catalog_stubs_compile_and_apply() {

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DisconnectNodes` — reconstructs `ConnectNodes` from the edge (and its
 //! relationship, if any) captured from BASE. Missing edge ⇒ `Vec::new()`.
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
 use crate::artifacts::wires::mutations::WiresMutation;
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 

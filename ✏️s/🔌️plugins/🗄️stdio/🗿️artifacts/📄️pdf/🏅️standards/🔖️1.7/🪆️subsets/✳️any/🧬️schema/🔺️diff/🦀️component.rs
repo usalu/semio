@@ -1181,7 +1181,7 @@ fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    async fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
         validate_pdf_diff(self, base)?;
         Ok(apply_pdf_diff_unchecked(self, base))
     }
@@ -1189,7 +1189,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce absorb (`## Absorb` contract).
     /// Scalars: LWW. `pages`/`objects`/`trailer`: composed via their own key/index-transported
     /// absorb helpers above.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.declared_version.is_some() {
             self.declared_version = other.declared_version;
         }
@@ -1238,14 +1238,14 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction): the
     /// state delta from `self.apply(base)` back to `base`.
-    async fn inverse(&self, base: &PdfSnapshot) -> Self {
+    fn inverse(&self, base: &PdfSnapshot) -> Self {
         let mid = apply_pdf_diff_unchecked(self, base);
-        Self::between(&mid, base).await
+        Self::between(&mid, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `pages` positionally matched (index key), `objects`
     /// and `trailer` matched by their real keys (`ObjRef`/dict key name).
-    async fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
+    fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
         let declared_version = (base.declared_version != other.declared_version).then(|| other.declared_version.clone());
         let info = (base.info != other.info).then(|| other.info.clone());
         let pages = {
@@ -1275,7 +1275,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
         PdfDiff { declared_version, info, pages, objects, trailer }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.declared_version.is_none() && self.info.is_none() && self.pages.is_none() && self.objects.is_none() && self.trailer.is_none()
     }
 }
@@ -2581,10 +2581,10 @@ fn parse_pdf_diff(line: &str) -> Result<PdfDiff, String> {
 }
 
 impl protocol::DiffCodec for PdfDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_pdf_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_pdf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declared_version][info][pages]
@@ -2594,7 +2594,7 @@ impl protocol::DiffCodec for PdfDiff {
     /// the P2-W0 census). `flags` bits 0-5 mark `declared_version`/`info`/`pages`/`objects`/
     /// `trailer` presence; each present field's own (genuinely recursive, LEB128-varint/
     /// length-prefixed binary) payload follows in that fixed order.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.declared_version.is_some() {
             flags |= 0b00001;
@@ -2629,14 +2629,14 @@ impl protocol::DiffCodec for PdfDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("diff format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
         }
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         if flags & !0b0001_1111 != 0 {
             return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0001_1111)));
         }
@@ -2646,7 +2646,7 @@ impl protocol::DiffCodec for PdfDiff {
         let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         if reader.remaining() != 0 {
-            return Err(malformed("diff trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining())));
+            return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
         Ok(PdfDiff { declared_version, info, pages, objects, trailer })
     }

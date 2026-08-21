@@ -289,9 +289,9 @@ pub mod hash {
 pub mod graph {
     //! 🕸️ Graph and directed graph layouts as Sobject groups.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{arrow, circle, line};
     use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects};
+    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::text::text::Text;
     use geometry::Point;
     use std::collections::HashMap;

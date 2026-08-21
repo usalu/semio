@@ -4,9 +4,9 @@
 // Answered structurally — Send comes from the concrete per-plugin enum at each call site, never
 // from a bound — so the lint is silenced here, never by adding `+ Send` or making a method sync.
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🦀️component.rs"]

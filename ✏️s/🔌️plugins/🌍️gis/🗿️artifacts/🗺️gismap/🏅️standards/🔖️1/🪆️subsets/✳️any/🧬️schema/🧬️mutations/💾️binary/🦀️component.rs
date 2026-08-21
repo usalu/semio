@@ -6,13 +6,11 @@
 //! this component is a pure pass-through over the derived codec, matching `🏔️gisterrain`'s sibling
 //! facet's identical shape.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::gismap::schema::mutations::text::GisMapMutation;
 use protocol::OpBinary;
@@ -33,8 +31,8 @@ pub async fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::Protoco
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::schema::{default_document, empty_gis_map_snapshot};
     use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, reorder_positions, reorder_regions, reorder_routes, replace_position_data};
+    use crate::artifacts::gismap::schema::{default_document, empty_gis_map_snapshot};
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
 
@@ -59,10 +57,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") }));
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "p1".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReorderPositions(reorder_positions::mutation::ReorderPositions { id: "p1".into(), to_index: 3 }));
-        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData {
-            id: "p1".into(),
-            new_data: dsl_of(&json!({ "label": "Home" })),
-        }));
+        store::os_store::test_support::assert_op_line_round_trip(&GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "label": "Home" })) }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -82,9 +77,7 @@ mod tests {
         let initial = empty_gis_map_snapshot();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        store
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") })], description: None })
-            .expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: sample_feature("p1") })], description: None }).expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store);
         store::os_store::test_support::assert_document_pack_round_trip(&store);
     }

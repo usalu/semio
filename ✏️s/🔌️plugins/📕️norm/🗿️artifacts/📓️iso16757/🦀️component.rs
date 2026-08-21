@@ -2,7 +2,6 @@
 
 pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
 
-
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -933,11 +932,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const ISO16757_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
-    artifact_kind: "s.norm.iso16757",
-    standard: semio_framework_plugin::app::StandardId("1"),
-    subset: semio_framework_plugin::app::SubsetId::ANY,
-};
+pub const ISO16757_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.iso16757", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub const ISO16757_DOCUMENT_SCHEMA: &str = "semio.norm.iso16757/v1";
 
 #[cfg(test)]

@@ -43,9 +43,7 @@ pub mod guest {
     use exports::semio::framework::checkpoint::Guest as CheckpointGuest;
     use exports::semio::framework::describe::Guest as DescribeGuest;
     use exports::semio::framework::jobs::{Guest as JobsGuest, JobBudget, JobStep};
-    use exports::semio::framework::reactor::{
-        Budget as WitBudget, Effect as WitEffect, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult, TurnStatus as WitTurnStatus,
-    };
+    use exports::semio::framework::reactor::{Budget as WitBudget, Effect as WitEffect, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult, TurnStatus as WitTurnStatus};
     use semio::framework::capabilities::CapabilityChange;
     use semio::framework::effects::{RequestCapabilityEffect, RequestCapabilityParams};
     use semio::framework::events::CompletionResult;
@@ -83,13 +81,7 @@ pub mod guest {
                 }
             }
 
-            let turn_budget = TurnBudget {
-                fuel: budget.fuel,
-                deadline_ms: budget.deadline_ms,
-                max_effects: budget.max_effects,
-                max_patch_bytes: budget.max_patch_bytes,
-                max_frames: budget.max_frames,
-            };
+            let turn_budget = TurnBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
             let outcome = profile::turn(turn_budget, now_ms);
 
             let ui_patches = outcome
@@ -110,9 +102,7 @@ pub mod guest {
                 .effects
                 .into_iter()
                 .map(|effect| match effect {
-                    PlainEffect::RequestCapability { req, id, scope, reason, optional } => {
-                        WitEffect::RequestCapability(RequestCapabilityEffect { req, params: RequestCapabilityParams { id, scope, reason, optional } })
-                    }
+                    PlainEffect::RequestCapability { req, id, scope, reason, optional } => WitEffect::RequestCapability(RequestCapabilityEffect { req, params: RequestCapabilityParams { id, scope, reason, optional } }),
                 })
                 .collect();
 

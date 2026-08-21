@@ -145,5 +145,9 @@ async fn changes_only_the_exaggeration_scalar_and_inverts_to_the_base_scalar() {
     };
     assert_eq!(undo.new_exaggeration, 1.0, "change-exaggeration/raises-the-exaggeration-from-one-to-two-and-a-half: the inverse restores BASE's scalar, not the diff's");
     let semantics = <GisTerrainMutation as protocol::SemanticMutation<GisTerrainSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "exaggeration", "change-exaggeration", "ChangedExaggeration"), "change-exaggeration/raises-the-exaggeration-from-one-to-two-and-a-half: the fixture must be bound to change-exaggeration's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("change", "exaggeration", "change-exaggeration", "ChangedExaggeration"),
+        "change-exaggeration/raises-the-exaggeration-from-one-to-two-and-a-half: the fixture must be bound to change-exaggeration's own descriptor"
+    );
 }

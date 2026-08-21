@@ -142,8 +142,7 @@ impl AsyncEngineHandle {
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         // 🧬️ B1 world-collapse already landed `pub(crate) mod actor_bindings` — no lease needed
         // (the previous draft's blocking lease request is resolved; see this file's module doc).
-        actor_bindings::Actor::add_to_linker::<AsyncActorHostState, HasSelf<AsyncActorHostState>>(&mut linker, |state: &mut AsyncActorHostState| state)
-            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        actor_bindings::Actor::add_to_linker::<AsyncActorHostState, HasSelf<AsyncActorHostState>>(&mut linker, |state: &mut AsyncActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok(Self { engine, _epoch_ticker: epoch_ticker, linker: Arc::new(linker) })
     }
 }
@@ -233,10 +232,26 @@ pub enum AsyncActorCommand {
     /// file does the kernel→WIT event encoding and WIT→kernel turn-result decoding, reusing
     /// `component.rs`'s own conversion fns (see [`AsyncActorTask::spawn`]) rather than
     /// re-implementing them a second time.
-    Poll { events: Vec<Event>, budget: Budget, reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, String>> },
-    StartJob { job: u64, kind: String, input: Vec<u8>, reply: tokio::sync::oneshot::Sender<Result<(), String>> },
-    StepJob { job: u64, budget: JobBudget, reply: tokio::sync::oneshot::Sender<Result<JobStep, String>> },
-    CancelJob { job: u64, reply: tokio::sync::oneshot::Sender<Result<(), String>> },
+    Poll {
+        events: Vec<Event>,
+        budget: Budget,
+        reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, String>>,
+    },
+    StartJob {
+        job: u64,
+        kind: String,
+        input: Vec<u8>,
+        reply: tokio::sync::oneshot::Sender<Result<(), String>>,
+    },
+    StepJob {
+        job: u64,
+        budget: JobBudget,
+        reply: tokio::sync::oneshot::Sender<Result<JobStep, String>>,
+    },
+    CancelJob {
+        job: u64,
+        reply: tokio::sync::oneshot::Sender<Result<(), String>>,
+    },
     Checkpoint(tokio::sync::oneshot::Sender<Result<Vec<u8>, String>>),
     Restore(Vec<u8>, tokio::sync::oneshot::Sender<Result<(), String>>),
     /// 🛑️ Ends the root task's control loop. The caller is expected to follow this with

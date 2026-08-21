@@ -1,9 +1,9 @@
 //! 🕸️ 🕸️ Mathematical play app commands command — `node-graph-viewport`.
 
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalCamera, MathematicalSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 👁️ Config-only: the node-graph viewport never touches the document — it's written into `cfg`,

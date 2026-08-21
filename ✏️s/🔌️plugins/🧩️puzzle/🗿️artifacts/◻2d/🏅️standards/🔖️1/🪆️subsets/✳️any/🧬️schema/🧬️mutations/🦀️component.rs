@@ -14,7 +14,6 @@
 //! `serde_json::to_value`) instead of hand-rolling per-field JSON splicing — the typed
 //! `Mutation`/`MutationDiff` impls above are the single source of truth either way.
 
-
 use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -157,16 +156,38 @@ pub async fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzz
     for edge in &after.edges {
         match before.edges.iter().find(|entry| entry.id == edge.id) {
             None => mutations.push(connect_handles(
-                edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(),
-                edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y,
-                edge.source_tip.clone(), edge.target_tip.clone(),
+                edge.id.clone(),
+                edge.source.clone(),
+                edge.target.clone(),
+                edge.edge_kind.clone(),
+                edge.gap,
+                edge.shift,
+                edge.rise,
+                edge.rotation,
+                edge.turn,
+                edge.tilt,
+                edge.x,
+                edge.y,
+                edge.source_tip.clone(),
+                edge.target_tip.clone(),
             )),
             Some(prior) if prior.source != edge.source || prior.target != edge.target => {
                 mutations.push(disconnect_handles(edge.id.clone()));
                 mutations.push(connect_handles(
-                    edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(),
-                    edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y,
-                    edge.source_tip.clone(), edge.target_tip.clone(),
+                    edge.id.clone(),
+                    edge.source.clone(),
+                    edge.target.clone(),
+                    edge.edge_kind.clone(),
+                    edge.gap,
+                    edge.shift,
+                    edge.rise,
+                    edge.rotation,
+                    edge.turn,
+                    edge.tilt,
+                    edge.x,
+                    edge.y,
+                    edge.source_tip.clone(),
+                    edge.target_tip.clone(),
                 ));
             }
             Some(prior) => {
@@ -235,13 +256,9 @@ pub async fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: 
 // of truth, so every one of this enum's 26 kinds gets `Value` support for free.
 impl MutationDiff<Value> for Puzzle2dDiff {
     async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
-        let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
-        })?;
+        let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle2dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        serde_json::to_value(next).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
-        })
+        serde_json::to_value(next).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"]))
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
@@ -322,8 +339,7 @@ impl store::ArtifactPack for Puzzle2dPlaySnapshot {
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
     async fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
-        MutationDiff::<Value>::apply(self, &projection.0)
-            .map(Puzzle2dPlaySnapshot)
+        MutationDiff::<Value>::apply(self, &projection.0).map(Puzzle2dPlaySnapshot)
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
@@ -524,7 +540,8 @@ mod tests {
         assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false))); // change/set/update
         assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
         assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into()))); // edit/replace
-        assert_missing_target_is_error(&base, &disconnect_handles("missing".into())); // disconnect/unbind
+        assert_missing_target_is_error(&base, &disconnect_handles("missing".into()));
+        // disconnect/unbind
     }
 
     #[semio_framework_async_macros::async_test]

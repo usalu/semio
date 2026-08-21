@@ -7,11 +7,6 @@ use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &RenameMachine, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
-    base.workshop
-        .machines
-        .iter()
-        .find(|machine| machine.id == payload.id)
-        .map(|machine| vec![Process3dMutation::RenameMachine(RenameMachine { id: payload.id.clone(), new_label: machine.label.clone() })])
-        .unwrap_or_default()
+    base.workshop.machines.iter().find(|machine| machine.id == payload.id).map(|machine| vec![Process3dMutation::RenameMachine(RenameMachine { id: payload.id.clone(), new_label: machine.label.clone() })]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

@@ -41,7 +41,7 @@ pub struct PdfDiff {
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    async fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.page.width = v;
@@ -57,7 +57,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 
     /// ➕️ Structural, total, base-free, sequential-coalesce (`## Absorb` contract) -- flat
     /// scalars only (no collections), so absorb is plain per-field LWW.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -72,16 +72,16 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction).
-    async fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = self.apply(base).await.unwrap();
-        Self::between(&mid, base).await
+    fn inverse(&self, base: &PdfSnapshot) -> Self {
+        let mid = self.apply(base).unwrap();
+        Self::between(&mid, base)
     }
 
-    async fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
+    fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
         PdfDiff { width: (base.page.width != other.page.width).then_some(other.page.width), height: (base.page.height != other.page.height).then_some(other.page.height), text: (base.page.text != other.page.text).then(|| other.page.text.clone()) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.width.is_none() && self.height.is_none() && self.text.is_none()
     }
 }

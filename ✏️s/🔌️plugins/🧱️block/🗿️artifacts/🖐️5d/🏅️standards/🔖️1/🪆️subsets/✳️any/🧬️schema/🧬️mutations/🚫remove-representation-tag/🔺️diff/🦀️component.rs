@@ -2,7 +2,7 @@
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::diff::{Block5dRepresentationsDelta, Block5dRepresentationsPatch, Block5dRepresentationsPatchEntry};
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::{BlockRepresentation};
+use crate::BlockRepresentation;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::RemoveRepresentationTag, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
@@ -11,6 +11,9 @@ pub async fn diff(payload: &super::mutation::RemoveRepresentationTag, base: &Blo
     };
     let tags: Vec<String> = existing.tags.iter().filter(|tag| *tag != &payload.tag).cloned().collect();
     let replacement = BlockRepresentation { tags, ..existing.clone() };
-    protocol::MutationOutcome::new(Block5dDiff { representations: Some(Block5dRepresentationsDelta { patched: vec![Block5dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block5dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff {
+        representations: Some(Block5dRepresentationsDelta { patched: vec![Block5dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block5dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

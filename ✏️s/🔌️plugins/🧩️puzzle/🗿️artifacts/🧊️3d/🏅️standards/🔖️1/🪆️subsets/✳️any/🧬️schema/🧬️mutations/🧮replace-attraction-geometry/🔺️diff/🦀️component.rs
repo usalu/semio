@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ReplaceAttractionGeometry` — patches the one addressed attraction in place.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry, Puzzle3dAttractionsDelta};
+use crate::artifacts::puzzle3d::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry, Puzzle3dAttractionsDelta, Puzzle3dDiff};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

@@ -90,11 +90,7 @@ mod tests {
     use protocol::Inference;
 
     async fn populated_snapshot() -> EnergyModelSnapshot {
-        crate::artifacts::model::energy_snapshot_with_state(
-            "energy.model",
-            crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() },
-            None,
-        )
+        crate::artifacts::model::energy_snapshot_with_state("energy.model", crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() }, None)
     }
 
     #[semio_framework_async_macros::async_test]

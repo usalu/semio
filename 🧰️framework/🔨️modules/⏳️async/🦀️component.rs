@@ -139,12 +139,22 @@ pub struct CancelToken(Arc<CancelNode>);
 impl CancelToken {
     /// 🌱️ A fresh root token with no parent, starting `Live`.
     pub async fn root() -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8().await), parent: None }))
+        CancelToken::root_now()
+    }
+
+    /// 🌱️ Creates a live root from synchronous scheduler/bootstrap code.
+    pub fn root_now() -> CancelToken {
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: None }))
     }
 
     /// 👶️ A descendant token: its effective state is never less severe than `self`'s.
     pub async fn child(&self) -> CancelToken {
-        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(CancelState::Live.to_u8().await), parent: Some(self.clone()) }))
+        self.child_now()
+    }
+
+    /// 👶️ Creates a cancellable descendant from a synchronous finite turn.
+    pub fn child_now(&self) -> CancelToken {
+        CancelToken(Arc::new(CancelNode { local: AtomicU8::new(0), parent: Some(self.clone()) }))
     }
 
     /// ⏸️ Enter the suspend state — a no-op once `Cancelled` (terminal, never downgraded).
@@ -160,7 +170,12 @@ impl CancelToken {
     /// 🛑️ Terminal: always wins over `Live`/`Park`, and over anything a later `park`/`unpark` on
     /// this same token would attempt.
     pub async fn cancel(&self) {
-        self.0.local.store(CancelState::Cancelled.to_u8().await, Ordering::SeqCst);
+        self.cancel_now();
+    }
+
+    /// 🛑️ Cancels from a synchronous scheduler turn or `Drop` boundary without needing an executor.
+    pub fn cancel_now(&self) {
+        self.0.local.store(2, Ordering::SeqCst);
     }
 
     /// 🔍️ Max-severity fold of this token's local state and every ancestor's. Walks the parent
@@ -179,7 +194,19 @@ impl CancelToken {
     }
 
     pub async fn is_cancelled(&self) -> bool {
-        self.state().await == CancelState::Cancelled
+        self.is_cancelled_now()
+    }
+
+    /// 🔍️ Reads cancellation from a finite synchronous scheduler turn.
+    pub fn is_cancelled_now(&self) -> bool {
+        let mut node = Some(self);
+        while let Some(current) = node {
+            if current.0.local.load(Ordering::SeqCst) >= 2 {
+                return true;
+            }
+            node = current.0.parent.as_ref();
+        }
+        false
     }
 
     pub async fn is_parked(&self) -> bool {
@@ -752,6 +779,305 @@ impl Drop for TimerSleep<'_> {
 }
 //#endregion ⏰️TimerWheel
 
+//#region 🪢️Oneshot
+/// 🪢️ Single-value handoff between exactly one [`oneshot::Sender`] and one [`oneshot::Receiver`] —
+/// the repo-owned replacement for `tokio::sync::oneshot` (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9
+/// packet P9a), sized for the services crate's own completion-signal shape: submit a closure onto a
+/// [`WorkerPool`] job, `.await` (or poll) its one eventual result from the caller.
+pub mod oneshot {
+    use std::future::Future;
+    use std::pin::Pin;
+    use std::sync::{Arc, Mutex, PoisonError};
+    use std::task::{Context, Poll, Waker};
+
+    struct State<T> {
+        value: Option<T>,
+        sender_dropped: bool,
+        receiver_dropped: bool,
+        waker: Option<Waker>,
+    }
+
+    /// 🪢️ Sending half — [`Sender::send`] never blocks: it stores the value for a still-live
+    /// [`Receiver`], or hands it straight back if the receiver already dropped.
+    pub struct Sender<T> {
+        state: Arc<Mutex<State<T>>>,
+    }
+
+    /// 🪢️ Receiving half — a [`Future`] that resolves once [`Sender::send`] runs (or reports
+    /// [`RecvError`] if the sender dropped first), plus a non-blocking [`Receiver::try_recv`] for a
+    /// caller polling without an executor (the services crate's scope-drain loop).
+    pub struct Receiver<T> {
+        state: Arc<Mutex<State<T>>>,
+    }
+
+    /// 🚫️ [`Sender`] dropped before sending — the value is gone for good.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct RecvError;
+
+    /// 🚫️ [`Receiver::try_recv`]'s two non-blocking outcomes: nothing sent yet, or the [`Sender`]
+    /// dropped first.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum TryRecvError {
+        Empty,
+        Closed,
+    }
+
+    pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
+        let state = Arc::new(Mutex::new(State { value: None, sender_dropped: false, receiver_dropped: false, waker: None }));
+        (Sender { state: state.clone() }, Receiver { state })
+    }
+
+    impl<T> Sender<T> {
+        /// 🪢️ `Err(value)` only if the [`Receiver`] already dropped — the value is handed back
+        /// unmodified, matching `tokio::sync::oneshot::Sender::send`'s shape.
+        pub fn send(self, value: T) -> Result<(), T> {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            if state.receiver_dropped {
+                return Err(value);
+            }
+            state.value = Some(value);
+            let waker = state.waker.take();
+            drop(state);
+            if let Some(waker) = waker {
+                waker.wake();
+            }
+            Ok(())
+        }
+    }
+
+    impl<T> Drop for Sender<T> {
+        fn drop(&mut self) {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            if state.value.is_none() {
+                state.sender_dropped = true;
+                let waker = state.waker.take();
+                drop(state);
+                if let Some(waker) = waker {
+                    waker.wake();
+                }
+            }
+        }
+    }
+
+    impl<T> Receiver<T> {
+        /// 🪢️ Non-blocking, runtime-context-free poll — [`TryRecvError::Empty`] if the [`Sender`]
+        /// hasn't sent yet and is still alive, [`TryRecvError::Closed`] if it dropped without
+        /// sending.
+        pub fn try_recv(&mut self) -> Result<T, TryRecvError> {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            if let Some(value) = state.value.take() {
+                return Ok(value);
+            }
+            if state.sender_dropped {
+                return Err(TryRecvError::Closed);
+            }
+            Err(TryRecvError::Empty)
+        }
+    }
+
+    impl<T> Future for Receiver<T> {
+        type Output = Result<T, RecvError>;
+
+        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+            if let Some(value) = state.value.take() {
+                return Poll::Ready(Ok(value));
+            }
+            if state.sender_dropped {
+                return Poll::Ready(Err(RecvError));
+            }
+            state.waker = Some(cx.waker().clone());
+            Poll::Pending
+        }
+    }
+
+    impl<T> Drop for Receiver<T> {
+        fn drop(&mut self) {
+            self.state.lock().unwrap_or_else(PoisonError::into_inner).receiver_dropped = true;
+        }
+    }
+}
+//#endregion 🪢️Oneshot
+
+//#region 🔔️Notify
+struct NotifyState {
+    permit: bool,
+    waker: Option<Waker>,
+}
+
+/// 🔔️ Single-permit wake signal — the repo-owned replacement for `tokio::sync::Notify`
+/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for [`TimerWheel`]'s sole consumer
+/// shape in the services crate: [`Notify::notify_one`] posts one early-wake permit that
+/// [`Notify::notified`] consumes, whether the notify arrives before or after the wait starts. Only
+/// ever has ONE real waiter in this repo (a timer driver loop) — multi-waiter fairness was
+/// deliberately not built, since nothing here needs it.
+pub struct Notify {
+    state: Mutex<NotifyState>,
+}
+
+impl Notify {
+    pub fn new() -> Notify {
+        Notify { state: Mutex::new(NotifyState { permit: false, waker: None }) }
+    }
+
+    pub fn notify_one(&self) {
+        let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+        state.permit = true;
+        let waker = state.waker.take();
+        drop(state);
+        if let Some(waker) = waker {
+            waker.wake();
+        }
+    }
+
+    pub fn notified(&self) -> Notified<'_> {
+        Notified { notify: self }
+    }
+}
+
+impl Default for Notify {
+    fn default() -> Notify {
+        Notify::new()
+    }
+}
+
+/// 🔔️ Future returned by [`Notify::notified`] — resolves once a permit is available, consuming it.
+pub struct Notified<'a> {
+    notify: &'a Notify,
+}
+
+impl Future for Notified<'_> {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        let mut state = self.notify.state.lock().unwrap_or_else(PoisonError::into_inner);
+        if state.permit {
+            state.permit = false;
+            return Poll::Ready(());
+        }
+        state.waker = Some(cx.waker().clone());
+        Poll::Pending
+    }
+}
+//#endregion 🔔️Notify
+
+//#region 🚦️Semaphore
+struct SemaphoreState {
+    permits: usize,
+    next_id: u64,
+    wakers: HashMap<u64, Waker>,
+}
+
+/// 🚦️ Counting admission gate — the repo-owned replacement for `tokio::sync::Semaphore`
+/// (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9 packet P9a), sized for [`ComputePool`]'s (services
+/// crate) local admission bound independent of [`WorkerPool`]'s own worker count. Never `close`s —
+/// nothing in this repo needs a closeable semaphore, so [`Semaphore::acquire_owned`] returns an
+/// [`OwnedPermit`] directly rather than a `Result`, unlike `tokio::sync::Semaphore`. Broadcast-wake
+/// on release (every pending waiter is woken and re-attempts the grab), not a fair queue — correct
+/// at the small (2–8 concurrent waiter) scale every real caller here runs at; each waiter's own
+/// [`Waker`] is tracked by id and removed on drop, so a cancelled (raced-away) acquire never leaks a
+/// stale waker.
+pub struct Semaphore {
+    state: Mutex<SemaphoreState>,
+}
+
+impl Semaphore {
+    pub fn new(permits: usize) -> Semaphore {
+        Semaphore { state: Mutex::new(SemaphoreState { permits, next_id: 1, wakers: HashMap::new() }) }
+    }
+
+    pub fn acquire_owned(self: &Arc<Self>) -> AcquireOwned {
+        AcquireOwned { semaphore: self.clone(), id: None }
+    }
+}
+
+/// 🚦️ RAII permit returned by [`Semaphore::acquire_owned`] — returns its one permit to the
+/// semaphore (and wakes every pending waiter) on drop.
+pub struct OwnedPermit {
+    semaphore: Arc<Semaphore>,
+}
+
+impl Drop for OwnedPermit {
+    fn drop(&mut self) {
+        let mut state = self.semaphore.state.lock().unwrap_or_else(PoisonError::into_inner);
+        state.permits += 1;
+        let wakers: Vec<Waker> = state.wakers.drain().map(|(_, waker)| waker).collect();
+        drop(state);
+        for waker in wakers {
+            waker.wake();
+        }
+    }
+}
+
+/// 🚦️ Future returned by [`Semaphore::acquire_owned`].
+pub struct AcquireOwned {
+    semaphore: Arc<Semaphore>,
+    id: Option<u64>,
+}
+
+impl Future for AcquireOwned {
+    type Output = OwnedPermit;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<OwnedPermit> {
+        let this = self.get_mut();
+        let mut state = this.semaphore.state.lock().unwrap_or_else(PoisonError::into_inner);
+        if state.permits > 0 {
+            state.permits -= 1;
+            if let Some(id) = this.id.take() {
+                state.wakers.remove(&id);
+            }
+            return Poll::Ready(OwnedPermit { semaphore: this.semaphore.clone() });
+        }
+        let id = *this.id.get_or_insert_with(|| {
+            let id = state.next_id;
+            state.next_id += 1;
+            id
+        });
+        state.wakers.insert(id, cx.waker().clone());
+        Poll::Pending
+    }
+}
+
+impl Drop for AcquireOwned {
+    fn drop(&mut self) {
+        if let Some(id) = self.id {
+            self.semaphore.state.lock().unwrap_or_else(PoisonError::into_inner).wakers.remove(&id);
+        }
+    }
+}
+//#endregion 🚦️Semaphore
+
+//#region 🔀️Select2
+/// 🔀️ Which branch of a [`select2`] race resolved first.
+pub enum Either<A, B> {
+    Left(A),
+    Right(B),
+}
+
+/// 🔀️ Races exactly two futures, returning whichever resolves first and dropping the other — the
+/// repo-owned two-branch replacement for `tokio::select!` (INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 9
+/// packet P9a). Every real race in this repo (a result vs. a deadline, a sleep vs. an early-wake
+/// notification) has exactly two arms, so no N-arm macro was built — build only what has a consumer.
+pub async fn select2<A, B>(a: A, b: B) -> Either<A::Output, B::Output>
+where
+    A: Future,
+    B: Future,
+{
+    let mut a = std::pin::pin!(a);
+    let mut b = std::pin::pin!(b);
+    std::future::poll_fn(move |cx| {
+        if let Poll::Ready(value) = a.as_mut().poll(cx) {
+            return Poll::Ready(Either::Left(value));
+        }
+        if let Poll::Ready(value) = b.as_mut().poll(cx) {
+            return Poll::Ready(Either::Right(value));
+        }
+        Poll::Pending
+    })
+    .await
+}
+//#endregion 🔀️Select2
+
 //#region 🧵️WorkerPool
 /// 🧵️ One submitted unit of pool work — a plain closure, never a `Future`. `WorkerPool` is the CPU
 /// substrate every subsystem's OS-thread work collapses onto (Phase 0 census: shard executors, shard
@@ -824,12 +1150,21 @@ mod native_pool {
         /// the interactive reserve is active, there are 2+ workers, and every non-reserved worker
         /// slot is already occupied by low-priority work. Real runtime enforcement, not a comment:
         /// checked on the hot scheduling path before a low-priority lane is even considered.
-        fn admit_low_priority(&self) -> bool {
+        fn reserve_low_priority(&self) -> Option<LowPriorityPermit<'_>> {
             if !self.interactive_reserve || self.workers.len() < 2 {
-                return true;
+                return Some(LowPriorityPermit { inner: self, claimed: false });
             }
             let ceiling = self.workers.len() as u32 - 1;
-            self.low_priority_active.load(Ordering::SeqCst) < ceiling
+            let mut current = self.low_priority_active.load(Ordering::SeqCst);
+            loop {
+                if current >= ceiling {
+                    return None;
+                }
+                match self.low_priority_active.compare_exchange(current, current + 1, Ordering::SeqCst, Ordering::SeqCst) {
+                    Ok(_) => return Some(LowPriorityPermit { inner: self, claimed: true }),
+                    Err(observed) => current = observed,
+                }
+            }
         }
 
         fn now_ms(&self) -> u64 {
@@ -849,21 +1184,32 @@ mod native_pool {
         }
     }
 
+    struct LowPriorityPermit<'a> {
+        inner: &'a PoolInner,
+        claimed: bool,
+    }
+
+    impl Drop for LowPriorityPermit<'_> {
+        fn drop(&mut self) {
+            if self.claimed {
+                self.inner.low_priority_active.fetch_sub(1, Ordering::SeqCst);
+                self.inner.notify_idle();
+            }
+        }
+    }
+
     /// ⚖️ Deficit-round-robin selection over one worker's OWN lane queues (never a sibling's — see
     /// [`steal`] for that). `cursor`/`deficits` are private, un-synchronized state owned entirely by
     /// the calling worker thread — no atomics needed, since no other thread ever touches them.
     /// `UNIT_COST` is [`Lane::Interactive`]'s own weight (the maximum), so the highest-weight lane
     /// is serviced every single scan while lower-weight lanes accrue deficit proportionally slower
     /// and are serviced roughly every `UNIT_COST / weight` scans — bounded, never starved.
-    fn select_and_pop(inner: &PoolInner, my_index: usize, cursor: &mut usize, deficits: &mut [i64; LANE_COUNT]) -> Option<(Lane, Job)> {
+    fn select_and_pop<'a>(inner: &'a PoolInner, my_index: usize, cursor: &mut usize, deficits: &mut [i64; LANE_COUNT]) -> Option<(Lane, Job, Option<LowPriorityPermit<'a>>)> {
         const UNIT_COST: i64 = Lane::Interactive.weight() as i64;
         let my = &inner.workers[my_index];
         for _ in 0..LANE_COUNT {
             let lane = Lane::ALL[*cursor];
             *cursor = (*cursor + 1) % LANE_COUNT;
-            if is_low_priority(lane) && !inner.admit_low_priority() {
-                continue;
-            }
             let mut queue = my.queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
             if queue.is_empty() {
                 deficits[lane.index()] = 0;
@@ -871,9 +1217,17 @@ mod native_pool {
             }
             deficits[lane.index()] += lane.weight() as i64;
             if deficits[lane.index()] >= UNIT_COST {
+                let low_priority_permit = if is_low_priority(lane) {
+                    match inner.reserve_low_priority() {
+                        Some(permit) => Some(permit),
+                        None => continue,
+                    }
+                } else {
+                    None
+                };
                 deficits[lane.index()] -= UNIT_COST;
                 let job = queue.pop_front().expect("WorkerPool: queue observed non-empty then empty under its own lock");
-                return Some((lane, job));
+                return Some((lane, job, low_priority_permit));
             }
         }
         None
@@ -883,17 +1237,25 @@ mod native_pool {
     /// the first non-empty lane, in [`Lane::ALL`] order, respecting the same admission-control gate
     /// as [`select_and_pop`]. Stealing always pops from the FRONT (same end the owner pops from) so
     /// a stolen job is still the oldest one queued for that lane on that worker.
-    fn steal(inner: &PoolInner, my_index: usize) -> Option<(Lane, Job)> {
+    fn steal(inner: &PoolInner, my_index: usize) -> Option<(Lane, Job, Option<LowPriorityPermit<'_>>)> {
         let worker_count = inner.workers.len();
         for offset in 1..worker_count {
             let victim = (my_index + offset) % worker_count;
             for lane in Lane::ALL {
-                if is_low_priority(lane) && !inner.admit_low_priority() {
+                let mut queue = inner.workers[victim].queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
+                if queue.is_empty() {
                     continue;
                 }
-                let mut queue = inner.workers[victim].queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
+                let low_priority_permit = if is_low_priority(lane) {
+                    match inner.reserve_low_priority() {
+                        Some(permit) => Some(permit),
+                        None => continue,
+                    }
+                } else {
+                    None
+                };
                 if let Some(job) = queue.pop_front() {
-                    return Some((lane, job));
+                    return Some((lane, job, low_priority_permit));
                 }
             }
         }
@@ -908,19 +1270,13 @@ mod native_pool {
             inner.wheel.fire_due(inner.now_ms());
             let picked = select_and_pop(inner, index as usize, &mut cursor, &mut deficits).or_else(|| steal(inner, index as usize));
             match picked {
-                Some((lane, job)) => {
-                    let low_priority = is_low_priority(lane);
-                    if low_priority {
-                        inner.low_priority_active.fetch_add(1, Ordering::SeqCst);
-                    }
+                Some((_lane, job, low_priority_permit)) => {
                     inner.trace_workers.worker_started();
                     let permit = inner.ledger.checkout(1).expect("WorkerPool: internal permit invariant violated — checked out more than worker_count concurrently");
                     let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
                     drop(permit);
                     inner.trace_workers.worker_finished();
-                    if low_priority {
-                        inner.low_priority_active.fetch_sub(1, Ordering::SeqCst);
-                    }
+                    drop(low_priority_permit);
                 }
                 None => {
                     let (lock, cvar) = &inner.idle;
@@ -1014,6 +1370,7 @@ mod native_pool {
         /// handle dropping must never tear down siblings' pool).
         pub fn shutdown(&self) {
             self.inner.shutdown.store(true, Ordering::SeqCst);
+            self.inner.wheel.fire_due(u64::MAX);
             self.inner.notify_idle();
             let mut handles = self.inner.handles.lock().unwrap_or_else(PoisonError::into_inner);
             for handle in handles.drain(..) {
@@ -1176,9 +1533,12 @@ pub use wasm_pool::WorkerPool;
 pub mod testkit {
     use super::*;
     use std::collections::HashMap;
-    use std::sync::atomic::AtomicU64;
-    use std::sync::Mutex;
-    use std::task::{Context, Poll, Waker};
+    use std::sync::atomic::{AtomicBool, AtomicU64};
+    use std::sync::{Condvar, Mutex, Weak};
+    use std::task::{Context, Poll, Wake, Waker};
+    use std::time::Duration;
+
+    const EXTERNAL_WAKE_IDLE_TIMEOUT: Duration = Duration::from_secs(1);
 
     #[derive(Clone)]
     struct ManualScopeRecord {
@@ -1190,6 +1550,8 @@ pub mod testkit {
     struct ManualTask {
         scope_id: u64,
         future: Pin<Box<dyn Future<Output = ()> + Send>>,
+        wake: Arc<ManualTaskWake>,
+        waits_for_wake: bool,
     }
 
     struct ManualRuntimeState {
@@ -1197,6 +1559,34 @@ pub mod testkit {
         next_scope_id: AtomicU64,
         scopes: Mutex<HashMap<u64, ManualScopeRecord>>,
         tasks: Mutex<Vec<ManualTask>>,
+        wake_epoch: Mutex<u64>,
+        wake_changed: Condvar,
+    }
+
+    struct ManualTaskWake {
+        ready: AtomicBool,
+        state: Weak<ManualRuntimeState>,
+    }
+
+    impl ManualTaskWake {
+        fn signal(&self) {
+            self.ready.store(true, Ordering::Release);
+            if let Some(state) = self.state.upgrade() {
+                let mut epoch = state.wake_epoch.lock().expect("ManualRuntime wake mutex poisoned");
+                *epoch = epoch.wrapping_add(1);
+                state.wake_changed.notify_all();
+            }
+        }
+    }
+
+    impl Wake for ManualTaskWake {
+        fn wake(self: Arc<Self>) {
+            self.signal();
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            self.signal();
+        }
     }
 
     /// 🧪️ See the module doc — the manual-poll-loop [`HostAsyncRuntime`] test double.
@@ -1205,40 +1595,83 @@ pub mod testkit {
 
     impl ManualRuntime {
         pub async fn new(start_now_ms: u64) -> ManualRuntime {
-            ManualRuntime(Arc::new(ManualRuntimeState { now_ms: AtomicU64::new(start_now_ms), next_scope_id: AtomicU64::new(1), scopes: Mutex::new(HashMap::new()), tasks: Mutex::new(Vec::new()) }))
+            ManualRuntime(Arc::new(ManualRuntimeState {
+                now_ms: AtomicU64::new(start_now_ms),
+                next_scope_id: AtomicU64::new(1),
+                scopes: Mutex::new(HashMap::new()),
+                tasks: Mutex::new(Vec::new()),
+                wake_epoch: Mutex::new(0),
+                wake_changed: Condvar::new(),
+            }))
         }
 
         /// 🕐️ Injects the current time — the ONLY way this runtime's clock ever moves.
         pub async fn set_now_ms(&self, now_ms: u64) {
             self.0.now_ms.store(now_ms, Ordering::SeqCst);
+            let wakes: Vec<_> = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned").iter().map(|task| task.wake.clone()).collect();
+            for wake in wakes {
+                wake.signal();
+            }
         }
 
-        /// ▶️ Polls every not-yet-finished task once with a no-op waker, repeating until a full
-        /// pass makes no further progress. Returns how many tasks completed across the whole call.
+        /// ▶️ Polls ready tasks with task-specific wakers until the runtime is quiescent. A future
+        /// that retains its waker may complete on another thread; `drive` waits for that signal up to
+        /// [`EXTERNAL_WAKE_IDLE_TIMEOUT`] instead of abandoning the wake as the old no-op waker did.
+        /// Manual sleeps retain no waker and become ready only through [`ManualRuntime::set_now_ms`],
+        /// so an unadvanced injected clock still returns immediately. Returns the number completed.
         pub async fn drive(&self) -> usize {
-            let waker = Waker::noop();
-            let mut cx = Context::from_waker(waker);
             let mut total_completed = 0usize;
+            let mut observed_epoch = *self.0.wake_epoch.lock().expect("ManualRuntime wake mutex poisoned");
             loop {
-                let mut tasks = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned");
-                let mut progressed = false;
-                let mut index = 0;
-                while index < tasks.len() {
-                    let ready = matches!(tasks[index].future.as_mut().poll(&mut cx), Poll::Ready(()));
-                    if ready {
-                        let task = tasks.remove(index);
+                let tasks = std::mem::take(&mut *self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned"));
+                let mut pending = Vec::with_capacity(tasks.len());
+                for mut task in tasks {
+                    if !task.wake.ready.swap(false, Ordering::AcqRel) {
+                        pending.push(task);
+                        continue;
+                    }
+                    let poll = {
+                        let waker = Waker::from(task.wake.clone());
+                        let mut cx = Context::from_waker(&waker);
+                        task.future.as_mut().poll(&mut cx)
+                    };
+                    if matches!(poll, Poll::Ready(())) {
                         let mut scopes = self.0.scopes.lock().expect("ManualRuntime scopes mutex poisoned");
                         if let Some(record) = scopes.get_mut(&task.scope_id) {
                             record.finished += 1;
                         }
                         total_completed += 1;
-                        progressed = true;
                     } else {
-                        index += 1;
+                        task.waits_for_wake = Arc::strong_count(&task.wake) > 1;
+                        pending.push(task);
                     }
                 }
-                drop(tasks);
-                if !progressed {
+                {
+                    let mut queued = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned");
+                    pending.append(&mut queued);
+                    *queued = pending;
+                }
+                let (has_tasks, has_ready, waits_for_wake) = {
+                    let tasks = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned");
+                    (!tasks.is_empty(), tasks.iter().any(|task| task.wake.ready.load(Ordering::Acquire)), tasks.iter().any(|task| task.waits_for_wake))
+                };
+                if !has_tasks {
+                    break;
+                }
+                if has_ready {
+                    continue;
+                }
+                if !waits_for_wake {
+                    break;
+                }
+                let epoch = self.0.wake_epoch.lock().expect("ManualRuntime wake mutex poisoned");
+                if *epoch != observed_epoch {
+                    observed_epoch = *epoch;
+                    continue;
+                }
+                let (epoch, timeout) = self.0.wake_changed.wait_timeout(epoch, EXTERNAL_WAKE_IDLE_TIMEOUT).expect("ManualRuntime wake mutex poisoned");
+                observed_epoch = *epoch;
+                if timeout.timed_out() {
                     break;
                 }
             }
@@ -1257,11 +1690,10 @@ pub mod testkit {
 
     impl Future for ManualSleep {
         type Output = ();
-        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+        fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<()> {
             if self.state.now_ms.load(Ordering::SeqCst) >= self.deadline_ms {
                 Poll::Ready(())
             } else {
-                cx.waker().wake_by_ref();
                 Poll::Pending
             }
         }
@@ -1280,7 +1712,9 @@ pub mod testkit {
 
         async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>) {
             let _ = ctx;
-            self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned").push(ManualTask { scope_id: scope.id.0, future: fut });
+            let wake = Arc::new(ManualTaskWake { ready: AtomicBool::new(true), state: Arc::downgrade(&self.0) });
+            self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned").push(ManualTask { scope_id: scope.id.0, future: fut, wake: wake.clone(), waits_for_wake: false });
+            wake.signal();
         }
 
         async fn sleep_until(&self, deadline_ms: u64) {
@@ -1466,6 +1900,34 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn manual_runtime_drive_observes_a_real_cross_thread_wake() {
+        use testkit::ManualRuntime;
+        let runtime = ManualRuntime::new(0).await;
+        let scope = runtime.open_scope(ScopeOwner::Service("cross-thread-wake"), None).await;
+        let ctx = OperationContext { actor: 0, generation: 0, trace: TraceId(5), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };
+        let (tx, rx) = oneshot::channel::<u32>();
+        let observed = Arc::new(AtomicU32::new(0));
+        let observed_for_task = observed.clone();
+        runtime
+            .spawn_scoped(
+                &scope,
+                ctx,
+                Box::pin(async move {
+                    observed_for_task.store(rx.await.expect("sender must complete"), Ordering::SeqCst);
+                }),
+            )
+            .await;
+        let sender = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            tx.send(42).expect("receiver must remain alive");
+        });
+        assert_eq!(runtime.drive().await, 1);
+        sender.join().expect("sender thread must not panic");
+        assert_eq!(observed.load(Ordering::SeqCst), 42);
+        assert_eq!(runtime.pending_task_count().await, 0);
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn manual_runtime_cancel_scope_reports_finished_and_cancelled() {
         use testkit::ManualRuntime;
         let runtime = ManualRuntime::new(0).await;
@@ -1638,6 +2100,179 @@ mod tests {
     }
     //#endregion ⏰️TimerWheelTests
 
+    //#region 🪢️OneshotTests
+    #[test]
+    fn oneshot_send_before_poll_is_observed_by_try_recv() {
+        let (tx, mut rx) = oneshot::channel::<u32>();
+        tx.send(7).expect("send must succeed while the receiver is alive");
+        assert_eq!(rx.try_recv(), Ok(7));
+    }
+
+    #[test]
+    fn oneshot_try_recv_reports_empty_then_closed() {
+        let (tx, mut rx) = oneshot::channel::<u32>();
+        assert_eq!(rx.try_recv(), Err(oneshot::TryRecvError::Empty));
+        drop(tx);
+        assert_eq!(rx.try_recv(), Err(oneshot::TryRecvError::Closed));
+    }
+
+    #[test]
+    fn oneshot_send_after_receiver_dropped_returns_the_value_back() {
+        let (tx, rx) = oneshot::channel::<u32>();
+        drop(rx);
+        assert_eq!(tx.send(9), Err(9));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn oneshot_receiver_await_resolves_once_sent_across_a_real_thread() {
+        let (tx, rx) = oneshot::channel::<u32>();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            tx.send(42).expect("send must succeed");
+        });
+        assert_eq!(rx.await, Ok(42));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn oneshot_receiver_await_reports_recv_error_when_sender_dropped_without_sending() {
+        let (tx, rx) = oneshot::channel::<u32>();
+        drop(tx);
+        assert_eq!(rx.await, Err(oneshot::RecvError));
+    }
+    //#endregion 🪢️OneshotTests
+
+    //#region 🔔️NotifyTests
+    #[test]
+    fn notify_one_before_notified_stores_a_permit() {
+        let notify = Notify::new();
+        notify.notify_one();
+        let waker = Waker::noop();
+        let mut cx = Context::from_waker(waker);
+        let mut fut = std::pin::pin!(notify.notified());
+        assert_eq!(fut.as_mut().poll(&mut cx), Poll::Ready(()));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn notify_one_wakes_an_already_pending_notified_across_a_real_thread() {
+        let notify = Arc::new(Notify::new());
+        let notify_for_task = notify.clone();
+        let (tx, rx) = mpsc::channel::<()>();
+        std::thread::spawn(move || {
+            block_on(async move {
+                notify_for_task.notified().await;
+                tx.send(()).expect("send must succeed");
+            });
+        });
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        notify.notify_one();
+        rx.recv_timeout(std::time::Duration::from_secs(5)).expect("notify_one must wake an already-pending notified()");
+    }
+    //#endregion 🔔️NotifyTests
+
+    //#region 🚦️SemaphoreTests
+    #[semio_framework_async_macros::async_test]
+    async fn semaphore_sequential_acquire_release_never_exceeds_capacity() {
+        let sem = Arc::new(Semaphore::new(1));
+        let permit = sem.acquire_owned().await;
+        let waker = Waker::noop();
+        let mut cx = Context::from_waker(waker);
+        let mut second = std::pin::pin!(sem.acquire_owned());
+        assert!(matches!(second.as_mut().poll(&mut cx), Poll::Pending), "a second acquire must not be admitted while the one permit is held");
+        drop(permit);
+        assert!(matches!(second.as_mut().poll(&mut cx), Poll::Ready(_)), "releasing the held permit must admit the pending acquire");
+    }
+
+    /// 🚨️ Cancellation proof: an `acquire_owned` future polled once (registering a waker), then
+    /// DROPPED before it ever resolves — this is exactly what [`select2`] does to the losing branch
+    /// of a deadline race. A leaked waker entry would neither break correctness nor deadlock this
+    /// specific test, but it is exactly the kind of stale-registration bug this packet's brief warns
+    /// about, so this proves the drop path actually removes its own entry: a THIRD acquire, submitted
+    /// after the cancelled one, must still be admitted promptly once the first permit is released.
+    #[semio_framework_async_macros::async_test]
+    async fn semaphore_acquire_dropped_while_pending_does_not_leak_or_block_a_later_acquire() {
+        let sem = Arc::new(Semaphore::new(1));
+        let permit = sem.acquire_owned().await;
+        let waker = Waker::noop();
+        let mut cx = Context::from_waker(waker);
+        {
+            let mut cancelled = std::pin::pin!(sem.acquire_owned());
+            assert!(matches!(cancelled.as_mut().poll(&mut cx), Poll::Pending));
+        }
+        drop(permit);
+        let third = sem.acquire_owned().await;
+        drop(third);
+    }
+
+    /// 🚨️ Stress test: many real OS threads hammering acquire/release in a tight loop must never
+    /// observe more concurrently-held permits than the semaphore's own capacity, and the process must
+    /// not deadlock (the test itself times out via `join` never returning if it does).
+    #[test]
+    fn semaphore_never_exceeds_capacity_under_concurrent_stress() {
+        const CAPACITY: usize = 3;
+        const THREADS: usize = 12;
+        const ITERATIONS: usize = 400;
+        let sem = Arc::new(Semaphore::new(CAPACITY));
+        let current = Arc::new(AtomicU32::new(0));
+        let observed_max = Arc::new(AtomicU32::new(0));
+        let handles: Vec<_> = (0..THREADS)
+            .map(|_| {
+                let sem = sem.clone();
+                let current = current.clone();
+                let observed_max = observed_max.clone();
+                std::thread::spawn(move || {
+                    block_on(async move {
+                        for _ in 0..ITERATIONS {
+                            let permit = sem.acquire_owned().await;
+                            let now = current.fetch_add(1, Ordering::SeqCst) + 1;
+                            observed_max.fetch_max(now, Ordering::SeqCst);
+                            current.fetch_sub(1, Ordering::SeqCst);
+                            drop(permit);
+                        }
+                    });
+                })
+            })
+            .collect();
+        for handle in handles {
+            handle.join().expect("stress thread must not panic");
+        }
+        assert!(observed_max.load(Ordering::SeqCst) as usize <= CAPACITY, "observed concurrency {} exceeded capacity {}", observed_max.load(Ordering::SeqCst), CAPACITY);
+    }
+    //#endregion 🚦️SemaphoreTests
+
+    //#region 🔀️Select2Tests
+    #[semio_framework_async_macros::async_test]
+    async fn select2_returns_the_ready_branch_and_drops_the_other() {
+        struct DropFlag(Arc<AtomicBool>);
+        impl Drop for DropFlag {
+            fn drop(&mut self) {
+                self.0.store(true, Ordering::SeqCst);
+            }
+        }
+        let loser_dropped = Arc::new(AtomicBool::new(false));
+        let flag = DropFlag(loser_dropped.clone());
+        let ready = async { 5u32 };
+        let never = async move {
+            let _flag = flag;
+            std::future::pending::<u32>().await
+        };
+        match select2(ready, never).await {
+            Either::Left(value) => assert_eq!(value, 5),
+            Either::Right(_) => panic!("the immediately-ready branch must win"),
+        }
+        assert!(loser_dropped.load(Ordering::SeqCst), "the losing branch must be dropped once the race resolves");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn select2_right_branch_wins_when_it_resolves_first() {
+        let (tx, rx) = oneshot::channel::<u32>();
+        drop(tx);
+        match select2(std::future::pending::<()>(), rx).await {
+            Either::Left(_) => panic!("the pending branch must never win"),
+            Either::Right(result) => assert_eq!(result, Err(oneshot::RecvError)),
+        }
+    }
+    //#endregion 🔀️Select2Tests
+
     //#region 🧵️WorkerPoolTests
     #[test]
     fn worker_pool_sizing_multi_core_and_forced_single_core() {
@@ -1725,19 +2360,42 @@ mod tests {
     fn worker_pool_admission_control_keeps_an_interactive_slot_free() {
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, 3));
         assert!(pool.worker_count() >= 2, "this test needs 2+ workers to exercise the reserve");
-        let keep_busy = Arc::new(AtomicBool::new(true));
-        for _ in 0..(pool.worker_count() * 4) {
-            let keep_busy = keep_busy.clone();
-            let pool_for_resubmit = pool.clone();
-            pool.submit(Lane::Maintenance, Box::new(move || saturate_background(&pool_for_resubmit, keep_busy)));
+        let release = Arc::new((Mutex::new(false), std::sync::Condvar::new()));
+        let (started_tx, started_rx) = mpsc::channel();
+        let (finished_tx, finished_rx) = mpsc::channel();
+        for _ in 0..pool.worker_count() {
+            let release = release.clone();
+            let started_tx = started_tx.clone();
+            let finished_tx = finished_tx.clone();
+            pool.submit(
+                Lane::Maintenance,
+                Box::new(move || {
+                    started_tx.send(()).expect("start signal must succeed");
+                    let (lock, changed) = &*release;
+                    let mut released = lock.lock().expect("release mutex poisoned");
+                    while !*released {
+                        released = changed.wait(released).expect("release mutex poisoned");
+                    }
+                    finished_tx.send(()).expect("finish signal must succeed");
+                }),
+            );
         }
-        std::thread::sleep(std::time::Duration::from_millis(30));
+        for _ in 0..(pool.worker_count() - 1) {
+            started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("every non-reserved worker must admit one low-priority job");
+        }
+        assert!(started_rx.recv_timeout(std::time::Duration::from_millis(50)).is_err(), "low-priority work must not race past the atomic reserve ceiling");
         let (tx, rx) = mpsc::channel();
         pool.submit(Lane::Interactive, Box::new(move || tx.send(()).expect("send must succeed")));
-        let result = rx.recv_timeout(std::time::Duration::from_secs(5));
-        keep_busy.store(false, Ordering::SeqCst);
+        rx.recv_timeout(std::time::Duration::from_secs(5)).expect("the reserved worker must run interactive work");
+        {
+            let (lock, changed) = &*release;
+            *lock.lock().expect("release mutex poisoned") = true;
+            changed.notify_all();
+        }
+        for _ in 0..pool.worker_count() {
+            finished_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("all low-priority jobs must finish after release");
+        }
         pool.shutdown();
-        result.expect("with 2+ workers, at least one slot must stay free for interactive work even under a full low-priority flood");
     }
 
     #[test]
@@ -1763,6 +2421,34 @@ mod tests {
         }
         assert_eq!(*order.lock().expect("mutex"), vec![10, 20, 30], "deadlines must fire in deadline order regardless of registration order");
         pool.shutdown();
+    }
+
+    #[test]
+    fn worker_pool_shutdown_wakes_an_in_flight_timer_waiter_before_joining() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let (waiting_tx, waiting_rx) = mpsc::channel();
+        let pool_for_waiter = pool.clone();
+        pool.submit(
+            Lane::Timer,
+            Box::new(move || {
+                waiting_tx.send(()).expect("waiter start signal must succeed");
+                block_on(pool_for_waiter.timer().sleep_until(u64::MAX - 1));
+            }),
+        );
+        waiting_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("timer waiter must start");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        while pool.timer().next_deadline_ms().is_none() && std::time::Instant::now() < deadline {
+            std::thread::yield_now();
+        }
+        assert_eq!(pool.timer().next_deadline_ms(), Some(u64::MAX - 1));
+        let (shutdown_tx, shutdown_rx) = mpsc::channel();
+        let pool_for_shutdown = pool;
+        let shutdown = std::thread::spawn(move || {
+            pool_for_shutdown.shutdown();
+            shutdown_tx.send(()).expect("shutdown signal must succeed");
+        });
+        shutdown_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("shutdown must wake the timer waiter before joining the sole worker");
+        shutdown.join().expect("shutdown thread must not panic");
     }
 
     #[test]

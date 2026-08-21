@@ -1,9 +1,9 @@
 //! 🔘️ 🔘️ Forms play app commands command — `add-question-option`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::artifacts::forms::schema::{create_form_id, update_block_operation};
 use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
@@ -16,9 +16,6 @@ async fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &st
     })
 }
 //#endregion 🔖️Shell
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "add-question-option")]
@@ -38,10 +35,10 @@ pub async fn handle(payload: &AddQuestionOption, doc: &ArtifactView<'_, FormsSna
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::forms::commands::remove_question_option::RemoveQuestionOption;
     use crate::editor::forms::testkit::{dispatch, forms_app};
     use crate::editor::forms::FormsCommand;
     use AddQuestionOption;
-    use crate::editor::forms::commands::remove_question_option::RemoveQuestionOption;
 
     async fn single_or_multi_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "single".into(), step_id: None }));

@@ -17,8 +17,17 @@ pub async fn inverse(payload: &super::mutation::RemoveObjectVortex, base: &Puzzl
     let mut mutations = vec![crate::artifacts::puzzle3d::mutations::add_object_vortex::mutation::add_object_vortex(payload.object_id.clone(), vortex.clone(), index)];
     for attraction in base.attractions.iter().filter(|attraction| attraction.attracting == full_id || attraction.attracted == full_id) {
         mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices::mutation::connect_vortices(
-            attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),
-            attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y,
+            attraction.id.clone(),
+            attraction.attracting.clone(),
+            attraction.attracted.clone(),
+            attraction.gap,
+            attraction.shift,
+            attraction.rise,
+            attraction.rotation,
+            attraction.turn,
+            attraction.tilt,
+            attraction.x,
+            attraction.y,
         ));
     }
     mutations

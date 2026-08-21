@@ -8,8 +8,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::puzzle3d::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
 use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
+use crate::artifacts::puzzle3d::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -117,7 +117,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::puzzle3d::diff::Puzzle3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::puzzle3d::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::puzzle3d::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-attraction-geometry/repositions-attraction-1: committed diff did not carry before to after");
 }

@@ -18,13 +18,11 @@
 //! "one accessor every render/export/inference call site funnels through" pattern the migration
 //! recipe's §3 prescribes.
 
-use crate::artifacts::process3d::{
-    Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine,
-};
+use crate::artifacts::process3d::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 use protocol::Inference;
 use schema::ArtifactSchema;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_plugin::ArtifactInferrer;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
@@ -76,10 +74,7 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stockPose"] },
-            protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stepCount", reads: &["steps"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stockPose"] }, protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stepCount", reads: &["steps"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -135,11 +130,7 @@ struct ProcessKernelMemo {
 
 impl ProcessKernelReplay {
     pub async fn new() -> Self {
-        Self {
-            kernel: Brep::new(),
-            tables: ProcessKernelMemo { memo: HashMap::new() },
-            stock_signature: 0,
-        }
+        Self { kernel: Brep::new(), tables: ProcessKernelMemo { memo: HashMap::new() }, stock_signature: 0 }
     }
 
     /// 🔩 Immutable kernel access — `tessellate`/`volume`/`kind` take `&self`.

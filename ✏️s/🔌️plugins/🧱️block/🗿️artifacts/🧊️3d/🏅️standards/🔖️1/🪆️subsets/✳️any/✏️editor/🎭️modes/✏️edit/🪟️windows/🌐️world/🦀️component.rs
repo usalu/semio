@@ -1,12 +1,12 @@
 //! 🌐️ Block 3D play app — the world window: the object kind's 3D representation viewport (block3d's
 //! only window kind).
 
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::modes::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
 use crate::editor::block3d::terminology::Block3dLabels;
-use crate::editor::block3d::world::{world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json, visible_representations};
+use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
 use crate::editor::block3d::{BLOCK3D_PLAY_APP_ID, BLOCK3D_PLAY_SURFACE_ID};
-use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

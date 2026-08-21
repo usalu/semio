@@ -41,11 +41,11 @@ fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
 }
 
 impl protocol::OpText for TxtEditorCommand {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let TxtEditorCommand::ReplaceText { text } = self;
         format!("replace-text text={}", hex_encode(text.as_bytes()))
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let hex = line.strip_prefix("replace-text text=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
         let text = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
@@ -54,12 +54,12 @@ impl protocol::OpText for TxtEditorCommand {
 }
 
 impl protocol::OpBinary for TxtEditorCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -121,7 +121,7 @@ impl ArtifactEditor for TxtEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

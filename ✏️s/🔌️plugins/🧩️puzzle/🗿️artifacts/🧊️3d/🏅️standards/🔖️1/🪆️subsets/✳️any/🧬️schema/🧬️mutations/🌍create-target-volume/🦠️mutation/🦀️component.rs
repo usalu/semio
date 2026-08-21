@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `CreateTargetVolume`: brings a new id-keyed target volume into existence.
 use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::{Puzzle3dTargetVolume, Puzzle3dSnapshot};
+use crate::artifacts::puzzle3d::{Puzzle3dSnapshot, Puzzle3dTargetVolume};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

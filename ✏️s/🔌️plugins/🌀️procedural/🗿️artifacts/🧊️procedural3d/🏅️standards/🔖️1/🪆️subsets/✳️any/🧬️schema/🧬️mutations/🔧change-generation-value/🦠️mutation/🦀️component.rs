@@ -14,7 +14,8 @@ use serde_json::Value;
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,
-    pub new_value: Value}
+    pub new_value: Value,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ChangeGenerationValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };

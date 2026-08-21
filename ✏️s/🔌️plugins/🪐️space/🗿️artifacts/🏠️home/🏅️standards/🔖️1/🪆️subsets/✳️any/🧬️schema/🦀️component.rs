@@ -23,31 +23,19 @@ pub struct SHomeArtifact {
 //#region 🔖️Conversions
 impl Default for SHomeArtifact {
     fn default() -> Self {
-        Self {
-            schema: crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA.into(),
-            catalog_generation: 0,
-            active_panel_tab: String::new(),
-            locale: "en-US".into(),
-        }
+        Self { schema: crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new(), locale: "en-US".into() }
     }
 }
 
 impl SHomeArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::home::SHomeSnapshot {
-        crate::artifacts::home::SHomeSnapshot {
-            schema: self.schema.clone(),
-            catalog_generation: self.catalog_generation,
-        }
+        crate::artifacts::home::SHomeSnapshot { schema: self.schema.clone(), catalog_generation: self.catalog_generation }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::home::SHomeSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            catalog_generation: snapshot.catalog_generation,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, catalog_generation: snapshot.catalog_generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -96,10 +84,10 @@ pub async fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::home::schema::diff::SHomeDiff;
     use crate::artifacts::home::schema::mutations::SHomeMutation;
     use crate::artifacts::home::schema::snapshot::SHomeSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct HomeBuilderConstruction {
@@ -111,8 +99,12 @@ pub mod derived_construction {
         type Snapshot = SHomeSnapshot;
         type Mutation = SHomeMutation;
         type Diff = SHomeDiff;
-        async fn empty() -> Self { Self { snapshot: SHomeSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: SHomeSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<SHomeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -123,24 +115,21 @@ pub mod derived_construction {
             let outcome = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <SHomeDiff as protocol::MutationDiff<SHomeSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -149,8 +138,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::home::SHomeSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct SHomeParts {

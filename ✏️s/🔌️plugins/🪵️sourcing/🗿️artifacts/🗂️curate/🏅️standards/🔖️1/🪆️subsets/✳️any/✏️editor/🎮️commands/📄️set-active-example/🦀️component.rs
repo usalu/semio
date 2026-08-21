@@ -1,11 +1,11 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `set-active-example`.
 
+use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::{default_document, empty_document};
+use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::editor::sourcing::{reset_document_effect, EMPTY_EXAMPLE_ID};
-use crate::artifacts::curate::schema::{default_document, empty_document};
-use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

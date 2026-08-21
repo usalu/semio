@@ -1,9 +1,9 @@
 //! 📃️ 📃️ Forms play app commands command — `patch-step`.
 
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

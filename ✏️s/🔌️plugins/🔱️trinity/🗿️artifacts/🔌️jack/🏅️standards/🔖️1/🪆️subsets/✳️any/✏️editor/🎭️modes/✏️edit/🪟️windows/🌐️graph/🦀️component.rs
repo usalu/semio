@@ -1,7 +1,7 @@
 //! 🌐️ Trinity Jack app — Nakagin Graph window (node-graph render + LOD control).
 
-use crate::editor::jack::config::JackConfig;
 use crate::artifacts::jack::JackSnapshot;
+use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{build_node_graph_scene, ActionDescriptor, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiNode, WindowMeasure};
 use serde_json::json;
 

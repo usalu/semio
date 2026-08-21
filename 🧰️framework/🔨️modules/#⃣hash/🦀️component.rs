@@ -88,10 +88,7 @@ mod tests {
 
     #[test]
     fn orders_merkle_children_deterministically() {
-        assert_eq!(
-            merkle_node(&["root"], vec!["child-b".into(), "child-a".into()]),
-            merkle_node(&["root"], vec!["child-a".into(), "child-b".into()]),
-        );
+        assert_eq!(merkle_node(&["root"], vec!["child-b".into(), "child-a".into()]), merkle_node(&["root"], vec!["child-a".into(), "child-b".into()]),);
     }
 
     #[test]

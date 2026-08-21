@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `DuplicateBlock`. Error `target-missing` on an absent source,
 //! Fatal `duplicate-id` when the new block's id already exists.
 use super::mutation::DuplicateBlock;
+use crate::artifacts::note::schema::diff::note_block_added_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_added_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DuplicateBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

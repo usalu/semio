@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateRepresentation` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block3d::diff::Block3dDiff;
-use crate::artifacts::block3d::diff::{Block3dRepresentationsDelta};
+use crate::artifacts::block3d::diff::Block3dRepresentationsDelta;
 use crate::artifacts::block3d::Block3dSnapshot;
 
 //#region 🔖️Diff

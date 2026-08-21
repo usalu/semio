@@ -1,8 +1,8 @@
 //! 📋️ Imperative play app — the main window: a table of the document's top-level steps plus, once `run`
 //! has been dispatched, the resulting scope.
 
-use crate::editor::imperative::terminology::ImperativeLabels;
 use crate::artifacts::imperative::{ImperativeSnapshot, Step};
+use crate::editor::imperative::terminology::ImperativeLabels;
 use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -99,8 +99,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_command_expands_scope_into_readable_rows_without_truncation() {
-        use crate::editor::imperative::testkit::dispatch;
         use crate::editor::imperative::commands::run;
+        use crate::editor::imperative::testkit::dispatch;
         let mut app = imperative_app();
         dispatch(&mut app, ImperativeCommand::Run(run::Run {}));
         let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);

@@ -1,6 +1,6 @@
 //! ⬆️ Note mutation — `RemoveTableRow`: removes a table block's last row (a table always keeps at least one row).
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

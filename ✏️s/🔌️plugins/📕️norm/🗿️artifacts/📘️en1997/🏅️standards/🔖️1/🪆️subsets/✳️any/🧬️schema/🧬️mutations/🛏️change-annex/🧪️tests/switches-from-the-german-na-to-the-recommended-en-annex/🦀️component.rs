@@ -38,7 +38,11 @@ async fn switches_from_the_german_na_to_the_recommended_en_annex() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-annex applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.annex, crate::document::AnnexChoice::En, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: annex must read `AnnexChoice::En` once the change lands");
-    assert_eq!(applied.design_approach, before().design_approach, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the design approach is a separate `change-design-approach` decision and must not be re-pinned by an annex switch");
+    assert_eq!(
+        applied.design_approach,
+        before().design_approach,
+        "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the design approach is a separate `change-design-approach` decision and must not be re-pinned by an annex switch"
+    );
 }
 
 /// ↩️ `change-annex`'s inverse reads the OLD `AnnexChoice::De` out of BASE, so replaying it puts the German
@@ -81,7 +85,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an enum cannot be non-finite, so `change-annex` carries only an equality guard, and `AnnexChoice::En` differs from the committed `De`");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an enum cannot be non-finite, so `change-annex` carries only an equality guard, and `AnnexChoice::En` differs from the committed `De`"
+    );
     assert!(produced.messages().is_empty(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an accepted change-annex emits no diagnostics at all");
 }
 

@@ -18,6 +18,11 @@ pub use crate::{
     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
 };
+
+/// 🆔️ Computes the canonical pack content identity for `bytes`.
+pub fn content_hash(bytes: &[u8]) -> ContentHash {
+    ContentHash(*blake3::hash(bytes).as_bytes())
+}
 //#endregion 🔖️Core
 
 //#region 🔖️Format
@@ -29,6 +34,12 @@ pub use crate::format::{
 };
 //#endregion 🔖️Format
 
+//#region 🔖️Json
+pub use crate::json::{
+    array as json_array, object as json_object, parse as parse_json, parse_bytes as parse_json_bytes, to_string as json_to_string, JsonError, Lexer as JsonLexer, Number as JsonNumber, Object as JsonObject, Token as JsonToken, Value as JsonValue,
+    MAX_DEPTH as JSON_MAX_DEPTH,
+};
+//#endregion 🔖️Json
 
 //#region 🔖️Io
 /// @emoji 🗄️ Native-only file I/O — absent from `wasm32` builds, mirroring `pack_io` itself.
@@ -45,9 +56,7 @@ pub use crate::async_::{AsyncPackSource, BoundedDemand, CancellationToken, Deman
 /// facade stay lean; enable via `pack`'s own `ureq` feature (forwards to `pack_http/ureq`).
 #[cfg(feature = "ureq")]
 pub use crate::http::UreqRangeTransport;
-pub use crate::http::{HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy};
+pub use crate::http::{HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy, RetryRuntime};
 //#endregion 🔖️Http
 
 //#endregion 🔖️Reexports
-
-

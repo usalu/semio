@@ -174,9 +174,9 @@ pub mod cache {
 }
 
 pub mod preview {
-    use crate::editor::animate::engine::video::VideoError;
-    use crate::editor::animate::engine::scene::scene::{preview_scene_loop, Scene, SceneFrame};
     use crate::editor::animate::engine::config::config::AnimateConfig;
+    use crate::editor::animate::engine::scene::scene::{preview_scene_loop, Scene, SceneFrame};
+    use crate::editor::animate::engine::video::VideoError;
     use std::io::Write;
 
     /// 🪟️ Live preview outcome.
@@ -325,8 +325,8 @@ pub mod preview {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
         use crate::editor::animate::engine::camera::camera::Camera;
+        use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
         use crate::editor::animate::engine::scene::section::SectionList;
         use crate::editor::animate::engine::scene::sobject::{Sobjects, VSobject};
         use std::collections::HashMap;
@@ -390,8 +390,8 @@ pub mod preview {
 
 pub mod render {
     use crate::editor::animate::engine::animation::animation::{compile_animations, interpolate_at, Animation, Animations, Wait};
-    use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::camera::camera::Camera;
+    use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::scene::Scene;
     use crate::editor::animate::engine::scene::section::SectionList;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
@@ -653,11 +653,11 @@ pub mod render {
 }
 
 pub mod renderer {
-    use crate::editor::animate::engine::video::VideoError;
-    use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::camera::camera::Camera;
-    use crate::editor::animate::engine::text::color::Color;
+    use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
+    use crate::editor::animate::engine::text::color::Color;
+    use crate::editor::animate::engine::video::VideoError;
     use pollster::block_on;
     use vello::kurbo::Stroke as KurboStroke;
     use vello::peniko::Color as VelloColor;
@@ -860,9 +860,9 @@ pub mod renderer {
 pub mod scenes {
     //! 🎬️ Built-in scenes resolved by content hash for present/video export.
 
+    use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
-    use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::scene::section::Section;
     use crate::editor::animate::engine::scene::section::SectionList;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects, VSobject};
@@ -946,10 +946,10 @@ pub mod writer {
     //! engine, and the gif sidecar through stdio's real `encode_gif` engine, both in-process, no
     //! subprocess involved.
 
-    use crate::editor::animate::engine::video::render::OutputFormat;
-    use crate::editor::animate::engine::video::VideoError;
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::section::SectionList;
+    use crate::editor::animate::engine::video::render::OutputFormat;
+    use crate::editor::animate::engine::video::VideoError;
     use image::{ImageBuffer, Rgba};
     use std::fs;
     use std::path::{Path, PathBuf};

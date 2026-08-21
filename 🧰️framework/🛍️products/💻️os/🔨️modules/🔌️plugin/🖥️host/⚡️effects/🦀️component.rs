@@ -38,7 +38,9 @@ use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestId, Request
 use semio_framework::{DslValue, MediaType};
 use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLane, Origin, PackageId, Payload};
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
-use semio_framework_os_services::{ComputeError, ComputePool, CompletionSink, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic};
+use semio_framework_os_services::{
+    CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
+};
 
 //#region 🆔️TraceIdAllocator
 /// 🆔️ Monotonic `TraceId` source, one per host — every dispatched operation gets a fresh id from
@@ -658,7 +660,15 @@ pub struct AsyncEffectExecutor<I: EnvelopeInjector, R: HostAsyncRuntime> {
 // methods hit first was reported before rustc's own outlives check on `I` had a chance to run).
 impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, R> {
     #[allow(clippy::too_many_arguments)]
-    pub async fn new(services: AsyncServices<R>, actors: ActorScopeRegistry, capabilities: CapabilityRevocationRegistry, sink: Arc<EnvelopeCompletionSink<I>>, backbone: Arc<BackboneRegistry>, router_handler: Arc<dyn RouterEffectHandler>, metrics: Arc<dyn EffectMetricsRecorder>) -> Self {
+    pub async fn new(
+        services: AsyncServices<R>,
+        actors: ActorScopeRegistry,
+        capabilities: CapabilityRevocationRegistry,
+        sink: Arc<EnvelopeCompletionSink<I>>,
+        backbone: Arc<BackboneRegistry>,
+        router_handler: Arc<dyn RouterEffectHandler>,
+        metrics: Arc<dyn EffectMetricsRecorder>,
+    ) -> Self {
         Self { services, actors, capabilities, sink, backbone, router_handler, metrics, trace_ids: TraceIdAllocator::new().await }
     }
 
@@ -738,7 +748,18 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
             match effect {
                 Effect::HttpRequest { req, method, url, headers, body, .. } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_http(ctx.await, scope.clone(), dispatch.package.clone(), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, *req, method.clone(), url.clone(), headers.clone(), body.clone()).await;
+                    self.dispatch_http(
+                        ctx.await,
+                        scope.clone(),
+                        dispatch.package.clone(),
+                        addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await,
+                        *req,
+                        method.clone(),
+                        url.clone(),
+                        headers.clone(),
+                        body.clone(),
+                    )
+                    .await;
                     report.dispatched += 1;
                 }
                 Effect::StorageRead { req, key } => {

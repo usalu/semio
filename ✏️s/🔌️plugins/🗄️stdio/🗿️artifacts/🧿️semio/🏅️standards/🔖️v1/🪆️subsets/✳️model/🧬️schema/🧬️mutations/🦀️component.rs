@@ -110,7 +110,7 @@ pub enum SemioModelMutation {
 impl Mutation<SemioModelSnapshot> for SemioModelMutation {
     type Diff = SemioModelDiff;
 
-    async fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
             SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -134,10 +134,10 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
             SemioModelMutation::SetRelation { id, kind, from, to } => {
                 SemioModelDiff { relations: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }], ..Default::default() }), ..Default::default() }
             }
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
         match self {
             SemioModelMutation::NoMutation => vec![SemioModelMutation::NoMutation],
             SemioModelMutation::SetSnapshot { .. } => vec![SemioModelMutation::SetSnapshot { snapshot: base.clone() }],
@@ -297,10 +297,10 @@ fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, String> 
 }
 
 impl OpText for SemioModelMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_semio_model_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_model_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -342,13 +342,13 @@ fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 /// `print_semio_model_mutation`/`parse_semio_model_mutation` text codec rather than re-deriving a
 /// second independent encoding.
 impl OpBinary for SemioModelMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -360,7 +360,7 @@ impl OpBinary for SemioModelMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpCodecs

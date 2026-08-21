@@ -6,7 +6,7 @@
 use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{s_play_action, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID};
-use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowSnapshot, WorkflowNode, WorkflowParameter};
+use semio_framework_os::{os_app_registration, os_parameter_value, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -15,7 +15,13 @@ use serde_json::json;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(S_PLAY_INSPECTOR_BODY_KEY.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(S_PLAY_INSPECTOR_BODY_KEY.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Manifest
 

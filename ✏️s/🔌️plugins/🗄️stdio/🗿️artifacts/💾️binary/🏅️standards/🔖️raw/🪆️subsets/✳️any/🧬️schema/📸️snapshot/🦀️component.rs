@@ -33,11 +33,11 @@ impl Default for BinarySnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for BinarySnapshot {
     const EXTENSION: &'static str = "bin";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "stdio.binary"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -55,9 +55,9 @@ impl store::ArtifactDsl for BinarySnapshot {
         }
         Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body: String = self.bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -71,11 +71,11 @@ impl store::ArtifactDsl for BinarySnapshot {
 /// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️component.rs`.
 impl store::ArtifactPack for BinarySnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         Ok(self.bytes.clone())
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let _ = options;
         Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
     }

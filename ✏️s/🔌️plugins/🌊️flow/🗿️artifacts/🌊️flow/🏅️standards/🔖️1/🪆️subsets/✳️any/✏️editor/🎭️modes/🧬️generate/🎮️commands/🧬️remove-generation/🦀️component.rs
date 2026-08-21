@@ -5,14 +5,14 @@ use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::seed_host_catalogue;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
 use crate::playbook::{handle_generation_action, selected_generation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use flow::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     FlowEvalSession, FlowHost,
-    };
+};
 
 //#region 🔖️SharedDispatch
 async fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowConfig, values: &serde_json::Map<String, Value>) -> String {

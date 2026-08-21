@@ -2,11 +2,11 @@
 //! element (removing one also clears every adjacency touching it).
 
 pub mod add_element {
-    use crate::editor::architect::catalog::default_element;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::catalog::default_element;
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -29,10 +29,10 @@ pub mod add_element {
 }
 
 pub mod remove_element {
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

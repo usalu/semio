@@ -24,8 +24,8 @@ use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{ActionDescriptor, ActionFactory, IconName, LocalizedLabel, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
 use semio_framework_plugin::{ui_control_to_node, ui_stack_vertical};
+use semio_framework_plugin::{ActionDescriptor, ActionFactory, IconName, LocalizedLabel, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const S_HOME_WINDOW: &str = "s-home-main";
@@ -78,14 +78,7 @@ async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, acti
         .iter()
         .map(|row| TableRow {
             id: format!("space:{}", row.id),
-            cells: vec![
-                row.name.clone(),
-                row.kind.clone(),
-                row.visibility.clone(),
-                row.members.clone(),
-                row.updated.clone(),
-                (if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() }).to_string(),
-            ],
+            cells: vec![row.name.clone(), row.kind.clone(), row.visibility.clone(), row.members.clone(), row.updated.clone(), (if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() }).to_string()],
             actions: row_actions(actions, row),
         })
         .collect();

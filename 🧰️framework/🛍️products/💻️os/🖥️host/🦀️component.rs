@@ -5,8 +5,8 @@ pub mod host {
     // #region host
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
 
-    use crate::instance::{OsInstanceState, create_os_id};
-    use crate::registry::{PluginRegistry, os_app_registration, resolve_os_app_definition};
+    use crate::instance::{create_os_id, OsInstanceState};
+    use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
     use crate::space;
     use crate::workflow;
     use protocol::Mutation;
@@ -14,8 +14,8 @@ pub mod host {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use store::{ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore, create_document_envelope, document_backbone_ref, materialize_document_snapshot};
-    use ui_wgpu::wgpu::{UiNode, ui_recovery_panel};
+    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
+    use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
     use vcs::{ArtifactVcs, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -501,11 +501,23 @@ pub mod host {
             match workflow::negotiate_media_contract(source_port, target_port) {
                 Ok(contract) if contract == edge.contract => true,
                 Ok(_) => {
-                    conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-type-mismatch"), message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id), target: vec![edge.id.clone()], op_index: None });
+                    conflicts.push(protocol::MutationMessage {
+                        level: dsl::Severity::Warning,
+                        code: dsl::FaultCode::new("workflow/edge-type-mismatch"),
+                        message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id),
+                        target: vec![edge.id.clone()],
+                        op_index: None,
+                    });
                     false
                 }
                 Err(reason) => {
-                    conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-type-mismatch"), message: format!("edge {} connects ports whose types no longer match: {reason}", edge.id), target: vec![edge.id.clone()], op_index: None });
+                    conflicts.push(protocol::MutationMessage {
+                        level: dsl::Severity::Warning,
+                        code: dsl::FaultCode::new("workflow/edge-type-mismatch"),
+                        message: format!("edge {} connects ports whose types no longer match: {reason}", edge.id),
+                        target: vec![edge.id.clone()],
+                        op_index: None,
+                    });
                     false
                 }
             }
@@ -583,7 +595,13 @@ pub mod host {
             let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
-            conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-cycle"), message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id), target: vec![dropped.id.clone()], op_index: None });
+            conflicts.push(protocol::MutationMessage {
+                level: dsl::Severity::Warning,
+                code: dsl::FaultCode::new("workflow/edge-cycle"),
+                message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id),
+                target: vec![dropped.id.clone()],
+                op_index: None,
+            });
         }
         edges
     }
@@ -1144,7 +1162,7 @@ pub mod host {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::workflow::{MediaContract, WorkflowEdge, WorkflowPosition, empty_workflow, placeholder_media_contract, validate_workflow};
+        use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, WorkflowEdge, WorkflowPosition};
         use semio_framework::{AppRole, ArtifactDialect, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use store::{MemoryBackbone, MemoryBackbonePort};
@@ -2312,9 +2330,14 @@ pub mod host_runtime {
     mod tests {
         use super::*;
 
+        fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
+            static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
+            POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
+        }
+
         #[test]
         fn opens_a_document_and_subscribes_to_its_events() {
-            let host = ArtifactHost::new();
+            let host = ArtifactHost::new(test_pool());
             let opened = open_document(&host, "doc-1", "test.schema", vec![], "actor-1");
             drop(opened.events);
             close_document(&host, "doc-1");
@@ -2327,7 +2350,6 @@ pub mod host_runtime {
             assert_eq!(config.document_id, "doc-2");
             assert_eq!(config.schema, "draw.document");
         }
-
     }
     // #endregion host_runtime
 }
@@ -2340,7 +2362,7 @@ pub mod instance {
     use crate::workflow;
     use semio_framework::ConfigSpec;
     use serde::{Deserialize, Serialize};
-    use serde_json::{Value, json};
+    use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -2573,7 +2595,11 @@ pub mod instance {
     }
 
     fn json_pointer_segments(pointer: &str) -> Vec<String> {
-        if let Some(rest) = pointer.strip_prefix('/') { rest.split('/').filter(|segment| !segment.is_empty()).map(str::to_string).collect() } else { pointer.split('.').filter(|segment| !segment.is_empty()).map(str::to_string).collect() }
+        if let Some(rest) = pointer.strip_prefix('/') {
+            rest.split('/').filter(|segment| !segment.is_empty()).map(str::to_string).collect()
+        } else {
+            pointer.split('.').filter(|segment| !segment.is_empty()).map(str::to_string).collect()
+        }
     }
 
     /// @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object snapshot.
@@ -2846,7 +2872,12 @@ pub mod instance {
         fn sample_config_spec() -> ConfigSpec {
             ConfigSpec {
                 fields: vec![
-                    semio_framework::ConfigFieldSpec { key: "zoom".into(), label: "Zoom".into(), shape: semio_framework::ConfigFieldShape::Number { min: None, max: None, step: None }, default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")) },
+                    semio_framework::ConfigFieldSpec {
+                        key: "zoom".into(),
+                        label: "Zoom".into(),
+                        shape: semio_framework::ConfigFieldShape::Number { min: None, max: None, step: None },
+                        default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")),
+                    },
                     semio_framework::ConfigFieldSpec {
                         key: "mode".into(),
                         label: "Mode".into(),
@@ -2904,7 +2935,7 @@ pub mod media_export_raster {
     // format kind ids, not the legacy format enum (retired — ticket 26/08/11/
     // SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     #[cfg(feature = "os-host-full")]
-    pub use crate::workflow::{OsMediaExportResult, export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind};
+    pub use crate::workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
 
     #[cfg(not(feature = "os-host-full"))]
     /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
@@ -2961,8 +2992,6 @@ pub mod media_export_raster {
     /// dependency closure), the direction this ticket's other framework-product crates already use.
     use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
     use serde_json::Value;
-    
-    
 
     /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
     pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
@@ -3306,10 +3335,10 @@ pub mod workflow {
     // single source of truth for the workflow document vocabulary.
     #[cfg(feature = "os-host-full")]
     pub use crate::workflow_kernel::{
-        MediaContract, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter,
-        WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-        media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot,
-        workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value,
+        apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
+        validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
+        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode,
+        WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
     #[cfg(feature = "os-host-full")]
@@ -3320,7 +3349,7 @@ pub mod workflow {
     }
     //#region 🔖️RegistryStubs
     #[cfg(feature = "os-host-full")]
-    use crate::registry::{OsArtifactDescriptor, os_app_registration, os_artifact_descriptor};
+    use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
     #[cfg(not(feature = "os-host-full"))]
     #[derive(Clone, Debug, Default)]
     pub struct OsArtifactDescriptor {
@@ -3341,9 +3370,9 @@ pub mod workflow {
     }
     //#endregion 🔖️RegistryStubs
     use base64::Engine;
-    use semio_framework::{ArtifactDialect, MediaCompat, MediaWireFormat, media_types_compatible};
+    use semio_framework::{media_types_compatible, ArtifactDialect, MediaCompat, MediaWireFormat};
     use serde::{Deserialize, Serialize};
-    use serde_json::{Value, json};
+    use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Mutex, OnceLock};
 
@@ -3842,7 +3871,7 @@ pub mod workflow {
     /// W2+ cuts real subsets over -- this is debt D2's "coexist, do not bridge" shape, not a silent gap.
     fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, source_document: &Value, file_stem: &str) -> Option<Result<OsMediaExportResult, String>> {
         use semio_framework::io::io_mechanism::{io_route, io_run};
-        use semio_framework::io_schema::{CARRIER_BINARY, CARRIER_TEXT, IoPayload as NewIoPayload};
+        use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
         let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
@@ -3959,7 +3988,7 @@ pub mod workflow {
     /// `io_identify` is for the genuinely-unknown-dialect "open this file" case, not this one.
     fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
         use semio_framework::io::io_mechanism::{io_route, io_run};
-        use semio_framework::io_schema::{CARRIER_BINARY, CARRIER_TEXT, IoPayload as NewIoPayload};
+        use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
         let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
@@ -4059,8 +4088,8 @@ pub mod workflow {
         #[test]
         fn export_via_io_mechanism_writes_raw_bytes_not_a_pack_container() {
             use base64::Engine;
-            use semio_framework::io::io_mechanism::{IoEntry, io_register};
-            use semio_framework::io_schema::{CARRIER_BINARY, IoFidelity, IoOutcome, IoPayload as NewIoPayload};
+            use semio_framework::io::io_mechanism::{io_register, IoEntry};
+            use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload as NewIoPayload, CARRIER_BINARY};
 
             const TEST_KIND: &str = "3d.__w1b_export_bug_proof";
             const TEST_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.__w1b_export_bug_proof", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId("*") };
@@ -4118,7 +4147,8 @@ pub mod workflow {
             .ok();
 
             let source_document = serde_json::json!({ "value": "RAW-FILE-CONTENT-not-a-pack" });
-            let outcome = registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
+            let outcome =
+                registry_export_media(TEST_KIND, "stdio.__w1b_export_bug_proof_fmt", &source_document).expect("io-mechanism export path must find the registered route, not fall through to the legacy/handler-map paths").expect("export must succeed");
 
             let bytes = base64::engine::general_purpose::STANDARD.decode(&outcome.data).expect("OsMediaExportResult base64-encodes binary payloads");
             assert_eq!(bytes, b"RAW-FILE-CONTENT-not-a-pack".to_vec(), "exported bytes must be exactly the raw content the io-mechanism route produced, byte for byte");
@@ -5071,41 +5101,41 @@ pub mod registry {
 pub use crate::space::*;
 #[cfg(feature = "os-host-full")]
 pub use crate::workflow::{
-    MediaContract, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA, Workflow, WorkflowDelivery,
-    WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
-    WorkflowPosition, WorkflowSnapshot, WorkflowValidation, apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
-    os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot,
-    workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value,
+    apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
+    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, patch_workflow_parameter,
+    placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id,
+    workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow,
+    WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,
+    WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "os-host-full")]
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 #[cfg(feature = "os-host-full")]
 pub use host::{
-    BackboneDocument, LoadedProgram, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, OsBackbonePort, OsBackbonePorts, OsCollectionDocument, OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost,
-    ProgramHotSwapEvent, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack,
-    import_os_space_from_dsl, import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty,
+    create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
+    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsBackbonePorts, OsCollectionDocument,
+    OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use instance::{
-    OS_PARAMETER_PORT_PREFIX, OsArtifactRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id,
-    is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter,
-    register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value,
+    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
+    OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
-    OsMediaExportResult, dwg_drawing_to_svg, media_accept_filter_kinds, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler, register_mesh_exporter, register_mesh_importer,
-    register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes,
+    dwg_drawing_to_svg, media_accept_filter_kinds, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler, register_mesh_exporter, register_mesh_importer,
+    register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes, OsMediaExportResult,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use registry::{
-    AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry, list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, os_artifact_dialect, register_app_io,
-    register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor, workflow_palette,
+    list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, os_artifact_dialect, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition,
+    try_os_artifact_descriptor, workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
 pub use semio_framework::*;
-pub use store::{ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort, document_backbone_ref, set_host_backbone_port};
+pub use store::{document_backbone_ref, set_host_backbone_port, ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};

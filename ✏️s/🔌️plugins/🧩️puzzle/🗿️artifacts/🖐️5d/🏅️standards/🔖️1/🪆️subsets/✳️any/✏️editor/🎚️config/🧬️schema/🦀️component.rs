@@ -33,22 +33,38 @@ pub struct Puzzle5dCamera3d {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d.config")]
 pub struct Puzzle5dConfig {
-    #[state(config)] pub camera2d: Puzzle5dCamera2d,
-    #[state(config)] pub camera3d: Puzzle5dCamera3d,
-    #[state(config)] pub fill_count: u32,
-    #[state(config)] pub brush_candidate_index: usize,
-    #[state(config)] pub overlap_budget: f64,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub suggestion_offset: f64,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_factor: f64,
-    #[state(config)] pub engagement_input_by_window: BTreeMap<String, String>,
-    #[state(config)] pub object_kind_weights: HashMap<String, f64>,
-    #[state(config)] pub vortex_kind_weights: HashMap<String, f64>,
-    #[state(config)] pub sun: WorldSunConfig,
-    #[state(config)] pub active_utility_by_window_id: BTreeMap<String, String>,
-    #[state(config)] pub terminology: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub camera2d: Puzzle5dCamera2d,
+    #[state(config)]
+    pub camera3d: Puzzle5dCamera3d,
+    #[state(config)]
+    pub fill_count: u32,
+    #[state(config)]
+    pub brush_candidate_index: usize,
+    #[state(config)]
+    pub overlap_budget: f64,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub suggestion_offset: f64,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_factor: f64,
+    #[state(config)]
+    pub engagement_input_by_window: BTreeMap<String, String>,
+    #[state(config)]
+    pub object_kind_weights: HashMap<String, f64>,
+    #[state(config)]
+    pub vortex_kind_weights: HashMap<String, f64>,
+    #[state(config)]
+    pub sun: WorldSunConfig,
+    #[state(config)]
+    pub active_utility_by_window_id: BTreeMap<String, String>,
+    #[state(config)]
+    pub terminology: String,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -77,4 +93,3 @@ pub async fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

@@ -1,17 +1,18 @@
 //! 🧩️ 🧩️ Procedural3d play app commands command — `remove-widget`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "remove-widget")]
 pub struct RemoveWidget {
-    pub widget_id: String}
+    pub widget_id: String,
+}
 
 /// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
 /// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -31,9 +32,9 @@ pub async fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural3dS
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::procedural3d::commands::{add_widget, patch_flow_widgets};
     use crate::editor::procedural3d::testkit::{app, dispatch, drain_flow_eval_ticks};
     use crate::editor::procedural3d::Procedural3dCommand;
-    use crate::editor::procedural3d::commands::{add_widget, patch_flow_widgets};
 
     #[semio_framework_async_macros::async_test]
     async fn add_widget_action_appends_widget() {
@@ -51,7 +52,8 @@ mod tests {
         dispatch(&mut app, Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) }));
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == "height" => Some(*value),
-            _ => None});
+            _ => None,
+        });
         assert_eq!(value, Some(9.5));
     }
 

@@ -9,12 +9,10 @@
 //! `document_tree_selected_ids`/inspector precedent). This panel falls back to its always-empty
 //! state unconditionally until a render-time interaction read exists.
 
+use crate::artifacts::process3d::Process3dSnapshot;
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::terminology::Process3dLabels;
-use crate::artifacts::process3d::Process3dSnapshot;
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";

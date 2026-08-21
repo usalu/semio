@@ -55,7 +55,16 @@ mod tests {
     use semio_framework_plugin::{ArtifactView, HistoryView};
 
     async fn event(seq: u64, body: DirectoryEventBody, space_id: Option<&str>) -> DirectoryEvent {
-        DirectoryEvent { seq, id: format!("evt-{seq}"), hlc: Hlc { physical_ms: seq as i64, logical: 0 }, actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:test".into() }, space_id: space_id.map(Into::into), user_id: None, body, recorded_at_ms: seq as i64 }
+        DirectoryEvent {
+            seq,
+            id: format!("evt-{seq}"),
+            hlc: Hlc { physical_ms: seq as i64, logical: 0 },
+            actor: DirectoryActor { kind: DirectoryActorKind::System, id: "system:test".into() },
+            space_id: space_id.map(Into::into),
+            user_id: None,
+            body,
+            recorded_at_ms: seq as i64,
+        }
     }
 
     async fn view_for(space_id: &str) -> SSpaceSnapshot {
@@ -91,7 +100,8 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let config_snapshot = SpaceIndexConfig::default();
         let cfg = ConfigView { snapshot: &config_snapshot };
-        let events = vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
+        let events =
+            vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
         let events_json = serde_json::to_string(&events).unwrap();
         let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
         assert!(result.config_mutations.is_empty(), "unrelated-space events never touch this space's config");

@@ -116,4 +116,3 @@ pub fn fuzz_bit_flips(valid_pack: &[u8], level: CorruptionLevel, decode: impl Fn
     run_corruption_cases(cases, &decode)
 }
 //#endregion 🔖️Corrupt
-

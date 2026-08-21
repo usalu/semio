@@ -97,8 +97,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioModelSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
-                IoPayload::Text(text) => <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
+                IoPayload::Binary(bytes) => <SemioModelSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => semio_model_referential_diagnostics(&snapshot),

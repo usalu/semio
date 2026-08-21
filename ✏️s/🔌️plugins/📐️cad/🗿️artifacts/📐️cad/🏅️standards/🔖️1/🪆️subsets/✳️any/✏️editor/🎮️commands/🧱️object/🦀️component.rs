@@ -11,11 +11,11 @@
 //! fan-out agent's write scope). Every handler is therefore a documented no-op (`Emit::default()`)
 //! until that seam exists — flagged in the wave-3 report, not silently dropped.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddObject

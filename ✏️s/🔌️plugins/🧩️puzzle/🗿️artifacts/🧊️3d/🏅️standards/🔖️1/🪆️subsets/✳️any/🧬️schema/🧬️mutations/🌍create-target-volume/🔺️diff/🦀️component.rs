@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateTargetVolume` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dTargetVolumesDelta, Puzzle3dDiff};
+use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dTargetVolumesDelta};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

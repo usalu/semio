@@ -1,8 +1,8 @@
 //! 🔍️ VCS play app panel — the inspector: title/counter/status/notes/tags fields for the document.
 
+use crate::artifacts::vcs::VcsSnapshot;
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::vcs_action;
-use crate::artifacts::vcs::VcsSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

@@ -49,21 +49,12 @@ impl store::ArtifactDsl for Fem2dConfig {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -72,22 +63,13 @@ impl store::ArtifactDsl for Fem2dConfig {
 impl store::ArtifactPack for Fem2dConfig {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -98,7 +80,6 @@ impl store::ArtifactPack for Fem2dConfig {
 }
 
 //#endregion 🔖️ArtifactCodec
-
 
 impl Default for Fem2dConfig {
     fn default() -> Self {
@@ -146,11 +127,7 @@ impl protocol::OpText for Fem2dConfigMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -170,11 +147,7 @@ impl protocol::OpBinary for Fem2dConfigMutation {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -192,24 +165,15 @@ impl protocol::OpBinary for Fem2dConfigMutation {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
 //#endregion 🔖️OpCodec
-
 
 impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
     type Diff = Fem2dConfig;
@@ -258,8 +222,7 @@ mod tests {
         let mut replacement = Fem2dConfig::default();
         replacement.locale = "de-DE".into();
         replacement.camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
-        let applied = protocol::MutationDiff::apply(&replacement, &base)
-            .expect("valid config mutation diff");
+        let applied = protocol::MutationDiff::apply(&replacement, &base).expect("valid config mutation diff");
         assert_eq!(applied, replacement);
         let mut absorbed = base.clone();
         protocol::MutationDiff::absorb(&mut absorbed, replacement.clone());

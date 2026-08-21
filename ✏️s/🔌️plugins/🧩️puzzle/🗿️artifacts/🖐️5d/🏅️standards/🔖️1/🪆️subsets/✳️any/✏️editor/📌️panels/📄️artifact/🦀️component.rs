@@ -4,7 +4,10 @@
 //! presence after render.
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_interaction_select, tree_info_item, tree_item_with_action, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN};
+use crate::editor::puzzle5d::{
+    find_part_by_grip_full_id, puzzle5d_grip_full_id, puzzle5d_interaction_select, tree_info_item, tree_item_with_action, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP,
+    PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN,
+};
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -62,12 +65,8 @@ pub async fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode
             item
         })
         .collect();
-    let fastener_items: Vec<UiTreeItemNode> = envelope
-        .document
-        .fasteners
-        .iter()
-        .map(|fastener| tree_item_with_action(fastener.id.clone(), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id)))
-        .collect();
+    let fastener_items: Vec<UiTreeItemNode> =
+        envelope.document.fasteners.iter().map(|fastener| tree_item_with_action(fastener.id.clone(), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id))).collect();
     let sections = vec![
         UiTreeSectionNode {
             presence: UiPresence::default(),

@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-shear-area-mm2/enlarges-the-shear-area-to-384000-mm2: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-shear-area-mm2/enlarges-the-shear-area-to-384000-mm2: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 384000.0 differs from the committed 300000.0, so the `mutation.no-op` warning guard stays shut too");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-shear-area-mm2/enlarges-the-shear-area-to-384000-mm2: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 384000.0 differs from the committed 300000.0, so the `mutation.no-op` warning guard stays shut too"
+    );
     assert!(produced.messages().is_empty(), "change-shear-area-mm2/enlarges-the-shear-area-to-384000-mm2: an accepted change-shear-area-mm2 emits no diagnostics at all");
 }
 

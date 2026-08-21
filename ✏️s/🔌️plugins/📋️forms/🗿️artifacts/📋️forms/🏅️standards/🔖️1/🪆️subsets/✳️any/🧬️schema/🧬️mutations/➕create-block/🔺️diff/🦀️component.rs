@@ -2,8 +2,8 @@
 //! (bounded, single-step scope — never the whole document).
 
 use super::mutation::CreateBlock;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
@@ -13,11 +13,7 @@ pub async fn diff_create_block(payload: &CreateBlock, base: &FormsSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);
     };
     if step.blocks.iter().any(|block| block.id == payload.block.id) {
-        return protocol::MutationOutcome::fatal(
-            "mutation.duplicate-id",
-            format!("A block with id \"{}\" already exists in step \"{}\".", payload.block.id, payload.step_id),
-            [payload.step_id.clone(), payload.block.id.clone()],
-        );
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A block with id \"{}\" already exists in step \"{}\".", payload.block.id, payload.step_id), [payload.step_id.clone(), payload.block.id.clone()]);
     }
     let mut blocks = step.blocks.clone();
     let at = payload.index.unwrap_or(blocks.len()).min(blocks.len());

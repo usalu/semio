@@ -95,12 +95,6 @@ async fn declared_outcome_holds() {
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

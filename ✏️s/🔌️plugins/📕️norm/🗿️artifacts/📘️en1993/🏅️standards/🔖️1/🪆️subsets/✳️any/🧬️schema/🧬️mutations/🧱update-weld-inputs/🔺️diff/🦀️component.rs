@@ -20,6 +20,13 @@ pub async fn diff(payload: &UpdateWeldInputs, base: &En1993Snapshot) -> protocol
     if base.weld_a_mm == payload.new_weld_a_mm && base.weld_l_mm == payload.new_weld_l_mm && base.weld_f_u_mpa == payload.new_weld_f_u_mpa && base.weld_steel_grade == payload.new_weld_steel_grade && base.weld_f_ed_kn == payload.new_weld_f_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "This facet already has these values.");
     }
-    protocol::MutationOutcome::new(En1993Diff { weld_a_mm: Some(payload.new_weld_a_mm), weld_l_mm: Some(payload.new_weld_l_mm), weld_f_u_mpa: Some(payload.new_weld_f_u_mpa), weld_steel_grade: Some(payload.new_weld_steel_grade.clone()), weld_f_ed_kn: Some(payload.new_weld_f_ed_kn), ..Default::default() })
+    protocol::MutationOutcome::new(En1993Diff {
+        weld_a_mm: Some(payload.new_weld_a_mm),
+        weld_l_mm: Some(payload.new_weld_l_mm),
+        weld_f_u_mpa: Some(payload.new_weld_f_u_mpa),
+        weld_steel_grade: Some(payload.new_weld_steel_grade.clone()),
+        weld_f_ed_kn: Some(payload.new_weld_f_ed_kn),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

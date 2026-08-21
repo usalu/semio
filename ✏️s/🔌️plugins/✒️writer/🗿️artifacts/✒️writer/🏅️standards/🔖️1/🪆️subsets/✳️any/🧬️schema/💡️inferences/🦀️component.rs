@@ -91,11 +91,7 @@ pub async fn writer_artifact_inference_descriptor() -> schema::ArtifactInference
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
 pub async fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     let text = crate::artifacts::writer::writer_text(document);
-    eprintln!(
-        "[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}",
-        document.language_id,
-        text.len()
-    );
+    eprintln!("[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}", document.language_id, text.len());
     if let Some(spec) = dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
         return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
@@ -111,10 +107,7 @@ pub async fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u
     let text = crate::artifacts::writer::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();
-        let diagnostics: Vec<Value> = lint(&graph, &text)
-            .into_iter()
-            .map(|diag| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
-            .collect();
+        let diagnostics: Vec<Value> = lint(&graph, &text).into_iter().map(|diag| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
         return serde_json::to_string(&diagnostics).ok();
     }
     if let Some(hooks) = dsl::idiom(&document.language_id) {
@@ -130,10 +123,7 @@ pub async fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u
         }
     }
     if lint_signal > 0 {
-        return Some(
-            json!([{ "start": 0, "end": text.len().max(1), "severity": "info", "message": format!("Lint pass #{lint_signal}") }])
-                .to_string(),
-        );
+        return Some(json!([{ "start": 0, "end": text.len().max(1), "severity": "info", "message": format!("Lint pass #{lint_signal}") }]).to_string());
     }
     None
 }

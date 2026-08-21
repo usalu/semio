@@ -236,7 +236,7 @@ pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Opt
 
 //#region 🔖️Apply
 impl MutationDiff<MdSnapshot> for MdDiff {
-    async fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
+    fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
         if let Some(blocks) = &self.blocks {
             validate_md_blocks(&base.blocks, blocks)?;
         }
@@ -247,7 +247,7 @@ impl MutationDiff<MdSnapshot> for MdDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
@@ -425,15 +425,15 @@ fn apply_list_items_diff(items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Vec<
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<MdSnapshot> for MdDiff {
-    async fn inverse(&self, base: &MdSnapshot) -> Self {
+    fn inverse(&self, base: &MdSnapshot) -> Self {
         MdDiff { blocks: self.blocks.as_ref().map(|d| inverse_blocks_diff(&base.blocks, d)) }
     }
 
-    async fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
+    fn between(base: &MdSnapshot, other: &MdSnapshot) -> Self {
         MdDiff { blocks: between_blocks(&base.blocks, &other.blocks) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.blocks.is_none()
     }
 }
@@ -1659,27 +1659,27 @@ fn parse_md_diff(line: &str) -> Result<MdDiff, String> {
 }
 
 impl protocol::DiffCodec for MdDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_md_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_md_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | has_value u8 | blocks-diff payload`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
     /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
     /// `DiffCodec` impls were still on that shortcut per the P2-W0 census).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.blocks.is_some() { 1 } else { 0 }];
         if let Some(blocks) = &self.blocks {
             enc_blocks_diff_bin(blocks, &mut out);
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
-        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let has_value = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
         let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(MdDiff { blocks })
     }

@@ -1,8 +1,10 @@
 //! 🔍️ Imperative play app panel — inspection: read-only summary of the document.
 
-use crate::editor::imperative::terminology::ImperativeLabels;
 use crate::artifacts::imperative::ImperativeSnapshot;
-use semio_framework_plugin::{ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use crate::editor::imperative::terminology::ImperativeLabels;
+use semio_framework_plugin::{
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";

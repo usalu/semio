@@ -13,7 +13,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateGeneration {
-    pub generation: FormGeneration}
+    pub generation: FormGeneration,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for CreateGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "generation", kind: "create-generation", record: "CreatedGeneration" };

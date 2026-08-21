@@ -1,8 +1,8 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `set-fixture-json`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
+use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) async fn set_fixture_json(json: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {

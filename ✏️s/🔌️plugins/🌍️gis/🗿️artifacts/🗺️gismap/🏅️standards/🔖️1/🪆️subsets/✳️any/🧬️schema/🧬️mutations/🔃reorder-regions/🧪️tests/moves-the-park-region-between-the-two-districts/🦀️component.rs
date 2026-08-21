@@ -137,8 +137,16 @@ async fn permutes_the_whole_region_order_including_the_id_that_stayed_put() {
     let produced = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation(), &base);
     assert!(produced.messages().is_empty(), "reorder-regions/moves-the-park-region-between-the-two-districts: a genuine move must be diagnostic-free (the no-op warning is the other branch), got {:?}", produced.messages());
     let delta = produced.diff().regions.as_ref().expect("reorder-regions writes a regions delta");
-    assert_eq!(delta.reordered.as_deref(), Some(["region-harbor-district".to_string(), "region-park".to_string(), "region-old-town".to_string()].as_slice()), "reorder-regions/moves-the-park-region-between-the-two-districts: the delta is the full recomputed id order");
-    assert_eq!(delta.reordered.as_ref().map(|order| order[0].as_str()), Some("region-harbor-district"), "reorder-regions/moves-the-park-region-between-the-two-districts: the unmoved leading id is still carried — the delta is a whole permutation, not a move instruction");
+    assert_eq!(
+        delta.reordered.as_deref(),
+        Some(["region-harbor-district".to_string(), "region-park".to_string(), "region-old-town".to_string()].as_slice()),
+        "reorder-regions/moves-the-park-region-between-the-two-districts: the delta is the full recomputed id order"
+    );
+    assert_eq!(
+        delta.reordered.as_ref().map(|order| order[0].as_str()),
+        Some("region-harbor-district"),
+        "reorder-regions/moves-the-park-region-between-the-two-districts: the unmoved leading id is still carried — the delta is a whole permutation, not a move instruction"
+    );
     assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.patched.is_empty(), "reorder-regions/moves-the-park-region-between-the-two-districts: a reorder must not add, remove or patch anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "reorder-regions/moves-the-park-region-between-the-two-districts: reorder-regions must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation());
@@ -148,5 +156,9 @@ async fn permutes_the_whole_region_order_including_the_id_that_stayed_put() {
     };
     assert_eq!((undo.id.as_str(), undo.to_index), ("region-park", 2), "reorder-regions/moves-the-park-region-between-the-two-districts: the inverse sends the region back to the index BASE held it at");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("reorder", "regions", "reorder-regions", "ReorderedRegions"), "reorder-regions/moves-the-park-region-between-the-two-districts: the fixture must be bound to reorder-regions' own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("reorder", "regions", "reorder-regions", "ReorderedRegions"),
+        "reorder-regions/moves-the-park-region-between-the-two-districts: the fixture must be bound to reorder-regions' own descriptor"
+    );
 }

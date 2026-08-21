@@ -38,7 +38,11 @@ async fn raises_the_effective_thickness_to_300_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-t-ef-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.t_ef_mm, 300.0, "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: t_ef_mm must read 300.0 mm once the change lands");
-    assert_eq!(applied.wall_thickness_mm, before().wall_thickness_mm, "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: the EN 1996-1-2 built thickness and the EN 1996-3 effective thickness are two independent document fields that happen to start equal");
+    assert_eq!(
+        applied.wall_thickness_mm,
+        before().wall_thickness_mm,
+        "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: the EN 1996-1-2 built thickness and the EN 1996-3 effective thickness are two independent document fields that happen to start equal"
+    );
 }
 
 /// ↩️ `change-t-ef-mm`'s inverse reads the OLD 240.0 mm out of BASE, so replaying it puts the 240.0 mm effective
@@ -81,7 +85,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 300.0 differs from the committed 240.0, so the `mutation.no-op` warning guard stays shut too");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 300.0 differs from the committed 240.0, so the `mutation.no-op` warning guard stays shut too"
+    );
     assert!(produced.messages().is_empty(), "change-t-ef-mm/raises-the-effective-thickness-to-300-mm: an accepted change-t-ef-mm emits no diagnostics at all");
 }
 

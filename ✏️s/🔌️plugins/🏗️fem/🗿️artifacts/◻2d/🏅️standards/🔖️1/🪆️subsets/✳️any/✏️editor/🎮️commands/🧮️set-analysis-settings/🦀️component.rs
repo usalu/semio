@@ -1,10 +1,10 @@
 //! 🧮️ 🧮️ Fem2d play app commands command — `set-analysis-settings`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::mutations::update_analysis_settings;
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemAnalysisSettings;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
@@ -40,10 +40,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_analysis_settings_partial_args_keep_current_2d() {
         let mut app = fem2d_app();
-        dispatch(
-            &mut app,
-            Fem2dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(4), buckling_count: Some(6), deformation_scale: Some(50.0) }),
-        );
+        dispatch(&mut app, Fem2dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: Some(4), buckling_count: Some(6), deformation_scale: Some(50.0) }));
         dispatch(&mut app, Fem2dCommand::SetAnalysisSettings(SetAnalysisSettings { modal_count: None, buckling_count: None, deformation_scale: Some(300.0) }));
         let settings = app.snapshot().expect("snapshot").analysis.clone();
         assert_eq!(settings.modal_count, 4);

@@ -130,10 +130,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn diamond_depth_takes_the_longest_incoming_path() {
         // a -> b -> d, a -> c -> d: d's depth must be 2 (via either b or c), not 1.
-        let snapshot = snapshot_from(
-            vec![step("a"), step("b"), step("c"), step("d")],
-            vec![edge("e1", "a", "b"), edge("e2", "a", "c"), edge("e3", "b", "d"), edge("e4", "c", "d")],
-        );
+        let snapshot = snapshot_from(vec![step("a"), step("b"), step("c"), step("d")], vec![edge("e1", "a", "b"), edge("e2", "a", "c"), edge("e3", "b", "d"), edge("e4", "c", "d")]);
         let topology = compute_sequence_topology(&snapshot);
         assert_eq!(topology.depth.get("d"), Some(&2));
         assert!(topology.cycle_free);

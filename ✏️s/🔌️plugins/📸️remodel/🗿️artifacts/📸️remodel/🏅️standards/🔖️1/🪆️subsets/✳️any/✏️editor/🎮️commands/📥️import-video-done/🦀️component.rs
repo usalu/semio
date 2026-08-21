@@ -1,11 +1,11 @@
 //! 📥️ 📥️ Remodel play app commands command — `import-video-done`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::replace_stream_source;
-use crate::artifacts::remodel::schema::video_codec_from_label;
 use crate::artifacts::remodel::op::RemodelMutation;
+use crate::artifacts::remodel::schema::video_codec_from_label;
 use crate::artifacts::remodel::{RemodelSnapshot, VideoSource};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

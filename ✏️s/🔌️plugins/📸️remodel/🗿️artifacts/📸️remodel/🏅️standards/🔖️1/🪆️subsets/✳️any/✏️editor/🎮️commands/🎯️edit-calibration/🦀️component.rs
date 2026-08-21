@@ -1,10 +1,10 @@
 //! 🎯️ 🎯️ Remodel play app commands command — `edit-calibration`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::{create_camera_calibration, update_camera_calibration};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{CameraCalibration, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -58,24 +58,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
         let mut app = app();
-        let payload = |fx: f64| {
-            RemodelCommand::EditCalibration(EditCalibration {
-                camera_id: "cam-1".into(),
-                label: "Front".into(),
-                model: "pinhole".into(),
-                fx,
-                fy: fx,
-                cx: 0.0,
-                cy: 0.0,
-                skew: 0.0,
-                k1: 0.0,
-                k2: 0.0,
-                k3: 0.0,
-                p1: 0.0,
-                p2: 0.0,
-                locked: false,
-            })
-        };
+        let payload =
+            |fx: f64| RemodelCommand::EditCalibration(EditCalibration { camera_id: "cam-1".into(), label: "Front".into(), model: "pinhole".into(), fx, fy: fx, cx: 0.0, cy: 0.0, skew: 0.0, k1: 0.0, k2: 0.0, k3: 0.0, p1: 0.0, p2: 0.0, locked: false });
         dispatch(&mut app, payload(1000.0));
         assert_eq!(app.snapshot().expect("projection").calibration.cameras.len(), 1);
         dispatch(&mut app, payload(2000.0));

@@ -28,13 +28,13 @@ pub mod scalar {
         };
         match prev_epoch_ms {
             Some(prev) => {
-                out.write_u8(2).await;
-                out.write_varint_i64(epoch_ms - prev).await;
+                out.write_u8(2);
+                out.write_varint_i64(epoch_ms - prev);
                 Some(epoch_ms)
             }
             None if epoch_ms >= 0 => {
-                out.write_u8(1).await;
-                out.write_varint_u64(epoch_ms as u64).await;
+                out.write_u8(1);
+                out.write_varint_u64(epoch_ms as u64);
                 Some(epoch_ms)
             }
             None => {
@@ -49,37 +49,37 @@ pub mod scalar {
     /// @emoji ⏱️ Reads one tagged timestamp, returning the reconstructed string and, iff tag 1/2,
     /// the `epoch_ms` to feed back in as `prev_epoch_ms` for the next call.
     pub async fn read_timestamp(input: &mut ByteReader<'_>, prev_epoch_ms: Option<i64>) -> Result<(String, Option<i64>), PackError> {
-        let tag = input.read_u8().await?;
+        let tag = input.read_u8()?;
         match tag {
             0 => {
-                let len = input.read_varint_u64().await? as usize;
-                let bytes = input.read_bytes(len).await?;
-                Ok((utf8(bytes, input.position().await as u64).await?.to_string(), None))
+                let len = input.read_varint_u64()? as usize;
+                let bytes = input.read_bytes(len)?;
+                Ok((utf8(bytes, input.position() as u64).await?.to_string(), None))
             }
             1 => {
-                let epoch_ms = input.read_varint_u64().await? as i64;
+                let epoch_ms = input.read_varint_u64()? as i64;
                 Ok((format_rfc3339_ms(epoch_ms).await, Some(epoch_ms)))
             }
             2 => {
                 let prev = match prev_epoch_ms {
                     Some(v) => v,
-                    None => return Err(malformed("timestamp", input.position().await as u64, "tag 2 delta with no previous timestamp in scope").await),
+                    None => return Err(malformed("timestamp", input.position() as u64, "tag 2 delta with no previous timestamp in scope").await),
                 };
-                let delta = input.read_varint_i64().await?;
+                let delta = input.read_varint_i64()?;
                 let epoch_ms = match prev.checked_add(delta) {
                     Some(v) => v,
-                    None => return Err(malformed("timestamp", input.position().await as u64, "epoch_ms overflow").await),
+                    None => return Err(malformed("timestamp", input.position() as u64, "epoch_ms overflow").await),
                 };
                 Ok((format_rfc3339_ms(epoch_ms).await, Some(epoch_ms)))
             }
-            other => Err(malformed("timestamp tag", input.position().await as u64, &format!("unknown timestamp tag {other:#x}")).await),
+            other => Err(malformed("timestamp tag", input.position() as u64, &format!("unknown timestamp tag {other:#x}")).await),
         }
     }
 
     async fn write_raw_timestamp(out: &mut ByteWriter, raw: &str) {
-        out.write_u8(0).await;
-        out.write_varint_u64(raw.len() as u64).await;
-        out.write_bytes(raw.as_bytes()).await;
+        out.write_u8(0);
+        out.write_varint_u64(raw.len() as u64);
+        out.write_bytes(raw.as_bytes());
     }
 
     async fn round_trip_epoch_ms(raw: &str) -> Option<i64> {
@@ -236,47 +236,47 @@ pub mod scalar {
     // `kernel-finish` lease-request this packet granted (`📡️spr/📜️history` is the one caller).
     pub async fn write_id(out: &mut ByteWriter, id: &str, mut intern: impl AsyncFnMut(&str) -> u32, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<(), PackError> {
         if let Some(ordinal) = edit_ordinal_of(id) {
-            out.write_u8(3).await;
-            out.write_varint_u64(ordinal).await;
+            out.write_u8(3);
+            out.write_varint_u64(ordinal);
             return Ok(());
         }
         if let Some((prefix, uuid_bytes)) = split_prefix_uuid(id).await {
-            out.write_u8(2).await;
-            out.write_varint_u64(intern(prefix).await as u64).await;
-            out.write_bytes(&uuid_bytes).await;
+            out.write_u8(2);
+            out.write_varint_u64(intern(prefix).await as u64);
+            out.write_bytes(&uuid_bytes);
             return Ok(());
         }
-        out.write_u8(1).await;
-        out.write_varint_u64(intern(id).await as u64).await;
+        out.write_u8(1);
+        out.write_varint_u64(intern(id).await as u64);
         Ok(())
     }
 
     /// @emoji 🪪️ Reads one tagged id, resolving dictrefs/ordinals through the supplied closures.
     pub async fn read_id<'r>(input: &mut ByteReader<'_>, resolve: impl AsyncFn(u32) -> Result<&'r str, PackError>, ordinal_to_id: impl Fn(u64) -> Result<&'r str, PackError>) -> Result<String, PackError> {
-        let tag = input.read_u8().await?;
+        let tag = input.read_u8()?;
         match tag {
             0 => {
-                let len = input.read_varint_u64().await? as usize;
-                let bytes = input.read_bytes(len).await?;
-                Ok(utf8(bytes, input.position().await as u64).await?.to_string())
+                let len = input.read_varint_u64()? as usize;
+                let bytes = input.read_bytes(len)?;
+                Ok(utf8(bytes, input.position() as u64).await?.to_string())
             }
             1 => {
-                let idx = input.read_varint_u64().await? as u32;
+                let idx = input.read_varint_u64()? as u32;
                 Ok(resolve(idx).await?.to_string())
             }
             2 => {
-                let idx = input.read_varint_u64().await? as u32;
+                let idx = input.read_varint_u64()? as u32;
                 let prefix = resolve(idx).await?;
-                let uuid_bytes = input.read_bytes(16).await?;
+                let uuid_bytes = input.read_bytes(16)?;
                 let mut array = [0u8; 16];
                 array.copy_from_slice(uuid_bytes);
                 Ok(format!("{prefix}-{}", format_uuid(&array).await))
             }
             3 => {
-                let ordinal = input.read_varint_u64().await?;
+                let ordinal = input.read_varint_u64()?;
                 Ok(ordinal_to_id(ordinal)?.to_string())
             }
-            other => Err(malformed("id tag", input.position().await as u64, &format!("unknown id tag {other:#x}")).await),
+            other => Err(malformed("id tag", input.position() as u64, &format!("unknown id tag {other:#x}")).await),
         }
     }
 
@@ -360,4 +360,3 @@ pub mod scalar {
     // Minimal-varint enforcement reuses crate::codec::is_minimal_varint at Full verification.
 }
 //#endregion 🔖️Scalars
-

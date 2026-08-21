@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `EditNodeText` — the OLD `text` looked up from BASE. Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::mutations::WiresMutation;
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 
 //#region 🔖️Inverse

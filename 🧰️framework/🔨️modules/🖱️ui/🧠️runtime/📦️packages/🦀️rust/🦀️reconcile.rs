@@ -309,7 +309,8 @@ mod tests {
     }
 
     fn container(key: &str, children: Vec<crate::TreeNode>) -> crate::TreeNode {
-        crate::TreeNode::new(key, ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None })).with_children(children)
+        crate::TreeNode::new(key, ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }))
+            .with_children(children)
     }
 
     fn tree(root: crate::TreeNode) -> crate::ComponentTree {
@@ -505,7 +506,8 @@ mod tests {
         reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
         let target_id = id_of(&reconciler.snapshot(), "a");
 
-        let mut changed = crate::TreeNode::new("a", ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }));
+        let mut changed =
+            crate::TreeNode::new("a", ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }));
         changed.style = ui_contract::StyleSpec { tone: ui_contract::Tone::Danger, ..Default::default() };
         changed.activity = ui_contract::Activity::Loading;
         changed.disabled = true;

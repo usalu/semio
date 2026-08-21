@@ -10,33 +10,60 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d")]
 pub struct Puzzle2dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub camera: Puzzle2dCamera,
-    #[state(artifact)] pub nodes: Vec<Puzzle2dNode>,
-    #[state(artifact)] pub edges: Vec<Puzzle2dEdge>,
-    #[state(artifact)] pub meta: Puzzle2dMeta,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_factor: f64,
-    #[state(config)] pub suggestion_offset: f64,
-    #[state(config)] pub fill_count: u32,
-    #[state(config)] pub brush_candidate_index: u32,
-    #[state(config)] pub brush_candidate_source_handle_id: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub terminology: String,
-    #[state(config)] pub lod_mode_by_pane_json: String,
-    #[state(config)] pub engagement_input_by_pane_json: String,
-    #[state(config)] pub brush_candidates_json: String,
-    #[state(config)] pub node_kind_weights_json: String,
-    #[state(config)] pub handle_kind_weights_json: String,
-    #[state(config)] pub active_utility_by_window_id_json: String,
-    #[state(artifact)] pub hovered_node_id: Option<String>,
-    #[state(artifact)] pub preview_seq: i64,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub camera: Puzzle2dCamera,
+    #[state(artifact)]
+    pub nodes: Vec<Puzzle2dNode>,
+    #[state(artifact)]
+    pub edges: Vec<Puzzle2dEdge>,
+    #[state(artifact)]
+    pub meta: Puzzle2dMeta,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_factor: f64,
+    #[state(config)]
+    pub suggestion_offset: f64,
+    #[state(config)]
+    pub fill_count: u32,
+    #[state(config)]
+    pub brush_candidate_index: u32,
+    #[state(config)]
+    pub brush_candidate_source_handle_id: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub terminology: String,
+    #[state(config)]
+    pub lod_mode_by_pane_json: String,
+    #[state(config)]
+    pub engagement_input_by_pane_json: String,
+    #[state(config)]
+    pub brush_candidates_json: String,
+    #[state(config)]
+    pub node_kind_weights_json: String,
+    #[state(config)]
+    pub handle_kind_weights_json: String,
+    #[state(config)]
+    pub active_utility_by_window_id_json: String,
+    #[state(artifact)]
+    pub hovered_node_id: Option<String>,
+    #[state(artifact)]
+    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -50,13 +77,7 @@ impl Default for Puzzle2dArtifact {
 impl Puzzle2dArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> Puzzle2dSnapshot {
-        Puzzle2dSnapshot {
-            schema: self.schema.clone(),
-            camera: self.camera.clone(),
-            nodes: self.nodes.clone(),
-            edges: self.edges.clone(),
-            meta: self.meta.clone(),
-        }
+        Puzzle2dSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), nodes: self.nodes.clone(), edges: self.edges.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
@@ -141,8 +162,8 @@ pub async fn puzzle2d_artifact_schema_descriptor() -> artifact_schema::ArtifactS
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::puzzle2d::{Puzzle2dDiff, Puzzle2dMutation, Puzzle2dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle2dBuilderConstruction {
@@ -154,8 +175,12 @@ pub mod derived_construction {
         type Snapshot = Puzzle2dSnapshot;
         type Mutation = Puzzle2dMutation;
         type Diff = Puzzle2dDiff;
-        async fn empty() -> Self { Self { snapshot: Puzzle2dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Puzzle2dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -166,24 +191,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -192,8 +214,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle2dParts {

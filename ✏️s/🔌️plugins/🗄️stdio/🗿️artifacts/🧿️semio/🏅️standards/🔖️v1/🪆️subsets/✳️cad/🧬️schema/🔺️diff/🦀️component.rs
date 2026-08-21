@@ -219,7 +219,7 @@ pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRec
 
 //#region 🔖️Apply
 impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
-    async fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
+    fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
@@ -236,7 +236,7 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.layers = match (self.layers.take(), other.layers) {
             (None, b) => b,
             (a, None) => a,
@@ -329,7 +329,7 @@ fn absorb_entity_record_diff(mut a: CadEntityRecordDiff, b: CadEntityRecordDiff)
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
-    async fn inverse(&self, base: &SemioCadSnapshot) -> Self {
+    fn inverse(&self, base: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
             layers: self.layers.as_ref().map(|d| inverse_named(&base.layers, d, |l| l.name.clone(), inverse_layer)),
             blocks: self.blocks.as_ref().map(|d| inverse_named(&base.blocks, d, |b| b.name.clone(), inverse_block)),
@@ -337,7 +337,7 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
         }
     }
 
-    async fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
+    fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
             layers: between_named(&base.layers, &other.layers, |l| l.name.clone(), between_layer),
             blocks: between_named(&base.blocks, &other.blocks, |b| b.name.clone(), between_block),
@@ -345,7 +345,7 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.layers.is_none() && self.blocks.is_none() && self.entities.is_none()
     }
 }
@@ -676,10 +676,10 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioCadDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_cad_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_cad_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -690,7 +690,7 @@ impl protocol::DiffCodec for SemioCadDiff {
     /// because there can be 0-3 of them (chaining a `Cond` per-segment hits the
     /// `protocol-cond-cannot-chain` gap: a second `if`-guard on a field that was itself only
     /// conditionally decoded hard-errors `eval_cond`).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.layers.is_some() {
@@ -714,7 +714,7 @@ impl protocol::DiffCodec for SemioCadDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

@@ -56,7 +56,11 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
     assert_eq!(messages[0].level, protocol::Severity::Error, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: this verb has no Fatal branch at all");
     assert_eq!(messages[0].target, vec!["logo".to_string()], "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the diagnostic names the ASSET id, not the layer that would reference it");
     let semantics = <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("remove", "asset", "remove-layer-asset", "RemovedLayerAsset"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the fixture must be bound to remove-layer-asset's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("remove", "asset", "remove-layer-asset", "RemovedLayerAsset"),
+        "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the fixture must be bound to remove-layer-asset's own descriptor"
+    );
 }
 
 /// ↩️ This verb's inverse is BASE-derived: it recovers the removed bytes through the working-scene
@@ -91,12 +95,6 @@ async fn declared_outcome_holds() {
     let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared path must match the emitted target");
 }

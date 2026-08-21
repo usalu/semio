@@ -8,8 +8,8 @@ use crate::artifacts::home::{SHomeSnapshot, HOME_DIALECT, S_HOME_DOCUMENT_SCHEMA
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::viewer::home::modes::view;
 use crate::viewer::home::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -109,14 +109,7 @@ impl ArtifactViewer for HomeViewer {
 
 //#region 🔖️Manifest
 pub async fn create_home_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(HOME_DIALECT)
-        .document(["semio", "s", "home"])
-        .icon_id("home")
-        .mode_def(view::definition())
-        .default_mode_id(view::S_HOME_VIEW_MODE)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(HOME_DIALECT).document(["semio", "s", "home"]).icon_id("home").mode_def(view::definition()).default_mode_id(view::S_HOME_VIEW_MODE).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

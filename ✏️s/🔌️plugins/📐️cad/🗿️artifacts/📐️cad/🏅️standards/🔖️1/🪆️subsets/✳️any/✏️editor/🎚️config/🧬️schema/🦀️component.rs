@@ -39,29 +39,52 @@ pub struct CadDislocateOptions {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad.config")]
 pub struct CadConfig {
-    #[state(config)] pub selected_node_ids: Vec<String>,
-    #[state(config)] pub hovered_reference_id: Option<String>,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub engagement_step: String,
-    #[state(config)] pub active_example_id: Option<String>,
-    #[state(config)] pub selected_reference_model_definition_id: Option<String>,
-    #[state(config)] pub selected_reference_id: Option<String>,
-    #[state(config)] pub engagement_pane: Option<String>,
-    #[state(config)] pub engagement_session_json: Option<String>,
-    #[state(config)] pub last_finalized_interaction_id: Option<String>,
-    #[state(config)] pub sun: CadSunConfig,
-    #[state(config)] pub camera: CadCamera,
-    #[state(config)] pub camera_building: CadCamera,
-    #[state(config)] pub camera_energy: CadCamera,
-    #[state(config)] pub camera_structure_classic: CadCamera,
-    #[state(config)] pub dislocate_shape: CadDislocateOptions,
-    #[state(config)] pub dislocate_building: CadDislocateOptions,
-    #[state(config)] pub dislocate_energy: CadDislocateOptions,
-    #[state(config)] pub dislocate_structure_classic: CadDislocateOptions,
-    #[state(config)] pub active_utility_id: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub terminology: String,
-    #[state(config)] pub contributions_json: String,
+    #[state(config)]
+    pub selected_node_ids: Vec<String>,
+    #[state(config)]
+    pub hovered_reference_id: Option<String>,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub engagement_step: String,
+    #[state(config)]
+    pub active_example_id: Option<String>,
+    #[state(config)]
+    pub selected_reference_model_definition_id: Option<String>,
+    #[state(config)]
+    pub selected_reference_id: Option<String>,
+    #[state(config)]
+    pub engagement_pane: Option<String>,
+    #[state(config)]
+    pub engagement_session_json: Option<String>,
+    #[state(config)]
+    pub last_finalized_interaction_id: Option<String>,
+    #[state(config)]
+    pub sun: CadSunConfig,
+    #[state(config)]
+    pub camera: CadCamera,
+    #[state(config)]
+    pub camera_building: CadCamera,
+    #[state(config)]
+    pub camera_energy: CadCamera,
+    #[state(config)]
+    pub camera_structure_classic: CadCamera,
+    #[state(config)]
+    pub dislocate_shape: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_building: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_energy: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_structure_classic: CadDislocateOptions,
+    #[state(config)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub terminology: String,
+    #[state(config)]
+    pub contributions_json: String,
 }
 
 //region 📎 App-schema descriptor
@@ -88,4 +111,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

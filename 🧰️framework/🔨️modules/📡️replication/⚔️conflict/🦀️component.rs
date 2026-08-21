@@ -178,11 +178,7 @@ mod tests {
     //#region 🔖️Reports
     #[semio_framework_async_macros::async_test]
     async fn dispatch_report_carries_worst_and_messages() {
-        let report = DispatchReport {
-            policy: crate::MergePolicy::Vigilant,
-            worst: Some(crate::diagnostic::Severity::Warning),
-            messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range").await],
-        };
+        let report = DispatchReport { policy: crate::MergePolicy::Vigilant, worst: Some(crate::diagnostic::Severity::Warning), messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range").await] };
         assert_eq!(report.worst, Some(crate::diagnostic::Severity::Warning));
         assert_eq!(report.messages.len(), 1);
     }

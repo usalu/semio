@@ -52,14 +52,7 @@ impl SequenceArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            content: snapshot.content,
-            last_run_json: String::new(),
-            orientation: "leftRight".into(),
-            camera: SequenceCamera::default(),
-            locale: "en-US".into(),
-        }
+        Self { schema: snapshot.schema, content: snapshot.content, last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.

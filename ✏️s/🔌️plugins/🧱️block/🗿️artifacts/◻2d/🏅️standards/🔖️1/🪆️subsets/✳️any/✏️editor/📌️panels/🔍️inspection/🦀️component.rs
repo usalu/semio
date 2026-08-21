@@ -1,8 +1,8 @@
 //! 🔍️ Block 2D play app panel — the inspector: the node kind's identity fields plus a handle count.
 
+use crate::artifacts::block2d::Block2dSnapshot;
 use crate::editor::block2d::block2d_action;
 use crate::editor::block2d::terminology::Block2dLabels;
-use crate::artifacts::block2d::Block2dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

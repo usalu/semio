@@ -9,8 +9,8 @@
 //! provides no such bridge) plus stdio's own real `write_json_pretty` text codec for
 //! `serialize_bytes`.
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
+use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 

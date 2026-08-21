@@ -3,8 +3,8 @@
 use crate::editor::procedural3d::terminology::Procedural3dLabels;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::FlowFixture;
 use flow::playbook::{render_generation_form_body, selected_generation, GenerationPlayState};
+use flow::FlowFixture;
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -28,7 +28,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

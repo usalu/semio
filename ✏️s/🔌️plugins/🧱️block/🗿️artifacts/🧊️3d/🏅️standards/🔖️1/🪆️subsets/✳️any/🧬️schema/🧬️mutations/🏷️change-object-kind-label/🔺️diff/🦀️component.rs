@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeObjectKindLabel` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::{BlockKindIdentity};
+use crate::BlockKindIdentity;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::ChangeObjectKindLabel, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

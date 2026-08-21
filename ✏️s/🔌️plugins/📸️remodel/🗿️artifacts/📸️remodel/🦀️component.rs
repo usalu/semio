@@ -176,8 +176,7 @@ pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 /// row `("s.remodel.schema.artifact", "schema", "s.remodel.remodel", …)` above — the schema-artifact
 /// descriptor, not `artifact_kind()`'s OS-level `"3d.remodel"` kind id (a different, unrelated
 /// namespace). `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-pub const REMODEL_DIALECT: semio_framework_plugin::Dialect =
-    semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodel", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const REMODEL_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodel", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodel→C:mesh R:image").

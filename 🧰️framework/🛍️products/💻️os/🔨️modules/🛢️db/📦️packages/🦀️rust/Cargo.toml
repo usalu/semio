@@ -17,9 +17,8 @@ name = "db"
 path = "📦️glue.rs"
 
 [features]
-default = ["fs", "thread", "deflate", "vcs"]
+default = ["fs", "deflate", "vcs"]
 fs = []
-thread = []
 deflate = []
 vcs = []
 cluster = []

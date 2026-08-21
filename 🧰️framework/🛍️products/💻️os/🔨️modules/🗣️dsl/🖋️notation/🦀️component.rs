@@ -167,11 +167,7 @@ fn print_fused_edge_arrow(label: &EdgeLabel, directed: bool) -> String {
 
 fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
     cursor.expect(TokenKind::LBracket)?;
-    let id = if cursor.peek().kind == TokenKind::Ident {
-        Some(cursor.advance().text.as_str().to_string())
-    } else {
-        None
-    };
+    let id = if cursor.peek().kind == TokenKind::Ident { Some(cursor.advance().text.as_str().to_string()) } else { None };
     let kind = if cursor.peek().kind == TokenKind::Colon {
         cursor.advance();
         Some(cursor.expect(TokenKind::Ident)?.text.as_str().to_string())
@@ -462,10 +458,7 @@ mod tests {
             EdgeValue { from: node("a"), link: None },
             EdgeValue { from: node("a"), link: Some(EdgeLink { directed: true, label: EdgeLabel::default(), to: node("b") }) },
             EdgeValue { from: node("a"), link: Some(EdgeLink { directed: false, label: EdgeLabel::default(), to: node("b") }) },
-            EdgeValue {
-                from: node("a"),
-                link: Some(EdgeLink { directed: true, label: EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) }, to: node("b") }),
-            },
+            EdgeValue { from: node("a"), link: Some(EdgeLink { directed: true, label: EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) }, to: node("b") }) },
         ];
         for case in cases {
             let printed = print_edge(&case);

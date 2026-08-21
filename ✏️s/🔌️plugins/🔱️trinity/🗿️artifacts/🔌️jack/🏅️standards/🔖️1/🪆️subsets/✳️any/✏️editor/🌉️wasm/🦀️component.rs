@@ -4,8 +4,8 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::jack::op::{create_trinity_graph_envelope, TrinityGraphEnvelope, TrinityGraphStore};
     use crate::artifacts::jack::empty_trinity_graph_fixture;
+    use crate::artifacts::jack::op::{create_trinity_graph_envelope, TrinityGraphEnvelope, TrinityGraphStore};
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
 

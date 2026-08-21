@@ -13,7 +13,7 @@
 //! crate's lexer pre-scans those two characters itself and hands every other run of characters to
 //! `crate::os_dsl::lex` unchanged.
 
-use crate::os_dsl::{lex as core_lex, lex_with as core_lex_with, CommentDialect, Limits, StringEscape, StringMode, LexOptions, TextError, TextSpan, TokenKind as CoreKind};
+use crate::os_dsl::{lex as core_lex, lex_with as core_lex_with, CommentDialect, LexOptions, Limits, StringEscape, StringMode, TextError, TextSpan, TokenKind as CoreKind};
 
 //#region 🔖️Model
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -152,22 +152,48 @@ pub struct NestedDispatch {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Block {
     Header(Vec<Field>),
-    Segment { name: String, kind: Option<u8>, fields: Vec<Field>, cond: Option<Cond> },
-    Record { name: String, tag: Option<u64>, fields: Vec<Field> },
-    Struct { name: String, fields: Vec<Field> },
-    Enum { name: String, variants: Vec<(String, u64)> },
+    Segment {
+        name: String,
+        kind: Option<u8>,
+        fields: Vec<Field>,
+        cond: Option<Cond>,
+    },
+    Record {
+        name: String,
+        tag: Option<u64>,
+        fields: Vec<Field>,
+    },
+    Struct {
+        name: String,
+        fields: Vec<Field>,
+    },
+    Enum {
+        name: String,
+        variants: Vec<(String, u64)>,
+    },
     Footer(usize),
     Chain(Prim),
     /// P2-M2 item 1.
-    Repeat { name: String, dispatch: RepeatDispatch },
+    Repeat {
+        name: String,
+        dispatch: RepeatDispatch,
+    },
     /// P2-M2 item 5a: scan BACKWARD from EOF for `magic`'s exact byte pattern (ZIP's EOCD, whose
     /// preceding comment field is 0-65535 bytes — its start is unknowable except by finding the
     /// EOCD itself first), jump `pos` directly to the match, then walk `fields` forward from there.
-    BackwardScan { name: String, magic: Vec<u8>, fields: Vec<Field> },
+    BackwardScan {
+        name: String,
+        magic: Vec<u8>,
+        fields: Vec<Field>,
+    },
     /// P2-M2 item 5b: jump `pos` to the ABSOLUTE offset held in `offset_field` (decoded by an
     /// earlier block — ZIP's EOCD `cd_offset`), then walk `fields` forward from there. A genuine,
     /// deliberate exception to "position only increases" — see `walk_protocol`'s `jumped` handling.
-    JumpTo { name: String, offset_field: String, fields: Vec<Field> },
+    JumpTo {
+        name: String,
+        offset_field: String,
+        fields: Vec<Field>,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -671,15 +697,7 @@ fn is_protocol_source(text: &str) -> bool {
 }
 
 fn project_protocol(protocol: ProtocolFile) -> GrammarFile {
-    GrammarFile {
-        dialect: SemioDialect::Protocol,
-        id: protocol.id,
-        extension: None,
-        uses: protocol.uses,
-        start: protocol.start,
-        productions: Vec::new(),
-        lex: LexOptions::default(),
-    }
+    GrammarFile { dialect: SemioDialect::Protocol, id: protocol.id, extension: None, uses: protocol.uses, start: protocol.start, productions: Vec::new(), lex: LexOptions::default() }
 }
 
 fn parse_usize_token(token: &GToken) -> Result<usize, TextError> {
@@ -1144,11 +1162,7 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                     cursor.expect(GKind::Equals)?;
                     tag = Some(parse_u64_literal(&mut cursor)?);
                 }
-                let fields = if cursor.peek().kind == GKind::LBrace {
-                    parse_braced_fields(&mut cursor)?
-                } else {
-                    parse_fields_until_break(&mut cursor)?
-                };
+                let fields = if cursor.peek().kind == GKind::LBrace { parse_braced_fields(&mut cursor)? } else { parse_fields_until_break(&mut cursor)? };
                 open_record = Some(Block::Record { name, tag, fields });
                 cursor.skip_newlines();
             }
@@ -1213,7 +1227,7 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 cursor.expect_ident("magic")?;
                 let magic = trim_be_bytes(parse_u64_literal(&mut cursor)?);
                 let fields = parse_braced_fields(&mut cursor)?;
-                blocks.push(Block::BackwardScan { name, magic: magic, fields });
+                blocks.push(Block::BackwardScan { name, magic, fields });
                 cursor.skip_newlines();
             }
             // P2-M2 item 5b: `jump <name> from <field> {...}` — absolute-offset jump.
@@ -1547,7 +1561,6 @@ fn header_fixed_size(fields: &[Field]) -> usize {
     total
 }
 
-
 /// @emoji 🖨️ Lossless protocol printer — `parse_protocol(print_protocol(p)) == p`.
 pub fn print_protocol(protocol: &ProtocolFile) -> String {
     let mut out = String::new();
@@ -1834,10 +1847,7 @@ impl Recognizer {
                 }
             }
         }
-        Self {
-            grammar: merged,
-            macros: default_macros(),
-        }
+        Self { grammar: merged, macros: default_macros() }
     }
 
     fn find_production(&self, name: &str) -> Option<&Production> {
@@ -1856,16 +1866,8 @@ impl Recognizer {
     /// on inputs that would otherwise abort with a lex error.
     pub fn recognize(&self, text: &str) -> Result<bool, TextError> {
         let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
-        let tokens: Vec<_> = raw
-            .into_iter()
-            .filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof)
-            .collect();
-        let start = self.find_production(&self.grammar.start).ok_or_else(|| {
-            TextError::new(
-                format!("start production `{}` not found", self.grammar.start),
-                TextSpan::at(1, 1),
-            )
-        })?;
+        let tokens: Vec<_> = raw.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof).collect();
+        let start = self.find_production(&self.grammar.start).ok_or_else(|| TextError::new(format!("start production `{}` not found", self.grammar.start), TextSpan::at(1, 1)))?;
         match self.match_production(start, &tokens, 0, text) {
             Some(pos) => Ok(pos == tokens.len()),
             None => Ok(false),
@@ -1876,46 +1878,19 @@ impl Recognizer {
     /// as [`Recognizer::recognize`] (P2-M1 raw-span support).
     pub fn uncovered_productions(&self, text: &str) -> Result<Vec<String>, TextError> {
         let raw = core_lex_with(text, &Limits::default(), true, &self.grammar.lex)?;
-        let tokens: Vec<_> = raw
-            .into_iter()
-            .filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof)
-            .collect();
+        let tokens: Vec<_> = raw.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != CoreKind::Eof).collect();
         let mut covered = std::collections::HashSet::<String>::new();
-        let start = self.find_production(&self.grammar.start).ok_or_else(|| {
-            TextError::new(
-                format!("start production `{}` not found", self.grammar.start),
-                TextSpan::at(1, 1),
-            )
-        })?;
+        let start = self.find_production(&self.grammar.start).ok_or_else(|| TextError::new(format!("start production `{}` not found", self.grammar.start), TextSpan::at(1, 1)))?;
         let _ = self.match_production_tracked(start, &tokens, 0, &mut covered, text);
-        Ok(self
-            .grammar
-            .productions
-            .iter()
-            .map(|p| p.name.clone())
-            .filter(|n| !covered.contains(n))
-            .collect())
+        Ok(self.grammar.productions.iter().map(|p| p.name.clone()).filter(|n| !covered.contains(n)).collect())
     }
 
-    fn match_production(
-        &self,
-        production: &Production,
-        tokens: &[crate::os_dsl::SpannedToken],
-        pos: usize,
-        text: &str,
-    ) -> Option<usize> {
+    fn match_production(&self, production: &Production, tokens: &[crate::os_dsl::SpannedToken], pos: usize, text: &str) -> Option<usize> {
         let mut covered = std::collections::HashSet::new();
         self.match_production_tracked(production, tokens, pos, &mut covered, text)
     }
 
-    fn match_production_tracked(
-        &self,
-        production: &Production,
-        tokens: &[crate::os_dsl::SpannedToken],
-        pos: usize,
-        covered: &mut std::collections::HashSet<String>,
-        text: &str,
-    ) -> Option<usize> {
+    fn match_production_tracked(&self, production: &Production, tokens: &[crate::os_dsl::SpannedToken], pos: usize, covered: &mut std::collections::HashSet<String>, text: &str) -> Option<usize> {
         for alt in &production.alternatives {
             if let Some(next) = self.match_sequence_tracked(&alt.symbols, tokens, pos, covered, text) {
                 covered.insert(production.name.clone());
@@ -1925,28 +1900,14 @@ impl Recognizer {
         None
     }
 
-    fn match_sequence_tracked(
-        &self,
-        symbols: &[Symbol],
-        tokens: &[crate::os_dsl::SpannedToken],
-        mut pos: usize,
-        covered: &mut std::collections::HashSet<String>,
-        text: &str,
-    ) -> Option<usize> {
+    fn match_sequence_tracked(&self, symbols: &[Symbol], tokens: &[crate::os_dsl::SpannedToken], mut pos: usize, covered: &mut std::collections::HashSet<String>, text: &str) -> Option<usize> {
         for symbol in symbols {
             pos = self.match_symbol_tracked(symbol, tokens, pos, covered, text)?;
         }
         Some(pos)
     }
 
-    fn match_symbol_tracked(
-        &self,
-        symbol: &Symbol,
-        tokens: &[crate::os_dsl::SpannedToken],
-        pos: usize,
-        covered: &mut std::collections::HashSet<String>,
-        text: &str,
-    ) -> Option<usize> {
+    fn match_symbol_tracked(&self, symbol: &Symbol, tokens: &[crate::os_dsl::SpannedToken], pos: usize, covered: &mut std::collections::HashSet<String>, text: &str) -> Option<usize> {
         match symbol {
             Symbol::Literal(literal) => {
                 let token = tokens.get(pos)?;
@@ -1996,9 +1957,7 @@ impl Recognizer {
                 }
                 found
             }
-            Symbol::Optional(inner) => {
-                Some(self.match_symbol_tracked(inner, tokens, pos, covered, text).unwrap_or(pos))
-            }
+            Symbol::Optional(inner) => Some(self.match_symbol_tracked(inner, tokens, pos, covered, text).unwrap_or(pos)),
             Symbol::Star(inner) => {
                 let mut cur = pos;
                 while let Some(next) = self.match_symbol_tracked(inner, tokens, cur, covered, text) {
@@ -2030,12 +1989,7 @@ impl Recognizer {
     /// floor (`pos..` rather than `pos + 1..`) only ever fires for a matcher whose `try_match`
     /// accepts the empty string — `hex`'s does (an empty hex-encoded value is valid) — so this is a
     /// strict widening: every pre-existing macro's behavior on non-empty spans is unchanged.
-    fn match_macro_span(
-        &self,
-        matcher: &MacroMatcher,
-        tokens: &[crate::os_dsl::SpannedToken],
-        pos: usize,
-    ) -> Option<usize> {
+    fn match_macro_span(&self, matcher: &MacroMatcher, tokens: &[crate::os_dsl::SpannedToken], pos: usize) -> Option<usize> {
         for end in (pos..=tokens.len()).rev() {
             let slice_text = slice_source_text(&tokens[pos..end]);
             if (matcher.try_match)(&slice_text) {
@@ -2073,11 +2027,7 @@ fn match_raw_span(tokens: &[crate::os_dsl::SpannedToken], pos: usize, text: &str
 }
 
 fn slice_source_text(tokens: &[crate::os_dsl::SpannedToken]) -> String {
-    tokens
-        .iter()
-        .map(|t| t.text.as_str().to_string())
-        .collect::<Vec<_>>()
-        .join(" ")
+    tokens.iter().map(|t| t.text.as_str().to_string()).collect::<Vec<_>>().join(" ")
 }
 
 /// @emoji 🏷️ Explicit terminal predicates — BOOL is Ident true|false.
@@ -2100,10 +2050,7 @@ fn terminal_matches(name: &str, token: &crate::os_dsl::SpannedToken) -> bool {
         "EDGEARROW" => text == "<->" || text == "<-->" || text == "↔",
         "QUANTITY" => matches!(token.kind, CoreKind::Float | CoreKind::Int),
         "VEC3" | "COLOR" | "POINT" | "UNIT" => {
-            matches!(
-                token.kind,
-                CoreKind::Ident | CoreKind::Float | CoreKind::Int | CoreKind::Text
-            )
+            matches!(token.kind, CoreKind::Ident | CoreKind::Float | CoreKind::Int | CoreKind::Text)
         }
         // P2-M1 item 3/5: the promoted single-char tokens + STEP's leading-dot enum literal each
         // get an explicit named terminal so a grammar can require them positionally (not just via
@@ -2123,11 +2070,7 @@ fn macro_table_ok(text: &str) -> bool {
 // 🚫️async: E4 fn-pointer slot — see `macro_table_ok` above.
 fn macro_quantity_ok(text: &str) -> bool {
     let parts: Vec<_> = text.split_whitespace().collect();
-    !parts.is_empty()
-        && parts[0]
-            .chars()
-            .next()
-            .is_some_and(|c| c.is_ascii_digit() || c == '-' || c == '.')
+    !parts.is_empty() && parts[0].chars().next().is_some_and(|c| c.is_ascii_digit() || c == '-' || c == '.')
 }
 
 // 🚫️async: E4 fn-pointer slot — see `macro_table_ok` above.
@@ -2168,22 +2111,10 @@ fn default_macros() -> Vec<MacroMatcher> {
             // direct sync call now.
             try_match: |text| crate::os_dsl::notation::parse_edge_text(text).is_ok(),
         },
-        MacroMatcher {
-            name: "table",
-            try_match: macro_table_ok,
-        },
-        MacroMatcher {
-            name: "quantity",
-            try_match: macro_quantity_ok,
-        },
-        MacroMatcher {
-            name: "props",
-            try_match: macro_props_ok,
-        },
-        MacroMatcher {
-            name: "hex",
-            try_match: macro_hex_ok,
-        },
+        MacroMatcher { name: "table", try_match: macro_table_ok },
+        MacroMatcher { name: "quantity", try_match: macro_quantity_ok },
+        MacroMatcher { name: "props", try_match: macro_props_ok },
+        MacroMatcher { name: "hex", try_match: macro_hex_ok },
     ]
 }
 //#endregion 🔖️Recognizer
@@ -2217,17 +2148,29 @@ fn prim_fixed_width(prim: &Prim) -> Option<usize> {
 
 fn decode_u16(slice: &[u8], big_endian: bool) -> u16 {
     let bytes = [slice[0], slice[1]];
-    if big_endian { u16::from_be_bytes(bytes) } else { u16::from_le_bytes(bytes) }
+    if big_endian {
+        u16::from_be_bytes(bytes)
+    } else {
+        u16::from_le_bytes(bytes)
+    }
 }
 
 fn decode_u32(slice: &[u8], big_endian: bool) -> u32 {
     let bytes: [u8; 4] = slice.try_into().unwrap();
-    if big_endian { u32::from_be_bytes(bytes) } else { u32::from_le_bytes(bytes) }
+    if big_endian {
+        u32::from_be_bytes(bytes)
+    } else {
+        u32::from_le_bytes(bytes)
+    }
 }
 
 fn decode_u64(slice: &[u8], big_endian: bool) -> u64 {
     let bytes: [u8; 8] = slice.try_into().unwrap();
-    if big_endian { u64::from_be_bytes(bytes) } else { u64::from_le_bytes(bytes) }
+    if big_endian {
+        u64::from_be_bytes(bytes)
+    } else {
+        u64::from_le_bytes(bytes)
+    }
 }
 
 // 🚫️async: E1 pure error constructor, consumed by `Option::ok_or_else` sync closures at several
@@ -2697,10 +2640,7 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
                 walk_fields(fields, bytes, &mut pos, &mut state, 0)?;
             }
             Block::JumpTo { offset_field, fields, .. } => {
-                let target = *state
-                    .env
-                    .get(offset_field)
-                    .ok_or_else(|| mismatch(pos, format!("jump target field `{offset_field}` was not decoded by an earlier block")))?;
+                let target = *state.env.get(offset_field).ok_or_else(|| mismatch(pos, format!("jump target field `{offset_field}` was not decoded by an earlier block")))?;
                 let target = target as usize;
                 if target > bytes.len() {
                     return Err(mismatch(target, "jump target offset exceeds buffer length"));
@@ -2741,18 +2681,13 @@ pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), Str
         }
         return Ok(());
     }
-    Err(format!(
-        "verify_protocol_bytes: cannot classify protocol id='{}' start='{}'",
-        spec.id, spec.start
-    ))
+    Err(format!("verify_protocol_bytes: cannot classify protocol id='{}' start='{}'", spec.id, spec.start))
 }
 
 /// @emoji 📡️ Parses handcrafted `.protocol.semio` source then deep-walks bytes via [`walk_protocol`].
 pub fn verify_protocol_source(source: &str, bytes: &[u8]) -> Result<(), String> {
     let spec = parse_protocol(source).map_err(|error| error.message)?;
-    walk_protocol(&spec, bytes)
-        .map(|_| ())
-        .map_err(|e| format!("offset {}: {}", e.offset, e.message))
+    walk_protocol(&spec, bytes).map(|_| ()).map_err(|e| format!("offset {}: {}", e.offset, e.message))
 }
 
 //#endregion 📡️ProtocolWalk
@@ -2782,10 +2717,7 @@ mod tests {
     /// fall through to "unexpected character" once the corrupted segment reached `core_lex`.
     #[semio_framework_async_macros::async_test]
     async fn hash_comment_hides_quote_and_pipe_characters_from_the_operator_prescan() {
-        let g = parse_grammar(
-            "grammar demo\nstart doc\n# illustrating an escape: \\\" and an alternation: a | b, plus a trailing comma? here\ndoc = \"hello\" | \"world\"\n",
-        )
-        .expect("parse_grammar");
+        let g = parse_grammar("grammar demo\nstart doc\n# illustrating an escape: \\\" and an alternation: a | b, plus a trailing comma? here\ndoc = \"hello\" | \"world\"\n").expect("parse_grammar");
         assert_eq!(g.id, "demo");
         assert_eq!(g.productions[0].alternatives.len(), 2);
         assert_eq!(g.productions[0].alternatives[0].symbols, vec![Symbol::Literal("hello".to_string())]);
@@ -2794,8 +2726,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parses_extension_and_uses() {
-        let g = parse_grammar("grammar fem2d\nextension fem2d\nuse core\nuse family-sheet\nstart document\ndocument = header\nheader = \"fem2d\" TEXT\n")
-            .expect("parse_grammar");
+        let g = parse_grammar("grammar fem2d\nextension fem2d\nuse core\nuse family-sheet\nstart document\ndocument = header\nheader = \"fem2d\" TEXT\n").expect("parse_grammar");
         assert_eq!(g.extension, Some("fem2d".to_string()));
         assert_eq!(g.uses, vec!["core".to_string(), "family-sheet".to_string()]);
         assert_eq!(g.productions.len(), 2);
@@ -2886,10 +2817,7 @@ mod tests {
     async fn parse_grammar_sets_dialect_grammar_vs_protocol() {
         let g = parse_grammar("dialect grammar\ngrammar demo\nstart doc\ndoc = \"x\"\n").expect("grammar");
         assert_eq!(g.dialect, SemioDialect::Grammar);
-        let p = parse_grammar(
-            "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo\nstart frame\nframing magic 0x8953504B0D0A1A0A\nheader fixed 4\nfield flags u32\n",
-        )
-        .expect("protocol");
+        let p = parse_grammar("dialect protocol\nprotocol demo.pack\nversion 1\nschema demo\nstart frame\nframing magic 0x8953504B0D0A1A0A\nheader fixed 4\nfield flags u32\n").expect("protocol");
         assert_eq!(p.dialect, SemioDialect::Protocol);
         assert_eq!(p.start, "frame");
         assert_eq!(p.id, "demo.pack");
@@ -3018,7 +2946,6 @@ field body bytes
         assert_eq!(reparsed, parsed);
     }
 
-
     #[semio_framework_async_macros::async_test]
     async fn parse_protocol_roundtrips_magic_pack() {
         let source = "dialect protocol\nprotocol demo.pack\nversion 1\nschema demo.v1\nstart frame\nframing magic 0x8953454D0D0A1A0A\nheader fixed 4\nfield flags u32\n";
@@ -3064,29 +2991,13 @@ field body bytes
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_accepts_any_0x89_magic() {
-        let g = GrammarFile {
-            dialect: SemioDialect::Protocol,
-            id: "demo.pack".into(),
-            extension: None,
-            uses: vec![],
-            start: "frame".into(),
-            productions: vec![],
-            lex: LexOptions::default(),
-        };
+        let g = GrammarFile { dialect: SemioDialect::Protocol, id: "demo.pack".into(), extension: None, uses: vec![], start: "frame".into(), productions: vec![], lex: LexOptions::default() };
         let mut bytes = vec![0x89];
         bytes.extend(std::iter::repeat(0u8).take(31));
         verify_protocol_bytes(&g, &bytes).expect("any 0x89");
         bytes[0] = 0x00;
         assert!(verify_protocol_bytes(&g, &bytes).is_err());
-        let spr = GrammarFile {
-            dialect: SemioDialect::Protocol,
-            id: "demo.spr".into(),
-            extension: None,
-            uses: vec![],
-            start: "record".into(),
-            productions: vec![],
-            lex: LexOptions::default(),
-        };
+        let spr = GrammarFile { dialect: SemioDialect::Protocol, id: "demo.spr".into(), extension: None, uses: vec![], start: "record".into(), productions: vec![], lex: LexOptions::default() };
         verify_protocol_bytes(&spr, &[1u8]).expect("spr non-empty");
         assert!(verify_protocol_bytes(&spr, &[]).is_err());
     }

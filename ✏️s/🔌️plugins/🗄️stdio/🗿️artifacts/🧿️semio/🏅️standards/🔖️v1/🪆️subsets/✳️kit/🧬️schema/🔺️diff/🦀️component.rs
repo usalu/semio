@@ -77,7 +77,7 @@ impl SemioKitDiff {
 }
 
 impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
-    async fn apply(&self, base: &SemioKitSnapshot) -> protocol::MutationApplyResult<SemioKitSnapshot> {
+    fn apply(&self, base: &SemioKitSnapshot) -> protocol::MutationApplyResult<SemioKitSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.types {
             next.types = t.values.clone();
@@ -100,7 +100,7 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.types.is_some() {
             self.types = other.types;
         }
@@ -124,7 +124,7 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
 
 /// 🧮️ `kit`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
-    async fn between(base: &SemioKitSnapshot, other: &SemioKitSnapshot) -> Self {
+    fn between(base: &SemioKitSnapshot, other: &SemioKitSnapshot) -> Self {
         SemioKitDiff {
             types: (base.types != other.types).then(|| SemioKitTypeList { values: other.types.clone() }),
             designs: (base.designs != other.designs).then(|| SemioKitDesignList { values: other.designs.clone() }),
@@ -134,7 +134,7 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
             representations: (base.representations != other.representations).then(|| SemioKitLinkList { values: other.representations.clone() }),
         }
     }
-    async fn inverse(&self, base: &SemioKitSnapshot) -> Self {
+    fn inverse(&self, base: &SemioKitSnapshot) -> Self {
         SemioKitDiff {
             types: self.types.as_ref().map(|_| SemioKitTypeList { values: base.types.clone() }),
             designs: self.designs.as_ref().map(|_| SemioKitDesignList { values: base.designs.clone() }),
@@ -144,7 +144,7 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
             representations: self.representations.as_ref().map(|_| SemioKitLinkList { values: base.representations.clone() }),
         }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -198,17 +198,17 @@ fn parse_kit_diff(line: &str) -> Result<SemioKitDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioKitDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_kit_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_kit_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=types, bit1=designs,
     /// bit2=objects, bit3=models, bit4=properties, bit5=representations), then each present
     /// field's own real encoding in bit order.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{write_child_list, write_child_opt, write_design_list, write_link_list, write_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
@@ -251,7 +251,7 @@ impl protocol::DiffCodec for SemioKitDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{read_child_list, read_child_opt, read_design_list, read_link_list, read_type_list};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {

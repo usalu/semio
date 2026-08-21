@@ -11,8 +11,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<ShootingSnapshot, store::TextError> {
     let _ = SHOOTING_DOCUMENT_SCHEMA;
-    let mut out: ShootingSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("shooting<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: ShootingSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("shooting<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = SHOOTING_DOCUMENT_SCHEMA.into();
     }

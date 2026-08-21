@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeHandleHandleKind` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::diff::{Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
+use crate::artifacts::block2d::Block2dHandleTemplate;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::{Block2dHandleTemplate};
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::ChangeHandleHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
@@ -13,6 +13,9 @@ pub async fn diff(payload: &super::mutation::ChangeHandleHandleKind, base: &Bloc
     if replacement == *existing {
         return protocol::MutationOutcome::new(Block2dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block2dDiff { handles: Some(Block2dHandlesDelta { patched: vec![Block2dHandlesPatchEntry { id: payload.id.clone(), patch: Block2dHandlesPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block2dDiff {
+        handles: Some(Block2dHandlesDelta { patched: vec![Block2dHandlesPatchEntry { id: payload.id.clone(), patch: Block2dHandlesPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

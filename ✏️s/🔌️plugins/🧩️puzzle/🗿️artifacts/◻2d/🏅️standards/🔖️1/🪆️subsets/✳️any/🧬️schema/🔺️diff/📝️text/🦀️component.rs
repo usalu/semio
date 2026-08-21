@@ -1,8 +1,6 @@
 //! 🔺️ Puzzle 2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::puzzle2d::schema::diff::{
-    Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta,
-};
+use crate::artifacts::puzzle2d::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta};
 use crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
 use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
 use protocol::MutationDiff;
@@ -12,7 +10,6 @@ use protocol::MutationDiff;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 //#region 🔖️Apply
 impl Puzzle2dDiff {
@@ -44,48 +41,79 @@ impl Puzzle2dDiff {
             if let Some(value) = &self.active_utility_id {
                 next.active_utility_id = value.clone();
             }
-            if let Some(value) = self.camera_x { next.camera_x = value; }
-            if let Some(value) = self.camera_y { next.camera_y = value; }
-            if let Some(value) = self.camera_zoom { next.camera_zoom = value; }
-            if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
-            if let Some(value) = self.grid_snap_enabled { next.grid_snap_enabled = value; }
-            if let Some(value) = self.grid_factor { next.grid_factor = value; }
-            if let Some(value) = self.suggestion_offset { next.suggestion_offset = value; }
-            if let Some(value) = self.fill_count { next.fill_count = value; }
-            if let Some(value) = self.brush_candidate_index { next.brush_candidate_index = value; }
-            if let Some(value) = &self.brush_candidate_source_handle_id { next.brush_candidate_source_handle_id = value.clone(); }
-            if let Some(value) = &self.locale { next.locale = value.clone(); }
-            if let Some(value) = &self.terminology { next.terminology = value.clone(); }
-            if let Some(value) = &self.lod_mode_by_pane_json { next.lod_mode_by_pane_json = value.clone(); }
-            if let Some(value) = &self.engagement_input_by_pane_json { next.engagement_input_by_pane_json = value.clone(); }
-            if let Some(value) = &self.brush_candidates_json { next.brush_candidates_json = value.clone(); }
-            if let Some(value) = &self.node_kind_weights_json { next.node_kind_weights_json = value.clone(); }
-            if let Some(value) = &self.handle_kind_weights_json { next.handle_kind_weights_json = value.clone(); }
-            if let Some(value) = &self.active_utility_by_window_id_json { next.active_utility_by_window_id_json = value.clone(); }
-            if let Some(value) = &self.hovered_node_id { next.hovered_node_id = value.clone(); }
-            if let Some(value) = self.preview_seq { next.preview_seq = value; }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = &self.selection_method {
+                next.selection_method = value.clone();
+            }
+            if let Some(value) = self.grid_snap_enabled {
+                next.grid_snap_enabled = value;
+            }
+            if let Some(value) = self.grid_factor {
+                next.grid_factor = value;
+            }
+            if let Some(value) = self.suggestion_offset {
+                next.suggestion_offset = value;
+            }
+            if let Some(value) = self.fill_count {
+                next.fill_count = value;
+            }
+            if let Some(value) = self.brush_candidate_index {
+                next.brush_candidate_index = value;
+            }
+            if let Some(value) = &self.brush_candidate_source_handle_id {
+                next.brush_candidate_source_handle_id = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.terminology {
+                next.terminology = value.clone();
+            }
+            if let Some(value) = &self.lod_mode_by_pane_json {
+                next.lod_mode_by_pane_json = value.clone();
+            }
+            if let Some(value) = &self.engagement_input_by_pane_json {
+                next.engagement_input_by_pane_json = value.clone();
+            }
+            if let Some(value) = &self.brush_candidates_json {
+                next.brush_candidates_json = value.clone();
+            }
+            if let Some(value) = &self.node_kind_weights_json {
+                next.node_kind_weights_json = value.clone();
+            }
+            if let Some(value) = &self.handle_kind_weights_json {
+                next.handle_kind_weights_json = value.clone();
+            }
+            if let Some(value) = &self.active_utility_by_window_id_json {
+                next.active_utility_by_window_id_json = value.clone();
+            }
+            if let Some(value) = &self.hovered_node_id {
+                next.hovered_node_id = value.clone();
+            }
+            if let Some(value) = self.preview_seq {
+                next.preview_seq = value;
+            }
             next
         })
     }
 }
 
-async fn apply_identified_delta<T: Clone>(
-    items: &[T],
-    removed: &[String],
-    added: &[T],
-    patched: &[(String, Option<T>)],
-    reordered: &Option<Vec<String>>,
-    id_of: impl Fn(&T) -> &str,
-) -> protocol::MutationApplyResult<Vec<T>> {
+async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
     let mut seen = std::collections::HashSet::new();
     for id in removed {
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
         }
-        let position = next.iter().position(|item| id_of(item) == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
-        })?;
+        let position = next.iter().position(|item| id_of(item) == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()]))?;
         next.remove(position);
     }
     seen.clear();
@@ -101,12 +129,8 @@ async fn apply_identified_delta<T: Clone>(
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
-        let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
-        })?;
-        let value = replacement.as_ref().ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "item patch has no replacement").at(["patched", id.as_str()])
-        })?;
+        let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()]))?;
+        let value = replacement.as_ref().ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "item patch has no replacement").at(["patched", id.as_str()]))?;
         let replacement_id = id_of(value);
         if replacement_id != id && next.iter().enumerate().any(|(index, entry)| index != position && id_of(entry) == replacement_id) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched item identity already exists").at(["patched", replacement_id]));
@@ -128,9 +152,7 @@ async fn apply_identified_delta<T: Clone>(
         }
         let mut ordered = Vec::with_capacity(next.len());
         for id in order {
-            let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
-                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
-            })?;
+            let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]))?;
             ordered.push(next.remove(position));
         }
         next = ordered;
@@ -157,11 +179,21 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
                 return Ok(replacement.to_snapshot());
             }
             let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-            if let Some(camera) = &self.camera { next.camera = camera.clone(); }
-            if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?; }
-            if let Some(delta) = &self.edges { next.edges = apply_edges_delta(&next.edges, delta).map_err(|error| error.under(["edges"]))?; }
-            if let Some(meta) = &self.meta { next.meta = meta.clone(); }
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(camera) = &self.camera {
+                next.camera = camera.clone();
+            }
+            if let Some(delta) = &self.nodes {
+                next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
+            }
+            if let Some(delta) = &self.edges {
+                next.edges = apply_edges_delta(&next.edges, delta).map_err(|error| error.under(["edges"]))?;
+            }
+            if let Some(meta) = &self.meta {
+                next.meta = meta.clone();
+            }
             next
         })
     }
@@ -208,7 +240,9 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
                     existing.removed.extend(delta.removed);
                     existing.added.extend(delta.added);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.nodes = Some(delta),
             }
@@ -219,7 +253,9 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
                     existing.removed.extend(delta.removed);
                     existing.added.extend(delta.added);
                     existing.patched.extend(delta.patched);
-                    if delta.reordered.is_some() { existing.reordered = delta.reordered; }
+                    if delta.reordered.is_some() {
+                        existing.reordered = delta.reordered;
+                    }
                 }
                 None => self.edges = Some(delta),
             }

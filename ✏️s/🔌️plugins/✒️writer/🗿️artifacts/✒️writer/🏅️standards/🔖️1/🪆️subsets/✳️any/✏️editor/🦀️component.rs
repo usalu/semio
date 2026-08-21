@@ -9,6 +9,8 @@
 //! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
+use crate::artifacts::writer::op::WriterMutation;
+use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
 use crate::editor::writer::commands::set_locale;
@@ -22,14 +24,12 @@ use crate::editor::writer::modes::edit::windows::main;
 use crate::editor::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology,
-    DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode,
-    NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Dialect,
+    DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

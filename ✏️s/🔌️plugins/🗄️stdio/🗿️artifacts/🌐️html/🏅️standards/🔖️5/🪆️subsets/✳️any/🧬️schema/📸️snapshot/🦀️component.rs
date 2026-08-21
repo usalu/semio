@@ -687,11 +687,11 @@ pub fn element_attr<'a>(node: &'a HtmlNode, name: &str) -> Option<&'a Option<Str
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for HtmlSnapshot {
     const EXTENSION: &'static str = "html";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         STDIO_HTML_DOCUMENT_SCHEMA
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -699,22 +699,22 @@ impl store::ArtifactDsl for HtmlSnapshot {
         parse_html_document(body)
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = write_html_document(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for HtmlSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = write_html_document(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

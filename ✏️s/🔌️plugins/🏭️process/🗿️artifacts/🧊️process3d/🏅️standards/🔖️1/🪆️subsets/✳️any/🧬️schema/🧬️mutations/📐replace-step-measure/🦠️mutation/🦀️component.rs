@@ -11,7 +11,7 @@
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{ProcessMeasure, Process3dSnapshot};
+use crate::artifacts::process3d::{Process3dSnapshot, ProcessMeasure};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️ReplaceStepMeasure

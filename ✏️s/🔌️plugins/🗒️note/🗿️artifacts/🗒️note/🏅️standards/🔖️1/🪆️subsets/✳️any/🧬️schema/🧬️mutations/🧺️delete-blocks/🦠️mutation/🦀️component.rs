@@ -1,6 +1,6 @@
 //! 🧺 Note mutation — `DeleteBlocks`: removes several blocks at once (multi-select delete).
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

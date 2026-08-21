@@ -5,11 +5,12 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
+use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use crate::editor::procedural3d::commands::{
-    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport,
-    patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility,
-    set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection, update_generation_values,
-    world_pointer_down,
+    add_generation, add_widget, delete_selection, flow_eval_resolve, flow_eval_tick, flow_tessellate_resolve, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
+    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
+    translate_selection, update_generation_values, world_pointer_down,
 };
 use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::editor::procedural3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -17,22 +18,20 @@ use crate::editor::procedural3d::modes::generate::windows::{form, generations, p
 use crate::editor::procedural3d::modes::{edit, generate};
 use crate::editor::procedural3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::procedural3d::terminology::procedural3d_labels;
-use crate::artifacts::procedural3d::op::Procedural3dMutation;
-use crate::artifacts::procedural3d::{artifact_kind, Procedural3dSnapshot, PROCEDURAL_3D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
 // `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, ArtifactView, Dialect, Editor,
-    DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
-    MediaClass, MediaError, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
+    SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
 };
-use store::EngineHandles;
-use serde_json::Value;
 use serde_json::json;
+use serde_json::Value;
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_APP_ID: &str = "procedural3d-play";
@@ -150,14 +149,18 @@ impl ArtifactEditor for Procedural3dPlayApp {
         match port {
             "geometry:out" => {
                 let mesh = export_mesh_from_document(doc.snapshot);
-                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() } })
+                Ok(semio_framework_plugin::Media {
+                    media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                    payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() },
+                })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
-            _ => Err(MediaError::NotImplemented)}
+            _ => Err(MediaError::NotImplemented),
+        }
     }
 
     /// 🎞️ `"params:in"` — patches matching `InputSlider` widgets from a `{widgetId: number}` JSON
@@ -175,12 +178,15 @@ impl ArtifactEditor for Procedural3dPlayApp {
                     let Some(number) = value.as_f64() else { continue };
                     let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
-                        operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget { widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } }));
+                        operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget {
+                            widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step },
+                        }));
                     }
                 }
                 Ok(Emit::mutations(operations))
             }
-            _ => Err(MediaError::NotImplemented)}
+            _ => Err(MediaError::NotImplemented),
+        }
     }
 
     async fn command_id(command: &Procedural3dCommand) -> &'static str {
@@ -198,13 +204,11 @@ impl ArtifactEditor for Procedural3dPlayApp {
         match action {
             "setActiveExample" => Ok(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(Procedural3dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            })),
             "deleteSelection" => Ok(Procedural3dCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "removeWidget" => Ok(Procedural3dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
-            "moveMediaNode" => Ok(Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
-                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
-                x: f64_arg(&["x"]).unwrap_or(0.0),
-                y: f64_arg(&["y"]).unwrap_or(0.0)})),
+            "moveMediaNode" => Ok(Procedural3dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
             "addWidget" => Ok(Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "patchFlowWidgets" => Ok(Procedural3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
                 widget_ids: {
@@ -215,7 +219,8 @@ impl ArtifactEditor for Procedural3dPlayApp {
                     ids
                 },
                 field: str_arg(&["field"]).unwrap_or_default(),
-                value: f64_arg(&["value"])})),
+                value: f64_arg(&["value"]),
+            })),
             "reorganize" => Ok(Procedural3dCommand::Reorganize(reorganize::Reorganize {})),
             "translateSelection" => {
                 let mut node_ids = string_list("nodeIds");
@@ -240,7 +245,8 @@ impl ArtifactEditor for Procedural3dPlayApp {
                     ax: f64_arg(&["ax"]).unwrap_or(0.0),
                     ay: f64_arg(&["ay"]).unwrap_or(0.0),
                     az: f64_arg(&["az"]).unwrap_or(0.0),
-                    angle: f64_arg(&["angle"]).unwrap_or(0.0)}))
+                    angle: f64_arg(&["angle"]).unwrap_or(0.0),
+                }))
             }
             "scaleSelection" => {
                 let mut node_ids = string_list("nodeIds");
@@ -260,7 +266,8 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 Ok(Procedural3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
-                    value}))
+                    value,
+                }))
             }
             "nodeGraphViewport" => Ok(Procedural3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: parse_flow_camera_json(&args) })),
             "worldPointerDown" => Ok(Procedural3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {})),
@@ -278,21 +285,31 @@ impl ArtifactEditor for Procedural3dPlayApp {
             "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
             "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into())})),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
+            })),
             "flowTessellateResolve" => Ok(Procedural3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
                 node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into())})),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
+            })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            )))}
+            ))),
+        }
     }
 
     /// 🕹️ `deleteSelection`/`nodeGraphEdit`/`{translate,rotate,scale}Selection` read the `graph`
     /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose
     /// per-row `$module::handle(payload, doc, cfg, ctx)` signature is framework-fixed and has no
     /// `interaction` slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(command: &Procedural3dCommand, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Procedural3dCommand,
+        doc: &ArtifactView<'_, Procedural3dSnapshot>,
+        cfg: &ConfigView<'_, Procedural3dConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| match command {
             Procedural3dCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction, session),
             Procedural3dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
@@ -341,7 +358,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
         with_process_flow_eval_session(|session| {
             let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
-                vec![Effect::DispatchAction {req: semio_framework_plugin::RequestId(104),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+                vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
                 Vec::new()
             }
@@ -366,7 +383,8 @@ impl ArtifactEditor for Procedural3dPlayApp {
             // widget-details view degrades to its "no selection" default until a future wave threads
             // interaction into render. Flagged as a discovered framework gap, not worked around here.
             inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &[], labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 
     async fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -386,7 +404,12 @@ impl ArtifactEditor for Procedural3dPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
     /// 26/08/14's w3b-summary.md), so the selection-dependent rows below always take the "nothing
     /// selected" branch rather than reading a stale/wrong selection.
-    async fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    async fn context_menu(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &ArtifactView<'_, Procedural3dSnapshot>,
+        cfg: &ConfigView<'_, Procedural3dConfig>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
@@ -542,7 +565,8 @@ pub async fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::One},
+            multiplicity: semio_framework::PortMultiplicity::One,
+        },
         semio_framework_plugin::MediaPortSpec {
             id: "geometry:out".into(),
             label: "Geometry".into(),
@@ -550,7 +574,8 @@ pub async fn procedural3d_io() -> semio_framework_plugin::AppIo {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::Many},
+            multiplicity: semio_framework::PortMultiplicity::Many,
+        },
     ])
 }
 //#endregion 🔖️ArtifactIo
@@ -564,7 +589,8 @@ pub async fn preview_tolerance(lod_mode: &str) -> f64 {
     match lod_mode {
         "coarse" => 0.15,
         "fine" => 0.02,
-        _ => 0.05}
+        _ => 0.05,
+    }
 }
 
 pub async fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
@@ -586,7 +612,8 @@ pub async fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &s
         "wireframe" => (true, "mesh"),
         "points" => (false, "mesh"),
         "shaded+edges" => (true, "mesh"),
-        _ => (false, "mesh")};
+        _ => (false, "mesh"),
+    };
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
         object.insert("gumballActive".into(), json!(false));
@@ -611,7 +638,8 @@ async fn merge_status_json(computing: Option<String>, preview_status: Option<Str
         }
         (Some(c), None) => Some(c),
         (None, Some(p)) => Some(p),
-        (None, None) => None}
+        (None, None) => None,
+    }
 }
 
 /// 👁️ Merges the session's live "still computing" flag with a fresh `preview_status_json` result.
@@ -681,7 +709,8 @@ async fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> b
 async fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
     let show_mode = match show_mode {
         "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
-        _ => "shaded"};
+        _ => "shaded",
+    };
     match show_mode {
         "wireframe" => {
             data.positions.clear();
@@ -696,7 +725,8 @@ async fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_m
             data.edge_positions.clear();
             data
         }
-        _ => data}
+        _ => data,
+    }
 }
 
 pub async fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Option<String> {
@@ -1094,7 +1124,13 @@ mod tests {
     async fn the_manifest_stitches_every_taxonomy_node() {
         let _serial = test_support::lock();
         let json = serde_json::to_string(&create_procedural3d_app()).expect("app definition json");
-        for id in [flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW] {
+        for id in [
+            flow_window::PROCEDURAL_3D_PLAY_WINDOW_MAIN,
+            edit_preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW,
+            generations::PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS,
+            form::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM,
+            generate_preview::PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW,
+        ] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
         for id in [edit::PROCEDURAL_3D_PLAY_MODE_EDIT, generate::PROCEDURAL_3D_PLAY_MODE_GENERATE] {
@@ -1143,7 +1179,13 @@ mod tests {
         let _serial = test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            Procedural3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None }),
+            |app| app.snapshot().expect("snapshot").fixture.widgets.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1200,12 +1242,12 @@ mod tests {
     }
 
     //#region 🔖️EngineComputeTests
+    use std::sync::MutexGuard;
     /// 🧬️ Rehomed verbatim from the deleted `⚙️engine` (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
     /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
     /// behavior (they construct or take a [`Procedural3dConfig`]), so the tests travel with them.
     use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
-    use std::sync::MutexGuard;
 
     async fn test_serial() -> MutexGuard<'static, ()> {
         test_support::lock()
@@ -1244,7 +1286,8 @@ mod tests {
             up: Vec3::new(0.0, 0.0, 1.0),
             fov_y: config.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
             near: 0.1,
-            far: 1000.0};
+            far: 1000.0,
+        };
         let view_proj = camera.view_proj(0.6);
         let planes = frustum_planes(view_proj);
         let mut visible = 0usize;
@@ -1253,8 +1296,7 @@ mod tests {
             let mesh = meshes.iter().find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id)).expect("mesh record");
             let data: semio_framework::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             let mesh3d = Mesh3d::from_buffers(data.positions, data.normals, data.indices);
-            let position =
-                instance.get("position").and_then(|value| value.as_array()).map_or([0.0, 0.0, 0.0], |items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]);
+            let position = instance.get("position").and_then(|value| value.as_array()).map_or([0.0, 0.0, 0.0], |items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]);
             assert_eq!(position, [0.0, 0.0, 0.0], "preview instances stay in world space");
             let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
             let (min, max) = transform_aabb(model, mesh3d.aabb_min, mesh3d.aabb_max);

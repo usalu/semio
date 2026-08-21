@@ -202,12 +202,12 @@ pub struct EpwDiff {
 }
 
 impl MutationDiff<EpwSnapshot> for EpwDiff {
-    async fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
+    fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
         validate_epw_diff(self, base)?;
         Ok(apply_epw_diff_unchecked(self, base))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.location.is_some() {
             self.location = other.location;
         }
@@ -426,12 +426,12 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
 }
 
 impl DiffAlgebra<EpwSnapshot> for EpwDiff {
-    async fn inverse(&self, base: &EpwSnapshot) -> Self {
+    fn inverse(&self, base: &EpwSnapshot) -> Self {
         let applied = apply_epw_diff_unchecked(self, base);
-        Self::between(&applied, base).await
+        Self::between(&applied, base)
     }
 
-    async fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
+    fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
         let location = (base.location != other.location).then(|| other.location.clone());
         let design_conditions = (base.design_conditions != other.design_conditions).then(|| other.design_conditions.clone());
         let typical_extreme_periods = (base.typical_extreme_periods != other.typical_extreme_periods).then(|| other.typical_extreme_periods.clone());
@@ -467,7 +467,7 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
         Self { location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.location.is_none()
             && self.design_conditions.is_none()
             && self.typical_extreme_periods.is_none()
@@ -753,20 +753,20 @@ fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
 }
 
 impl DiffCodec for EpwDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_epw_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_epw_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification csv's/gif89a's hand-rolled
     /// `DiffCodec`s use.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().await.into_bytes())
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

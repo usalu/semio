@@ -95,7 +95,7 @@ pub enum XlsxEditorCommand {
 /// the framework trait's own `type Command: ::protocol::OpBinary + Send`); `OpText` is not required
 /// and, with a single variant of two plain fields, would be pure ceremony here.
 impl protocol::OpBinary for XlsxEditorCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let XlsxEditorCommand::SetCell { row, value } = self;
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         store::pack_rt::write_varint_u64(&mut out, *row as u64);
@@ -104,13 +104,13 @@ impl protocol::OpBinary for XlsxEditorCommand {
         out.extend_from_slice(bytes);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-        let len = reader.read_varint_u64().await.map_err(|e| malformed("op value len", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-        let value_bytes = reader.read_bytes(len).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let row = reader.read_varint_u64().map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
         let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
         Ok(XlsxEditorCommand::SetCell { row, value })
     }
@@ -164,7 +164,7 @@ impl ArtifactEditor for XlsxEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

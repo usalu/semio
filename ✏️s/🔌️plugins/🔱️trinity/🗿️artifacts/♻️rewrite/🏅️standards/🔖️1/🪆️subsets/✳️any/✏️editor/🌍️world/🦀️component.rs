@@ -761,8 +761,7 @@ mod wasm_session {
         pub async fn new() -> Self {
             let dsl = include_str!("../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
-                let empty =
-                    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "empty".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), vec![], vec![], None);
+                let empty = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "empty".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), vec![], vec![], None);
                 TrinityBridge::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
             });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
@@ -965,7 +964,8 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
-    use crate::lexer::{TokenSpan as JackTokenSpan}; use graph::dsl::Completion as JackCompletion;
+    use crate::lexer::TokenSpan as JackTokenSpan;
+    use graph::dsl::Completion as JackCompletion;
     use store::ArtifactDsl;
 
     async fn nakagin_graph() -> Graph {

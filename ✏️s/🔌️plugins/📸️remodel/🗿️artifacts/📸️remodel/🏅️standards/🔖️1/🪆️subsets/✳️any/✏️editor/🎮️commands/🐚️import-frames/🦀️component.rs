@@ -1,9 +1,9 @@
 //! 🐚️ 🐚️ Remodel play app commands command — `import-frames`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -27,7 +27,7 @@ pub const REMODEL_VIDEO_ACCEPT: &str = "video/mp4,video/quicktime,video/webm,vid
 pub struct ImportFrames {}
 
 pub async fn handle(_payload: &ImportFrames, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(117),  accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
+    Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(117), accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }))
 }
 
 //#region 🧪️Tests

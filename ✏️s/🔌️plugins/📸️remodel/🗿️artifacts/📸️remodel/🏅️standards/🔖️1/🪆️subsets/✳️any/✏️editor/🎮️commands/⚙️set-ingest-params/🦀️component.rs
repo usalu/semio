@@ -1,10 +1,10 @@
 //! ⚙️ ⚙️ Remodel play app commands command — `set-ingest-params`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::update_ingest_params;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{IngestParams, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -17,12 +17,7 @@ pub struct SetIngestParams {
 }
 
 pub async fn handle(payload: &SetIngestParams, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![update_ingest_params(IngestParams {
-        frame_sample_stride: payload.frame_sample_stride,
-        max_frames: payload.max_frames,
-        downscale_long_edge_px: payload.downscale_long_edge_px,
-        min_sharpness: payload.min_sharpness,
-    })]))
+    Ok(Emit::mutations(vec![update_ingest_params(IngestParams { frame_sample_stride: payload.frame_sample_stride, max_frames: payload.max_frames, downscale_long_edge_px: payload.downscale_long_edge_px, min_sharpness: payload.min_sharpness })]))
 }
 
 //#region 🧪️Tests

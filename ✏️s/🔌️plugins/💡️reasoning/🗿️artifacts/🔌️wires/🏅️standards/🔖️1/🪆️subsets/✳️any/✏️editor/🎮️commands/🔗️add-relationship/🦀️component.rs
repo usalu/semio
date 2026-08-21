@@ -1,11 +1,11 @@
 //! 🔗️ 🔗️ Wires play app commands command — `add-relationship`.
 
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::schema::fixture_edges;
+use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE};
-use crate::artifacts::wires::schema::fixture_edges;
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 

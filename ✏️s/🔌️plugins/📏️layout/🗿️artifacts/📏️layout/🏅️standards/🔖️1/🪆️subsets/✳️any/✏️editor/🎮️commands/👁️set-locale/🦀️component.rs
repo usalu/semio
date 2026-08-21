@@ -1,8 +1,8 @@
 //! 👁️ 👁️ Layout play app commands command — `set-locale`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::artifacts::layout::{op::LayoutMutation, LayoutSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🗣️ Not declared as a manifest action (locale is host-pushed, not a user-facing app action needing

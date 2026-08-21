@@ -12,7 +12,13 @@ pub async fn diff(payload: &super::mutation::UpdateCameraCalibration, base: &Rem
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Camera calibration \"{}\" is already up to date.", payload.camera.id));
     }
     let camera = &payload.camera;
-    let non_finite = !camera.fx.is_finite() || !camera.fy.is_finite() || !camera.cx.is_finite() || !camera.cy.is_finite() || !camera.skew.is_finite() || camera.distortion.iter().any(|v| !v.is_finite()) || camera.rms_reprojection_px.is_some_and(|v| !v.is_finite());
+    let non_finite = !camera.fx.is_finite()
+        || !camera.fy.is_finite()
+        || !camera.cx.is_finite()
+        || !camera.cy.is_finite()
+        || !camera.skew.is_finite()
+        || camera.distortion.iter().any(|v| !v.is_finite())
+        || camera.rms_reprojection_px.is_some_and(|v| !v.is_finite());
     if non_finite {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera calibration \"{}\" has non-finite intrinsics or distortion.", payload.camera.id), [payload.camera.id.clone()]);
     }

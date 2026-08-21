@@ -1075,7 +1075,7 @@ fn diff_document(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) ->
 }
 
 impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
-    async fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
+    fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;
@@ -1092,7 +1092,7 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
         Ok(out)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         let styles = std::mem::take(&mut self.styles);
         self.styles = match (styles, other.styles) {
             (None, x) => x,
@@ -1115,17 +1115,17 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
 }
 
 impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
-    async fn between(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> Self {
+    fn between(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> Self {
         diff_document(base, other)
     }
-    async fn inverse(&self, base: &SemioDocumentSnapshot) -> Self {
+    fn inverse(&self, base: &SemioDocumentSnapshot) -> Self {
         SemioDocumentDiff {
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
             images: self.images.as_ref().map(|id| inverse_named(&base.images, id, |i| i.id.clone(), inverse_image)),
             blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| inverse_block(b, d))),
         }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.styles.is_none() && self.images.is_none() && self.blocks.is_none()
     }
 }
@@ -1677,10 +1677,10 @@ fn parse_document_diff(line: &str) -> Result<SemioDocumentDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioDocumentDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_document_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_document_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real binary
@@ -1692,7 +1692,7 @@ impl protocol::DiffCodec for SemioDocumentDiff {
     /// SECOND `if`-guard on a field that's itself only conditionally decoded hard-errors `eval_cond`
     /// (`protocol-cond-cannot-chain`, per the grammar recipe's own gap table; flow's/model's own
     /// diff binary upgrade hit the identical shape).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.styles.is_some() {
@@ -1716,7 +1716,7 @@ impl protocol::DiffCodec for SemioDocumentDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-application-type applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-application-type/reclassifies-the-application-type-as-wab: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.application_type, "WAB", "change-application-type/reclassifies-the-application-type-as-wab: applicationType did not land on 'WAB'");
-    assert_eq!(snapshot.declared_application_class, before().declared_application_class, "change-application-type/reclassifies-the-application-type-as-wab: declaredApplicationClass must stay exactly as the before-snapshot had it — change-application-type owns applicationType and nothing else");
+    assert_eq!(
+        snapshot.declared_application_class,
+        before().declared_application_class,
+        "change-application-type/reclassifies-the-application-type-as-wab: declaredApplicationClass must stay exactly as the before-snapshot had it — change-application-type owns applicationType and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-application-type` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-application-type/reclassifies-the-application-type-as-wab: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().application_type.as_deref(), Some("WAB"), "change-application-type/reclassifies-the-application-type-as-wab: the sparse delta must carry applicationType = 'WAB'");
-    assert!(raised.diff().declared_application_class.is_none(), "change-application-type/reclassifies-the-application-type-as-wab: the sparse delta must leave declaredApplicationClass unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().declared_application_class.is_none(),
+        "change-application-type/reclassifies-the-application-type-as-wab: the sparse delta must leave declaredApplicationClass unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din4108Diff`. Its
@@ -143,7 +143,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din4108Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-application-type/reclassifies-the-application-type-as-wab: committed diff did not carry before to after");
 }

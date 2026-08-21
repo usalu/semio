@@ -1,8 +1,8 @@
 //! 🖌️ `add-brush-part` command.
 
-use serde_json::{json, Value};
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::puzzle5d_brush_target_grip;
+use crate::editor::puzzle5d::Puzzle5dActionCtx;
+use serde_json::{json, Value};
 
 /// 🧱️ `addBrushPart`/`addBrushObject`: tries the engine's collision-free placement for the explicit
 /// payload first, then always runs the paired board placement so both projections land in one part.

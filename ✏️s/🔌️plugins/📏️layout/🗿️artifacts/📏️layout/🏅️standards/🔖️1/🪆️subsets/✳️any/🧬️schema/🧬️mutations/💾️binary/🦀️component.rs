@@ -10,13 +10,11 @@
 //! codec — is an APP concern, not an artifact one: it lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::layout::schema::mutations::text::LayoutMutation;
 use protocol::OpBinary;
@@ -35,8 +33,8 @@ pub async fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::Protoco
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::LayoutSnapshot;
     use crate::artifacts::layout::mutations::rename_layout;
+    use crate::artifacts::layout::LayoutSnapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
@@ -53,12 +51,7 @@ mod tests {
         let initial = crate::artifacts::layout::schema::default_document();
         let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
         let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        doc_store
-            .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() })],
-                description: Some("rename document".into()),
-            })
-            .expect("apply rename");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![LayoutMutation::RenameLayout(rename_layout::mutation::RenameLayout { new_name: "Renamed".into() })], description: Some("rename document".into()) }).expect("apply rename");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
         store::os_store::test_support::assert_live_equals_replay(&doc_store);

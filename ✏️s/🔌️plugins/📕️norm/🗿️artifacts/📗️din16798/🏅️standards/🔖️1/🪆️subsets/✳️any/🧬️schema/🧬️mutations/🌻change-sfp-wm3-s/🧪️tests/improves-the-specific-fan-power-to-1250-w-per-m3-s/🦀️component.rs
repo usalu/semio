@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-sfp-wm3-s applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.sfp_w_m3_s, 1250.0, "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: sfpWM3S did not land on 1250.0");
-    assert_eq!(snapshot.sfp_required_class, before().sfp_required_class, "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: sfpRequiredClass must stay exactly as the before-snapshot had it — change-sfp-wm3-s owns sfpWM3S and nothing else");
+    assert_eq!(
+        snapshot.sfp_required_class,
+        before().sfp_required_class,
+        "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: sfpRequiredClass must stay exactly as the before-snapshot had it — change-sfp-wm3-s owns sfpWM3S and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-sfp-wm3-s` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().sfp_w_m3_s, Some(1250.0), "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: the sparse delta must carry sfpWM3S = 1250.0");
-    assert!(raised.diff().sfp_required_class.is_none(), "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: the sparse delta must leave sfpRequiredClass unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().sfp_required_class.is_none(),
+        "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: the sparse delta must leave sfpRequiredClass unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
@@ -143,7 +143,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-sfp-wm3-s/improves-the-specific-fan-power-to-1250-w-per-m3-s: committed diff did not carry before to after");
 }

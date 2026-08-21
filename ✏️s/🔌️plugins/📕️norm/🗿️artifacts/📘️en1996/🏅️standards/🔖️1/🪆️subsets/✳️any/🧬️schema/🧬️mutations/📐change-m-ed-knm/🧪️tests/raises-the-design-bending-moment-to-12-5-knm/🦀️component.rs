@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-m-ed-knm/raises-the-design-bending-moment-to-12-5-knm: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-m-ed-knm/raises-the-design-bending-moment-to-12-5-knm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 12.5 differs from the committed 8.0, so the `mutation.no-op` warning guard stays shut too");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-m-ed-knm/raises-the-design-bending-moment-to-12-5-knm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 12.5 differs from the committed 8.0, so the `mutation.no-op` warning guard stays shut too"
+    );
     assert!(produced.messages().is_empty(), "change-m-ed-knm/raises-the-design-bending-moment-to-12-5-knm: an accepted change-m-ed-knm emits no diagnostics at all");
 }
 

@@ -1,12 +1,12 @@
 //! 🔄️ `world-relocate` command.
 
-use serde_json::Value;
-use crate::editor::puzzle5d::PUZZLE5D_PROXIMITY_RADIUS;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::next_fastener_id;
 use crate::editor::puzzle5d::puzzle5d_grip_full_id;
 use crate::editor::puzzle5d::world_grip_position;
+use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::Puzzle5dFastener;
+use crate::editor::puzzle5d::PUZZLE5D_PROXIMITY_RADIUS;
+use serde_json::Value;
 
 /// 🚚️ Drops one part at an explicit world origin, then auto-fastens its first grip to every other
 /// grip that lands within [`PUZZLE5D_PROXIMITY_RADIUS`].
@@ -33,8 +33,7 @@ pub async fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value
                 let dx = source_position[0] - target_position[0];
                 let dy = source_position[1] - target_position[1];
                 let dz = source_position[2] - target_position[2];
-                if (dx * dx + dy * dy + dz * dz).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS
-                    && !ctx.scene.document.fasteners.iter().any(|entry| entry.source == source_id && entry.target == target_id || entry.source == target_id && entry.target == source_id)
+                if (dx * dx + dy * dy + dz * dz).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS && !ctx.scene.document.fasteners.iter().any(|entry| entry.source == source_id && entry.target == target_id || entry.source == target_id && entry.target == source_id)
                 {
                     fresh.push(Puzzle5dFastener { id: next_fastener_id(), source: source_id.clone(), target: target_id, fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
                 }

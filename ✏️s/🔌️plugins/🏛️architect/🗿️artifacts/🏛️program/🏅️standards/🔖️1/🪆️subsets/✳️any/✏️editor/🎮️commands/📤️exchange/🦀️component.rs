@@ -2,11 +2,11 @@
 //! its `.architect` DSL text.
 
 pub mod export_registers_csv {
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,10 +21,10 @@ pub mod export_registers_csv {
 }
 
 pub mod import_registers_csv {
-    use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -50,10 +50,10 @@ pub mod import_registers_csv {
 }
 
 pub mod export_program {
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -68,10 +68,10 @@ pub mod export_program {
 }
 
 pub mod import_program_request {
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
-    use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
+    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -79,14 +79,20 @@ pub mod import_program_request {
     pub struct ImportProgramRequest {}
 
     pub async fn handle(_payload: &ImportProgramRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(110),  accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "importProgram".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen {
+            req: semio_framework_plugin::RequestId(110),
+            accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
+            read_as: None,
+            import_action: "importProgram".into(),
+            multiple: false,
+        }))
     }
 }
 
 pub mod import_program {
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

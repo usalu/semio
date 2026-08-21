@@ -14,31 +14,33 @@
 //! WIRING + DISPATCH ONLY beyond that: every command's real body lives in its own
 //! `🎮️commands/<group>/🦀️component.rs` payload module (see `app_commands!` below).
 
-use crate::engine::space::commands::{connect_media_ports, disconnect_media_edge};
-use crate::engine::space::commands::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
 use crate::engine::space::commands::node_graph_edit;
-use crate::engine::space::commands::{close_focused_instance, open_instance};
-use crate::engine::space::commands::{export_media, import_media, import_media_payload};
-use crate::engine::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
-use crate::engine::space::commands::{copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, patch_app_instances, patch_media_nodes, paste_app_instance, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app};
-use crate::engine::space::commands::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
-use crate::engine::space::commands::presence_heartbeat;
 use crate::engine::space::commands::node_graph_viewport;
+use crate::engine::space::commands::presence_heartbeat;
+use crate::engine::space::commands::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
+use crate::engine::space::commands::{close_focused_instance, open_instance};
+use crate::engine::space::commands::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
+use crate::engine::space::commands::{connect_media_ports, disconnect_media_edge};
+use crate::engine::space::commands::{
+    copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, paste_app_instance, patch_app_instances, patch_media_nodes, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app,
+};
+use crate::engine::space::commands::{export_media, import_media, import_media_payload};
 use crate::engine::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
+use crate::engine::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::presence::{SpacePresence, SpacePresenceMutation};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
-use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
+use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowEdge, WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
-    DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
+    app::InteractionView, app_commands, create_default_layout, host, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactApp, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Effect,
+    Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
-use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 /// 🪪️ Canonical surface id (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1: every
@@ -357,7 +359,9 @@ impl ArtifactApp for SpaceApp {
                 field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default(),
                 parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
             })),
-            "unbindParameterField" => Ok(SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: node_id().unwrap_or_default(), field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default() })),
+            "unbindParameterField" => {
+                Ok(SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: node_id().unwrap_or_default(), field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default() }))
+            }
             "reorganizeWorkflow" => Ok(SpaceCommand::ReorganizeWorkflow(reorganize_workflow::ReorganizeWorkflow {})),
             "workflowEngagementSubmit" => Ok(SpaceCommand::WorkflowEngagementSubmit(workflow_engagement_submit::WorkflowEngagementSubmit { value: str_field("value") })),
             "compiledDagEngagementSubmit" => Ok(SpaceCommand::CompiledDagEngagementSubmit(compiled_dag_engagement_submit::CompiledDagEngagementSubmit {})),
@@ -392,7 +396,14 @@ impl ArtifactApp for SpaceApp {
     /// interaction domain directly (bypassing the `app_commands!`-generated `dispatch`, whose per-row
     /// `$module::handle(payload, doc, cfg)` signature is framework-fixed and has no `interaction`
     /// slot) — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(command: &SpaceCommand, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &SpaceCommand,
+        doc: &ArtifactView<'_, WorkflowSnapshot>,
+        cfg: &ConfigView<'_, SpaceConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<WorkflowMutation, crate::engine::space::config::SpaceConfigMutation, Self::DraftMutation>, Fault> {
         let emit = match command {
             SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
@@ -456,7 +467,12 @@ impl ArtifactApp for SpaceApp {
     /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` — see ticket 26/08/14's
     /// w3b-summary.md), so the selection-dependent rows below always take the "nothing selected"
     /// branch rather than reading a stale/wrong selection.
-    async fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    async fn context_menu(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &ArtifactView<'_, WorkflowSnapshot>,
+        cfg: &ConfigView<'_, SpaceConfig>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.snapshot.locale);
         let is_de = cfg.snapshot.locale.starts_with("de");
         space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &[])
@@ -612,8 +628,8 @@ pub async fn create_space_app() -> App {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
     use semio_framework_os::{apply_workflow_operation, register_app_io, ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity};
+    use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
     use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel, SurfaceKind};
 
     pub(crate) async fn empty_history() -> HistoryView {
@@ -683,7 +699,8 @@ pub(crate) mod testkit {
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
-            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).with_ports(ports))
+            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
+                .with_ports(ports))
             .build_definition();
         register_app_io(plugin_id, &definition);
     }
@@ -694,18 +711,64 @@ pub(crate) mod testkit {
 
     pub(crate) async fn seed_multi_port_plugins() {
         let puzzle_ports = vec![
-            MediaPortSpec { id: "in-a".into(), label: "In A".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
-            MediaPortSpec { id: "out-a".into(), label: "Out A".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
-            MediaPortSpec { id: "out-b".into(), label: "Out B".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
+            MediaPortSpec {
+                id: "in-a".into(),
+                label: "In A".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-a".into(),
+                label: "Out A".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-b".into(),
+                label: "Out B".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
         ];
         seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports);
 
-        let shooting_ports = vec![MediaPortSpec { id: "scene-in".into(), label: "Scene".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, kind_id: Some("2d.shooting".into()), required: true, multiplicity: PortMultiplicity::One }];
+        let shooting_ports = vec![MediaPortSpec {
+            id: "scene-in".into(),
+            label: "Scene".into(),
+            direction: MediaPortDirection::In,
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+            kind_id: Some("2d.shooting".into()),
+            required: true,
+            multiplicity: PortMultiplicity::One,
+        }];
         seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports);
     }
 
     pub(crate) async fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
-        WorkflowNode { id: id.into(), plugin_id: "test".into(), app_id: "test".into(), label: id.into(), yields: String::new(), artifact_ref: format!("artifacts/{id}"), config_ref: format!("config/{id}"), x: 0.0, y: 0.0, width: 1.0, height: 1.0, inputs, outputs }
+        WorkflowNode {
+            id: id.into(),
+            plugin_id: "test".into(),
+            app_id: "test".into(),
+            label: id.into(),
+            yields: String::new(),
+            artifact_ref: format!("artifacts/{id}"),
+            config_ref: format!("config/{id}"),
+            x: 0.0,
+            y: 0.0,
+            width: 1.0,
+            height: 1.0,
+            inputs,
+            outputs,
+        }
     }
 
     pub(crate) async fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> WorkflowMediaPort {
@@ -722,8 +785,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engine::space::testkit::{empty_history, studio_emit};
     use crate::demo_space_projection;
+    use crate::engine::space::testkit::{empty_history, studio_emit};
     use semio_framework_plugin::testkit as plugin_testkit;
     use semio_framework_plugin::{PluginApp, VcsArtifactApp};
 

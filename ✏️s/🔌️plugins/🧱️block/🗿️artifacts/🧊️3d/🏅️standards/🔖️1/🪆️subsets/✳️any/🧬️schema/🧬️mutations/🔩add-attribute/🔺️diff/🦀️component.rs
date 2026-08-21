@@ -1,12 +1,13 @@
 //! 🔺️ Sparse diff builder for `AddAttribute` — real handcrafted delta, never apply-then-capture.
+use crate::artifacts::block3d::diff::Block3dAttributesDelta;
 use crate::artifacts::block3d::diff::Block3dDiff;
-use crate::artifacts::block3d::diff::{Block3dAttributesDelta};
 use crate::artifacts::block3d::Block3dSnapshot;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::AddAttribute, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if base.attributes.iter().any(|item| item.key == payload.attribute.key) {
-        return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "attribute", payload.attribute.key)).at(vec![payload.attribute.key.clone()])]);
+        return protocol::MutationOutcome::new(Block3dDiff::default())
+            .absorb_messages([protocol::MutationMessage::warn("mutation.no-op", format!("{} \"{}\" already present", "attribute", payload.attribute.key)).at(vec![payload.attribute.key.clone()])]);
     }
     protocol::MutationOutcome::new(Block3dDiff { attributes: Some(Block3dAttributesDelta { added: vec![payload.attribute.clone()], ..Default::default() }), ..Default::default() })
 }

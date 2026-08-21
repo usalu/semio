@@ -1,8 +1,8 @@
 //! 🔍️ Navigator-window option — the overview zoom slider.
 //! Its command handler lives in `🎮️commands/🎥️camera::set_camera_zoom`.
 
-use crate::editor::note::terminology::NotePlayLabels;
 use crate::artifacts::note::NoteCamera;
+use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

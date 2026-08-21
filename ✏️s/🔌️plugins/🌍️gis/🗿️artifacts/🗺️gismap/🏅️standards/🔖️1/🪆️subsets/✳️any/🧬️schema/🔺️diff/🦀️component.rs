@@ -11,17 +11,28 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::gismap::schema::GisMapArtifact>>,
-    #[state(artifact)] pub positions: Option<GisMapFeaturesDelta>,
-    #[state(artifact)] pub routes: Option<GisMapFeaturesDelta>,
-    #[state(artifact)] pub regions: Option<GisMapFeaturesDelta>,
-    #[state(presence)] pub layer_visibility: Option<GisMapBoolMapDelta>,
-    #[state(presence)] pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
-    #[state(config)] pub camera_json: Option<String>,
-    #[state(config)] pub render_mode: Option<String>,
-    #[state(config)] pub vector_style: Option<String>,
-    #[state(config)] pub lod_mode: Option<String>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::gismap::schema::GisMapArtifact>>,
+    #[state(artifact)]
+    pub positions: Option<GisMapFeaturesDelta>,
+    #[state(artifact)]
+    pub routes: Option<GisMapFeaturesDelta>,
+    #[state(artifact)]
+    pub regions: Option<GisMapFeaturesDelta>,
+    #[state(presence)]
+    pub layer_visibility: Option<GisMapBoolMapDelta>,
+    #[state(presence)]
+    pub layer_stroke_scale: Option<GisMapNumberMapDelta>,
+    #[state(config)]
+    pub camera_json: Option<String>,
+    #[state(config)]
+    pub render_mode: Option<String>,
+    #[state(config)]
+    pub vector_style: Option<String>,
+    #[state(config)]
+    pub lod_mode: Option<String>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 

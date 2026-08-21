@@ -1,9 +1,9 @@
 //! 🪜️ 🪜️ Playbook play app commands command — `add-step`.
 
-use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::artifacts::playbook::op::{add_step_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -19,13 +19,13 @@ pub async fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use AddStep;
-    use crate::editor::playbook::testkit::{dispatch, playbook_app};
-    use crate::editor::playbook::PlaybookCommand;
     use crate::editor::playbook::commands::move_step::MoveStep;
     use crate::editor::playbook::commands::remove_step::RemoveStep;
-    use semio_framework_plugin::PluginApp;
     use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;
+    use crate::editor::playbook::testkit::{dispatch, playbook_app};
+    use crate::editor::playbook::PlaybookCommand;
+    use semio_framework_plugin::PluginApp;
+    use AddStep;
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_action_appends_step() {

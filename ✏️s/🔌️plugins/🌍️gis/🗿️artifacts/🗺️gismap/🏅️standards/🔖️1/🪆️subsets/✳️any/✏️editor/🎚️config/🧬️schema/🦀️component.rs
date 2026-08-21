@@ -7,13 +7,20 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gis2d.config")]
 pub struct Gis2dConfig {
-    #[state(config)] pub layer_visibility: BTreeMap<String, bool>,
-    #[state(config)] pub camera_json: String,
-    #[state(config)] pub render_mode: String,
-    #[state(config)] pub vector_style: String,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub layer_visibility: BTreeMap<String, bool>,
+    #[state(config)]
+    pub camera_json: String,
+    #[state(config)]
+    pub render_mode: String,
+    #[state(config)]
+    pub vector_style: String,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub layer_stroke_scale: BTreeMap<String, f64>,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -40,4 +47,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

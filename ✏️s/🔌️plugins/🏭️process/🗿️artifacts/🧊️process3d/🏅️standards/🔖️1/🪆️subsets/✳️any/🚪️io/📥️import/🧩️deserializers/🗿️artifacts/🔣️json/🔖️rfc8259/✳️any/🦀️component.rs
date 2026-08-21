@@ -7,8 +7,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<Process3dSnapshot, store::TextError> {
     let _ = PROCESS_3D_SCHEMA;
-    let out: Process3dSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("process3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let out: Process3dSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("process3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 

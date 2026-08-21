@@ -8,8 +8,6 @@ pub async fn inverse(payload: &super::mutation::DisconnectKindCompatibility, bas
     let Some(row) = base.kind_compatibility.iter().find(|row| row.source == payload.source && row.target == payload.target) else {
         return Vec::new();
     };
-    vec![crate::artifacts::puzzle5d::mutations::connect_kind_compatibility::mutation::connect_kind_compatibility(
-        row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity,
-    )]
+    vec![crate::artifacts::puzzle5d::mutations::connect_kind_compatibility::mutation::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)]
 }
 //#endregion 🔖️Inverse

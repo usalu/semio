@@ -1,9 +1,9 @@
 //! 🎛️ Trinity Rewrite app — Parameters window (editable form over the RHS's declared parameters).
 
-use crate::editor::rewrite::terminology::TrinityRewriteLabels;
+use crate::artifacts::jack::PropertyValue;
 use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::RewriteSnapshot;
-use crate::artifacts::jack::PropertyValue;
+use crate::editor::rewrite::terminology::TrinityRewriteLabels;
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, UiFieldNode, UiNode, UiPresence, UiSectionNode};
 
 trait ParameterKindLabel {

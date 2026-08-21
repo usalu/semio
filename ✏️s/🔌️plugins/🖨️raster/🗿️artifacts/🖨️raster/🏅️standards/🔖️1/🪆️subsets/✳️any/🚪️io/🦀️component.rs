@@ -1,7 +1,11 @@
 //! 🚪️ IO s.raster (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"] }
-pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+}
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff"]
+}
 
 //#region 🔖️SemioBridge
 /// 🌉️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
@@ -62,11 +66,7 @@ async fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dia
 
 async fn semio_transform_from_raster(transform: &RasterTransform) -> SemioTransform {
     let half = transform.rotation.to_radians() / 2.0;
-    SemioTransform {
-        translation: SemioPoint3 { x: transform.x, y: transform.y, z: 0.0 },
-        rotation: SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() },
-        scale: SemioPoint3 { x: transform.scale_x, y: transform.scale_y, z: 1.0 },
-    }
+    SemioTransform { translation: SemioPoint3 { x: transform.x, y: transform.y, z: 0.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() }, scale: SemioPoint3 { x: transform.scale_x, y: transform.scale_y, z: 1.0 } }
 }
 
 /// 🖼️ Builds one real `DrawNode` per visible pixel layer (its embedded asset bytes, positioned/
@@ -84,10 +84,7 @@ async fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &std::colle
             if w <= 0.0 || h <= 0.0 {
                 return None;
             }
-            Some(DrawNode::Group {
-                transform: semio_transform_from_raster(transform),
-                children: vec![DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: w, height: h, mime: asset.mime.clone(), bytes: asset.data.clone() }],
-            })
+            Some(DrawNode::Group { transform: semio_transform_from_raster(transform), children: vec![DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: w, height: h, mime: asset.mime.clone(), bytes: asset.data.clone() }] })
         }
         RasterLayerNode::Group { visible, transform, children, .. } => {
             if !*visible {
@@ -321,9 +318,9 @@ mod tests {
 //#endregion 🧪️Tests
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::raster::RasterSnapshot;
     use crate::artifacts::raster::standards::v1::subsets::any::schema::RasterAnalyzer;
+    use crate::artifacts::raster::RasterSnapshot;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.raster", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_BMP: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
@@ -335,7 +332,6 @@ pub mod derived_composition {
     const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_TIFF: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
-
 
     pub struct RasterComposerComposition;
 
@@ -440,7 +436,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "RasterComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -455,10 +450,10 @@ pub use derived_composition::*;
 /// own shadowing `io_registry` (returns `&'static [&'static ComposerEntry]`, a different type) must
 /// never be confused with this module's `entries() -> &'static [ComposerEntry]`.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::raster::standards::v1::subsets::any::schema::RasterComposer as RasterAnyComposer;
     use crate::artifacts::raster::standards::v1::subsets::any::schema::RasterBuilder as RasterAnyBuilder;
+    use crate::artifacts::raster::standards::v1::subsets::any::schema::RasterComposer as RasterAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -499,91 +494,95 @@ pub mod io_registry {
 
     const EXPORT_GIF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
     async fn compose_export_gif(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::gif::v87a::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_GIF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::gif::v87a::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_GIF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     async fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
     async fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JPG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     async fn compose_export_jpg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::jpg::v_jfif_1_01::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JPG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::jpg::v_jfif_1_01::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_JPG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
     async fn compose_export_bmp(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_BMP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_BMP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_TIFF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
     async fn compose_export_tiff(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::raster::io::export::serializers::artifacts::tiff::v6_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_TIFF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::raster::io::export::serializers::artifacts::tiff::v6_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_TIFF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
     pub async fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<RasterAnyComposer>(),
-            ComposerEntry { writes: EXPORT_GIF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_gif },
-            ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_svg },
-            ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_pdf },
-            ComposerEntry { writes: EXPORT_JPG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_jpg },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_dwg },
-            ComposerEntry { writes: EXPORT_BMP_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_bmp },
-            ComposerEntry { writes: EXPORT_TIFF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_tiff },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<RasterAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_GIF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_gif },
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_pdf },
+                    ComposerEntry { writes: EXPORT_JPG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_jpg },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_json },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_dwg },
+                    ComposerEntry { writes: EXPORT_BMP_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_bmp },
+                    ComposerEntry { writes: EXPORT_TIFF_DIALECT, reads: &[RASTER_DIALECT], compose: compose_export_tiff },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

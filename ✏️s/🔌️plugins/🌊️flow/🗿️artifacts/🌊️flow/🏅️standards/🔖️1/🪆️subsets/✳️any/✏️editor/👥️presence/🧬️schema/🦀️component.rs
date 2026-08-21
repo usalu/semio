@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow.presence")]
 pub struct FlowPresence {
-    #[state(presence)] pub preview_off_node_ids: Vec<String>,
-    #[state(presence)] pub camera: CameraJson,
+    #[state(presence)]
+    pub preview_off_node_ids: Vec<String>,
+    #[state(presence)]
+    pub camera: CameraJson,
 }

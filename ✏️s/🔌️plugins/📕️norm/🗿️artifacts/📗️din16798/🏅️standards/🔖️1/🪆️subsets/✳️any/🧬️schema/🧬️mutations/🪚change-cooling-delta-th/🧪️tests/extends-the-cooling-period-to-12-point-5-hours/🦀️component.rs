@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-cooling-delta-th applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.cooling_delta_t_h, 12.5, "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: coolingDeltaTH did not land on 12.5");
-    assert_eq!(snapshot.cooling_gains_kwh, before().cooling_gains_kwh, "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: coolingGainsKwh must stay exactly as the before-snapshot had it — change-cooling-delta-th owns coolingDeltaTH and nothing else");
+    assert_eq!(
+        snapshot.cooling_gains_kwh,
+        before().cooling_gains_kwh,
+        "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: coolingGainsKwh must stay exactly as the before-snapshot had it — change-cooling-delta-th owns coolingDeltaTH and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-cooling-delta-th` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().cooling_delta_t_h, Some(12.5), "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: the sparse delta must carry coolingDeltaTH = 12.5");
-    assert!(raised.diff().cooling_gains_kwh.is_none(), "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: the sparse delta must leave coolingGainsKwh unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().cooling_gains_kwh.is_none(),
+        "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: the sparse delta must leave coolingGainsKwh unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
@@ -143,7 +143,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-cooling-delta-th/extends-the-cooling-period-to-12-point-5-hours: committed diff did not carry before to after");
 }

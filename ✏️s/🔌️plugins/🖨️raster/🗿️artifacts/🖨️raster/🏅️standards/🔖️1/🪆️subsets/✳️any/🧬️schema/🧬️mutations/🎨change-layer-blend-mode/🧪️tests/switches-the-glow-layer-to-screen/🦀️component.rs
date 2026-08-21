@@ -45,9 +45,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::ChangeLayerBlendMode(restore)] = inverse.as_slice() else {
-        panic!("change-layer-blend-mode/switches-the-glow-layer-to-screen: the inverse must be exactly one change-layer-blend-mode step, got {inverse:?}")
-    };
+    let [RasterMutation::ChangeLayerBlendMode(restore)] = inverse.as_slice() else { panic!("change-layer-blend-mode/switches-the-glow-layer-to-screen: the inverse must be exactly one change-layer-blend-mode step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "glow", "change-layer-blend-mode/switches-the-glow-layer-to-screen: the inverse must re-address the same layer");
     assert_eq!(restore.new_blend_mode, "normal", "change-layer-blend-mode/switches-the-glow-layer-to-screen: the inverse must carry the base's own prior blend mode");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -112,7 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-blend-mode/switches-the-glow-layer-to-screen: committed diff did not carry before to after");
 }

@@ -197,10 +197,10 @@ fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
 }
 
 impl protocol::OpText for SemioGraphMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_graph_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_graph_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }

@@ -156,17 +156,11 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
     };
 
     if let Some(cached_identity) = &cached {
-        client.set_token(Some(cached_identity.session_token.clone())).await;
+        client.set_token(Some(cached_identity.session_token.clone()));
         match client.me(ctx).await {
             Ok(session) => {
-                let identity = Identity {
-                    user_id: session.user_id,
-                    email: session.email,
-                    display_name: session.display_name,
-                    hub_base_url: env.hub_url.clone(),
-                    session_token: cached_identity.session_token.clone(),
-                    issued_at_ms: cached_identity.issued_at_ms,
-                };
+                let identity =
+                    Identity { user_id: session.user_id, email: session.email, display_name: session.display_name, hub_base_url: env.hub_url.clone(), session_token: cached_identity.session_token.clone(), issued_at_ms: cached_identity.issued_at_ms };
                 persist(env, &identity).await;
                 return Ok(IdentityOutcome { identity, status: IdentityStatus::Online });
             }
@@ -177,15 +171,8 @@ pub async fn mint_or_restore<T: DirectoryTransport>(ctx: &OperationContext, clie
 
     match client.mint_session(ctx, &env.user_email).await {
         Ok(minted) => {
-            let identity = Identity {
-                user_id: minted.user_id,
-                email: env.user_email.clone(),
-                display_name: env.user_email.clone(),
-                hub_base_url: env.hub_url.clone(),
-                session_token: minted.token,
-                issued_at_ms: now_ms().await,
-            };
-            client.set_token(Some(identity.session_token.clone())).await;
+            let identity = Identity { user_id: minted.user_id, email: env.user_email.clone(), display_name: env.user_email.clone(), hub_base_url: env.hub_url.clone(), session_token: minted.token, issued_at_ms: now_ms().await };
+            client.set_token(Some(identity.session_token.clone()));
             persist(env, &identity).await;
             Ok(IdentityOutcome { identity, status: IdentityStatus::Online })
         }
@@ -223,7 +210,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = mint_or_restore(&root_ctx().await, &client.await, &env(dir.path()).await).await.expect("mints");
+        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("mints");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-new");
         assert_eq!(transport.requests.lock().unwrap().len(), 1, "restore is skipped entirely with no cache");
@@ -239,7 +226,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "userId": "u-1", "email": "amara@semio.dev", "displayName": "Amara", "expiresAt": 999 })).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = mint_or_restore(&root_ctx().await, &client.await, &env(dir.path()).await).await.expect("restores");
+        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("restores");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-old", "restore keeps the cached token, /me only confirms it");
         let requests = transport.requests.lock().unwrap();
@@ -257,7 +244,7 @@ mod tests {
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-fresh", "user_id": "u-1" })).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
 
-        let outcome = mint_or_restore(&root_ctx().await, &client.await, &env(dir.path()).await).await.expect("mints after 401");
+        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("mints after 401");
         assert_eq!(outcome.status, IdentityStatus::Online);
         assert_eq!(outcome.identity.session_token, "tok-fresh");
         let requests = transport.requests.lock().unwrap();
@@ -274,7 +261,7 @@ mod tests {
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string()))).await;
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let outcome = mint_or_restore(&root_ctx().await, &client.await, &env(dir.path()).await).await.expect("degrades, never errors, while a cache exists");
+        let outcome = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect("degrades, never errors, while a cache exists");
         assert_eq!(outcome.status, IdentityStatus::Offline);
         assert_eq!(outcome.identity, cached, "the stale identity is returned as-is, never mutated");
     }
@@ -286,7 +273,7 @@ mod tests {
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string()))).await;
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let error = mint_or_restore(&root_ctx().await, &client.await, &env(dir.path()).await).await.expect_err("no cache and no hub leaves nothing to restore");
+        let error = mint_or_restore(&root_ctx().await, &client, &env(dir.path()).await).await.expect_err("no cache and no hub leaves nothing to restore");
         assert!(matches!(error, IdentityError::Unavailable(email) if email == "amara@semio.dev"));
     }
 }

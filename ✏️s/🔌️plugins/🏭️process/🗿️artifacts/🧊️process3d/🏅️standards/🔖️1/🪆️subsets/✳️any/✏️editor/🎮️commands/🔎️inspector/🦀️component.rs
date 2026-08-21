@@ -1,13 +1,13 @@
 //! 🔎️ Process 3d play app commands — the generic inspector field-patch dispatcher, addressed by a
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::mutations::change_stock_label::mutation::ChangeStockLabel;
 use crate::artifacts::process3d::mutations::move_stock::mutation::MoveStock;
 use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMachine;
 use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
 use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -115,7 +115,12 @@ pub mod patch_inspector {
         pub text: Option<String>,
     }
 
-    pub async fn handle(payload: &PatchInspector, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &PatchInspector,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let value = payload.number.map(|n| json!(n)).or_else(|| payload.text.clone().map(Value::String));
         match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),

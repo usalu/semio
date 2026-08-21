@@ -13,4 +13,3 @@ extern crate self as fsm;
 #[path = "../../🦀️component.rs"]
 mod component;
 pub use component::*;
-

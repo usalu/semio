@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct CreateWidget {
     pub index: usize,
-    pub widget: Widget}
+    pub widget: Widget,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for CreateWidget {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };

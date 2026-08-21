@@ -1,9 +1,9 @@
 //! 🐚️ 🐚️ Remodel play app commands command — `export-qc-report`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

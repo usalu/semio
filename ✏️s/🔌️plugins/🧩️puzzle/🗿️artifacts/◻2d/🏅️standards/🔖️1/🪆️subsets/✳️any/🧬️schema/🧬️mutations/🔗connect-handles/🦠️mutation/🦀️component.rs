@@ -35,9 +35,20 @@ pub struct ConnectHandles {
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
 pub async fn connect_handles(
-    id: String, source: String, target: String, edge_kind: Option<String>,
-    gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64,
-    source_tip: Option<String>, target_tip: Option<String>,
+    id: String,
+    source: String,
+    target: String,
+    edge_kind: Option<String>,
+    gap: f64,
+    shift: f64,
+    rise: f64,
+    rotation: f64,
+    turn: f64,
+    tilt: f64,
+    x: f64,
+    y: f64,
+    source_tip: Option<String>,
+    target_tip: Option<String>,
 ) -> Puzzle2dMutation {
     Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip })
 }

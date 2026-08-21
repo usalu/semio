@@ -1,8 +1,8 @@
 //! 🔺️ `replace-block` — sparse diff construction: clones only the touched step's own `blocks` Vec.
 
 use super::mutation::ReplaceBlock;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
@@ -12,11 +12,7 @@ pub async fn diff_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) ->
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);
     };
     let Some(existing) = step.blocks.iter().find(|block| block.id == payload.block.id) else {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Block \"{}\" does not exist in step \"{}\".", payload.block.id, payload.step_id),
-            [payload.step_id.clone(), payload.block.id.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist in step \"{}\".", payload.block.id, payload.step_id), [payload.step_id.clone(), payload.block.id.clone()]);
     };
     if existing == &payload.block {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" is already unchanged.", payload.block.id));

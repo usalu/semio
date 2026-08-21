@@ -1,22 +1,31 @@
 //! 🧬️ schema leaf
+use super::Procedural3dPreviewCamera;
+use flow::CameraJson;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use flow::CameraJson;
-use super::Procedural3dPreviewCamera;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.3d.config")]
 pub struct Procedural3dConfig {
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub show_mode: String,
-    #[state(config)] pub camera: CameraJson,
-    #[state(config)] pub preview_camera: Procedural3dPreviewCamera,
-    #[state(config)] pub sun_json: String,
-    #[state(config)] pub selected_generation_id: Option<String>,
-    #[state(config)] pub generation_preview_text: Option<String>,
-    #[state(config)] pub active_utility_id: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub show_mode: String,
+    #[state(config)]
+    pub camera: CameraJson,
+    #[state(config)]
+    pub preview_camera: Procedural3dPreviewCamera,
+    #[state(config)]
+    pub sun_json: String,
+    #[state(config)]
+    pub selected_generation_id: Option<String>,
+    #[state(config)]
+    pub generation_preview_text: Option<String>,
+    #[state(config)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

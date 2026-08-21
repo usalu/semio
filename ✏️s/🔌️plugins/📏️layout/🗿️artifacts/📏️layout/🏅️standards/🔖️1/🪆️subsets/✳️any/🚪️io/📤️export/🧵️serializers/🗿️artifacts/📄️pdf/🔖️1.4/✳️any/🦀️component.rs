@@ -14,8 +14,5 @@ use semio_s_plugin_stdio::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 pub async fn register() {}
 
 pub async fn serialize(from: &LayoutSnapshot) -> Result<PdfSnapshot, store::PackError> {
-    Ok(PdfSnapshot {
-        schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
-        page: PageDoc { width: 612.0, height: 792.0, text: <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from) },
-    })
+    Ok(PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 612.0, height: 792.0, text: <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from) } })
 }

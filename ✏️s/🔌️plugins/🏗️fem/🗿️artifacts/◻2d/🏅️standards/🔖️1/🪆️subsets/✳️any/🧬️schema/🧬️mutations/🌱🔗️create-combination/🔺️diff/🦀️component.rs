@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::mutation::CreateCombination;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dCombinationsDelta};
+use crate::artifacts::fem2d::diff::{Fem2dCombinationsDelta, Fem2dDiff};
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 //#region 🔖️Diff

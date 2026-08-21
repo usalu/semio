@@ -35,12 +35,7 @@ pub(crate) async fn imported_lon_lat_positions(snapshot: &GisTerrainSnapshot) ->
 pub(crate) async fn lon_lat_bounds(positions: &[(f64, f64)]) -> Option<GisTerrainBounds> {
     positions.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
-            Some(bounds) => GisTerrainBounds {
-                lon_min: bounds.lon_min.min(lon),
-                lon_max: bounds.lon_max.max(lon),
-                lat_min: bounds.lat_min.min(lat),
-                lat_max: bounds.lat_max.max(lat),
-            },
+            Some(bounds) => GisTerrainBounds { lon_min: bounds.lon_min.min(lon), lon_max: bounds.lon_max.max(lon), lat_min: bounds.lat_min.min(lat), lat_max: bounds.lat_max.max(lat) },
             None => GisTerrainBounds { lon_min: lon, lon_max: lon, lat_min: lat, lat_max: lat },
         })
     })

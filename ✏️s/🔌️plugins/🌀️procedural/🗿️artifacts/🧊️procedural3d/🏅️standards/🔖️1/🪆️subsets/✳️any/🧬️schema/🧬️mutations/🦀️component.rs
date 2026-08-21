@@ -19,18 +19,16 @@
 //! directories couldn't be renamed alongside their content — see the migration report's
 //! `sharedFileRequests` for the exact rename once a later pass can touch glue.rs.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
-use flow::FlowFixture;
 use flow::playbook::GenerationMutation;
+use flow::FlowFixture;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -54,12 +52,12 @@ pub(crate) async fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usi
 // sibling `pub mod` blocks, unchanged — imported by those names just below.
 #[path = "."]
 pub mod create_widget {
-    #[path = "🌱create-widget/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "🌱create-widget/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "🌱create-widget/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "🌱create-widget/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "🌱create-widget/🧪️tests/inserts-node-c-at-index-2/🦀️component.rs"]
     mod tests_inserts_node_c_at_index_2;
@@ -67,12 +65,12 @@ pub mod create_widget {
 
 #[path = "."]
 pub mod connect_synapse {
-    #[path = "🔗connect-synapse/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "🔗connect-synapse/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "🔗connect-synapse/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "🔗connect-synapse/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "🔗connect-synapse/🧪️tests/wires-node-b-to-node-c-at-index-1/🦀️component.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
@@ -80,12 +78,12 @@ pub mod connect_synapse {
 
 #[path = "."]
 pub mod create_generation {
-    #[path = "➕create-generation/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "➕create-generation/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "➕create-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "➕create-generation/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "➕create-generation/🧪️tests/appends-generation-2-and-moves-the-selection/🦀️component.rs"]
     mod tests_appends_generation_2_and_moves_the_selection;
@@ -93,12 +91,12 @@ pub mod create_generation {
 
 #[path = "."]
 pub mod delete_generation {
-    #[path = "🗑delete-generation/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "🗑delete-generation/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "🗑delete-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "🗑delete-generation/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "🗑delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back/🦀️component.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
@@ -106,12 +104,12 @@ pub mod delete_generation {
 
 #[path = "."]
 pub mod rename_generation {
-    #[path = "🏷rename-generation/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "🏷rename-generation/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "🏷rename-generation/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "🏷rename-generation/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "🏷rename-generation/🧪️tests/retitles-generation-1-via-new-name/🦀️component.rs"]
     mod tests_retitles_generation_1_via_new_name;
@@ -119,12 +117,12 @@ pub mod rename_generation {
 
 #[path = "."]
 pub mod change_generation_value {
-    #[path = "🔧change-generation-value/🦠️mutation/🦀️component.rs"]
-    pub mod mutation;
     #[path = "🔧change-generation-value/🔺️diff/🦀️component.rs"]
     pub mod diff;
     #[path = "🔧change-generation-value/↩️inverse/🦀️component.rs"]
     pub mod inverse;
+    #[path = "🔧change-generation-value/🦠️mutation/🦀️component.rs"]
+    pub mod mutation;
     #[cfg(test)]
     #[path = "🔧change-generation-value/🧪️tests/raises-the-storeys-answer-in-generation-1/🦀️component.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
@@ -137,12 +135,12 @@ pub mod change_generation_value {
 // into this file's own scope the same way `cad`'s already-migrated `🧬️mutations/🦀️component.rs`
 // reaches its own siblings (`use super::create_object;` etc.): `pub use component::*` only lifts
 // `component`'s items UP into `mutations`, it doesn't inject `mutations`'s OTHER children back down.
+use super::change_schema;
+use super::delete_widget;
 use super::delete_widget_position;
 use super::disconnect_synapse;
-use super::delete_widget;
-use super::update_camera;
 use super::move_widget;
-use super::change_schema;
+use super::update_camera;
 use super::update_synapse;
 use super::update_widget;
 //#endregion 🔖️RepurposedLeaves
@@ -167,7 +165,8 @@ pub enum Procedural3dMutation {
     CreateGeneration(create_generation::mutation::CreateGeneration),
     DeleteGeneration(delete_generation::mutation::DeleteGeneration),
     RenameGeneration(rename_generation::mutation::RenameGeneration),
-    ChangeGenerationValue(change_generation_value::mutation::ChangeGenerationValue)}
+    ChangeGenerationValue(change_generation_value::mutation::ChangeGenerationValue),
+}
 //#endregion 🔖️Mutations
 
 //#region 🔖️GenerationBridge
@@ -181,7 +180,8 @@ pub async fn generation_mutation_to_procedural3d(operation: GenerationMutation) 
         GenerationMutation::Add { generation } => Procedural3dMutation::CreateGeneration(create_generation::mutation::CreateGeneration { generation }),
         GenerationMutation::Remove { id } => Procedural3dMutation::DeleteGeneration(delete_generation::mutation::DeleteGeneration { id }),
         GenerationMutation::Rename { id, name } => Procedural3dMutation::RenameGeneration(rename_generation::mutation::RenameGeneration { id, new_name: name }),
-        GenerationMutation::UpdateValues { id, question_id, value } => Procedural3dMutation::ChangeGenerationValue(change_generation_value::mutation::ChangeGenerationValue { id, question_id, new_value: value })}
+        GenerationMutation::UpdateValues { id, question_id, value } => Procedural3dMutation::ChangeGenerationValue(change_generation_value::mutation::ChangeGenerationValue { id, question_id, new_value: value }),
+    }
 }
 //#endregion 🔖️GenerationBridge
 
@@ -256,35 +256,31 @@ pub async fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
     use change_generation_value::mutation::ChangeGenerationValue;
+    use change_schema::mutation::ChangeSchema;
     use connect_synapse::mutation::ConnectSynapse;
     use create_generation::mutation::CreateGeneration;
     use create_widget::mutation::CreateWidget;
     use delete_generation::mutation::DeleteGeneration;
+    use delete_widget::mutation::DeleteWidget;
     use delete_widget_position::mutation::DeleteWidgetPosition;
     use disconnect_synapse::mutation::DisconnectSynapse;
-    use delete_widget::mutation::DeleteWidget;
+    use flow::playbook::FormGeneration;
+    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+    use move_widget::mutation::MoveWidget;
+    use protocol::Mutation;
+    use protocol::SemanticMutation;
     use rename_generation::mutation::RenameGeneration;
     use update_camera::mutation::UpdateCamera;
-    use move_widget::mutation::MoveWidget;
-    use change_schema::mutation::ChangeSchema;
     use update_synapse::mutation::UpdateSynapse;
     use update_widget::mutation::UpdateWidget;
-    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
-    use flow::playbook::FormGeneration;
-    use protocol::Mutation;
 
     async fn round_trip(projection: &Procedural3dSnapshot, operation: &Procedural3dMutation) -> Procedural3dSnapshot {
-        let forward = vcs::apply_mutation(projection, operation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(projection, operation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in operation.inverse(projection) {
-            restored = vcs::apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, projection, "inverse(base) must restore the pre-operation document");
         forward
@@ -322,7 +318,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn store_applies_widget_create() {
-        let mut store = ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None))
+            .expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
         assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }

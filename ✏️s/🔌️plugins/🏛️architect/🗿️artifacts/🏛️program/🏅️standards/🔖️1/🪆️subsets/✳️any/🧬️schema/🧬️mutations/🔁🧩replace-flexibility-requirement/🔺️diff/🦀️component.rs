@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceFlexibilityRequirement, base: &ProgramSnapsho
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This flexibility requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.flexibility_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { flexibility: Some(ProgramFlexibilityDelta { patched: vec![ProgramFlexibilityPatchEntry { id: payload.flexibility_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        flexibility: Some(ProgramFlexibilityDelta { patched: vec![ProgramFlexibilityPatchEntry { id: payload.flexibility_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

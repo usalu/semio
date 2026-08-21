@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-selection-constraint/drops-the-trailing-length-constraint: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "remove-selection-constraint/drops-the-trailing-length-constraint: index 1 is within the committed two-entry constraint list, so `remove-selection-constraint`'s `mutation.target-missing` error cannot fire");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "remove-selection-constraint/drops-the-trailing-length-constraint: index 1 is within the committed two-entry constraint list, so `remove-selection-constraint`'s `mutation.target-missing` error cannot fire"
+    );
     assert!(produced.messages().is_empty(), "remove-selection-constraint/drops-the-trailing-length-constraint: an accepted remove-selection-constraint emits no diagnostics at all");
 }
 

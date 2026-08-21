@@ -2,8 +2,8 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 use crate::artifacts::procedural2d::mutations::{Procedural2dEnvelope, Procedural2dStore};
+use crate::artifacts::procedural2d::schema::empty_procedural2d_snapshot;
 use crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;
@@ -11,7 +11,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Procedural2dSnapshotVcs {
-    store: RefCell<Procedural2dStore>}
+    store: RefCell<Procedural2dStore>,
+}
 
 #[wasm_bindgen]
 impl Procedural2dSnapshotVcs {
@@ -22,7 +23,8 @@ impl Procedural2dSnapshotVcs {
                 let envelope: Procedural2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Procedural2dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
             }
-            None => Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?};
+            None => Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+        };
         Ok(Self { store: RefCell::new(store) })
     }
 
@@ -51,4 +53,3 @@ impl Procedural2dSnapshotVcs {
         self.store.borrow().generation() as u32
     }
 }
-

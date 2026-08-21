@@ -7,7 +7,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::Block3dSnapshot;
 use protocol::Mutation;
@@ -128,8 +127,8 @@ mod tests {
     use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-    use protocol::SemanticMutation;
     use protocol::MutationDiff;
+    use protocol::SemanticMutation;
 
     async fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
@@ -145,7 +144,15 @@ mod tests {
 
     async fn seeded_snapshot() -> Block3dSnapshot {
         let mut base = empty_block3d_snapshot();
-        base.representations.push(BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: vec!["lod0".into()], lod: None, description: String::new(), attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }] });
+        base.representations.push(BlockRepresentation {
+            id: "r0".into(),
+            name: "r0".into(),
+            mesh_url: None,
+            tags: vec!["lod0".into()],
+            lod: None,
+            description: String::new(),
+            attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }],
+        });
         crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
         base.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
         base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
@@ -338,7 +345,8 @@ mod tests {
         assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
         assert_missing_target_is_error(&base, &change_vortex_kind_color("missing".into(), "#fff".into())); // change/set/update
-        assert_missing_target_is_error(&base, &move_vortex("missing".into(), [0.0, 0.0, 0.0], [1.0, 0.0, 0.0])); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &move_vortex("missing".into(), [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]));
+        // move/drag/rotate/scale/resize
     }
 
     #[semio_framework_async_macros::async_test]

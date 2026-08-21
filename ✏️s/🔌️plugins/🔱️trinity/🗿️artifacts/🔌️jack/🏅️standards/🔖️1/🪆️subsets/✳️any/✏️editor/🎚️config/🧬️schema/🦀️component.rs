@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
-use crate::artifacts::jack::Camera;
 use super::JackEditorSelection;
+use crate::artifacts::jack::Camera;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -9,18 +9,30 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.config")]
 pub struct JackConfig {
-    #[state(config)] pub camera: Camera,
-    #[state(config)] pub active_fixture_id: String,
-    #[state(config)] pub jack_query: String,
-    #[state(config)] pub jack_result_json: String,
-    #[state(config)] pub editor_engagement_input: String,
-    #[state(config)] pub graph_engagement_input: String,
-    #[state(config)] pub results_engagement_input: String,
-    #[state(config)] pub reorganize_epoch: u64,
-    #[state(config)] pub editor_selection: Option<JackEditorSelection>,
-    #[state(config)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(config)] pub revision: u64,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub camera: Camera,
+    #[state(config)]
+    pub active_fixture_id: String,
+    #[state(config)]
+    pub jack_query: String,
+    #[state(config)]
+    pub jack_result_json: String,
+    #[state(config)]
+    pub editor_engagement_input: String,
+    #[state(config)]
+    pub graph_engagement_input: String,
+    #[state(config)]
+    pub results_engagement_input: String,
+    #[state(config)]
+    pub reorganize_epoch: u64,
+    #[state(config)]
+    pub editor_selection: Option<JackEditorSelection>,
+    #[state(config)]
+    pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)]
+    pub revision: u64,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -47,4 +59,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

@@ -7,8 +7,8 @@
 //!
 //! The translational pin is released while the six-DOF clamp stays — deleting a support never re-balances the rest.
 
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::artifacts::fem3d::mutations::Fem3dMutation;
+use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
 use crate::artifacts::fem3d::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -109,7 +109,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-support/releases-the-pinned-node-n2: committed diff did not carry before to after");
 }

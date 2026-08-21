@@ -440,17 +440,17 @@ impl UndirectedGraph {
 // #region 🔖️ViewDelegation
 /// 🪟️ Delegates the structural view to the inner `Storage` so later-wave algorithm crates can operate on `&UndirectedGraph` directly.
 impl GraphView for UndirectedGraph {
-    async fn node_count(&self) -> usize {
-        self.0.node_count().await
+    fn node_count(&self) -> usize {
+        self.0.node_count()
     }
     async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.0.nodes()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
-        self.0.contains_node(node).await
+    fn contains_node(&self, node: NodeId) -> bool {
+        self.0.contains_node(node)
     }
-    async fn edge_count(&self) -> usize {
-        self.0.edge_count().await
+    fn edge_count(&self) -> usize {
+        self.0.edge_count()
     }
     async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.0.edges()
@@ -464,20 +464,20 @@ impl GraphView for UndirectedGraph {
     async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.0.in_neighbors(node)
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        self.0.degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        self.0.degree(node)
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
-        self.0.out_degree(node).await
+    fn out_degree(&self, node: NodeId) -> usize {
+        self.0.out_degree(node)
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        self.0.in_degree(node).await
+    fn in_degree(&self, node: NodeId) -> usize {
+        self.0.in_degree(node)
     }
-    async fn is_directed(&self) -> bool {
-        self.0.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.0.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.0.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.0.is_multigraph()
     }
     async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.0.edges_between(u, v)
@@ -486,21 +486,21 @@ impl GraphView for UndirectedGraph {
 
 /// 🏷️ Delegates attribute lookup to the inner `Storage`.
 impl AttrView for UndirectedGraph {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.0.node_attrs(node).await
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+        self.0.node_attrs(node)
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.0.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.0.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.0.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.0.graph_attrs()
     }
 }
 
 /// ⚖️ Delegates edge weight lookup (`PropertyBag["weight"]`, defaulting to `1.0`) to the inner `Storage`.
 impl EdgeWeights for UndirectedGraph {
-    async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.0.weight(edge).await
+    fn weight(&self, edge: EdgeRef) -> f64 {
+        self.0.weight(edge)
     }
 }
 // #endregion 🔖️ViewDelegation

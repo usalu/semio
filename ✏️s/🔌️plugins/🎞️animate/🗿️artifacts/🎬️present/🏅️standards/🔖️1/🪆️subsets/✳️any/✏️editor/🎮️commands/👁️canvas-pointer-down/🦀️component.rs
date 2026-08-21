@@ -1,10 +1,10 @@
 //! 👁️ 👁️ Animate present app commands command — `canvas-pointer-down`.
 
-use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
+use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

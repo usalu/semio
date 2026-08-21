@@ -87,7 +87,6 @@ pub struct CadWorkingScene {
     pub(crate) structure_classic_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
 }
 
-
 /// 🌉 READ direction: resolved `s.stdio.semio.model` child content (once a real resolver hands it
 /// over — see `store::LinkResolver`/`ChildStoreFactory` in `🏪️store/🦀️component.rs`'s
 /// `🔖️Composition` region) → this document's `CadWorkingScene`. Each pane is independent: a `None`

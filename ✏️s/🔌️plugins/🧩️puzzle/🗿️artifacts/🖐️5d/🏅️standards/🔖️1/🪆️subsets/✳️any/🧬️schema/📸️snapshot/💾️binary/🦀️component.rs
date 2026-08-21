@@ -1,13 +1,11 @@
 //! 🎒️ Puzzle 5d artifact — the binary document surface and its laws: `encode`/`decode` over the
 //! typed `Puzzle5dSnapshot`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use store::PackError;
@@ -49,8 +47,7 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
-        let part = Puzzle5dPart { id: "p1".into(),
-            anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
+        let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
         store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle5d::mutations::create_part(part, None)], description: None }).expect("apply");
         let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));

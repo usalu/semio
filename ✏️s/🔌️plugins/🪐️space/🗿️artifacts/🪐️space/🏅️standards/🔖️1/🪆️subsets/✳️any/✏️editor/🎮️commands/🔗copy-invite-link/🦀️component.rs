@@ -28,7 +28,6 @@ pub async fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnaps
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn copy_invite_link_relays_share_link() {

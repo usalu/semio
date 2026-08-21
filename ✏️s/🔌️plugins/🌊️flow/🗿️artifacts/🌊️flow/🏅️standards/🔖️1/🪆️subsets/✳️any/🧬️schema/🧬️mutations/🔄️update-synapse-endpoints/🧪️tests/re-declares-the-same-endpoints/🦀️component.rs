@@ -166,9 +166,5 @@ async fn all_three_lookups_pass_before_the_four_field_equality_guard() {
         "all four endpoint fields must already match — that four-way equality IS the no-op guard"
     );
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("update", "synapse", "update-synapse-endpoints", "UpdatedSynapseEndpoints"),
-        "the fixture must be bound to update-synapse-endpoints' own descriptor"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("update", "synapse", "update-synapse-endpoints", "UpdatedSynapseEndpoints"), "the fixture must be bound to update-synapse-endpoints' own descriptor");
 }

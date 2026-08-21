@@ -14,18 +14,10 @@ pub async fn diff(payload: &ResizeTileCrop, base: &PresentSnapshot) -> protocol:
     };
     let crop = &payload.new_crop;
     if !crop.x.is_finite() || !crop.y.is_finite() || !crop.width.is_finite() || !crop.height.is_finite() {
-        return protocol::MutationOutcome::fatal(
-            "mutation.invariant",
-            format!("Tile \"{}\" crop must be finite, got ({}, {}, {}, {}).", payload.id, crop.x, crop.y, crop.width, crop.height),
-            ["tiles".to_string(), payload.id.clone()],
-        );
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" crop must be finite, got ({}, {}, {}, {}).", payload.id, crop.x, crop.y, crop.width, crop.height), ["tiles".to_string(), payload.id.clone()]);
     }
     if crop.width <= 0.0 || crop.height <= 0.0 {
-        return protocol::MutationOutcome::fatal(
-            "mutation.invariant",
-            format!("Tile \"{}\" crop width/height must be positive, got ({}, {}).", payload.id, crop.width, crop.height),
-            ["tiles".to_string(), payload.id.clone()],
-        );
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tile \"{}\" crop width/height must be positive, got ({}, {}).", payload.id, crop.width, crop.height), ["tiles".to_string(), payload.id.clone()]);
     }
     if existing.crop == payload.new_crop {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tile \"{}\" crop is already unchanged.", payload.id));

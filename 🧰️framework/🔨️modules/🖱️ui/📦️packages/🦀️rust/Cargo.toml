@@ -43,6 +43,7 @@ wgpu-engine = [
     "dep:web-sys",
     "dep:arboard",
     "dep:semio-framework-geometry",
+    "dep:semio-framework-job",
 ]
 # 🧬️ TypeScript mirror for boundary/protocol types on the `wgpu` target's `component` region.
 typegen = ["wgpu", "dep:ts-rs"]
@@ -58,6 +59,7 @@ ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = 
 # ⛓️ Consumed directly for the `wgpu-engine` widgets that still take `Camera3d` by value (see
 # `widgets.rs`); `semio-framework-ui-scene`'s `math` module re-exports `Mat4`/`Vec3` from here too.
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
+semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
 unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }

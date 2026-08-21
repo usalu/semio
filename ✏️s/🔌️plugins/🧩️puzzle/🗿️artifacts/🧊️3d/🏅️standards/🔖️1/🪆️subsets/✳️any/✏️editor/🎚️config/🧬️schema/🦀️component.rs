@@ -86,35 +86,64 @@ pub struct Puzzle3dWindowOptions {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d.config")]
 pub struct Puzzle3dConfig {
-    #[state(config)] pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
-    #[state(config)] pub overlap_budget: f64,
-    #[state(config)] pub fill_count: u32,
-    #[state(config)] pub brush_candidate_index: usize,
-    #[state(config)] pub object_kind_weights: HashMap<String, f64>,
-    #[state(config)] pub vortex_kind_weights: HashMap<String, f64>,
-    #[state(config)] pub lod_automatic: bool,
-    #[state(config)] pub lod_depth_variable: bool,
-    #[state(config)] pub grid_visible: bool,
-    #[state(config)] pub lod_manual: f64,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_spacing: f64,
-    #[state(config)] pub selectable_kinds: Puzzle3dSelectableKinds,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub proximity_radius: f64,
-    #[state(config)] pub chunk_size: f64,
-    #[state(config)] pub voxel_dims: [u32; 3],
-    #[state(config)] pub transform_move: bool,
-    #[state(config)] pub transform_rotate: bool,
-    #[state(config)] pub vortex_show: String,
-    #[state(config)] pub vortex_direction: String,
-    #[state(config)] pub sun: WorldSunConfig,
-    #[state(config)] pub camera: Puzzle3dCamera,
-    #[state(config)] pub window_options: BTreeMap<String, Puzzle3dWindowOptions>,
-    #[state(config)] pub active_utility_by_window_id: BTreeMap<String, String>,
-    #[state(config)] pub active_tool_id: Option<String>,
-    #[state(config)] pub terminology: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub window_ids: Vec<String>,
+    #[state(config)]
+    pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
+    #[state(config)]
+    pub overlap_budget: f64,
+    #[state(config)]
+    pub fill_count: u32,
+    #[state(config)]
+    pub brush_candidate_index: usize,
+    #[state(config)]
+    pub object_kind_weights: HashMap<String, f64>,
+    #[state(config)]
+    pub vortex_kind_weights: HashMap<String, f64>,
+    #[state(config)]
+    pub lod_automatic: bool,
+    #[state(config)]
+    pub lod_depth_variable: bool,
+    #[state(config)]
+    pub grid_visible: bool,
+    #[state(config)]
+    pub lod_manual: f64,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_spacing: f64,
+    #[state(config)]
+    pub selectable_kinds: Puzzle3dSelectableKinds,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub proximity_radius: f64,
+    #[state(config)]
+    pub chunk_size: f64,
+    #[state(config)]
+    pub voxel_dims: [u32; 3],
+    #[state(config)]
+    pub transform_move: bool,
+    #[state(config)]
+    pub transform_rotate: bool,
+    #[state(config)]
+    pub vortex_show: String,
+    #[state(config)]
+    pub vortex_direction: String,
+    #[state(config)]
+    pub sun: WorldSunConfig,
+    #[state(config)]
+    pub camera: Puzzle3dCamera,
+    #[state(config)]
+    pub window_options: BTreeMap<String, Puzzle3dWindowOptions>,
+    #[state(config)]
+    pub active_utility_by_window_id: BTreeMap<String, String>,
+    #[state(config)]
+    pub active_tool_id: Option<String>,
+    #[state(config)]
+    pub terminology: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub window_ids: Vec<String>,
 }
 
 //region 📎 App-schema descriptor
@@ -143,4 +172,3 @@ pub async fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

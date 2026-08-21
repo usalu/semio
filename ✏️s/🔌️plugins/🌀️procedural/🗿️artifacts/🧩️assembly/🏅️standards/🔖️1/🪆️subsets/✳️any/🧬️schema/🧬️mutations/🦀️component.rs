@@ -72,9 +72,7 @@ mod tests {
         let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
-            restored = apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, projection, "inverse() must restore the pre-mutation document");
         forward

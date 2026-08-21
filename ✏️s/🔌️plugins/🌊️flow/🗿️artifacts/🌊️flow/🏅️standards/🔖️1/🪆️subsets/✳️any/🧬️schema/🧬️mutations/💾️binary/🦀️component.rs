@@ -8,13 +8,11 @@
 //! is an APP concern, not an artifact one: it now lives in `🎛️apps/🌊️flow/🦀️component.rs`, assembled from
 //! the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::flow::op::FlowMutation;
 use protocol::OpBinary;
@@ -37,9 +35,7 @@ mod tests {
     use protocol::Identified;
 
     async fn sample_move_widgets_operation() -> FlowMutation {
-        FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
-            entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 1.0, y: 2.0 }) }],
-        })
+        FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 1.0, y: 2.0 }) }] })
     }
 
     #[semio_framework_async_macros::async_test]

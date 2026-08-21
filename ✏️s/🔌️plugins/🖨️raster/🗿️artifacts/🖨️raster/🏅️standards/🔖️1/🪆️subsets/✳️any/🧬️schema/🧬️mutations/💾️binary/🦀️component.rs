@@ -1,12 +1,10 @@
 //! ⚖️ Raster artifact — binary command protocol surface + laws (constitutional: spr).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::raster::op::RasterMutation;
 use protocol::OpBinary;
@@ -25,8 +23,8 @@ pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::Protoco
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::schema::empty_raster_document;
     use crate::artifacts::raster::mutations::create_layer;
+    use crate::artifacts::raster::schema::empty_raster_document;
     use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]

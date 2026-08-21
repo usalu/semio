@@ -30,7 +30,6 @@ extern crate semio_framework_graph as graph_core;
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -58,20 +57,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
@@ -95,174 +94,174 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod clear_widget_layout {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹clear-widget-layout/🧪️tests/drops-the-note-a-layout-entry/🦀️component.rs"]
                                     mod tests_drops_the_note_a_layout_entry;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_synapse {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/severs-link-ab-leaving-both-notes/🦀️component.rs"]
                                     mod tests_severs_link_ab_leaving_both_notes;
                                 }
                                 #[path = "."]
                                 pub mod delete_widget {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/removes-note-a-and-flags-the-dangling-synapse/🦀️component.rs"]
                                     mod tests_removes_note_a_and_flags_the_dangling_synapse;
                                 }
                                 #[path = "."]
                                 pub mod set_camera {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛set-camera/🧪️tests/pans-and-zooms-the-graph-camera/🦀️component.rs"]
                                     mod tests_pans_and_zooms_the_graph_camera;
                                 }
                                 #[path = "."]
                                 pub mod move_widget {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🧪️tests/repositions-note-a-on-the-canvas/🦀️component.rs"]
                                     mod tests_repositions_note_a_on_the_canvas;
                                 }
                                 #[path = "."]
                                 pub mod change_schema {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🧪️tests/restamps-the-fixture-schema/🦀️component.rs"]
                                     mod tests_restamps_the_fixture_schema;
                                 }
                                 #[path = "."]
                                 pub mod connect_synapse {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🧪️tests/joins-note-b-to-note-c-at-index-1/🦀️component.rs"]
                                     mod tests_joins_note_b_to_note_c_at_index_1;
                                 }
                                 #[path = "."]
                                 pub mod replace_widget {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-widget/🧪️tests/rewrites-the-note-b-body-in-place/🦀️component.rs"]
                                     mod tests_rewrites_the_note_b_body_in_place;
                                 }
                                 #[path = "."]
                                 pub mod replace_synapse {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-synapse/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-synapse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-synapse/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-synapse/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-synapse/🧪️tests/repoints-link-ab-onto-the-alt-port/🦀️component.rs"]
                                     mod tests_repoints_link_ab_onto_the_alt_port;
                                 }
                                 #[path = "."]
                                 pub mod create_generation {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🧪️tests/appends-generation-2-and-selects-it/🦀️component.rs"]
                                     mod tests_appends_generation_2_and_selects_it;
                                 }
                                 #[path = "."]
                                 pub mod delete_generation {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/removes-the-selected-generation-2-and-falls-back-to-generation-1/🦀️component.rs"]
                                     mod tests_removes_the_selected_generation_2_and_falls_back_to_generation_1;
                                 }
                                 #[path = "."]
                                 pub mod rename_generation {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧪️tests/retitles-generation-1/🦀️component.rs"]
                                     mod tests_retitles_generation_1;
                                 }
                                 #[path = "."]
                                 pub mod change_generation_value {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-generation-value/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-generation-value/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-generation-value/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-generation-value/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-generation-value/🧪️tests/raises-the-height-answer-in-generation-1/🦀️component.rs"]
                                     mod tests_raises_the_height_answer_in_generation_1;
                                 }
                                 #[path = "."]
                                 pub mod create_widget {
-                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🧪️tests/inserts-note-c-at-index-2/🦀️component.rs"]
                                     mod tests_inserts_note_c_at_index_2;
@@ -473,16 +472,63 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-        pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::Procedural2dSnapshot;
-        pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::Procedural2dMutation;
+        pub mod op {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::diff::Procedural2dDiff;
-
+        pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::mutations::Procedural2dMutation;
+        pub use crate::artifacts::procedural2d::standards::v1::subsets::any::schema::snapshot::Procedural2dSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -518,20 +564,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
@@ -555,102 +601,102 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod delete_widget_position {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-widget-position/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-widget-position/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-widget-position/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-widget-position/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-widget-position/🧪️tests/unpins-the-node-a-position/🦀️component.rs"]
                                     mod tests_unpins_the_node_a_position;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_synapse {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧪️tests/cuts-wire-ab-leaving-both-nodes/🦀️component.rs"]
                                     mod tests_cuts_wire_ab_leaving_both_nodes;
                                 }
                                 #[path = "."]
                                 pub mod delete_widget {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-widget/🧪️tests/removes-node-a-and-leaves-wire-ab-dangling/🦀️component.rs"]
                                     mod tests_removes_node_a_and_leaves_wire_ab_dangling;
                                 }
                                 #[path = "."]
                                 pub mod update_camera {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷update-camera/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷update-camera/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷update-camera/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷update-camera/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷update-camera/🧪️tests/frames-the-graph-at-double-zoom/🦀️component.rs"]
                                     mod tests_frames_the_graph_at_double_zoom;
                                 }
                                 #[path = "."]
                                 pub mod move_widget {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-widget/🧪️tests/repositions-node-a-in-the-graph/🦀️component.rs"]
                                     mod tests_repositions_node_a_in_the_graph;
                                 }
                                 #[path = "."]
                                 pub mod change_schema {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-schema/🧪️tests/restamps-the-fixture-schema-id/🦀️component.rs"]
                                     mod tests_restamps_the_fixture_schema_id;
                                 }
                                 #[path = "."]
                                 pub mod update_synapse {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄update-synapse/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄update-synapse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄update-synapse/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄update-synapse/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄update-synapse/🧪️tests/repoints-wire-ab-onto-the-cap-port/🦀️component.rs"]
                                     mod tests_repoints_wire_ab_onto_the_cap_port;
                                 }
                                 #[path = "."]
                                 pub mod update_widget {
-                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹update-widget/🧪️tests/retunes-the-knob-slider-value/🦀️component.rs"]
                                     mod tests_retunes_the_knob_slider_value;
@@ -909,17 +955,63 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::text::*; } pub mod pack { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::binary::*; } pub mod binary { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::text::*; } pub mod pack { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*; } pub mod binary { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::text::*; } pub mod pack { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-        pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::Procedural3dSnapshot;
-        pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::Procedural3dMutation;
+        pub mod op {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::diff::Procedural3dDiff;
-
-
+        pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::mutations::Procedural3dMutation;
+        pub use crate::artifacts::procedural3d::standards::v1::subsets::any::schema::snapshot::Procedural3dSnapshot;
     }
 
     #[path = "."]
@@ -938,10 +1030,10 @@ pub mod artifacts {
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
-                            pub mod snapshot;
                             #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs"]
                             pub mod diff;
+                            #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
+                            pub mod snapshot;
                             #[path = "."]
                             pub mod mutations {
                                 #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
@@ -949,108 +1041,108 @@ pub mod artifacts {
                                 pub use component::*;
                                 #[path = "."]
                                 pub mod create_slot {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-slot/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-slot/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-slot/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-slot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-slot/🧪️tests/appends-slot-c-at-index-2/🦀️component.rs"]
                                     mod tests_appends_slot_c_at_index_2;
                                 }
                                 #[path = "."]
                                 pub mod delete_slot {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-slot/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-slot/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-slot/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-slot/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-slot/🧪️tests/removes-slot-a-and-cascades-edge-ab/🦀️component.rs"]
                                     mod tests_removes_slot_a_and_cascades_edge_ab;
                                 }
                                 #[path = "."]
                                 pub mod create_rule {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-rule/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-rule/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-rule/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-rule/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-rule/🧪️tests/appends-a-rule-forbidding-roof-over-wall/🦀️component.rs"]
                                     mod tests_appends_a_rule_forbidding_roof_over_wall;
                                 }
                                 #[path = "."]
                                 pub mod delete_rule {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-rule/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-rule/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-rule/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-rule/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-rule/🧪️tests/removes-the-wall-roof-rule/🦀️component.rs"]
                                     mod tests_removes_the_wall_roof_rule;
                                 }
                                 #[path = "."]
                                 pub mod change_weight {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-weight/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-weight/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-weight/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-weight/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-weight/🧪️tests/raises-the-wall-module-selection-bias/🦀️component.rs"]
                                     mod tests_raises_the_wall_module_selection_bias;
                                 }
                                 #[path = "."]
                                 pub mod remove_weight {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-weight/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-weight/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-weight/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-weight/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-weight/🧪️tests/drops-the-wall-module-weight-override/🦀️component.rs"]
                                     mod tests_drops_the_wall_module_weight_override;
                                 }
                                 #[path = "."]
                                 pub mod connect_slots {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-slots/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-slots/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-slots/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-slots/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-slots/🧪️tests/joins-slot-b-to-slot-c-at-index-1/🦀️component.rs"]
                                     mod tests_joins_slot_b_to_slot_c_at_index_1;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_slots {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/severs-edge-ab-leaving-both-slots/🦀️component.rs"]
                                     mod tests_severs_edge_ab_leaving_both_slots;
                                 }
                                 #[path = "."]
                                 pub mod change_seed {
-                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲change-seed/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲change-seed/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲change-seed/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲change-seed/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲change-seed/🧪️tests/reseeds-the-solve-from-7-to-99/🦀️component.rs"]
                                     mod tests_reseeds_the_solve_from_7_to_99;
@@ -1081,9 +1173,9 @@ pub mod artifacts {
         pub mod inferences {
             pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::*;
         }
-        pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::snapshot::AssemblySnapshot;
-        pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::mutations::AssemblyMutation;
         pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::diff::AssemblyDiff;
+        pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::mutations::AssemblyMutation;
+        pub use crate::artifacts::assembly::standards::v1::subsets::any::schema::snapshot::AssemblySnapshot;
     }
 }
 //#endregion 🗿️Artifacts
@@ -1171,39 +1263,6 @@ pub(crate) mod wfc_engine {
     pub(crate) mod trail;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs"]
     pub mod weights;
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }
 //#endregion 🧩️WfcEngine
 
@@ -1243,34 +1302,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
-            pub mod node_graph_edit;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
-            pub mod move_media_node;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
-            pub mod connect_media_ports;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
-            pub mod reorganize;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
-            pub mod node_graph_viewport;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️component.rs"]
-            pub mod add_widget;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
-            pub mod remove_widget;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️add-generation/🦀️component.rs"]
             pub mod add_generation;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
-            pub mod remove_generation;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
-            pub mod rename_generation;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
-            pub mod update_generation_values;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-generation/🦀️component.rs"]
-            pub mod select_generation;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️enter-generate/🦀️component.rs"]
-            pub mod enter_generate;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️component.rs"]
-            pub mod set_show_mode;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️component.rs"]
+            pub mod add_widget;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-pointer-move/🦀️component.rs"]
@@ -1279,12 +1314,36 @@ pub mod editor {
             pub mod canvas_pointer_up;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-wheel/🦀️component.rs"]
             pub mod canvas_wheel;
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-eval-outputs/🦀️component.rs"]
-            pub mod set_eval_outputs;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
+            pub mod connect_media_ports;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️enter-generate/🦀️component.rs"]
+            pub mod enter_generate;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
             pub mod flow_eval_tick;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            pub mod move_media_node;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            pub mod node_graph_edit;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            pub mod node_graph_viewport;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
+            pub mod remove_generation;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
+            pub mod remove_widget;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
+            pub mod rename_generation;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            pub mod reorganize;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-generation/🦀️component.rs"]
+            pub mod select_generation;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-eval-outputs/🦀️component.rs"]
+            pub mod set_eval_outputs;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️component.rs"]
+            pub mod set_show_mode;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
+            pub mod update_generation_values;
         }
 
         #[path = "."]
@@ -1312,10 +1371,10 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
-                    pub mod generations;
                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
                     pub mod form;
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
+                    pub mod generations;
                     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
@@ -1324,10 +1383,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
             #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
@@ -1366,68 +1425,68 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
-            pub mod set_active_example;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
-            pub mod node_graph_edit;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
-            pub mod move_media_node;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
-            pub mod reorganize;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
-            pub mod node_graph_viewport;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph-pointer-down/🦀️component.rs"]
-            pub mod graph_pointer_down;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️delete-selection/🦀️component.rs"]
-            pub mod delete_selection;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
-            pub mod remove_widget;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️add-generation/🦀️component.rs"]
+            pub mod add_generation;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️component.rs"]
             pub mod add_widget;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️delete-selection/🦀️component.rs"]
+            pub mod delete_selection;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs"]
+            pub mod flow_eval_resolve;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
+            pub mod flow_eval_tick;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-tessellate-resolve/🦀️component.rs"]
+            pub mod flow_tessellate_resolve;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph-pointer-down/🦀️component.rs"]
+            pub mod graph_pointer_down;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            pub mod move_media_node;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            pub mod node_graph_edit;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            pub mod node_graph_viewport;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️patch-flow-widgets/🦀️component.rs"]
             pub mod patch_flow_widgets;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️translate-selection/🦀️component.rs"]
-            pub mod translate_selection;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
+            pub mod remove_generation;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
+            pub mod remove_widget;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
+            pub mod rename_generation;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            pub mod reorganize;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️rotate-selection/🦀️component.rs"]
             pub mod rotate_selection;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️scale-selection/🦀️component.rs"]
             pub mod scale_selection;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️world-pointer-down/🦀️component.rs"]
-            pub mod world_pointer_down;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️add-generation/🦀️component.rs"]
-            pub mod add_generation;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
-            pub mod remove_generation;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
-            pub mod rename_generation;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
-            pub mod update_generation_values;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-generation/🦀️component.rs"]
             pub mod select_generation;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            pub mod set_active_utility;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️component.rs"]
+            pub mod set_camera;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
             pub mod set_lod_mode;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️component.rs"]
             pub mod set_show_mode;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️component.rs"]
-            pub mod set_camera;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️component.rs"]
-            pub mod set_active_utility;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🦀️component.rs"]
-            pub mod toggle_sun;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-azimuth/🦀️component.rs"]
             pub mod set_sun_azimuth;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-elevation/🦀️component.rs"]
             pub mod set_sun_elevation;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-intensity/🦀️component.rs"]
             pub mod set_sun_intensity;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
-            pub mod flow_eval_tick;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs"]
-            pub mod flow_eval_resolve;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-tessellate-resolve/🦀️component.rs"]
-            pub mod flow_tessellate_resolve;
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
-            pub mod set_locale;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🦀️component.rs"]
+            pub mod toggle_sun;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️translate-selection/🦀️component.rs"]
+            pub mod translate_selection;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
+            pub mod update_generation_values;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️world-pointer-down/🦀️component.rs"]
+            pub mod world_pointer_down;
         }
 
         #[path = "."]
@@ -1455,10 +1514,10 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
-                    pub mod generations;
                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
                     pub mod form;
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
+                    pub mod generations;
                     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
@@ -1467,10 +1526,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
             #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
@@ -1548,6 +1607,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
+    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_2d_demo_session;
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_3d_demo_session;
     #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_procedural2d_demo;
     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️box-fillet-preview/🦀️component.rs"]
@@ -1564,10 +1627,6 @@ pub mod examples {
     pub mod art_procedural3d_sphere_box_fuse;
     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️sphere-cut-with-torus/🦀️component.rs"]
     pub mod art_procedural3d_sphere_cut_with_torus;
-    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_2d_demo_session;
-    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_3d_demo_session;
 }
 //#endregion 📚️Examples
 

@@ -1,15 +1,15 @@
 //! 🧬️ Procedural2d artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::procedural2d::snapshot::schema::Procedural2dSnapshot;
-use flow::CameraJson;
-use flow::FlowFixture;
-use flow::playbook::GenerationPlayState;
-use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
-use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
+use flow::playbook::GenerationPlayState;
 use flow::render_scene_json;
+use flow::CameraJson;
+use flow::FlowFixture;
+use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use store::ArtifactDsl;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
@@ -21,14 +21,23 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecor
 #[artifact_schema(id = "s.procedural.procedural2d")]
 
 pub struct Procedural2dArtifact {
-    #[state(artifact)] pub fixture: FlowFixture,
-    #[state(artifact)] pub generation: GenerationPlayState,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(config)] pub graph_camera: CameraJson,
-    #[state(config)] pub show_mode: String,
-    #[state(presence)] pub selected_generation_id: Option<String>,
-    #[state(artifact)] pub generation_preview_text: Option<String>,
-    #[state(config)] pub locale: String}
+    #[state(artifact)]
+    pub fixture: FlowFixture,
+    #[state(artifact)]
+    pub generation: GenerationPlayState,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(config)]
+    pub graph_camera: CameraJson,
+    #[state(config)]
+    pub show_mode: String,
+    #[state(presence)]
+    pub selected_generation_id: Option<String>,
+    #[state(artifact)]
+    pub generation_preview_text: Option<String>,
+    #[state(config)]
+    pub locale: String,
+}
 //#endregion 🔖️Procedural2dArtifact
 
 impl Default for Procedural2dArtifact {
@@ -41,25 +50,20 @@ impl Default for Procedural2dArtifact {
             show_mode: "preview".into(),
             selected_generation_id: None,
             generation_preview_text: None,
-            locale: "en-US".into()}
+            locale: "en-US".into(),
+        }
     }
 }
 
 impl Procedural2dArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> Procedural2dSnapshot {
-        Procedural2dSnapshot {
-            fixture: self.fixture.clone(),
-            generation: self.generation.clone()}
+        Procedural2dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: Procedural2dSnapshot) -> Self {
-        Self {
-            fixture: snapshot.fixture,
-            generation: snapshot.generation,
-            ..Self::default()
-        }
+        Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -107,8 +111,8 @@ pub async fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchema
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dMutation, Procedural2dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Procedural2dBuilderConstruction {
@@ -120,8 +124,12 @@ pub mod derived_construction {
         type Snapshot = Procedural2dSnapshot;
         type Mutation = Procedural2dMutation;
         type Diff = Procedural2dDiff;
-        async fn empty() -> Self { Self { snapshot: Procedural2dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Procedural2dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -132,24 +140,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Procedural2dDiff as protocol::MutationDiff<Procedural2dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -158,8 +163,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::procedural2d::Procedural2dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Procedural2dParts {

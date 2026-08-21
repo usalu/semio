@@ -56,7 +56,7 @@ impl PropertyValue {
         }
     }
 
-    pub async fn as_object(&self) -> Option<&std::collections::BTreeMap<String, PropertyValue>> {
+    pub fn as_object(&self) -> Option<&std::collections::BTreeMap<String, PropertyValue>> {
         match self {
             Self::Object(m) => Some(m),
             _ => None,
@@ -263,7 +263,7 @@ pub struct KindDef {
 }
 
 impl KindDef {
-    pub async fn display_name(&self) -> &str {
+    pub fn display_name(&self) -> &str {
         if self.name.is_empty() {
             &self.id
         } else {
@@ -309,31 +309,31 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    pub async fn node_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn node_kind(&self, id: &str) -> Option<&KindDef> {
         self.node_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn edge_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn edge_kind(&self, id: &str) -> Option<&KindDef> {
         self.edge_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn port_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn port_kind(&self, id: &str) -> Option<&KindDef> {
         self.port_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn wire_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn wire_kind(&self, id: &str) -> Option<&KindDef> {
         self.wire_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn layer_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn layer_kind(&self, id: &str) -> Option<&KindDef> {
         self.layer_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn language_kind(&self, id: &str) -> Option<&KindDef> {
+    pub fn language_kind(&self, id: &str) -> Option<&KindDef> {
         self.language_kinds.iter().find(|k| k.id == id)
     }
 
-    pub async fn to_trinity_manifest(&self) -> TrinityManifest {
+    pub fn to_trinity_manifest(&self) -> TrinityManifest {
         TrinityManifest {
             node_kinds: self.node_kinds.iter().map(|k| TrinityNodeKindDef { name: k.id.clone(), properties: k.properties.clone(), port_kinds: k.ports.clone() }).collect(),
             edge_kinds: self.edge_kinds.iter().map(|k| TrinityEdgeKindDef { name: k.id.clone(), properties: k.properties.clone() }).collect(),
@@ -395,21 +395,21 @@ pub struct TrinityPortKindDef {
 }
 
 impl TrinityManifest {
-    pub async fn node_kind(&self, name: &str) -> Option<&TrinityNodeKindDef> {
+    pub fn node_kind(&self, name: &str) -> Option<&TrinityNodeKindDef> {
         self.node_kinds.iter().find(|k| k.name == name)
     }
 
-    pub async fn edge_kind(&self, name: &str) -> Option<&TrinityEdgeKindDef> {
+    pub fn edge_kind(&self, name: &str) -> Option<&TrinityEdgeKindDef> {
         self.edge_kinds.iter().find(|k| k.name == name)
     }
 
-    pub async fn port_kind(&self, name: &str) -> Option<&TrinityPortKindDef> {
+    pub fn port_kind(&self, name: &str) -> Option<&TrinityPortKindDef> {
         self.port_kinds.iter().find(|k| k.name == name)
     }
 
     /// 📜️ Nakagin capsule tower compile-time manifest.
-    pub async fn nakagin_default() -> Self {
-        nakagin::nakagin_manifest().to_trinity_manifest().await
+    pub fn nakagin_default() -> Self {
+        nakagin::nakagin_manifest().to_trinity_manifest()
     }
 }
 
@@ -424,7 +424,7 @@ pub struct ManifestValidationError {
 }
 
 impl ManifestValidationError {
-    async fn new(path: impl Into<String>, message: impl Into<String>) -> Self {
+    fn new(path: impl Into<String>, message: impl Into<String>) -> Self {
         Self { path: path.into(), message: message.into() }
     }
 }
@@ -436,73 +436,73 @@ pub struct ManifestValidator<'a> {
 }
 
 impl<'a> ManifestValidator<'a> {
-    pub async fn new(manifest: &'a Manifest) -> Self {
+    pub fn new(manifest: &'a Manifest) -> Self {
         Self { manifest }
     }
 
-    pub async fn validate_node_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.node_kind(kind).await.is_some() {
+    pub fn validate_node_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.node_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("nodes/{kind}"), format!("unknown node kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("nodes/{kind}"), format!("unknown node kind {kind:?}")))
         }
     }
 
-    pub async fn validate_edge_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.edge_kind(kind).await.is_some() {
+    pub fn validate_edge_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.edge_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("edges/{kind}"), format!("unknown edge kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("edges/{kind}"), format!("unknown edge kind {kind:?}")))
         }
     }
 
-    pub async fn validate_port_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.port_kind(kind).await.is_some() {
+    pub fn validate_port_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.port_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("ports/{kind}"), format!("unknown port kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("ports/{kind}"), format!("unknown port kind {kind:?}")))
         }
     }
 
-    pub async fn validate_wire_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.wire_kind(kind).await.is_some() {
+    pub fn validate_wire_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.wire_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("wires/{kind}"), format!("unknown wire kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("wires/{kind}"), format!("unknown wire kind {kind:?}")))
         }
     }
 
-    pub async fn validate_layer_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.layer_kind(kind).await.is_some() {
+    pub fn validate_layer_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.layer_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("layers/{kind}"), format!("unknown layer kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("layers/{kind}"), format!("unknown layer kind {kind:?}")))
         }
     }
 
-    pub async fn validate_language_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.language_kind(kind).await.is_some() {
+    pub fn validate_language_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
+        if self.manifest.language_kind(kind).is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("languages/{kind}"), format!("unknown language kind {kind:?}")).await)
+            Err(ManifestValidationError::new(format!("languages/{kind}"), format!("unknown language kind {kind:?}")))
         }
     }
 
-    pub async fn validate_node_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
-        let Some(def) = self.manifest.node_kind(kind).await else {
-            return self.validate_node_kind(kind).await;
+    pub fn validate_node_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
+        let Some(def) = self.manifest.node_kind(kind) else {
+            return self.validate_node_kind(kind);
         };
-        self.validate_property_bag(&format!("nodes/{kind}/properties"), &def.properties, properties).await
+        self.validate_property_bag(&format!("nodes/{kind}/properties"), &def.properties, properties)
     }
 
-    pub async fn validate_edge_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
-        let Some(def) = self.manifest.edge_kind(kind).await else {
-            return self.validate_edge_kind(kind).await;
+    pub fn validate_edge_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
+        let Some(def) = self.manifest.edge_kind(kind) else {
+            return self.validate_edge_kind(kind);
         };
-        self.validate_property_bag(&format!("edges/{kind}/properties"), &def.properties, properties).await
+        self.validate_property_bag(&format!("edges/{kind}/properties"), &def.properties, properties)
     }
 
-    async fn validate_property_bag(&self, path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), ManifestValidationError> {
+    fn validate_property_bag(&self, path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), ManifestValidationError> {
         for def in defs {
             if def.kind == PropertyKind::Derived {
                 continue;
@@ -510,53 +510,53 @@ impl<'a> ManifestValidator<'a> {
             let Some(value) = bag.get(&def.name) else {
                 continue;
             };
-            if !property_value_matches_type(value, &def.value_type).await {
-                return Err(ManifestValidationError::new(format!("{path}/{}", def.name), format!("property type mismatch for {}", def.value_type.id())).await);
+            if !property_value_matches_type(value, &def.value_type) {
+                return Err(ManifestValidationError::new(format!("{path}/{}", def.name), format!("property type mismatch for {}", def.value_type.id())));
             }
         }
         for key in bag.keys() {
             if !defs.iter().any(|d| d.name == *key) {
-                return Err(ManifestValidationError::new(format!("{path}/{key}"), format!("unknown property {key:?}")).await);
+                return Err(ManifestValidationError::new(format!("{path}/{key}"), format!("unknown property {key:?}")));
             }
         }
         Ok(())
     }
 
-    pub async fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
+    pub fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
         for node in nodes {
-            self.validate_node_kind(node.kind).await?;
-            self.validate_node_properties(node.kind, node.properties).await?;
+            self.validate_node_kind(node.kind)?;
+            self.validate_node_properties(node.kind, node.properties)?;
             for port in node.ports {
-                self.validate_port_kind(port.kind).await?;
-                if let Some(node_def) = self.manifest.node_kind(node.kind).await {
+                self.validate_port_kind(port.kind)?;
+                if let Some(node_def) = self.manifest.node_kind(node.kind) {
                     if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == port.kind) {
-                        return Err(ManifestValidationError::new(format!("nodes/{}/ports/{}", node.id, port.kind), format!("port kind {} not declared on node kind {}", port.kind, node.kind)).await);
+                        return Err(ManifestValidationError::new(format!("nodes/{}/ports/{}", node.id, port.kind), format!("port kind {} not declared on node kind {}", port.kind, node.kind)));
                     }
                 }
             }
         }
         for edge in edges {
-            self.validate_edge_kind(edge.kind).await?;
-            self.validate_edge_properties(edge.kind, edge.properties).await?;
+            self.validate_edge_kind(edge.kind)?;
+            self.validate_edge_properties(edge.kind, edge.properties)?;
         }
         Ok(())
     }
 }
 
-async fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> bool {
+fn property_value_matches_type(value: &PropertyValue, expected: &ValueType) -> bool {
     if matches!(expected, ValueType::Any) {
         return true;
     }
     match value {
         PropertyValue::Object(_) if matches!(expected, ValueType::Schema(_)) => true,
         _ => {
-            let neural = property_value_to_neural(value).await;
+            let neural = property_value_to_neural(value);
             expected.matches(&neural)
         }
     }
 }
 
-async fn property_value_to_neural(value: &PropertyValue) -> Value {
+fn property_value_to_neural(value: &PropertyValue) -> Value {
     match value {
         PropertyValue::Null => Value::null(),
         PropertyValue::Bool(b) => Value::Atom(neural_engine::Atom::Boolean(*b)),
@@ -617,14 +617,13 @@ mod tests {
         }
     }
 
-
     #[test]
     fn nakagin_manifest_loads() {
         block_on_test(async {
             let m = nakagin::nakagin_manifest();
             assert_eq!(m.id, "nakagin");
-            assert!(m.node_kind("Piece").await.is_some());
-            assert!(m.edge_kind("Connection").await.is_some());
+            assert!(m.node_kind("Piece").is_some());
+            assert!(m.edge_kind("Connection").is_some());
         });
     }
 
@@ -633,7 +632,7 @@ mod tests {
         block_on_test(async {
             let m = nakagin::nakagin_manifest();
             let v = ManifestValidator::new(&m);
-            assert!(v.await.validate_node_kind("NoSuchNode").await.is_err());
+            assert!(v.validate_node_kind("NoSuchNode").is_err());
         });
     }
 
@@ -641,7 +640,7 @@ mod tests {
     fn manifest_by_id_resolves() {
         block_on_test(async {
             let m = manifest_by_id("nakagin").expect("nakagin");
-            assert!(m.node_kind("Balcony").await.is_some());
+            assert!(m.node_kind("Balcony").is_some());
         });
     }
 

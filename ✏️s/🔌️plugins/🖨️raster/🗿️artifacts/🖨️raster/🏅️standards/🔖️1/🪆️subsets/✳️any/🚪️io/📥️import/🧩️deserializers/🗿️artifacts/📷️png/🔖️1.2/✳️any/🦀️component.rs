@@ -1,5 +1,5 @@
 //! raster <- png
-use crate::artifacts::raster::schema::{empty_raster_snapshot, create_raster_id};
+use crate::artifacts::raster::schema::{create_raster_id, empty_raster_snapshot};
 use crate::artifacts::raster::RasterSnapshot;
 pub async fn register() {}
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {

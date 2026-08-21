@@ -111,9 +111,9 @@ pub async fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
-    use crate::artifacts::fem3d::{element_id, load_id, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport, FemAnalysisSettings, FemCombination};
+    use crate::artifacts::fem3d::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use protocol::MutationDiff;
+    use protocol::SemanticMutation;
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
@@ -165,14 +165,10 @@ mod tests {
 
     // #region 🔖️OpRoundTrip
     async fn round_trip(snapshot: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
-            restored = vcs::apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
         forward
@@ -287,13 +283,26 @@ mod tests {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateElement(create_element::mutation::CreateElement {
             element: Box::new(FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }),
         }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceElement(replace_element::mutation::ReplaceElement { id: "e1".into(), new_element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }) }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceElement(replace_element::mutation::ReplaceElement {
+            id: "e1".into(),
+            new_element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteElement(delete_element::mutation::DeleteElement { id: "e1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 } }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "steel".into(), new_material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateMaterial(create_material::mutation::CreateMaterial {
+            material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 },
+        }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial {
+            id: "steel".into(),
+            new_material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 },
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "steel".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSection(create_section::mutation::CreateSection { section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 } }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceSection(replace_section::mutation::ReplaceSection { id: "hea200".into(), new_section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSection(create_section::mutation::CreateSection {
+            section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 },
+        }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceSection(replace_section::mutation::ReplaceSection {
+            id: "hea200".into(),
+            new_section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 },
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSection(delete_section::mutation::DeleteSection { id: "hea200".into() }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSolid(create_solid::mutation::CreateSolid {
             solid: FemSolid {
@@ -309,7 +318,9 @@ mod tests {
             },
         }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: "sol1".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateSupport(create_support::mutation::CreateSupport {
+            support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() },
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSupport(delete_support::mutation::DeleteSupport { id: "s1".into() }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase {
             load_case: FemLoadCase {
@@ -324,12 +335,19 @@ mod tests {
             },
         }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteLoadCase(delete_load_case::mutation::DeleteLoadCase { id: "point".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "point".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -5000.0 }) }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::AddLoad(add_load::mutation::AddLoad {
+            case_id: "point".into(),
+            load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -5000.0 }),
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "point".into(), load_id: "l1".into() }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "point".into(), new_self_weight: true }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination {
+            combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) },
+        }));
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "uls".into() }));
-        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } }));
+        semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings {
+            settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
+        }));
     }
     // #endregion 🔖️OpText
 
@@ -394,7 +412,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn replace_material_missing_target_is_error() {
         let base = Fem3dSnapshot::default();
-        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }));
+        protocol::testkit::assert_missing_target_is_error(
+            &base,
+            &Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }),
+        );
     }
 
     #[semio_framework_async_macros::async_test]

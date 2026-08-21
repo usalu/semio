@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the payload is finite, so `change-fvk`'s `mutation.invariant` fatal cannot fire, and 3.5 differs from the committed 4.0, so its `mutation.no-op` warning cannot either");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the payload is finite, so `change-fvk`'s `mutation.invariant` fatal cannot fire, and 3.5 differs from the committed 4.0, so its `mutation.no-op` warning cannot either"
+    );
     assert!(produced.messages().is_empty(), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: an accepted change-fvk emits no diagnostics at all");
 }
 

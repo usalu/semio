@@ -1,10 +1,10 @@
 //! 🕸️ 🕸️ DAG play app commands command — `node-graph-edit`.
 
-use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::commands::delete_selection::delete_selection_result;
+use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use infinite_board_port_directed_dag::{dag_document_from_fixture, DagFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -73,8 +73,8 @@ async fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, 
 mod tests {
     use super::DagNodeGraphEditOp;
     use super::*;
-    use crate::editor::dag::testkit;
     use crate::editor::dag::commands::{connect_media_ports, disconnect, move_media_node};
+    use crate::editor::dag::testkit;
     use crate::editor::dag::DagCommand;
     use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
     use serde_json::json;
@@ -143,8 +143,11 @@ mod tests {
             (nodes[0].id.clone(), nodes[1].id.clone())
         };
         let edges_before = app.snapshot().expect("projection").edges().len();
-        app.dispatch_typed(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: source_id, source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("connect");
+        app.dispatch_typed(
+            DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: source_id, source_port_id: "out".into(), target_node_id: target_id, target_port_id: "in".into() }),
+            &semio_framework_plugin::testkit::meta("local"),
+        )
+        .expect("connect");
         assert!(app.snapshot().expect("projection").edges().len() >= edges_before);
     }
 }

@@ -1,12 +1,12 @@
 //! 📄️ Architect document panel — program meta, per-register counts and the element list.
 
+use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
+use crate::artifacts::program::ProgramSnapshot;
 use crate::editor::architect::architect_action;
 use crate::editor::architect::catalog::register_len;
 use crate::editor::architect::chrome::{tree_item, tree_item_with_action};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
-use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 

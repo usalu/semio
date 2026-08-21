@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-bb2-details-conform applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: applied state differs from committed after-snapshot");
     assert!(!snapshot.bb2_details_conform, "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: bb2DetailsConform did not land on false");
-    assert_eq!(snapshot.airtightness_class, before().airtightness_class, "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: airtightnessClass must stay exactly as the before-snapshot had it — change-bb2-details-conform owns bb2DetailsConform and nothing else");
+    assert_eq!(
+        snapshot.airtightness_class,
+        before().airtightness_class,
+        "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: airtightnessClass must stay exactly as the before-snapshot had it — change-bb2-details-conform owns bb2DetailsConform and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-bb2-details-conform` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().bb2_details_conform, Some(false), "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: the sparse delta must carry bb2DetailsConform = false");
-    assert!(raised.diff().airtightness_class.is_none(), "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: the sparse delta must leave airtightnessClass unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().airtightness_class.is_none(),
+        "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: the sparse delta must leave airtightnessClass unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din4108Diff`. Its
@@ -143,7 +143,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din4108Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-bb2-details-conform/declares-the-beiblatt-2-details-non-conforming: committed diff did not carry before to after");
 }

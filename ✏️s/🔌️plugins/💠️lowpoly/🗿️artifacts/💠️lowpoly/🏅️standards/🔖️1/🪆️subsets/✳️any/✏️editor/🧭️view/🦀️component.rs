@@ -10,10 +10,10 @@
 //! presence auto-stamp share one id space) and `selection_from_interaction`, the boundary that turns a
 //! resolved `InteractionView` into the engine's `LowpolySelection`.
 
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolySelection, LowpolySelectionTargets, LowpolySnapshot};
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot, LowpolySelection, LowpolySelectionTargets};
 use semio_framework_plugin::app::InteractionView;
 use serde_json::Value;
 
@@ -104,13 +104,7 @@ pub async fn selection_from_interaction(active_object_id: &str, interaction: &In
     let selected = interaction.selection(MESH_INTERACTION_DOMAIN);
     let granularity = if selected.granularity.is_empty() { MESH_GRANULARITY_OBJECT } else { selected.granularity.as_str() };
     let mode = LowpolyDocument::normalize_selection_mode(granularity);
-    let ids: Vec<u32> = selected
-        .ids
-        .iter()
-        .filter_map(|raw| parse_mesh_target_id(raw))
-        .filter(|(object_id, _)| object_id == active_object_id)
-        .filter_map(|(_, component)| component.map(|(_, numeric)| numeric))
-        .collect();
+    let ids: Vec<u32> = selected.ids.iter().filter_map(|raw| parse_mesh_target_id(raw)).filter(|(object_id, _)| object_id == active_object_id).filter_map(|(_, component)| component.map(|(_, numeric)| numeric)).collect();
     LowpolySelection { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode, ids }
 }
 

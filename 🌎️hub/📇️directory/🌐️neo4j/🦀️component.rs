@@ -7,8 +7,8 @@
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
-use neo4rs::{query, Graph, Txn};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
+use neo4rs::{query, Graph, Txn};
 use uuid::Uuid;
 
 fn now_ms() -> i64 {
@@ -74,13 +74,7 @@ impl Neo4jDirectory {
         let actor = DirectoryActor { kind: DirectoryActorKind::System, id: "system:seed".into() };
         let mut clock = HubClock::new();
         let events = vec![
-            NewDirectoryEvent {
-                hlc: clock.tick(),
-                actor: actor.clone(),
-                space_id: None,
-                user_id: Some("seed".into()),
-                body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() },
-            },
+            NewDirectoryEvent { hlc: clock.tick(), actor: actor.clone(), space_id: None, user_id: Some("seed".into()), body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() } },
             NewDirectoryEvent {
                 hlc: clock.tick(),
                 actor: actor.clone(),
@@ -462,7 +456,17 @@ impl HubDirectory for Neo4jDirectory {
                     .map_err(backend)?;
             }
         }
-        Ok(SyncSessionRecord { id, space_id: space_id.to_string(), document_id: document_id.to_string(), surface: surface.to_string(), user_id: user_id.map(str::to_string), space_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
+        Ok(SyncSessionRecord {
+            id,
+            space_id: space_id.to_string(),
+            document_id: document_id.to_string(),
+            surface: surface.to_string(),
+            user_id: user_id.map(str::to_string),
+            space_role,
+            client_label: client_label.to_string(),
+            connected_at,
+            disconnected_at: None,
+        })
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()> {
@@ -527,10 +531,7 @@ impl HubDirectory for Neo4jDirectory {
             let recorded_at_ms = now_ms();
             let payload_value = serde_json::to_value(&event.body).map_err(backend)?;
             let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
-            let mut counter = txn
-                .execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq"))
-                .await
-                .map_err(backend)?;
+            let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
             let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
             txn.run(
                 query(
@@ -560,11 +561,7 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (e:DirectoryEvent) WHERE e.seq > $since_seq RETURN e AS e ORDER BY e.seq LIMIT $limit").param("since_seq", since_seq as i64).param("limit", limit as i64))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (e:DirectoryEvent) WHERE e.seq > $since_seq RETURN e AS e ORDER BY e.seq LIMIT $limit").param("since_seq", since_seq as i64).param("limit", limit as i64)).await.map_err(backend)?;
         let mut events = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             events.push(event_from_node(&row)?);

@@ -1,9 +1,9 @@
 //! 🎥️ 🎥️ Writer play app commands command — `set-camera`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::artifacts::writer::{WriterCamera, WriterSnapshot};
 use crate::artifacts::writer::op::WriterMutation;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::artifacts::writer::{WriterCamera, WriterSnapshot};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,9 +21,9 @@ pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>
 #[cfg(test)]
 mod tests {
     use super::SetCamera;
-        use crate::editor::writer::testkit::new_app;
-    use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
     use crate::artifacts::writer::WriterCamera;
+    use crate::editor::writer::testkit::new_app;
+    use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
     use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 

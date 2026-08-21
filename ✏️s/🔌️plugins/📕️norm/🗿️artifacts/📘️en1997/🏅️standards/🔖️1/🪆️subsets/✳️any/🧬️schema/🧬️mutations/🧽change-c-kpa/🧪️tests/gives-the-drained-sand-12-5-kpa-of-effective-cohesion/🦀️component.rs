@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the payload is finite, so `change-c-kpa`'s `mutation.invariant` fatal cannot fire, and 12.5 differs from the committed 0.0, so its `mutation.no-op` warning cannot either");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the payload is finite, so `change-c-kpa`'s `mutation.invariant` fatal cannot fire, and 12.5 differs from the committed 0.0, so its `mutation.no-op` warning cannot either"
+    );
     assert!(produced.messages().is_empty(), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: an accepted change-c-kpa emits no diagnostics at all");
 }
 

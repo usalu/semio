@@ -41,11 +41,7 @@ pub async fn compute_fem3d_bounds(snapshot: &Fem3dSnapshot) -> Fem3dBounds {
         min = [0.0; 3];
         max = [0.0; 3];
     }
-    Fem3dBounds {
-        bounding_box: Fem3dBoundingBox { min, max },
-        node_count: snapshot.nodes.len() as u32,
-        element_count: snapshot.elements.len() as u32,
-    }
+    Fem3dBounds { bounding_box: Fem3dBoundingBox { min, max }, node_count: snapshot.nodes.len() as u32, element_count: snapshot.elements.len() as u32 }
 }
 //#endregion 🔖️Bounds
 
@@ -58,18 +54,8 @@ mod tests {
     //#region 🧸️Fixtures
     async fn sample_snapshot() -> Fem3dSnapshot {
         Fem3dSnapshot {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: -2.0, y: 1.0, z: 0.0 },
-                FemNode { id: "n2".into(), x: 5.0, y: 1.0, z: -3.0 },
-                FemNode { id: "n3".into(), x: 5.0, y: 7.5, z: 6.0 },
-            ],
-            elements: vec![FemElement::Bar {
-                id: "e1".into(),
-                start: "n1".into(),
-                end: "n2".into(),
-                material_id: "m1".into(),
-                section_id: "s1".into(),
-            }],
+            nodes: vec![FemNode { id: "n1".into(), x: -2.0, y: 1.0, z: 0.0 }, FemNode { id: "n2".into(), x: 5.0, y: 1.0, z: -3.0 }, FemNode { id: "n3".into(), x: 5.0, y: 7.5, z: 6.0 }],
+            elements: vec![FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }],
             ..Default::default()
         }
     }

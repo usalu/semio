@@ -7,8 +7,8 @@
 //! and their helpers — app-facing, reference `crate::app_surface` and shared by the model/results
 //! windows) live in `🎛️apps/🧊️3d/🦀️component.rs`.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::analyses;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::fem3d_engine::meshing;
 use std::collections::HashMap;
 
@@ -74,8 +74,8 @@ pub async fn fem3d_solve_all(doc: &Fem3dSnapshot) -> Result<HashMap<String, crat
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fem3d_engine::modal_buckling;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::fem3d_engine::modal_buckling;
     use crate::model::{Dof, ElementResult};
     use std::collections::BTreeMap;
 

@@ -9,12 +9,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Outline
 async fn block_name(block: &NoteBlockNode) -> &str {
     match block {
-        NoteBlockNode::Text { name, .. }
-        | NoteBlockNode::Image { name, .. }
-        | NoteBlockNode::Table { name, .. }
-        | NoteBlockNode::Math { name, .. }
-        | NoteBlockNode::Ink { name, .. }
-        | NoteBlockNode::Group { name, .. } => name,
+        NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => name,
     }
 }
 
@@ -29,9 +24,7 @@ async fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteB
 
 async fn block_word_count(block: &NoteBlockNode) -> u32 {
     match block {
-        NoteBlockNode::Text { content, .. } => {
-            crate::artifacts::note::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32
-        }
+        NoteBlockNode::Text { content, .. } => crate::artifacts::note::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32,
         _ => 0,
     }
 }

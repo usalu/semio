@@ -1,12 +1,12 @@
 //! 📄️ 📄️ Mathematical play app commands command — `set-artifact`.
 
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::dsl::MathematicalGraphDsl;
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::schema::mutations::replace_points::mutation::ReplacePoints;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -36,15 +36,21 @@ pub async fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, MathematicalSn
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::mathematical::MathematicalGeometry;
     use crate::editor::mathematical::testkit::{dispatch, math_app};
     use crate::editor::mathematical::MathematicalCommand;
-    use crate::artifacts::mathematical::MathematicalGeometry;
 
     #[semio_framework_async_macros::async_test]
     async fn set_artifact_replaces_graph_and_geometry() {
         let mut app = math_app();
         let geometry = MathematicalGeometry { points: vec![crate::artifacts::mathematical::MathematicalPoint { x: 1.0, y: 2.0 }] };
-        dispatch(&mut app, MathematicalCommand::SetArtifact(SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() }));
+        dispatch(
+            &mut app,
+            MathematicalCommand::SetArtifact(SetArtifact {
+                graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph { algorithm: "components".into(), ..Default::default() }),
+                geometry: geometry.clone(),
+            }),
+        );
         let projection = app.snapshot().expect("projection");
         assert_eq!(crate::artifacts::mathematical::mathematical_graph(&projection).algorithm, "components");
         assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&projection), geometry);

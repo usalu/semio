@@ -3,9 +3,9 @@
 //! `crate::artifacts::block3d::schema`/`crate::artifacts::block3d::schema::inferences` on purpose: an
 //! artifact must never depend on an app, and every function here takes at least one app-only type.
 
-use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
 use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
+use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 use serde_json::json;

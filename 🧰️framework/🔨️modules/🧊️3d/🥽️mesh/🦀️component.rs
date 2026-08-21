@@ -45,11 +45,7 @@ impl Vec3 {
     }
 
     pub async fn cross(self, o: Self) -> Self {
-        Self([
-            self.y().await * o.z().await - self.z().await * o.y().await,
-            self.z().await * o.x().await - self.x().await * o.z().await,
-            self.x().await * o.y().await - self.y().await * o.x().await,
-        ])
+        Self([self.y().await * o.z().await - self.z().await * o.y().await, self.z().await * o.x().await - self.x().await * o.z().await, self.x().await * o.y().await - self.y().await * o.x().await])
     }
 
     pub async fn length(self) -> f32 {

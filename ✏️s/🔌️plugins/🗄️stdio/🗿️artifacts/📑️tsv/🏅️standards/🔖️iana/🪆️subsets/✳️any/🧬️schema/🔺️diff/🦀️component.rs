@@ -183,12 +183,12 @@ pub struct TsvDiff {
 }
 
 impl MutationDiff<TsvSnapshot> for TsvDiff {
-    async fn apply(&self, base: &TsvSnapshot) -> MutationApplyResult<TsvSnapshot> {
+    fn apply(&self, base: &TsvSnapshot) -> MutationApplyResult<TsvSnapshot> {
         validate_tsv_diff(self, base)?;
         Ok(apply_tsv_diff_unchecked(self, base))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.trailing_newline.is_some() {
             self.trailing_newline = other.trailing_newline;
         }
@@ -373,12 +373,12 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
 }
 
 impl DiffAlgebra<TsvSnapshot> for TsvDiff {
-    async fn inverse(&self, base: &TsvSnapshot) -> Self {
+    fn inverse(&self, base: &TsvSnapshot) -> Self {
         let applied = apply_tsv_diff_unchecked(self, base);
-        Self::between(&applied, base).await
+        Self::between(&applied, base)
     }
 
-    async fn between(base: &TsvSnapshot, other: &TsvSnapshot) -> Self {
+    fn between(base: &TsvSnapshot, other: &TsvSnapshot) -> Self {
         let trailing_newline = (base.trailing_newline != other.trailing_newline).then_some(other.trailing_newline);
         let line_ending = (base.line_ending != other.line_ending).then_some(other.line_ending);
 
@@ -413,7 +413,7 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
         Self { trailing_newline, line_ending, records }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.trailing_newline.is_none() && self.line_ending.is_none() && self.records.as_ref().map_or(true, TsvRowsDiff::is_empty)
     }
 }
@@ -606,20 +606,20 @@ fn parse_tsv_diff(line: &str) -> Result<TsvDiff, String> {
 }
 
 impl DiffCodec for TsvDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_tsv_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_tsv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification csv's/gif89a's hand-rolled
     /// `DiffCodec`s use.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().await.into_bytes())
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

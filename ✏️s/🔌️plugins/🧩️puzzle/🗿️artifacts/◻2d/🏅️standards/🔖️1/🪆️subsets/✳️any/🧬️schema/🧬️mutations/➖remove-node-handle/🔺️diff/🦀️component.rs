@@ -13,12 +13,7 @@ pub async fn diff(payload: &super::mutation::RemoveNodeHandle, base: &Puzzle2dSn
     }
     let mut next = node.clone();
     next.handles.retain(|handle| handle.id != payload.handle_id);
-    let severed: Vec<String> = base
-        .edges
-        .iter()
-        .filter(|edge| edge.source == payload.handle_id || edge.target == payload.handle_id)
-        .map(|edge| edge.id.clone())
-        .collect();
+    let severed: Vec<String> = base.edges.iter().filter(|edge| edge.source == payload.handle_id || edge.target == payload.handle_id).map(|edge| edge.id.clone()).collect();
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: Some(Puzzle2dNodesDelta { patched: vec![Puzzle2dNodePatchEntry { id: payload.node_id.clone(), patch: Puzzle2dNodePatch { replacement: Some(next) } }], ..Default::default() }),
         edges: if severed.is_empty() { None } else { Some(Puzzle2dEdgesDelta { removed: severed, ..Default::default() }) },

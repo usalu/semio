@@ -1452,7 +1452,6 @@ pub async fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
     build_manifest_json("brep", "Brep", "0.3.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![])
@@ -1834,10 +1833,7 @@ mod tests {
         install_extension_bundle(bundle);
         extension_activate().unwrap();
         assert_eq!(extension_manifest().extension_id, "brep");
-        let input = Dictionary::new()
-            .insert("width", Value::Dictionary(number_dictionary(1.0)))
-            .insert("depth", Value::Dictionary(number_dictionary(1.0)))
-            .insert("height", Value::Dictionary(number_dictionary(1.0)));
+        let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)));
         let req = serde_json::json!({
             "operatorId": "brep.prim3d.box",
             "inputJson": serde_json::to_string(&input).unwrap(),
@@ -1905,19 +1901,13 @@ mod extension_guest {
             .contributes_topic("flow.extension", flow_topic_payload)
             .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-                })?;
+                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
                 Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
             })
             .handler("tessellate", |req| {
-                let request: TessellateRequest = serde_json::from_slice(req).map_err(|err| {
-                    Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string())
-                })?;
+                let request: TessellateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
                 match flow_extension_sdk::brep_geometry::tessellate_geometry(&request.handle, request.tolerance) {
-                    Ok(mesh) => Ok(serde_json::to_vec(&mesh).map_err(|err| {
-                        Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.encode"), err.to_string())
-                    })?),
+                    Ok(mesh) => Ok(serde_json::to_vec(&mesh).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.encode"), err.to_string()))?),
                     Err(err) => Ok(serde_json::json!({ "error": err }).to_string().into_bytes()),
                 }
             })

@@ -1,9 +1,9 @@
 //! 🗣️ 🗣️ Note play app command command — `set-locale`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

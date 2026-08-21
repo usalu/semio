@@ -1,9 +1,9 @@
 //! 📄️ Forms play app panel — the document tree: steps and their questions.
 
-use crate::editor::forms::{forms_action, FORMS_INTERACTION_FIELDS};
-use crate::editor::forms::terminology::FormsLabels;
 use crate::artifacts::forms::schema::forms_play_step_tree_id;
 use crate::artifacts::forms::{forms_steps, FormsSnapshot};
+use crate::editor::forms::terminology::FormsLabels;
+use crate::editor::forms::{forms_action, FORMS_INTERACTION_FIELDS};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -36,12 +36,7 @@ pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
             let question_items: Vec<UiTreeItemNode> = step
                 .blocks
                 .iter()
-                .map(|question| UiTreeItemNode {
-                    icon_id: Some("help-circle".into()),
-                    draggable: Some(true),
-                    menu: None,
-                    ..tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone()))
-                })
+                .map(|question| UiTreeItemNode { icon_id: Some("help-circle".into()), draggable: Some(true), menu: None, ..tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone())) })
                 .collect();
             UiTreeItemNode {
                 icon_id: Some("list-tree".into()),

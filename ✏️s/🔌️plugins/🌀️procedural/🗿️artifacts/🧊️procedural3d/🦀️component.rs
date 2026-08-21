@@ -1,6 +1,5 @@
 //! 📐️ Procedural3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
-
 use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 

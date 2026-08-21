@@ -1,9 +1,7 @@
 //! 🔧️ CAD artifact — OpText/OpBinary codecs + grammar for serializing `CadMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::artifacts::cad::mutations::{
-    CadMutation, CadNodePatch, CadReferencePatch,
-};
+pub use crate::artifacts::cad::mutations::{CadMutation, CadNodePatch, CadReferencePatch};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -19,11 +17,7 @@ impl protocol::OpText for CadMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

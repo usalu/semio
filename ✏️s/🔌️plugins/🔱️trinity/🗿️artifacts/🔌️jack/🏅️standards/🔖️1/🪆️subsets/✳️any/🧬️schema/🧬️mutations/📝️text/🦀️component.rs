@@ -1,9 +1,8 @@
 //! ⚡️ TrinityGraph artifact — grammar + store/mutation re-exports for `TrinityGraphMutation`.
 
 pub use crate::artifacts::jack::schema::mutations::{
-    apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope,
-    dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, TrinityGraphEnvelope,
-    TrinityGraphMutation, TrinityGraphStore, validate_trinity_graph_operation,
+    apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope, dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, validate_trinity_graph_operation, TrinityGraphEnvelope, TrinityGraphMutation,
+    TrinityGraphStore,
 };
 
 //#region 📖️SemioGrammar

@@ -1,9 +1,9 @@
 //! 🔢️ Sourcing curate app — the grid window: every filtered stock object laid out on a 3D grid.
 
-use crate::editor::sourcing::config::SourcingCurateConfig;
-use crate::editor::sourcing::SOURCING_CONTROLLER_ID;
 use crate::artifacts::curate::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
+use crate::editor::sourcing::config::SourcingCurateConfig;
+use crate::editor::sourcing::SOURCING_CONTROLLER_ID;
 use semio_framework_plugin::{build_world_3d_scene, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use serde_json::json;
 use std::collections::HashSet;
@@ -63,8 +63,8 @@ pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> Ui
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::sourcing::testkit::{new_app, render as render_body};
     use crate::artifacts::curate::Filters;
+    use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
     async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {

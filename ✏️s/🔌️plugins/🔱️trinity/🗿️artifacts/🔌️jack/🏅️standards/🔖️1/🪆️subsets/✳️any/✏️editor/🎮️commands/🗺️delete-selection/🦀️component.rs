@@ -1,9 +1,9 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `delete-selection`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::artifacts::jack::mutations::delete_node;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
+use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 /// 🕹️ `selected_node_ids` now comes from `interaction.selection("ast").ids` (framework-owned) — no

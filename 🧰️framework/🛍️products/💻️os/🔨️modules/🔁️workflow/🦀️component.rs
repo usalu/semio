@@ -653,11 +653,11 @@ pub struct WorkflowFixture {
 impl store::ArtifactDsl for WorkflowFixture {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
 
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -666,33 +666,33 @@ impl store::ArtifactDsl for WorkflowFixture {
         Self::__dsl_from_record(&record)
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for WorkflowFixture {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id().await {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
 
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -919,7 +919,13 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &ser
 pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParameterBinding, parameter_type: &WorkflowParameterType, config_spec: &semio_framework::ConfigSpec) -> Result<(), protocol::MutationMessage> {
     let uri = format!("{}#{}", binding.node_id, binding.field_path);
     let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
-        return Err(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/parameter-binding-invalid"), message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path), target: vec![uri], op_index: None });
+        return Err(protocol::MutationMessage {
+            level: dsl::Severity::Warning,
+            code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
+            message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path),
+            target: vec![uri],
+            op_index: None,
+        });
     };
     let compatible = matches!(
         (parameter_type, &field.shape),
@@ -931,7 +937,13 @@ pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParame
     if compatible {
         Ok(())
     } else {
-        Err(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/parameter-binding-invalid"), message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape), target: vec![uri], op_index: None })
+        Err(protocol::MutationMessage {
+            level: dsl::Severity::Warning,
+            code: dsl::FaultCode::new("workflow/parameter-binding-invalid"),
+            message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape),
+            target: vec![uri],
+            op_index: None,
+        })
     }
 }
 
@@ -1010,7 +1022,7 @@ fn sync_workflow_node_parameter_ports(node: &WorkflowNode, bindings: &[WorkflowP
     WorkflowNode { inputs, height: 56.0 + port_count as f64 * 18.0, ..node.clone() }
 }
 
-pub async fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParameterBinding]) -> Workflow {
+pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParameterBinding]) -> Workflow {
     Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: graph.nodes.iter().map(|node| sync_workflow_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
 }
 //#endregion 🔖️WorkflowParameters
@@ -1138,10 +1150,10 @@ pub async fn empty_workflow_snapshot() -> WorkflowSnapshot {
 /// 🧬️ P6: `DslArtifact` emits helpers only — ArtifactDsl/ArtifactPack are handcrafted here.
 impl store::ArtifactDsl for WorkflowSnapshot {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -1149,32 +1161,32 @@ impl store::ArtifactDsl for WorkflowSnapshot {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for WorkflowSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id().await {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -1215,7 +1227,7 @@ pub enum WorkflowMutation {
     UnbindOutput { node_id: String, port_id: String },
 }
 
-pub async fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &WorkflowMutation) -> WorkflowSnapshot {
+pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &WorkflowMutation) -> WorkflowSnapshot {
     let mut next = document.clone();
     match operation {
         WorkflowMutation::AddNode { node } => {
@@ -1250,7 +1262,7 @@ pub async fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &W
         WorkflowMutation::RemoveParameter { parameter_id } => {
             next.parameters.retain(|parameter| workflow_parameter_entity_id(parameter) != *parameter_id);
             next.parameter_bindings.retain(|binding| binding.parameter_id != *parameter_id);
-            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings).await;
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
         WorkflowMutation::PatchParameter { parameter_id, parameter } => {
             for entry in &mut next.parameters {
@@ -1262,14 +1274,14 @@ pub async fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &W
         WorkflowMutation::BindParameterField { binding } => {
             next.parameter_bindings.retain(|entry| !(entry.node_id == binding.node_id && entry.field_path == binding.field_path));
             next.parameter_bindings.push(binding.clone());
-            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings).await;
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
         WorkflowMutation::UnbindParameterField { node_id, field_path } => {
             next.parameter_bindings.retain(|binding| !(binding.node_id == *node_id && binding.field_path == *field_path));
-            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings).await;
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
         WorkflowMutation::SyncNodePorts => {
-            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings).await;
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
         WorkflowMutation::DeclareInput { input } => next.inputs.push(input.clone()),
         WorkflowMutation::RemoveInput { input_id } => {
@@ -1360,115 +1372,115 @@ pub enum WorkflowDiff {
 }
 
 impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
-    async fn apply(&self, document: &WorkflowSnapshot) -> protocol::MutationApplyResult<WorkflowSnapshot> {
+    fn apply(&self, document: &WorkflowSnapshot) -> protocol::MutationApplyResult<WorkflowSnapshot> {
         match self {
             WorkflowDiff::Empty | WorkflowDiff::SyncNodePorts => {}
             WorkflowDiff::AddNode { node } => {
                 if document.graph.nodes.iter().any(|entry| entry.id == node.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow node identity already exists").await.at(["nodes", node.id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow node identity already exists").at(["nodes", node.id.as_str()]));
                 }
             }
             WorkflowDiff::RemoveNode { node_id } | WorkflowDiff::MoveNode { node_id, .. } | WorkflowDiff::PatchNode { node_id, .. } => {
                 if !document.graph.nodes.iter().any(|node| node.id == *node_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow node does not exist").await.at(["nodes", node_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow node does not exist").at(["nodes", node_id.as_str()]));
                 }
             }
             WorkflowDiff::ConnectPorts { edge } => {
                 if document.graph.edges.iter().any(|entry| entry.id == edge.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow edge identity already exists").await.at(["edges", edge.id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow edge identity already exists").at(["edges", edge.id.as_str()]));
                 }
                 let source = match document.graph.nodes.iter().find(|node| node.id == edge.source_node_id) {
                     Some(node) => node,
-                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge source node does not exist").await.at(["edges", edge.id.as_str(), "sourceNodeId"]).await),
+                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge source node does not exist").at(["edges", edge.id.as_str(), "sourceNodeId"])),
                 };
                 if !source.outputs.iter().any(|port| port.id == edge.source_port_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge source port does not exist").await.at(["edges", edge.id.as_str(), "sourcePortId"]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge source port does not exist").at(["edges", edge.id.as_str(), "sourcePortId"]));
                 }
                 let target = match document.graph.nodes.iter().find(|node| node.id == edge.target_node_id) {
                     Some(node) => node,
-                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge target node does not exist").await.at(["edges", edge.id.as_str(), "targetNodeId"]).await),
+                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge target node does not exist").at(["edges", edge.id.as_str(), "targetNodeId"])),
                 };
                 if !target.inputs.iter().any(|port| port.id == edge.target_port_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge target port does not exist").await.at(["edges", edge.id.as_str(), "targetPortId"]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge target port does not exist").at(["edges", edge.id.as_str(), "targetPortId"]));
                 }
             }
             WorkflowDiff::DisconnectEdge { edge_id } => {
                 if !document.graph.edges.iter().any(|edge| edge.id == *edge_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge does not exist").await.at(["edges", edge_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow edge does not exist").at(["edges", edge_id.as_str()]));
                 }
             }
             WorkflowDiff::AddParameter { parameter } => {
                 let parameter_id = workflow_parameter_entity_id(parameter);
                 if document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == parameter_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow parameter identity already exists").await.at(["parameters", parameter_id]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow parameter identity already exists").at(["parameters", parameter_id]));
                 }
             }
             WorkflowDiff::RemoveParameter { parameter_id } => {
                 if !document.parameters.iter().any(|parameter| workflow_parameter_entity_id(parameter) == parameter_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter does not exist").await.at(["parameters", parameter_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter does not exist").at(["parameters", parameter_id.as_str()]));
                 }
             }
             WorkflowDiff::PatchParameter { parameter_id, parameter } => {
                 if !document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == parameter_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter does not exist").await.at(["parameters", parameter_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter does not exist").at(["parameters", parameter_id.as_str()]));
                 }
                 let new_id = workflow_parameter_entity_id(parameter);
                 if new_id != parameter_id && document.parameters.iter().any(|entry| workflow_parameter_entity_id(entry) == new_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched workflow parameter identity already exists").await.at(["parameters", new_id]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched workflow parameter identity already exists").at(["parameters", new_id]));
                 }
             }
             WorkflowDiff::BindParameterField { binding } => {
                 if !document.graph.nodes.iter().any(|node| node.id == binding.node_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "parameter binding node does not exist").await.at(["parameterBindings", binding.node_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "parameter binding node does not exist").at(["parameterBindings", binding.node_id.as_str()]));
                 }
                 if !document.parameters.iter().any(|parameter| workflow_parameter_entity_id(parameter) == binding.parameter_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "bound workflow parameter does not exist").await.at(["parameterBindings", binding.parameter_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "bound workflow parameter does not exist").at(["parameterBindings", binding.parameter_id.as_str()]));
                 }
             }
             WorkflowDiff::UnbindParameterField { node_id, field_path } => {
                 if !document.parameter_bindings.iter().any(|binding| binding.node_id == *node_id && binding.field_path == *field_path) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter binding does not exist").await.at(["parameterBindings", node_id.as_str(), field_path.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow parameter binding does not exist").at(["parameterBindings", node_id.as_str(), field_path.as_str()]));
                 }
             }
             WorkflowDiff::DeclareInput { input } => {
                 if document.inputs.iter().any(|entry| entry.id == input.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow input identity already exists").await.at(["inputs", input.id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "workflow input identity already exists").at(["inputs", input.id.as_str()]));
                 }
             }
             WorkflowDiff::RemoveInput { input_id } => {
                 if !document.inputs.iter().any(|input| input.id == *input_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow input does not exist").await.at(["inputs", input_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow input does not exist").at(["inputs", input_id.as_str()]));
                 }
             }
             WorkflowDiff::BindInput { binding } => {
                 if !document.inputs.iter().any(|input| input.id == binding.input_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "bound workflow input does not exist").await.at(["inputBindings", binding.input_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "bound workflow input does not exist").at(["inputBindings", binding.input_id.as_str()]));
                 }
                 let node = match document.graph.nodes.iter().find(|node| node.id == binding.node_id) {
                     Some(node) => node,
-                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "input binding node does not exist").await.at(["inputBindings", binding.node_id.as_str()]).await),
+                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "input binding node does not exist").at(["inputBindings", binding.node_id.as_str()])),
                 };
                 if !node.inputs.iter().any(|port| port.id == binding.port_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "input binding port does not exist").await.at(["inputBindings", binding.node_id.as_str(), binding.port_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "input binding port does not exist").at(["inputBindings", binding.node_id.as_str(), binding.port_id.as_str()]));
                 }
             }
             WorkflowDiff::UnbindInput { input_id } => {
                 if !document.input_bindings.iter().any(|binding| binding.input_id == *input_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow input binding does not exist").await.at(["inputBindings", input_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow input binding does not exist").at(["inputBindings", input_id.as_str()]));
                 }
             }
             WorkflowDiff::BindOutput { binding } => {
                 let node = match document.graph.nodes.iter().find(|node| node.id == binding.node_id) {
                     Some(node) => node,
-                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "output binding node does not exist").await.at(["outputBindings", binding.node_id.as_str()]).await),
+                    None => return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "output binding node does not exist").at(["outputBindings", binding.node_id.as_str()])),
                 };
                 if !node.outputs.iter().any(|port| port.id == binding.port_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "output binding port does not exist").await.at(["outputBindings", binding.node_id.as_str(), binding.port_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "output binding port does not exist").at(["outputBindings", binding.node_id.as_str(), binding.port_id.as_str()]));
                 }
             }
             WorkflowDiff::UnbindOutput { node_id, port_id } => {
                 if !document.output_bindings.iter().any(|binding| binding.node_id == *node_id && binding.port_id == *port_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow output binding does not exist").await.at(["outputBindings", node_id.as_str(), port_id.as_str()]).await);
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow output binding does not exist").at(["outputBindings", node_id.as_str(), port_id.as_str()]));
                 }
             }
         }
@@ -1493,10 +1505,10 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
             WorkflowDiff::BindOutput { binding } => WorkflowMutation::BindOutput { binding: binding.clone() },
             WorkflowDiff::UnbindOutput { node_id, port_id } => WorkflowMutation::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
         };
-        Ok(apply_workflow_operation(document, &operation).await)
+        Ok(apply_workflow_operation(document, &operation))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if !matches!(other, WorkflowDiff::Empty) {
             *self = other;
         }
@@ -1508,7 +1520,7 @@ impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
 
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
-    async fn diff(&self, _document: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
+    fn diff(&self, _document: &WorkflowSnapshot) -> protocol::MutationOutcome<WorkflowDiff> {
         let diff = match self {
             WorkflowMutation::AddNode { node } => WorkflowDiff::AddNode { node: node.clone() },
             WorkflowMutation::RemoveNode { node_id } => WorkflowDiff::RemoveNode { node_id: node_id.clone() },
@@ -1529,10 +1541,10 @@ impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
             WorkflowMutation::BindOutput { binding } => WorkflowDiff::BindOutput { binding: binding.clone() },
             WorkflowMutation::UnbindOutput { node_id, port_id } => WorkflowDiff::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
         };
-        protocol::MutationOutcome::new(diff).await
+        protocol::MutationOutcome::new(diff)
     }
 
-    async fn inverse(&self, document: &WorkflowSnapshot) -> Vec<Self> {
+    fn inverse(&self, document: &WorkflowSnapshot) -> Vec<Self> {
         match self {
             WorkflowMutation::AddNode { node } => vec![WorkflowMutation::RemoveNode { node_id: node.id.clone() }],
             // 🧵️ `apply`'s `RemoveNode` arm cascades away every edge/binding touching the node — its
@@ -1691,7 +1703,7 @@ enum WorkflowMutationDsl {
     },
 }
 
-async fn workflow_mutation_to_dsl(operation: &WorkflowMutation) -> WorkflowMutationDsl {
+fn workflow_mutation_to_dsl(operation: &WorkflowMutation) -> WorkflowMutationDsl {
     match operation {
         WorkflowMutation::AddNode { node } => WorkflowMutationDsl::AddNode { node: node.clone() },
         WorkflowMutation::RemoveNode { node_id } => WorkflowMutationDsl::RemoveNode { node_id: node_id.clone() },
@@ -1714,7 +1726,7 @@ async fn workflow_mutation_to_dsl(operation: &WorkflowMutation) -> WorkflowMutat
     }
 }
 
-async fn workflow_mutation_from_dsl(operation: WorkflowMutationDsl) -> WorkflowMutation {
+fn workflow_mutation_from_dsl(operation: WorkflowMutationDsl) -> WorkflowMutation {
     match operation {
         WorkflowMutationDsl::AddNode { node } => WorkflowMutation::AddNode { node },
         WorkflowMutationDsl::RemoveNode { node_id } => WorkflowMutation::RemoveNode { node_id },
@@ -1738,7 +1750,7 @@ async fn workflow_mutation_from_dsl(operation: WorkflowMutationDsl) -> WorkflowM
 }
 
 impl protocol::OpText for WorkflowMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -1749,7 +1761,7 @@ impl protocol::OpText for WorkflowMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
@@ -1759,31 +1771,31 @@ impl protocol::OpText for WorkflowMutationDsl {
 
 /// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
 impl protocol::OpBinary for WorkflowMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self).await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes).await
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 
 impl protocol::OpText for WorkflowMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        Ok(workflow_mutation_from_dsl(<WorkflowMutationDsl as protocol::OpText>::parse_op(line).await?).await)
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        Ok(workflow_mutation_from_dsl(<WorkflowMutationDsl as protocol::OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
-        <WorkflowMutationDsl as protocol::OpText>::print_op(&workflow_mutation_to_dsl(self).await).await
+    fn print_op(&self) -> String {
+        <WorkflowMutationDsl as protocol::OpText>::print_op(&workflow_mutation_to_dsl(self))
     }
 }
 
 impl protocol::OpBinary for WorkflowMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        workflow_mutation_to_dsl(self).await.encode_op().await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        workflow_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(workflow_mutation_from_dsl(WorkflowMutationDsl::decode_op(bytes).await?).await)
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(workflow_mutation_from_dsl(WorkflowMutationDsl::decode_op(bytes)?))
     }
 }
 //#endregion 🔖️WorkflowMutationOpText
@@ -2157,10 +2169,10 @@ pub async fn empty_run_document() -> RunArtifact {
 /// helpers + `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` only, never the trait impls themselves.
 impl store::ArtifactDsl for RunArtifact {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -2168,32 +2180,32 @@ impl store::ArtifactDsl for RunArtifact {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for RunArtifact {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id().await {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
+        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
             Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -2219,7 +2231,7 @@ pub enum RunMutation {
     Seal { status: RunStatus },
 }
 
-pub async fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
+pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
     let mut next = document.clone();
     match operation {
         RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
@@ -2231,10 +2243,10 @@ pub async fn apply_run_operation(document: &RunArtifact, operation: &RunMutation
             next.output_collection_ref = output_collection_ref.clone();
             next.trigger = trigger.clone();
             next.status = RunStatus::Running;
-            next.started_at = store::now_iso().await;
+            next.started_at = store::now_iso();
         }
         RunMutation::NodeStarted { node_id } => {
-            next.logs.push(RunLogLine { node_id: node_id.clone(), level: "info".into(), message: "node started".into(), at: store::now_iso().await });
+            next.logs.push(RunLogLine { node_id: node_id.clone(), level: "info".into(), message: "node started".into(), at: store::now_iso() });
         }
         RunMutation::NodeFinished { node_record } => {
             next.node_records.retain(|entry| entry.node_id != node_record.node_id);
@@ -2245,7 +2257,7 @@ pub async fn apply_run_operation(document: &RunArtifact, operation: &RunMutation
         }
         RunMutation::Seal { status } => {
             next.status = *status;
-            next.finished_at = Some(store::now_iso().await);
+            next.finished_at = Some(store::now_iso());
             next.sealed = true;
         }
     }
@@ -2284,12 +2296,12 @@ pub enum RunDiff {
 }
 
 impl protocol::MutationDiff<RunArtifact> for RunDiff {
-    async fn apply(&self, document: &RunArtifact) -> protocol::MutationApplyResult<RunArtifact> {
+    fn apply(&self, document: &RunArtifact) -> protocol::MutationApplyResult<RunArtifact> {
         if document.sealed && !matches!(self, RunDiff::Empty) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.sealed", "run document is sealed").await.at(["sealed"]).await);
+            return Err(protocol::MutationApplyError::new("mutation.apply.sealed", "run document is sealed").at(["sealed"]));
         }
         if matches!(self, RunDiff::Start { .. }) && (document.status != RunStatus::Pending || !document.started_at.is_empty()) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "run has already started").await.at(["status"]).await);
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "run has already started").at(["status"]));
         }
         let operation = match self {
             RunDiff::Empty => return Ok(document.clone()),
@@ -2307,10 +2319,10 @@ impl protocol::MutationDiff<RunArtifact> for RunDiff {
             RunDiff::Log { node_id, level, message, at } => RunMutation::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
             RunDiff::Seal { status } => RunMutation::Seal { status: *status },
         };
-        Ok(apply_run_operation(document, &operation).await)
+        Ok(apply_run_operation(document, &operation))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if !matches!(other, RunDiff::Empty) {
             *self = other;
         }
@@ -2322,7 +2334,7 @@ impl protocol::Mutation<RunArtifact> for RunMutation {
 
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
-    async fn diff(&self, _document: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
+    fn diff(&self, _document: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
         let diff = match self {
             RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => RunDiff::Start {
                 workflow_ref: workflow_ref.clone(),
@@ -2338,10 +2350,10 @@ impl protocol::Mutation<RunArtifact> for RunMutation {
             RunMutation::Log { node_id, level, message, at } => RunDiff::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
             RunMutation::Seal { status } => RunDiff::Seal { status: *status },
         };
-        protocol::MutationOutcome::new(diff).await
+        protocol::MutationOutcome::new(diff)
     }
 
-    async fn inverse(&self, base: &RunArtifact) -> Vec<Self> {
+    fn inverse(&self, base: &RunArtifact) -> Vec<Self> {
         match self {
             // 🧷️ `Start` is a run's genesis operation (always applied to a freshly-`empty_run_document`
             // document in practice) and `Seal`/`NodeStarted`/`Log` have no meaningful undo target —
@@ -2377,7 +2389,7 @@ impl RunMutation {
 /// directly, for every operation it emits.
 pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, String> {
     operation.check_not_sealed(document).await?;
-    Ok(apply_run_operation(document, &operation).await)
+    Ok(apply_run_operation(document, &operation))
 }
 //#endregion 🔖️RunMutation
 
@@ -2414,7 +2426,7 @@ enum RunMutationDsl {
     },
 }
 
-async fn run_mutation_to_dsl(operation: &RunMutation) -> RunMutationDsl {
+fn run_mutation_to_dsl(operation: &RunMutation) -> RunMutationDsl {
     match operation {
         RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => RunMutationDsl::Start {
             workflow_ref: workflow_ref.clone(),
@@ -2432,7 +2444,7 @@ async fn run_mutation_to_dsl(operation: &RunMutation) -> RunMutationDsl {
     }
 }
 
-async fn run_mutation_from_dsl(operation: RunMutationDsl) -> RunMutation {
+fn run_mutation_from_dsl(operation: RunMutationDsl) -> RunMutation {
     match operation {
         RunMutationDsl::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
             RunMutation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger }
@@ -2445,7 +2457,7 @@ async fn run_mutation_from_dsl(operation: RunMutationDsl) -> RunMutation {
 }
 
 impl protocol::OpText for RunMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -2456,7 +2468,7 @@ impl protocol::OpText for RunMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
@@ -2466,31 +2478,31 @@ impl protocol::OpText for RunMutationDsl {
 
 /// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
 impl protocol::OpBinary for RunMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self).await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes).await
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 
 impl protocol::OpText for RunMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        Ok(run_mutation_from_dsl(<RunMutationDsl as protocol::OpText>::parse_op(line).await?).await)
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        Ok(run_mutation_from_dsl(<RunMutationDsl as protocol::OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
-        <RunMutationDsl as protocol::OpText>::print_op(&run_mutation_to_dsl(self).await).await
+    fn print_op(&self) -> String {
+        <RunMutationDsl as protocol::OpText>::print_op(&run_mutation_to_dsl(self))
     }
 }
 
 impl protocol::OpBinary for RunMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        run_mutation_to_dsl(self).await.encode_op().await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        run_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(run_mutation_from_dsl(RunMutationDsl::decode_op(bytes).await?).await)
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(run_mutation_from_dsl(RunMutationDsl::decode_op(bytes)?))
     }
 }
 //#endregion 🔖️RunMutationOpText
@@ -2530,7 +2542,14 @@ mod tests {
     }
 
     async fn workflow_edge(id: &str, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> WorkflowEdge {
-        WorkflowEdge { id: id.into(), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract: placeholder_media_contract("data.value").await }
+        WorkflowEdge {
+            id: id.into(),
+            source_node_id: source_node_id.into(),
+            source_port_id: source_port_id.into(),
+            target_node_id: target_node_id.into(),
+            target_port_id: target_port_id.into(),
+            contract: placeholder_media_contract("data.value").await,
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2698,7 +2717,8 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }).await;
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }).await;
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } }).await;
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } })
+            .await;
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() }).await;
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }).await;
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() }).await;
@@ -2721,7 +2741,8 @@ mod tests {
         store::os_store::test_support::assert_operation_round_trip(
             &document,
             WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-2".into(), kind_id: "kind.b".into(), selector: "**/*".into(), required: false, multiplicity: PortMultiplicity::One } },
-        ).await;
+        )
+        .await;
         store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } }).await;
         store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } }).await;
         store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() }).await;
@@ -2821,7 +2842,8 @@ mod tests {
                 output_collection_ref: "collections/out".into(),
                 trigger: RunTrigger::Manual { actor: "dev".into() },
             },
-        ).await;
+        )
+        .await;
         document = apply_run_operation(&document, &RunMutation::NodeStarted { node_id: "a".into() }).await;
         document = apply_run_operation(&document, &RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::Computed).await }).await;
         document
@@ -2852,7 +2874,8 @@ mod tests {
             parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Manual { actor: "dev".into() },
-        }).await;
+        })
+        .await;
         store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Start {
             workflow_ref: "space.space".into(),
             workflow_checkpoint_id: "ck-1".into(),
@@ -2861,7 +2884,8 @@ mod tests {
             parameter_values: Vec::new(),
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
-        }).await;
+        })
+        .await;
         store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() }).await;
         store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }).await;
         store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }).await;

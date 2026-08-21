@@ -1,14 +1,13 @@
 //! 🧭️ 🧭️ Procedural3d play app commands command — `scale-selection`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-use crate::artifacts::procedural3d::schema::{
-    commit_fixture, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, host_from_fixture};
 
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
@@ -59,7 +58,8 @@ pub struct ScaleSelection {
     pub node_ids: Vec<String>,
     pub sx: f64,
     pub sy: f64,
-    pub sz: f64}
+    pub sz: f64,
+}
 
 async fn scale_ids(fixture: &FlowFixture, ids: &[String], uniform_factor: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     match gumball_transform(fixture, ids, "scale", move |host, transform_id| {
@@ -67,7 +67,8 @@ async fn scale_ids(fixture: &FlowFixture, ids: &[String], uniform_factor: f64) -
         host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
     }) {
         Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-scale".into()), ..Default::default() },
-        None => Emit::default()}
+        None => Emit::default(),
+    }
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
@@ -81,7 +82,13 @@ pub async fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, Procedural3
 
 /// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
 /// command carries no explicit ids.
-pub async fn apply(payload: &ScaleSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn apply(
+    payload: &ScaleSelection,
+    doc: &ArtifactView<'_, Procedural3dSnapshot>,
+    _cfg: &ConfigView<'_, Procedural3dConfig>,
+    interaction: &InteractionView<'_>,
+    _session: &mut FlowEvalSession,
+) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
     Ok(scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
 }

@@ -416,7 +416,6 @@ mod json_schema_tests {
 /// tree through the replication crate; the record/field/wire types below build on it.
 pub use protocol::value::{from_dsl_value, to_dsl_value, DslValue};
 
-
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WireNode {
@@ -424,7 +423,6 @@ pub struct WireNode {
     pub kind: Option<String>,
     pub port: Option<String>,
 }
-
 
 /// @emoji 🏷️ Optional id/kind label on a wire edge (`-[e1:Connection]->` / fused `-e1:Connection>`).
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -1164,11 +1162,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
 fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
     fn parse_wire_label(cursor: &mut Cursor) -> Result<WireEdgeLabel, TextError> {
         cursor.expect(TokenKind::LBracket)?;
-        let id = if cursor.peek().kind == TokenKind::Ident {
-            Some(ident_like_text(&cursor.advance()))
-        } else {
-            None
-        };
+        let id = if cursor.peek().kind == TokenKind::Ident { Some(ident_like_text(&cursor.advance())) } else { None };
         let kind = if cursor.peek().kind == TokenKind::Colon {
             cursor.advance();
             Some(ident_like_text(&cursor.expect(TokenKind::Ident)?))
@@ -1292,11 +1286,7 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
 /// key (here, always `)`), so no special "bounded sub-cursor" is needed to keep it from reading
 /// past the closing paren.
 fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
-    let name_field = spec
-        .fields
-        .iter()
-        .find(|f| f.is_call_name)
-        .ok_or_else(|| TextError::new("RecordLayout::Call requires exactly one field marked call_name()", cursor.span()))?;
+    let name_field = spec.fields.iter().find(|f| f.is_call_name).ok_or_else(|| TextError::new("RecordLayout::Call requires exactly one field marked call_name()", cursor.span()))?;
     let name = ident_like_text(&cursor.expect(TokenKind::Ident)?);
     cursor.expect(TokenKind::Equals)?;
     let keyword = spec.keyword.as_deref().ok_or_else(|| TextError::new("RecordLayout::Call requires RecordSpec.keyword (the call target)", cursor.span()))?;
@@ -2204,18 +2194,10 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
 }
 
 fn print_wire(wire: &WireValue, writer: &mut Writer) {
-    let map_node = |node: &WireNode| dsl_notation::EdgeNode {
-        id: node.id.clone(),
-        kind: node.kind.clone(),
-        port: node.port.clone(),
-    };
+    let map_node = |node: &WireNode| dsl_notation::EdgeNode { id: node.id.clone(), kind: node.kind.clone(), port: node.port.clone() };
     let edge = dsl_notation::EdgeValue {
         from: map_node(&wire.from),
-        link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink {
-            directed: *directed,
-            label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() },
-            to: map_node(to),
-        }),
+        link: wire.edge.as_ref().map(|(directed, to)| dsl_notation::EdgeLink { directed: *directed, label: dsl_notation::EdgeLabel { id: wire.edge_label.id.clone(), kind: wire.edge_label.kind.clone() }, to: map_node(to) }),
     };
     writer.atom(dsl_notation::print_edge(&edge));
     if !matches!(&wire.properties, DslValue::Object(entries) if entries.is_empty()) {
@@ -2241,7 +2223,6 @@ pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Resul
     Ok(print(&value, spec, JoinMode::Document))
 }
 //#endregion 🔖️Canonicalize
-
 
 //#region 🔖️Language
 /// @emoji 🎨️ Generic editor surface over any `RecordSpec` — the generalization of
@@ -2630,12 +2611,7 @@ mod tests {
         RecordSpec::new(
             Some("brep.solid.extrude"),
             RecordLayout::Call,
-            vec![
-                FieldSpec::new(0, "name", Shape::Text).call_name(),
-                FieldSpec::new(1, "profile", Shape::Text).positional(0),
-                FieldSpec::new(2, "axis", Shape::Text).positional(1),
-                FieldSpec::new(3, "height", Shape::Float).optional(),
-            ],
+            vec![FieldSpec::new(0, "name", Shape::Text).call_name(), FieldSpec::new(1, "profile", Shape::Text).positional(0), FieldSpec::new(2, "axis", Shape::Text).positional(1), FieldSpec::new(3, "height", Shape::Float).optional()],
         )
     }
 

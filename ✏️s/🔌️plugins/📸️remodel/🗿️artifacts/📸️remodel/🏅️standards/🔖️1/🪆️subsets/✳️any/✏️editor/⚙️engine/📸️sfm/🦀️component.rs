@@ -1880,14 +1880,7 @@ pub struct SfmConfig {
 
 impl Default for SfmConfig {
     fn default() -> Self {
-        Self {
-            ransac_threshold_px: 2.0,
-            min_track_length: 3,
-            ba_max_iterations: 50,
-            robust_loss: RobustLoss::Huber(2.0),
-            min_triangulation_angle_rad: 2.0_f64.to_radians(),
-            min_visible_points_to_keep_camera: 6,
-        }
+        Self { ransac_threshold_px: 2.0, min_track_length: 3, ba_max_iterations: 50, robust_loss: RobustLoss::Huber(2.0), min_triangulation_angle_rad: 2.0_f64.to_radians(), min_visible_points_to_keep_camera: 6 }
     }
 }
 
@@ -2057,13 +2050,8 @@ impl IncrementalSfm {
         best
     }
 
-        pub async fn pnp_correspondence_count(&self, frame: usize) -> usize {
-        self.tracks
-            .tracks
-            .iter()
-            .enumerate()
-            .filter(|(track_id, track)| self.points.contains_key(track_id) && self.track_obs_in(track, frame).is_some())
-            .count()
+    pub async fn pnp_correspondence_count(&self, frame: usize) -> usize {
+        self.tracks.tracks.iter().enumerate().filter(|(track_id, track)| self.points.contains_key(track_id) && self.track_obs_in(track, frame).is_some()).count()
     }
 
     /// 🌱️ Whether `frame` already has a registered camera pose in this reconstruction.
@@ -2151,11 +2139,7 @@ impl IncrementalSfm {
                 };
                 let _ = (src, dst);
                 for m in matches {
-                    let (px_r, px_f) = if !flip {
-                        (self.obs_px(ref_f, m.a), self.obs_px(frame, m.b))
-                    } else {
-                        (self.obs_px(ref_f, m.b), self.obs_px(frame, m.a))
-                    };
+                    let (px_r, px_f) = if !flip { (self.obs_px(ref_f, m.a), self.obs_px(frame, m.b)) } else { (self.obs_px(ref_f, m.b), self.obs_px(frame, m.a)) };
                     corr.push((px_r, px_f));
                 }
             }
@@ -2464,12 +2448,7 @@ impl IncrementalSfm {
         self.init_pair(f0, f1, matches01)?;
 
         for _ in 0..frame_order.len().saturating_sub(2) {
-            let mut candidates: Vec<(usize, usize)> = frame_order
-                .iter()
-                .copied()
-                .filter(|&frame| !self.is_registered(frame))
-                .map(|frame| (self.pnp_correspondence_count(frame), frame))
-                .collect();
+            let mut candidates: Vec<(usize, usize)> = frame_order.iter().copied().filter(|&frame| !self.is_registered(frame)).map(|frame| (self.pnp_correspondence_count(frame), frame)).collect();
             candidates.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
             let mut registered_any = false;
             for (_corrs, frame) in candidates {
@@ -2800,14 +2779,7 @@ mod tests {
         assert!(matches01.len() >= 8, "expected enough shared tracks between frames 0 and 1, got {}", matches01.len());
         let pairwise_matches = vec![(0usize, 1usize, matches01)];
 
-        let cfg = SfmConfig {
-            ransac_threshold_px: 2.5,
-            min_track_length: 2,
-            ba_max_iterations: 30,
-            robust_loss: RobustLoss::Huber(2.0),
-            min_triangulation_angle_rad: 1.0_f64.to_radians(),
-            min_visible_points_to_keep_camera: 6,
-        };
+        let cfg = SfmConfig { ransac_threshold_px: 2.5, min_track_length: 2, ba_max_iterations: 30, robust_loss: RobustLoss::Huber(2.0), min_triangulation_angle_rad: 1.0_f64.to_radians(), min_visible_points_to_keep_camera: 6 };
         let mut sfm = IncrementalSfm::new(intr, feature_tracks.clone(), keypoints_per_frame.clone(), cfg);
         let recon = sfm.run_all(&frame_order, &pairwise_matches).expect("run_all should reconstruct the synthetic scene");
 

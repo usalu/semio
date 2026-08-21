@@ -3,7 +3,7 @@
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::{dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

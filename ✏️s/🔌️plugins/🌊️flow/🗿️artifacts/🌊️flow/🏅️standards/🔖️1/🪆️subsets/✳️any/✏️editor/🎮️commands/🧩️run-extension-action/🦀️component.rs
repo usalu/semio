@@ -5,7 +5,7 @@ use crate::editor::flow::commands::evaluate::evaluate_result;
 use crate::editor::flow::commands::reorganize::reorganize_operations;
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Registry

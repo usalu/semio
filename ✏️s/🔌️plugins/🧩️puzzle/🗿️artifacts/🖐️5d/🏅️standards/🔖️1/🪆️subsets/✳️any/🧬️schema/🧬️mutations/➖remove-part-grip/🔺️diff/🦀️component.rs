@@ -14,12 +14,7 @@ pub async fn diff(payload: &super::mutation::RemovePartGrip, base: &Puzzle5dSnap
     let mut next = part.clone();
     next.grips.retain(|grip| grip.id != payload.grip_id);
     let full_id = format!("{}:{}", payload.part_id, payload.grip_id);
-    let severed: Vec<String> = base
-        .fasteners
-        .iter()
-        .filter(|fastener| fastener.source == full_id || fastener.target == full_id)
-        .map(|fastener| fastener.id.clone())
-        .collect();
+    let severed: Vec<String> = base.fasteners.iter().filter(|fastener| fastener.source == full_id || fastener.target == full_id).map(|fastener| fastener.id.clone()).collect();
     protocol::MutationOutcome::new(Puzzle5dDiff {
         parts: Some(Puzzle5dPartsDelta { patched: vec![Puzzle5dPartPatchEntry { id: payload.part_id.clone(), patch: Puzzle5dPartPatch { replacement: Some(next) } }], ..Default::default() }),
         fasteners: if severed.is_empty() { None } else { Some(Puzzle5dFastenersDelta { removed: severed, ..Default::default() }) },

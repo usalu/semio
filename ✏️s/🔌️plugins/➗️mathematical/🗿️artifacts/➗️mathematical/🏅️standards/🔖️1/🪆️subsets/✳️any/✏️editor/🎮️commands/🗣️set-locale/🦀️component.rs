@@ -1,9 +1,9 @@
 //! 🗣️ 🗣️ Mathematical play app commands command — `set-locale`.
 
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::MathematicalSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

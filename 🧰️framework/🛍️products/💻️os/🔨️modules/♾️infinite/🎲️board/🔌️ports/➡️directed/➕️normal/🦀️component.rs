@@ -504,18 +504,18 @@ pub mod board_host {
         }
 
         fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> Option<Point> {
-            let center = Point::new(node.x, node.y).await;
+            let center = Point::new(node.x, node.y);
             match node.shape {
                 NodeShape::Circle => {
                     let radius = self.scaled_node_radius(node);
                     let angle = circle_handle_angle_toward(center, toward);
-                    Some(handle_position_on_circle(center, radius, angle).await)
+                    Some(handle_position_on_circle(center, radius, angle))
                 }
                 NodeShape::Rectangle => {
                     let width = self.scaled_node_width(node);
                     let height = self.scaled_node_height(node);
                     let angle = rectangle_handle_angle_toward(center, width, height, toward);
-                    Some(handle_position_on_rectangle(center, width, height, angle).await)
+                    Some(handle_position_on_rectangle(center, width, height, angle))
                 }
             }
         }
@@ -1387,10 +1387,10 @@ pub mod board_host {
                     let half_w = sw * 1.15;
                     let base = tip - d * length;
                     let mut path = BezPath::new();
-                    path.await.move_to(tip);
-                    path.await.line_to(base + n * half_w);
-                    path.await.line_to(base - n * half_w);
-                    path.await.close_path();
+                    path.move_to(tip);
+                    path.line_to(base + n * half_w);
+                    path.line_to(base - n * half_w);
+                    path.close_path();
                     if tip_def.filled {
                         scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &path);
                     } else {
@@ -1402,10 +1402,10 @@ pub mod board_host {
                     let half_w = sw * 0.75;
                     let base = tip - d * length;
                     let mut path = BezPath::new();
-                    path.await.move_to(tip);
-                    path.await.line_to(base + n * half_w);
-                    path.await.move_to(tip);
-                    path.await.line_to(base - n * half_w);
+                    path.move_to(tip);
+                    path.line_to(base + n * half_w);
+                    path.move_to(tip);
+                    path.line_to(base - n * half_w);
                     let outline = Stroke::new((sw * 0.9).max(1.0));
                     scene.stroke(&outline, Affine::IDENTITY, color, None, &path);
                 }
@@ -1415,11 +1415,11 @@ pub mod board_host {
                     let back = tip - d * length;
                     let mid = tip - d * (length * 0.5);
                     let mut path = BezPath::new();
-                    path.await.move_to(tip);
-                    path.await.line_to(mid + n * half_w);
-                    path.await.line_to(back);
-                    path.await.line_to(mid - n * half_w);
-                    path.await.close_path();
+                    path.move_to(tip);
+                    path.line_to(mid + n * half_w);
+                    path.line_to(back);
+                    path.line_to(mid - n * half_w);
+                    path.close_path();
                     if tip_def.filled {
                         scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &path);
                     } else {
@@ -1440,8 +1440,8 @@ pub mod board_host {
                     let half = sw * ui_styling::strokes::EDGE_TIP_MIN;
                     let center = tip - d * (sw * 0.5);
                     let mut path = BezPath::new();
-                    path.await.move_to(center + n * half);
-                    path.await.line_to(center - n * half);
+                    path.move_to(center + n * half);
+                    path.line_to(center - n * half);
                     scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
                 }
             }
@@ -1656,7 +1656,7 @@ pub mod board_host {
             let slot_center = self.brush_slot_center_world(h)?;
             let zoom = self.camera.zoom.max(1e-9);
             let slot_hit_r = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.brush_slot_hit_radius_world();
-            let d_slot = distance_between(world, slot_center).await;
+            let d_slot = distance_between(world, slot_center);
             if d_slot <= slot_hit_r {
                 return Some(d_slot);
             }
@@ -1769,7 +1769,7 @@ pub mod board_host {
 
         fn brush_template_world_pos(&self, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, angle: f64) -> Point {
             match shape {
-                NodeShape::Circle => handle_position_on_circle(center, radius, angle).await,
+                NodeShape::Circle => handle_position_on_circle(center, radius, angle),
                 NodeShape::Rectangle => handle_position_on_rectangle(center, width, height, angle),
             }
         }
@@ -1998,9 +1998,9 @@ pub mod board_host {
         }
 
         fn fill_virtual_handle_anchor_world(node: &FillVirtualNode, tmpl: &NodeKindHandleTemplate) -> Point {
-            let center = Point::new(node.x, node.y).await;
+            let center = Point::new(node.x, node.y);
             match node.shape {
-                NodeShape::Circle => handle_position_on_circle(center, node.radius, tmpl.angle).await,
+                NodeShape::Circle => handle_position_on_circle(center, node.radius, tmpl.angle),
                 NodeShape::Rectangle => handle_position_on_rectangle(center, node.width, node.height, tmpl.angle),
             }
         }
@@ -2537,7 +2537,7 @@ pub mod board_host {
         }
 
         fn paint_highlighted_node_preview(&self, scene: &mut Scene, _lod: BoardDrawLod, x: f64, y: f64, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: Option<&str>, world_space: bool) {
-            let center = Point::new(x, y).await;
+            let center = Point::new(x, y);
             let style = BoardElementStyleKind::Highlighted;
             let fill = Self::node_fill_for_style(&self.canvas_theme, style);
             let stroke_c = Self::node_stroke_for_style(&self.canvas_theme, style);
@@ -2634,7 +2634,7 @@ pub mod board_host {
             };
             let _ = lod;
             self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, preview.shape, preview.radius, preview.width, preview.height, preview.icon_kind.as_deref(), world_space);
-            let center = Point::new(preview.x, preview.y).await;
+            let center = Point::new(preview.x, preview.y);
             let source = match self.handles.get(preview.source_handle_id.as_str()) {
                 Some(h) => h,
                 None => return,
@@ -2653,10 +2653,10 @@ pub mod board_host {
             };
             let tgt_center = center;
             let curve = compute_edge_bezier_points(src_pos, tgt_pos, Point::new(src_node.x, src_node.y), tgt_center);
-            let p0 = self.draw_space_point(curve.await.p0(), world_space);
-            let p1 = self.draw_space_point(curve.await.p1(), world_space);
-            let p2 = self.draw_space_point(curve.await.p2(), world_space);
-            let p3 = self.draw_space_point(curve.await.p3(), world_space);
+            let p0 = self.draw_space_point(curve.p0(), world_space);
+            let p1 = self.draw_space_point(curve.p1(), world_space);
+            let p2 = self.draw_space_point(curve.p2(), world_space);
+            let p3 = self.draw_space_point(curve.p3(), world_space);
             let bez = CubicBez::new(p0, p1, p2, p3);
             scene.stroke(&Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT), Affine::IDENTITY, self.canvas_theme.wire_stroke_highlighted, None, &bez);
         }
@@ -2945,7 +2945,7 @@ pub mod board_host {
         pub(crate) fn handle_world_pos(&self, h: &HandleData) -> Option<Point> {
             let n = self.nodes.get(&h.node_id)?;
             Some(match n.shape {
-                NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n), h.angle).await,
+                NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n), h.angle),
                 NodeShape::Rectangle => handle_position_on_rectangle(Point::new(n.x, n.y), self.scaled_node_width(n), self.scaled_node_height(n), h.angle),
             })
         }
@@ -2968,7 +2968,7 @@ pub mod board_host {
             let n = self.nodes.get(&h.node_id)?;
             let offset = self.indirect_handle_ring_offset_world(n);
             Some(match n.shape {
-                NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n) + offset, h.angle).await,
+                NodeShape::Circle => handle_position_on_circle(Point::new(n.x, n.y), self.scaled_node_radius(n) + offset, h.angle),
                 NodeShape::Rectangle => handle_position_on_rectangle(Point::new(n.x, n.y), self.scaled_node_width(n) + 2.0 * offset, self.scaled_node_height(n) + 2.0 * offset, h.angle),
             })
         }
@@ -3371,11 +3371,11 @@ pub mod board_host {
             if !self.has_ports() {
                 let source_node = self.nodes.get(&e.source)?;
                 let target_node = self.nodes.get(&e.target)?;
-                let source_center = Point::new(source_node.x, source_node.y).await;
-                let target_center = Point::new(target_node.x, target_node.y).await;
+                let source_center = Point::new(source_node.x, source_node.y);
+                let target_center = Point::new(target_node.x, target_node.y);
                 let source_pos = self.node_rim_point_toward(source_node, target_center)?;
                 let target_pos = self.node_rim_point_toward(target_node, source_center)?;
-                return Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center).await);
+                return Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center));
             }
             let source_handle = self.handles.get(&e.source)?;
             let target_handle = self.handles.get(&e.target)?;
@@ -3383,14 +3383,14 @@ pub mod board_host {
             let target_node = self.nodes.get(&target_handle.node_id)?;
             let source_pos = self.handle_world_pos(source_handle)?;
             let target_pos = self.handle_world_pos(target_handle)?;
-            Some(compute_edge_bezier_points(source_pos, target_pos, Point::new(source_node.x, source_node.y), Point::new(target_node.x, target_node.y)).await)
+            Some(compute_edge_bezier_points(source_pos, target_pos, Point::new(source_node.x, source_node.y), Point::new(target_node.x, target_node.y)))
         }
 
         fn link_drag_wire_curve_world(&self, source_id: &str, target_id: Option<&str>, end_world: Point) -> Option<CubicBez> {
             let source_handle = self.handles.get(source_id)?;
             let source_node = self.nodes.get(&source_handle.node_id)?;
             let source_pos = self.handle_world_pos(source_handle)?;
-            let source_center = Point::new(source_node.x, source_node.y).await;
+            let source_center = Point::new(source_node.x, source_node.y);
             let (target_pos, target_center) = if let Some(tid) = target_id {
                 let th = self.handles.get(tid)?;
                 let tn = self.nodes.get(&th.node_id)?;
@@ -3398,7 +3398,7 @@ pub mod board_host {
             } else {
                 (end_world, end_world)
             };
-            Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center).await)
+            Some(compute_edge_bezier_points(source_pos, target_pos, source_center, target_center))
         }
 
         fn active_link_wire_curve(&self) -> Option<CubicBez> {
@@ -3465,7 +3465,7 @@ pub mod board_host {
                 let Some(pos) = self.handle_world_pos(h) else {
                     continue;
                 };
-                let d = distance_between(point, pos).await;
+                let d = distance_between(point, pos);
                 if d <= MAX_D_WORLD && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
                     best = Some((d, h.id.clone()));
                 }
@@ -4186,14 +4186,14 @@ pub mod board_host {
             let mut p = infinite::canvas::BezPath::new();
             let mut x = x_off;
             while x <= w {
-                p.await.move_to(Point::new(x, 0.0));
-                p.await.line_to(Point::new(x, h));
+                p.move_to(Point::new(x, 0.0));
+                p.line_to(Point::new(x, h));
                 x += step;
             }
             let mut y = y_off;
             while y <= h {
-                p.await.move_to(Point::new(0.0, y));
-                p.await.line_to(Point::new(w, y));
+                p.move_to(Point::new(0.0, y));
+                p.line_to(Point::new(w, y));
                 y += step;
             }
             scene.stroke(&stroke, Affine::IDENTITY, color, None, &p);
@@ -4235,7 +4235,7 @@ pub mod board_host {
             let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
             let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
             let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
-            let outward = if exterior_cap { self.nodes.get(h.node_id.as_str()).and_then(|n| handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height).await) } else { None };
+            let outward = if exterior_cap { self.nodes.get(h.node_id.as_str()).and_then(|n| handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height)) } else { None };
             if paint_fill {
                 if let Some(out) = outward {
                     scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &handle_exterior_cap_fill_path(c, out, r));
@@ -4352,7 +4352,7 @@ pub mod board_host {
                     let hh = self.scaled_node_height(n) / 2.0;
                     let p0 = self.draw_space_point(Point::new(n.x - hw, n.y - hh), world_space);
                     let p1 = self.draw_space_point(Point::new(n.x + hw, n.y + hh), world_space);
-                    let rect = Rect::from_points(p0, p1).await;
+                    let rect = Rect::from_points(p0, p1);
                     if paint_fill {
                         scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &rect);
                     }
@@ -4704,11 +4704,11 @@ pub mod board_host {
             if let Some(ref pts) = self.selection_screen_preview {
                 if pts.len() >= 2 {
                     let mut path = infinite::canvas::BezPath::new();
-                    path.await.move_to(pts[0]);
+                    path.move_to(pts[0]);
                     for p in pts.iter().skip(1) {
-                        path.await.line_to(*p);
+                        path.line_to(*p);
                     }
-                    path.await.close_path();
+                    path.close_path();
                     inner.fill(FillRule::NonZero, Affine::IDENTITY, self.canvas_theme.selection_preview_fill, None, &path);
                     let mut preview_stroke = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
                     if self.selection_preview_crossing {
@@ -4948,7 +4948,7 @@ pub mod board_host {
                         let Some(tgt_pos) = self.handle_world_pos(tgt_h) else {
                             continue;
                         };
-                        let d = distance_between(src_pos, tgt_pos).await;
+                        let d = distance_between(src_pos, tgt_pos);
                         let pair = if self.handles_link_compatible_for_drag(src_h, tgt_h) {
                             Some(((*src_id).clone(), (*tgt_id).clone()))
                         } else if self.handles_link_compatible_for_drag(tgt_h, src_h) {
@@ -5046,7 +5046,7 @@ pub mod board_host {
                 }
                 let pw = self.handle_world_pos(h)?;
                 let h_scr = self.world_to_screen(pw);
-                let d_screen = distance_between(p_scr, h_scr).await;
+                let d_screen = distance_between(p_scr, h_scr);
                 let tol_screen = self.link_snap_drag_tolerance_screen(h);
                 if d_screen <= tol_screen && best.as_ref().map(|(bd, _)| d_screen < *bd).unwrap_or(true) {
                     best = Some((d_screen, id.clone()));
@@ -5116,7 +5116,7 @@ pub mod board_host {
 
         pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
             self.set_selection_screen_preview(None);
-            let screen = Point::new(sx, sy).await;
+            let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
             if self.active_utility == ActiveUtility::Brush {
                 if button == 1 {
@@ -5238,7 +5238,7 @@ pub mod board_host {
         }
 
         pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            let screen = Point::new(sx, sy).await;
+            let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
@@ -5369,7 +5369,7 @@ pub mod board_host {
         }
 
         pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            let screen = Point::new(sx, sy).await;
+            let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
@@ -5560,7 +5560,7 @@ pub mod board_host {
                 .min_by(|a, b| {
                     let da = self.nodes.get(*a).map(|n| distance_between(world, Point::new(n.x, n.y))).unwrap_or(f64::INFINITY);
                     let db = self.nodes.get(*b).map(|n| distance_between(world, Point::new(n.x, n.y))).unwrap_or(f64::INFINITY);
-                    da.partial_cmp(&db).await.unwrap_or(std::cmp::Ordering::Equal)
+                    da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
                 })
                 .cloned()
                 .unwrap_or_else(|| members[0].clone());
@@ -5585,12 +5585,12 @@ pub mod board_host {
             let lasso = self.selection_options.method == "lasso";
             if enclosing {
                 if lasso {
-                    polygon_contains_world_box(polygon, bounds).await
+                    polygon_contains_world_box(polygon, bounds)
                 } else {
                     world_box_contains_box(box_, bounds)
                 }
             } else if lasso {
-                polygon_intersects_world_box(polygon, bounds).await
+                polygon_intersects_world_box(polygon, bounds)
             } else {
                 world_boxes_overlap(box_, bounds)
             }
@@ -5605,12 +5605,12 @@ pub mod board_host {
             let lasso = self.selection_options.method == "lasso";
             if enclosing {
                 if lasso {
-                    polygon_contains_world_box(polygon, bounds).await
+                    polygon_contains_world_box(polygon, bounds)
                 } else {
                     world_box_contains_box(box_, bounds)
                 }
             } else if lasso {
-                polygon_intersects_world_box(polygon, bounds).await
+                polygon_intersects_world_box(polygon, bounds)
             } else {
                 world_boxes_overlap(box_, bounds)
             }
@@ -5626,14 +5626,14 @@ pub mod board_host {
             let lasso = self.selection_options.method == "lasso";
             if enclosing {
                 if lasso {
-                    samples.iter().all(|&p| point_in_polygon(p, polygon).await)
+                    samples.iter().all(|&p| point_in_polygon(p, polygon))
                 } else {
                     samples.iter().all(|&p| world_box_contains_point(box_, p))
                 }
             } else if lasso {
-                (1..samples.len()).any(|i| segment_intersects_polygon(samples[i - 1], samples[i], polygon).await)
+                (1..samples.len()).any(|i| segment_intersects_polygon(samples[i - 1], samples[i], polygon))
             } else {
-                (1..samples.len()).any(|i| segment_intersects_world_box(samples[i - 1], samples[i], box_).await)
+                (1..samples.len()).any(|i| segment_intersects_world_box(samples[i - 1], samples[i], box_))
             }
         }
 
@@ -5692,10 +5692,10 @@ pub mod board_host {
     // #endregion board_host
 }
 
-pub use board_host::*;
 pub use crate::infinite::board::normal::undirected::{
     apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
     apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
 };
 pub use crate::infinite::board::ports::directed::*;
-pub use crate::infinite::canvas as canvas;
+pub use crate::infinite::canvas;
+pub use board_host::*;

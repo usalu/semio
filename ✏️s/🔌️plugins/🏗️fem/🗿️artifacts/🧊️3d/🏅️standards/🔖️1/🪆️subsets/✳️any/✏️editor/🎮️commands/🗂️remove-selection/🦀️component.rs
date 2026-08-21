@@ -1,10 +1,10 @@
 //! 🗂️ 🗂️ FEM 3D app commands command — `remove-selection`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -54,10 +54,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_selection_covers_solids_3d() {
         let mut app = fem3d_app();
-        dispatch(
-            &mut app,
-            Fem3dCommand::AddSolid(crate::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 1.0, depth: 1.0, height: 1.0, material_id: "concrete".into(), base_z: None, layers: None, mesh_size: None }),
-        );
+        dispatch(&mut app, Fem3dCommand::AddSolid(crate::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 1.0, depth: 1.0, height: 1.0, material_id: "concrete".into(), base_z: None, layers: None, mesh_size: None }));
         let solid_id = app.snapshot().expect("snapshot").solids[0].id.clone();
         dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![solid_id] }));
         assert!(app.snapshot().expect("snapshot").solids.is_empty());

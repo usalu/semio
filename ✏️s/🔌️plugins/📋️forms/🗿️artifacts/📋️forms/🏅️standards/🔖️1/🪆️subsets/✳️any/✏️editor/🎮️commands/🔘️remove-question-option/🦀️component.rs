@@ -1,9 +1,9 @@
 //! 🔘️ 🔘️ Forms play app commands command — `remove-question-option`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::artifacts::forms::schema::update_block_operation;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shell
@@ -15,9 +15,6 @@ async fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_
     })
 }
 //#endregion 🔖️Shell
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "remove-question-option")]

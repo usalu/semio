@@ -107,10 +107,7 @@ pub async fn sequence_snapshot_mutations(before: &SequenceFixture, after: &Seque
 }
 
 /// ▶️ Applies `mutation` via its diff.
-pub async fn apply_sequence_mutation(
-    snapshot: &SequenceSnapshot,
-    mutation: &SequenceMutation,
-) -> protocol::MutationApplyResult<SequenceSnapshot> {
+pub async fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> protocol::MutationApplyResult<SequenceSnapshot> {
     protocol::MutationDiff::apply(mutation.diff(snapshot).diff(), snapshot)
 }
 
@@ -128,14 +125,12 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     async fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
         backward.reverse();
         for back in backward {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");
@@ -178,10 +173,7 @@ mod tests {
     async fn store_applies_and_undoes_step_create() {
         let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).expect("valid artifact store fixture");
         store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })],
-                description: None,
-            })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None })
             .expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").to_fixture().steps.len(), 3);
     }

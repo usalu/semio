@@ -120,11 +120,7 @@ mod tests {
     }
 
     async fn snapshot_with_handles(handles: Vec<Block2dHandleTemplate>) -> Block2dSnapshot {
-        Block2dSnapshot {
-            node_kind: BlockKindIdentity { id: "square".into(), name: "square".into(), label: "Square".into(), ..Default::default() },
-            handles,
-            ..Block2dSnapshot::default()
-        }
+        Block2dSnapshot { node_kind: BlockKindIdentity { id: "square".into(), name: "square".into(), label: "Square".into(), ..Default::default() }, handles, ..Block2dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures
 

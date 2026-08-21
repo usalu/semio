@@ -17,24 +17,42 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowDiff {
-    #[state(artifact)] pub artifact: Option<Box<FlowArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub camera: Option<CameraJson>,
-    #[state(artifact)] pub content: Option<FlowContentChild>,
-    #[state(presence)] pub selected_node_ids: Option<FlowStringList>,
-    #[state(presence)] pub selected_edge_ids: Option<FlowStringList>,
-    #[state(presence)] pub selected_handle_ids: Option<FlowStringList>,
-    #[state(presence)] pub preview_off_node_ids: Option<FlowStringList>,
-    #[state(config)] pub lod_mode: Option<String>,
-    #[state(config)] pub proximity_distance: Option<f64>,
-    #[state(config)] pub grid_visible: Option<bool>,
-    #[state(config)] pub grid_snap_enabled: Option<bool>,
-    #[state(config)] pub grid_factor: Option<f64>,
-    #[state(config)] pub catalogue_sections_json: Option<String>,
-    #[state(config)] pub automation_enabled_json: Option<String>,
-    #[state(config)] pub contributions_json: Option<String>,
-    #[state(config)] pub generation_json: Option<String>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<FlowArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub camera: Option<CameraJson>,
+    #[state(artifact)]
+    pub content: Option<FlowContentChild>,
+    #[state(presence)]
+    pub selected_node_ids: Option<FlowStringList>,
+    #[state(presence)]
+    pub selected_edge_ids: Option<FlowStringList>,
+    #[state(presence)]
+    pub selected_handle_ids: Option<FlowStringList>,
+    #[state(presence)]
+    pub preview_off_node_ids: Option<FlowStringList>,
+    #[state(config)]
+    pub lod_mode: Option<String>,
+    #[state(config)]
+    pub proximity_distance: Option<f64>,
+    #[state(config)]
+    pub grid_visible: Option<bool>,
+    #[state(config)]
+    pub grid_snap_enabled: Option<bool>,
+    #[state(config)]
+    pub grid_factor: Option<f64>,
+    #[state(config)]
+    pub catalogue_sections_json: Option<String>,
+    #[state(config)]
+    pub automation_enabled_json: Option<String>,
+    #[state(config)]
+    pub contributions_json: Option<String>,
+    #[state(config)]
+    pub generation_json: Option<String>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 

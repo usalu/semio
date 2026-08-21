@@ -9,13 +9,11 @@
 //! `🦀️component.rs`, assembled from
 //! the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::forms::op::FormMutation;
 use protocol::OpBinary;

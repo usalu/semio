@@ -155,6 +155,14 @@ class TestScript extends BundleScript {
     runCargoTestBudgeted([], packageRoot, ["--features", "tui-terminal,wgpu", ...rest]);
   }
 }
+
+/** @emoji 🧪️ Runs the retained wgpu engine's native unit tests through the standard budgeted harness. */
+class TestWgpuEngineScript extends BundleScript {
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted([], packageRoot, ["--features", "wgpu-engine", ...rest]);
+  }
+}
 //#endregion 🔖️test
 
 //#region 🔖️check-wasm
@@ -167,9 +175,22 @@ class CheckWasmScript extends BundleScript {
     check(["--target", "wasm32-wasip2", "--features", "wgpu"]);
   }
 }
+
+/** @emoji 🧊️ Checks the full retained render seam on browser WebGPU. */
+class CheckWgpuEngineWasmScript extends BundleScript {
+  run(): void {
+    runCmd("cargo", ["check", "-p", "semio-framework-ui", "--target", "wasm32-unknown-unknown", "--features", "wgpu-engine"], { cwd: packageRoot, budgetMs: buildBudgetMs() });
+  }
+}
 //#endregion 🔖️check-wasm
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("generate", GenerateAxesScript).register("check", CheckAxesScript).register("test", TestScript).register("check-wasm", CheckWasmScript);
+  const router = new ScriptRouter(import.meta.dir)
+    .register("generate", GenerateAxesScript)
+    .register("check", CheckAxesScript)
+    .register("test", TestScript)
+    .register("test-wgpu-engine", TestWgpuEngineScript)
+    .register("check-wasm", CheckWasmScript)
+    .register("check-wgpu-engine-wasm", CheckWgpuEngineWasmScript);
   await runBundleScriptMain(router, import.meta.url);
 }

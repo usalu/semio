@@ -12,12 +12,7 @@ fn visible_indices(w: &WizardState) -> Vec<usize> {
         return (0..w.options.len()).collect();
     }
     let f = w.filter.to_ascii_lowercase();
-    w.options
-        .iter()
-        .enumerate()
-        .filter(|(_, o)| o.to_ascii_lowercase().contains(&f))
-        .map(|(i, _)| i)
-        .collect()
+    w.options.iter().enumerate().filter(|(_, o)| o.to_ascii_lowercase().contains(&f)).map(|(i, _)| i).collect()
 }
 
 pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
@@ -69,11 +64,7 @@ pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<Widget
 pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let bg = theme.surface(Surface::Window);
     let vis = visible_indices(w);
-    let breadcrumb = if w.steps.is_empty() {
-        String::new()
-    } else {
-        w.steps.iter().map(|(l, _)| l.as_str()).collect::<Vec<_>>().join(" › ")
-    };
+    let breadcrumb = if w.steps.is_empty() { String::new() } else { w.steps.iter().map(|(l, _)| l.as_str()).collect::<Vec<_>>().join(" › ") };
     let mut y = rect.y;
     if !breadcrumb.is_empty() && rect.height > 0 {
         let fg = theme.role(Role::MutedForeground);

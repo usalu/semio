@@ -19,9 +19,7 @@
 
 use crate::artifacts::mathematical::mutations::insert_point::mutation::InsertPoint;
 use crate::artifacts::mathematical::mutations::remove_point::mutation::RemovePoint;
-use crate::artifacts::mathematical::{
-    mathematical_children_from_state, mathematical_geometry, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalPoint, MathematicalSnapshot,
-};
+use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_geometry, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalPoint, MathematicalSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");

@@ -7,6 +7,8 @@
 //! pure derived reads over the document live in the artifact's own `🧬️schema` / `🧬️schema/💡️inferences`
 //! (see `//#region 🔧️Behavior` below for the app-scoped, `&mut`-taking counterpart).
 
+use crate::artifacts::program::op::ProgramMutation;
+use crate::artifacts::program::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::editor::architect::catalog::{analysis_kind_picker_options, parse_entity_id, parse_entity_id_from_args, parse_register_id, report_kind_picker_options, REGISTER_IDS};
 use crate::editor::architect::commands::adjacency::{set_adjacency_field, set_adjacency_filter, set_adjacency_kind};
 use crate::editor::architect::commands::analysis::{run_analysis, run_report, run_validation};
@@ -22,14 +24,12 @@ use crate::editor::architect::modes::edit::windows::{adjacency as adjacency_wind
 use crate::editor::architect::modes::{report as report_mode, review as review_mode};
 use crate::editor::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
-use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️component.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -969,11 +969,7 @@ pub mod behavior {
             let mut target = crate::artifacts::program::empty_plugin();
             for operation in &operations {
                 use protocol::{Mutation, MutationDiff};
-                target = operation
-                    .diff(&target)
-                    .diff()
-                    .apply(&target)
-                    .expect("template operation applies");
+                target = operation.diff(&target).diff().apply(&target).expect("template operation applies");
             }
             assert_eq!(target.functions.len(), 1);
         }
@@ -1415,10 +1411,10 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::architect::catalog::{analysis_kind_from_str, register_entities};
-    use crate::editor::architect::testkit;
     use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind};
     use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
+    use crate::editor::architect::catalog::{analysis_kind_from_str, register_entities};
+    use crate::editor::architect::testkit;
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 

@@ -92,13 +92,7 @@ async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> 
 
 //#region 🔖️TextPrimitives
 async fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
-    format!(
-        "schema={}\nstructure={}\nzones={}\nreferencedModel={}",
-        enc_str(&s.schema),
-        enc_child(&s.structure),
-        enc_child(&s.zones),
-        enc_json(&s.referenced_model),
-    )
+    format!("schema={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
 }
 async fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
     let mut schema = None;
@@ -184,12 +178,7 @@ async fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModel
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(EnergyModelSnapshot {
-        schema: read_str_lp(&mut reader)?,
-        structure: read_child(&mut reader)?,
-        zones: read_child(&mut reader)?,
-        referenced_model: read_json(&mut reader)?,
-    })
+    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -208,12 +197,7 @@ impl store::ArtifactDsl for EnergyModelSnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_energy_model_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -222,23 +206,13 @@ impl store::ArtifactPack for EnergyModelSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_energy_model_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) =
-            store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_energy_model_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -252,16 +226,8 @@ mod round_trip_tests {
     use super::*;
 
     async fn sample_with_composition() -> EnergyModelSnapshot {
-        let mut snapshot = energy_snapshot_with_state(
-            ENERGY_MODEL_DOCUMENT_SCHEMA,
-            crate::model::Model { name: "Demo".into(), version: "1".into(), ..crate::model::Model::default() },
-            None,
-        );
-        snapshot.referenced_model = Some(store::ArtifactLink {
-            target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"),
-            pin: store::LinkPin::Head,
-            role: "model".into(),
-        });
+        let mut snapshot = energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, crate::model::Model { name: "Demo".into(), version: "1".into(), ..crate::model::Model::default() }, None);
+        snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
         snapshot
     }
 
@@ -299,14 +265,7 @@ mod round_trip_tests {
         let model = crate::model::Model {
             name: "Demo".into(),
             version: "1".into(),
-            zones: vec![crate::model::Zone {
-                id: crate::model::EntityId(1),
-                name: "Zone1".into(),
-                volume_m3: 100.0,
-                multiplier: 1,
-                conditioned: true,
-                part_of_total_floor_area: true,
-            }],
+            zones: vec![crate::model::Zone { id: crate::model::EntityId(1), name: "Zone1".into(), volume_m3: 100.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
             ..crate::model::Model::default()
         };
         let structure = crate::artifacts::model::energy_structure_from_model(&model);

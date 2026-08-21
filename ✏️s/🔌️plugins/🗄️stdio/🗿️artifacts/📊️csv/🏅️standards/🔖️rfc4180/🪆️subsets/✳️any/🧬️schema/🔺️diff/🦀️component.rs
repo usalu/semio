@@ -257,12 +257,12 @@ pub struct CsvDiff {
 }
 
 impl MutationDiff<CsvSnapshot> for CsvDiff {
-    async fn apply(&self, base: &CsvSnapshot) -> MutationApplyResult<CsvSnapshot> {
+    fn apply(&self, base: &CsvSnapshot) -> MutationApplyResult<CsvSnapshot> {
         validate_csv_diff(self, base)?;
         Ok(apply_csv_diff_unchecked(self, base))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.has_header.is_some() {
             self.has_header = other.has_header;
         }
@@ -468,12 +468,12 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
 }
 
 impl DiffAlgebra<CsvSnapshot> for CsvDiff {
-    async fn inverse(&self, base: &CsvSnapshot) -> Self {
+    fn inverse(&self, base: &CsvSnapshot) -> Self {
         let applied = apply_csv_diff_unchecked(self, base);
-        Self::between(&applied, base).await
+        Self::between(&applied, base)
     }
 
-    async fn between(base: &CsvSnapshot, other: &CsvSnapshot) -> Self {
+    fn between(base: &CsvSnapshot, other: &CsvSnapshot) -> Self {
         let has_header = (base.has_header != other.has_header).then_some(other.has_header);
 
         let mut removed = Vec::new();
@@ -509,7 +509,7 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
         Self { has_header, records }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.has_header.is_none() && self.records.as_ref().map_or(true, CsvRecordsDiff::is_empty)
     }
 }
@@ -857,35 +857,35 @@ fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 }
 
 impl DiffCodec for CsvDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_csv_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_csv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         match self.has_header {
             Some(v) => {
-                w.write_u8(1).await;
-                w.write_u8(if v { 1 } else { 0 }).await;
+                w.write_u8(1);
+                w.write_u8(if v { 1 } else { 0 });
             }
-            None => w.write_u8(0).await,
+            None => w.write_u8(0),
         }
         match &self.records {
             Some(r) => {
-                w.write_u8(1).await;
+                w.write_u8(1);
                 write_bin_records_diff(&mut w, r);
             }
-            None => w.write_u8(0).await,
+            None => w.write_u8(0),
         }
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes).await;
-        let hh_flag = r.read_u8().await.map_err(diff_pack_err)?;
-        let has_header = if hh_flag == 1 { Some(r.read_u8().await.map_err(diff_pack_err)? != 0) } else { None };
-        let rec_flag = r.read_u8().await.map_err(diff_pack_err)?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let hh_flag = r.read_u8().map_err(diff_pack_err)?;
+        let has_header = if hh_flag == 1 { Some(r.read_u8().map_err(diff_pack_err)? != 0) } else { None };
+        let rec_flag = r.read_u8().map_err(diff_pack_err)?;
         let records = if rec_flag == 1 { Some(read_bin_records_diff(&mut r).map_err(diff_pack_err)?) } else { None };
         Ok(CsvDiff { has_header, records })
     }

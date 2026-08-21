@@ -55,14 +55,10 @@ pub async fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: 
             update_layer_transform(layer_id.into(), transform)
         }
         "fillColor" => {
-            let alpha = layer_base(layer)
-                .attributes
-                .fill
-                .as_ref()
-                .map_or(1.0, |fill| match fill {
-                    FillStyle::Solid { color } => color[3],
-                    FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
-                });
+            let alpha = layer_base(layer).attributes.fill.as_ref().map_or(1.0, |fill| match fill {
+                FillStyle::Solid { color } => color[3],
+                FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
+            });
             replace_layer_fill(layer_id.into(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
         }
         "strokeWidth" => {

@@ -529,7 +529,6 @@ pub mod updater {
         callback: Arc<dyn Fn(&mut Sobjects, f64) + Send + Sync>,
     }
 
-
     impl Updater {
         pub async fn new<F>(name: impl Into<String>, callback: F) -> Self
         where

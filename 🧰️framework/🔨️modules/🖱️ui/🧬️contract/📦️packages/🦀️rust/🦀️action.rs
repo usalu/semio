@@ -189,12 +189,7 @@ mod tests {
 
     #[test]
     fn action_binding_round_trips_with_and_without_args() {
-        let full = ActionBinding {
-            trigger: Trigger::Change,
-            action: ActionId::v1("app", "setValue"),
-            args: Some(UiValue::Text("scope".into())),
-            capability: Some("edit".into()),
-        };
+        let full = ActionBinding { trigger: Trigger::Change, action: ActionId::v1("app", "setValue"), args: Some(UiValue::Text("scope".into())), capability: Some("edit".into()) };
         let first = serde_json::to_string(&full).expect("serialize");
         let back: ActionBinding = serde_json::from_str(&first).expect("deserialize");
         assert_eq!(full, back);
@@ -235,17 +230,7 @@ mod tests {
 
     #[test]
     fn every_trigger_variant_round_trips() {
-        for trigger in [
-            Trigger::Activate,
-            Trigger::Change,
-            Trigger::Commit,
-            Trigger::Delta,
-            Trigger::Drop,
-            Trigger::Submit,
-            Trigger::Abort,
-            Trigger::RepeatLast,
-            Trigger::HoverPreview,
-        ] {
+        for trigger in [Trigger::Activate, Trigger::Change, Trigger::Commit, Trigger::Delta, Trigger::Drop, Trigger::Submit, Trigger::Abort, Trigger::RepeatLast, Trigger::HoverPreview] {
             let json = serde_json::to_string(&trigger).expect("serialize");
             let back: Trigger = serde_json::from_str(&json).expect("deserialize");
             assert_eq!(trigger, back);

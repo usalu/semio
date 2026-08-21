@@ -1,7 +1,7 @@
 //! 📐️ Mathematical play app — the geometry window: the convex-hull/centroid canvas.
 
-use crate::editor::mathematical::{empty_component_scene, geometry_layers_json};
 use crate::artifacts::mathematical::MathematicalGeometry;
+use crate::editor::mathematical::{empty_component_scene, geometry_layers_json};
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

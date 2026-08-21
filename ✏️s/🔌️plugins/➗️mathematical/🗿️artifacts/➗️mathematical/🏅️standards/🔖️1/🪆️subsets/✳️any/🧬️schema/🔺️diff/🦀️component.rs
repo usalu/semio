@@ -1,7 +1,7 @@
 //! 🧬️ Mathematical diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalNotationChild, MathematicalResultsChild};
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
+use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

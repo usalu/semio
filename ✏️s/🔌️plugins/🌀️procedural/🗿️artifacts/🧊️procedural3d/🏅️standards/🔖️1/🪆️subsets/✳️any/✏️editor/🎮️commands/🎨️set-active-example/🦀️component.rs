@@ -1,12 +1,12 @@
 //! 🎨️ 🎨️ Procedural3d play app commands command — `set-active-example`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::{default_snapshot, example_snapshot, is_procedural3d_example_id};
 use crate::artifacts::procedural3d::op::{generation_mutation_to_procedural3d, procedural3d_fixture_operations, Procedural3dMutation};
+use crate::artifacts::procedural3d::schema::{default_snapshot, example_snapshot, is_procedural3d_example_id};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use flow::{CameraJson, FlowEvalSession};
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::playbook::GenerationMutation;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use flow::{CameraJson, FlowEvalSession};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
@@ -23,7 +23,8 @@ async fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &
         show_mode: previous.show_mode.clone(),
         sun_json: previous.sun_json.clone(),
         active_utility_id: previous.active_utility_id.clone(),
-        locale: previous.locale.clone()}
+        locale: previous.locale.clone(),
+    }
 }
 
 //#region 🔖️SetActiveExample
@@ -32,7 +33,8 @@ async fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
-    pub example_id: String}
+    pub example_id: String,
+}
 
 pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     session.set_eval_json(String::new());
@@ -53,9 +55,9 @@ pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Procedura
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::procedural3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
     use crate::editor::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
-    use crate::artifacts::procedural3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
     use flow::Widget;
     use semio_framework_plugin::PluginApp;
 
@@ -65,7 +67,11 @@ mod tests {
         let mut app = app_with_registry();
         app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &semio_framework_plugin::testkit::meta("local")).expect("set example");
         let projection = app.snapshot().expect("snapshot");
-        assert!(projection.fixture.widgets.iter().any(|widget| crate::artifacts::procedural3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
+        assert!(projection
+            .fixture
+            .widgets
+            .iter()
+            .any(|widget| crate::artifacts::procedural3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
     }
 
     #[semio_framework_async_macros::async_test]

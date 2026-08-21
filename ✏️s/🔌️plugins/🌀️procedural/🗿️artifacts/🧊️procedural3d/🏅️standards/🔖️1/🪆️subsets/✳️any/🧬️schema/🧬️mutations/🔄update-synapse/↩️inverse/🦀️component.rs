@@ -9,5 +9,6 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 pub async fn inverse(payload: &UpdateSynapse, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     match synapse_index(&base.fixture, &payload.synapse.id) {
         Some(index) => vec![Procedural3dMutation::UpdateSynapse(UpdateSynapse { synapse: base.fixture.synapses[index].clone() })],
-        None => Vec::new()}
+        None => Vec::new(),
+    }
 }

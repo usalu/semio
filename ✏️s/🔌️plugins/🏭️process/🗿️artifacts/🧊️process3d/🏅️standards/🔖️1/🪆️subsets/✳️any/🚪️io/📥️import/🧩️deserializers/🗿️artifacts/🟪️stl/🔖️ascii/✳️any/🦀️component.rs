@@ -11,7 +11,5 @@ pub async fn deserialize(from: &StlSnapshot) -> Result<Process3dSnapshot, store:
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<Process3dSnapshot, store::TextError> {
-    <Process3dSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
-        <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
-    })
+    <Process3dSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }

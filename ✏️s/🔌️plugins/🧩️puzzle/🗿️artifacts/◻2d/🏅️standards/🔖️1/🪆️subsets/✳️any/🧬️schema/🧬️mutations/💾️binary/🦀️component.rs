@@ -3,13 +3,11 @@
 //! puzzle-2d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::puzzle2d::schema::mutations::text::Puzzle2dMutation;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
@@ -38,18 +36,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn puzzle2d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::mutations::create_node;
+        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None));
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)], description: None }).expect("apply");
         let projection = store.snapshot().expect("projection");
         assert_eq!(projection.nodes.len(), 1);
         assert_eq!(projection.nodes[0].id, "n1");
@@ -72,7 +65,21 @@ mod wire_format_guard {
     use protocol::OpText;
 
     async fn ops() -> Vec<Puzzle2dMutation> {
-        let node = Puzzle2dNode { id: "n1".into(), node_kind: Some("Base".into()), shape: Some("circle".into()), x: 1.5, y: -2.25, radius: Some(3.0), text: Some("hi".into()), icon_kind: Some("base".into()), root: Some(true), scale: Some(2.0), visible: Some(true), locked: Some(false), ..Default::default() };
+        let node = Puzzle2dNode {
+            id: "n1".into(),
+            node_kind: Some("Base".into()),
+            shape: Some("circle".into()),
+            x: 1.5,
+            y: -2.25,
+            radius: Some(3.0),
+            text: Some("hi".into()),
+            icon_kind: Some("base".into()),
+            root: Some(true),
+            scale: Some(2.0),
+            visible: Some(true),
+            locked: Some(false),
+            ..Default::default()
+        };
         vec![
             create_node(node, Some(0)),
             move_node("n1".into(), 4.0, 5.0),

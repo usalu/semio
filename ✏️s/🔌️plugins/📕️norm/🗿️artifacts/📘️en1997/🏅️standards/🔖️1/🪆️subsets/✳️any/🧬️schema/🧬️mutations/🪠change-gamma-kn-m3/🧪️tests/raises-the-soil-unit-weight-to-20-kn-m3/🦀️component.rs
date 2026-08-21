@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the payload is finite, so `change-gamma-kn-m3`'s `mutation.invariant` fatal cannot fire, and 20.0 differs from the committed 18.0, so its `mutation.no-op` warning cannot either");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the payload is finite, so `change-gamma-kn-m3`'s `mutation.invariant` fatal cannot fire, and 20.0 differs from the committed 18.0, so its `mutation.no-op` warning cannot either"
+    );
     assert!(produced.messages().is_empty(), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: an accepted change-gamma-kn-m3 emits no diagnostics at all");
 }
 

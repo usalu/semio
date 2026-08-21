@@ -6,10 +6,9 @@
 pub use crate::artifacts::mathematical::schema::mutations::MathematicalMutation;
 
 use crate::artifacts::mathematical::schema::mutations::{
-    change_coefficient::mutation::ChangeCoefficient, change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes,
-    create_node::mutation::CreateNode, delete_node::mutation::DeleteNode, delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, insert_point::mutation::InsertPoint,
-    move_node::mutation::MoveNode, move_point::mutation::MovePoint, remove_point::mutation::RemovePoint, replace_graph::mutation::ReplaceGraph, replace_points::mutation::ReplacePoints,
-    update_graph_algorithm::mutation::UpdateGraphAlgorithm,
+    change_coefficient::mutation::ChangeCoefficient, change_graph_directed::mutation::ChangeGraphDirected, change_node_label::mutation::ChangeNodeLabel, connect_nodes::mutation::ConnectNodes, create_node::mutation::CreateNode,
+    delete_node::mutation::DeleteNode, delete_nodes::mutation::DeleteNodes, disconnect_nodes::mutation::DisconnectNodes, insert_point::mutation::InsertPoint, move_node::mutation::MoveNode, move_point::mutation::MovePoint,
+    remove_point::mutation::RemovePoint, replace_graph::mutation::ReplaceGraph, replace_points::mutation::ReplacePoints, update_graph_algorithm::mutation::UpdateGraphAlgorithm,
 };
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::artifacts::mathematical::{MathematicalGraph, MathematicalPoint};
@@ -50,7 +49,11 @@ async fn enc_opt_str(s: &Option<String>) -> String {
     }
 }
 async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_str(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_str(s)?))
+    }
 }
 async fn enc_f64(v: f64) -> String {
     format!("{v}")
@@ -126,10 +129,7 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -172,10 +172,7 @@ async fn parse_mathematical_mutation(line: &str) -> Result<MathematicalMutation,
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("mathematical mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
         "change-graph-directed" => Ok(MathematicalMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: dec_bool(&arg("new-directed")?)? })),
-        "update-graph-algorithm" => Ok(MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm {
-            new_algorithm: dec_str(&arg("new-algorithm")?)?,
-            new_algorithm_seed: dec_opt_str(&arg("new-algorithm-seed")?)?,
-        })),
+        "update-graph-algorithm" => Ok(MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: dec_str(&arg("new-algorithm")?)?, new_algorithm_seed: dec_opt_str(&arg("new-algorithm-seed")?)? })),
         "replace-graph" => Ok(MathematicalMutation::ReplaceGraph(ReplaceGraph { graph: dec_graph(&arg("graph")?)? })),
         "create-node" => Ok(MathematicalMutation::CreateNode(CreateNode { id: dec_str(&arg("id")?)?, label: dec_str(&arg("label")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "delete-node" => Ok(MathematicalMutation::DeleteNode(DeleteNode { id: dec_str(&arg("id")?)? })),
@@ -188,9 +185,7 @@ async fn parse_mathematical_mutation(line: &str) -> Result<MathematicalMutation,
         "insert-point" => Ok(MathematicalMutation::InsertPoint(InsertPoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
         "remove-point" => Ok(MathematicalMutation::RemovePoint(RemovePoint { index: dec_usize(&arg("index")?)? })),
         "move-point" => Ok(MathematicalMutation::MovePoint(MovePoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
-        "change-coefficient" => {
-            Ok(MathematicalMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(dec_usize(&arg("label")?)? as u64), numer: dec_str(&arg("numer")?)?, denom: dec_str(&arg("denom")?)? }))
-        }
+        "change-coefficient" => Ok(MathematicalMutation::ChangeCoefficient(ChangeCoefficient { label: EquationNodeLabel(dec_usize(&arg("label")?)? as u64), numer: dec_str(&arg("numer")?)?, denom: dec_str(&arg("denom")?)? })),
         other => Err(format!("mathematical mutation: unknown keyword {other:?}")),
     }
 }

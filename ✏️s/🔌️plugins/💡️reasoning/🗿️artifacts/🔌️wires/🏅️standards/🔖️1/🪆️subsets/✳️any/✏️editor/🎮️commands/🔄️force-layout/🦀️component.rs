@@ -1,10 +1,10 @@
 //! 🔄️ 🔄️ Wires play app commands command — `force-layout`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::schema::{fixture_nodes, force_layout_board, node_position};
 use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::schema::{fixture_nodes, force_layout_board, node_position};
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both

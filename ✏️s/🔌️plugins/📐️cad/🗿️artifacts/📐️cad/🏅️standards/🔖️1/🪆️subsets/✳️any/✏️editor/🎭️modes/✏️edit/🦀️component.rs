@@ -2,17 +2,17 @@
 //! energy/structure-classic) plus the world-scene, selection-overlay and engagement-HUD builders its
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use crate::artifacts::cad::{CadPaneId, CadSnapshot};
+use crate::editor::cad::config::CadDislocateOptions;
+use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
-use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
-use crate::artifacts::cad::{CadPaneId, CadSnapshot};
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement,
-    WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement, WindowEngagementInput,
+    WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 use serde_json::{json, Value};
 

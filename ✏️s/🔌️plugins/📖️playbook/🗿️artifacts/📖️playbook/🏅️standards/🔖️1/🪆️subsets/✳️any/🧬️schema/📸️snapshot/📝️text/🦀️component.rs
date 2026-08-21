@@ -46,6 +46,5 @@ mod tests {
         assert!(!document.steps().is_empty());
         assert_eq!(print_dsl(&document).trim_end(), FACADE_GENERATOR_EXAMPLE_TEXT.trim_end());
     }
-
 }
 //#endregion 🧪️Tests

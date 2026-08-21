@@ -521,7 +521,13 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// `apply_envelope`'s persisted, checkpoint-resuming path is checked against by the
     /// rebuild==incremental law (see `🧪️Tests::rebuild_equals_incremental_after_checkpoint_resume`).
     pub async fn rebuild_in_memory(&self, events: &[(u64, MutationEnvelope, TouchedSet)]) -> Result<PMap<String, Vec<u8>>, DbError> {
-        let mut states: Vec<Vec<u8>> = { let mut v = Vec::with_capacity(self.projections.len()); for projection in &self.projections { v.push(projection.initial_bytes().await); } v };
+        let mut states: Vec<Vec<u8>> = {
+            let mut v = Vec::with_capacity(self.projections.len());
+            for projection in &self.projections {
+                v.push(projection.initial_bytes().await);
+            }
+            v
+        };
         for (_, envelope, touched) in events {
             self.require_matching_document(envelope).await?;
             let mut deps = DepView::default();

@@ -1,14 +1,14 @@
 //! 📥️ 📥️ Remodel play app commands command — `import-video-frame-payload`.
 
+use crate::artifacts::remodel::mutations::{add_stream_frame, create_asset, create_stream};
+use crate::artifacts::remodel::op::RemodelMutation;
+use crate::artifacts::remodel::schema::next_remodel_id;
+use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::{decode_still_image, payload_from_data_url};
-use crate::artifacts::remodel::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::artifacts::remodel::schema::next_remodel_id;
-use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot};
 use base64::Engine as _;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -250,10 +250,7 @@ mod tests {
     async fn import_video_frame_payload_then_done_writes_one_stream_with_video_source() {
         let mut app = app();
         for index in 0..4u32 {
-            dispatch(
-                &mut app,
-                RemodelCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }),
-            );
+            dispatch(&mut app, RemodelCommand::ImportVideoFramePayload(ImportVideoFramePayload { payload: checker_data_url_jpeg(24, 24, 3), name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }));
         }
         dispatch(&mut app, RemodelCommand::ImportVideoDone(import_video_done::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }));
         let scene = app.snapshot().expect("projection");

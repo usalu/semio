@@ -81,23 +81,41 @@ pub async fn widget_tree_label(widget: &Widget) -> String {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
 pub struct FlowArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub camera: CameraJson,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.flow")] pub content: FlowContentChild,
-    #[state(presence)] pub selected_node_ids: Vec<String>,
-    #[state(presence)] pub selected_edge_ids: Vec<String>,
-    #[state(presence)] pub selected_handle_ids: Vec<String>,
-    #[state(presence)] pub preview_off_node_ids: Vec<String>,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub proximity_distance: f64,
-    #[state(config)] pub grid_visible: bool,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_factor: f64,
-    #[state(config)] pub catalogue_sections_json: String,
-    #[state(config)] pub automation_enabled_json: String,
-    #[state(config)] pub contributions_json: String,
-    #[state(config)] pub generation_json: String,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub camera: CameraJson,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.flow")]
+    pub content: FlowContentChild,
+    #[state(presence)]
+    pub selected_node_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_edge_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_handle_ids: Vec<String>,
+    #[state(presence)]
+    pub preview_off_node_ids: Vec<String>,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub proximity_distance: f64,
+    #[state(config)]
+    pub grid_visible: bool,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_factor: f64,
+    #[state(config)]
+    pub catalogue_sections_json: String,
+    #[state(config)]
+    pub automation_enabled_json: String,
+    #[state(config)]
+    pub contributions_json: String,
+    #[state(config)]
+    pub generation_json: String,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔹Artifact
 
@@ -111,11 +129,7 @@ impl Default for FlowArtifact {
 impl FlowArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> FlowSnapshot {
-        FlowSnapshot {
-            schema: self.schema.clone(),
-            camera: self.camera.clone(),
-            content: self.content.clone(),
-        }
+        FlowSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
@@ -188,8 +202,8 @@ pub async fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 //#endregion 🔹Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::flow::{FlowDiff, FlowMutation, FlowSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct FlowBuilderConstruction {
@@ -201,8 +215,12 @@ pub mod derived_construction {
         type Snapshot = FlowSnapshot;
         type Mutation = FlowMutation;
         type Diff = FlowDiff;
-        async fn empty() -> Self { Self { snapshot: FlowSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: FlowSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -213,24 +231,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <FlowDiff as protocol::MutationDiff<FlowSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -239,8 +254,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::flow::FlowSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct FlowParts {

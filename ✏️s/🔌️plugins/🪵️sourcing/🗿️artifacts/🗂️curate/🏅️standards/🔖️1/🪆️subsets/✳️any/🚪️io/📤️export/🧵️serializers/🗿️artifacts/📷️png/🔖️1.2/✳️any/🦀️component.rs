@@ -14,8 +14,7 @@ pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standar
 pub async fn serialize(snapshot: &CurateSnapshot) -> Result<PngSnapshot, store::TextError> {
     let _ = STDIO_PNG_DOCUMENT_SCHEMA;
     let bytes = <CurateSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &CurateSnapshot) -> Result<Vec<u8>, store::TextError> {

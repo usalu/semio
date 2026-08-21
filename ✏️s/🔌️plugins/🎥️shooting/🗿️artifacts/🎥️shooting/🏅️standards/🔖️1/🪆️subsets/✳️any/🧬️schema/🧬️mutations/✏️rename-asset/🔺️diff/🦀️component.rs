@@ -2,9 +2,9 @@
 //! already at that name.
 
 use super::mutation::RenameAsset;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingAssetPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &RenameAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.assets.iter().find(|asset| asset.id == payload.id) else {
@@ -14,10 +14,7 @@ pub async fn diff(payload: &RenameAsset, base: &ShootingSnapshot) -> protocol::M
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Asset \"{}\" already has name \"{}\".", payload.id, payload.new_name));
     }
     protocol::MutationOutcome::new(ShootingDiff {
-        assets: Some(ShootingAssetsDelta {
-            patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { name: Some(payload.new_name.clone()), ..Default::default() } }],
-            ..Default::default()
-        }),
+        assets: Some(ShootingAssetsDelta { patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

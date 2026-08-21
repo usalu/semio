@@ -1,9 +1,9 @@
 //! 📤️ 📤️ Forms play app commands command — `export-fixture`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::artifacts::forms::dsl as forms_dsl;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

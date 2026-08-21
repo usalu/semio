@@ -77,7 +77,10 @@ async fn change_provided_axis_distance_mm_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-provided-axis-distance-mm outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-provided-axis-distance-mm/raises-provided-axis-distance-mm-to-42-5: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
-    assert!(outcome.messages().is_empty(), "change-provided-axis-distance-mm/raises-provided-axis-distance-mm-to-42-5: moving provided_axis_distance_mm from 30.0 to 42.5 must raise neither the leaf's `mutation.invariant` nor its `mutation.no-op` message");
+    assert!(
+        outcome.messages().is_empty(),
+        "change-provided-axis-distance-mm/raises-provided-axis-distance-mm-to-42-5: moving provided_axis_distance_mm from 30.0 to 42.5 must raise neither the leaf's `mutation.invariant` nor its `mutation.no-op` message"
+    );
     assert!(vcs::apply_mutation(&before(), &mutation()).is_ok(), "change-provided-axis-distance-mm/raises-provided-axis-distance-mm-to-42-5: an applied outcome must survive the diff-apply seam");
 }
 

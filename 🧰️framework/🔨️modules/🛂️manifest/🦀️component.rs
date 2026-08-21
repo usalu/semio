@@ -3,8 +3,8 @@
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
-use serde::{Deserialize, Serialize};
 use dsl::DslValue;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
 // 🔀️ ArtifactKindSpec/OsMediaCapability/MediaType/MediaClass/MediaForm/MediaWireFormat/MediaPortSpec/
@@ -106,7 +106,9 @@ pub enum ArgFormat {
     WindowId,
     // 🐛️ `entity_kind`, not `kind`: a struct-variant field literally named `kind` collides with this
     // enum's own internal tag key (`#[serde(tag = "kind")]`) and serde's derive hard-errors on it.
-    EntityId { entity_kind: String },
+    EntityId {
+        entity_kind: String,
+    },
     IconId,
     Color,
     Uri,
@@ -115,10 +117,15 @@ pub enum ArgFormat {
     Terminology,
     /// 🗂️ Host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind` and
     /// `ActionArgDef::artifact_kind`.
-    ArtifactKind { roles: Vec<AppRole> },
+    ArtifactKind {
+        roles: Vec<AppRole>,
+    },
     /// 🎭️ Host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp` and
     /// `ActionArgDef::surface_app`.
-    SurfaceApp { roles: Vec<AppRole>, dialect_arg: String },
+    SurfaceApp {
+        roles: Vec<AppRole>,
+        dialect_arg: String,
+    },
 }
 
 /// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
@@ -598,20 +605,15 @@ pub async fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         "setInteractionGranularity" => "layers".into(),
         "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "camera".into(),
         "setProjection" | "setProjectionParam" => "scan".into(),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => {
-            "mouse-pointer".into()
-        }
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => "mouse-pointer".into(),
         "worldPick" => "crosshair".into(),
-        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput"
-        | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput"
-        | "compiledDagEngagementInput" => "hand".into(),
+        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput" | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput" | "compiledDagEngagementInput" => "hand".into(),
         "setLodMode" => "layers".into(),
         "toggleGrid" | "setGridSnapEnabled" | "setGridFactor" => "grid-3x3".into(),
         "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => "sun".into(),
         "run" | "stop" => "play".into(),
         "search" => "search".into(),
-        "exportProgram" | "exportRegistersCsv" | "exportMedia" | "exportStudioPack" | "exportStudioDsl"
-        | "exportVideoFromDeck" => "download".into(),
+        "exportProgram" | "exportRegistersCsv" | "exportMedia" | "exportStudioPack" | "exportStudioDsl" | "exportVideoFromDeck" => "download".into(),
         "importMedia" | "importSpacePack" | "importFrames" | "importVideo" | "openSource" => "hard-drive".into(),
         "goHome" => "home".into(),
         "openSpace" | "openInstance" => "folder-open".into(),
@@ -735,7 +737,9 @@ pub enum UndoMode {
     Inverse,
     /// 🔁️ Undone by invoking a DIFFERENT capability (id, not the gateway's `CapabilityDefinition` —
     /// that type lives in the gateway crate per D5) rather than a true inverse.
-    Compensate { capability: String },
+    Compensate {
+        capability: String,
+    },
 }
 
 /// @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
@@ -825,19 +829,9 @@ impl ActionSemantics {
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
                 ..Default::default()
             },
-            ActionKind::History => Self {
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() },
-                ..Default::default()
-            },
-            ActionKind::Clipboard => Self {
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() },
-                ..Default::default()
-            },
-            ActionKind::Shell => Self {
-                effects: CapabilityEffects { reversible: false, ..Default::default() },
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() },
-                ..Default::default()
-            },
+            ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
         }
     }
 }
@@ -874,17 +868,7 @@ pub struct ActionDefinition {
 
 impl ActionDefinition {
     pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
-        Self {
-            id: id.into(),
-            label: label.into(),
-            kind,
-            icon_id: icon_id.into(),
-            args: Vec::new(),
-            keys: None,
-            in_palette: true,
-            category: None,
-            semantics: ActionSemantics::for_kind(kind).await,
-        }
+        Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind).await }
     }
 
     /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
@@ -962,27 +946,15 @@ pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub async fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition {
-            keys: Some("mod+z".into()),
-            ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History).await
-        },
-        ActionDefinition {
-            keys: Some("mod+shift+z".into()),
-            ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History).await
-        },
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History).await },
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History).await },
         ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History).await,
         ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History).await,
         ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History).await,
         ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History).await,
-        ActionDefinition {
-            in_palette: false,
-            ..ActionDefinition::new_catalog(
-                REVERT_TO_COMMAND_ACTION_ID,
-                LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"),
-                ActionKind::History,
-            ).await
-        }
-        .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required().await]).await,
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History).await }
+            .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required().await])
+            .await,
     ]
 }
 
@@ -1001,15 +973,9 @@ pub async fn set_history_command_filter_action_definition() -> ActionDefinition 
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")).await,
         ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")).await,
     ];
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(
-            SET_HISTORY_COMMAND_FILTER_ACTION_ID,
-            LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"),
-            ActionKind::View,
-        ).await
-    }
-    .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all")).await]).await
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View).await }
+        .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all")).await])
+        .await
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -1022,19 +988,13 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
 pub async fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(
-            NOTE_SHELL_COMMAND_ACTION_ID,
-            LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"),
-            ActionKind::Shell,
-        ).await
-    }
-    .with_args([
-        ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required().await,
-        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required().await,
-        ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")).await,
-    ]).await
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell).await }
+        .with_args([
+            ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required().await,
+            ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required().await,
+            ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")).await,
+        ])
+        .await
 }
 
 //#region 🔖️Clipboard
@@ -1052,23 +1012,14 @@ pub async fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")).await,
     ];
     vec![
-        ActionDefinition {
-            keys: Some("mod+c".into()),
-            ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard).await
-        },
-        ActionDefinition {
-            keys: Some("mod+x".into()),
-            ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard).await
-        },
-        ActionDefinition {
-            keys: Some("mod+v".into()),
-            ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard).await
-        }
-        .with_args([
-            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options)
-                .await.default_value(serde_json::json!("original")).await,
-            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")).await,
-        ]).await,
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard).await },
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard).await },
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard).await }
+            .with_args([
+                ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).await.default_value(serde_json::json!("original")).await,
+                ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")).await,
+            ])
+            .await,
     ]
 }
 //#endregion 🔖️Clipboard
@@ -1119,56 +1070,33 @@ pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDe
         ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")).await,
         ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")).await,
     ];
-    let mode_options = vec![
-        ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")).await,
-        ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")).await,
-    ];
+    let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")).await, ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")).await];
     vec![
-        ActionDefinition {
-            in_palette: false,
-            ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction).await
-        }
-        .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
-            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).await.required().await,
-            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required().await,
-        ]).await,
-        ActionDefinition {
-            in_palette: false,
-            ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction).await
-        }
-        .with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required().await,
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
-        ]).await,
-        ActionDefinition {
-            keys: Some("escape".into()),
-            ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction).await
-        },
-        ActionDefinition {
-            keys: Some("mod+a".into()),
-            ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction).await
-        },
-        ActionDefinition::new_catalog(
-            SET_SELECTION_MODE_ACTION_ID,
-            LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"),
-            ActionKind::Interaction,
-        )
-        .await.with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-            ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required().await,
-        ]).await,
-        ActionDefinition::new_catalog(
-            SET_INTERACTION_GRANULARITY_ACTION_ID,
-            LocalizedLabel::native("Set Granularity", "Granularität festlegen"),
-            ActionKind::Interaction,
-        )
-        .await.with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-            ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required().await,
-        ]).await,
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction).await }
+            .with_args([
+                ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+                ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
+                ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).await.required().await,
+                ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required().await,
+            ])
+            .await,
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction).await }
+            .with_args([
+                ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
+                ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required().await,
+                ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
+            ])
+            .await,
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction).await },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction).await },
+        ActionDefinition::new_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
+            .await
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required().await])
+            .await,
+        ActionDefinition::new_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
+            .await
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required().await])
+            .await,
     ]
 }
 //#endregion 🔖️Interaction
@@ -1181,18 +1109,9 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub async fn set_active_utility_action_definition() -> ActionDefinition {
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(
-            SET_ACTIVE_UTILITY_ACTION_ID,
-            LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"),
-            ActionKind::View,
-        ).await
-    }
-    .with_args([
-        ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required().await,
-        ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")).await,
-    ]).await
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View).await }
+        .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required().await, ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")).await])
+        .await
 }
 
 /// @emoji 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — auto-injected
@@ -1203,15 +1122,9 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub async fn set_active_tool_action_definition() -> ActionDefinition {
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(
-            SET_ACTIVE_TOOL_ACTION_ID,
-            LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"),
-            ActionKind::View,
-        ).await
-    }
-    .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required().await]).await
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View).await }
+        .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required().await])
+        .await
 }
 
 /// @emoji 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
@@ -1224,10 +1137,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
 pub async fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View).await
-    }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View).await }
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
@@ -1323,16 +1233,7 @@ pub struct UtilityDefinition {
 impl UtilityDefinition {
     /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
     pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
-        Self {
-            id: id.into(),
-            label: label.into(),
-            icon_id: icon_id.into(),
-            group: None,
-            keys: None,
-            cursor: None,
-            category: None,
-            allows_actions_while_active: false,
-        }
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false }
     }
 }
 
@@ -1395,24 +1296,8 @@ pub struct CommandDefinition {
 }
 
 impl CommandDefinition {
-    pub async fn new(
-        id: impl Into<String>,
-        label: impl Into<LocalizedLabel>,
-        category: impl Into<String>,
-        icon_id: impl Into<IconName>,
-        kind: ActionKind,
-    ) -> Self {
-        Self {
-            id: id.into(),
-            label: label.into(),
-            category: category.into(),
-            icon_id: icon_id.into(),
-            kind,
-            args: Vec::new(),
-            keybindings: Vec::new(),
-            in_palette: true,
-            semantics: ActionSemantics::for_kind(kind).await,
-        }
+    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, icon_id: impl Into<IconName>, kind: ActionKind) -> Self {
+        Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind).await }
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
@@ -1707,18 +1592,7 @@ pub struct IntroductionStepDefinition {
 // `catch_unwind` closures, `Vec<IntroductionStepDefinition>` literals).
 impl IntroductionStepDefinition {
     pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
-        Self {
-            id: id.into(),
-            title: title.into(),
-            body: body.into(),
-            introduce: None,
-            show: Vec::new(),
-            placement: IntroductionPlacement::default(),
-            interactions: Vec::new(),
-            ordered: false,
-            logos: Vec::new(),
-            demonstrations: Vec::new(),
-        }
+        Self { id: id.into(), title: title.into(), body: body.into(), introduce: None, show: Vec::new(), placement: IntroductionPlacement::default(), interactions: Vec::new(), ordered: false, logos: Vec::new(), demonstrations: Vec::new() }
     }
 
     /// @emoji 🎯️ Sets the single element id raised above the glass and anchoring the info box.
@@ -2013,9 +1887,15 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
 // serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum IntroductionGesture {
-    LeftClick { at: IntroductionPoint },
-    RightClick { at: IntroductionPoint },
-    DoubleClick { at: IntroductionPoint },
+    LeftClick {
+        at: IntroductionPoint,
+    },
+    RightClick {
+        at: IntroductionPoint,
+    },
+    DoubleClick {
+        at: IntroductionPoint,
+    },
     Drag {
         from: IntroductionPoint,
         to: IntroductionPoint,
@@ -2024,7 +1904,10 @@ pub enum IntroductionGesture {
         #[serde(default)]
         modifiers: Vec<IntroductionKeyModifier>,
     },
-    Scroll { at: IntroductionPoint, delta_y: f64 },
+    Scroll {
+        at: IntroductionPoint,
+        delta_y: f64,
+    },
     /// 🌐️ A curved (not straight-line) drag around a pivot — camera orbit, distinct from `Drag`'s
     /// straight-line pan/reposition motion.
     Orbit {
@@ -2034,7 +1917,7 @@ pub enum IntroductionGesture {
         button: IntroductionPointerButton,
         #[serde(default = "introduction_orbit_default_modifiers")]
         modifiers: Vec<IntroductionKeyModifier>,
-    }
+    },
 }
 
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
@@ -2079,10 +1962,7 @@ impl IntroductionDemonstration {
 
     /// @emoji ✋️ A click-and-drag demonstration from `from` to `to`.
     pub async fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
-        Self {
-            gesture: IntroductionGesture::Drag { from, to, button: IntroductionPointerButton::Left, modifiers: vec![] },
-            cursor: None,
-        }
+        Self { gesture: IntroductionGesture::Drag { from, to, button: IntroductionPointerButton::Left, modifiers: vec![] }, cursor: None }
     }
 
     /// @emoji 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
@@ -2092,15 +1972,7 @@ impl IntroductionDemonstration {
 
     /// @emoji 🌐️ A camera-orbit demonstration curving from `from` to `to`.
     pub async fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
-        Self {
-            gesture: IntroductionGesture::Orbit {
-                from,
-                to,
-                button: IntroductionPointerButton::Right,
-                modifiers: vec![IntroductionKeyModifier::Alt],
-            },
-            cursor: None,
-        }
+        Self { gesture: IntroductionGesture::Orbit { from, to, button: IntroductionPointerButton::Right, modifiers: vec![IntroductionKeyModifier::Alt] }, cursor: None }
     }
 }
 //#endregion 🔖️Introduction
@@ -2363,7 +2235,7 @@ pub struct TutorialUiKeyframe {
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
     Snapshot { state: TutorialUiSnapshot },
-    Delta { changes: Vec<TutorialUiChange> }
+    Delta { changes: Vec<TutorialUiChange> },
 }
 
 /// @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewModel` plus the
@@ -2472,7 +2344,7 @@ pub enum TutorialUiChange {
     },
     CommandPanel {
         open: bool,
-    }
+    },
 }
 
 /// @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
@@ -2524,7 +2396,7 @@ pub enum TutorialArtifactEventKind {
     Load {
         artifact_dsl: String,
         previous_dsl: String,
-    }
+    },
 }
 
 // 🚫️async: E4 fn-pointer slot (serde default)
@@ -2565,7 +2437,7 @@ pub enum TutorialCameraState {
         x: f64,
         y: f64,
         zoom: f64,
-    }
+    },
 }
 
 /// @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
@@ -2607,11 +2479,9 @@ pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) 
     for t in tutorials {
         options.push(ActionArgOption::new(t.id.clone(), t.title.clone()).await);
     }
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View).await
-    }
-    .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required().await]).await
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View).await }
+        .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required().await])
+        .await
 }
 
 /// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
@@ -2621,10 +2491,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub async fn record_tutorial_action_definition() -> ActionDefinition {
-    ActionDefinition {
-        in_palette: false,
-        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View).await
-    }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View).await }
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
@@ -2715,10 +2582,7 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
         }
     };
     match (&prev.camera, &next.camera) {
-        (
-            TutorialCameraState::Orbit { position: p0, target: t0, up: u0, fov: f0 },
-            TutorialCameraState::Orbit { position: p1, target: t1, up: u1, fov: f1 },
-        ) => TutorialCameraState::Orbit {
+        (TutorialCameraState::Orbit { position: p0, target: t0, up: u0, fov: f0 }, TutorialCameraState::Orbit { position: p1, target: t1, up: u1, fov: f1 }) => TutorialCameraState::Orbit {
             position: tutorial_lerp3(*p0, *p1, t).await,
             target: tutorial_lerp3(*t0, *t1, t).await,
             up: tutorial_lerp3(*u0, *u1, t).await,
@@ -2729,9 +2593,7 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
                 (None, None) => None,
             },
         },
-        (TutorialCameraState::Canvas { x: x0, y: y0, zoom: z0 }, TutorialCameraState::Canvas { x: x1, y: y1, zoom: z1 }) => {
-            TutorialCameraState::Canvas { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, zoom: (z0.ln() + (z1.ln() - z0.ln()) * t).exp() }
-        }
+        (TutorialCameraState::Canvas { x: x0, y: y0, zoom: z0 }, TutorialCameraState::Canvas { x: x1, y: y1, zoom: z1 }) => TutorialCameraState::Canvas { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, zoom: (z0.ln() + (z1.ln() - z0.ln()) * t).exp() },
         _ => {
             if t < 0.5 {
                 prev.camera.clone()
@@ -2746,8 +2608,7 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
 /// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
 /// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
 pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
-    let keyframes: Vec<&TutorialCameraKeyframe> =
-        def.base.cameras.iter().chain(def.tracks.camera.iter()).filter(|k| k.window_id == window_id).collect();
+    let keyframes: Vec<&TutorialCameraKeyframe> = def.base.cameras.iter().chain(def.tracks.camera.iter()).filter(|k| k.window_id == window_id).collect();
     let first = keyframes.first()?;
     if at_ms <= first.at as f64 {
         return Some(first.camera.clone());
@@ -3136,7 +2997,7 @@ impl PanelGroup {
         }
     }
 
-    pub async fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "workbench",
             PanelGroup::Details => "details",
@@ -3381,11 +3242,7 @@ pub async fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Opti
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧮️action-argument-resolution/🟦️component.ts`).
-pub async fn effective_action_args(
-    defs: &[ActionArgDef],
-    staged: &DslValue,
-    seed: Option<&DslValue>,
-) -> DslValue {
+pub async fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
     let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
         let mut effective = seed_pairs;
@@ -3421,10 +3278,7 @@ pub async fn effective_action_args(
 /// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
 /// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
 /// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
-pub async fn missing_required_args(
-    defs: &[ActionArgDef],
-    effective: &DslValue,
-) -> Vec<String> {
+pub async fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
     defs.iter()
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
@@ -3442,17 +3296,12 @@ pub async fn missing_required_args(
 // 🚫️async: E1 transitive — the only consumer is `Iterator::filter` (external trait), which takes a
 // sync closure; pure comparison, no I/O (R9).
 fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
-    action.kind != ActionKind::History
-        && action.id != SET_ACTIVE_UTILITY_ACTION_ID
-        && action.id != SET_ACTIVE_TOOL_ACTION_ID
+    action.kind != ActionKind::History && action.id != SET_ACTIVE_UTILITY_ACTION_ID && action.id != SET_ACTIVE_TOOL_ACTION_ID
 }
 
 /// @emoji 📇️ Resolves the actions a window kind presents in its panel from its authoritative
 /// owned definitions, preserving declaration order and excluding framework-only rail actions.
-pub async fn resolve_window_actions<'a>(
-    _app: &'a AppDefinition,
-    window_kind: &'a WindowKindDefinition,
-) -> Vec<&'a ActionDefinition> {
+pub async fn resolve_window_actions<'a>(_app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
     window_kind.actions.iter().filter(|action| action_is_panel_eligible(action)).collect()
 }
 
@@ -3493,10 +3342,7 @@ pub async fn app_window_label(app: &AppDefinition, terminology: &str, locale: Lo
     let mut breadcrumb = resolve_app_breadcrumb(app, terminology).await.to_vec();
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.resolve(Terminology::parse(terminology).await.unwrap_or_default(), locale).trim().to_lowercase();
-    if !normalized_window.is_empty()
-        && normalized_window != normalized_app
-        && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
-    {
+    if !normalized_window.is_empty() && normalized_window != normalized_app && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window) {
         breadcrumb.push(normalized_window);
     }
     app_breadcrumb(&breadcrumb).await
@@ -3892,7 +3738,8 @@ pub async fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoi
     let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
     let kind_id = json.get("kindId").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
     let schema = json.get("schema").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
-    let dialect: ArtifactDialect = json.get("dialect").cloned().ok_or_else(|| "artifact kind choice missing field dialect".to_string()).and_then(|value| serde_json::from_value(value).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
+    let dialect: ArtifactDialect =
+        json.get("dialect").cloned().ok_or_else(|| "artifact kind choice missing field dialect".to_string()).and_then(|value| serde_json::from_value(value).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
     let en = json.pointer("/label/en").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
     let de = json.pointer("/label/de").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
     Ok(ArtifactKindChoice { kind_id, schema, dialect, label: LocalizedLabel::native(en, de) })
@@ -3961,12 +3808,7 @@ async fn validate_dependency_graph(manifests: &[PluginManifest]) -> Result<(), D
                 return Err(DependencyGraphError::MissingDependency { plugin_id: manifest.plugin_id.clone(), depends_on: dependency.plugin_id.clone() });
             };
             if !dependency.version.matches_raw(&target.version) {
-                return Err(DependencyGraphError::VersionMismatch {
-                    plugin_id: manifest.plugin_id.clone(),
-                    depends_on: dependency.plugin_id.clone(),
-                    required: dependency.version.to_string(),
-                    actual: target.version.clone(),
-                });
+                return Err(DependencyGraphError::VersionMismatch { plugin_id: manifest.plugin_id.clone(), depends_on: dependency.plugin_id.clone(), required: dependency.version.to_string(), actual: target.version.clone() });
             }
         }
     }
@@ -4010,12 +3852,7 @@ pub async fn resolve_load_order(manifests: &[PluginManifest]) -> Result<Vec<Stri
 
     if order.len() != manifests.len() {
         let resolved: std::collections::BTreeSet<&str> = order.iter().map(String::as_str).collect();
-        let leftover: std::collections::BTreeSet<String> = manifests
-            .iter()
-            .map(|manifest| manifest.plugin_id.as_str())
-            .filter(|id| !resolved.contains(id))
-            .map(str::to_string)
-            .collect();
+        let leftover: std::collections::BTreeSet<String> = manifests.iter().map(|manifest| manifest.plugin_id.as_str()).filter(|id| !resolved.contains(id)).map(str::to_string).collect();
         return Err(DependencyGraphError::Cycle { members: find_cycle_members(manifests, &leftover).await });
     }
     Ok(order)
@@ -4045,9 +3882,7 @@ async fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collec
             visited.insert(node.clone());
             on_path.insert(node.clone());
             path.push(node.clone());
-            let next = by_id
-                .get(node.as_str())
-                .and_then(|manifest| manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).find(|id| leftover.contains(id)));
+            let next = by_id.get(node.as_str()).and_then(|manifest| manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).find(|id| leftover.contains(id)));
             match next {
                 Some(next_node) => node = next_node,
                 None => break,
@@ -4061,11 +3896,7 @@ async fn find_cycle_members(manifests: &[PluginManifest], leftover: &std::collec
 /// dependency, sorted for determinism — used to refuse unload/hot-reload while dependents are
 /// loaded (contract freeze §4).
 pub async fn dependents(manifests: &[PluginManifest], plugin_id: &str) -> Vec<String> {
-    let mut result: Vec<String> = manifests
-        .iter()
-        .filter(|manifest| manifest.dependencies.iter().any(|dependency| dependency.plugin_id == plugin_id))
-        .map(|manifest| manifest.plugin_id.clone())
-        .collect();
+    let mut result: Vec<String> = manifests.iter().filter(|manifest| manifest.dependencies.iter().any(|dependency| dependency.plugin_id == plugin_id)).map(|manifest| manifest.plugin_id.clone()).collect();
     result.sort_unstable();
     result
 }
@@ -4201,11 +4032,7 @@ mod plugin_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
-        let forward = vec![
-            manifest("a", "1.0.0", vec![]).await,
-            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
-        ];
+        let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await];
         let mut shuffled = forward.clone();
         shuffled.reverse();
         assert_eq!(resolve_load_order(&forward).await.unwrap(), resolve_load_order(&shuffled).await.unwrap());
@@ -4221,15 +4048,9 @@ mod plugin_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_reports_version_mismatch() {
-        let manifests = vec![
-            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap()).await]).await,
-            manifest("b", "1.0.0", vec![]).await,
-        ];
+        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap()).await]).await, manifest("b", "1.0.0", vec![]).await];
         let error = resolve_load_order(&manifests).await.unwrap_err();
-        assert_eq!(
-            error,
-            DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() }
-        );
+        assert_eq!(error, DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4833,7 +4654,7 @@ pub struct MediaType {
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format_kind: String },
-    Document { schema: String }
+    Document { schema: String },
 }
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
@@ -4879,12 +4700,7 @@ pub enum MediaCompat {
 }
 
 /// 🔀️ One-way `MediaForm` conversions the workflow is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
-const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[
-    (MediaForm::Brep, MediaForm::Mesh),
-    (MediaForm::Vector, MediaForm::Raster),
-    (MediaForm::Design, MediaForm::Kit),
-    (MediaForm::Type, MediaForm::Kit),
-];
+const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[(MediaForm::Brep, MediaForm::Mesh), (MediaForm::Vector, MediaForm::Raster), (MediaForm::Design, MediaForm::Kit), (MediaForm::Type, MediaForm::Kit)];
 
 /// ⚖️ The single source of truth for wire compatibility: classes must match exactly, `MediaForm::Any` on the accepting side takes anything within the class, equal forms are always direct, and everything else falls through to the explicit `MEDIA_FORM_CONVERSIONS` table.
 pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> MediaCompat {
@@ -4939,28 +4755,12 @@ pub struct AppIo {
 impl AppIo {
     /// 🔌️ The implicit `"document:in"` port every app accepts, keyed by `self.document_media_type`.
     pub async fn document_in_port(&self) -> MediaPortSpec {
-        MediaPortSpec {
-            id: "document:in".into(),
-            label: "Document".into(),
-            direction: MediaPortDirection::In,
-            media_type: self.document_media_type,
-            kind_id: None,
-            required: true,
-            multiplicity: PortMultiplicity::One,
-        }
+        MediaPortSpec { id: "document:in".into(), label: "Document".into(), direction: MediaPortDirection::In, media_type: self.document_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
     /// 🔌️ The implicit `"document:out"` port every app produces — see `document_in_port`.
     pub async fn document_out_port(&self) -> MediaPortSpec {
-        MediaPortSpec {
-            id: "document:out".into(),
-            label: "Document".into(),
-            direction: MediaPortDirection::Out,
-            media_type: self.document_media_type,
-            kind_id: None,
-            required: true,
-            multiplicity: PortMultiplicity::One,
-        }
+        MediaPortSpec { id: "document:out".into(), label: "Document".into(), direction: MediaPortDirection::Out, media_type: self.document_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
     /// 🔌️ The full port list, in stable order: the implicit document ports first, followed by every app-specific port declared in `self.ports`.
@@ -4972,14 +4772,7 @@ impl AppIo {
 
     /// 🏗️ Builds an `AppIo` from just its implicit document surface, with no extra ports/formats declared yet — chain `.with_ports(...)` to add app-specific ports.
     pub async fn from_document(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
-        Self {
-            document_schema: schema.into(),
-            document_media_type: media_type,
-            ports: Vec::new(),
-            export_formats: Vec::new(),
-            import_formats: Vec::new(),
-            artifact,
-        }
+        Self { document_schema: schema.into(), document_media_type: media_type, ports: Vec::new(), export_formats: Vec::new(), import_formats: Vec::new(), artifact }
     }
 
     /// 🔌️ Attaches app-specific ports (beyond the implicit document ports) to this `AppIo`.
@@ -4997,12 +4790,7 @@ impl Default for AppIo {
             ports: Vec::new(),
             export_formats: Vec::new(),
             import_formats: Vec::new(),
-            artifact: ArtifactPresentation {
-                id: String::new(),
-                name: String::new(),
-                dimension: String::new(),
-                component_kind: String::new(),
-            },
+            artifact: ArtifactPresentation { id: String::new(), name: String::new(), dimension: String::new(), component_kind: String::new() },
         }
     }
 }
@@ -5031,7 +4819,9 @@ pub enum ConfigFieldShape {
     },
     Toggle,
     Text,
-    Select { options: Vec<String> },
+    Select {
+        options: Vec<String>,
+    },
     Record(Vec<ConfigFieldSpec>),
 }
 
@@ -5123,7 +4913,7 @@ pub struct Media {
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
-    Binary { format_kind: String, blob_hash: String }
+    Binary { format_kind: String, blob_hash: String },
 }
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
@@ -5135,9 +4925,7 @@ impl MediaFingerprint {
     /// 🔑️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
     pub fn of(media: &Media) -> Self {
         match &media.payload {
-            MediaPayload::Structured { schema, json } => {
-                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]))
-            }
+            MediaPayload::Structured { schema, json } => MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()])),
             MediaPayload::Binary { blob_hash, .. } => MediaFingerprint(blob_hash.clone()),
         }
     }
@@ -5192,10 +4980,7 @@ mod media_vocabulary_tests {
 
     #[test]
     fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
-        let structured = Media {
-            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
-        };
+        let structured = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() } };
         let fingerprint = MediaFingerprint::of(&structured);
         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
 
@@ -5205,21 +4990,14 @@ mod media_vocabulary_tests {
         }
         assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
 
-        let binary = Media {
-            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-            payload: MediaPayload::Binary { format_kind: "glb".into(), blob_hash: "abc123".into() },
-        };
+        let binary = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Binary { format_kind: "glb".into(), blob_hash: "abc123".into() } };
         assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn media_error_messages_are_human_readable() {
         assert_eq!(MediaError::UnknownPort("in".into()).to_string(), "unknown media port `in`");
-        let incompatible = MediaError::Incompatible {
-            port: "out".into(),
-            produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
-            accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-        };
+        let incompatible = MediaError::Incompatible { port: "out".into(), produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh } };
         assert!(incompatible.to_string().starts_with("port `out` produced"));
         assert_eq!(MediaError::Payload("p".into(), "bad".into()).to_string(), "media payload error on port `p`: bad");
         assert_eq!(MediaError::NotImplemented.to_string(), "media ports are not implemented for this app");
@@ -5238,15 +5016,7 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn ui_dirty_scope_partial_serializes_fields_as_camel_case() {
         use crate::kernel::UiDirtyScope;
-        let scope = UiDirtyScope::Partial {
-            window_bodies: vec!["a".into()],
-            panel_bodies: vec!["b".into()],
-            utilities: true,
-            tools: false,
-            engagements: true,
-            measures: false,
-            labels: false,
-        };
+        let scope = UiDirtyScope::Partial { window_bodies: vec!["a".into()], panel_bodies: vec!["b".into()], utilities: true, tools: false, engagements: true, measures: false, labels: false };
         let json = serde_json::to_string(&scope).unwrap();
         assert!(json.contains("\"windowBodies\""), "{json}");
         assert!(json.contains("\"panelBodies\""), "{json}");
@@ -5272,36 +5042,111 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn formats_app_label_for_chrome() {
-        assert_eq!(
-            app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]).await,
-            "semio · puzzle · 3d"
-        );
+        assert_eq!(app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]).await, "semio · puzzle · 3d");
     }
 
     //#region 🔖️ActionArgsAndUtilitiesTests
-    use crate::ui::{
-        app_window_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
-        resolve_app_breadcrumb, resolve_layout_for_mode, resolve_mode_tools,
-        resolve_window_actions, surface_app_id, parse_surface_app_id, ActionAddress, ActionArgControl, ActionArgDef, ActionInvocation,
-        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, AppRole, AppRef, CommandAddress, CommandDefinition, CommandInvocation,
-        CommandOwnerAddress, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, OsDefinition,
-        Platform, PlatformKeybinding, Terminology,
-        IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
-        Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
-        SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
-        panel_tab_first_draggable_element_id,
-        compose_tutorial_ui, interpolate_tutorial_camera, record_tutorial_action_definition, start_tutorial_action_definition,
-        tutorial_camera_at, tutorial_slice, validate_tutorial, TutorialAssetSrc, TutorialBase, TutorialCameraKeyframe, TutorialCameraState,
-        TutorialChapter, TutorialDefinition, TutorialArtifactEvent, TutorialArtifactEventKind, TutorialEasing, TutorialEvent, TutorialEventKind,
-        TutorialNarrationCue, TutorialTracks, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, TutorialUiSnapshot,
-        RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
-        interaction_action_definitions, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
-        SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
-        // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema.
-        ActionSemantics, ApprovalMode, PreviewMode, UndoMode,
-    };
     use crate::ui::kernel;
     use crate::ui::kernel::{Effect, RequestId};
+    use crate::ui::{
+        app_window_label,
+        child_element_id,
+        compose_tutorial_ui,
+        effective_action_args,
+        element_id_segment,
+        interaction_action_definitions,
+        interpolate_tutorial_camera,
+        is_element_id,
+        missing_required_args,
+        panel_tab_element_id,
+        panel_tab_first_draggable_element_id,
+        parse_surface_app_id,
+        record_tutorial_action_definition,
+        resolve_app_breadcrumb,
+        resolve_layout_for_mode,
+        resolve_mode_tools,
+        resolve_window_actions,
+        start_tutorial_action_definition,
+        surface_app_id,
+        tutorial_camera_at,
+        tutorial_slice,
+        validate_tutorial,
+        window_element_id,
+        ActionAddress,
+        ActionArgControl,
+        ActionArgDef,
+        ActionArgOption,
+        ActionDefinition,
+        ActionInvocation,
+        ActionKind,
+        ActionRef,
+        // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema.
+        ActionSemantics,
+        AppDefinition,
+        AppRef,
+        AppRole,
+        ApprovalMode,
+        CommandAddress,
+        CommandDefinition,
+        CommandInvocation,
+        CommandOwnerAddress,
+        DialogDefinition,
+        IntroductionCursor,
+        IntroductionDemonstration,
+        IntroductionGesture,
+        IntroductionInteraction,
+        IntroductionInteractionKind,
+        IntroductionKeyModifier,
+        IntroductionPoint,
+        IntroductionPointerButton,
+        IntroductionStepDefinition,
+        Locale,
+        LocalizedLabel,
+        Modes,
+        NonEmptyVec,
+        OsDefinition,
+        PanelGroup,
+        PanelTabDefinition,
+        PanelTabKind,
+        Platform,
+        PlatformKeybinding,
+        PreviewMode,
+        Terminology,
+        ToolRef,
+        TutorialArtifactEvent,
+        TutorialArtifactEventKind,
+        TutorialAssetSrc,
+        TutorialBase,
+        TutorialCameraKeyframe,
+        TutorialCameraState,
+        TutorialChapter,
+        TutorialDefinition,
+        TutorialEasing,
+        TutorialEvent,
+        TutorialEventKind,
+        TutorialNarrationCue,
+        TutorialTracks,
+        TutorialUiChange,
+        TutorialUiKeyframe,
+        TutorialUiSample,
+        TutorialUiSnapshot,
+        UndoMode,
+        UtilityDefinition,
+        UtilityRef,
+        WindowKindDefinition,
+        WindowKinds,
+        CLEAR_SELECTION_ACTION_ID,
+        INTERACTION_HOVER_ACTION_ID,
+        INTERACTION_SELECT_ACTION_ID,
+        RECORD_TUTORIAL_ACTION_ID,
+        SELECT_ALL_ACTION_ID,
+        SET_ACTIVE_UTILITY_ACTION_ID,
+        SET_INTERACTION_GRANULARITY_ACTION_ID,
+        SET_SELECTION_MODE_ACTION_ID,
+        START_TUTORIAL_ACTION_ID,
+        UI_FOOTER_ELEMENT_ID,
+        UI_NAVBAR_ELEMENT_ID,
+    };
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
     // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
     // at this file's top.
@@ -5311,11 +5156,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn action_arg_def_builder_chain() {
-        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
-            .await.required()
-            .await.default_value(1.0)
-            .await.describe("scale factor")
-            .await;
+        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.required().await.default_value(1.0).await.describe("scale factor").await;
         assert_eq!(arg.id, "scale");
         assert!(arg.required);
         assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
@@ -5331,10 +5172,7 @@ mod app_label_tests {
     async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
         assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).await.control().await, ActionArgControl::Text { placeholder: None });
         assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).await.control().await, ActionArgControl::Number { min: None, max: None, step: None });
-        assert_eq!(
-            ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control().await,
-            ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None }
-        );
+        assert_eq!(ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control().await, ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None });
         assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).await.control().await, ActionArgControl::Toggle);
         let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await];
         assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).await.control().await, ActionArgControl::Select { options });
@@ -5347,14 +5185,8 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
         let roles = vec![AppRole::Viewer];
-        assert_eq!(
-            ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control().await,
-            ActionArgControl::ArtifactKind { roles: roles.clone() }
-        );
-        assert_eq!(
-            ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control().await,
-            ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() }
-        );
+        assert_eq!(ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control().await, ActionArgControl::ArtifactKind { roles: roles.clone() });
+        assert_eq!(ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control().await, ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() });
     }
 
     /// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
@@ -5389,9 +5221,12 @@ mod app_label_tests {
         assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation).await);
 
         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
-            .await.destructive()
-            .await.use_when(["delete the selected objects", "remove selection"])
-            .await.example("deleteSelection removes every currently selected object")
+            .await
+            .destructive()
+            .await
+            .use_when(["delete the selected objects", "remove selection"])
+            .await
+            .example("deleteSelection removes every currently selected object")
             .await;
         assert!(action.semantics.effects.destructive);
         assert_eq!(action.semantics.policy.approval, ApprovalMode::WhenDestructive);
@@ -5428,11 +5263,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn effective_args_prefer_staged_then_default() {
-        let defs = vec![
-            ActionArgDef::text("a", LocalizedLabel::data("A")).await.default_value("da").await,
-            ActionArgDef::text("b", LocalizedLabel::data("B")).await.default_value("db").await,
-            ActionArgDef::text("c", LocalizedLabel::data("C")).await,
-        ];
+        let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).await.default_value("da").await, ActionArgDef::text("b", LocalizedLabel::data("B")).await.default_value("db").await, ActionArgDef::text("c", LocalizedLabel::data("C")).await];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
         let effective = effective_action_args(&defs, &staged, None).await;
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
@@ -5480,10 +5311,8 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_required_args_treats_unset_select_as_missing() {
-        let defs = vec![
-            ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await]).await.required().await,
-            ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.required().await,
-        ];
+        let defs =
+            vec![ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await]).await.required().await, ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.required().await];
         // Nothing staged, no defaults: both required ids are missing.
         let empty = DslValue::Object(Vec::new());
         let effective = effective_action_args(&defs, &empty, None).await;
@@ -5506,14 +5335,7 @@ mod app_label_tests {
     }
 
     async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
-        let owned_actions = if window_actions.is_empty() {
-            actions
-        } else {
-            window_actions
-                .iter()
-                .filter_map(|action_ref| actions.iter().find(|action| action.id == action_ref.as_str()).cloned())
-                .collect()
-        };
+        let owned_actions = if window_actions.is_empty() { actions } else { window_actions.iter().filter_map(|action_ref| actions.iter().find(|action| action.id == action_ref.as_str()).cloned()).collect() };
         AppDefinition {
             id: "a".into(),
             role: AppRole::Editor,
@@ -5522,14 +5344,7 @@ mod app_label_tests {
             breadcrumb: vec!["semio".into(), "a".into()],
             icon_id: None,
             controller_id: "a".into(),
-            modes: Modes::one(crate::ui::ModeDefinition {
-                id: "edit".into(),
-                label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                tools: Vec::new(),
-                layout_id: None,
-                commands: Vec::new(),
-            }),
+            modes: Modes::one(crate::ui::ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: WindowKinds::one(WindowKindDefinition {
                 id: "main".into(),
@@ -5572,12 +5387,10 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
-            vec![
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
-                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation).await,
-            ],
+            vec![ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await, ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation).await],
             vec![ActionRef::new("add")],
-        ).await;
+        )
+        .await;
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "window ownership replaces app-level orphan fallback");
@@ -5592,7 +5405,8 @@ mod app_label_tests {
                 ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
             ],
             vec![],
-        ).await;
+        )
+        .await;
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
@@ -5609,13 +5423,7 @@ mod app_label_tests {
             granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::data("Node"), icon_id: "circle".into() }],
             hierarchy: HierarchyProvider::Flat,
             hover: HoverSpec::default(),
-            selection: SelectionSpec {
-                modes: vec![SelectionMode::Multiple, SelectionMode::Single],
-                methods: vec![SelectionMethod::Pick],
-                merges: vec![MergeMode::Replace],
-                transitive: false,
-                broadcast: true,
-            },
+            selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
         }
     }
 
@@ -5632,17 +5440,7 @@ mod app_label_tests {
         app.interactions = vec![sample_interaction_definition("graph").await];
         let defs = interaction_action_definitions(&app).await;
         let ids: Vec<&str> = defs.iter().map(|action| action.id.as_str()).collect();
-        assert_eq!(
-            ids,
-            vec![
-                INTERACTION_SELECT_ACTION_ID,
-                INTERACTION_HOVER_ACTION_ID,
-                CLEAR_SELECTION_ACTION_ID,
-                SELECT_ALL_ACTION_ID,
-                SET_SELECTION_MODE_ACTION_ID,
-                SET_INTERACTION_GRANULARITY_ACTION_ID,
-            ]
-        );
+        assert_eq!(ids, vec![INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID,]);
         assert!(defs.iter().all(|action| action.kind == ActionKind::Interaction));
         let by_id = |id: &str| defs.iter().find(|action| action.id == id).unwrap();
         assert!(!by_id(INTERACTION_SELECT_ACTION_ID).in_palette, "raw dispatch verb, never in the palette");
@@ -5663,14 +5461,7 @@ mod app_label_tests {
         app.window_kinds.first_mut().actions = actions.await;
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
-        for id in [
-            INTERACTION_SELECT_ACTION_ID,
-            INTERACTION_HOVER_ACTION_ID,
-            CLEAR_SELECTION_ACTION_ID,
-            SELECT_ALL_ACTION_ID,
-            SET_SELECTION_MODE_ACTION_ID,
-            SET_INTERACTION_GRANULARITY_ACTION_ID,
-        ] {
+        for id in [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID] {
             assert!(resolved.contains(&id), "{id} injected into the owning window but not resolved");
         }
     }
@@ -5684,10 +5475,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
-        let mut app = app_with(
-            vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View).await],
-            vec![ActionRef::new("noop")],
-        ).await;
+        let mut app = app_with(vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View).await], vec![ActionRef::new("noop")]).await;
         app.interactions = vec![sample_interaction_definition("graph").await];
         app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph").await];
         let json = serde_json::to_string(&app).unwrap();
@@ -5735,19 +5523,10 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_mode_tools_declared_order() {
         let app = app_with_modes_and_tools(
-            vec![crate::ui::ModeDefinition {
-                id: "edit".into(),
-                label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                tools: vec![ToolRef::new("fill").await, ToolRef::new("brush").await],
-                layout_id: None,
-                commands: Vec::new(),
-            }],
-            vec![
-                crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await,
-                crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await,
-            ],
-        ).await;
+            vec![crate::ui::ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: vec![ToolRef::new("fill").await, ToolRef::new("brush").await], layout_id: None, commands: Vec::new() }],
+            vec![crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await, crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
+        )
+        .await;
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill", "brush"], "resolves in the mode's declared ref order, not registry order");
     }
@@ -5756,25 +5535,12 @@ mod app_label_tests {
     async fn resolve_mode_tools_isolates_other_modes() {
         let app = app_with_modes_and_tools(
             vec![
-                crate::ui::ModeDefinition {
-                    id: "edit".into(),
-                    label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                    tools: vec![ToolRef::new("fill").await],
-                    layout_id: None,
-                    commands: Vec::new(),
-                },
-                crate::ui::ModeDefinition {
-                    id: "view".into(),
-                    label: LocalizedLabel::data("View"),
-                icon_id: "pencil".into(),
-                    tools: Vec::new(),
-                    layout_id: None,
-                    commands: Vec::new(),
-                },
+                crate::ui::ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: vec![ToolRef::new("fill").await], layout_id: None, commands: Vec::new() },
+                crate::ui::ModeDefinition { id: "view".into(), label: LocalizedLabel::data("View"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() },
             ],
             vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
-        ).await;
+        )
+        .await;
         assert_eq!(resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
         assert!(resolve_mode_tools(&app, "view").await.is_empty(), "tools are opt-in per mode, no orphan fallback");
         assert!(resolve_mode_tools(&app, "nonexistent").await.is_empty());
@@ -5783,16 +5549,10 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_mode_tools_skips_unresolvable_refs() {
         let app = app_with_modes_and_tools(
-            vec![crate::ui::ModeDefinition {
-                id: "edit".into(),
-                label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                tools: vec![ToolRef::new("fill").await, ToolRef::new("ghost").await],
-                layout_id: None,
-                commands: Vec::new(),
-            }],
+            vec![crate::ui::ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: vec![ToolRef::new("fill").await, ToolRef::new("ghost").await], layout_id: None, commands: Vec::new() }],
             vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
-        ).await;
+        )
+        .await;
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
     }
@@ -5800,35 +5560,17 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
         async fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
-            ui_wgpu::wgpu::WindowLayout {
-                root: ui_wgpu::wgpu::WindowLayoutRoot::Stack(ui_wgpu::wgpu::WindowLayoutStackNode {
-                    kind: "stack".into(),
-                    size: None,
-                    active_window_kind_id: Some(active.into()),
-                    children: vec![],
-                }),
-            }
+            ui_wgpu::wgpu::WindowLayout { root: ui_wgpu::wgpu::WindowLayoutRoot::Stack(ui_wgpu::wgpu::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
         }
         let mut app = app_with(vec![], vec![]).await;
         app.modes.first_mut().layout_id = Some("named".into());
-        app.named_layouts.push(ui_wgpu::wgpu::NamedLayout {
-            id: "named".into(),
-            label: "Named".into(),
-            icon_id: None,
-            layout: stack_layout("main").await,
-            origin: "app".into(),
-            group_path: None,
-        });
+        app.named_layouts.push(ui_wgpu::wgpu::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
         app.default_layout = Some(stack_layout("fallback").await);
 
         assert_eq!(resolve_layout_for_mode(&app, "edit").await, Some(stack_layout("main").await), "named layout referenced by the mode wins");
 
         app.modes.first_mut().layout_id = Some("missing".into());
-        assert_eq!(
-            resolve_layout_for_mode(&app, "edit").await,
-            Some(stack_layout("fallback").await),
-            "unresolved named layout id falls back to default_layout"
-        );
+        assert_eq!(resolve_layout_for_mode(&app, "edit").await, Some(stack_layout("fallback").await), "unresolved named layout id falls back to default_layout");
 
         app.default_layout = None;
         assert_eq!(resolve_layout_for_mode(&app, "edit").await, None, "no named layout and no default_layout ⇒ none");
@@ -5850,16 +5592,8 @@ mod app_label_tests {
         app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
         assert_eq!(app_window_label(&app, "native", Locale::En, "Layers").await, "semio · a · layers");
         assert_eq!(app_window_label(&app, "native", Locale::En, "").await, "semio · a", "empty window label appends nothing");
-        assert_eq!(
-            app_window_label(&app, "native", Locale::En, "Draw").await,
-            "semio · a",
-            "window label equal to the app label appends nothing"
-        );
-        assert_eq!(
-            app_window_label(&app, "native", Locale::En, "A").await,
-            "semio · a",
-            "window label equal to the document's trailing segment appends nothing"
-        );
+        assert_eq!(app_window_label(&app, "native", Locale::En, "Draw").await, "semio · a", "window label equal to the app label appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "A").await, "semio · a", "window label equal to the document's trailing segment appends nothing");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5896,13 +5630,7 @@ mod app_label_tests {
         assert_eq!(PanelTabKind::WorkbenchCategory.id_str().await, "framework.category.workbench");
         assert_eq!(PanelTabKind::DisplayWindows.id_str().await, "framework.display.windows");
         assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str().await, "puzzle.catalogue");
-        let tab = PanelTabDefinition {
-            kind: PanelTabKind::App("puzzle.catalogue".into()),
-            label: LocalizedLabel::data("Catalogue"),
-            group: PanelGroup::Workbench,
-            body_key: Some("puzzle.catalogue".into()),
-            children: Vec::new(),
-        };
+        let tab = PanelTabDefinition { kind: PanelTabKind::App("puzzle.catalogue".into()), label: LocalizedLabel::data("Catalogue"), group: PanelGroup::Workbench, body_key: Some("puzzle.catalogue".into()), children: Vec::new() };
         assert_eq!(tab.id().await, "puzzle.catalogue");
     }
 
@@ -5922,10 +5650,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_kind_deserializes_without_utilities_field() {
-        let window: WindowKindDefinition = serde_json::from_str(
-            r#"{"id":"main","label":{"native":{"en":"Main","de":"Main"},"reuse":{"en":"Main","de":"Main"}},"bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
-        )
-        .unwrap();
+        let window: WindowKindDefinition = serde_json::from_str(r#"{"id":"main","label":{"native":{"en":"Main","de":"Main"},"reuse":{"en":"Main","de":"Main"}},"bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#).unwrap();
         assert!(window.utilities.is_empty());
         assert!(window.actions.is_empty());
     }
@@ -5968,19 +5693,15 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn introduction_step_serde_defaults() {
-        let step: IntroductionStepDefinition = serde_json::from_str(
-            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
-        )
-        .unwrap();
+        let step: IntroductionStepDefinition =
+            serde_json::from_str(r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#).unwrap();
         assert_eq!(step.introduce, None);
         assert!(step.show.is_empty());
         let json = serde_json::to_string(&step).unwrap();
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, step);
 
-        let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…"))
-            .introduce(window_element_id("puzzle3d-main").await)
-            .show(vec![window_element_id("puzzle3d-secondary").await]);
+        let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…")).introduce(window_element_id("puzzle3d-main").await).show(vec![window_element_id("puzzle3d-secondary").await]);
         let json = serde_json::to_string(&with_targets).unwrap();
         assert!(json.contains("\"introduce\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
@@ -5991,10 +5712,7 @@ mod app_label_tests {
     async fn element_id_authoring_helpers() {
         assert_eq!(window_element_id("puzzle3d-main").await, "framework.window.puzzle3dMain");
         assert_eq!(panel_tab_element_id("framework.panel.catalogue").await, "framework.panelTab.framework.panel.catalogue");
-        assert_eq!(
-            panel_tab_first_draggable_element_id("framework.panel.catalogue").await,
-            "framework.panelTab.framework.panel.catalogue.firstDraggable"
-        );
+        assert_eq!(panel_tab_first_draggable_element_id("framework.panel.catalogue").await, "framework.panelTab.framework.panel.catalogue.firstDraggable");
         assert!(is_element_id(UI_NAVBAR_ELEMENT_ID).await);
         assert!(is_element_id(UI_FOOTER_ELEMENT_ID).await);
         assert!(is_element_id(&window_element_id("puzzle3d-main").await).await);
@@ -6036,10 +5754,8 @@ mod app_label_tests {
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
         assert_eq!(round, with_celebrate);
 
-        let step: IntroductionStepDefinition = serde_json::from_str(
-            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
-        )
-        .unwrap();
+        let step: IntroductionStepDefinition =
+            serde_json::from_str(r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#).unwrap();
         assert!(step.interactions.is_empty());
         assert!(!step.ordered);
 
@@ -6090,20 +5806,9 @@ mod app_label_tests {
             (IntroductionGesture::LeftClick { at: at.clone() }, "leftClick"),
             (IntroductionGesture::RightClick { at: at.clone() }, "rightClick"),
             (IntroductionGesture::DoubleClick { at: at.clone() }, "doubleClick"),
-            (
-                IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] },
-                "drag",
-            ),
+            (IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] }, "drag"),
             (IntroductionGesture::Scroll { at: at.clone(), delta_y: 100.0 }, "scroll"),
-            (
-                IntroductionGesture::Orbit {
-                    from: at.clone(),
-                    to: at.clone(),
-                    button: IntroductionPointerButton::Right,
-                    modifiers: vec![IntroductionKeyModifier::Alt],
-                },
-                "orbit",
-            ),
+            (IntroductionGesture::Orbit { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Right, modifiers: vec![IntroductionKeyModifier::Alt] }, "orbit"),
         ] {
             let json = serde_json::to_string(&gesture).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
@@ -6123,10 +5828,7 @@ mod app_label_tests {
     async fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
         let at = IntroductionPoint::Element { id: "puzzle3d-main".into(), offset: None };
         let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
-        assert_eq!(
-            drag,
-            IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] }
-        );
+        assert_eq!(drag, IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] });
         // ⚖️ Defaults are still INFERRED on the way in (the input literal above names neither field),
         // but they are always WRITTEN on the way out: `🤖️generated/🟦️manifest.ts` declares both
         // `button: IntroductionPointerButton` and `modifiers: Array<IntroductionKeyModifier>` as
@@ -6137,25 +5839,12 @@ mod app_label_tests {
         assert!(drag_json.contains("\"modifiers\":[]"), "{drag_json}");
 
         let orbit: IntroductionGesture = serde_json::from_str(r#"{"kind":"orbit","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
-        assert_eq!(
-            orbit,
-            IntroductionGesture::Orbit {
-                from: at.clone(),
-                to: at.clone(),
-                button: IntroductionPointerButton::Right,
-                modifiers: vec![IntroductionKeyModifier::Alt],
-            }
-        );
+        assert_eq!(orbit, IntroductionGesture::Orbit { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Right, modifiers: vec![IntroductionKeyModifier::Alt] });
         let orbit_json = serde_json::to_string(&orbit).unwrap();
         assert!(orbit_json.contains("\"button\":\"right\""), "{orbit_json}");
         assert!(orbit_json.contains("\"modifiers\":[\"alt\"]"), "{orbit_json}");
 
-        let middle_drag = IntroductionGesture::Drag {
-            from: at.clone(),
-            to: at.clone(),
-            button: IntroductionPointerButton::Middle,
-            modifiers: vec![],
-        };
+        let middle_drag = IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Middle, modifiers: vec![] };
         let middle_json = serde_json::to_string(&middle_drag).unwrap();
         assert!(middle_json.contains("\"button\":\"middle\""), "{middle_json}");
         let round: IntroductionGesture = serde_json::from_str(&middle_json).unwrap();
@@ -6172,19 +5861,14 @@ mod app_label_tests {
         let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
         assert_eq!(round, demo);
 
-        let with_cursor = IntroductionDemonstration {
-            gesture: IntroductionGesture::Drag { from: at.clone(), to: at, button: IntroductionPointerButton::Left, modifiers: vec![] },
-            cursor: Some(IntroductionCursor::Grabbing),
-        };
+        let with_cursor = IntroductionDemonstration { gesture: IntroductionGesture::Drag { from: at.clone(), to: at, button: IntroductionPointerButton::Left, modifiers: vec![] }, cursor: Some(IntroductionCursor::Grabbing) };
         let json = serde_json::to_string(&with_cursor).unwrap();
         assert!(json.contains("\"cursor\":\"grabbing\""), "{json}");
         let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
         assert_eq!(round, with_cursor);
 
-        let step: IntroductionStepDefinition = serde_json::from_str(
-            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
-        )
-        .unwrap();
+        let step: IntroductionStepDefinition =
+            serde_json::from_str(r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#).unwrap();
         assert!(step.demonstrations.is_empty());
         let json = serde_json::to_string(&step).unwrap();
         assert!(json.contains("\"demonstrations\":[]"), "{json}");
@@ -6319,40 +6003,13 @@ mod app_label_tests {
     async fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
         let mut def = minimal_tutorial().await;
         def.tracks.narration = vec![
-            TutorialNarrationCue {
-                id: "b".into(),
-                at: 500,
-                duration_ms: 100,
-                text: LocalizedLabel::data("b"),
-                audio: None,
-                voice: None,
-                rate: 1.0,
-                captions: vec![],
-            },
-            TutorialNarrationCue {
-                id: "a".into(),
-                at: 100,
-                duration_ms: 100,
-                text: LocalizedLabel::data("a"),
-                audio: None,
-                voice: None,
-                rate: 1.0,
-                captions: vec![],
-            },
+            TutorialNarrationCue { id: "b".into(), at: 500, duration_ms: 100, text: LocalizedLabel::data("b"), audio: None, voice: None, rate: 1.0, captions: vec![] },
+            TutorialNarrationCue { id: "a".into(), at: 100, duration_ms: 100, text: LocalizedLabel::data("a"), audio: None, voice: None, rate: 1.0, captions: vec![] },
         ];
         assert!(validate_tutorial(&def).await.is_err(), "unsorted narration must be rejected");
 
         let mut def = minimal_tutorial().await;
-        def.tracks.narration = vec![TutorialNarrationCue {
-            id: "a".into(),
-            at: 999_999,
-            duration_ms: 100,
-            text: LocalizedLabel::data("a"),
-            audio: None,
-            voice: None,
-            rate: 1.0,
-            captions: vec![],
-        }];
+        def.tracks.narration = vec![TutorialNarrationCue { id: "a".into(), at: 999_999, duration_ms: 100, text: LocalizedLabel::data("a"), audio: None, voice: None, rate: 1.0, captions: vec![] }];
         assert!(validate_tutorial(&def).await.is_err(), "entry beyond durationMs must be rejected");
 
         let mut def = minimal_tutorial().await;
@@ -6360,12 +6017,7 @@ mod app_label_tests {
         assert!(validate_tutorial(&def).await.is_err(), "duplicate chapter id must be rejected");
 
         let mut def = minimal_tutorial().await;
-        def.base.cameras.push(TutorialCameraKeyframe {
-            at: 5,
-            window_id: "w".into(),
-            camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 },
-            easing: TutorialEasing::default(),
-        });
+        def.base.cameras.push(TutorialCameraKeyframe { at: 5, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::default() });
         assert!(validate_tutorial(&def).await.is_err(), "base camera keyframe must be at == 0");
 
         assert!(validate_tutorial(&minimal_tutorial().await).await.is_ok());
@@ -6373,18 +6025,8 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_interpolation_lerps_position_and_target() {
-        let prev = TutorialCameraKeyframe {
-            at: 0,
-            window_id: "w".into(),
-            camera: TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(40.0) },
-            easing: TutorialEasing::Linear,
-        };
-        let next = TutorialCameraKeyframe {
-            at: 1000,
-            window_id: "w".into(),
-            camera: TutorialCameraState::Orbit { position: [10.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(60.0) },
-            easing: TutorialEasing::Linear,
-        };
+        let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(40.0) }, easing: TutorialEasing::Linear };
+        let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Orbit { position: [10.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(60.0) }, easing: TutorialEasing::Linear };
         let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
         match mid {
             TutorialCameraState::Orbit { position, fov, .. } => {
@@ -6401,10 +6043,8 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn tutorial_camera_interpolation_zooms_in_log_space() {
-        let prev =
-            TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
-        let next =
-            TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Linear };
+        let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
+        let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Linear };
         let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
         match mid {
             TutorialCameraState::Canvas { zoom, .. } => assert!((zoom - 2.0).abs() < 1e-9, "log-space midpoint of 1..4 is 2, got {zoom}"),
@@ -6437,19 +6077,10 @@ mod app_label_tests {
         let mut def = minimal_tutorial().await;
         def.base.ui.active_tool_id = Some("fill".into());
         def.tracks.ui = vec![
-            TutorialUiKeyframe {
-                at: 100,
-                sample: TutorialUiSample::Snapshot { state: TutorialUiSnapshot { active_mode_id: Some("edit".into()), ..Default::default() } },
-            },
+            TutorialUiKeyframe { at: 100, sample: TutorialUiSample::Snapshot { state: TutorialUiSnapshot { active_mode_id: Some("edit".into()), ..Default::default() } } },
             TutorialUiKeyframe { at: 200, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("brush".into()) }] } },
-            TutorialUiKeyframe {
-                at: 300,
-                sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] },
-            },
-            TutorialUiKeyframe {
-                at: 400,
-                sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into()] }] },
-            },
+            TutorialUiKeyframe { at: 300, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] } },
+            TutorialUiKeyframe { at: 400, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into()] }] } },
         ];
         // Before any sample: the base snapshot alone.
         let at_0 = compose_tutorial_ui(&def, 0.0).await;
@@ -6516,8 +6147,7 @@ mod app_label_tests {
     async fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
         let mut def = minimal_tutorial().await;
         def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
-        def.tracks.ui =
-            vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
+        def.tracks.ui = vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
         let slice = tutorial_slice(&def, 0.0, 100.0).await;
         assert_eq!(slice.events.len(), 1);
         assert_eq!(slice.ui_changes.len(), 1);
@@ -6578,9 +6208,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell)
-            .await.with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs).await)
-            .await;
+        let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).await.with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs).await).await;
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
@@ -6592,14 +6220,10 @@ mod app_label_tests {
         assert_eq!(round, command);
     }
 
-
     #[semio_framework_async_macros::async_test]
     async fn command_and_action_invocations_round_trip_owner_qualified_addresses() {
         let command = CommandInvocation {
-            address: CommandAddress {
-                owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() },
-                command_id: "addGeneration".into(),
-            },
+            address: CommandAddress { owner: CommandOwnerAddress::Mode { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "generate".into() }, command_id: "addGeneration".into() },
             arguments: [("name".into(), json!("A"))].into_iter().collect(),
         };
         let command_json = serde_json::to_string(&command).unwrap();
@@ -6607,14 +6231,7 @@ mod app_label_tests {
         assert_eq!(serde_json::from_str::<CommandInvocation>(&command_json).unwrap(), command);
 
         let action = ActionInvocation {
-            address: ActionAddress {
-                plugin_id: "flow".into(),
-                app_id: "flow".into(),
-                mode_id: "edit".into(),
-                window_kind_id: "main".into(),
-                window_instance_id: "main-1".into(),
-                action_id: "select".into(),
-            },
+            address: ActionAddress { plugin_id: "flow".into(), app_id: "flow".into(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-1".into(), action_id: "select".into() },
             arguments: [("id".into(), json!("node-1"))].into_iter().collect(),
         };
         let action_json = serde_json::to_string(&action).unwrap();
@@ -6636,12 +6253,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dispatch_action_effect_round_trips_camel_case() {
-        let effect = Effect::DispatchAction {
-            req: RequestId(2),
-            action: "advanceReconstruction".into(),
-            args: Some(dsl::to_dsl_value(&json!({"jobId": "job-1"})).expect("dispatch action args")),
-            delay_ms: 250,
-        };
+        let effect = Effect::DispatchAction { req: RequestId(2), action: "advanceReconstruction".into(), args: Some(dsl::to_dsl_value(&json!({"jobId": "job-1"})).expect("dispatch action args")), delay_ms: 250 };
         let json = serde_json::to_string(&effect).unwrap();
         assert_eq!(json, r#"{"dispatchAction":{"req":2,"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
         let round: Effect = serde_json::from_str(&json).unwrap();
@@ -6655,33 +6267,15 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn request_file_open_effect_round_trips_multiple() {
-        let effect = Effect::RequestFileOpen {
-            req: RequestId(4),
-            accept: ".png,.jpg".into(),
-            read_as: Some("dataUrl".into()),
-            import_action: "importFramePayload".into(),
-            multiple: true,
-        };
+        let effect = Effect::RequestFileOpen { req: RequestId(4), accept: ".png,.jpg".into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true };
         let json = serde_json::to_string(&effect).unwrap();
         assert!(json.contains("\"multiple\":true"), "{json}");
         let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
         // `multiple` defaults to false when absent from the wire (older callers/plugins); `req` is
         // not defaulted (mandatory on every completing effect).
-        let defaulted: Effect = serde_json::from_str(
-            r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#,
-        )
-        .unwrap();
-        assert_eq!(
-            defaulted,
-            Effect::RequestFileOpen {
-                req: RequestId(5),
-                accept: ".png".into(),
-                read_as: None,
-                import_action: "importFramePayload".into(),
-                multiple: false,
-            }
-        );
+        let defaulted: Effect = serde_json::from_str(r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#).unwrap();
+        assert_eq!(defaulted, Effect::RequestFileOpen { req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6707,10 +6301,7 @@ mod app_label_tests {
         let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
         // Numeric hints default to 0 (host-default) and `payload`/`args` may be entirely absent.
-        let defaulted: Effect = serde_json::from_str(
-            r#"{"requestMediaFrames":{"req":7,"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#,
-        )
-        .unwrap();
+        let defaulted: Effect = serde_json::from_str(r#"{"requestMediaFrames":{"req":7,"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#).unwrap();
         assert_eq!(
             defaulted,
             Effect::RequestMediaFrames {

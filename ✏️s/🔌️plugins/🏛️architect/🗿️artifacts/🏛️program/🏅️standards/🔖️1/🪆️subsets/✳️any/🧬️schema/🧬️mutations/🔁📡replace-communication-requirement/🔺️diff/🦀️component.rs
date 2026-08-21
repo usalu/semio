@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceCommunicationRequirement, base: &ProgramSnaps
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This communication requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.communication_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { communication: Some(ProgramCommunicationDelta { patched: vec![ProgramCommunicationPatchEntry { id: payload.communication_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        communication: Some(ProgramCommunicationDelta { patched: vec![ProgramCommunicationPatchEntry { id: payload.communication_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

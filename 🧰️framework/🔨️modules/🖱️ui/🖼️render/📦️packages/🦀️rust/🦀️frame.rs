@@ -27,8 +27,8 @@
 
 use crate::element::{Bounds, Element, ElementId, FrameArena, PaintCx, PrepaintCx, ReconciliationKey, RetainedStore, SharedFrameCx};
 use crate::layout::LayoutCx;
-use crate::schedule::{Deadline, FrameScheduler, InvalidationReason};
 use crate::scene::{FinishParams, RenderPacket, Scene, SceneBuilder, SceneError};
+use crate::schedule::{Deadline, FrameScheduler, InvalidationReason};
 use std::rc::Rc;
 use ui_contract::UiRevision;
 
@@ -183,11 +183,7 @@ impl FrameEngine {
         // file's module docstring. `UiRevision(0)` is a placeholder until a packet threads a real
         // `UiSnapshot`-sourced revision through `FrameInputs` (see this packet's report).
         let mut dispatch = crate::DispatchTree::new(UiRevision(0));
-        let mut prepaint_cx = PrepaintCx::new(
-            SharedFrameCx { arena: &mut self.arena, resources: &mut *resources, retained: &mut self.retained, time_seconds: time_seconds as f32 },
-            &mut dispatch,
-            text,
-        );
+        let mut prepaint_cx = PrepaintCx::new(SharedFrameCx { arena: &mut self.arena, resources: &mut *resources, retained: &mut self.retained, time_seconds: time_seconds as f32 }, &mut dispatch, text);
         let mut prepaint_state = root.prepaint(root_id, bounds, &mut layout_state, &mut prepaint_cx);
 
         let mut scene_builder = SceneBuilder::default();
@@ -205,15 +201,7 @@ impl FrameEngine {
         self.arena.clear();
 
         self.generation = self.generation.next();
-        let snapshot = FrameSnapshot {
-            generation: self.generation,
-            packet,
-            dispatch,
-            focus: FocusSnapshot::default(),
-            ime: ImeSnapshot::default(),
-            access: AccessibilitySnapshot::default(),
-            next_deadline: scheduler.next_deadline(),
-        };
+        let snapshot = FrameSnapshot { generation: self.generation, packet, dispatch, focus: FocusSnapshot::default(), ime: ImeSnapshot::default(), access: AccessibilitySnapshot::default(), next_deadline: scheduler.next_deadline() };
         self.presented = Some(Rc::new(snapshot));
         Ok(self.generation)
     }
@@ -461,7 +449,11 @@ mod tests {
         assert_eq!(tree.node(child_node).unwrap().parent, Some(root_node), "child's parent link must point at the real root node — this is exactly what a geometry-only reconstruction could never recover");
         assert!(tree.node(child_node).unwrap().flags.contains(crate::DispatchFlags::OVERLAY), "the child's own declared OVERLAY flag must survive registration");
         assert!(!tree.node(root_node).unwrap().flags.contains(crate::DispatchFlags::OVERLAY));
-        assert_eq!(tree.node(child_node).unwrap().listeners.binding_for(Trigger::Activate).map(|binding| binding.action.clone()), Some(act("open")), "the child's real ActionBinding must survive registration into a typed ListenerSet, not an empty default one");
+        assert_eq!(
+            tree.node(child_node).unwrap().listeners.binding_for(Trigger::Activate).map(|binding| binding.action.clone()),
+            Some(act("open")),
+            "the child's real ActionBinding must survive registration into a typed ListenerSet, not an empty default one"
+        );
     }
 
     #[test]

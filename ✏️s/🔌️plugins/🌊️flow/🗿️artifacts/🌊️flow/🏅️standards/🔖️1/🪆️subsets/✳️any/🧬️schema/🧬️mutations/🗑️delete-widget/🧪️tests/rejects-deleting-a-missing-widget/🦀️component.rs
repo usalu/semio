@@ -72,11 +72,7 @@ async fn a_missing_widget_is_an_error_level_target_missing() {
     assert_eq!(messages[0].level, protocol::Severity::Error, "delete-widget's miss is Error, not the Fatal create-widget reserves for a duplicate identity");
     assert_eq!(messages[0].target, vec!["ghost-widget".to_string()], "the diagnostic names the WIDGET id that was asked for, not the one that survives");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("delete", "widget", "delete-widget", "DeletedWidget"),
-        "the fixture must be bound to delete-widget's own descriptor"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "widget", "delete-widget", "DeletedWidget"), "the fixture must be bound to delete-widget's own descriptor");
 }
 
 /// ↩️ `delete-widget`'s inverse is BASE-derived — it rebuilds the widget, its layout entry and every
@@ -110,12 +106,6 @@ async fn declared_outcome_holds() {
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

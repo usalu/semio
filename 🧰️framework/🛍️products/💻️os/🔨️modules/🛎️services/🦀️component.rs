@@ -38,7 +38,9 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 use semio_framework_actor::{ActorId, PackageId};
-use semio_framework_async::{block_on, CancelState, CancelToken, ChannelPolicy, HostAsyncRuntime, HostFuture, Lane, OperationContext, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, WorkerPool, WorkerPoolConfig};
+use semio_framework_async::{
+    block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, Notify, OperationContext, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool, WorkerPoolConfig,
+};
 
 //#region 🧵️GlobalWorkerPool
 /// 🧵️ The ONE process-wide [`WorkerPool`] every tokio-free service in this crate schedules real CPU/
@@ -82,15 +84,15 @@ enum TaskOutcome {
 
 /// 🌳️ One scope's identity/lineage/cancellation plus the outcome receivers tracking every task
 /// [`ScopeTable::spawn_scoped`] put onto the shared [`WorkerPool`] — replaces the pre-Phase-1
-/// `tokio::task::JoinSet` one-for-one: a [`tokio::sync::oneshot::Receiver`] per spawned task,
-/// completed by that task's own [`WorkerPool`] job once [`block_on`] drives it to completion. Like
-/// the `JoinSet` it replaces, entries are only ever reclaimed by [`ScopeTable::cancel_scope`]
-/// draining the whole scope — a long-lived scope that spawns many short tasks and is never cancelled
-/// accumulates dead receivers exactly as the old `JoinSet` accumulated dead `AbortHandle`s until
-/// `join_next` was called; not a new limitation.
+/// `tokio::task::JoinSet` one-for-one: an [`oneshot::Receiver`] per spawned task, completed by that
+/// task's own [`WorkerPool`] job once [`block_on`] drives it to completion. Like the `JoinSet` it
+/// replaces, entries are only ever reclaimed by [`ScopeTable::cancel_scope`] draining the whole
+/// scope — a long-lived scope that spawns many short tasks and is never cancelled accumulates dead
+/// receivers exactly as the old `JoinSet` accumulated dead `AbortHandle`s until `join_next` was
+/// called; not a new limitation.
 struct ScopeRecord {
     cancel: CancelToken,
-    tasks: Vec<tokio::sync::oneshot::Receiver<TaskOutcome>>,
+    tasks: Vec<oneshot::Receiver<TaskOutcome>>,
 }
 
 /// 🐢️ Poll interval a newly-submitted unit of work waits on while its scope is `Park`ed before
@@ -148,11 +150,11 @@ impl ScopeTable {
     /// owner-index entry; the earlier scope's tasks stay tracked by id but become unreachable via
     /// `cancel_scope(owner)` afterward. No caller in this packet re-opens an owner, so this is a
     /// documented limitation rather than an exercised bug.
-    async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+    fn open_scope_now(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
         let id = ScopeId(self.0.next_id.fetch_add(1, Ordering::SeqCst));
         let cancel = match parent {
-            Some(parent_handle) => parent_handle.cancel.child().await,
-            None => CancelToken::root().await,
+            Some(parent_handle) => parent_handle.cancel.child_now(),
+            None => CancelToken::root_now(),
         };
         let parent_id = parent.map(|handle| handle.id);
         self.0.records.lock().expect("ScopeTable records mutex poisoned").insert(id, ScopeRecord { cancel: cancel.clone(), tasks: Vec::new() });
@@ -161,6 +163,10 @@ impl ScopeTable {
             self.0.children.lock().expect("ScopeTable children mutex poisoned").entry(parent_id).or_default().push(id);
         }
         ScopeHandle { id, owner, cancel }
+    }
+
+    async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+        self.open_scope_now(owner, parent)
     }
 
     /// ▶️ Submits `fut` as ONE [`WorkerPool`] job on the [`Lane`] `ctx.lane` maps to
@@ -179,7 +185,7 @@ impl ScopeTable {
     fn spawn_scoped(&self, scope: &ScopeHandle, ctx: &OperationContext, fut: HostFuture<()>) {
         let cancel = ctx.cancel.clone();
         let lane = Lane::from_context_lane(ctx.lane);
-        let (result_tx, result_rx) = tokio::sync::oneshot::channel::<TaskOutcome>();
+        let (result_tx, result_rx) = oneshot::channel::<TaskOutcome>();
         let mut records = self.0.records.lock().expect("ScopeTable records mutex poisoned");
         let Some(record) = records.get_mut(&scope.id) else { return };
         record.tasks.push(result_rx);
@@ -221,7 +227,7 @@ impl ScopeTable {
     /// can reach, flipping each recorded descendant's OWN token too — defensive, since the
     /// transitive fold in `CancelToken::child` already covers scopes opened with a live parent
     /// link, this just keeps the bookkeeping honest either way. Drains each scope's outcome
-    /// receivers within `grace_ms` by polling [`tokio::sync::oneshot::Receiver::try_recv`] (a
+    /// receivers within `grace_ms` by polling [`oneshot::Receiver::try_recv`] (a
     /// non-blocking, runtime-context-free call) on a [`CANCEL_DRAIN_POLL_MS`] tick — whatever is
     /// still pending once the grace period elapses is honestly counted `leaked` (never silently
     /// folded into `finished`); a blocking OS thread already underway cannot be preempted, so unlike
@@ -258,8 +264,8 @@ impl ScopeTable {
                     match receiver.try_recv() {
                         Ok(TaskOutcome::Finished) => report.finished += 1,
                         Ok(TaskOutcome::CancelledEarly) => report.cancelled += 1,
-                        Err(tokio::sync::oneshot::error::TryRecvError::Closed) => report.cancelled += 1,
-                        Err(tokio::sync::oneshot::error::TryRecvError::Empty) => still_pending.push(receiver),
+                        Err(oneshot::TryRecvError::Closed) => report.cancelled += 1,
+                        Err(oneshot::TryRecvError::Empty) => still_pending.push(receiver),
                     }
                 }
                 pending = still_pending;
@@ -301,6 +307,10 @@ impl TokioHostRuntime {
     /// oversubscribed default) instead of the crate-wide singleton [`TokioHostRuntime::new`] resolves.
     pub fn with_pool(pool: WorkerPool) -> TokioHostRuntime {
         TokioHostRuntime { scopes: ScopeTable::new(pool.clone()), pool }
+    }
+
+    pub fn open_scope_now(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+        self.scopes.open_scope_now(owner, parent)
     }
 
     /// 🧵️ Drives `f` to completion on the calling thread — the entry point a process bootstrap uses
@@ -520,12 +530,12 @@ const TIMER_DRIVER_IDLE_POLL_MS: u64 = 250;
 /// of their own.
 pub struct TimerWheel {
     core: Arc<Mutex<WheelCore>>,
-    wake: Arc<tokio::sync::Notify>,
+    wake: Arc<Notify>,
 }
 
 impl TimerWheel {
     pub async fn new(quota_per_plugin: u32) -> TimerWheel {
-        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin).await)), wake: Arc::new(tokio::sync::Notify::new()) }
+        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin).await)), wake: Arc::new(Notify::new()) }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -581,10 +591,7 @@ impl TimerWheel {
                             Some(_) => now_ms,
                             None => now_ms + TIMER_DRIVER_IDLE_POLL_MS,
                         };
-                        tokio::select! {
-                            _ = pool.timer().sleep_until(sleep_deadline) => {}
-                            _ = wake.notified() => {}
-                        }
+                        select2(pool.timer().sleep_until(sleep_deadline), wake.notified()).await;
                     }
                 });
             }),
@@ -621,17 +628,21 @@ impl std::error::Error for ComputeError {}
 /// [`WorkerPool`]'s own (larger, process-wide) `worker_count` — the real dispatch substrate is now
 /// [`global_worker_pool`] (this type's constructor is frozen by external call sites this packet's
 /// boundary does not own — see that fn's doc — so it cannot accept an injected pool), but a
-/// [`tokio::sync::Semaphore`] sized to `capacity` still gates LOGICAL admission on top of it, and is
-/// also what lets `ctx.deadline_ms` be enforced honestly (a bounded semaphore has somewhere to race a
-/// timeout against; submitting straight to the pool with no local admission gate would not).
+/// [`Semaphore`] sized to `capacity` still gates LOGICAL admission on top of it, and is also what
+/// lets `ctx.deadline_ms` be enforced honestly (a bounded semaphore has somewhere to race a timeout
+/// against; submitting straight to the pool with no local admission gate would not).
 pub struct ComputePool {
-    admission: Arc<tokio::sync::Semaphore>,
+    admission: Arc<Semaphore>,
     pool: WorkerPool,
 }
 
 impl ComputePool {
     pub async fn new(capacity: u32) -> ComputePool {
-        ComputePool { admission: Arc::new(tokio::sync::Semaphore::new(capacity.max(1) as usize)), pool: global_worker_pool() }
+        Self::with_pool(capacity, global_worker_pool())
+    }
+
+    pub fn with_pool(capacity: u32, pool: WorkerPool) -> ComputePool {
+        ComputePool { admission: Arc::new(Semaphore::new(capacity.max(1) as usize)), pool }
     }
 
     /// 🧮️ Runs `work` on [`global_worker_pool`] (the `Lane` `ctx.lane` maps to via
@@ -646,18 +657,25 @@ impl ComputePool {
     /// compatibility with `🔌️plugin/🖥️host`/`📇️directory/🔌️client` (outside this packet's boundary,
     /// not edited here) — [`WorkerPool`] dispatch has no scope concept to hand it to.
     pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+        let lane = Lane::from_context_lane(ctx.lane);
+        self.run_in_lane(runtime, ctx, lane, work).await
+    }
+
+    /// 🌐️ Runs a blocking platform-I/O boundary on the pool's dedicated fair I/O lane.
+    pub async fn run_io<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+        self.run_in_lane(runtime, ctx, Lane::Io, work).await
+    }
+
+    async fn run_in_lane<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, ctx: OperationContext, lane: Lane, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
         let admission = self.admission.clone();
         let permit = match ctx.deadline_ms {
-            Some(deadline_ms) => {
-                tokio::select! {
-                    permit = admission.acquire_owned() => permit.map_err(|_| ComputeError::WorkerLost)?,
-                    _ = runtime.sleep_until(deadline_ms) => return Err(ComputeError::DeadlineExceeded),
-                }
-            }
-            None => admission.acquire_owned().await.map_err(|_| ComputeError::WorkerLost)?,
+            Some(deadline_ms) => match select2(admission.acquire_owned(), runtime.sleep_until(deadline_ms)).await {
+                Either::Left(permit) => permit,
+                Either::Right(()) => return Err(ComputeError::DeadlineExceeded),
+            },
+            None => admission.acquire_owned().await,
         };
-        let (result_tx, result_rx) = tokio::sync::oneshot::channel::<T>();
-        let lane = Lane::from_context_lane(ctx.lane);
+        let (result_tx, result_rx) = oneshot::channel::<T>();
         self.pool.submit(
             lane,
             Box::new(move || {
@@ -667,12 +685,10 @@ impl ComputePool {
             }),
         );
         match ctx.deadline_ms {
-            Some(deadline_ms) => {
-                tokio::select! {
-                    result = result_rx => result.map_err(|_| ComputeError::WorkerLost),
-                    _ = runtime.sleep_until(deadline_ms) => Err(ComputeError::DeadlineExceeded),
-                }
-            }
+            Some(deadline_ms) => match select2(result_rx, runtime.sleep_until(deadline_ms)).await {
+                Either::Left(result) => result.map_err(|_| ComputeError::WorkerLost),
+                Either::Right(()) => Err(ComputeError::DeadlineExceeded),
+            },
             None => result_rx.await.map_err(|_| ComputeError::WorkerLost),
         }
     }
@@ -855,7 +871,7 @@ impl AsyncHttpTransport for BlockingHttpTransport {
         let scope = self.scope.clone();
         let ctx = ctx.clone();
         Box::pin(async move {
-            let result = compute.run_blocking(runtime.as_ref(), &scope, ctx, move || transport.call(request)).await;
+            let result = compute.run_io(runtime.as_ref(), &scope, ctx, move || transport.call(request)).await;
             match result {
                 Ok(Ok(response)) => {
                     let head = HttpResponseHead { status: response.status, headers: response.headers };
@@ -948,13 +964,11 @@ impl HttpPool {
     /// [`AsyncHttpTransport::start`] needs a transport that OWNS them — see the crate report's
     /// `## honest gaps` for this one acknowledged duplication.
     pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
-        HttpPool {
-            transport: HttpPoolTransport::Blocking { transport, compute },
-            buckets: Arc::new(Mutex::new(HashMap::new())),
-            bytes_per_minute_cap,
-            outstanding: Arc::new(Mutex::new(HashMap::new())),
-            outstanding_cap: outstanding_cap.max(1),
-        }
+        Self::new_now(transport, compute, bytes_per_minute_cap, outstanding_cap)
+    }
+
+    pub fn new_now(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
+        HttpPool { transport: HttpPoolTransport::Blocking { transport, compute }, buckets: Arc::new(Mutex::new(HashMap::new())), bytes_per_minute_cap, outstanding: Arc::new(Mutex::new(HashMap::new())), outstanding_cap: outstanding_cap.max(1) }
     }
 
     /// 🌐️ For a real [`AsyncHttpTransport`] (a sibling packet's real async client) that needs no
@@ -1035,7 +1049,7 @@ impl HttpPool {
                 let transport = transport.clone();
                 let compute = compute.clone();
                 let ctx_for_run = ctx.clone();
-                let result = compute.run_blocking(runtime, scope, ctx_for_run, move || transport.call(request)).await;
+                let result = compute.run_io(runtime, scope, ctx_for_run, move || transport.call(request)).await;
                 match result {
                     Ok(Ok(response)) => {
                         let head = HttpResponseHead { status: response.status, headers: response.headers };
@@ -1142,7 +1156,10 @@ impl Drop for HttpPoolBody {
 /// 🚫️ [`StorageScheduler::submit`]'s failure modes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StorageError {
-    BytesQuotaExceeded { plugin: PackageId, limit: u64 },
+    BytesQuotaExceeded {
+        plugin: PackageId,
+        limit: u64,
+    },
     Io(String),
     Closed,
     /// ⏰️ `ctx.deadline_ms` elapsed before this job's turn came up (still queued) or before it
@@ -1170,7 +1187,7 @@ struct StorageJob {
     bytes: u64,
     ctx: OperationContext,
     work: Box<dyn FnOnce() -> Result<Vec<u8>, std::io::Error> + Send>,
-    result_tx: tokio::sync::oneshot::Sender<Result<Vec<u8>, StorageError>>,
+    result_tx: oneshot::Sender<Result<Vec<u8>, StorageError>>,
     /// ⏰️ Set by [`StorageTicket::await_result`] if the deadline race is lost while this job is
     /// still queued — [`storage_try_dispatch`] checks it right after popping, same lazy-skip
     /// discipline [`WheelCore::disarm`] already uses for timers.
@@ -1299,7 +1316,16 @@ pub struct StorageScheduler<R: HostAsyncRuntime>(Arc<StorageState<R>>);
 
 impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
     pub async fn new(runtime: Arc<R>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler<R> {
-        StorageScheduler(Arc::new(StorageState { runtime, scope, pool: global_worker_pool(), queues: Mutex::new(BTreeMap::new()), in_flight: AtomicU32::new(0), max_in_flight: max_in_flight.max(1), per_plugin_bytes: Mutex::new(HashMap::new()), byte_quota_per_plugin }))
+        StorageScheduler(Arc::new(StorageState {
+            runtime,
+            scope,
+            pool: global_worker_pool(),
+            queues: Mutex::new(BTreeMap::new()),
+            in_flight: AtomicU32::new(0),
+            max_in_flight: max_in_flight.max(1),
+            per_plugin_bytes: Mutex::new(HashMap::new()),
+            byte_quota_per_plugin,
+        }))
     }
 
     /// 💾️ Enqueues `work`, reserving `bytes` against `plugin`'s budget up front. Returns a
@@ -1321,7 +1347,7 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
             }
             usage.insert(plugin.clone(), current + bytes);
         }
-        let (result_tx, result_rx) = tokio::sync::oneshot::channel();
+        let (result_tx, result_rx) = oneshot::channel();
         let cancelled = Arc::new(AtomicBool::new(false));
         let job = StorageJob { plugin, bytes, ctx: ctx.clone(), work: Box::new(work), result_tx, cancelled: cancelled.clone() };
         self.0.queues.lock().expect("StorageScheduler queues mutex poisoned").entry(ctx.lane).or_default().push_back(job);
@@ -1335,10 +1361,10 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
 }
 
 /// 🎫️ A handle to one [`StorageScheduler::submit`] call's eventual result — deliberately opaque:
-/// the tokio receiver it wraps is a PRIVATE field (never named on this struct's own declaration
-/// line), so nothing outside this crate can see or name a tokio type through it.
+/// the [`oneshot::Receiver`] it wraps is a PRIVATE field (never named on this struct's own
+/// declaration line), so nothing outside this crate can see or name it through here.
 pub struct StorageTicket<R: HostAsyncRuntime> {
-    receiver: tokio::sync::oneshot::Receiver<Result<Vec<u8>, StorageError>>,
+    receiver: oneshot::Receiver<Result<Vec<u8>, StorageError>>,
     cancelled: Arc<AtomicBool>,
     runtime: Arc<R>,
     deadline_ms: Option<u64>,
@@ -1352,15 +1378,13 @@ impl<R: HostAsyncRuntime> StorageTicket<R> {
     /// case.
     pub async fn await_result(self) -> Result<Vec<u8>, StorageError> {
         match self.deadline_ms {
-            Some(deadline_ms) => {
-                tokio::select! {
-                    result = self.receiver => result.unwrap_or(Err(StorageError::Closed)),
-                    _ = self.runtime.sleep_until(deadline_ms) => {
-                        self.cancelled.store(true, Ordering::SeqCst);
-                        Err(StorageError::DeadlineExceeded)
-                    }
+            Some(deadline_ms) => match select2(self.receiver, self.runtime.sleep_until(deadline_ms)).await {
+                Either::Left(result) => result.unwrap_or(Err(StorageError::Closed)),
+                Either::Right(()) => {
+                    self.cancelled.store(true, Ordering::SeqCst);
+                    Err(StorageError::DeadlineExceeded)
                 }
-            }
+            },
             None => self.receiver.await.unwrap_or(Err(StorageError::Closed)),
         }
     }
@@ -1992,10 +2016,7 @@ mod tests {
                     let _ = ticket.await_result().await;
                 }
             };
-            tokio::select! {
-                _ = sampler => {}
-                _ = drain => {}
-            }
+            select2(sampler, drain).await;
         });
         assert!(!cap_violated.load(Ordering::SeqCst), "in-flight count must never exceed max_in_flight");
     }
@@ -2315,7 +2336,7 @@ mod tests {
             let ctx_for_body = ctx.clone();
             let dropped = self.dropped.clone();
             Box::pin(async move {
-                let connect_result = compute.run_blocking(runtime.as_ref(), &scope, ctx_for_connect, move || std::net::TcpStream::connect(addr)).await;
+                let connect_result = compute.run_io(runtime.as_ref(), &scope, ctx_for_connect, move || std::net::TcpStream::connect(addr)).await;
                 let stream = match connect_result {
                     Ok(Ok(stream)) => stream,
                     Ok(Err(io_error)) => return Err(HttpPoolError::Transport(io_error.to_string())),

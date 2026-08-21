@@ -1,8 +1,8 @@
 //! 🧺️ Sourcing curate app — the curated window: the currently-picked objects and their counts.
 
+use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::editor::sourcing::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
-use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{build_table_scene, table_row_json, LocalizedLabel, SurfaceKind, TableCell, TableScene, UiNode, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 

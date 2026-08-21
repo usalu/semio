@@ -1,11 +1,11 @@
 //! 🎥️ Shooting play app — the 3D scene window: the editable studio viewport (assets + lighting).
 
+use crate::artifacts::shooting::schema::is_transparent_shooting_background;
+use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_PLAY_APP_ID;
-use crate::artifacts::shooting::schema::is_transparent_shooting_background;
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingSnapshot, ShootingShot};
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,

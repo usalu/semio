@@ -20,35 +20,66 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::process3d::schema::Process3dArtifact>>,
-    #[state(artifact)] pub workshop: Option<Workshop>,
-    #[state(artifact)] pub stock_id: Option<String>,
-    #[state(artifact)] pub stock_label: Option<String>,
-    #[state(artifact)] pub stock_pose: Option<Pose>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.brep")] pub stock_solid: Option<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.flow")] pub steps: Option<store::ArtifactChild<SemioFlowSnapshot>>,
-    #[state(artifact)] pub tool_solids: Option<Process3dToolSolidChildList>,
-    #[state(artifact)] pub resolved_up_to: Option<Option<usize>>,
-    #[state(presence)] pub selected_id: Option<Option<String>>,
-    #[state(presence)] pub selected_face_id: Option<Option<usize>>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub selection_method: Option<String>,
-    #[state(config)] pub engagement_input: Option<String>,
-    #[state(config)] pub camera_position_x: Option<f64>,
-    #[state(config)] pub camera_position_y: Option<f64>,
-    #[state(config)] pub camera_position_z: Option<f64>,
-    #[state(config)] pub camera_target_x: Option<f64>,
-    #[state(config)] pub camera_target_y: Option<f64>,
-    #[state(config)] pub camera_target_z: Option<f64>,
-    #[state(config)] pub camera_fov: Option<f64>,
-    #[state(config)] pub sun_enabled: Option<bool>,
-    #[state(config)] pub sun_azimuth: Option<f64>,
-    #[state(config)] pub sun_elevation: Option<f64>,
-    #[state(config)] pub sun_intensity: Option<f64>,
-    #[state(config)] pub sun_color: Option<String>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(config)] pub contributions_json: Option<String>,
-    #[state(artifact)] pub hovered_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::process3d::schema::Process3dArtifact>>,
+    #[state(artifact)]
+    pub workshop: Option<Workshop>,
+    #[state(artifact)]
+    pub stock_id: Option<String>,
+    #[state(artifact)]
+    pub stock_label: Option<String>,
+    #[state(artifact)]
+    pub stock_pose: Option<Pose>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.brep")]
+    pub stock_solid: Option<store::ArtifactChild<SemioBrepSnapshot>>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.flow")]
+    pub steps: Option<store::ArtifactChild<SemioFlowSnapshot>>,
+    #[state(artifact)]
+    pub tool_solids: Option<Process3dToolSolidChildList>,
+    #[state(artifact)]
+    pub resolved_up_to: Option<Option<usize>>,
+    #[state(presence)]
+    pub selected_id: Option<Option<String>>,
+    #[state(presence)]
+    pub selected_face_id: Option<Option<usize>>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub selection_method: Option<String>,
+    #[state(config)]
+    pub engagement_input: Option<String>,
+    #[state(config)]
+    pub camera_position_x: Option<f64>,
+    #[state(config)]
+    pub camera_position_y: Option<f64>,
+    #[state(config)]
+    pub camera_position_z: Option<f64>,
+    #[state(config)]
+    pub camera_target_x: Option<f64>,
+    #[state(config)]
+    pub camera_target_y: Option<f64>,
+    #[state(config)]
+    pub camera_target_z: Option<f64>,
+    #[state(config)]
+    pub camera_fov: Option<f64>,
+    #[state(config)]
+    pub sun_enabled: Option<bool>,
+    #[state(config)]
+    pub sun_azimuth: Option<f64>,
+    #[state(config)]
+    pub sun_elevation: Option<f64>,
+    #[state(config)]
+    pub sun_intensity: Option<f64>,
+    #[state(config)]
+    pub sun_color: Option<String>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(config)]
+    pub contributions_json: Option<String>,
+    #[state(artifact)]
+    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

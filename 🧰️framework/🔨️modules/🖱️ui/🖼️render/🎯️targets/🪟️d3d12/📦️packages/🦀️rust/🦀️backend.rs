@@ -34,13 +34,16 @@ use crate::resources::GpuResources;
 use crate::scene_target::{SceneTarget, SCENE_MIP_LEVELS};
 use crate::types::{create_default_texture2d, create_upload_buffer, transition_barrier, wait_for_fence_value, BlurMipGpu, UNIT_QUAD_CORNERS, WORLD_GLOBALS_SLOT_SIZE};
 use raw_window_handle::{RawWindowHandle, WindowHandle};
+use ui_render::{
+    BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, QuadInstance, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp,
+    SurfaceFormat, TextureId, VectorVertex,
+};
 use windows::core::Interface;
 use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::Graphics::Direct3D::D3D_FEATURE_LEVEL_11_0;
 use windows::Win32::Graphics::Direct3D12::*;
 use windows::Win32::Graphics::Dxgi::Common::*;
 use windows::Win32::Graphics::Dxgi::*;
-use ui_render::{BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, QuadInstance, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, SurfaceFormat, TextureId, VectorVertex};
 
 #[cfg(feature = "backend-testing")]
 use ui_render::ReadbackImage;
@@ -246,7 +249,19 @@ fn create_device_and_queue() -> Result<(Device, ID3D12CommandQueue, IDXGIFactory
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn swap_chain_desc(width: u32, height: u32, swap_effect: DXGI_SWAP_EFFECT) -> DXGI_SWAP_CHAIN_DESC1 {
-    DXGI_SWAP_CHAIN_DESC1 { Width: width, Height: height, Format: SURFACE_FORMAT, Stereo: false.into(), SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 }, BufferUsage: DXGI_USAGE_RENDER_TARGET_OUTPUT, BufferCount: BUFFER_COUNT, Scaling: DXGI_SCALING_STRETCH, SwapEffect: swap_effect, AlphaMode: DXGI_ALPHA_MODE_UNSPECIFIED, Flags: 0 }
+    DXGI_SWAP_CHAIN_DESC1 {
+        Width: width,
+        Height: height,
+        Format: SURFACE_FORMAT,
+        Stereo: false.into(),
+        SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+        BufferUsage: DXGI_USAGE_RENDER_TARGET_OUTPUT,
+        BufferCount: BUFFER_COUNT,
+        Scaling: DXGI_SCALING_STRETCH,
+        SwapEffect: swap_effect,
+        AlphaMode: DXGI_ALPHA_MODE_UNSPECIFIED,
+        Flags: 0,
+    }
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -461,8 +476,16 @@ impl D3d12Backend {
             let src_mip = mip - 1;
             self.transition_scene_mip(src_mip, D3D12_RESOURCE_STATE_COPY_SOURCE);
             self.transition_blur_scratch(src_mip, D3D12_RESOURCE_STATE_COPY_DEST);
-            let src_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(self.scene_target.texture()) })), Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: src_mip } };
-            let dst_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(self.scene_target.blur_scratch()) })), Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: src_mip } };
+            let src_location = D3D12_TEXTURE_COPY_LOCATION {
+                pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(self.scene_target.texture()) })),
+                Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: src_mip },
+            };
+            let dst_location = D3D12_TEXTURE_COPY_LOCATION {
+                pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(self.scene_target.blur_scratch()) })),
+                Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: src_mip },
+            };
             // 🔓️ SAFETY: same borrowed-pointer-without-`AddRef` technique `crate::types::transition_barrier`
             // documents — both locations are consumed synchronously by `CopyTextureRegion` and then
             // dropped as plain stack values within this loop iteration, never `ManuallyDrop::into_inner`'d.
@@ -537,7 +560,8 @@ impl D3d12Backend {
         let ui_globals_address = self.ui_globals.gpu_address().expect("update_globals always uploads a non-empty buffer");
         let rtv = self.back_buffer_rtv(back_buffer_index);
         let pair = self.frame_descriptors.allocate_pair(&self.device, self.scene_target.texture_srv_handle(&self.device), self.scene_target.texture_srv_handle(&self.device));
-        let instance_view = D3D12_VERTEX_BUFFER_VIEW { BufferLocation: glass_address, SizeInBytes: (packet.glass_instances.len() * std::mem::size_of::<ui_render::GlassInstance>()) as u32, StrideInBytes: std::mem::size_of::<ui_render::GlassInstance>() as u32 };
+        let instance_view =
+            D3D12_VERTEX_BUFFER_VIEW { BufferLocation: glass_address, SizeInBytes: (packet.glass_instances.len() * std::mem::size_of::<ui_render::GlassInstance>()) as u32, StrideInBytes: std::mem::size_of::<ui_render::GlassInstance>() as u32 };
         unsafe {
             self.list.OMSetRenderTargets(1, Some(&rtv), false, None);
             self.list.SetPipelineState(&self.pipelines.glass);
@@ -657,7 +681,16 @@ impl GraphicsBackend for D3d12Backend {
     /// `isLowPower()` for real.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
-        DeviceCapabilities { max_texture_dimension: 16384, max_bind_groups: 4, supports_msaa: true, supports_timestamp_queries: false, supports_storage_buffers: true, preferred_surface_format: SurfaceFormat::Bgra8UnormSrgb, memory_class: MemoryClass::Standard, gpu_tier: GpuTier::Discrete }
+        DeviceCapabilities {
+            max_texture_dimension: 16384,
+            max_bind_groups: 4,
+            supports_msaa: true,
+            supports_timestamp_queries: false,
+            supports_storage_buffers: true,
+            preferred_surface_format: SurfaceFormat::Bgra8UnormSrgb,
+            memory_class: MemoryClass::Standard,
+            gpu_tier: GpuTier::Discrete,
+        }
     }
 
     /// 🕳️ A zero-size request parks: `self.size` is still recorded, but the swapchain/scene target/
@@ -744,7 +777,8 @@ impl GraphicsBackend for D3d12Backend {
         self.fence_value += 1;
         unsafe { self.queue.Signal(&self.fence, self.fence_value) }.map_err(|_| BackendError::DeviceLost(LossReason::Device))?;
 
-        let stats = FrameStats { encode_duration_seconds: 0.0, submit_duration_seconds: 0.0, present_duration_seconds: 0.0, draw_call_count: packet.batches.len() as u32, instance_count: (packet.quad_instances.len() + packet.vector_vertices.len()) as u32 };
+        let stats =
+            FrameStats { encode_duration_seconds: 0.0, submit_duration_seconds: 0.0, present_duration_seconds: 0.0, draw_call_count: packet.batches.len() as u32, instance_count: (packet.quad_instances.len() + packet.vector_vertices.len()) as u32 };
         Ok(RenderReport::Presented { stats })
     }
 
@@ -855,8 +889,18 @@ impl D3d12Backend {
 
         let before = self.back_buffer_states[back_buffer_index as usize];
         unsafe { self.list.ResourceBarrier(&[transition_barrier(&self.back_buffers[back_buffer_index as usize], 0, before, D3D12_RESOURCE_STATE_COPY_SOURCE)]) };
-        let src_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&self.back_buffers[back_buffer_index as usize]) })), Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: 0 } };
-        let dst_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&readback_resource) })), Type: D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { PlacedFootprint: D3D12_PLACED_SUBRESOURCE_FOOTPRINT { Offset: 0, Footprint: D3D12_SUBRESOURCE_FOOTPRINT { Format: SURFACE_FORMAT, Width: width, Height: height, Depth: 1, RowPitch: row_pitch } } } };
+        let src_location = D3D12_TEXTURE_COPY_LOCATION {
+            pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&self.back_buffers[back_buffer_index as usize]) })),
+            Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+            Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: 0 },
+        };
+        let dst_location = D3D12_TEXTURE_COPY_LOCATION {
+            pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&readback_resource) })),
+            Type: D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
+            Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 {
+                PlacedFootprint: D3D12_PLACED_SUBRESOURCE_FOOTPRINT { Offset: 0, Footprint: D3D12_SUBRESOURCE_FOOTPRINT { Format: SURFACE_FORMAT, Width: width, Height: height, Depth: 1, RowPitch: row_pitch } },
+            },
+        };
         // 🔓️ SAFETY: same borrowed-pointer-without-`AddRef` technique used throughout this crate for
         // `D3D12_TEXTURE_COPY_LOCATION`; both locations are consumed synchronously here.
         unsafe { self.list.CopyTextureRegion(&dst_location, 0, 0, 0, &src_location, None) };

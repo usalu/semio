@@ -1,14 +1,14 @@
 //! 🌍️ Process 3d play app commands — 3D viewport interactions: click-to-place, push/pull face drag,
 //! and face picking.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
-use crate::editor::process3d::set_active_utility_effect;
-use crate::editor::process3d::axis_angle_from_up_to;
 use crate::artifacts::process3d::schema::inferences::capability_for_measure_kind;
 use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, WorkingSolid, StepOrigin};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
+use crate::editor::process3d::axis_angle_from_up_to;
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::set_active_utility_effect;
+use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️FaceDrag
@@ -49,7 +49,12 @@ pub mod world_pointer_down {
         pub position: [f64; 3],
     }
 
-    pub async fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &WorldPointerDown,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let utility = config.active_utility();
@@ -63,13 +68,7 @@ pub mod world_pointer_down {
         };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep {
-            id: next_step_id(),
-            label: capability.label.clone(),
-            enabled: true,
-            origin: Some(origin),
-            measure: crate::artifacts::process3d::schema::inferences::measure_for_capability(&capability, Some(payload.position)),
-        };
+        let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::artifacts::process3d::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
         Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }
 }
@@ -90,7 +89,12 @@ pub mod world_face_drag_end {
         pub face_extent: Option<[f64; 2]>,
     }
 
-    pub async fn handle(payload: &WorldFaceDragEnd, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &WorldFaceDragEnd,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         if config.active_utility() != "select" {

@@ -40,8 +40,8 @@ impl protocol::OpBinary for LowpolyMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::artifacts::lowpoly::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
+    use crate::artifacts::lowpoly::schema::default_snapshot;
     use protocol::{OpBinary, OpText};
 
     async fn tiny_mesh_json() -> String {
@@ -51,14 +51,7 @@ mod tests {
     async fn tiny_object(id: &str, name: &str) -> crate::artifacts::lowpoly::LowpolyObject {
         let mesh_workspace = tiny_mesh_json();
         let mesh = crate::artifacts::lowpoly::mesh_child_handle(id, &mesh_workspace);
-        crate::artifacts::lowpoly::LowpolyObject {
-            id: id.into(),
-            name: name.into(),
-            transform: Default::default(),
-            smooth_shading: false,
-            mesh: Some(mesh),
-            paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")],
-        }
+        crate::artifacts::lowpoly::LowpolyObject { id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")] }
     }
 
     /// 🧪️ One representative value per variant — reused by the round-trip law test below.
@@ -74,7 +67,12 @@ mod tests {
             LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::mutation::MoveObject { id: object_id.clone(), new_position: [1.0, 2.0, 3.0] }),
             LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::mutation::RotateObject { id: object_id.clone(), new_rotation: [0.1, 0.2, 0.3] }),
             LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::mutation::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
-            LowpolyMutation::CreateMesh(create_mesh::mutation::CreateMesh { id: object_id.clone(), child_id: "mesh-fixture-01".into(), target: store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } }, mesh_workspace: tiny_mesh_json() }),
+            LowpolyMutation::CreateMesh(create_mesh::mutation::CreateMesh {
+                id: object_id.clone(),
+                child_id: "mesh-fixture-01".into(),
+                target: store::os_io::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
+                mesh_workspace: tiny_mesh_json(),
+            }),
             LowpolyMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: object_id.clone() }),
             LowpolyMutation::InsertPaintLayer(insert_paint_layer::mutation::InsertPaintLayer { object_id: object_id.clone(), index: 1, layer: crate::artifacts::lowpoly::LowpolyPaintLayer::new("Detail") }),
             LowpolyMutation::RemovePaintLayer(crate::artifacts::lowpoly::mutations::remove_paint_layer::mutation::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
@@ -82,7 +80,11 @@ mod tests {
             LowpolyMutation::ChangePaintLayerVisible(crate::artifacts::lowpoly::mutations::change_paint_layer_visible::mutation::ChangePaintLayerVisible { object_id: object_id.clone(), index: 0, new_visible: false }),
             LowpolyMutation::ChangePaintLayerOpacity(crate::artifacts::lowpoly::mutations::change_paint_layer_opacity::mutation::ChangePaintLayerOpacity { object_id: object_id.clone(), index: 0, new_opacity: 0.5 }),
             LowpolyMutation::ChangePaintLayerBlendMode(crate::artifacts::lowpoly::mutations::change_paint_layer_blend_mode::mutation::ChangePaintLayerBlendMode { object_id: object_id.clone(), index: 0, new_blend_mode: "multiply".into() }),
-            LowpolyMutation::EditPaintLayer(edit_paint_layer::mutation::EditPaintLayer { object_id, layer_index: 0, runs: vec![PixelRun { offset: 12, bytes: vec![255, 0, 0, 255] }, PixelRun { offset: 400, bytes: vec![0, 255, 0, 255, 0, 0, 0, 128] }] }),
+            LowpolyMutation::EditPaintLayer(edit_paint_layer::mutation::EditPaintLayer {
+                object_id,
+                layer_index: 0,
+                runs: vec![PixelRun { offset: 12, bytes: vec![255, 0, 0, 255] }, PixelRun { offset: 400, bytes: vec![0, 255, 0, 255, 0, 0, 0, 128] }],
+            }),
         ]
     }
 

@@ -11,8 +11,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-
 //#region 🔖️Apply
 impl RemodelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
@@ -153,18 +151,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
         let scene = default_remodel_scene();
-        assert_eq!(
-            RemodelDiff::default()
-                .apply(&scene)
-                .expect("valid identity diff"),
-            scene
-        );
+        assert_eq!(RemodelDiff::default().apply(&scene).expect("valid identity diff"), scene);
 
         let mut diff = RemodelDiff::default();
-        diff.absorb(RemodelDiff {
-            gcps: Some(RemodelGcpList { values: Vec::new() }),
-            ..Default::default()
-        });
+        diff.absorb(RemodelDiff { gcps: Some(RemodelGcpList { values: Vec::new() }), ..Default::default() });
         assert!(diff.gcps.is_some());
         diff.absorb(RemodelDiff::default());
         assert!(diff.gcps.is_some(), "absorbing empty never clobbers a real entry");

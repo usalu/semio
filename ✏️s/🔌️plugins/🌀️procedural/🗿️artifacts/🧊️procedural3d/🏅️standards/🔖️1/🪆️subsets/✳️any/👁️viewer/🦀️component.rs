@@ -10,7 +10,7 @@ use crate::viewer::procedural3d::modes::view::windows::preview;
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.2/§2.4): `ArtifactViewer`/`Viewer`/`ViewEmit`/
 // `Dialect` are curated at `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare
 // here, no `app::` prefix needed (unlike the earlier cad pilot, written before that gap closed).
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer, ArtifactViewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -59,7 +59,13 @@ impl ArtifactViewer for Procedural3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action
     /// (camera orbit, "jump to widget") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

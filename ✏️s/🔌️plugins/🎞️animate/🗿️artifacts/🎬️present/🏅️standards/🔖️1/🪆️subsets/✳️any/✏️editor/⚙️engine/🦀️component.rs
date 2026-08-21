@@ -15,9 +15,9 @@
 pub mod compiler {
     //! 🌐️ Headless static-site compiler for animate present decks.
 
+    use crate::artifacts::present::PresentSnapshot;
     use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
-    use crate::artifacts::present::PresentSnapshot;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::fs;
@@ -274,8 +274,8 @@ pub mod compiler {
 pub mod slide {
     //! 🎭️ Scene-based presentation document types for slide/section timelines.
 
-    use crate::editor::animate::engine::scene::section::Section;
     use crate::artifacts::present::PresentSnapshot;
+    use crate::editor::animate::engine::scene::section::Section;
     use serde::{Deserialize, Serialize};
 
     pub const PRESENT_SCENE_SCHEMA: &str = "animate.present.scene";

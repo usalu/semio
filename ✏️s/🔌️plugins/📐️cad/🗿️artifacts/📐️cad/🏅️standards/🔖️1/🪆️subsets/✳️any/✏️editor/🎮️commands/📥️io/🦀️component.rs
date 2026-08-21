@@ -1,17 +1,16 @@
 //! 📥️ CAD play app commands — the shell file round-trip: native/spatial import and the three export flavours.
 
+use crate::artifacts::cad::op::CadMutation;
+use crate::artifacts::cad::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
+use crate::artifacts::cad::CadSnapshot;
+use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, reset_document_effect, runtime_of, snapshot_of, CadPlayView};
-use crate::artifacts::cad::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
-use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
 use semio_framework::kernel::Effect;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
 
 //#region 🔖️ImportCadFile
 pub mod import_cad_file {
@@ -124,7 +123,8 @@ pub mod load_raw_request {
     pub struct LoadRawRequest {}
 
     pub async fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(116), 
+        Ok(Emit::effect(Effect::RequestFileOpen {
+            req: semio_framework_plugin::RequestId(116),
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
             read_as: Some("dataUrl".into()),
             import_action: "importCadFile".into(),

@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceInformationRequirement, base: &ProgramSnapsho
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This information requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.information_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { information: Some(ProgramInformationDelta { patched: vec![ProgramInformationPatchEntry { id: payload.information_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        information: Some(ProgramInformationDelta { patched: vec![ProgramInformationPatchEntry { id: payload.information_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

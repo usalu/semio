@@ -123,7 +123,7 @@ fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Op
 impl Mutation<HtmlSnapshot> for HtmlMutation {
     type Diff = HtmlDiff;
 
-    async fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             HtmlMutation::NoMutation => HtmlDiff::default(),
             HtmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -143,7 +143,7 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
         })
     }
 
-    async fn inverse(&self, base: &HtmlSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &HtmlSnapshot) -> Vec<Self> {
         match self {
             HtmlMutation::NoMutation => vec![HtmlMutation::NoMutation],
             HtmlMutation::SetSnapshot { .. } => vec![HtmlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -264,22 +264,22 @@ fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
 }
 
 impl OpText for HtmlMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_html_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_html_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `HtmlDiff`'s hand-rolled codec.
 impl OpBinary for HtmlMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().await.into_bytes())
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_op().into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

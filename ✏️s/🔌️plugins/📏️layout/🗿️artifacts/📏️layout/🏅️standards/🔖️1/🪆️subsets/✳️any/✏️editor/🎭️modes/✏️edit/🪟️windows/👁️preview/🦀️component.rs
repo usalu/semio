@@ -1,10 +1,10 @@
 //! 👁️ Layout play app — the Preview window: a read-only render of the current page with no chrome
 //! (no guides, no dashed inherited-frame strokes) and its own independent camera pose.
 
+use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::canvas::canvas_layers;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::LAYOUT_PLAY_APP_ID;
-use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

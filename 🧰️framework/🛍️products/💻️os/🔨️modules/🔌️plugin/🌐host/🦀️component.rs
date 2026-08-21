@@ -328,7 +328,8 @@ impl Host {
         match &self.backend {
             HostBackend::Poll(registry) => {
                 let bytes = registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream: true }).await?;
-                let wire: HttpResponseWire = serde_json::from_slice(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
+                let wire: HttpResponseWire =
+                    serde_json::from_slice(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
                 Ok(HttpFetchResponse { status: wire.status, headers: wire.headers, body: BodyReader::poll_buffered(wire.body).await })
             }
             #[cfg(feature = "component-guest-async")]
@@ -729,7 +730,17 @@ impl Host {
 
     #[allow(clippy::too_many_arguments)]
     pub async fn request_media_frames(
-        &self, accept: impl Into<String>, frame_action: impl Into<String>, done_action: impl Into<String>, fallback_action: impl Into<String>, sample_stride: u32, max_frames: u32, max_long_edge_px: u32, fps_hint: f64, payload: Option<String>, args: Option<DslValue>,
+        &self,
+        accept: impl Into<String>,
+        frame_action: impl Into<String>,
+        done_action: impl Into<String>,
+        fallback_action: impl Into<String>,
+        sample_stride: u32,
+        max_frames: u32,
+        max_long_edge_px: u32,
+        fps_hint: f64,
+        payload: Option<String>,
+        args: Option<DslValue>,
     ) -> Result<Vec<u8>, Fault> {
         let accept = accept.into();
         let frame_action = frame_action.into();
@@ -741,7 +752,20 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::request_media_frames(direct::effects::RequestMediaFramesParams { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::request_media_frames(direct::effects::RequestMediaFramesParams {
+                        accept,
+                        frame_action,
+                        done_action,
+                        fallback_action,
+                        sample_stride,
+                        max_frames,
+                        max_long_edge_px,
+                        fps_hint,
+                        payload,
+                        args: args.map(|value| pack(&value)),
+                    })
+                    .await
+                    .map_err(|bytes| dsl::decode_fault_bytes(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -898,7 +922,9 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::request_capability(direct::effects::RequestCapabilityParams { id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    direct::host_async::request_capability(direct::effects::RequestCapabilityParams { id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional })
+                        .await
+                        .map_err(|bytes| dsl::decode_fault_bytes(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {

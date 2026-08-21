@@ -46,10 +46,7 @@ async fn drops_the_guarantee_without_clearing_the_recorded_watertight_report() {
 async fn inverse_restores_the_base_two_thousand_forty_eight_texture() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::UpdateMeshParams(payload)] if payload.params.texture_size == 2048 && payload.params.guarantee_watertight),
-        "update-mesh-params inverts to itself with the base facet, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::UpdateMeshParams(payload)] if payload.params.texture_size == 2048 && payload.params.guarantee_watertight), "update-mesh-params inverts to itself with the base facet, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

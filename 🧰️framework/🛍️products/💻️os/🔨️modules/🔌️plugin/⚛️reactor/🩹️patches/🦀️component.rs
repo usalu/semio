@@ -13,10 +13,10 @@
 //! exact piece that matches what this file always did: revisioned per-surface diffing off a tree the
 //! plugin's own `render()` already produced.
 
-use std::cell::RefCell;
-use std::collections::HashMap;
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_ui_runtime::{ComponentTree, SurfaceReconciler};
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 /// 🩹️ One per app instance — surfaces from different instances never share a reconciler, and
 /// therefore never share revision counters or node-id allocators.

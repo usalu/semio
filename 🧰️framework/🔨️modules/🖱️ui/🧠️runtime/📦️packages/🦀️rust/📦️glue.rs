@@ -18,24 +18,24 @@
 //!    a host embeds it to drive its own screens. Hence no `Send` bounds and no dependency beyond the
 //!    contract — it compiles for `wasm32-wasip2` and `wasm32-unknown-unknown` by construction.
 
-#[path = "🦀️entity.rs"]
-mod entity;
 #[path = "🦀️context.rs"]
 mod context;
-#[path = "🦀️tracking.rs"]
-mod tracking;
-#[path = "🦀️present.rs"]
-mod present;
-#[path = "🦀️reconcile.rs"]
-mod reconcile;
+#[path = "🦀️dispatch.rs"]
+mod dispatch;
+#[path = "🦀️entity.rs"]
+mod entity;
 #[path = "🦀️gateway.rs"]
 mod gateway;
 #[path = "🦀️inbox.rs"]
 mod inbox;
 #[path = "🦀️presence.rs"]
 mod presence;
-#[path = "🦀️dispatch.rs"]
-mod dispatch;
+#[path = "🦀️present.rs"]
+mod present;
+#[path = "🦀️reconcile.rs"]
+mod reconcile;
+#[path = "🦀️tracking.rs"]
+mod tracking;
 #[path = "🦀️transaction.rs"]
 mod transaction;
 

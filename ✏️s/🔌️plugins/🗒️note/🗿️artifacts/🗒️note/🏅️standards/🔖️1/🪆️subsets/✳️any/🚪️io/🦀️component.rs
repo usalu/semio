@@ -461,7 +461,6 @@ mod media_tests {
 }
 //#endregion 🧪️Tests
 
-
 //#region 🔖️IoDeclaration
 pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::note::standards::v1::subsets::any::io::export::serializers::artifacts as export;

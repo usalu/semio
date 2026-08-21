@@ -3,7 +3,7 @@
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🖼️ Opening the host file picker is renderer chrome; the picked media returns as a widget patch.

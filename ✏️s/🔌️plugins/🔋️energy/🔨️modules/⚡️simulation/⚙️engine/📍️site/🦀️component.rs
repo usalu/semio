@@ -99,8 +99,7 @@ impl EpwWeather {
     /// `stdio.epw` codec (all 8 header lines + all 35 record columns, hard errors on malformed
     /// input — no silent per-field defaulting), then derive energy's own `WeatherRecord` view.
     pub async fn parse(content: &str) -> Result<Self, Error> {
-        let snapshot = semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(content)
-            .map_err(Error::fatal)?;
+        let snapshot = semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(content).map_err(Error::fatal)?;
         Self::from_snapshot(&snapshot)
     }
 

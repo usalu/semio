@@ -1,12 +1,7 @@
 //! 🧬️ Remodel diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::remodel::schema::{
-    RemodelArtifact, RemodelUiCamera, RemodelUiFrameCursor, RemodelUiLayers, RemodelUiSelection,
-};
-use crate::artifacts::remodel::{
-    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob,
-    ReconstructionParams, ReconstructionResults, RemodelAssetChild,
-};
+use crate::artifacts::remodel::schema::{RemodelArtifact, RemodelUiCamera, RemodelUiFrameCursor, RemodelUiLayers, RemodelUiSelection};
+use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -17,23 +12,40 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelDiff {
-    #[state(artifact)] pub artifact: Option<Box<RemodelArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub id: Option<String>,
-    #[state(artifact)] pub streams: Option<RemodelMediaStreamList>,
-    #[state(artifact)] pub assets: Option<BTreeMap<String, RemodelAssetChild>>,
-    #[state(artifact)] pub calibration: Option<CalibrationState>,
-    #[state(artifact)] pub params: Option<ReconstructionParams>,
-    #[state(artifact)] pub gcps: Option<RemodelGcpList>,
-    #[state(artifact)] pub job: Option<ReconstructionJob>,
-    #[state(artifact)] pub results: Option<ReconstructionResults>,
-    #[state(presence)] pub selection: Option<RemodelUiSelection>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(presence)] pub report_table: Option<String>,
-    #[state(presence)] pub frame_cursor: Option<RemodelUiFrameCursor>,
-    #[state(config)] pub camera: Option<RemodelUiCamera>,
-    #[state(config)] pub layers: Option<RemodelUiLayers>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<RemodelArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub id: Option<String>,
+    #[state(artifact)]
+    pub streams: Option<RemodelMediaStreamList>,
+    #[state(artifact)]
+    pub assets: Option<BTreeMap<String, RemodelAssetChild>>,
+    #[state(artifact)]
+    pub calibration: Option<CalibrationState>,
+    #[state(artifact)]
+    pub params: Option<ReconstructionParams>,
+    #[state(artifact)]
+    pub gcps: Option<RemodelGcpList>,
+    #[state(artifact)]
+    pub job: Option<ReconstructionJob>,
+    #[state(artifact)]
+    pub results: Option<ReconstructionResults>,
+    #[state(presence)]
+    pub selection: Option<RemodelUiSelection>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(presence)]
+    pub report_table: Option<String>,
+    #[state(presence)]
+    pub frame_cursor: Option<RemodelUiFrameCursor>,
+    #[state(config)]
+    pub camera: Option<RemodelUiCamera>,
+    #[state(config)]
+    pub layers: Option<RemodelUiLayers>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

@@ -35,7 +35,11 @@ async fn renames_only_the_identity_field() {
     let mut snapshot = before();
     apply_writer_mutation(&mut snapshot, &mutation()).expect("rename-writer applies to its committed before-document");
     assert_eq!(snapshot, expected_after(), "rename-writer/renames-the-document-to-mission-brief: the renamed document differs from the committed after-snapshot");
-    assert_eq!((snapshot.uri.as_str(), snapshot.document.child_id.as_str()), (before().uri.as_str(), before().document.child_id.as_str()), "rename-writer/renames-the-document-to-mission-brief: renaming must not move the uri or re-mint the document child handle");
+    assert_eq!(
+        (snapshot.uri.as_str(), snapshot.document.child_id.as_str()),
+        (before().uri.as_str(), before().document.child_id.as_str()),
+        "rename-writer/renames-the-document-to-mission-brief: renaming must not move the uri or re-mint the document child handle"
+    );
 }
 
 /// ↩️ `rename-writer`'s inverse reads `base.id` — never the diff — so undoing restores `brief`.

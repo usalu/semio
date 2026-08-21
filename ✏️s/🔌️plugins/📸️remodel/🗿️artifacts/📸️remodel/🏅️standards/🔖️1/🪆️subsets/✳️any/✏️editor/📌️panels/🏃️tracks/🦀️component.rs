@@ -2,8 +2,8 @@
 //! does not yet drive the `motion` topic file from `advance()` (its `motion_enabled` flag is accepted
 //! but unused), so this stays empty today — a documented gap, not a UI bug.
 
-use crate::editor::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::RemodelSnapshot;
+use crate::editor::remodel::terminology::RemodelLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants

@@ -12,42 +12,77 @@ use std::collections::HashSet;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle5d")]
 pub struct Puzzle5dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub domain: String,
-    #[state(artifact)] pub label: Option<String>,
-    #[state(artifact)] pub meta: Puzzle5dMeta,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub domain: String,
+    #[state(artifact)]
+    pub label: Option<String>,
+    #[state(artifact)]
+    pub meta: Puzzle5dMeta,
     #[child(kind = "s.stdio.semio.kit")]
-    #[state(artifact)] pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
-    #[state(artifact)] pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
-    #[state(artifact)] pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
-    #[state(artifact)] pub parts: Vec<Puzzle5dPart>,
-    #[state(artifact)] pub fasteners: Vec<Puzzle5dFastener>,
-    #[state(presence)] pub selected_part_ids: Vec<String>,
-    #[state(presence)] pub selected_grip_ids: Vec<String>,
-    #[state(presence)] pub selected_fastener_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub camera2d_x: f64,
-    #[state(config)] pub camera2d_y: f64,
-    #[state(config)] pub camera2d_zoom: f64,
-    #[state(config)] pub camera3d_position_x: f64,
-    #[state(config)] pub camera3d_position_y: f64,
-    #[state(config)] pub camera3d_position_z: f64,
-    #[state(config)] pub camera3d_target_x: f64,
-    #[state(config)] pub camera3d_target_y: f64,
-    #[state(config)] pub camera3d_target_z: f64,
-    #[state(config)] pub camera3d_zoom: f64,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_factor: f64,
-    #[state(config)] pub suggestion_offset: f64,
-    #[state(config)] pub overlap_budget: f64,
-    #[state(config)] pub fill_count: u32,
-    #[state(config)] pub brush_candidate_index: u32,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub runtime_extras_json: String,
-    #[state(artifact)] pub hovered_part_id: Option<String>,
-    #[state(artifact)] pub preview_seq: i64,
+    #[state(artifact)]
+    pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    #[state(artifact)]
+    pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
+    #[state(artifact)]
+    pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
+    #[state(artifact)]
+    pub parts: Vec<Puzzle5dPart>,
+    #[state(artifact)]
+    pub fasteners: Vec<Puzzle5dFastener>,
+    #[state(presence)]
+    pub selected_part_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_grip_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_fastener_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub camera2d_x: f64,
+    #[state(config)]
+    pub camera2d_y: f64,
+    #[state(config)]
+    pub camera2d_zoom: f64,
+    #[state(config)]
+    pub camera3d_position_x: f64,
+    #[state(config)]
+    pub camera3d_position_y: f64,
+    #[state(config)]
+    pub camera3d_position_z: f64,
+    #[state(config)]
+    pub camera3d_target_x: f64,
+    #[state(config)]
+    pub camera3d_target_y: f64,
+    #[state(config)]
+    pub camera3d_target_z: f64,
+    #[state(config)]
+    pub camera3d_zoom: f64,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_factor: f64,
+    #[state(config)]
+    pub suggestion_offset: f64,
+    #[state(config)]
+    pub overlap_budget: f64,
+    #[state(config)]
+    pub fill_count: u32,
+    #[state(config)]
+    pub brush_candidate_index: u32,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub runtime_extras_json: String,
+    #[state(artifact)]
+    pub hovered_part_id: Option<String>,
+    #[state(artifact)]
+    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -168,8 +203,8 @@ pub async fn puzzle5d_artifact_schema_descriptor() -> artifact_schema::ArtifactS
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::puzzle5d::{Puzzle5dDiff, Puzzle5dMutation, Puzzle5dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle5dBuilderConstruction {
@@ -181,8 +216,12 @@ pub mod derived_construction {
         type Snapshot = Puzzle5dSnapshot;
         type Mutation = Puzzle5dMutation;
         type Diff = Puzzle5dDiff;
-        async fn empty() -> Self { Self { snapshot: Puzzle5dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Puzzle5dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -193,24 +232,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Puzzle5dDiff as protocol::MutationDiff<Puzzle5dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -219,8 +255,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle5dParts {

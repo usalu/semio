@@ -19,7 +19,10 @@ const DIRECT_READ_CHUNK: usize = 64 * 1024;
 /// 📖️ See module doc. Never constructed directly outside `🌐host/🦀️component.rs` — use
 /// `BodyReader::poll_buffered`/`BodyReader::direct`.
 pub enum BodyReader {
-    Poll { bytes: Vec<u8>, consumed: usize },
+    Poll {
+        bytes: Vec<u8>,
+        consumed: usize,
+    },
     #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
     Direct(wit_bindgen::StreamReader<u8>),
 }

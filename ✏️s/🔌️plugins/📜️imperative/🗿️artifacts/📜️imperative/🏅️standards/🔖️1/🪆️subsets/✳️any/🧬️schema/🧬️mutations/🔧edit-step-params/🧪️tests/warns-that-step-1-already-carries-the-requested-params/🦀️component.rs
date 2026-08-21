@@ -29,12 +29,7 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 fn cached_program() -> Path {
     Path {
         steps: vec![
-            Step {
-                id: "step-1".into(),
-                kind: "log.print".into(),
-                params: Dictionary::new().insert("message", Value::Atom(Atom::String("Guten Tag".into()))),
-                bodies: std::collections::BTreeMap::new(),
-            },
+            Step { id: "step-1".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("Guten Tag".into()))), bodies: std::collections::BTreeMap::new() },
             Step { id: "step-2".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() },
         ],
     }
@@ -108,7 +103,11 @@ async fn declared_outcome_holds() {
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: an unchanged dictionary is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: exactly one diagnostic is raised");
-    assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: raised diagnostic code differs from the declared one");
+    assert_eq!(
+        produced.messages()[0].code.0.as_str(),
+        declared["messages"][0]["code"].as_str().expect("declared message code is a string"),
+        "edit-step-params/warns-that-step-1-already-carries-the-requested-params: raised diagnostic code differs from the declared one"
+    );
 }
 
 /// 🔺️ The committed diff is `ImperativeDiff`'s all-null default: the oracle returns before it ever

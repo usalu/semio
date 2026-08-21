@@ -7,16 +7,26 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting.config")]
 pub struct ShootingConfig {
-    #[state(config)] pub default_shot_format: String,
-    #[state(config)] pub default_shot_shape: String,
-    #[state(config)] pub default_asset_format: String,
-    #[state(config)] pub selected_shot_ids: Vec<String>,
-    #[state(config)] pub center_model: bool,
-    #[state(config)] pub fit_revision: u32,
-    #[state(config)] pub camera_draft_label: String,
-    #[state(config)] pub camera: ShootingCamera,
-    #[state(config)] pub active_utility_id: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub default_shot_format: String,
+    #[state(config)]
+    pub default_shot_shape: String,
+    #[state(config)]
+    pub default_asset_format: String,
+    #[state(config)]
+    pub selected_shot_ids: Vec<String>,
+    #[state(config)]
+    pub center_model: bool,
+    #[state(config)]
+    pub fit_revision: u32,
+    #[state(config)]
+    pub camera_draft_label: String,
+    #[state(config)]
+    pub camera: ShootingCamera,
+    #[state(config)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -43,4 +53,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

@@ -75,13 +75,27 @@ pub struct EquationNode {
 pub enum EquationNodeKind {
     /// 🔢️ Arbitrary-precision integer, round-tripped through `number::Integer`'s own
     /// `Display`/`FromStr` (decimal, sign-prefixed) — never `i64`, which would silently truncate.
-    Integer { lexeme: String },
+    Integer {
+        lexeme: String,
+    },
     /// ➗️ `numer/denom`, each an `Integer` decimal lexeme (same round-trip as above).
-    Rational { numer: String, denom: String },
-    Symbol { name: String },
-    Add { terms: Vec<EquationNode> },
-    Mul { factors: Vec<EquationNode> },
-    Pow { base: Box<EquationNode>, exponent: Box<EquationNode> },
+    Rational {
+        numer: String,
+        denom: String,
+    },
+    Symbol {
+        name: String,
+    },
+    Add {
+        terms: Vec<EquationNode>,
+    },
+    Mul {
+        factors: Vec<EquationNode>,
+    },
+    Pow {
+        base: Box<EquationNode>,
+        exponent: Box<EquationNode>,
+    },
 }
 
 /// 📸️ Persisted equation content: the expression AST plus the label allocator that guarantees

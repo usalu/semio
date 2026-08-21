@@ -9,8 +9,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{spa
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{IconName, Label, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
 use semio_framework_plugin::{ui_control_to_node, ui_stack_vertical};
+use semio_framework_plugin::{IconName, Label, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -56,11 +56,7 @@ async fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
 /// `render_rows`/`render` split.
 async fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
     let columns = SPACE_INDEX_TABLE_COLUMNS.iter().map(|s| s.to_string()).collect();
-    let rows = document
-        .artifacts
-        .iter()
-        .map(|row| TableRow { id: format!("artifact:{}", row.id), cells: space_index_table_row(row, &config.presence_for(&row.id).join(", ")), actions: row_actions(row) })
-        .collect();
+    let rows = document.artifacts.iter().map(|row| TableRow { id: format!("artifact:{}", row.id), cells: space_index_table_row(row, &config.presence_for(&row.id).join(", ")), actions: row_actions(row) }).collect();
     TableWindowKit::render_rows(&TableRowsView { columns, rows, actions_label: "Actions".into() })
 }
 

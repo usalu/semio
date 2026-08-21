@@ -32,7 +32,7 @@ use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, Plug
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
-use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
+use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
@@ -158,7 +158,7 @@ pub async fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_byte
     let status = match &result.status {
         semio_framework::kernel::TurnStatus::Idle => semio_framework_actor::TurnStatus::Idle,
         semio_framework::kernel::TurnStatus::MoreWork => semio_framework_actor::TurnStatus::MoreWork,
-        semio_framework::kernel::TurnStatus::CheckpointReady => semio_framework_actor::TurnStatus::CheckpointReady,
+        semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint } => semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
         semio_framework::kernel::TurnStatus::Faulted(detail) => semio_framework_actor::TurnStatus::Faulted { detail: detail.clone() },
     };
     semio_framework_actor::TurnResult {
@@ -171,36 +171,31 @@ pub async fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_byte
 }
 //#endregion 🔀️BudgetBridge
 
-/// 📤️ One outcome `ShardLoop` sends back over the transport — tagged so a caller on the OTHER end
-/// (a `ShardClient`, per `design-runtime.md` §"Web shard"/`ShardTable`) can tell a full turn result
-/// apart from a single job step without probing the bytes.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+/// 📤️ Owned pack-coded outcome sent from a shard to its scheduler-side consumer.
+#[derive(Clone, Debug, PartialEq)]
 pub enum ShardOutcome {
     Turn {
         actor: u64,
-        result: TurnResult,
+        result: semio_framework_actor::TurnResult,
     },
     Job {
         actor: u64,
-        job: u64,
-        step: JobStep,
+        publication: JobPublication,
     },
     Fault {
         actor: u64,
         message: String,
     },
-    /// 📸️ `Payload::Suspend`'s outcome — `state` is [`super::GuestRuntime::checkpoint`]'s bytes
-    /// (empty when `Suspend{checkpoint: false}` asked for no snapshot). A caller on the kernel side
-    /// feeds `state` into `Kernel::suspend(actor, Some(state))` (K1's own gap this closes).
+    /// 📸️ `Payload::Suspend`'s operation-bound checkpoint and committed progress boundary.
     Checkpoint {
         actor: u64,
-        state: Vec<u8>,
+        operation: JobOperation,
+        checkpoint: JobCheckpoint,
     },
-    /// ▶️ `Payload::Resume`'s success outcome, sent after [`super::GuestRuntime::restore`] (when the
-    /// envelope carried checkpoint bytes) or immediately (when it did not — nothing to restore).
+    /// ▶️ `Payload::Resume`'s success outcome after restoring its explicit checkpoint bytes.
     Resumed {
         actor: u64,
+        operation: JobOperation,
     },
     /// 🛑️ `Payload::Cancel`'s outcome: every one of the actor's `running_jobs` was cancelled via
     /// [`super::GuestRuntime::cancel_job`] and its [`super::GuestInstance`] was unregistered
@@ -208,6 +203,57 @@ pub enum ShardOutcome {
     Cancelled {
         actor: u64,
     },
+}
+
+impl ShardOutcome {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Self::Turn { actor, result } => {
+                semio_framework_actor::pack::write_u8(out, 0).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+                result.pack_encode(out).await;
+            }
+            Self::Job { actor, publication } => {
+                semio_framework_actor::pack::write_u8(out, 1).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+                publication.pack_encode(out).await;
+            }
+            Self::Fault { actor, message } => {
+                semio_framework_actor::pack::write_u8(out, 2).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+                semio_framework_actor::pack::write_str(out, message).await;
+            }
+            Self::Checkpoint { actor, operation, checkpoint } => {
+                semio_framework_actor::pack::write_u8(out, 3).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+                operation.pack_encode(out).await;
+                checkpoint.pack_encode(out).await;
+            }
+            Self::Resumed { actor, operation } => {
+                semio_framework_actor::pack::write_u8(out, 4).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+                operation.pack_encode(out).await;
+            }
+            Self::Cancelled { actor } => {
+                semio_framework_actor::pack::write_u8(out, 5).await;
+                semio_framework_actor::pack::write_u64(out, *actor).await;
+            }
+        }
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor::pack::PackError> {
+        let tag = semio_framework_actor::pack::read_u8(bytes, pos, "ShardOutcome").await?;
+        let actor = semio_framework_actor::pack::read_u64(bytes, pos, "ShardOutcome::actor").await?;
+        match tag {
+            0 => Ok(Self::Turn { actor, result: semio_framework_actor::TurnResult::pack_decode(bytes, pos).await? }),
+            1 => Ok(Self::Job { actor, publication: JobPublication::pack_decode(bytes, pos).await? }),
+            2 => Ok(Self::Fault { actor, message: semio_framework_actor::pack::read_str(bytes, pos, "ShardOutcome::Fault::message").await? }),
+            3 => Ok(Self::Checkpoint { actor, operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
+            4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
+            5 => Ok(Self::Cancelled { actor }),
+            other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome", tag: other, offset: *pos }),
+        }
+    }
 }
 
 /// 🧵️ design-runtime.md §2. One `ShardLoop` per shard (an OS thread today, a `[[bin]]` process in
@@ -226,6 +272,8 @@ pub struct ShardLoop {
     /// to completion internally — so a job needing N steps needs N `pump()` calls, which is what
     /// proves resumability rather than a single-shot call.
     running_jobs: BTreeSet<(u64, u64)>,
+    /// 🪪️ Active replay identity and sequence cursor for every running job.
+    job_turns: HashMap<(u64, u64), JobTurn>,
     /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
     /// `Effect::SpawnJob` admission — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `placement` used
     /// to be matched and immediately discarded (`_` in the `Effect::SpawnJob` arm). `Exclusive`
@@ -262,7 +310,7 @@ pub struct ShardLoop {
 
 impl ShardLoop {
     pub async fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports) -> Self {
-        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new(), actor_lanes: HashMap::new() }
+        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_turns: HashMap::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new(), actor_lanes: HashMap::new() }
     }
 
     /// ⚖️ `actor`'s last [`ShardFrame::Grant`]ed budget — used for both turn execution and job
@@ -322,6 +370,7 @@ impl ShardLoop {
             self.runtime.drop_instance(instance).await;
         }
         self.running_jobs.retain(|&(job_actor, _)| job_actor != actor.0);
+        self.job_turns.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.job_placement.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.pending_completions.remove(&actor.0);
         self.actor_lanes.remove(&actor.0);
@@ -353,7 +402,7 @@ impl ShardLoop {
         // arrive on, so the originating actor's `execute_turn` sees `Event::JobCompleted` exactly
         // like any other inbound event, with no separate delivery path.
         let mut events_by_actor: HashMap<u64, Vec<Event>> = std::mem::take(&mut self.pending_completions);
-        let mut jobs_by_actor: Vec<(u64, u64)> = Vec::new();
+        let mut jobs_by_actor: Vec<(u64, JobTurn)> = Vec::new();
 
         if let Some(bytes) = primed {
             self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
@@ -408,12 +457,15 @@ impl ShardLoop {
         // completion here (that is `PluginInstanceHandle::run_job_to_completion`'s DIFFERENT,
         // deliberately-synchronous relay for the three hardcoded io/infer kinds) — a job needing N
         // steps needs N `pump()` calls, which is the entire resumability proof.
-        let mut to_step: Vec<(u64, u64)> = jobs_by_actor;
+        let mut to_step_by_actor: std::collections::BTreeMap<u64, JobTurn> = jobs_by_actor.into_iter().collect();
         for &pair in &self.running_jobs {
-            if !to_step.contains(&pair) {
-                to_step.push(pair);
+            let Some(turn) = self.job_turns.get(&pair).copied() else { continue };
+            let replace = to_step_by_actor.get(&pair.0).map(|active| matches!(self.job_placement.get(&pair), Some(JobPlacement::Exclusive)) && !matches!(self.job_placement.get(&(pair.0, active.job)), Some(JobPlacement::Exclusive))).unwrap_or(true);
+            if replace {
+                to_step_by_actor.insert(pair.0, turn);
             }
         }
+        let mut to_step: Vec<(u64, JobTurn)> = to_step_by_actor.into_iter().collect();
         // 🚦 MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `Exclusive`-placed jobs step FIRST this
         // pump, ahead of `Inline`/`Isolated` ones — a stable sort, so relative order within each
         // group is otherwise unchanged. This is the honest, IN-SHARD-ONLY approximation of
@@ -423,9 +475,10 @@ impl ShardLoop {
         // lease-request). `job_placement` may not have an entry for an externally re-armed
         // `Payload::JobStep` that this shard never admitted itself (no `SpawnJob` seen) — such a job
         // sorts as non-exclusive, which is correct: this shard has no placement to honour for it.
-        to_step.sort_by_key(|pair| if matches!(self.job_placement.get(pair), Some(JobPlacement::Exclusive)) { 0u8 } else { 1u8 });
+        to_step.sort_by_key(|(actor, turn)| if matches!(self.job_placement.get(&(*actor, turn.job)), Some(JobPlacement::Exclusive)) { 0u8 } else { 1u8 });
 
-        for (actor_id, job) in to_step {
+        for (actor_id, turn) in to_step {
+            let job = turn.job;
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id).await);
             let watchdog_stage = interactive_stage_for(self.actor_lane(actor_id).await);
@@ -440,23 +493,37 @@ impl ShardLoop {
             };
             let outcome = match job_outcome {
                 Ok(step) => {
-                    match &step {
-                        JobStep::Running { .. } => {}
-                        JobStep::Done { output: bytes } => {
+                    let step_outcome = match step {
+                        JobStep::Running { progress: Some(preview) } => JobStepOutcome::PreviewReady { preview },
+                        JobStep::Running { progress: None } => JobStepOutcome::Yield,
+                        JobStep::Done { output } => {
+                            let state = self.runtime.checkpoint(instance).await.unwrap_or_default();
                             self.running_jobs.remove(&(actor_id, job));
+                            self.job_turns.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
-                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Ok(bytes.clone()) });
+                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) });
+                            JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
                         }
-                        JobStep::Failed { error: bytes } => {
+                        JobStep::Failed { error } => {
                             self.running_jobs.remove(&(actor_id, job));
+                            self.job_turns.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
-                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(bytes.clone()) });
+                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) });
+                            JobStepOutcome::Fault { detail: error }
                         }
+                    };
+                    let mut published_turn = turn;
+                    if matches!(step_outcome, JobStepOutcome::PreviewReady { .. }) {
+                        published_turn.operation.preview_sequence = published_turn.operation.preview_sequence.saturating_add(1);
                     }
-                    ShardOutcome::Job { actor: actor_id, job, step }
+                    if !matches!(step_outcome, JobStepOutcome::Complete { .. } | JobStepOutcome::Cancelled | JobStepOutcome::Fault { .. }) {
+                        self.job_turns.insert((actor_id, job), JobTurn { step_sequence: turn.step_sequence.saturating_add(1), ..published_turn });
+                    }
+                    ShardOutcome::Job { actor: actor_id, publication: JobPublication { turn: published_turn, outcome: step_outcome } }
                 }
                 Err(fault) => {
                     self.running_jobs.remove(&(actor_id, job));
+                    self.job_turns.remove(&(actor_id, job));
                     self.job_placement.remove(&(actor_id, job));
                     self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) });
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await }
@@ -541,6 +608,7 @@ impl ShardLoop {
                         },
                         Effect::CancelJob { job } => {
                             if self.running_jobs.remove(&(actor_id, *job)) {
+                                self.job_turns.remove(&(actor_id, *job));
                                 self.job_placement.remove(&(actor_id, *job));
                                 let _ = self.runtime.cancel_job(instance, *job).await;
                             }
@@ -548,7 +616,7 @@ impl ShardLoop {
                         _ => {}
                     }
                 }
-                ShardOutcome::Turn { actor: actor_id, result }
+                ShardOutcome::Turn { actor: actor_id, result: to_actor_turn_result(&result, 0, 0).await }
             }
             // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
             // epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
@@ -568,7 +636,7 @@ impl ShardLoop {
                 // wire-shape-mismatch sites this packet's report flags (`🦀️component.rs`'s
                 // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
                 // here, there was simply nothing produced.
-                result: TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0 },
+                result: to_actor_turn_result(&TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0 }, 0, 0).await,
             },
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
         };
@@ -580,7 +648,7 @@ impl ShardLoop {
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
-    async fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+    async fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, JobTurn)>) -> Result<(), PluginHostError> {
         let mut pos = 0usize;
         let frame = ShardFrame::pack_decode(bytes, &mut pos).await.map_err(|error| PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}")))?;
         match frame {
@@ -610,7 +678,7 @@ impl ShardLoop {
     /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
     /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
     /// documented, consistent placeholder, not an invented one-off.
-    async fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+    async fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, JobTurn)>) -> Result<(), PluginHostError> {
         // 🚦 terra-shard-lane piece 1: records the LAST-seen lane for `envelope.to`, covering both
         // standalone `ShardFrame::Envelope` frames and every envelope bundled inside a
         // `ShardFrame::Grant` (`Self::consume_frame`'s `Grant` arm calls this per envelope) — see
@@ -622,39 +690,30 @@ impl ShardLoop {
                 let event: Event = serde_json::from_slice(&event_bytes)?;
                 events_by_actor.entry(envelope.to.0).or_default().push(event);
             }
-            Payload::JobStep { job } => jobs_by_actor.push((envelope.to.0, job)),
-            // 📸️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `checkpoint:bool` gates whether a
-            // snapshot is actually taken — `false` is a plain "stop scheduling me" suspend with
-            // nothing to persist, so `state` comes back empty rather than calling `checkpoint`
-            // for bytes nobody asked for. `ActorStatus::Suspended`/`Kernel::suspend` themselves
-            // live in `🎭️actor` and are out of this file's path_scope — a caller on the OTHER
-            // end of the transport is the one that turns `ShardOutcome::Checkpoint` into a
-            // `Kernel::suspend(actor, Some(state))` call.
-            Payload::Suspend { checkpoint } => {
+            Payload::JobStep { turn } => {
+                self.accept_job_turn(envelope.to.0, turn)?;
+                jobs_by_actor.push((envelope.to.0, turn));
+            }
+            // 📸️ The runtime state and incoming applied-progress boundary are published together.
+            Payload::Suspend { operation, applied_progress } => {
                 let actor_id = envelope.to.0;
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) if checkpoint => match self.runtime.checkpoint(instance).await {
-                        Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
+                    Some(instance) => match self.runtime.checkpoint(instance).await {
+                        Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, operation, checkpoint: JobCheckpoint { state, applied_progress } },
                         Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
                     },
-                    Some(_) => ShardOutcome::Checkpoint { actor: actor_id, state: Vec::new() },
                 };
                 self.send_outcome(&outcome).await?;
             }
-            // ▶️ Mirrors `Suspend`: `checkpoint: None` means "resume as-is, nothing to restore"
-            // (the actor was never asked for a snapshot, or the caller intentionally cold-starts
-            // it) — `restore` is only called when bytes actually arrived.
-            Payload::Resume { checkpoint } => {
+            // ▶️ Resume always restores the explicit operation-bound checkpoint.
+            Payload::Resume { operation, checkpoint } => {
                 let actor_id = envelope.to.0;
                 let outcome = match self.instances.get_mut(&actor_id) {
                     None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) => match checkpoint {
-                        Some(state) => match self.runtime.restore(instance, &state).await {
-                            Ok(()) => ShardOutcome::Resumed { actor: actor_id },
-                            Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
-                        },
-                        None => ShardOutcome::Resumed { actor: actor_id },
+                    Some(instance) => match self.runtime.restore(instance, &checkpoint.state).await {
+                        Ok(()) => ShardOutcome::Resumed { actor: actor_id, operation },
+                        Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
                     },
                 };
                 self.send_outcome(&outcome).await?;
@@ -688,8 +747,32 @@ impl ShardLoop {
         Ok(())
     }
 
+    /// 🔐️ Validates a requested turn against the active replay cursor before publication.
+    fn accept_job_turn(&mut self, actor: u64, turn: JobTurn) -> Result<(), PluginHostError> {
+        let key = (actor, turn.job);
+        match self.job_turns.get(&key) {
+            None if turn.step_sequence == 0 => {
+                self.job_turns.insert(key, turn);
+                Ok(())
+            }
+            None => Err(PluginHostError::Plugin(format!("ShardLoop::job bridge: first step for actor {actor}, job {} had sequence {}, expected 0", turn.job, turn.step_sequence))),
+            Some(active)
+                if active.operation.operation == turn.operation.operation
+                    && active.operation.base_revision == turn.operation.base_revision
+                    && active.operation.generation == turn.operation.generation
+                    && active.operation.preview_sequence == turn.operation.preview_sequence
+                    && active.operation.seed == turn.operation.seed
+                    && active.step_sequence == turn.step_sequence =>
+            {
+                Ok(())
+            }
+            Some(active) => Err(PluginHostError::Plugin(format!("ShardLoop::job bridge: stale or non-deterministic turn for actor {actor}, job {}: active={active:?}, requested={turn:?}", turn.job))),
+        }
+    }
+
     async fn send_outcome(&self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
-        let bytes = serde_json::to_vec(outcome)?;
+        let mut bytes = Vec::new();
+        outcome.pack_encode(&mut bytes).await;
         self.transport.send(&bytes).await;
         Ok(())
     }
@@ -930,6 +1013,21 @@ mod tests {
         semio_framework_async::block_on(shard.pump())
     }
 
+    async fn decode_outcome(bytes: &[u8]) -> ShardOutcome {
+        let mut pos = 0usize;
+        let outcome = ShardOutcome::pack_decode(bytes, &mut pos).await.expect("decode outcome");
+        assert_eq!(pos, bytes.len());
+        outcome
+    }
+
+    async fn decode_outcomes(bytes: &[Vec<u8>]) -> Vec<ShardOutcome> {
+        let mut outcomes = Vec::with_capacity(bytes.len());
+        for bytes in bytes {
+            outcomes.push(decode_outcome(bytes).await);
+        }
+        outcomes
+    }
+
     async fn encode_event_envelope(to: ActorId, seq: u64, event: &Event) -> Vec<u8> {
         encode_payload_envelope(to, seq, Payload::Event { bytes: serde_json::to_vec(event).expect("encode event") }).await
     }
@@ -943,6 +1041,14 @@ mod tests {
         let mut bytes = Vec::new();
         ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
         bytes
+    }
+
+    fn test_job_operation(actor: ActorId, job: u64, preview_sequence: u64) -> JobOperation {
+        JobOperation { operation: actor.0 ^ job.rotate_left(17), base_revision: 7, generation: 3, preview_sequence, seed: 0x5eed ^ job }
+    }
+
+    fn test_job_turn(actor: ActorId, job: u64, step_sequence: u64, preview_sequence: u64) -> JobTurn {
+        JobTurn { job, operation: test_job_operation(actor, job, preview_sequence), step_sequence }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -968,11 +1074,11 @@ mod tests {
 
         let outbound = probe.take_outbound().await;
         assert_eq!(outbound.len(), 1, "one ShardOutcome sent back");
-        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        let outcome = decode_outcome(&outbound[0]).await;
         match outcome {
             ShardOutcome::Turn { actor: reported, result } => {
                 assert_eq!(reported, 7);
-                assert_eq!(result.fuel_used, 42, "the scripted turn's own fuel_used must round-trip through ShardOutcome");
+                assert_eq!(result.usage.fuel, 42, "the scripted turn's own fuel_used must round-trip through ShardOutcome");
             }
             other => panic!("expected ShardOutcome::Turn, got {other:?}"),
         }
@@ -991,7 +1097,7 @@ mod tests {
 
         let outbound = probe.take_outbound().await;
         assert_eq!(outbound.len(), 1);
-        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        let outcome = decode_outcome(&outbound[0]).await;
         assert!(matches!(outcome, ShardOutcome::Fault { actor, .. } if actor == 99), "must surface as a Fault naming the actor, not vanish");
     }
 
@@ -1044,6 +1150,7 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
@@ -1054,10 +1161,10 @@ mod tests {
         let driven1 = pump(&mut shard).await.expect("pump 1");
         assert_eq!(driven1, 2, "one turn (the spawn) plus one job step (the first Running) this pump");
 
-        // Pump 2 and 3: no new envelopes at all — the job is driven PURELY from `running_jobs`,
-        // proving `pump()` self-drives an admitted job without needing external re-arming.
+        probe.push_inbound(encode_payload_envelope(actor, 3, Payload::JobStep { turn: test_job_turn(actor, job_id, 1, 0) }).await).await;
         let driven2 = pump(&mut shard).await.expect("pump 2");
         assert_eq!(driven2, 1, "only the second Running step — no envelope, so no turn this pump");
+        probe.push_inbound(encode_payload_envelope(actor, 4, Payload::JobStep { turn: test_job_turn(actor, job_id, 2, 1) }).await).await;
         let driven3 = pump(&mut shard).await.expect("pump 3");
         assert_eq!(driven3, 1, "the terminal Done step");
 
@@ -1067,18 +1174,18 @@ mod tests {
         assert_eq!(driven4, 1, "the queued completion drives one more turn, with no job left to step");
 
         let outbound = probe.take_outbound().await;
-        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
-        let job_outcomes: Vec<&JobStep> = outcomes
+        let outcomes = decode_outcomes(&outbound).await;
+        let job_outcomes: Vec<&JobStepOutcome> = outcomes
             .iter()
             .filter_map(|outcome| match outcome {
-                ShardOutcome::Job { job, step, .. } if *job == job_id => Some(step),
+                ShardOutcome::Job { publication, .. } if publication.turn.job == job_id => Some(&publication.outcome),
                 _ => None,
             })
             .collect();
         assert_eq!(job_outcomes.len(), 3, "exactly three step_job calls were made — the resumability proof");
-        assert!(matches!(job_outcomes[0], JobStep::Running { progress: None }));
-        assert!(matches!(job_outcomes[1], JobStep::Running { progress: Some(bytes) } if bytes == b"halfway"));
-        assert!(matches!(job_outcomes[2], JobStep::Done { output: bytes } if bytes == b"reconstruction-complete"));
+        assert!(matches!(job_outcomes[0], JobStepOutcome::Yield));
+        assert!(matches!(job_outcomes[1], JobStepOutcome::PreviewReady { preview } if preview == b"halfway"));
+        assert!(matches!(job_outcomes[2], JobStepOutcome::Complete { candidate } if candidate.output == b"reconstruction-complete"));
 
         // 🎯️ The actual end-to-end proof: the ORIGINATING actor's `execute_turn` was, at some
         // point, handed a real `Event::JobCompleted{job: 777, result: Ok(..)}` — not merely that
@@ -1112,6 +1219,7 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
 
@@ -1119,14 +1227,13 @@ mod tests {
         assert_eq!(driven, 1, "only the turn itself — the job was cancelled before the step phase, so no step_job call happened");
 
         let outbound = probe.take_outbound().await;
-        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
+        let outcomes = decode_outcomes(&outbound).await;
         assert!(!outcomes.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { .. })), "a cancelled-before-first-step job must never produce a ShardOutcome::Job");
     }
 
     //#region 🔖️K1SuspendResumePlacement
-    /// 📸️ `Payload::Suspend { checkpoint: true }` must dispatch to `GuestRuntime::checkpoint` and
-    /// surface its bytes in a `ShardOutcome::Checkpoint` — the K1 gap: this envelope used to fault
-    /// out unconditionally instead of reaching `checkpoint` at all.
+    /// 📸️ `Payload::Suspend` dispatches to `GuestRuntime::checkpoint` and surfaces its bytes
+    /// with the explicit operation identity and applied progress boundary.
     #[semio_framework_async_macros::async_test]
     async fn suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome() {
         let mock = Arc::new(MockGuestRuntime::new().await);
@@ -1136,7 +1243,8 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }).await).await;
+        let operation = test_job_operation(actor, 0, 0);
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 73 }).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
@@ -1146,11 +1254,13 @@ mod tests {
 
         let outbound = probe.take_outbound().await;
         assert_eq!(outbound.len(), 1);
-        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        let outcome = decode_outcome(&outbound[0]).await;
         match outcome {
-            ShardOutcome::Checkpoint { actor: reported, state } => {
+            ShardOutcome::Checkpoint { actor: reported, operation: reported_operation, checkpoint } => {
                 assert_eq!(reported, 31);
-                assert_eq!(state, b"mock-checkpoint:31".to_vec(), "MockGuestRuntime::checkpoint's own deterministic bytes must round-trip unmodified");
+                assert_eq!(reported_operation, operation);
+                assert_eq!(checkpoint.state, b"mock-checkpoint:31".to_vec(), "MockGuestRuntime::checkpoint's own deterministic bytes must round-trip unmodified");
+                assert_eq!(checkpoint.applied_progress, 73);
             }
             other => panic!("expected ShardOutcome::Checkpoint, got {other:?}"),
         }
@@ -1172,27 +1282,28 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
 
         let (transport, probe) = LoopbackTransport::paired().await;
-        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }).await).await;
+        let operation = test_job_operation(actor, 0, 0);
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 19 }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
         pump(&mut shard).await.expect("pump suspend");
 
         let suspend_outbound = probe.take_outbound().await;
-        let checkpoint_bytes = match serde_json::from_slice(&suspend_outbound[0]).expect("decode suspend outcome") {
-            ShardOutcome::Checkpoint { state, .. } => state,
+        let checkpoint = match decode_outcome(&suspend_outbound[0]).await {
+            ShardOutcome::Checkpoint { checkpoint, .. } => checkpoint,
             other => panic!("expected ShardOutcome::Checkpoint, got {other:?}"),
         };
 
-        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Resume { checkpoint: Some(checkpoint_bytes.clone()) }).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Resume { operation, checkpoint: checkpoint.clone() }).await).await;
         pump(&mut shard).await.expect("pump resume");
 
         let resume_outbound = probe.take_outbound().await;
-        let resume_outcome: ShardOutcome = serde_json::from_slice(&resume_outbound[0]).expect("decode resume outcome");
-        assert!(matches!(resume_outcome, ShardOutcome::Resumed { actor: reported } if reported == 32));
+        let resume_outcome = decode_outcome(&resume_outbound[0]).await;
+        assert!(matches!(resume_outcome, ShardOutcome::Resumed { actor: reported, operation: reported_operation } if reported == 32 && reported_operation == operation));
 
         let instance = shard.instances.get(&actor.0).expect("Resume must not drop the instance");
         let GuestInstanceState::Mock(mock_state) = &instance.state else { panic!("expected a Mock instance") };
-        assert_eq!(mock_state.checkpoint.as_deref(), Some(checkpoint_bytes.as_slice()), "restore must have been called with the EXACT bytes checkpoint produced");
+        assert_eq!(mock_state.checkpoint.as_deref(), Some(checkpoint.state.as_slice()), "restore must have been called with the EXACT bytes checkpoint produced");
     }
 
     /// 🛑️ `Payload::Cancel` must cancel every one of the actor's `running_jobs` (via
@@ -1215,6 +1326,7 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
 
@@ -1230,7 +1342,7 @@ mod tests {
 
         let outbound2 = probe.take_outbound().await;
         assert_eq!(outbound2.len(), 1);
-        let outcome: ShardOutcome = serde_json::from_slice(&outbound2[0]).expect("decode cancel outcome");
+        let outcome = decode_outcome(&outbound2[0]).await;
         assert!(matches!(outcome, ShardOutcome::Cancelled { actor: reported } if reported == 41));
 
         // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
@@ -1261,30 +1373,27 @@ mod tests {
         turn.effects.push(Effect::SpawnJob { job: inline_job, kind: "a".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
         turn.effects.push(Effect::SpawnJob { job: exclusive_job, kind: "b".to_string(), input: Vec::new(), placement: JobPlacement::Exclusive });
         mock.script_turn(actor, turn).await;
-        // 🧯️ `Running { progress: None }`, not `Done`/`Failed` — those two `JobStep` variants are a
-        // PRE-EXISTING, out-of-path_scope serde bug (`send_outcome`'s `serde_json::to_vec` panics:
-        // "cannot serialize tagged newtype variant JobStep::Done containing a sequence", the exact
-        // same internally-tagged-newtype hazard `Running`'s own doc comment already names, just never
-        // fixed for `Done`/`Failed` — see this packet's K1 report for the lease-request). This test
-        // only needs to prove STEP ORDER, which `Running` proves identically without touching that
-        // unrelated bug.
-        mock.script_job_step(actor, JobStep::Running { progress: None }).await;
+        // 🧲️ The terminal exclusive step frees the actor slot so the inline step runs next.
+        mock.script_job_step(actor, JobStep::Done { output: vec![6, 2] }).await;
         mock.script_job_step(actor, JobStep::Running { progress: None }).await;
 
         let (transport, probe) = LoopbackTransport::paired().await;
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, inline_job, 0, 0) }).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 3, Payload::JobStep { turn: test_job_turn(actor, exclusive_job, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
         shard.register(actor, instance).await;
 
         let driven = pump(&mut shard).await.expect("pump");
-        assert_eq!(driven, 3, "one turn plus two job steps this pump");
+        assert_eq!(driven, 2, "one actor turn plus exactly one bounded job step");
+        assert_eq!(pump(&mut shard).await.expect("second pump"), 1, "the second job steps on the next actor turn");
 
         let outbound = probe.take_outbound().await;
-        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
+        let outcomes = decode_outcomes(&outbound).await;
         let job_order: Vec<u64> = outcomes
             .iter()
             .filter_map(|outcome| match outcome {
-                ShardOutcome::Job { job, .. } => Some(*job),
+                ShardOutcome::Job { publication, .. } => Some(publication.turn.job),
                 _ => None,
             })
             .collect();
@@ -1334,6 +1443,34 @@ mod tests {
         shard_frame_round_trip_envelope_passthrough,
         ShardFrame::Envelope(Envelope { to: ActorId(13), from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: 4 } })
     );
+
+    #[semio_framework_async_macros::async_test]
+    async fn shard_outcome_owned_pack_round_trips_every_variant() {
+        let operation = test_job_operation(ActorId(11), 1, 0);
+        let turn = test_job_turn(ActorId(11), 44, 0, 0);
+        let values = vec![
+            ShardOutcome::Turn {
+                actor: 11,
+                result: semio_framework_actor::TurnResult {
+                    ui_patches: vec![1],
+                    effects: vec![2],
+                    next_wake: Some(3),
+                    status: semio_framework_actor::TurnStatus::MoreWork,
+                    usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
+                },
+            },
+            ShardOutcome::Job { actor: 11, publication: JobPublication { turn, outcome: JobStepOutcome::PreviewReady { preview: vec![7] } } },
+            ShardOutcome::Fault { actor: 11, message: "fault".to_string() },
+            ShardOutcome::Checkpoint { actor: 11, operation, checkpoint: JobCheckpoint { state: vec![8], applied_progress: 9 } },
+            ShardOutcome::Resumed { actor: 11, operation },
+            ShardOutcome::Cancelled { actor: 11 },
+        ];
+        for value in values {
+            let mut bytes = Vec::new();
+            value.pack_encode(&mut bytes).await;
+            assert_eq!(decode_outcome(&bytes).await, value);
+        }
+    }
 
     /// 🎯️ A `Grant` with ZERO bundled envelopes must still record its budget — proven separately
     /// from the "budget actually executes under" test below, which needs at least one envelope to
@@ -1444,7 +1581,16 @@ mod tests {
         // step phase without depending on `RecordingRuntime::execute_turn`'s effects (it always
         // returns none).
         let job_bytes = {
-            let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Maintenance, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { job: 999 } };
+            let envelope = Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Maintenance,
+                seq: 2,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::JobStep { turn: test_job_turn(actor, 999, 0, 0) },
+            };
             let mut out = Vec::new();
             ShardFrame::Envelope(envelope).pack_encode(&mut out).await;
             out
@@ -1523,10 +1669,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn to_actor_turn_result_status_maps_idle_more_work_and_checkpoint_ready() {
+        let checkpoint = JobCheckpoint { state: vec![4, 2], applied_progress: 9 };
         for (kernel_status, expected) in [
             (semio_framework::kernel::TurnStatus::Idle, semio_framework_actor::TurnStatus::Idle),
             (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
-            (semio_framework::kernel::TurnStatus::CheckpointReady, semio_framework_actor::TurnStatus::CheckpointReady),
+            (semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }, semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }),
         ] {
             let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0 };
             assert_eq!(to_actor_turn_result(&kernel_result, 0, 0).await.status, expected);
@@ -1604,11 +1751,11 @@ mod tests {
 
         let outbound = probe.take_outbound().await;
         assert_eq!(outbound.len(), BACKGROUND_ACTORS as usize + 1);
-        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
+        let outcomes = decode_outcomes(&outbound).await;
         match &outcomes[0] {
             ShardOutcome::Turn { actor, result } => {
                 assert_eq!(*actor, interactive_actor.0, "the Interactive-lane grant must be the FIRST ShardOutcome sent, despite every Background-lane grant having been queued on the wire BEFORE it");
-                assert_eq!(result.fuel_used, 4242, "must be the interactive actor's own scripted turn, not a background one that happens to share a position");
+                assert_eq!(result.usage.fuel, 4242, "must be the interactive actor's own scripted turn, not a background one that happens to share a position");
             }
             other => panic!("expected the first outcome to be the interactive actor's Turn, got {other:?}"),
         }
@@ -1639,11 +1786,11 @@ mod tests {
 
         let outbound = probe.take_outbound().await;
         assert_eq!(outbound.len(), 1);
-        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        let outcome = decode_outcome(&outbound[0]).await;
         match outcome {
             ShardOutcome::Turn { actor: reported, result } => {
                 assert_eq!(reported, 91);
-                assert_eq!(result.status, semio_framework::kernel::TurnStatus::MoreWork, "a deadline-exceeded turn must yield MoreWork, not surface as a Fault the kernel would escalate/quarantine the actor for");
+                assert_eq!(result.status, semio_framework_actor::TurnStatus::MoreWork, "a deadline-exceeded turn must yield MoreWork, not surface as a Fault the kernel would escalate/quarantine the actor for");
             }
             other => panic!("expected ShardOutcome::Turn{{status: MoreWork}}, got {other:?} — DeadlineExceeded must never become a Fault"),
         }

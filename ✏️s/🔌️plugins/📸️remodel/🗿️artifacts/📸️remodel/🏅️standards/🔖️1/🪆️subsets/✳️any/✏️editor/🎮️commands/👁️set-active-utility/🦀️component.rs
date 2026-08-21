@@ -1,9 +1,9 @@
 //! 👁️ 👁️ Remodel play app commands command — `set-active-utility`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🧰️ The host-injected `setActiveUtility` action (framework-owned id — see

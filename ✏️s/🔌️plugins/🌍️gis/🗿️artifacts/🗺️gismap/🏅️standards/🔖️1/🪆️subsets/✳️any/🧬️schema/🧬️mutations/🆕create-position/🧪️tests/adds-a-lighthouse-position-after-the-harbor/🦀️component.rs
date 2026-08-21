@@ -147,5 +147,9 @@ async fn adds_exactly_one_position_and_inverts_to_a_delete_of_that_id() {
     };
     assert_eq!(undo.id, "pos-lighthouse", "create-position/adds-a-lighthouse-position-after-the-harbor: the inverse deletes exactly the id the payload carried");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "position", "create-position", "CreatedPosition"), "create-position/adds-a-lighthouse-position-after-the-harbor: the fixture must be bound to create-position's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("create", "position", "create-position", "CreatedPosition"),
+        "create-position/adds-a-lighthouse-position-after-the-harbor: the fixture must be bound to create-position's own descriptor"
+    );
 }

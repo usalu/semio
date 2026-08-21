@@ -5,16 +5,15 @@
 //! back into `serde_json::Value` so `serde_json::from_value` still works; `deserialize_bytes`
 //! parses through stdio's own real RFC 8259 text codec (`parse_json_text`), not a re-derived parser.
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
+use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<Fem3dSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw = from.to_serde_value();
-    let snap: Fem3dSnapshot = serde_json::from_value(raw)
-        .map_err(|e| store::TextError::new(format!("fem3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let snap: Fem3dSnapshot = serde_json::from_value(raw).map_err(|e| store::TextError::new(format!("fem3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(snap)
 }
 

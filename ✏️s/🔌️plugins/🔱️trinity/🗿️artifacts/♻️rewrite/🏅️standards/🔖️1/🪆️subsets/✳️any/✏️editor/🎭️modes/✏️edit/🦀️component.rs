@@ -2,9 +2,7 @@
 //! Before/After) stitching this app's six modeless windows into the taxonomy's mode dir. The app
 //! itself has no other mode; this is the only `ModeDefinition` `create_rewrite_app` registers.
 
-use crate::editor::rewrite::{
-    TRINITY_REWRITE_PLAY_WINDOW_AFTER, TRINITY_REWRITE_PLAY_WINDOW_BEFORE, TRINITY_REWRITE_PLAY_WINDOW_JACK, TRINITY_REWRITE_PLAY_WINDOW_LHS, TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITE_PLAY_WINDOW_RHS,
-};
+use crate::editor::rewrite::{TRINITY_REWRITE_PLAY_WINDOW_AFTER, TRINITY_REWRITE_PLAY_WINDOW_BEFORE, TRINITY_REWRITE_PLAY_WINDOW_JACK, TRINITY_REWRITE_PLAY_WINDOW_LHS, TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS, TRINITY_REWRITE_PLAY_WINDOW_RHS};
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const TRINITY_REWRITE_MODE_EDIT: &str = "edit";
@@ -35,11 +33,7 @@ pub async fn layout() -> WindowLayout {
                 WindowLayoutChild::Axis(WindowLayoutAxisNode {
                     kind: "row".into(),
                     size: Some(0.5),
-                    children: vec![
-                        window_stack(TRINITY_REWRITE_PLAY_WINDOW_LHS, "LHS", Some(0.34)),
-                        window_stack(TRINITY_REWRITE_PLAY_WINDOW_RHS, "RHS", Some(0.34)),
-                        window_stack(TRINITY_REWRITE_PLAY_WINDOW_JACK, "Jack", Some(0.32)),
-                    ],
+                    children: vec![window_stack(TRINITY_REWRITE_PLAY_WINDOW_LHS, "LHS", Some(0.34)), window_stack(TRINITY_REWRITE_PLAY_WINDOW_RHS, "RHS", Some(0.34)), window_stack(TRINITY_REWRITE_PLAY_WINDOW_JACK, "Jack", Some(0.32))],
                 }),
                 WindowLayoutChild::Axis(WindowLayoutAxisNode {
                     kind: "row".into(),

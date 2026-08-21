@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block3d::mutations::{apply_block3d_mutation, inverse_block3d_mutation};
 use crate::artifacts::block3d::mutations::Block3dMutation;
+use crate::artifacts::block3d::mutations::{apply_block3d_mutation, inverse_block3d_mutation};
 use crate::artifacts::block3d::Block3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -110,7 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::block3d::diff::Block3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block3d::diff::Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::block3d::diff::Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-vortex-vortex-kind/rekinds-front-vortex-as-hatch: committed diff did not carry before to after");
 }

@@ -14,7 +14,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 /// 📦️ Encodes a `DagSnapshot` to its binary pack form.
 pub async fn encode(document: &DagSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
@@ -138,8 +137,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT)
-            .expect("parse fixture");
+        let document = crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");

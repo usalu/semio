@@ -2,9 +2,9 @@
 //! when already at that width, Fatal `invariant` when the width is zero.
 
 use super::mutation::ChangeShotWidth;
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::{ShootingShotPatchEntry, ShootingShotsDelta, ShootingDiff};
+use crate::artifacts::shooting::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
 use crate::artifacts::shooting::ShootingShotPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeShotWidth, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.shots.iter().find(|shot| shot.id == payload.id) else {

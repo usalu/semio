@@ -33,9 +33,7 @@ fn mutation() -> RasterMutation {
 async fn applies_to_committed_after() {
     let produced = apply_raster_mutation(&before(), &mutation()).expect("change-layer-adjustment-kind applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: applied state differs from committed after-snapshot");
-    let Some(RasterLayerNode::Adjustment { adjustment_kind, params, .. }) = find_layer(&produced.layers, "tone") else {
-        panic!("change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: tone must still be an adjustment layer")
-    };
+    let Some(RasterLayerNode::Adjustment { adjustment_kind, params, .. }) = find_layer(&produced.layers, "tone") else { panic!("change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: tone must still be an adjustment layer") };
     assert_eq!(adjustment_kind, "curves", "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: the adjustment kind must be the payload's");
     assert!(params.is_empty(), "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: changing the KIND must not fabricate params for it");
 }
@@ -98,7 +96,11 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched.len(), 1, "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: exactly one layer is patched");
     assert_eq!(delta.patched[0].id, "tone", "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: the patch must address the adjustment layer, not its pixel sibling");
     assert_eq!(delta.patched[0].patch.adjustment_kind.as_deref(), Some("curves"), "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: the patch must carry the new kind");
-    assert_eq!((delta.patched[0].patch.width, delta.patched[0].patch.height), (None, None), "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: width/height are rejected outright on an Adjustment — the patch must leave them unset");
+    assert_eq!(
+        (delta.patched[0].patch.width, delta.patched[0].patch.height),
+        (None, None),
+        "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: width/height are rejected outright on an Adjustment — the patch must leave them unset"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
@@ -115,7 +117,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-adjustment-kind/switches-the-tone-layer-from-levels-to-curves: committed diff did not carry before to after");
 }

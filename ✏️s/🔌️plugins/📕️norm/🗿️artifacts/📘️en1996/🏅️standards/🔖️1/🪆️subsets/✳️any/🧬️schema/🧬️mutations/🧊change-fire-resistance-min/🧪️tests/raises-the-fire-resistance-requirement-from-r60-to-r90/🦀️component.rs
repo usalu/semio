@@ -38,7 +38,11 @@ async fn raises_the_fire_resistance_requirement_from_r60_to_r90() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-fire-resistance-min applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.fire_resistance_min, 90, "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: fire_resistance_min must read 90 minutes once the change lands");
-    assert_eq!(applied.wall_thickness_mm, before().wall_thickness_mm, "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the built wall thickness is what the fire check COMPARES against and must never be auto-raised to satisfy the new requirement");
+    assert_eq!(
+        applied.wall_thickness_mm,
+        before().wall_thickness_mm,
+        "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the built wall thickness is what the fire check COMPARES against and must never be auto-raised to satisfy the new requirement"
+    );
 }
 
 /// ↩️ `change-fire-resistance-min`'s inverse reads the OLD 60 minutes out of BASE, so replaying it puts the R60

@@ -8,7 +8,8 @@ use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, WorldSunConfig,
+    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
+    UiSliderNode, UiToggleNode, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -256,9 +257,7 @@ struct ModulePayloadDiff {
 
 impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     async fn apply(&self, projection: &ModuleRenderPayload) -> protocol::MutationApplyResult<ModuleRenderPayload> {
-        Ok({
-            self.payload.clone().unwrap_or_else(|| projection.clone())
-        })
+        Ok({ self.payload.clone().unwrap_or_else(|| projection.clone()) })
     }
     async fn absorb(&mut self, other: Self) {
         if other.payload.is_some() {

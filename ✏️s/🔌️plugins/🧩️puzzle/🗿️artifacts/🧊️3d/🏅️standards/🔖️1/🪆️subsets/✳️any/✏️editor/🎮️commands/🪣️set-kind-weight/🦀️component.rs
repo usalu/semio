@@ -1,12 +1,12 @@
 //! 🪣️ `set-kind-weight` command.
 
-use serde_json::Value;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::puzzle3d_ensure_catalog_kind_weights;
 use crate::editor::puzzle3d::puzzle3d_fill_options_scope;
 use crate::editor::puzzle3d::puzzle3d_kind_ids;
 use crate::editor::puzzle3d::puzzle3d_normalize_kind_weight_group;
 use crate::editor::puzzle3d::sync_precompute_weights;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use serde_json::Value;
 
 /// 🎲️ `setObjectKindWeight`/`setVortexKindWeight` share one arm. Object weights live on their own
 /// simplex; a vortex slider nested under an object row carries the JOINT `P(object)×P(vortex)` value

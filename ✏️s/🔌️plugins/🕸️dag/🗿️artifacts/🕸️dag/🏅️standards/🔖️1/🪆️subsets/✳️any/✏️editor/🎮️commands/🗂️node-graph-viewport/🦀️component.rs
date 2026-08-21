@@ -1,9 +1,9 @@
 //! 🗂️ 🗂️ DAG play app commands command — `node-graph-viewport`.
 
-use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::dag::config::{DagConfig, DagConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

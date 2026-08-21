@@ -3,7 +3,7 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::engine::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use serde_json::{json, Value};
 
 use serde::{Deserialize, Serialize};
@@ -27,8 +27,7 @@ pub async fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapsh
                 .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
                 .map(|descriptor| descriptor.short_id)
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;
-            let result = semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind)
-                .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
+            let result = semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
             Ok(Emit::effect(Effect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }))
         }
         None => Ok(Emit::default()),
@@ -39,9 +38,9 @@ pub async fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapsh
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::demo_space_projection;
     use crate::engine::space::testkit::{apply_config, studio_emit};
     use crate::engine::space::SpaceCommand;
-    use crate::demo_space_projection;
 
     #[semio_framework_async_macros::async_test]
     async fn space_command_op_text_round_trips_every_variant() {

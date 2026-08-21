@@ -3,8 +3,8 @@
 //! §12.2 "shared options across multiple windows" pattern, extended here to windows split across modes.
 
 use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::lowpoly_action;
+use crate::editor::lowpoly::terminology::LowpolyLabels;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.

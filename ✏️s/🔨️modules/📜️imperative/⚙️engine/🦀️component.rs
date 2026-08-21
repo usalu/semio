@@ -33,7 +33,6 @@ impl Path {
     }
 }
 
-
 impl protocol::Identified<String> for Step {
     fn id(&self) -> &String {
         &self.id

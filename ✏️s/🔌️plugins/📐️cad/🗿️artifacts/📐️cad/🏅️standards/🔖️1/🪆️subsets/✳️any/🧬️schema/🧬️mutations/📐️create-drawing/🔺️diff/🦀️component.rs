@@ -6,10 +6,7 @@ use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Diff
 pub(crate) async fn parse_target(uri: &str) -> store::os_io::ArtifactRef {
-    store::os_io::ArtifactRef::parse_uri(uri).unwrap_or_else(|_| store::os_io::ArtifactRef {
-        artifact_id: uri.to_string(),
-        dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() },
-    })
+    store::os_io::ArtifactRef::parse_uri(uri).unwrap_or_else(|_| store::os_io::ArtifactRef { artifact_id: uri.to_string(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
 }
 
 pub async fn diff(payload: &CreateDrawing, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

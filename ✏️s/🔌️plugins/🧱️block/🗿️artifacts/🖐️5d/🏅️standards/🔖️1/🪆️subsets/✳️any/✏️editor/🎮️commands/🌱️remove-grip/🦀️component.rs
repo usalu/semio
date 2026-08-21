@@ -1,8 +1,8 @@
 //! 🌱️ 🌱️ Block 5D play app commands command — `remove-grip`.
 
-use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::artifacts::block5d::op::Block5dMutation;
 use crate::artifacts::block5d::Block5dSnapshot;
+use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

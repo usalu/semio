@@ -7,8 +7,7 @@ use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<LowpolySnapshot, store::TextError> {
-    let mut out: LowpolySnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("lowpoly<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: LowpolySnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("lowpoly<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = LOWPOLY_DOCUMENT_SCHEMA.into();
     }

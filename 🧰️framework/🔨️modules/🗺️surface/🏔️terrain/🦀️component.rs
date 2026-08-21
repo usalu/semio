@@ -71,7 +71,7 @@ pub mod tiles {
         format!("{z}/{x}/{y}")
     }
 
-    pub async fn parse_tile_key(key: &str) -> Option<(u32, u32, u32)> {
+    pub fn parse_tile_key(key: &str) -> Option<(u32, u32, u32)> {
         let mut parts = key.split('/');
         let z = parts.next()?.parse().ok()?;
         let x = parts.next()?.parse().ok()?;
@@ -81,7 +81,7 @@ pub mod tiles {
 
     /// 🔎️ Picks a DEM zoom level from camera-to-target distance (meters): closer camera -> higher
     /// zoom (finer DEM resolution), halving the reference distance per zoom level.
-    pub async fn pick_zoom(distance_m: f64) -> u32 {
+    pub fn pick_zoom(distance_m: f64) -> u32 {
         const REFERENCE_DISTANCE_AT_MAX_ZOOM: f64 = 400.0;
         if distance_m <= REFERENCE_DISTANCE_AT_MAX_ZOOM {
             return TERRAIN_TILE_MAX_ZOOM;
@@ -132,7 +132,7 @@ fn decode_terrarium_png(bytes: &[u8]) -> Result<image::RgbaImage, FrameworkSurfa
     Ok(image::load_from_memory(bytes)?.to_rgba8())
 }
 
-async fn sample_elevation(image: &image::RgbaImage, px: f32, py: f32) -> f32 {
+fn sample_elevation(image: &image::RgbaImage, px: f32, py: f32) -> f32 {
     let x = px.round().clamp(0.0, (image.width().saturating_sub(1)) as f32) as u32;
     let y = py.round().clamp(0.0, (image.height().saturating_sub(1)) as f32) as u32;
     let pixel = image.get_pixel(x, y);
@@ -158,7 +158,7 @@ struct TerrainTileMeshJson {
     uvs: Vec<f32>,
 }
 
-async fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, origin_lat: f64, exaggeration: f64) -> TerrainTileMeshJson {
+fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, origin_lat: f64, exaggeration: f64) -> TerrainTileMeshJson {
     let n = TERRAIN_GRID_RESOLUTION;
     let (min_lon, max_lat) = projection::tile_xy_to_lonlat(tile.x as f64, tile.y as f64, tile.z);
     let (max_lon, min_lat) = projection::tile_xy_to_lonlat((tile.x + 1) as f64, (tile.y + 1) as f64, tile.z);
@@ -171,9 +171,9 @@ async fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, o
             let px = (col as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
             let py = (row as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
             let elevation = sample_elevation(&tile.image, px, py);
-            heights[(row * n + col) as usize] = elevation.await;
-            min_elev = min_elev.min(elevation.await);
-            max_elev = max_elev.max(elevation.await);
+            heights[(row * n + col) as usize] = elevation;
+            min_elev = min_elev.min(elevation);
+            max_elev = max_elev.max(elevation);
         }
     }
     if !min_elev.is_finite() {
@@ -262,7 +262,7 @@ struct VisibleTileRow {
 /// so this is deliberately a free function rather than an `InferredField`: there is no snapshot
 /// here for a `DepHash` to key off, and the render loop already recomputes it every frame (see
 /// `♾️infinite/🌍️world/🦀️component.rs`'s `sync_terrain_state`), which a dep-hash cache would not help.
-async fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat: f64) -> Vec<(u32, u32, u32)> {
+fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat: f64) -> Vec<(u32, u32, u32)> {
     let target = camera.target.unwrap_or([0.0, 0.0, 0.0]);
     let position = camera.position.unwrap_or([0.0, 0.0, 100.0]);
     let dx = position[0] - target[0];
@@ -271,7 +271,7 @@ async fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat:
     let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
     let zoom = tiles::pick_zoom(distance);
     let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], origin_lon, origin_lat);
-    tiles::visible_tiles(center_lon, center_lat, zoom.await)
+    tiles::visible_tiles(center_lon, center_lat, zoom)
 }
 //#endregion VisibleTileQuery
 
@@ -317,32 +317,29 @@ impl TerrainSessionCore {
     /// threading `origin_lon`/`origin_lat` through every call for API compatibility with the current
     /// `♾️infinite/🌍️world` consumer, which this file does not own; see the report's recommended
     /// target shape (drop the setter, pass origin as a parameter) as a `sharedFileRequests` patch.
-    pub async fn set_project_origin(&mut self, lon: f64, lat: f64) {
+    pub fn set_project_origin(&mut self, lon: f64, lat: f64) {
         self.origin_lon = lon;
         self.origin_lat = lat;
     }
 
     /// 🪞 Mirrors `TerrainDescriptorJson.exaggeration` (gis-owned, tier-a there) — same rationale as
     /// [`Self::set_project_origin`].
-    pub async fn set_exaggeration(&mut self, exaggeration: f64) {
+    pub fn set_exaggeration(&mut self, exaggeration: f64) {
         self.exaggeration = exaggeration.max(0.0);
     }
 
     /// 🔭️ JSON-wrapping shim over the tier-(e) [`visible_tile_coords`] — kept `&self` for API
     /// compatibility; the actual query is pure and argument-driven, not a method of this struct's
     /// mutable state.
-    pub async fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
+    pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
         let camera: CameraRecord = serde_json::from_str(camera_json).unwrap_or(CameraRecord { position: None, target: None });
-        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat).await
-            .into_iter()
-            .map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) })
-            .collect();
+        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat).into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
     }
 
     /// 📥️ Decodes and stores one externally-fetched DEM tile — see [`TerrainElevationTiles`] for
     /// why this is an out-of-doctrine resource cache, not tier-(d)/(c) state.
-    pub async fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
+    pub fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
         match decode_terrarium_png(bytes) {
             Ok(image) => {
                 self.elevation.by_key.insert(tiles::tile_key(z, x, y), DecodedElevationTile { z, x, y, image });
@@ -354,12 +351,12 @@ impl TerrainSessionCore {
 
     /// 🗑️ Drops one cached tile — a cache eviction, not a `delete-*` mutation: nothing here is
     /// authoritative, so there is nothing to capture for an inverse.
-    pub async fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
+    pub fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
         self.elevation.by_key.remove(&tiles::tile_key(z, x, y));
     }
 
     /// 🕸️ Tier-(e) mesh build ([`build_terrain_tile_mesh`]) over a cached decoded tile, JSON-wrapped.
-    pub async fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
+    pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
         match self.elevation.by_key.get(&tiles::tile_key(z, x, y)) {
             Some(tile) => {
                 let mesh = build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration);
@@ -385,31 +382,31 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl TerrainSession {
         #[wasm_bindgen(constructor)]
-        pub async fn new() -> TerrainSession {
+        pub fn new() -> TerrainSession {
             TerrainSession { core: TerrainSessionCore::default() }
         }
 
-        pub async fn set_project_origin(&mut self, lon: f64, lat: f64) {
+        pub fn set_project_origin(&mut self, lon: f64, lat: f64) {
             self.core.set_project_origin(lon, lat);
         }
 
-        pub async fn set_exaggeration(&mut self, exaggeration: f64) {
+        pub fn set_exaggeration(&mut self, exaggeration: f64) {
             self.core.set_exaggeration(exaggeration);
         }
 
-        pub async fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
+        pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
             self.core.visible_terrain_tiles_json(camera_json)
         }
 
-        pub async fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
+        pub fn upload_elevation_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
             self.core.upload_elevation_tile(z, x, y, bytes)
         }
 
-        pub async fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
+        pub fn evict_terrain_tile(&mut self, z: u32, x: u32, y: u32) {
             self.core.evict_terrain_tile(z, x, y);
         }
 
-        pub async fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
+        pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
             self.core.terrain_tile_mesh_json(z, x, y)
         }
     }
@@ -431,14 +428,14 @@ mod tests {
     use super::*;
 
     #[test]
-    async fn tile_key_roundtrip() {
+    fn tile_key_roundtrip() {
         assert_eq!(tiles::tile_key(10, 3, 7), "10/3/7");
         assert_eq!(tiles::parse_tile_key("10/3/7"), Some((10, 3, 7)));
         assert_eq!(tiles::parse_tile_key("garbage"), None);
     }
 
     #[test]
-    async fn lonlat_tile_xy_roundtrip_is_stable() {
+    fn lonlat_tile_xy_roundtrip_is_stable() {
         let (x, y) = projection::lonlat_to_tile_xy(9.7382, 52.3759, 12);
         let (lon, lat) = projection::tile_xy_to_lonlat(x.floor(), y.floor(), 12);
         // Round-tripping the tile's top-left corner should land close to (not equal to, since we
@@ -448,7 +445,7 @@ mod tests {
     }
 
     #[test]
-    async fn local_meters_roundtrip() {
+    fn local_meters_roundtrip() {
         let origin_lon = 9.7382;
         let origin_lat = 52.3759;
         let (x, y) = projection::lonlat_to_local_meters(9.75, 52.38, origin_lon, origin_lat);
@@ -458,13 +455,13 @@ mod tests {
     }
 
     #[test]
-    async fn pick_zoom_clamps_to_bounds() {
+    fn pick_zoom_clamps_to_bounds() {
         assert_eq!(tiles::pick_zoom(1.0), tiles::TERRAIN_TILE_MAX_ZOOM);
         assert_eq!(tiles::pick_zoom(1_000_000_000.0), tiles::TERRAIN_TILE_MIN_ZOOM);
     }
 
     #[test]
-    async fn visible_tiles_returns_bounded_grid_around_center() {
+    fn visible_tiles_returns_bounded_grid_around_center() {
         let rows = tiles::visible_tiles(9.7382, 52.3759, 12);
         assert!(!rows.is_empty());
         assert!(rows.len() <= 25);
@@ -485,7 +482,7 @@ mod tests {
     }
 
     #[test]
-    async fn upload_and_mesh_a_flat_tile_produces_grid_geometry() {
+    fn upload_and_mesh_a_flat_tile_produces_grid_geometry() {
         let mut session = TerrainSessionCore::default();
         session.set_project_origin(9.7382, 52.3759);
         let bytes = solid_terrarium_png(123.0);
@@ -506,32 +503,32 @@ mod tests {
     }
 
     #[test]
-    async fn missing_tile_mesh_is_null() {
+    fn missing_tile_mesh_is_null() {
         let session = TerrainSessionCore::default();
         assert_eq!(session.terrain_tile_mesh_json(12, 0, 0), "null");
     }
 
     #[test]
-    async fn pick_zoom_halves_reference_distance_per_level() {
+    fn pick_zoom_halves_reference_distance_per_level() {
         assert_eq!(tiles::pick_zoom(400.0), tiles::TERRAIN_TILE_MAX_ZOOM);
         assert_eq!(tiles::pick_zoom(800.0), tiles::TERRAIN_TILE_MAX_ZOOM - 1);
         assert_eq!(tiles::pick_zoom(1600.0), tiles::TERRAIN_TILE_MAX_ZOOM - 2);
     }
 
     #[test]
-    async fn visible_tiles_clamps_at_world_edge() {
+    fn visible_tiles_clamps_at_world_edge() {
         let rows = tiles::visible_tiles(-179.9, 0.1, 0);
         assert_eq!(rows, vec![(0, 0, 0)]);
     }
 
     #[test]
-    async fn decode_terrarium_png_invalid_bytes_returns_error() {
+    fn decode_terrarium_png_invalid_bytes_returns_error() {
         let error = decode_terrarium_png(b"not a real png").expect_err("garbage bytes should not decode");
         assert!(!error.to_string().is_empty());
     }
 
     #[test]
-    async fn sample_elevation_clamps_out_of_bounds_coordinates() {
+    fn sample_elevation_clamps_out_of_bounds_coordinates() {
         let mut image = image::RgbaImage::new(2, 2);
         image.put_pixel(1, 1, image::Rgba([128, 0, 0, 255]));
         let inside = sample_elevation(&image, 1.0, 1.0);
@@ -542,20 +539,20 @@ mod tests {
     }
 
     #[test]
-    async fn normalize3_degenerate_vector_does_not_panic_or_nan() {
+    fn normalize3_degenerate_vector_does_not_panic_or_nan() {
         let (x, y, z) = normalize3(0.0, 0.0, 0.0);
         assert!(x.is_finite() && y.is_finite() && z.is_finite());
     }
 
     #[test]
-    async fn upload_elevation_tile_invalid_bytes_returns_false_and_no_mesh() {
+    fn upload_elevation_tile_invalid_bytes_returns_false_and_no_mesh() {
         let mut session = TerrainSessionCore::default();
         assert!(!session.upload_elevation_tile(5, 1, 1, b"garbage"));
         assert_eq!(session.terrain_tile_mesh_json(5, 1, 1), "null");
     }
 
     #[test]
-    async fn evict_terrain_tile_removes_previously_uploaded_tile() {
+    fn evict_terrain_tile_removes_previously_uploaded_tile() {
         let mut session = TerrainSessionCore::default();
         let bytes = solid_terrarium_png(50.0);
         assert!(session.upload_elevation_tile(8, 10, 10, &bytes));
@@ -565,7 +562,7 @@ mod tests {
     }
 
     #[test]
-    async fn set_exaggeration_clamps_negative_to_zero() {
+    fn set_exaggeration_clamps_negative_to_zero() {
         let mut session = TerrainSessionCore::default();
         session.set_exaggeration(-3.0);
         let bytes = solid_terrarium_png(200.0);
@@ -578,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    async fn visible_terrain_tiles_json_falls_back_to_defaults_on_invalid_camera_json() {
+    fn visible_terrain_tiles_json_falls_back_to_defaults_on_invalid_camera_json() {
         let session = TerrainSessionCore::default();
         let json = session.visible_terrain_tiles_json("not json");
         let rows: Vec<serde_json::Value> = serde_json::from_str(&json).expect("valid array");
@@ -586,7 +583,7 @@ mod tests {
     }
 
     #[test]
-    async fn visible_terrain_tiles_json_reflects_camera_distance_in_zoom() {
+    fn visible_terrain_tiles_json_reflects_camera_distance_in_zoom() {
         let session = TerrainSessionCore::default();
         let close_json = session.visible_terrain_tiles_json(r#"{"position":[0,0,100],"target":[0,0,0]}"#);
         let far_json = session.visible_terrain_tiles_json(r#"{"position":[0,0,1000000],"target":[0,0,0]}"#);
@@ -595,7 +592,7 @@ mod tests {
         assert!(close_rows[0]["z"].as_u64().unwrap() > far_rows[0]["z"].as_u64().unwrap());
     }
 
-    async fn gradient_terrarium_png() -> Vec<u8> {
+    fn gradient_terrarium_png() -> Vec<u8> {
         let mut image = image::RgbaImage::new(TERRARIUM_TILE_PX, TERRARIUM_TILE_PX);
         for (px, _py, pixel) in image.enumerate_pixels_mut() {
             let value = (500.0 + px as f32 * 10.0 + 32768.0).round() as i64;
@@ -609,7 +606,7 @@ mod tests {
     }
 
     #[test]
-    async fn sloped_tile_mesh_has_varying_elevation_and_nontrivial_normals() {
+    fn sloped_tile_mesh_has_varying_elevation_and_nontrivial_normals() {
         let mut session = TerrainSessionCore::default();
         session.set_project_origin(9.7382, 52.3759);
         let bytes = gradient_terrarium_png();
@@ -624,7 +621,7 @@ mod tests {
     }
 
     #[test]
-    async fn visible_tile_coords_is_deterministic_for_identical_input() {
+    fn visible_tile_coords_is_deterministic_for_identical_input() {
         let camera = CameraRecord { position: Some([0.0, 0.0, 500.0]), target: Some([10.0, 10.0, 0.0]) };
         let first = visible_tile_coords(&camera, 9.7382, 52.3759);
         let second = visible_tile_coords(&camera, 9.7382, 52.3759);
@@ -632,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    async fn terrain_tile_mesh_json_is_deterministic_for_the_same_cached_tile() {
+    fn terrain_tile_mesh_json_is_deterministic_for_the_same_cached_tile() {
         let mut session = TerrainSessionCore::default();
         session.set_project_origin(9.7382, 52.3759);
         let bytes = gradient_terrarium_png();

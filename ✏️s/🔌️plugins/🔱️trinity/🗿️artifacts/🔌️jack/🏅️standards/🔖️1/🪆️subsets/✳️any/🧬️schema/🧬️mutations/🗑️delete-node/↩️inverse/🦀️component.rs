@@ -11,9 +11,7 @@ pub async fn inverse(payload: &super::mutation::DeleteNode, base: &JackSnapshot)
         return Vec::new();
     };
     let mut out = vec![create_node(node.clone())];
-    for edge in base.edges().iter().filter(|edge| {
-        crate::artifacts::jack::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::artifacts::jack::port_node_id(&edge.target) == Some(payload.id.as_str())
-    }) {
+    for edge in base.edges().iter().filter(|edge| crate::artifacts::jack::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::artifacts::jack::port_node_id(&edge.target) == Some(payload.id.as_str())) {
         out.push(create_edge(edge.clone()));
     }
     out

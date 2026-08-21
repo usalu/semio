@@ -1,6 +1,6 @@
 //! 🔁 Note mutation — `ReplaceAssetPayload`: whole-value swap of an existing asset's image payload.
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

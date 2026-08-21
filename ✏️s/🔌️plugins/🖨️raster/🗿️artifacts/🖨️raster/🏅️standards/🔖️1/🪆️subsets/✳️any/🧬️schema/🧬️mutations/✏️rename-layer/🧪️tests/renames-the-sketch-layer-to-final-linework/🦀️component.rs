@@ -43,9 +43,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::RenameLayer(restore)] = inverse.as_slice() else {
-        panic!("rename-layer/renames-the-sketch-layer-to-final-linework: the inverse must be exactly one rename-layer step, got {inverse:?}")
-    };
+    let [RasterMutation::RenameLayer(restore)] = inverse.as_slice() else { panic!("rename-layer/renames-the-sketch-layer-to-final-linework: the inverse must be exactly one rename-layer step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "sketch", "rename-layer/renames-the-sketch-layer-to-final-linework: the inverse must re-address the same unchanged id");
     assert_eq!(restore.new_name, "Sketch", "rename-layer/renames-the-sketch-layer-to-final-linework: the inverse must carry the base's own prior name");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -111,7 +109,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-layer/renames-the-sketch-layer-to-final-linework: committed diff did not carry before to after");
 }

@@ -1,12 +1,11 @@
 //! 📄️ Wires play app panel — the document tree: identities and relationships of the current fixture.
 
-use crate::editor::wires::terminology::WiresLabels;
-use crate::editor::wires::{wires_action, wires_select_action_args, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
 use crate::artifacts::wires::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
 use crate::artifacts::wires::WiresSnapshot;
+use crate::editor::wires::terminology::WiresLabels;
+use crate::editor::wires::{wires_action, wires_select_action_args, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
 use semio_framework_plugin::{
-    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-    INTERACTION_SELECT_ACTION_ID,
+    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
 };
 
 //#region 🔖️Constants
@@ -69,12 +68,7 @@ pub async fn render(document: &WiresSnapshot, labels: &WiresLabels) -> UiNode {
             let label = identity.get("label")?.as_str()?;
             let identity_kind = identity.get("identityKind").and_then(|value| value.as_str());
             let description = identity_kind.and_then(|kind| wires_identity_kind_name(wires, kind)).filter(|kind_name| kind_name != label);
-            Some(tree_item_with_action(
-                node_id,
-                Label::data(label),
-                description,
-                wires_action(INTERACTION_SELECT_ACTION_ID, Some(wires_select_action_args(&[node_id.to_string()], WIRES_GRANULARITY_NODE, "replace"))),
-            ))
+            Some(tree_item_with_action(node_id, Label::data(label), description, wires_action(INTERACTION_SELECT_ACTION_ID, Some(wires_select_action_args(&[node_id.to_string()], WIRES_GRANULARITY_NODE, "replace")))))
         })
         .collect();
     let relationship_items: Vec<UiTreeItemNode> = fixture_edges(board)

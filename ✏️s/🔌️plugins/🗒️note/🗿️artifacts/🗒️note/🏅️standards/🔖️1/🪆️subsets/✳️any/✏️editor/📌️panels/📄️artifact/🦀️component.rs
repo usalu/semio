@@ -1,10 +1,12 @@
 //! 📄️ Note play app panel — the document tree: every block, with quick-add rows.
 
-use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::NOTE_INTERACTION_BLOCKS;
 use crate::artifacts::note::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::{tree_item, tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::note::terminology::NotePlayLabels;
+use crate::editor::note::NOTE_INTERACTION_BLOCKS;
+use semio_framework_plugin::{
+    tree_item, tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -13,7 +15,13 @@ pub const NOTE_PLAY_BODY_DOCUMENT: &str = "note.play.document";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(NOTE_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(NOTE_PLAY_BODY_DOCUMENT.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -41,18 +49,11 @@ async fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
 pub async fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> UiNode {
     let action_rows: Vec<UiTreeItemNode> = [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")]
         .into_iter()
-        .map(|(kind, label, icon)| UiTreeItemNode {
-            icon_id: Some(icon.into()),
-            menu: None,
-            ..tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, crate::editor::note::note_action("addBlock", Some(json!({ "kind": kind }))))
-        })
+        .map(|(kind, label, icon)| UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, crate::editor::note::note_action("addBlock", Some(json!({ "kind": kind })))) })
         .collect();
     let block_items: Vec<UiTreeItemNode> =
         if document.blocks.is_empty() { vec![UiTreeItemNode { icon_id: Some("sticky-note".into()), ..tree_item("note-play-blocks.empty", labels.document_empty) }] } else { document.blocks.iter().map(block_tree_item).collect() };
-    PanelTreeBuilder::new("note-play-blocks")
-        .section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat())
-        .interaction_domain(NOTE_INTERACTION_BLOCKS)
-        .build()
+    PanelTreeBuilder::new("note-play-blocks").section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat()).interaction_domain(NOTE_INTERACTION_BLOCKS).build()
 }
 //#endregion 🔖️Render
 

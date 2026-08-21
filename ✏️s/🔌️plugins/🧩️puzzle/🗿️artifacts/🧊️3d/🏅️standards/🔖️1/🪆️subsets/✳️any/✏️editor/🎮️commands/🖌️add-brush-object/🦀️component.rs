@@ -1,12 +1,12 @@
 //! 🖌️ `add-brush-object` command.
 
 use crate::artifacts::puzzle3d::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
-use serde_json::Value;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::drive_precompute;
 use crate::editor::puzzle3d::fixture_from_engine_fixture;
 use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use serde_json::Value;
 
 /// 🧱️ Places an explicit `BrushPlacePayload` (the viewport's own click-to-place path).
 pub async fn add_brush_object(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

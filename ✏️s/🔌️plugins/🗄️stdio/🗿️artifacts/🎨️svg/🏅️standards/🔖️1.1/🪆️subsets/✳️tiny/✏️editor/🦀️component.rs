@@ -19,10 +19,10 @@ pub enum SvgTinyEditCommand {
 }
 
 impl protocol::OpBinary for SvgTinyEditCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_tiny-edit-command", offset: 0, detail: error.to_string() })
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "svg_tiny-edit-command", offset: 0, detail: error.to_string() })
     }
 }
@@ -61,7 +61,7 @@ impl ArtifactEditor for SvgTinyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source).await {
+            SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
                 Ok(snapshot) => Ok(Emit::mutations(vec![SvgMutation::SetSnapshot { snapshot }]).await),
                 Err(_) => Ok(Emit::default()),
             },
@@ -71,7 +71,7 @@ impl ArtifactEditor for SvgTinyEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

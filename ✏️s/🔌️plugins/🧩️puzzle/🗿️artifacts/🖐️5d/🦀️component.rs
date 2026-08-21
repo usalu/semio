@@ -6,7 +6,6 @@
 //! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
 //! `🚪️io` system only; behaviour lives in the sibling editor module, `crate::editor::puzzle5d`.
 
-
 use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors

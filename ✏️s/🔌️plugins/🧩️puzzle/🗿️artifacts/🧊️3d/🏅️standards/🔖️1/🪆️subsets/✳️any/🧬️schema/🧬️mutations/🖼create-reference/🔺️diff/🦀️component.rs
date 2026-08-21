@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateReference` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dReferencesDelta, Puzzle3dDiff};
+use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff

@@ -14,8 +14,8 @@ use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_M
 use crate::editor::model::modes::edit;
 use crate::editor::model::modes::edit::windows::{structure, zones};
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
-use store::EngineHandles;
 use serde::{Deserialize, Serialize};
+use store::EngineHandles;
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the two edits `🌳️structure`'s/`📊️zones`'s

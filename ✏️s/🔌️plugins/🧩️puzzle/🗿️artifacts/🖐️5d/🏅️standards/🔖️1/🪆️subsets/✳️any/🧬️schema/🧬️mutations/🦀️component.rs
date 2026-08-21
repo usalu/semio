@@ -9,7 +9,6 @@
 //! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`'s: the bridge round-trips
 //! through the typed `Puzzle5dSnapshot` instead of hand-splicing JSON per mutation kind.
 
-
 use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -164,18 +163,46 @@ pub async fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzz
     for fastener in &after.fasteners {
         match before.fasteners.iter().find(|entry| entry.id == fastener.id) {
             None => mutations.push(connect_grips(
-                fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
-                fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+                fastener.id.clone(),
+                fastener.source.clone(),
+                fastener.target.clone(),
+                fastener.fastener_kind.clone(),
+                fastener.gap,
+                fastener.shift,
+                fastener.rise,
+                fastener.rotation,
+                fastener.turn,
+                fastener.tilt,
+                fastener.x,
+                fastener.y,
             )),
             Some(prior) if prior.source != fastener.source || prior.target != fastener.target => {
                 mutations.push(disconnect_grips(fastener.id.clone()));
                 mutations.push(connect_grips(
-                    fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
-                    fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+                    fastener.id.clone(),
+                    fastener.source.clone(),
+                    fastener.target.clone(),
+                    fastener.fastener_kind.clone(),
+                    fastener.gap,
+                    fastener.shift,
+                    fastener.rise,
+                    fastener.rotation,
+                    fastener.turn,
+                    fastener.tilt,
+                    fastener.x,
+                    fastener.y,
                 ));
             }
             Some(prior) => {
-                if prior.gap != fastener.gap || prior.shift != fastener.shift || prior.rise != fastener.rise || prior.rotation != fastener.rotation || prior.turn != fastener.turn || prior.tilt != fastener.tilt || prior.x != fastener.x || prior.y != fastener.y {
+                if prior.gap != fastener.gap
+                    || prior.shift != fastener.shift
+                    || prior.rise != fastener.rise
+                    || prior.rotation != fastener.rotation
+                    || prior.turn != fastener.turn
+                    || prior.tilt != fastener.tilt
+                    || prior.x != fastener.x
+                    || prior.y != fastener.y
+                {
                     mutations.push(replace_fastener_geometry(fastener.id.clone(), fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y));
                 }
                 if prior.fastener_kind != fastener.fastener_kind {
@@ -255,20 +282,20 @@ async fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
     let Some(catalogs_value) = object.remove("kindCatalogs") else { return value };
     let catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = serde_json::from_value(catalogs_value).unwrap_or_default();
     let (handle, extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(catalogs));
-    if let Ok(handle_value) = serde_json::to_value(&handle) { object.insert("kindCatalogs".into(), handle_value); }
-    if let Ok(extra_value) = serde_json::to_value(&extra) { object.insert("kindCatalogsExtra".into(), extra_value); }
+    if let Ok(handle_value) = serde_json::to_value(&handle) {
+        object.insert("kindCatalogs".into(), handle_value);
+    }
+    if let Ok(extra_value) = serde_json::to_value(&extra) {
+        object.insert("kindCatalogsExtra".into(), extra_value);
+    }
     value
 }
 
 impl MutationDiff<Value> for Puzzle5dDiff {
     async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
-        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
-        })?;
+        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        serde_json::to_value(next).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
-        })
+        serde_json::to_value(next).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"]))
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
@@ -344,8 +371,7 @@ impl store::ArtifactPack for Puzzle5dPlaySnapshot {
 
 impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
     async fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
-        MutationDiff::<Value>::apply(self, &projection.0)
-            .map(Puzzle5dPlaySnapshot)
+        MutationDiff::<Value>::apply(self, &projection.0).map(Puzzle5dPlaySnapshot)
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
@@ -539,7 +565,8 @@ mod tests {
         assert_missing_target_is_error(&base, &change_part_2d_icon("missing".into(), Some("star".into()))); // change/set/update
         assert_missing_target_is_error(&base, &move_part_2d("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
         assert_missing_target_is_error(&base, &edit_part_3d_label("missing".into(), Some("x".into()))); // edit/replace
-        assert_missing_target_is_error(&base, &disconnect_grips("missing".into())); // disconnect/unbind
+        assert_missing_target_is_error(&base, &disconnect_grips("missing".into()));
+        // disconnect/unbind
     }
 
     #[semio_framework_async_macros::async_test]

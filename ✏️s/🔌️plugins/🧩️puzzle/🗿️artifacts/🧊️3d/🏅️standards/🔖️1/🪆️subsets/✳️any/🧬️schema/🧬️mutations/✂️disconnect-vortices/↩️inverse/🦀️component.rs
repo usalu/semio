@@ -9,8 +9,17 @@ pub async fn inverse(payload: &super::mutation::DisconnectVortices, base: &Puzzl
         return Vec::new();
     };
     vec![crate::artifacts::puzzle3d::mutations::connect_vortices::mutation::connect_vortices(
-        attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),
-        attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y,
+        attraction.id.clone(),
+        attraction.attracting.clone(),
+        attraction.attracted.clone(),
+        attraction.gap,
+        attraction.shift,
+        attraction.rise,
+        attraction.rotation,
+        attraction.turn,
+        attraction.tilt,
+        attraction.x,
+        attraction.y,
     )]
 }
 //#endregion 🔖️Inverse

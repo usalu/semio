@@ -48,10 +48,7 @@ async fn stores_a_minted_child_handle_rather_than_the_raw_bytes() {
 async fn inverse_is_a_single_delete_of_asset_b() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::DeleteAsset(payload)] if payload.key == "asset-b"),
-        "create-asset's inverse for a fresh key is one delete-asset for that key, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::DeleteAsset(payload)] if payload.key == "asset-b"), "create-asset's inverse for a fresh key is one delete-asset for that key, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

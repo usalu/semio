@@ -5,22 +5,24 @@
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
+use crate::artifacts::raster::op::RasterMutation;
+use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::editor::raster::modes::edit;
 use crate::editor::raster::modes::edit::windows::{composite, navigator};
+use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
 use crate::editor::raster::terminology::raster_play_labels;
-use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, AppDefinition, ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, ArtifactKindSpec, ArtifactEditor, ConfigView, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
-};
+use base64::Engine as _;
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    UtilityCategory, UtilityDefinition, WindowMeasure,
+};
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
-use base64::Engine as _;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_CONTROLLER_ID: &str = "raster-play";
@@ -72,11 +74,8 @@ async fn document_sync_json(document: &RasterSnapshot) -> String {
 /// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
 /// other exemplar in this ticket).
 async fn assets_json_from_document(document: &RasterSnapshot) -> String {
-    let resolved: std::collections::BTreeMap<String, crate::artifacts::raster::RasterImageAsset> = document
-        .assets
-        .keys()
-        .filter_map(|asset_id| crate::artifacts::raster::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset)))
-        .collect();
+    let resolved: std::collections::BTreeMap<String, crate::artifacts::raster::RasterImageAsset> =
+        document.assets.keys().filter_map(|asset_id| crate::artifacts::raster::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
     serde_json::to_string(&resolved).unwrap_or_else(|_| "{}".into())
 }
 
@@ -143,11 +142,11 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
+use crate::editor::raster::commands::set_active_utility;
+use crate::editor::raster::commands::set_locale;
+use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
-use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
-use crate::editor::raster::commands::set_locale;
-use crate::editor::raster::commands::set_active_utility;
 //#endregion 🔖️Commands
 
 //#region 🔖️RasterPlayApp
@@ -224,7 +223,14 @@ impl ArtifactEditor for RasterPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &RasterCommand, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &RasterCommand,
+        doc: &ArtifactView<'_, RasterSnapshot>,
+        cfg: &ConfigView<'_, RasterConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -311,10 +317,7 @@ pub async fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, 
     let raw_bytes = base64::engine::general_purpose::STANDARD.decode(rendered.as_bytes()).map_err(|error| MediaError::Payload("image:out".into(), error.to_string()))?;
     let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).map_err(|error| MediaError::Payload("image:out".into(), error))?;
     let png_base64 = base64::engine::general_purpose::STANDARD.encode(canonical);
-    Ok(Media {
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
-    })
+    Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 //#endregion 🔖️Io
 
@@ -483,8 +486,8 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use crate::editor::raster::panels::{catalogue, document, inspection, masks};
     use crate::artifacts::raster::schema::{empty_raster_document, layer_name, layer_visible};
+    use crate::editor::raster::panels::{catalogue, document, inspection, masks};
     use semio_framework_plugin::{testkit, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::MemoryBackbone;
 
@@ -892,9 +895,7 @@ mod tests {
     /// fixture mismatch.
     #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_declared_wire_bytes() {
-        let cases: [(RasterCommand, &str, &str); 1] = [
-            (RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600"),
-        ];
+        let cases: [(RasterCommand, &str, &str); 1] = [(RasterCommand::SetLayerVisible(set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600")];
         for (command, text, hex) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text, "printed text drifted for {command:?}");
             let bytes = protocol::OpBinary::encode_op(&command).expect("encode");

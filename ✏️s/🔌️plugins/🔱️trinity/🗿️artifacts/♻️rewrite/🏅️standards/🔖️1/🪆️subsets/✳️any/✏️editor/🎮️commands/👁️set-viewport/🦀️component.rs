@@ -1,8 +1,8 @@
 //! 👁️ 👁️ Trinity Rewrite app command — `set-viewport`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::Camera;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) async fn set_viewport(surface_id: &Option<String>, viewport_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {

@@ -1,7 +1,7 @@
 //! jack <- md
 use crate::artifacts::jack::JackSnapshot;
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
+use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 

@@ -40,10 +40,7 @@ impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedFeaturesJson"] },
-            protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedFeaturesJson"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedFeaturesJson"] }, protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedFeaturesJson"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -198,11 +195,7 @@ async fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositio
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::artifacts::gisterrain::schema::default_terrain_document`.
 pub async fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
-    let mut descriptor = terrain_fixture_text::parse_descriptor(
-        crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT,
-        crate::artifacts::gisterrain::GIS_3D_TERRAIN_SCHEMA,
-        document.exaggeration,
-    );
+    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::artifacts::gisterrain::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
     descriptor.positions.extend(imported_positions(document));
     descriptor
 }
@@ -234,11 +227,7 @@ mod tests {
     //#region 🧪️InferenceLaws
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        let snapshot = GisTerrainSnapshot {
-            exaggeration: 1.5,
-            imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(),
-            ..Default::default()
-        };
+        let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: serde_json::json!({ "positions": [{ "id": "p1", "lon": 5.58, "lat": 50.60 }] }).to_string(), ..Default::default() };
         assert_eq!(GisTerrainInference::infer(&snapshot), GisTerrainInference::infer(&snapshot));
     }
 

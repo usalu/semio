@@ -1,10 +1,10 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-nodal-load`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::mutations::{add_load, create_load_case};
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and

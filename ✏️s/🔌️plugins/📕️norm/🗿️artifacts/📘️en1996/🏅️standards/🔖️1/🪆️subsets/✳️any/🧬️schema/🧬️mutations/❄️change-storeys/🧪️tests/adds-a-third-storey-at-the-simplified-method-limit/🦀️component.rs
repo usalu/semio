@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: `change-storeys` has no numeric-finiteness guard at all — only the equality guard — and 3 differs from the committed committed 2, so `mutation.no-op` must not fire");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: `change-storeys` has no numeric-finiteness guard at all — only the equality guard — and 3 differs from the committed committed 2, so `mutation.no-op` must not fire"
+    );
     assert!(produced.messages().is_empty(), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: an accepted change-storeys emits no diagnostics at all");
 }
 

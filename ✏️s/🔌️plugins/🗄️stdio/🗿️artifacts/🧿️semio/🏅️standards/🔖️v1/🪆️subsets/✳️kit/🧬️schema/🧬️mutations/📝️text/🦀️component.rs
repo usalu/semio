@@ -121,10 +121,10 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
 }
 
 impl protocol::OpText for SemioKitMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_kit_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_kit_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }

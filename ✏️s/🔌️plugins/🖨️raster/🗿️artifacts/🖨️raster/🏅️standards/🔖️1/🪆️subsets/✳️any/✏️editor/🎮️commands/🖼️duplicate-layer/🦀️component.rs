@@ -1,11 +1,11 @@
 //! 🖼️ 🖼️ Raster play app commands command — `duplicate-layer`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::artifacts::raster::schema::{clone_layer, find_layer};
 use crate::artifacts::raster::mutations::create_layer;
 use crate::artifacts::raster::op::RasterMutation;
+use crate::artifacts::raster::schema::{clone_layer, find_layer};
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -23,10 +23,7 @@ pub async fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnaps
     match find_layer(&document.layers, &payload.layer_id) {
         Some(layer) => {
             let copy = clone_layer(layer);
-            Ok(Emit {
-                artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) })],
-                ..Default::default()
-            })
+            Ok(Emit { artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) })], ..Default::default() })
         }
         None => Ok(Emit::default()),
     }

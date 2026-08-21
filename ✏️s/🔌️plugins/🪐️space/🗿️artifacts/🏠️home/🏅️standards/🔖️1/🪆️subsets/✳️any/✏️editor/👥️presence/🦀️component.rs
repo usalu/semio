@@ -15,9 +15,7 @@ pub struct HomePresence {}
 
 impl protocol::MutationDiff<HomePresence> for HomePresence {
     async fn apply(&self, base: &HomePresence) -> protocol::MutationApplyResult<HomePresence> {
-        Ok({
-            base.clone()
-        })
+        Ok({ base.clone() })
     }
     async fn absorb(&mut self, _other: Self) {}
 }
@@ -48,11 +46,7 @@ impl ArtifactPack for HomePresence {
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         if !inner.is_empty() {
             return Err(store::PackError::Schema("home presence pack must be empty".into()));
@@ -87,19 +81,8 @@ impl protocol::OpText for HomePresenceMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() {
-                    line[keyword.len()..].trim_start()
-                } else {
-                    ""
-                };
-                let record = dsl::parse(
-                    body,
-                    &spec_fn(),
-                    &dsl::ParseOptions {
-                        limits: dsl::Limits::default(),
-                        mode: dsl::SourceMode::Inline,
-                    },
-                )?;
+                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -108,11 +91,7 @@ impl protocol::OpText for HomePresenceMutation {
     async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants
-            .iter()
-            .find(|(k, _)| k == &keyword)
-            .map(|(_, s)| *s)
-            .expect("variant spec must exist for its own keyword");
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
         let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword

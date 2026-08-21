@@ -7,26 +7,27 @@
 //! app's own typed media I/O surface + plugin registration (below — constitutional: general, an
 //! artifact must never depend on an app, so both live here rather than under `🗿️artifacts`).
 
+use crate::artifacts::block2d::op::Block2dMutation;
+use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
+use crate::editor::block2d::commands::patch_node_kind;
 use crate::editor::block2d::commands::{add_compatibility_rule, remove_compatibility_rule};
-use crate::editor::block2d::commands::{edit, set_active_example};
 use crate::editor::block2d::commands::{add_handle, remove_handle};
 use crate::editor::block2d::commands::{add_handle_kind, remove_handle_kind};
-use crate::editor::block2d::commands::patch_node_kind;
+use crate::editor::block2d::commands::{edit, set_active_example};
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::editor::block2d::modes::edit as edit_mode;
 use crate::editor::block2d::modes::edit::windows::board;
 use crate::editor::block2d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block2d::terminology::block2d_labels;
-use crate::artifacts::block2d::op::Block2dMutation;
-use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionDescriptor, AppIo, ArtifactEditor, ArtifactKindSpec, ArtifactPresentation, ConfigView, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode,
-};
-use semio_framework_plugin::app::InteractionView;
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
-use store::EngineHandles;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ActionDescriptor, AppIo, ArtifactEditor, ArtifactKindSpec, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaPortDirection, MediaPortSpec, MediaType, NoDraft, NoDraftMutation, PortMultiplicity, UiNode,
+};
 use serde_json::Value;
 use std::collections::BTreeMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const BLOCK2D_PLAY_APP_ID: &str = "block2d-play";
@@ -52,20 +53,17 @@ pub async fn block2d_action(action: &str, args: Option<Value>) -> ActionDescript
 /// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle2d_manifest_fragment` a real caller (see `export_media` above).
 pub async fn block2d_io() -> AppIo {
-    AppIo::from_document(
-        BLOCK_2D_SCHEMA,
-        MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() },
+    AppIo::from_document(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }).with_ports(
+        vec![MediaPortSpec {
+            id: "catalog:out".into(),
+            label: "Kit Catalog".into(),
+            direction: MediaPortDirection::Out,
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            kind_id: Some("kit.catalog".into()),
+            required: false,
+            multiplicity: PortMultiplicity::Many,
+        }],
     )
-    .with_ports(vec![MediaPortSpec {
-        id: "catalog:out".into(),
-        label: "Kit Catalog".into(),
-        direction: MediaPortDirection::Out,
-        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        kind_id: Some("kit.catalog".into()),
-        required: false,
-        multiplicity: PortMultiplicity::Many,
-    }])
 }
 //#endregion 🔖️Io
 
@@ -163,7 +161,14 @@ impl ArtifactEditor for Block2dPlayApp {
         }
     }
 
-    async fn handle(command: &Block2dCommand, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Block2dCommand,
+        doc: &ArtifactView<'_, Block2dSnapshot>,
+        cfg: &ConfigView<'_, Block2dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

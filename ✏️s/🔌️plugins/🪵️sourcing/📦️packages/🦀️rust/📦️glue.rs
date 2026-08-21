@@ -19,8 +19,8 @@
 #![allow(async_fn_in_trait)]
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
@@ -31,7 +31,6 @@ extern crate semio_framework_schema as schema;
 // lint does not fire on the trait impl itself (only on the free functions the taxonomy split
 // creates), so this is a pure artefact of decomposition.
 #[allow(clippy::result_large_err)]
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -91,36 +90,36 @@ pub mod artifacts {
                                 pub use component::*;
                                 #[path = "."]
                                 pub mod create_curated_item {
-                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/appends-a-steel-plate-to-the-curation/🦀️component.rs"]
                                     mod tests_appends_a_steel_plate_to_the_curation;
                                 }
                                 #[path = "."]
                                 pub mod delete_curated_item {
-                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🧪️tests/removes-the-clt-panel-from-the-curation/🦀️component.rs"]
                                     mod tests_removes_the_clt_panel_from_the_curation;
                                 }
                                 #[path = "."]
                                 pub mod change_curated_item_count {
-                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🧪️tests/raises-the-glulam-beam-count-to-20/🦀️component.rs"]
                                     mod tests_raises_the_glulam_beam_count_to_20;
@@ -134,31 +133,31 @@ pub mod artifacts {
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod import {
@@ -335,13 +334,60 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::text::*; } pub mod pack { pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::binary::*; } pub mod binary { pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::binary::*; } }
-        pub mod mutations { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*; pub mod schema { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*; } pub mod text { pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::text::*; } pub mod pack { pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*; } pub mod binary { pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*; } }
-        pub mod snapshot { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*; pub mod schema { pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*; } pub mod text { pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::text::*; } pub mod pack { pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::binary::*; } pub mod binary { pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::binary::*; } }
-
+        pub mod op {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::diff::binary::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*;
+            pub mod schema {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::schema::mutations::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::mutations::binary::*;
+            }
+        }
+        pub mod snapshot {
+            pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*;
+            pub mod schema {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::text::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::binary::*;
+            }
+            pub mod binary {
+                pub use crate::artifacts::curate::standards::v1::subsets::any::io::snapshot::binary::*;
+            }
+        }
 
         #[path = "."]
         pub mod examples {
@@ -389,36 +435,36 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact-json/🦀️component.rs"]
-            pub mod set_artifact_json;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-active-example/🦀️component.rs"]
-            pub mod set_active_example;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️stock-from-catalogue/🦀️component.rs"]
-            pub mod stock_from_catalogue;
             #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-add/🦀️component.rs"]
             pub mod curate_add;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-set-count/🦀️component.rs"]
-            pub mod curate_set_count;
             #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-remove/🦀️component.rs"]
             pub mod curate_remove;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️drop-on-pool/🦀️component.rs"]
-            pub mod drop_on_pool;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-set-count/🦀️component.rs"]
+            pub mod curate_set_count;
             #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️drop-on-curated/🦀️component.rs"]
             pub mod drop_on_curated;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-query/🦀️component.rs"]
-            pub mod set_filter_query;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-module/🦀️component.rs"]
-            pub mod set_filter_module;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-typology/🦀️component.rs"]
-            pub mod set_filter_typology;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-min-availability/🦀️component.rs"]
-            pub mod set_filter_min_availability;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️sort-table/🦀️component.rs"]
-            pub mod sort_table;
-            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
-            pub mod set_locale;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️drop-on-pool/🦀️component.rs"]
+            pub mod drop_on_pool;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-active-example/🦀️component.rs"]
+            pub mod set_active_example;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact-json/🦀️component.rs"]
+            pub mod set_artifact_json;
             #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
             pub mod set_contributions;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-min-availability/🦀️component.rs"]
+            pub mod set_filter_min_availability;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-module/🦀️component.rs"]
+            pub mod set_filter_module;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-query/🦀️component.rs"]
+            pub mod set_filter_query;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-typology/🦀️component.rs"]
+            pub mod set_filter_typology;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️sort-table/🦀️component.rs"]
+            pub mod sort_table;
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️stock-from-catalogue/🦀️component.rs"]
+            pub mod stock_from_catalogue;
         }
 
         #[path = "."]
@@ -431,14 +477,14 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🦀️component.rs"]
-                    pub mod pool;
                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧺️curated/🦀️component.rs"]
                     pub mod curated;
-                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
-                    pub mod preview;
                     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🦀️component.rs"]
                     pub mod grid;
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🦀️component.rs"]
+                    pub mod pool;
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
+                    pub mod preview;
                 }
             }
         }
@@ -483,10 +529,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
-    pub mod art_curate_demo;
     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_curate_demo_session;
+    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_curate_demo;
 }
 //#endregion 📚️Examples
 

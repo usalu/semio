@@ -4,10 +4,10 @@
 //! These live at app level (not in the artifact engine) because they produce framework UI types and
 //! app-addressed `ActionDescriptor`s — an artifact must never depend on an app.
 
-use crate::editor::architect::architect_action;
-use crate::editor::architect::ARCHITECT_APP_ID;
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
+use crate::editor::architect::architect_action;
+use crate::editor::architect::ARCHITECT_APP_ID;
 use semio_framework_plugin::{
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode, UiToggleNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode,

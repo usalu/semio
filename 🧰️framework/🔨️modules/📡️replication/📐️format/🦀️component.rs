@@ -42,7 +42,7 @@ async fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HE
     buf[10..12].copy_from_slice(&FORMAT_VERSION_MINOR.to_le_bytes());
     buf[12..16].copy_from_slice(&required_flags.to_le_bytes());
     buf[16..20].copy_from_slice(&optional_flags.to_le_bytes());
-    let crc = crate::codec::crc32c(&buf[0..20]).await;
+    let crc = crate::codec::crc32c(&buf[0..20]);
     buf[20..24].copy_from_slice(&crc.to_le_bytes());
     buf
 }
@@ -65,7 +65,7 @@ async fn validate_header<S: PackSource>(source: &S) -> Result<(), ProtocolError>
     let version_minor = u16::from_le_bytes([buf[10], buf[11]]);
     let required_flags = u32::from_le_bytes(buf[12..16].try_into().unwrap());
     let stored_crc = u32::from_le_bytes(buf[20..24].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(&buf[0..20]).await;
+    let computed_crc = crate::codec::crc32c(&buf[0..20]);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "header", offset: 20 }));
     }
@@ -108,7 +108,7 @@ pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolEr
 /// @emoji 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
 async fn varint_width(value: u64) -> u64 {
     let mut buf = Vec::with_capacity(10);
-    crate::codec::write_varint_u64(&mut buf, value).await;
+    crate::codec::write_varint_u64(&mut buf, value);
     buf.len() as u64
 }
 
@@ -137,15 +137,15 @@ async fn encode_frame_into(scratch: &mut Vec<u8>, kind: u8, flags: u8, raw_len: 
         None => 0,
     };
     let body_len = 2 + raw_len_width + stored_payload.len() as u64;
-    crate::codec::write_varint_u64(scratch, body_len).await;
+    crate::codec::write_varint_u64(scratch, body_len);
     let body_start = scratch.len();
     scratch.push(kind);
     scratch.push(flags);
     if let Some(rl) = raw_len {
-        crate::codec::write_varint_u64(scratch, rl).await;
+        crate::codec::write_varint_u64(scratch, rl);
     }
     scratch.extend_from_slice(stored_payload);
-    let crc = crate::codec::crc32c(&scratch[body_start..]).await;
+    let crc = crate::codec::crc32c(&scratch[body_start..]);
     scratch.extend_from_slice(&crc.to_le_bytes());
     let back_len_u64 = scratch.len() as u64 + 4;
     let back_len: u32 = back_len_u64.try_into().map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?;
@@ -190,7 +190,7 @@ impl<'a> RecordFrame<'a> {
 /// `(frame, next_pos)` so callers (both cursors below) can advance without recomputing `frame_len`.
 async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, usize), ProtocolError> {
     let mut cursor = pos;
-    let body_len = crate::codec::read_varint_u64(bytes, &mut cursor).await?;
+    let body_len = crate::codec::read_varint_u64(bytes, &mut cursor)?;
     if body_len < 2 {
         return Err(malformed("frame body_len", pos as u64, "body_len smaller than kind+flags (2 bytes)").await);
     }
@@ -207,7 +207,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::codec::read_varint_u64(body, &mut p).await?;
+        let v = crate::codec::read_varint_u64(body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -215,7 +215,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     };
     let stored = &body[payload_start..];
     let stored_crc = u32::from_le_bytes(bytes[body_end..body_end + 4].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(body).await;
+    let computed_crc = crate::codec::crc32c(body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end as u64 }));
     }
@@ -371,7 +371,7 @@ async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> R
         1 => {
             #[cfg(feature = "deflate")]
             {
-                let compressed = crate::codec::DeflateCodec.compress(payload).await?;
+                let compressed = crate::codec::DeflateCodec.compress(payload)?;
                 Ok((true, Some(payload.len() as u64), std::borrow::Cow::Owned(compressed)))
             }
             #[cfg(not(feature = "deflate"))]
@@ -424,7 +424,7 @@ impl<S: PackSink> SprWriter<S> {
     pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: crate::codec::ids::CodecId) -> Result<u64, ProtocolError> {
         let start_offset = self.sink.position().await;
         let (compressed, raw_len, stored) = prepare_payload(codec, payload).await?;
-        let flags = frame_flags(compressed, critical, codec.0).await;
+        let flags = frame_flags(compressed, critical, codec.0);
         encode_frame_into(&mut self.scratch, kind, flags, raw_len, stored.as_ref()).await?;
         self.sink.write_all(&self.scratch).await?;
         let digest = *blake3::hash(&self.scratch).as_bytes();
@@ -449,7 +449,7 @@ impl<S: PackSink> SprWriter<S> {
         let commit_seq = self.next_commit_seq;
         let prev_commit_offset = self.last_commit_offset.unwrap_or(0);
         let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash).await;
-        let flags = frame_flags(false, true, 0).await;
+        let flags = frame_flags(false, true, 0);
         encode_frame_into(&mut self.scratch, crate::REC_COMMIT, flags, None, &payload).await?;
         self.sink.write_all(&self.scratch).await?;
 
@@ -521,7 +521,7 @@ async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_le
         }
     }
     let mut pos = 0usize;
-    let value = crate::codec::read_varint_u64(&tmp, &mut pos).await?;
+    let value = crate::codec::read_varint_u64(&tmp, &mut pos)?;
     Ok((value, i))
 }
 
@@ -556,7 +556,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::codec::read_varint_u64(&body, &mut p).await?;
+        let v = crate::codec::read_varint_u64(&body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -565,7 +565,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let mut trailer = [0u8; 8];
     source.read_exact_at(body_end, &mut trailer).await?;
     let stored_crc = u32::from_le_bytes(trailer[0..4].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(&body).await;
+    let computed_crc = crate::codec::crc32c(&body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(PackError::ChecksumMismatch { segment: "frame", offset: body_end }));
     }

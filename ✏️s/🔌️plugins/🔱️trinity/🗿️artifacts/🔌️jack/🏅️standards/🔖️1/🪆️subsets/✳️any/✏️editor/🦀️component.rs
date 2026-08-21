@@ -7,22 +7,22 @@
 //! channel via `ArtifactEditor::handle`, which fans out to `🎮️commands/<group>/component.rs` (the
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
-use crate::editor::jack::config::{JackConfig, JackConfigMutation};
-use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Effect, Label, LocalizedLabel, Media, MediaClass,
-    MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, DomainTopology, TopologyNode, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+use crate::editor::jack::config::{JackConfig, JackConfigMutation};
+use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation,
+    NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, TopologyNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 // 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
 use std::collections::HashMap;
+use store::EngineHandles;
 use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
@@ -196,11 +196,7 @@ impl protocol::OpText for TrinityJackCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -220,11 +216,7 @@ impl protocol::OpBinary for TrinityJackCommand {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -242,19 +234,11 @@ impl protocol::OpBinary for TrinityJackCommand {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
@@ -343,7 +327,14 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
     }
 
-    async fn handle(command: &TrinityJackCommand, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &TrinityJackCommand,
+        doc: &ArtifactView<'_, JackSnapshot>,
+        cfg: &ConfigView<'_, JackConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         match command {

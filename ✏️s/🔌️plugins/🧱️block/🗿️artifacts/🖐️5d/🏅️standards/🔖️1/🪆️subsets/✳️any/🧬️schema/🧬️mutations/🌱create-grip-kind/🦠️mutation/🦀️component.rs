@@ -1,8 +1,8 @@
 //! 🌱 Block5d mutation — `CreateGripKind`: a new grip-kind catalog row.
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::artifacts::block5d::Block5dGripKind;
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dGripKind};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

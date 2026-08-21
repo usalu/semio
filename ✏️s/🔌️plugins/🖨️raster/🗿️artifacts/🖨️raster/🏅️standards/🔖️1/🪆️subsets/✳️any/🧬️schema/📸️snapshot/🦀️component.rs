@@ -44,18 +44,29 @@ pub struct RasterSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️CodecPrimitives
-async fn hex_encode(bytes: &[u8]) -> String { bytes.iter().map(|b| format!("{b:02x}")).collect() }
+async fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
 async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 { return Err(format!("odd hex length: {s:?}")); }
+    if s.len() % 2 != 0 {
+        return Err(format!("odd hex length: {s:?}"));
+    }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String { hex_encode(s.as_bytes()) }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> { String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string()) }
+pub(crate) async fn enc_str(s: &str) -> String {
+    hex_encode(s.as_bytes())
+}
+pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+}
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 
 pub(crate) async fn enc_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt { None => "[0]".to_string(), Some(v) => format!("[1,{}]", enc(v)) }
+    match opt {
+        None => "[0]".to_string(),
+        Some(v) => format!("[1,{}]", enc(v)),
+    }
 }
 pub(crate) async fn dec_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
@@ -65,16 +76,30 @@ pub(crate) async fn dec_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, Strin
         other => Err(format!("option: bad shape {other:?}")),
     }
 }
-pub(crate) async fn enc_opt_str(s: &Option<String>) -> String { enc_option(s, |v| enc_str(v)) }
-pub(crate) async fn dec_opt_str(s: &str) -> Result<Option<String>, String> { dec_option(s, dec_str) }
-pub(crate) async fn enc_opt_u32(v: &Option<u32>) -> String { enc_option(v, |n| n.to_string()) }
-pub(crate) async fn dec_opt_u32(s: &str) -> Result<Option<u32>, String> { dec_option(s, |n| n.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string())) }
+pub(crate) async fn enc_opt_str(s: &Option<String>) -> String {
+    enc_option(s, |v| enc_str(v))
+}
+pub(crate) async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+    dec_option(s, dec_str)
+}
+pub(crate) async fn enc_opt_u32(v: &Option<u32>) -> String {
+    enc_option(v, |n| n.to_string())
+}
+pub(crate) async fn dec_opt_u32(s: &str) -> Result<Option<u32>, String> {
+    dec_option(s, |n| n.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))
+}
 
-pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String { enc_str(&r.to_uri()) }
-pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> { store::os_io::ArtifactRef::parse_uri(&dec_str(s)?) }
+pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+    enc_str(&r.to_uri())
+}
+pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+}
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) async fn enc_child(c: &RasterAssetChild) -> String { format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target)) }
+pub(crate) async fn enc_child(c: &RasterAssetChild) -> String {
+    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
+}
 pub(crate) async fn dec_child(s: &str) -> Result<RasterAssetChild, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -113,8 +138,12 @@ pub(crate) async fn dec_mask(s: &str) -> Result<RasterLayerMask, String> {
     let b = |s: &str| s.trim().parse::<bool>().map_err(|e: std::str::ParseBoolError| e.to_string());
     Ok(RasterLayerMask { enabled: b(enabled)?, linked: b(linked)?, invert: b(invert)?, width: dec_opt_u32(width)?, height: dec_opt_u32(height)? })
 }
-pub(crate) async fn enc_mask_opt(m: &Option<RasterLayerMask>) -> String { enc_option(m, enc_mask) }
-pub(crate) async fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, String> { dec_option(s, dec_mask) }
+pub(crate) async fn enc_mask_opt(m: &Option<RasterLayerMask>) -> String {
+    enc_option(m, enc_mask)
+}
+pub(crate) async fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, String> {
+    dec_option(s, dec_mask)
+}
 
 /// 🧬️ `params: BTreeMap<String, dsl::DslValue>` — structured/untyped values, encoded JSON-then-hex per
 /// entry (matches `📐️cad`'s established `JsonFieldPrimitives` convention for the same shape, per this
@@ -139,22 +168,21 @@ pub(crate) async fn dec_params(s: &str) -> Result<BTreeMap<String, dsl::DslValue
 /// confuses top-level list splitting).
 pub(crate) async fn enc_layer(layer: &RasterLayerNode) -> String {
     match layer {
-        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => format!(
-            "p[{},{},{},{},{},{},{},{},{},{}]",
-            enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_opt_u32(width), enc_opt_u32(height), enc_opt_str(image_key),
-        ),
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => format!(
-            "g[{},{},{},{},{},{},{},{}]",
-            enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_layer_list(children),
-        ),
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => format!(
-            "a[{},{},{},{},{},{},{},{}]",
-            enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_str(adjustment_kind), enc_params(params),
-        ),
+        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => {
+            format!("p[{},{},{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_opt_u32(width), enc_opt_u32(height), enc_opt_str(image_key),)
+        }
+        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
+            format!("g[{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_layer_list(children),)
+        }
+        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
+            format!("a[{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_str(adjustment_kind), enc_params(params),)
+        }
     }
 }
 pub(crate) async fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
-    if s.is_empty() { return Err("layer: empty".into()); }
+    if s.is_empty() {
+        return Err("layer: empty".into());
+    }
     let (tag, rest) = s.split_at(1);
     let parts = split_top_level(strip_brackets(rest)?, ',');
     match tag {
@@ -163,11 +191,16 @@ pub(crate) async fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
                 return Err(format!("pixel layer: expected 10 fields, got {}", parts.len()));
             };
             Ok(RasterLayerNode::Pixel {
-                id: dec_str(id)?, name: dec_str(name)?,
+                id: dec_str(id)?,
+                name: dec_str(name)?,
                 visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
                 opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?, transform: dec_transform(transform)?, mask: dec_mask_opt(mask)?,
-                width: dec_opt_u32(width)?, height: dec_opt_u32(height)?, image_key: dec_opt_str(image_key)?,
+                blend_mode: dec_str(blend_mode)?,
+                transform: dec_transform(transform)?,
+                mask: dec_mask_opt(mask)?,
+                width: dec_opt_u32(width)?,
+                height: dec_opt_u32(height)?,
+                image_key: dec_opt_str(image_key)?,
             })
         }
         "g" => {
@@ -175,10 +208,13 @@ pub(crate) async fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
                 return Err(format!("group layer: expected 8 fields, got {}", parts.len()));
             };
             Ok(RasterLayerNode::Group {
-                id: dec_str(id)?, name: dec_str(name)?,
+                id: dec_str(id)?,
+                name: dec_str(name)?,
                 visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
                 opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?, transform: dec_transform(transform)?, mask: dec_mask_opt(mask)?,
+                blend_mode: dec_str(blend_mode)?,
+                transform: dec_transform(transform)?,
+                mask: dec_mask_opt(mask)?,
                 children: dec_layer_list(children)?,
             })
         }
@@ -187,11 +223,14 @@ pub(crate) async fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
                 return Err(format!("adjustment layer: expected 8 fields, got {}", parts.len()));
             };
             Ok(RasterLayerNode::Adjustment {
-                id: dec_str(id)?, name: dec_str(name)?,
+                id: dec_str(id)?,
+                name: dec_str(name)?,
                 visible: visible.trim().parse().map_err(|e: std::str::ParseBoolError| e.to_string())?,
                 opacity: opacity.trim().parse().map_err(|e: std::num::ParseFloatError| e.to_string())?,
-                blend_mode: dec_str(blend_mode)?, transform: dec_transform(transform)?,
-                adjustment_kind: dec_str(adjustment_kind)?, params: dec_params(params)?,
+                blend_mode: dec_str(blend_mode)?,
+                transform: dec_transform(transform)?,
+                adjustment_kind: dec_str(adjustment_kind)?,
+                params: dec_params(params)?,
             })
         }
         other => Err(format!("layer: unknown tag {other:?}")),
@@ -207,10 +246,7 @@ pub(crate) async fn dec_layer_list(s: &str) -> Result<Vec<RasterLayerNode>, Stri
 
 //#region 🔖️TextPrimitives
 async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String {
-    format!(
-        "schema={}\nid={}\ntitle={}\nlayers={}\nassets={}",
-        enc_str(&s.schema), enc_str(&s.id), enc_opt_str(&s.title), enc_layer_list(&s.layers), enc_asset_map(&s.assets),
-    )
+    format!("schema={}\nid={}\ntitle={}\nlayers={}\nassets={}", enc_str(&s.schema), enc_str(&s.id), enc_opt_str(&s.title), enc_layer_list(&s.layers), enc_asset_map(&s.assets),)
 }
 async fn parse_raster_snapshot_body(body: &str) -> Result<RasterSnapshot, String> {
     let mut schema = None;
@@ -220,21 +256,24 @@ async fn parse_raster_snapshot_body(body: &str) -> Result<RasterSnapshot, String
     let mut assets = BTreeMap::new();
     for line in body.lines() {
         let line = line.trim();
-        if line.is_empty() { continue; }
-        if let Some(rest) = line.strip_prefix("schema=") { schema = Some(dec_str(rest)?); }
-        else if let Some(rest) = line.strip_prefix("id=") { id = Some(dec_str(rest)?); }
-        else if let Some(rest) = line.strip_prefix("title=") { title = dec_opt_str(rest)?; }
-        else if let Some(rest) = line.strip_prefix("layers=") { layers = dec_layer_list(rest)?; }
-        else if let Some(rest) = line.strip_prefix("assets=") { assets = dec_asset_map(rest)?; }
-        else { return Err(format!("raster snapshot: unknown line {line:?}")); }
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("schema=") {
+            schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("id=") {
+            id = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("title=") {
+            title = dec_opt_str(rest)?;
+        } else if let Some(rest) = line.strip_prefix("layers=") {
+            layers = dec_layer_list(rest)?;
+        } else if let Some(rest) = line.strip_prefix("assets=") {
+            assets = dec_asset_map(rest)?;
+        } else {
+            return Err(format!("raster snapshot: unknown line {line:?}"));
+        }
     }
-    Ok(RasterSnapshot {
-        schema: schema.ok_or_else(|| "raster snapshot: missing schema line".to_string())?,
-        id: id.ok_or_else(|| "raster snapshot: missing id line".to_string())?,
-        title,
-        layers,
-        assets,
-    })
+    Ok(RasterSnapshot { schema: schema.ok_or_else(|| "raster snapshot: missing schema line".to_string())?, id: id.ok_or_else(|| "raster snapshot: missing id line".to_string())?, title, layers, assets })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -247,11 +286,21 @@ async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, St
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) { write_bytes_lp(out, s.as_bytes()); }
-pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> { String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string()) }
+pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+    write_bytes_lp(out, s.as_bytes());
+}
+pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+}
 
 async fn write_opt<T>(out: &mut Vec<u8>, v: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
-    match v { Some(x) => { out.push(1); write(out, x); } None => out.push(0) }
+    match v {
+        Some(x) => {
+            out.push(1);
+            write(out, x);
+        }
+        None => out.push(0),
+    }
 }
 async fn read_opt<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
@@ -260,18 +309,29 @@ async fn read_opt<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut stor
         other => Err(format!("option: bad presence tag {other}")),
     }
 }
-async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) { write_opt(out, v, |out, s| write_str_lp(out, s)); }
-async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> { read_opt(reader, read_str_lp) }
-async fn write_opt_u32(out: &mut Vec<u8>, v: &Option<u32>) { write_opt(out, v, |out, n| out.extend_from_slice(&n.to_le_bytes())); }
+async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
+    write_opt(out, v, |out, s| write_str_lp(out, s));
+}
+async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+    read_opt(reader, read_str_lp)
+}
+async fn write_opt_u32(out: &mut Vec<u8>, v: &Option<u32>) {
+    write_opt(out, v, |out, n| out.extend_from_slice(&n.to_le_bytes()));
+}
 async fn read_opt_u32(reader: &mut store::ByteReader<'_>) -> Result<Option<u32>, String> {
     read_opt(reader, |r| Ok(u32::from_le_bytes(r.read_bytes(4).map_err(|e| e.to_string())?.try_into().map_err(|_| "u32: short read".to_string())?)))
 }
 
-async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) { write_str_lp(out, &r.to_uri()); }
+async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+    write_str_lp(out, &r.to_uri());
+}
 async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-async fn write_child(out: &mut Vec<u8>, c: &RasterAssetChild) { write_str_lp(out, &c.child_id); write_ref(out, &c.target); }
+async fn write_child(out: &mut Vec<u8>, c: &RasterAssetChild) {
+    write_str_lp(out, &c.child_id);
+    write_ref(out, &c.target);
+}
 async fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChild, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
@@ -321,8 +381,12 @@ async fn read_mask(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerMask
     let height = read_opt_u32(reader)?;
     Ok(RasterLayerMask { enabled, linked, invert, width, height })
 }
-async fn write_mask_opt(out: &mut Vec<u8>, m: &Option<RasterLayerMask>) { write_opt(out, m, write_mask); }
-async fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<RasterLayerMask>, String> { read_opt(reader, read_mask) }
+async fn write_mask_opt(out: &mut Vec<u8>, m: &Option<RasterLayerMask>) {
+    write_opt(out, m, write_mask);
+}
+async fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<RasterLayerMask>, String> {
+    read_opt(reader, read_mask)
+}
 
 async fn write_params(out: &mut Vec<u8>, params: &BTreeMap<String, dsl::DslValue>) {
     store::pack_rt::write_varint_u64(out, params.len() as u64);
@@ -413,7 +477,9 @@ async fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerNod
 }
 async fn write_layer_list(out: &mut Vec<u8>, list: &[RasterLayerNode]) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
-    for l in list { write_layer(out, l); }
+    for l in list {
+        write_layer(out, l);
+    }
 }
 async fn read_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<RasterLayerNode>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -434,7 +500,9 @@ async fn decode_raster_snapshot_binary(bytes: &[u8]) -> Result<RasterSnapshot, S
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT { return Err(format!("unsupported pack format {format}")); }
+    if format != PACK_BINARY_FORMAT {
+        return Err(format!("unsupported pack format {format}"));
+    }
     let schema = read_str_lp(&mut reader)?;
     let id = read_str_lp(&mut reader)?;
     let title = read_opt_str(&mut reader)?;
@@ -450,7 +518,9 @@ async fn decode_raster_snapshot_binary(bytes: &[u8]) -> Result<RasterSnapshot, S
 /// impl for the derive to bind against; see this file's own module doc comment.
 impl store::ArtifactDsl for RasterSnapshot {
     const EXTENSION: &'static str = "raster";
-    async fn envelope_id() -> &'static str { "raster.raster" }
+    async fn envelope_id() -> &'static str {
+        "raster.raster"
+    }
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
@@ -460,11 +530,7 @@ impl store::ArtifactDsl for RasterSnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_raster_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -473,22 +539,13 @@ impl store::ArtifactPack for RasterSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_raster_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_raster_snapshot_binary(&inner).map_err(store::PackError::Schema)
@@ -499,13 +556,7 @@ impl store::ArtifactPack for RasterSnapshot {
 //#region 🔖️Defaults
 impl Default for RasterSnapshot {
     fn default() -> Self {
-        Self {
-            schema: RASTER_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            title: None,
-            layers: Vec::new(),
-            assets: BTreeMap::new(),
-        }
+        Self { schema: RASTER_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: BTreeMap::new() }
     }
 }
 //#endregion 🔖️Defaults

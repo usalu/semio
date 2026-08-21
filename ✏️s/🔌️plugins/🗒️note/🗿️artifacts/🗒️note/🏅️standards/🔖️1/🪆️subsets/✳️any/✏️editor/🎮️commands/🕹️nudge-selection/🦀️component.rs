@@ -1,10 +1,10 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::op::NoteMutation;
+use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -42,8 +42,6 @@ async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f6
     Emit::mutations(vec![crate::artifacts::note::schema::mutations::drag_blocks(ids, dx, dy)])
 }
 //#endregion 🔖️Helpers
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "nudge-selection")]

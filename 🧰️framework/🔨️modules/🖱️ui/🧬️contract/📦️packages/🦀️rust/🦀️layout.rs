@@ -345,7 +345,11 @@ mod tests {
             axis: Axis::Horizontal,
             size: Some(0.5),
             children: vec![
-                WindowLayoutNode::Stack { size: Some(0.5), active_window_kind_id: Some("editor".into()), children: vec![WindowLayoutNode::Window { window_kind_id: "editor".into(), title: Some("Editor".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }] },
+                WindowLayoutNode::Stack {
+                    size: Some(0.5),
+                    active_window_kind_id: Some("editor".into()),
+                    children: vec![WindowLayoutNode::Window { window_kind_id: "editor".into(), title: Some("Editor".into()), instance_id: None, template_id: None, corner: Some(WindowStackCorner::TopRight) }],
+                },
                 WindowLayoutNode::Stack { size: None, active_window_kind_id: None, children: vec![] },
             ],
         };

@@ -62,11 +62,7 @@ async fn declared_applied_outcome_clears_a_trajectory_that_actually_exists() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(declared["status"], "applied", "replace-trajectory/clears-the-camera-trajectory declares an applied outcome");
     let produced = produced();
-    assert!(
-        produced.messages().is_empty(),
-        "clearing a trajectory that exists raises neither mutation.target-missing nor mutation.no-op, got {:?}",
-        produced.messages()
-    );
+    assert!(produced.messages().is_empty(), "clearing a trajectory that exists raises neither mutation.target-missing nor mutation.no-op, got {:?}", produced.messages());
     let results = produced.diff().results.as_ref().expect("replace-trajectory writes the results field");
     assert_eq!(results.trajectory, None, "the results delta carries the cleared trajectory");
     assert!(produced.diff().job.is_none(), "replace-trajectory writes results alone");

@@ -250,7 +250,7 @@ impl PolicyEngine {
 #[cfg(test)]
 mod quick {
     use super::*;
-    use crate::catalog::{CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilitySource, CapabilityRef, ToolExposure};
+    use crate::catalog::{CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
     use semio_framework::manifest::{CapabilityEffects, CapabilityExecution, CapabilityPolicy};
 
     fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {

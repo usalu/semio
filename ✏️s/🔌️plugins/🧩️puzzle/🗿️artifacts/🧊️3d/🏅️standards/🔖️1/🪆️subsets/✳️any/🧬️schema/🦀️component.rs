@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dSnapshot};
+use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
 use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -10,45 +10,84 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub domain: String,
-    #[state(artifact)] pub meta: Puzzle3dMeta,
-    #[state(artifact)] pub objects: Vec<Puzzle3dObject>,
-    #[state(artifact)] pub attractions: Vec<Puzzle3dAttraction>,
-    #[state(artifact)] pub target_volumes: Vec<Puzzle3dTargetVolume>,
-    #[state(artifact)] pub references: Vec<Puzzle3dReference>,
-    #[state(presence)] pub selected_object_ids: Vec<String>,
-    #[state(presence)] pub selected_vortex_ids: Vec<String>,
-    #[state(presence)] pub selected_attraction_ids: Vec<String>,
-    #[state(presence)] pub selected_target_volume_ids: Vec<String>,
-    #[state(presence)] pub selected_reference_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub camera_position_x: f64,
-    #[state(config)] pub camera_position_y: f64,
-    #[state(config)] pub camera_position_z: f64,
-    #[state(config)] pub camera_target_x: f64,
-    #[state(config)] pub camera_target_y: f64,
-    #[state(config)] pub camera_target_z: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub selection_mode_default: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub grid_visible: bool,
-    #[state(config)] pub grid_snap_enabled: bool,
-    #[state(config)] pub grid_spacing: f64,
-    #[state(config)] pub overlap_budget: f64,
-    #[state(config)] pub fill_count: u32,
-    #[state(config)] pub brush_candidate_index: u32,
-    #[state(config)] pub lod_automatic: bool,
-    #[state(config)] pub lod_depth_variable: bool,
-    #[state(config)] pub lod_manual: f64,
-    #[state(config)] pub proximity_radius: f64,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub runtime_extras_json: String,
-    #[state(artifact)] pub hovered_object_id: Option<String>,
-    #[state(artifact)] pub hovered_vortex_full_id: Option<String>,
-    #[state(artifact)] pub hovered_kind_id: Option<String>,
-    #[state(artifact)] pub preview_seq: i64,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub domain: String,
+    #[state(artifact)]
+    pub meta: Puzzle3dMeta,
+    #[state(artifact)]
+    pub objects: Vec<Puzzle3dObject>,
+    #[state(artifact)]
+    pub attractions: Vec<Puzzle3dAttraction>,
+    #[state(artifact)]
+    pub target_volumes: Vec<Puzzle3dTargetVolume>,
+    #[state(artifact)]
+    pub references: Vec<Puzzle3dReference>,
+    #[state(presence)]
+    pub selected_object_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_vortex_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_attraction_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_target_volume_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_reference_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub camera_position_x: f64,
+    #[state(config)]
+    pub camera_position_y: f64,
+    #[state(config)]
+    pub camera_position_z: f64,
+    #[state(config)]
+    pub camera_target_x: f64,
+    #[state(config)]
+    pub camera_target_y: f64,
+    #[state(config)]
+    pub camera_target_z: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub selection_mode_default: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub grid_visible: bool,
+    #[state(config)]
+    pub grid_snap_enabled: bool,
+    #[state(config)]
+    pub grid_spacing: f64,
+    #[state(config)]
+    pub overlap_budget: f64,
+    #[state(config)]
+    pub fill_count: u32,
+    #[state(config)]
+    pub brush_candidate_index: u32,
+    #[state(config)]
+    pub lod_automatic: bool,
+    #[state(config)]
+    pub lod_depth_variable: bool,
+    #[state(config)]
+    pub lod_manual: f64,
+    #[state(config)]
+    pub proximity_radius: f64,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub runtime_extras_json: String,
+    #[state(artifact)]
+    pub hovered_object_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_vortex_full_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_kind_id: Option<String>,
+    #[state(artifact)]
+    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -169,8 +208,8 @@ pub async fn puzzle3d_artifact_schema_descriptor() -> artifact_schema::ArtifactS
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::puzzle3d::{Puzzle3dDiff, Puzzle3dMutation, Puzzle3dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle3dBuilderConstruction {
@@ -182,8 +221,12 @@ pub mod derived_construction {
         type Snapshot = Puzzle3dSnapshot;
         type Mutation = Puzzle3dMutation;
         type Diff = Puzzle3dDiff;
-        async fn empty() -> Self { Self { snapshot: Puzzle3dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Puzzle3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -194,24 +237,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -220,8 +260,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Puzzle3dParts {
@@ -372,22 +412,9 @@ pub struct ObjectKindVortexTemplate {
 
 impl Default for ObjectKindVortexTemplate {
     fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            label: String::new(),
-            description: String::new(),
-            icon: String::new(),
-            vortex_kind: None,
-            point: [0.0, 0.0, 0.0],
-            direction: None,
-            t: None,
-            mandatory: None,
-            radius: None,
-        }
+        Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), vortex_kind: None, point: [0.0, 0.0, 0.0], direction: None, t: None, mandatory: None, radius: None }
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct ObjectKindRepresentation {
@@ -686,11 +713,7 @@ impl protocol::OpText for Puzzle3dEngineCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -771,8 +794,13 @@ pub(crate) mod testkit {
                 }],
             },
             kind_catalogs: Some(KindCatalogBundle {
-                objects: vec![ObjectKind { id: "Host".to_string(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }],
-                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }],
+                objects: vec![ObjectKind {
+                    id: "Host".to_string(),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                    scale: None,
+                    vortices: vec![],
+                }],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }],
                 cables: vec![],
             }),
             kind_compatibility: vec![],

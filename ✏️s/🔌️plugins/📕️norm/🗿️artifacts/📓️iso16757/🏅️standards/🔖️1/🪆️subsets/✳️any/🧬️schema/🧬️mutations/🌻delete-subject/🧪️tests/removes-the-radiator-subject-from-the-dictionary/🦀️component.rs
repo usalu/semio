@@ -39,7 +39,11 @@ async fn removes_the_radiator_subject_from_the_dictionary() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("delete-subject applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the applied state differs from the committed after-snapshot");
     assert!(applied.dictionary.subjects.is_empty(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the addressed subject must be gone");
-    assert_eq!(applied.catalogue.product_groups[0].dictionary_subject_id.as_deref(), Some("subject.radiator"), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the oracle severs no catalogue reference, so the now-dangling pointer must survive verbatim");
+    assert_eq!(
+        applied.catalogue.product_groups[0].dictionary_subject_id.as_deref(),
+        Some("subject.radiator"),
+        "delete-subject/removes-the-radiator-subject-from-the-dictionary: the oracle severs no catalogue reference, so the now-dangling pointer must survive verbatim"
+    );
     assert_eq!(applied.dictionary.reference, before().dictionary.reference, "delete-subject/removes-the-radiator-subject-from-the-dictionary: the dictionary identity is not part of the deletion");
 }
 

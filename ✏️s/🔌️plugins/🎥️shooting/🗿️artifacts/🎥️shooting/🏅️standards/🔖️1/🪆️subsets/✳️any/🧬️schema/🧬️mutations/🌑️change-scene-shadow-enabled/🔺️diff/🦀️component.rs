@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneShadowEnabled`.
 
 use super::mutation::ChangeSceneShadowEnabled;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeSceneShadowEnabled, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if base.scene.shadow.enabled == payload.new_enabled {

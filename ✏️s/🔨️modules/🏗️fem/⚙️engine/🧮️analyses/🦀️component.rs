@@ -3,9 +3,9 @@
 //! (`nodal_averaged_scalar`) — all sparse-backed (RCM-ordered, single LDLT factorization shared
 //! across every load case / eigen-solve).
 
-use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
-use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::algebra::{MatD, VecD};
+use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
+use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
 use std::collections::{HashMap, HashSet};
 
 // #region 🔖️Model
@@ -353,9 +353,9 @@ async fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, fa
         (ElementResult::Beam { stations: acc_s }, ElementResult::Beam { stations: term_s }) => {
             ElementResult::Beam { stations: acc_s.iter().zip(term_s.iter()).map(|(a, t)| BeamStation { x: a.x, n: a.n + factor * t.n, v: a.v + factor * t.v, m: a.m + factor * t.m }).collect() }
         }
-        (ElementResult::Plane { gauss: acc_g }, ElementResult::Plane { gauss: term_g }) => ElementResult::Plane {
-            gauss: acc_g.iter().zip(term_g.iter()).map(|(a, t)| PlaneStress { sxx: a.sxx + factor * t.sxx, syy: a.syy + factor * t.syy, sxy: a.sxy + factor * t.sxy, von_mises: a.von_mises + factor * t.von_mises }).collect(),
-        },
+        (ElementResult::Plane { gauss: acc_g }, ElementResult::Plane { gauss: term_g }) => {
+            ElementResult::Plane { gauss: acc_g.iter().zip(term_g.iter()).map(|(a, t)| PlaneStress { sxx: a.sxx + factor * t.sxx, syy: a.syy + factor * t.syy, sxy: a.sxy + factor * t.sxy, von_mises: a.von_mises + factor * t.von_mises }).collect() }
+        }
         (ElementResult::Plate { gauss: acc_g }, ElementResult::Plate { gauss: term_g }) => {
             ElementResult::Plate { gauss: acc_g.iter().zip(term_g.iter()).map(|(a, t)| PlateMoments { mx: a.mx + factor * t.mx, my: a.my + factor * t.my, mxy: a.mxy + factor * t.mxy }).collect() }
         }

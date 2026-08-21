@@ -34,10 +34,10 @@
 
 use crate::types::{create_default_texture2d, create_upload_buffer, transition_barrier, wait_for_fence_value, World3dGpuVertex};
 use std::collections::{HashMap, HashSet};
+use ui_render::{AtlasId, BackendError, MeshId, ResourceOp, TextureId};
 use windows::core::Interface;
 use windows::Win32::Graphics::Direct3D12::*;
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8_UNORM};
-use ui_render::{AtlasId, BackendError, MeshId, ResourceOp, TextureId};
 
 //#region 🔖️Resources
 
@@ -255,12 +255,27 @@ impl GpuResources {
         // placeholder never meant to be visually meaningful) and matches this table's steady-state
         // invariant that every occupied slot's resource is always sampleable.
         unsafe {
-            upload_list.ResourceBarrier(&[transition_barrier(&glyph_dummy, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE), transition_barrier(&icon_dummy, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)]);
+            upload_list.ResourceBarrier(&[
+                transition_barrier(&glyph_dummy, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+                transition_barrier(&icon_dummy, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            ]);
         }
         table.write(device, GLYPH_SLOT, glyph_dummy, DXGI_FORMAT_R8_UNORM);
         table.write(device, ICON_SLOT, icon_dummy, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-        Self { table, raster_slot: HashMap::new(), meshes: HashMap::new(), known_textures: HashSet::new(), known_meshes: HashSet::new(), known_atlases: HashSet::new(), upload_allocator, upload_list, upload_fence, upload_fence_value: 0, pending_staging: Vec::new() }
+        Self {
+            table,
+            raster_slot: HashMap::new(),
+            meshes: HashMap::new(),
+            known_textures: HashSet::new(),
+            known_meshes: HashSet::new(),
+            known_atlases: HashSet::new(),
+            upload_allocator,
+            upload_list,
+            upload_fence,
+            upload_fence_value: 0,
+            pending_staging: Vec::new(),
+        }
     }
 
     /// 🔚️ Closes and (via `apply`'s own queue-execute-wait cycle) never-executed construction-time
@@ -434,7 +449,11 @@ impl GpuResources {
                 Type: D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT,
                 Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { PlacedFootprint: D3D12_PLACED_SUBRESOURCE_FOOTPRINT { Offset: 0, Footprint: D3D12_SUBRESOURCE_FOOTPRINT { Format: format, Width: width, Height: height, Depth: 1, RowPitch: row_pitch } } },
             };
-            let dst_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&texture) })), Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: 0 } };
+            let dst_location = D3D12_TEXTURE_COPY_LOCATION {
+                pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&texture) })),
+                Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX,
+                Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: 0 },
+            };
             // 🔓️ SAFETY: `src_location`/`dst_location` borrow `staging`/`texture` via the same
             // transmute-copy-without-`AddRef` technique `crate::types::transition_barrier` documents —
             // sound because both *locations* are consumed synchronously by `CopyTextureRegion` and then

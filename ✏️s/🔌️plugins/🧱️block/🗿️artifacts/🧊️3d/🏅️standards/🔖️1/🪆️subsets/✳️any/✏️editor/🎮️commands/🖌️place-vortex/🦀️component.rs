@@ -1,9 +1,9 @@
 //! 🖌️ 🖌️ Block 3D play app commands command — `place-vortex`.
 
-use crate::editor::block3d::config::{block3d_window_view, Block3dConfig, Block3dConfigMutation};
-use crate::editor::block3d::world::{default_vortex_kind, instance_offset_for_representation, resolve_brush_vortex_kind_id};
 use crate::artifacts::block3d::op::Block3dMutation;
 use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
+use crate::editor::block3d::config::{block3d_window_view, Block3dConfig, Block3dConfigMutation};
+use crate::editor::block3d::world::{default_vortex_kind, instance_offset_for_representation, resolve_brush_vortex_kind_id};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

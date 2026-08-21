@@ -1,12 +1,10 @@
 //! 📦️ Draw artifact — binary document surface + laws (constitutional: pack).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::draw::DrawSnapshot;
 use store::PackError;
@@ -18,27 +16,20 @@ use store::PackError;
 impl store::ArtifactPack for DrawSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+    async fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
 }
 //#endregion 🔖️HandcraftedArtifactPack
 
@@ -114,7 +105,7 @@ mod tests {
             id: "dsl-fixture".into(),
             title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
             layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
-            assets: assets,
+            assets,
             artboard: Some(DrawArtboard { width: 640.0, height: 480.0 }),
         }
     }

@@ -1,12 +1,16 @@
 //! 🚪️ IO s.jack (1/✳️any) — registration now flows through this module's own `io_registry::entries()`,
 //! wired into `.composers(…)` by the artifact root's `declaration()`, not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg", "stdio.txt"] }
-pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg", "stdio.txt"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg", "stdio.txt"]
+}
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.csv", "stdio.json", "stdio.md", "stdio.png", "stdio.svg", "stdio.txt"]
+}
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::jack::JackSnapshot;
     use crate::artifacts::jack::standards::v1::subsets::any::schema::JackAnalyzer;
+    use crate::artifacts::jack::JackSnapshot;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.jack", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
@@ -15,7 +19,6 @@ pub mod derived_composition {
     const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
 
     pub struct JackComposerComposition;
 
@@ -93,7 +96,6 @@ pub mod derived_composition {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
-
             }
             Err(ComposeError { message: "JackComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -104,10 +106,10 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::jack::standards::v1::subsets::any::schema::JackComposer as JackAnyComposer;
     use crate::artifacts::jack::standards::v1::subsets::any::schema::JackBuilder as JackAnyBuilder;
+    use crate::artifacts::jack::standards::v1::subsets::any::schema::JackComposer as JackAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -148,56 +150,59 @@ pub mod io_registry {
 
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     async fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::jack::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::jack::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     async fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::jack::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::jack::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
     async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::jack::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::jack::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
     async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::jack::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::jack::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::jack::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let bytes = crate::artifacts::jack::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
-
     pub async fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<JackAnyComposer>(),
-            ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_svg },
-            ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_csv },
-            ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_md },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<JackAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_CSV_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_csv },
+                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_md },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_png },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[JACK_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

@@ -13,11 +13,6 @@ pub async fn inverse_move_block_to_step(payload: &MoveBlockToStep, base: &FormsS
     let Some(original_index) = source_step.blocks.iter().position(|block| block.id == payload.block_id) else {
         return Vec::new();
     };
-    vec![FormMutation::MoveBlockToStep(MoveBlockToStep {
-        step_id: payload.to_step_id.clone(),
-        block_id: payload.block_id.clone(),
-        to_step_id: payload.step_id.clone(),
-        index: original_index,
-    })]
+    vec![FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: payload.to_step_id.clone(), block_id: payload.block_id.clone(), to_step_id: payload.step_id.clone(), index: original_index })]
 }
 //#endregion 🔖️Inverse

@@ -1,9 +1,9 @@
 //! 🔍️ 🔍️ Writer play app commands command — `lint-document`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -19,10 +19,10 @@ pub async fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnaps
 #[cfg(test)]
 mod tests {
     use super::LintDocument;
-        use crate::editor::writer::commands::set_active_example;
+    use crate::artifacts::writer::{writer_text, WriterSnapshot};
+    use crate::editor::writer::commands::set_active_example;
     use crate::editor::writer::testkit::new_app_with_registry;
     use crate::editor::writer::WriterCommand;
-    use crate::artifacts::writer::{writer_text, WriterSnapshot};
     use semio_framework::kernel::Effect;
 
     #[semio_framework_async_macros::async_test]

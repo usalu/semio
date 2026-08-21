@@ -3,11 +3,11 @@
 //! via `reset_document_effect` (a `Effect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
 //! replace has no `Mutation`-enum representative.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::artifacts::lowpoly::op::LowpolyMutation;
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
+use crate::editor::lowpoly::session::LowpolyScratch;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 async fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
@@ -53,10 +53,10 @@ pub mod set_fixture_json {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::editor::lowpoly::config::LowpolyConfig;
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
 
     /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `Effect::LoadDocument` (outside undo
     /// history), not an `artifact_mutations` entry — driven directly through `handle` (not

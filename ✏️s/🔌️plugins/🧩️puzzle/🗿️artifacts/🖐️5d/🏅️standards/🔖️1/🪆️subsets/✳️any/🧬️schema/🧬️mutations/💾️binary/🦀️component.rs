@@ -3,13 +3,11 @@
 //! puzzle-5d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::puzzle5d::schema::mutations::text::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
@@ -38,18 +36,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn puzzle5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::mutations::create_part;
+        use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], description: None }).expect("apply");
         let projection = store.snapshot().expect("projection");
         assert_eq!(projection.parts.len(), 1);
         assert_eq!(projection.parts[0].id, "p1");

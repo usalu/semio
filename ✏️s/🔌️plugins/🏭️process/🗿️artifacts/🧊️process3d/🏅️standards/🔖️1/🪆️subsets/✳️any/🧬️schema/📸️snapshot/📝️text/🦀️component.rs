@@ -1,12 +1,10 @@
 //! 📜️ Process3d artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::process3d::Process3dSnapshot;
 
@@ -26,7 +24,6 @@ steps=[73746570732d666c6f772d65643466396264663562653539656139,70726f636573732d73
 toolSolids=[]
 resolvedUpTo=32";
 
-
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
 pub async fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
     <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
@@ -42,12 +39,10 @@ pub async fn print_dsl(document: &Process3dSnapshot) -> String {
 mod tests {
     use super::*;
 
-
-
-
-
-
-    use crate::artifacts::process3d::{empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+    use crate::artifacts::process3d::{
+        empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop,
+        WorkshopMachine,
+    };
 
     async fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }

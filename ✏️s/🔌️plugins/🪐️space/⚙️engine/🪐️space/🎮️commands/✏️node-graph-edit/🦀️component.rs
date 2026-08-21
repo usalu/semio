@@ -83,9 +83,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
+        use crate::demo_space_projection;
         use crate::engine::space::testkit::{apply_mutations, studio_emit};
         use crate::engine::space::SpaceCommand;
-        use crate::demo_space_projection;
         use semio_framework_os::os_workflow_to_flow_fixture;
         use serde_json::json;
         let projection = demo_space_projection();

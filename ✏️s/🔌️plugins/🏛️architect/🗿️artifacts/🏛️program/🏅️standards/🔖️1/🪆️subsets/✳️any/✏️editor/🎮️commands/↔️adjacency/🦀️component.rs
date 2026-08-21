@@ -2,10 +2,10 @@
 //! setting a pair's kind, and filtering the matrix by kind.
 
 pub mod set_adjacency_field {
-    use crate::editor::architect::catalog::patch_register_item_operation;
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::editor::architect::catalog::patch_register_item_operation;
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -32,11 +32,11 @@ pub mod set_adjacency_field {
 }
 
 pub mod set_adjacency_kind {
-    use crate::editor::architect::catalog::{adjacency_kind_from_id, find_adjacency, new_adjacency, next_adjacency_kind};
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::editor::architect::catalog::{adjacency_kind_from_id, find_adjacency, new_adjacency, next_adjacency_kind};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 
@@ -79,10 +79,10 @@ pub mod set_adjacency_kind {
 }
 
 pub mod set_adjacency_filter {
-    use crate::editor::architect::catalog::adjacency_kind_from_id;
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::catalog::adjacency_kind_from_id;
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

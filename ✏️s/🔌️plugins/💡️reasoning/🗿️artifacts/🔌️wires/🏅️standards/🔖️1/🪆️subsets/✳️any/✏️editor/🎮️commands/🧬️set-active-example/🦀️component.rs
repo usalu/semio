@@ -1,9 +1,9 @@
 //! 🧬️ 🧬️ Wires play app commands command — `set-active-example`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::artifacts::wires::empty_wires_snapshot;
-use crate::artifacts::wires::schema::metabolism_wires_example_snapshot;
 use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::schema::metabolism_wires_example_snapshot;
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
 
@@ -27,34 +27,22 @@ pub struct SetActiveExample {
 pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifacts::wires::WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let next = if payload.example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
         metabolism_wires_example_snapshot().map_err(|error| {
-            let message = if error.target.is_empty() {
-                error.message.clone()
-            } else {
-                format!("{} at {}", error.message, error.target.join("."))
-            };
-            Fault::new(
-                FaultOrigin::App,
-                FaultCode::new(error.code.clone()),
-                message,
-            )
+            let message = if error.target.is_empty() { error.message.clone() } else { format!("{} at {}", error.message, error.target.join(".")) };
+            Fault::new(FaultOrigin::App, FaultCode::new(error.code.clone()), message)
         })?
     } else {
         empty_wires_snapshot()
     };
-    Ok(Emit {
-        effects: vec![crate::editor::wires::reset_wires_document_effect(&next)],
-        config_mutations: vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
-        ..Default::default()
-    })
+    Ok(Emit { effects: vec![crate::editor::wires::reset_wires_document_effect(&next)], config_mutations: vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }], ..Default::default() })
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::wires::schema::fixture_nodes;
     use crate::editor::wires::testkit::{dispatch, metabolism_app, new_app};
     use crate::editor::wires::WiresCommand;
-    use crate::artifacts::wires::schema::fixture_nodes;
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned
     /// outright), so `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the

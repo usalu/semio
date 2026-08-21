@@ -1,7 +1,7 @@
 //! 🌳️ Trinity jack query AST.
 
-use serde::{Deserialize, Serialize};
 use crate::artifacts::jack::{JackSnapshot, PropertyValue};
+use serde::{Deserialize, Serialize};
 
 /// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]

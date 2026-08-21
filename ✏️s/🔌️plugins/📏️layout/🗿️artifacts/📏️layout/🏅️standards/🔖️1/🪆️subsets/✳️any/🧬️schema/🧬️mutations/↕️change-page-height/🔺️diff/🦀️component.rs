@@ -13,10 +13,7 @@ pub async fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSn
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has height {}.", payload.id, payload.new_height));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { height: Some(payload.new_height), ..Default::default() } }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { height: Some(payload.new_height), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

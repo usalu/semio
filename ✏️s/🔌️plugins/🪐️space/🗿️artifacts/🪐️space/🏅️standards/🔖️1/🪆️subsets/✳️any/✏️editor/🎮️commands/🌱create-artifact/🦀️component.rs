@@ -4,7 +4,7 @@
 //! convention — the shell's own `os.open-artifact` handler, see `📓️w2-c-report.md`).
 
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::{create_artifact, SSpaceMutation};
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{mint_artifact_id, SpaceArtifactDialect, SpaceArtifactRow, SSpaceSnapshot};
+use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{mint_artifact_id, SSpaceSnapshot, SpaceArtifactDialect, SpaceArtifactRow};
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use crate::editor::space_index::known_artifact_kind;
 use semio_framework_plugin::kernel::Effect;
@@ -27,7 +27,7 @@ pub struct CreateArtifact {
 /// the already-declared `createArtifact` dialog instead of failing on an unknown empty `kind_id`.
 pub async fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     if payload.name.trim().is_empty() || payload.kind_id.trim().is_empty() {
-        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(130),  dialog_id: "createArtifact".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(130), dialog_id: "createArtifact".into(), args: None }));
     }
     let known = known_artifact_kind(&payload.kind_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.unknown-kind"), format!("unknown artifact kind `{}`", payload.kind_id)))?;
     let id = mint_artifact_id(&doc.snapshot.artifacts, payload.now_ms);
@@ -43,10 +43,7 @@ pub async fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnaps
         updated_by: payload.actor.clone(),
     };
     let artifact_ref = format!("{}@{}/{}", known.dialect_artifact_kind, known.standard, known.subset);
-    let relay = Effect::ReplayShellCommand {
-        action_id: "os.open-artifact".into(),
-        args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id }))),
-    };
+    let relay = Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id }))) };
     Ok(Emit { artifact_mutations: vec![create_artifact(row)], effects: vec![relay], ..Default::default() })
 }
 
@@ -55,7 +52,6 @@ pub async fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnaps
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {
@@ -100,7 +96,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_artifact_rejects_an_unknown_kind() {
         let mut app = testkit::new_app();
-        let error = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "nope".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect_err("unknown kind must fail");
+        let error = app
+            .dispatch_typed(SpaceIndexCommand::CreateArtifact(CreateArtifact { name: "First".into(), kind_id: "nope".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
+            .expect_err("unknown kind must fail");
         assert_eq!(error.code.0, "s.space.unknown-kind");
     }
 

@@ -61,7 +61,6 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-
 //#region 🔖️MediaCodec
 /// 🖼️ Relocated verbatim from the former artifact-tree `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): title-card SVG export for the app catalogue/

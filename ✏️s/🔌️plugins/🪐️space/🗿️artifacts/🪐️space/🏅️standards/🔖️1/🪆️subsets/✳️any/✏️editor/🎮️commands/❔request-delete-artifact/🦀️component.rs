@@ -3,9 +3,9 @@
 //! pre-seeded with the target `id`; the dialog's own submit re-dispatches the real, undecorated
 //! `🗑️delete-artifact` command (unchanged — see that file's own doc comment).
 
+use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ pub struct RequestDeleteArtifact {
 
 pub async fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
-    Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(128),  dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
+    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
 }
 
 //#region 🧪️Tests
@@ -28,12 +28,12 @@ mod tests {
     use super::*;
     use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn request_delete_opens_the_confirm_dialog_without_mutating() {
         let mut app = testkit::new_app();
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
+        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
+            .expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();
         let result = app.dispatch_typed(SpaceIndexCommand::RequestDeleteArtifact(RequestDeleteArtifact { id: id.clone() }), &semio_framework_plugin::testkit::meta("local")).expect("request delete");
         assert!(result.mutations.is_empty(), "requesting delete never mutates the document directly");

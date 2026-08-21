@@ -12,11 +12,7 @@ pub async fn inverse_delete_block(payload: &DeleteBlock, base: &FormsSnapshot) -
         return Vec::new();
     };
     match step.blocks.iter().position(|block| block.id == payload.id) {
-        Some(index) => vec![FormMutation::CreateBlock(create_block::mutation::CreateBlock {
-            step_id: payload.step_id.clone(),
-            block: step.blocks[index].clone(),
-            index: Some(index),
-        })],
+        Some(index) => vec![FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: payload.step_id.clone(), block: step.blocks[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
 }

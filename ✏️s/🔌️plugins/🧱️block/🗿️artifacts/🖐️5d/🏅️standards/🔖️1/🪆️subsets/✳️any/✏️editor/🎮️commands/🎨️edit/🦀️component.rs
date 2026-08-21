@@ -206,9 +206,9 @@ async fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSn
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::artifacts::block5d::op::Block5dMutation;
 use crate::artifacts::block5d::Block5dSnapshot;
+use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

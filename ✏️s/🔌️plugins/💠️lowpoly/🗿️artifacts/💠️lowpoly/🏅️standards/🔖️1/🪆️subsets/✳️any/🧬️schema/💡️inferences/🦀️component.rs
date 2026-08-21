@@ -38,10 +38,7 @@ impl protocol::InferenceSpec<LowpolySnapshot> for LowpolyInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.objectCount", reads: &["objects"] },
-            protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.bounds", reads: &["objects"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.objectCount", reads: &["objects"] }, protocol::InferenceFieldSpec { id: "s.lowpoly.lowpoly.inference.bounds", reads: &["objects"] }]
     }
 }
 //#endregion 🔖️Inference

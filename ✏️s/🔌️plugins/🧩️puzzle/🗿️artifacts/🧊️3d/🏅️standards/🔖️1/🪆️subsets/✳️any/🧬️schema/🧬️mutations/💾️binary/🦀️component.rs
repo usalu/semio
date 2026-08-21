@@ -4,13 +4,11 @@
 //! `ArtifactStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
 //! `📡️protocol` module; both wire formats are unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::puzzle3d::schema::mutations::text::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
@@ -151,7 +149,19 @@ mod wire_format_guard {
     use protocol::OpText;
 
     async fn ops() -> Vec<Puzzle3dMutation> {
-        let object = puzzle_3d::Puzzle3dObject { id: "o1".into(), label: Some("L".into()), object_kind: Some("Capsule".into()), anchor: puzzle_3d::Puzzle3dObjectAnchor::Fixed, origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(puzzle_3d::Puzzle3dScale::Vec3([2.0, 3.0, 4.0])), mesh_url: Some("/m.glb".into()), vortices: Vec::new(), hidden: false, locked: true };
+        let object = puzzle_3d::Puzzle3dObject {
+            id: "o1".into(),
+            label: Some("L".into()),
+            object_kind: Some("Capsule".into()),
+            anchor: puzzle_3d::Puzzle3dObjectAnchor::Fixed,
+            origin: [1.0, 2.0, 3.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: Some(puzzle_3d::Puzzle3dScale::Vec3([2.0, 3.0, 4.0])),
+            mesh_url: Some("/m.glb".into()),
+            vortices: Vec::new(),
+            hidden: false,
+            locked: true,
+        };
         vec![
             create_object(object, Some(0)),
             change_object_anchor("o1".into(), puzzle_3d::Puzzle3dObjectAnchor::Derived),
@@ -192,15 +202,21 @@ mod wire_format_guard {
             let bytes = encode_op(operation).expect("encode");
             assert_eq!(&decode_op(&bytes).expect("decode"), operation);
         }
-        let created = operations.iter().find_map(|op| match op {
-            Puzzle3dMutation::CreateObject(payload) => Some(payload),
-            _ => None,
-        }).expect("create-object covered");
+        let created = operations
+            .iter()
+            .find_map(|op| match op {
+                Puzzle3dMutation::CreateObject(payload) => Some(payload),
+                _ => None,
+            })
+            .expect("create-object covered");
         assert_eq!(created.object.anchor, puzzle_3d::Puzzle3dObjectAnchor::Fixed);
-        let connected = operations.iter().find_map(|op| match op {
-            Puzzle3dMutation::ConnectVortices(payload) => Some(payload),
-            _ => None,
-        }).expect("connect-vortices covered");
+        let connected = operations
+            .iter()
+            .find_map(|op| match op {
+                Puzzle3dMutation::ConnectVortices(payload) => Some(payload),
+                _ => None,
+            })
+            .expect("connect-vortices covered");
         assert_eq!(connected.x, 7.0);
         assert_eq!(connected.y, 8.0);
     }

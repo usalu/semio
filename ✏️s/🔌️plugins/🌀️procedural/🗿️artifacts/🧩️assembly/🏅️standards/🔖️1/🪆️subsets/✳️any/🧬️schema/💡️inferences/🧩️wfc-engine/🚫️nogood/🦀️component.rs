@@ -187,7 +187,17 @@ impl NogoodIndex {
     /// instead, unit-propagate its partner watch, or (if both watches — and every other literal —
     /// are simultaneously false) report the conflict this combination was learned from.
     #[allow(clippy::too_many_arguments)]
-    pub async fn on_decision<T: Topology>(&mut self, model: &CompiledModel, topo: &T, node: NodeId, pattern: PatternId, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::wfc_engine::diag::Metrics) -> Option<NodeId> {
+    pub async fn on_decision<T: Topology>(
+        &mut self,
+        model: &CompiledModel,
+        topo: &T,
+        node: NodeId,
+        pattern: PatternId,
+        domains: &mut DomainStore,
+        queue: &mut PropQueue,
+        trail: &mut Trail,
+        metrics: &mut crate::wfc_engine::diag::Metrics,
+    ) -> Option<NodeId> {
         if !self.config.enabled {
             return None;
         }

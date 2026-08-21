@@ -45,11 +45,7 @@ async fn history_tree_nodes(parent: &Option<String>, children_by_parent: &HashMa
         .get(parent)
         .into_iter()
         .flatten()
-        .map(|column| TreeNodeView {
-            id: column.checkpoint_id.clone(),
-            label: column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
-            children: history_tree_nodes(&Some(column.checkpoint_id.clone()), children_by_parent),
-        })
+        .map(|column| TreeNodeView { id: column.checkpoint_id.clone(), label: column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()), children: history_tree_nodes(&Some(column.checkpoint_id.clone()), children_by_parent) })
         .collect()
 }
 //#endregion 🔖️Render

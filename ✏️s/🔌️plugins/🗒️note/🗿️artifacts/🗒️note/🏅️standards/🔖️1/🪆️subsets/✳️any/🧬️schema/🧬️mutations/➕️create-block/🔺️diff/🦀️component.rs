@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `CreateBlock`. Fatal `duplicate-id` on an existing id, Fatal
 //! `invariant` on an unknown/non-group container.
 use super::mutation::CreateBlock;
+use crate::artifacts::note::schema::diff::note_block_added_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_added_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

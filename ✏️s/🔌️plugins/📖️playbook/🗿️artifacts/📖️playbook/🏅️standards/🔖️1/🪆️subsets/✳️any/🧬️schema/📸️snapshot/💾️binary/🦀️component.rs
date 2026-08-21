@@ -46,7 +46,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
-  #[semio_framework_async_macros::async_test]
+    #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
         use protocol::{ArtifactId, Edit, SchemaId};

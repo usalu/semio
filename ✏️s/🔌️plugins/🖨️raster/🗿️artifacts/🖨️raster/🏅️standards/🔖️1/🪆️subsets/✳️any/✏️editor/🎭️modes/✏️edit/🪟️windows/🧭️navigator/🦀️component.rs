@@ -1,8 +1,8 @@
 //! 🧭️ Raster play app — the navigator window: the small overview/minimap surface.
 
+use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::raster_scene;
-use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::{build_paint_2d_scene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

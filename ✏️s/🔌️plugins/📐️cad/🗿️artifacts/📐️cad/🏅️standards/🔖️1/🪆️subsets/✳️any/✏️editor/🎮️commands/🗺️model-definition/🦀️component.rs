@@ -1,15 +1,14 @@
 //! 🗺️ CAD play app commands — which model definition the document is focused on, and which bundled example is loaded.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use crate::editor::cad::{reset_document_effect, runtime_of, snapshot_of, CadPlayRuntime};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_camera, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
-
+use crate::artifacts::cad::CadSnapshot;
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{reset_document_effect, runtime_of, snapshot_of, CadPlayRuntime};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️FocusModelDefinition
 pub mod focus_model_definition {

@@ -138,10 +138,10 @@ fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
 }
 
 impl protocol::OpText for SemioTextMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_text_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_text_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }

@@ -375,7 +375,7 @@ pub struct TiffDiff {
 }
 
 impl MutationDiff<TiffSnapshot> for TiffDiff {
-    async fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
+    fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
         if let Some(ifds) = &self.ifds {
             validate_tiff_ifds(&base.ifds, ifds)?;
         }
@@ -395,7 +395,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). `byte_order`/
     /// `pixels`: LWW. `ifds`: index-transported merge with the nested tag-id-keyed merge for
     /// `modified` entries.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.byte_order.is_some() {
             self.byte_order = other.byte_order;
         }
@@ -456,18 +456,18 @@ fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyRes
 impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta
     /// from `self.apply(base)` back to `base`.
-    async fn inverse(&self, base: &TiffSnapshot) -> Self {
-        let mutated = self.apply(base).await.unwrap();
-        Self::between(&mutated, base).await
+    fn inverse(&self, base: &TiffSnapshot) -> Self {
+        let mutated = self.apply(base).unwrap();
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// `ifds`, recursive tag-id-keyed matching within each surviving IFD pair.
-    async fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
+    fn between(base: &TiffSnapshot, other: &TiffSnapshot) -> Self {
         Self { byte_order: (base.byte_order != other.byte_order).then_some(other.byte_order), ifds: between_ifds(&base.ifds, &other.ifds), pixels: (base.pixels != other.pixels).then(|| other.pixels.clone()) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.byte_order.is_none() && self.ifds.is_none() && self.pixels.is_none()
     }
 }
@@ -1105,10 +1105,10 @@ fn parse_tiff_diff(line: &str) -> Result<TiffDiff, String> {
 }
 
 impl protocol::DiffCodec for TiffDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_tiff_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_tiff_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [byte_order][ifds][pixels]`),
@@ -1119,7 +1119,7 @@ impl protocol::DiffCodec for TiffDiff {
     /// payload follows in that fixed order (`ifds` recurses through [`enc_ifds_diff_bin`] into the
     /// tag-id-keyed triples and the 12-variant `TiffValues` union, genuinely structured all the
     /// way down, never text-as-bytes).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.byte_order.is_some() {
             flags |= 0b001;
@@ -1145,13 +1145,13 @@ impl protocol::DiffCodec for TiffDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let byte_order = if flags & 0b001 != 0 {
-            let v = reader.read_u8().await.map_err(|e| malformed("diff byte_order", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let v = reader.read_u8().map_err(|e| malformed("diff byte_order", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(if v == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian })
         } else {
             None

@@ -7,8 +7,8 @@
 use crate::artifacts::remodel::{default_remodel_scene, RemodelSnapshot, REMODEL_DIALECT, REMODEL_DOCUMENT_SCHEMA};
 use crate::viewer::remodel::modes::view;
 use crate::viewer::remodel::modes::view::windows::model;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

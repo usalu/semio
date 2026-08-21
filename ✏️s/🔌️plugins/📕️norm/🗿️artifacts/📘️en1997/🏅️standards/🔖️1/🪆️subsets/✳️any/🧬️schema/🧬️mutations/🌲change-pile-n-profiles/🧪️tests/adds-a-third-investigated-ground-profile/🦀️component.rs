@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-pile-n-profiles/adds-a-third-investigated-ground-profile: `pile_n_profiles` is a `u32`, so `change-pile-n-profiles` has no finiteness guard at all — only the equality one — and 3 differs from the committed 2");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-pile-n-profiles/adds-a-third-investigated-ground-profile: `pile_n_profiles` is a `u32`, so `change-pile-n-profiles` has no finiteness guard at all — only the equality one — and 3 differs from the committed 2"
+    );
     assert!(produced.messages().is_empty(), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: an accepted change-pile-n-profiles emits no diagnostics at all");
 }
 

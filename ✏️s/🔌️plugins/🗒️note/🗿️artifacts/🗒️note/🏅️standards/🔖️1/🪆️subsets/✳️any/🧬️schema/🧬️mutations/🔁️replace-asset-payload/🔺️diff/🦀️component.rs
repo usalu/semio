@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `ReplaceAssetPayload`. Error `target-missing` when the key is
 //! absent, Warning `no-op` when the payload is unchanged.
 use super::mutation::ReplaceAssetPayload;
+use crate::artifacts::note::schema::diff::note_asset_upsert_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_asset_upsert_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

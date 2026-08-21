@@ -588,21 +588,20 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
     use flow_extension_sdk::{build_manifest_json, FlowExtensionCommand, FlowExtensionSetting};
     build_manifest_json(
-            "math",
-            "Math",
-            "0.2.0",
-            &module_registry(),
-            vec!["onStartup".into()],
-            vec![],
-            vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
-        )
+        "math",
+        "Math",
+        "0.2.0",
+        &module_registry(),
+        vec!["onStartup".into()],
+        vec![],
+        vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
+        vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
+    )
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
@@ -759,9 +758,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-            })?;
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
@@ -769,4 +766,3 @@ mod extension_guest {
     semio_framework_plugin::extension_exports!(bundle);
 }
 // #endregion 🔖️ExtensionGuest
-

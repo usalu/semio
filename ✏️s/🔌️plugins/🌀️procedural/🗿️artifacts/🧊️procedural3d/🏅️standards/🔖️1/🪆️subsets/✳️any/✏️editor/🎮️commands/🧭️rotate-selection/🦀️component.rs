@@ -1,14 +1,13 @@
 //! 🧭️ 🧭️ Procedural3d play app commands command — `rotate-selection`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-use crate::artifacts::procedural3d::schema::{
-    commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_widget_number_param, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_widget_number_param, host_from_fixture};
 
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
@@ -60,7 +59,8 @@ pub struct RotateSelection {
     pub ax: f64,
     pub ay: f64,
     pub az: f64,
-    pub angle: f64}
+    pub angle: f64,
+}
 
 async fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     match gumball_transform(fixture, ids, "rotate", move |host, transform_id| {
@@ -68,7 +68,8 @@ async fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az:
         host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
     }) {
         Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-rotate".into()), ..Default::default() },
-        None => Emit::default()}
+        None => Emit::default(),
+    }
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
@@ -82,7 +83,13 @@ pub async fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural
 
 /// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
 /// command carries no explicit ids.
-pub async fn apply(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn apply(
+    payload: &RotateSelection,
+    doc: &ArtifactView<'_, Procedural3dSnapshot>,
+    _cfg: &ConfigView<'_, Procedural3dConfig>,
+    interaction: &InteractionView<'_>,
+    _session: &mut FlowEvalSession,
+) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
     Ok(rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle))
 }

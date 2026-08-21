@@ -44,10 +44,7 @@ async fn appends_a_rig_pose_keyed_to_the_existing_cam_b() {
 async fn inverse_is_a_single_delete_of_the_cam_b_pose() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::DeleteRigExtrinsic(payload)] if payload.camera_id == "cam-b"),
-        "create-rig-extrinsic's inverse for an unposed camera is one delete-rig-extrinsic, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::DeleteRigExtrinsic(payload)] if payload.camera_id == "cam-b"), "create-rig-extrinsic's inverse for an unposed camera is one delete-rig-extrinsic, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

@@ -38,7 +38,11 @@ async fn restamps_the_catalogue_as_the_2026_edition() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("rename-catalogue applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "rename-catalogue/restamps-the-catalogue-as-the-2026-edition: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.catalogue.metadata.names.preferred.text, "Fixture Radiator Catalogue 2026", "rename-catalogue/restamps-the-catalogue-as-the-2026-edition: the preferred name must be restamped");
-    assert_eq!(applied.catalogue.metadata.names.alternatives, before().catalogue.metadata.names.alternatives, "rename-catalogue/restamps-the-catalogue-as-the-2026-edition: the German alternative name is a separate locale entry and must not be rewritten");
+    assert_eq!(
+        applied.catalogue.metadata.names.alternatives,
+        before().catalogue.metadata.names.alternatives,
+        "rename-catalogue/restamps-the-catalogue-as-the-2026-edition: the German alternative name is a separate locale entry and must not be rewritten"
+    );
     assert_eq!(applied.catalogue.id, before().catalogue.id, "rename-catalogue/restamps-the-catalogue-as-the-2026-edition: renaming must never re-mint the catalogue identifier");
 }
 

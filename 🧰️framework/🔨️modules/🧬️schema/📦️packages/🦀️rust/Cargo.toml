@@ -19,15 +19,11 @@ path = "📦️glue.rs"
 default = []
 
 [dependencies]
-# Default features enable resolve-http/resolve-file, which fail to compile on wasm32.
-jsonschema = { version = "0.29.1", default-features = false }
-schemars = "0.8.22"
-serde = { workspace = true }
-serde_json = { workspace = true }
-thiserror = { workspace = true }
-
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack = { workspace = true }
 semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-schema-derive" }
 
 [dev-dependencies]
+jsonschema = { version = "0.29.1", default-features = false }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

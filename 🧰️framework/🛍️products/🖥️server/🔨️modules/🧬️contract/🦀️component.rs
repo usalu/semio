@@ -383,12 +383,7 @@ mod tests {
 
     #[test]
     fn command_outcome_variants_are_tagged_by_status() {
-        let receipt = CommandReceipt {
-            command_id: CommandId("cmd-1".into()),
-            actor: envelope().target,
-            revision: Revision(5),
-            accepted_at: HybridLogicalClock::default(),
-        };
+        let receipt = CommandReceipt { command_id: CommandId("cmd-1".into()), actor: envelope().target, revision: Revision(5), accepted_at: HybridLogicalClock::default() };
         let accepted = CommandOutcome::Accepted { receipt: receipt.clone(), events: vec![], frontier: None };
         assert!(serde_json::to_string(&accepted).unwrap().contains("\"status\":\"accepted\""));
         let rejected = CommandOutcome::Rejected { receipt, reason: Rejection::Invalid { detail: "no".into() }, notices: vec![] };
@@ -412,11 +407,7 @@ mod tests {
         let instance = ServerInstanceDefinition {
             id: "hub".into(),
             version: "0.1.0".into(),
-            modules: vec![ModuleManifest {
-                id: "documents".into(),
-                commands: vec![CommandDescriptor { kind: "artifact.mutate".into(), version: 1, actor_kind: "artifact".into(), offline: OfflinePolicy::Optimistic }],
-                ..Default::default()
-            }],
+            modules: vec![ModuleManifest { id: "documents".into(), commands: vec![CommandDescriptor { kind: "artifact.mutate".into(), version: 1, actor_kind: "artifact".into(), offline: OfflinePolicy::Optimistic }], ..Default::default() }],
         };
         assert_eq!(instance.offline_policy("artifact.mutate"), OfflinePolicy::Optimistic);
         assert_eq!(instance.offline_policy("directory.inviteMember"), OfflinePolicy::AuthorityRequired);

@@ -1,10 +1,10 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `patch-nodes`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::{Graph, JackSnapshot};
 use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 async fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {

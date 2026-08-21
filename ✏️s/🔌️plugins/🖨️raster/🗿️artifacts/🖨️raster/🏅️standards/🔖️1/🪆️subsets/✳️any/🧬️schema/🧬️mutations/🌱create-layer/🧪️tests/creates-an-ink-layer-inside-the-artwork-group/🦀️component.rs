@@ -45,9 +45,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::DeleteLayer(restore)] = inverse.as_slice() else {
-        panic!("create-layer/creates-an-ink-layer-inside-the-artwork-group: the inverse must be exactly one delete-layer step, got {inverse:?}")
-    };
+    let [RasterMutation::DeleteLayer(restore)] = inverse.as_slice() else { panic!("create-layer/creates-an-ink-layer-inside-the-artwork-group: the inverse must be exactly one delete-layer step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "ink", "create-layer/creates-an-ink-layer-inside-the-artwork-group: the inverse must delete the id the payload introduced");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
     for step in &inverse {
@@ -113,7 +111,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-layer/creates-an-ink-layer-inside-the-artwork-group: committed diff did not carry before to after");
 }

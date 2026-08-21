@@ -1,9 +1,9 @@
 //! 👁️ Procedural3d play app — the 3D preview window (edit mode): the tessellated evaluated geometry.
 
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use crate::editor::procedural3d::config::Procedural3dConfig;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::editor::procedural3d::{preview_camera_json, preview_payload_from_eval_with_session, preview_scene_status_json, preview_selection_json, preview_status_json};
-use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene, world3d_sun_measures, ActionDescriptor, LocalizedLabel, MeasureSelectItem, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -29,7 +29,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 
 /// 👁️ Preview shading mode for the world-3d window.
@@ -45,7 +46,8 @@ pub async fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str,
             MeasureSelectItem { id: "procedural3d-measure-show-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
             MeasureSelectItem { id: "procedural3d-measure-show-points".into(), value: "points".into(), label: "Points".into() },
         ],
-        on_change: procedural_action("setShowMode", None)}
+        on_change: procedural_action("setShowMode", None),
+    }
 }
 
 /// 🎚️ Shared preview-window chrome measures (show-mode toggle + sun group) — reused by both preview
@@ -77,8 +79,10 @@ pub async fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig
                     }
                     value.to_string()
                 }
-                _ => debug_value.to_string()},
-            None => debug_value.to_string()})
+                _ => debug_value.to_string(),
+            },
+            None => debug_value.to_string(),
+        })
     };
     build_world_3d_scene(
         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,

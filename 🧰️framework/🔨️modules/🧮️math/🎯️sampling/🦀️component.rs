@@ -2140,9 +2140,13 @@ async fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
         ProcessorSpec::RepetitionPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("repetition_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope).await)]),
         ProcessorSpec::PresencePenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("presence_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope).await)]),
         ProcessorSpec::FrequencyPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("frequency_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope).await)]),
-        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => {
-            obj(vec![("kind", JsonValue::Str("decaying_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("window", JsonValue::Num(*window as f64)), ("half_life", JsonValue::Num(*half_life)), ("scope", penalty_scope_to_json(*scope).await)])
-        }
+        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => obj(vec![
+            ("kind", JsonValue::Str("decaying_penalty".into())),
+            ("penalty", JsonValue::Num(*penalty as f64)),
+            ("window", JsonValue::Num(*window as f64)),
+            ("half_life", JsonValue::Num(*half_life)),
+            ("scope", penalty_scope_to_json(*scope).await),
+        ]),
         ProcessorSpec::TokenClassPenalty { class_tokens, factors } => {
             obj(vec![("kind", JsonValue::Str("token_class_penalty".into())), ("class_tokens", phrases_json(class_tokens)), ("factors", JsonValue::Array(factors.iter().map(|f| JsonValue::Num(*f as f64)).collect()))])
         }
@@ -2261,7 +2265,12 @@ async fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sa
         "repetition_penalty" => Ok(ProcessorSpec::RepetitionPenalty { penalty: num(value, "penalty", 1.0).await as f32, scope: penalty_scope_from_json(value.get("scope").await).await? }),
         "presence_penalty" => Ok(ProcessorSpec::PresencePenalty { penalty: num(value, "penalty", 0.0).await as f32, scope: penalty_scope_from_json(value.get("scope").await).await? }),
         "frequency_penalty" => Ok(ProcessorSpec::FrequencyPenalty { penalty: num(value, "penalty", 0.0).await as f32, scope: penalty_scope_from_json(value.get("scope").await).await? }),
-        "decaying_penalty" => Ok(ProcessorSpec::DecayingPenalty { penalty: num(value, "penalty", 0.0).await as f32, window: num(value, "window", 16.0).await as usize, half_life: num(value, "half_life", 1.0).await, scope: penalty_scope_from_json(value.get("scope").await).await? }),
+        "decaying_penalty" => Ok(ProcessorSpec::DecayingPenalty {
+            penalty: num(value, "penalty", 0.0).await as f32,
+            window: num(value, "window", 16.0).await as usize,
+            half_life: num(value, "half_life", 1.0).await,
+            scope: penalty_scope_from_json(value.get("scope").await).await?,
+        }),
         "token_class_penalty" => Ok(ProcessorSpec::TokenClassPenalty { class_tokens: phrases(value, "class_tokens").await, factors: f32_array(value, "factors").await }),
         "no_repeat_ngram" => Ok(ProcessorSpec::NoRepeatNgram { n: num(value, "n", 3.0).await as usize }),
         "phrase_penalty" => Ok(ProcessorSpec::PhrasePenalty { phrases: phrases(value, "phrases").await, penalty: num(value, "penalty", 0.0).await as f32 }),
@@ -2290,7 +2299,9 @@ async fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sa
         }),
         "entropy_pid" => Ok(ProcessorSpec::EntropyPid { target: num(value, "target", 2.0).await, kp: num(value, "kp", 0.1).await, ki: num(value, "ki", 0.0).await, kd: num(value, "kd", 0.0).await }),
         "repetition_controller" => Ok(ProcessorSpec::RepetitionController { window: num(value, "window", 16.0).await as usize, threshold: num(value, "threshold", 0.5).await, boost: num(value, "boost", 0.2).await }),
-        "confidence_controller" => Ok(ProcessorSpec::ConfidenceController { low_entropy: num(value, "low_entropy", 0.5).await, high_entropy: num(value, "high_entropy", 3.0).await, low_temp: num(value, "low_temp", 0.5).await, high_temp: num(value, "high_temp", 1.2).await }),
+        "confidence_controller" => {
+            Ok(ProcessorSpec::ConfidenceController { low_entropy: num(value, "low_entropy", 0.5).await, high_entropy: num(value, "high_entropy", 3.0).await, low_temp: num(value, "low_temp", 0.5).await, high_temp: num(value, "high_temp", 1.2).await })
+        }
         _ => Err(SamplingError::Corrupted { reason: "unknown processor kind" }),
     }
 }
@@ -3507,7 +3518,8 @@ impl LogitsProcessor for RepetitionPenalty {
             } else {
                 logit
             }
-        }).await;
+        })
+        .await;
         Ok(())
     }
     async fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
@@ -3778,7 +3790,8 @@ impl LogitsProcessor for TokenClassPenalty {
         ws.transform_processed_over_live(|token, logit| match class_of.get(&token).and_then(|&c| factors.get(c as usize)) {
             Some(&factor) => logit * factor,
             None => logit,
-        }).await;
+        })
+        .await;
         Ok(())
     }
     async fn fork(&self) -> LogitsProcessors {
@@ -6158,7 +6171,8 @@ impl Constraint for JsonSchemaConstraint {
             text: self.text.clone(),
             schema_violated: self.schema_violated,
             text_snapshots: self.text_snapshots.clone(),
-        }).into()
+        })
+        .into()
     }
 }
 
@@ -6305,14 +6319,7 @@ impl SequenceState {
         for s in self.stops.iter_mut() {
             stop_marks.push(s.save().await);
         }
-        SequenceCheckpoint {
-            generated_len: self.generated.len(),
-            cumulative_logprob: self.cumulative_logprob,
-            processor_marks,
-            constraint_marks,
-            stop_marks,
-            rng_snapshot: self.rng.snapshot().await,
-        }
+        SequenceCheckpoint { generated_len: self.generated.len(), cumulative_logprob: self.cumulative_logprob, processor_marks, constraint_marks, stop_marks, rng_snapshot: self.rng.snapshot().await }
     }
 
     /// 🧬️ Restores every component to a previously captured [`SequenceCheckpoint`].
@@ -6540,15 +6547,7 @@ pub async fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorks
     // plain `if` replaces it (O1 de-dyn, math-dedyn).
     let diagnostics = if config.diagnostics.enabled {
         let prob_sum: f64 = ws.probs().await.iter().map(|&p| p as f64).sum();
-        Some(StepDiagnostics {
-            entropy,
-            effective_count: entropy.exp(),
-            truncation_mass: 0.0,
-            masked_by: Vec::new(),
-            timings_ns: Vec::new(),
-            fallback,
-            health: Some(DistributionHealth::assess(ws.live().await.len(), prob_sum).await),
-        })
+        Some(StepDiagnostics { entropy, effective_count: entropy.exp(), truncation_mass: 0.0, masked_by: Vec::new(), timings_ns: Vec::new(), fallback, health: Some(DistributionHealth::assess(ws.live().await.len(), prob_sum).await) })
     } else {
         None
     };
@@ -6702,15 +6701,7 @@ pub async fn sample_step(
 
     let diagnostics = if config.diagnostics.enabled {
         let prob_sum: f64 = ws.probs().await.iter().map(|&p| p as f64).sum();
-        Some(StepDiagnostics {
-            entropy,
-            effective_count: entropy.exp(),
-            truncation_mass: 0.0,
-            masked_by: Vec::new(),
-            timings_ns: Vec::new(),
-            fallback,
-            health: Some(DistributionHealth::assess(ws.live().await.len(), prob_sum).await),
-        })
+        Some(StepDiagnostics { entropy, effective_count: entropy.exp(), truncation_mass: 0.0, masked_by: Vec::new(), timings_ns: Vec::new(), fallback, health: Some(DistributionHealth::assess(ws.live().await.len(), prob_sum).await) })
     } else {
         None
     };
@@ -8225,11 +8216,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn builder_produces_a_validated_config() {
         let config = SamplingConfigBuilder::new()
-            .await.method(SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch }).await
-            .processor(ProcessorSpec::Temperature { value: Schedule::Constant(0.8) }).await
-            .seed(7).await
-            .max_tokens(128).await
-            .build().await
+            .await
+            .method(SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch })
+            .await
+            .processor(ProcessorSpec::Temperature { value: Schedule::Constant(0.8) })
+            .await
+            .seed(7)
+            .await
+            .max_tokens(128)
+            .await
+            .build()
+            .await
             .expect("valid config");
         assert_eq!(config.seed, 7);
         assert_eq!(config.max_tokens, 128);
@@ -8286,14 +8283,23 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_json_round_trips_core_fields() {
         let config = SamplingConfigBuilder::new()
-            .await.method(SamplingMethod::GumbelTopK { k: 3 }).await
-            .processor(ProcessorSpec::TopK { k: Schedule::Constant(40.0), min_keep: 1 }).await
-            .processor(ProcessorSpec::RepetitionPenalty { penalty: 1.2, scope: PenaltyScope::GeneratedOnly }).await
-            .seed(99).await
-            .candidate_count(2).await
-            .min_tokens(1).await
-            .max_tokens(200).await
-            .build().await
+            .await
+            .method(SamplingMethod::GumbelTopK { k: 3 })
+            .await
+            .processor(ProcessorSpec::TopK { k: Schedule::Constant(40.0), min_keep: 1 })
+            .await
+            .processor(ProcessorSpec::RepetitionPenalty { penalty: 1.2, scope: PenaltyScope::GeneratedOnly })
+            .await
+            .seed(99)
+            .await
+            .candidate_count(2)
+            .await
+            .min_tokens(1)
+            .await
+            .max_tokens(200)
+            .await
+            .build()
+            .await
             .expect("valid config");
         let json = config.to_json().await;
         let parsed = SamplingConfig::from_json(&json).await.expect("valid round trip");
@@ -9877,18 +9883,8 @@ mod tests {
         let vocab = Vocabulary::new(4).await.with_eos(vec![TokenId::new(3)]).await;
         let best_of = BestOfN { n: 3 };
         let mut observer: SamplingObservers = NullObserver.into();
-        let results = best_of
-            .run(
-                &config,
-                &vocab,
-                None,
-                2,
-                &mut observer,
-                async |i| SequenceState::new(SequenceId::new(i as u64), Vec::new(), &config, CounterRng::from_seed(i as u64).await.into()).await,
-                |_state| vec![0.0, 9.0, 0.0, 1.0],
-            )
-            .await
-            .unwrap();
+        let results =
+            best_of.run(&config, &vocab, None, 2, &mut observer, async |i| SequenceState::new(SequenceId::new(i as u64), Vec::new(), &config, CounterRng::from_seed(i as u64).await.into()).await, |_state| vec![0.0, 9.0, 0.0, 1.0]).await.unwrap();
         assert_eq!(results.len(), 3);
         for i in 1..results.len() {
             assert!(results[i - 1].1 >= results[i].1, "results must be sorted best-first by mean logprob");
@@ -10244,7 +10240,8 @@ mod tests {
             } else {
                 StepControlFlow::Continue
             }
-        }).await;
+        })
+        .await;
         assert!(result.is_err());
         assert_eq!(calls, 1);
     }

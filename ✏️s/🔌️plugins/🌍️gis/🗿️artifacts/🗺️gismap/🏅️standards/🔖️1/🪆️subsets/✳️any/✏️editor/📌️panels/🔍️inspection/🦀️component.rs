@@ -1,10 +1,10 @@
 //! 🔍️ GIS 2D play app panel — the inspector: map-view settings plus the selected layer's fields.
 
+use crate::artifacts::gismap::GIS_MAP_SCHEMA;
 use crate::editor::gis2d::config::{layer_visible, Gis2dConfig};
 use crate::editor::gis2d::modes::edit::windows::map::options::{layer_weights, lod_mode};
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{gis2d_action, GIS_MAP_LAYER_IDS};
-use crate::artifacts::gismap::GIS_MAP_SCHEMA;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

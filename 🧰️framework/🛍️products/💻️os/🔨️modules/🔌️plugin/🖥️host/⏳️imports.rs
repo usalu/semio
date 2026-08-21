@@ -331,24 +331,8 @@ async fn begin_call(snap: CallSnapshot) -> CallContext {
     if let Some(capability) = snap.capability {
         snap.capability_registry.track(capability, cancel.clone());
     }
-    let ctx = OperationContext {
-        actor: snap.actor,
-        generation: snap.generation,
-        trace: snap.trace,
-        lane: snap.lane,
-        deadline_ms: Some(now_ms.saturating_add(lane_ceiling_ms(snap.lane))),
-        cancel: cancel.clone(),
-        capability: snap.capability,
-    };
-    CallContext {
-        ctx,
-        services: snap.services,
-        router_handler: snap.router_handler,
-        scope: snap.scope,
-        package: snap.package,
-        actor_id: addressed_actor_id(snap.actor, snap.generation).await,
-        guard: CancelOnDrop::new(cancel),
-    }
+    let ctx = OperationContext { actor: snap.actor, generation: snap.generation, trace: snap.trace, lane: snap.lane, deadline_ms: Some(now_ms.saturating_add(lane_ceiling_ms(snap.lane))), cancel: cancel.clone(), capability: snap.capability };
+    CallContext { ctx, services: snap.services, router_handler: snap.router_handler, scope: snap.scope, package: snap.package, actor_id: addressed_actor_id(snap.actor, snap.generation).await, guard: CancelOnDrop::new(cancel) }
 }
 //#endregion 📞️CallContext
 
@@ -371,13 +355,7 @@ impl StreamProducer<AsyncActorHostState> for ChunkStreamProducer {
     type Item = u8;
     type Buffer = VecBuffer<u8>;
 
-    fn poll_produce<'a>(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        _store: StoreContextMut<'a, AsyncActorHostState>,
-        mut destination: Destination<'a, u8, VecBuffer<u8>>,
-        _finish: bool,
-    ) -> Poll<wasmtime::Result<StreamResult>> {
+    fn poll_produce<'a>(self: Pin<&mut Self>, cx: &mut Context<'_>, _store: StoreContextMut<'a, AsyncActorHostState>, mut destination: Destination<'a, u8, VecBuffer<u8>>, _finish: bool) -> Poll<wasmtime::Result<StreamResult>> {
         let mut shared = self.shared.lock().expect("ChunkShared mutex poisoned");
         if let Some(chunk) = shared.queue.pop_front() {
             destination.set_buffer(chunk.into());
@@ -430,7 +408,7 @@ async fn decode_dsl(bytes: &[u8]) -> Option<semio_framework::DslValue> {
     if bytes.is_empty() {
         return None;
     }
-    store::pack_rt::decode_wire_value(bytes).await.ok()
+    store::pack_rt::decode_wire_value(bytes).ok()
 }
 
 async fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> {
@@ -451,11 +429,9 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
         E::SendMessage(inner) => K::SendMessage { target: wit_message_endpoint_to_kernel(inner.target).await, payload: inner.payload },
         E::PublishEvent(inner) => K::PublishEvent { topic: inner.topic, payload: inner.payload },
         E::BlobLoad(inner) => K::BlobLoad { req: semio_framework::kernel::RequestId(inner.req), hash: inner.params.hash },
-        E::BlobWrite(inner) => K::BlobWrite {
-            req: semio_framework::kernel::RequestId(inner.req),
-            media_type: decode_json(&inner.params.media_type).await.unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }),
-            bytes: inner.params.bytes,
-        },
+        E::BlobWrite(inner) => {
+            K::BlobWrite { req: semio_framework::kernel::RequestId(inner.req), media_type: decode_json(&inner.params.media_type).await.unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }), bytes: inner.params.bytes }
+        }
         E::HttpRequest(inner) => K::HttpRequest { req: semio_framework::kernel::RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
         E::DocumentRead(inner) => K::DocumentRead { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
         E::DocumentWrite(inner) => K::DocumentWrite { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
@@ -465,7 +441,9 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
         E::IoRun(_inner) => return Err("effect io-run has no semio_framework::kernel::Effect variant yet (needs A3 to add Effect::IoRun) — see 📓️terra-B1-host-native-report.md".to_string()),
         E::CacheDerive(inner) => K::CacheDerive { req: semio_framework::kernel::RequestId(inner.req), engine_id: inner.params.engine_id, input: inner.params.input },
         E::CacheRead(inner) => K::CacheRead { req: semio_framework::kernel::RequestId(inner.req), engine_id: inner.params.engine_id, key: String::from_utf8_lossy(&inner.params.key).into_owned() },
-        E::OpenWindow(inner) => K::OpenWindow { req: semio_framework::kernel::RequestId(inner.req), kind: semio_framework::kernel::WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(semio_framework::DslValue::Null) },
+        E::OpenWindow(inner) => {
+            K::OpenWindow { req: semio_framework::kernel::RequestId(inner.req), kind: semio_framework::kernel::WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(semio_framework::DslValue::Null) }
+        }
         E::CloseWindow(inner) => K::CloseWindow { window: semio_framework::kernel::WindowHandle(inner.window as u128) },
         // 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
         // sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
@@ -477,7 +455,9 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             };
             K::DispatchAction { req: semio_framework::kernel::RequestId(inner.req), action: inner.params.action, args, delay_ms: inner.params.delay_ms }
         }
-        E::InvokeExtension(inner) => K::InvokeExtension { req: semio_framework::kernel::RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() },
+        E::InvokeExtension(inner) => {
+            K::InvokeExtension { req: semio_framework::kernel::RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() }
+        }
         E::Notify(inner) => K::Notify { message: inner.message },
         E::ClipboardWrite(inner) => K::ClipboardWrite { fragment: decode_json(&inner.fragment).await.ok_or_else(|| "clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string())? },
         E::Navigate(inner) => K::Navigate { uri: inner.uri },
@@ -493,7 +473,14 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             };
             K::ReplayShellCommand { action_id: inner.action_id, args }
         }
-        E::SpawnPluginInstance(inner) => K::SpawnPluginInstance { req: semio_framework::kernel::RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.document_json },
+        E::SpawnPluginInstance(inner) => K::SpawnPluginInstance {
+            req: semio_framework::kernel::RequestId(inner.req),
+            plugin_id: inner.params.plugin_id,
+            app_id: inner.params.app_id,
+            os_instance_id: inner.params.os_instance_id,
+            label: inner.params.label,
+            document_json: inner.params.document_json,
+        },
         E::OpenPluginInstance(inner) => K::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
         E::OpenDialog(inner) => {
             let args = match inner.params.args {
@@ -527,13 +514,31 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
         E::LoadDocument(inner) => K::LoadDocument { pack: inner.doc_pack, spr: inner.spr },
         E::RequestSync => K::RequestSync,
         E::SetTimer(inner) => K::SetTimer { id: inner.id, after_ms: inner.after_ms as u64, repeat: inner.repeat },
-        E::SpawnJob(inner) => K::SpawnJob { job: inner.job, kind: inner.kind, input: inner.input, placement: match inner.placement { wit_effects::JobPlacement::Inline => semio_framework::kernel::JobPlacement::Inline, wit_effects::JobPlacement::Isolated => semio_framework::kernel::JobPlacement::Isolated, wit_effects::JobPlacement::Exclusive => semio_framework::kernel::JobPlacement::Exclusive } },
+        E::SpawnJob(inner) => K::SpawnJob {
+            job: inner.job,
+            kind: inner.kind,
+            input: inner.input,
+            placement: match inner.placement {
+                wit_effects::JobPlacement::Inline => semio_framework::kernel::JobPlacement::Inline,
+                wit_effects::JobPlacement::Isolated => semio_framework::kernel::JobPlacement::Isolated,
+                wit_effects::JobPlacement::Exclusive => semio_framework::kernel::JobPlacement::Exclusive,
+            },
+        },
         E::CancelJob(inner) => K::CancelJob { job: inner.job },
-        E::Respond(inner) => K::Respond { req: semio_framework::kernel::RequestId(inner.req), result: match inner.outcome { wit_effects::RespondResult::Ok(bytes) => semio_framework::kernel::RequestOutcome::Ok(bytes), wit_effects::RespondResult::Fault(bytes) => semio_framework::kernel::RequestOutcome::Err(bytes) } },
+        E::Respond(inner) => K::Respond {
+            req: semio_framework::kernel::RequestId(inner.req),
+            result: match inner.outcome {
+                wit_effects::RespondResult::Ok(bytes) => semio_framework::kernel::RequestOutcome::Ok(bytes),
+                wit_effects::RespondResult::Fault(bytes) => semio_framework::kernel::RequestOutcome::Err(bytes),
+            },
+        },
         E::StorageRead(inner) => K::StorageRead { req: semio_framework::kernel::RequestId(inner.req), key: inner.params.key },
         E::StorageWrite(inner) => K::StorageWrite { req: semio_framework::kernel::RequestId(inner.req), key: inner.params.key, bytes: inner.params.value },
         E::StorageDelete(inner) => K::StorageDelete { req: semio_framework::kernel::RequestId(inner.req), key: inner.params.key },
-        E::RequestCapability(inner) => K::RequestCapability { req: semio_framework::kernel::RequestId(inner.req), capability: semio_framework::kernel::CapabilityRequest { id: semio_framework::kernel::CapabilityId(inner.params.id), scope: inner.params.scope, reason: inner.params.reason, optional: inner.params.optional } },
+        E::RequestCapability(inner) => K::RequestCapability {
+            req: semio_framework::kernel::RequestId(inner.req),
+            capability: semio_framework::kernel::CapabilityRequest { id: semio_framework::kernel::CapabilityId(inner.params.id), scope: inner.params.scope, reason: inner.params.reason, optional: inner.params.optional },
+        },
         E::ReleaseCapability(inner) => K::ReleaseCapability { id: semio_framework::kernel::CapabilityId(inner.id) },
         E::Subscribe(inner) => K::Subscribe { topic: inner.topic },
         E::Unsubscribe(inner) => K::Unsubscribe { topic: inner.topic },

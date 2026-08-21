@@ -16,13 +16,7 @@ pub async fn diff(payload: &ReplaceRegionData, base: &GisMapSnapshot) -> protoco
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Region \"{}\" data is already identical to the requested replacement.", payload.id));
     }
     protocol::MutationOutcome::new(GisMapDiff {
-        regions: Some(GisMapFeaturesDelta {
-            patched: vec![GisMapFeaturePatchEntry {
-                id: payload.id.clone(),
-                patch: MapFeaturePatch { data: Some(payload.new_data.clone()) },
-            }],
-            ..Default::default()
-        }),
+        regions: Some(GisMapFeaturesDelta { patched: vec![GisMapFeaturePatchEntry { id: payload.id.clone(), patch: MapFeaturePatch { data: Some(payload.new_data.clone()) } }], ..Default::default() }),
         ..Default::default()
     })
 }

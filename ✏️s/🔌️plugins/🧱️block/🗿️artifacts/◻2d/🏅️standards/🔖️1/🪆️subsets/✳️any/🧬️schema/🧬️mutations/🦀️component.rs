@@ -7,7 +7,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::Block2dSnapshot;
 use protocol::Mutation;
@@ -105,8 +104,8 @@ mod tests {
     use crate::artifacts::block2d::schema::empty_block2d_snapshot;
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-    use protocol::SemanticMutation;
     use protocol::MutationDiff;
+    use protocol::SemanticMutation;
 
     async fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
@@ -298,7 +297,8 @@ mod tests {
         assert_missing_target_is_error(&base, &rename_handle_kind("missing".into(), "x".into())); // rename
         assert_missing_target_is_error(&base, &change_handle_kind_color("missing".into(), "#fff".into())); // change/set/update
         assert_missing_target_is_error(&base, &change_handle_handle_kind("missing".into(), "hk0".into())); // change/set/update
-        assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &move_handle("missing".into(), 1.0, 1.0));
+        // move/drag/rotate/scale/resize
     }
 
     #[semio_framework_async_macros::async_test]

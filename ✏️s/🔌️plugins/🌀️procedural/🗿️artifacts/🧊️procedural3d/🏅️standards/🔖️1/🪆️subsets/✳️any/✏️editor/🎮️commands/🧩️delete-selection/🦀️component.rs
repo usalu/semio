@@ -1,11 +1,11 @@
 //! 🧩️ 🧩️ Procedural3d play app commands command — `delete-selection`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::schema::{commit_fixture, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -32,6 +32,12 @@ pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedura
 /// 🕹️ Reads the `graph` domain's current selection instead of a deleted config field — no config
 /// mutation needed afterwards, the framework auto-prunes the deleted ids out of `graph`'s selection
 /// via `interaction_topology`.
-pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn apply(
+    _payload: &DeleteSelection,
+    doc: &ArtifactView<'_, Procedural3dSnapshot>,
+    _cfg: &ConfigView<'_, Procedural3dConfig>,
+    interaction: &InteractionView<'_>,
+    _session: &mut FlowEvalSession,
+) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(delete_selected(&doc.snapshot.fixture, &interaction.selection("graph").ids))
 }

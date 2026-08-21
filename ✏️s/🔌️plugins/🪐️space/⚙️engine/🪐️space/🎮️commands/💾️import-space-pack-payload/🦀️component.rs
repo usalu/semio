@@ -1,7 +1,7 @@
 //! 💾️ 💾️ S Studio app command — `import-space-pack-payload`.
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_os::host::{import_os_space_from_pack};
+use semio_framework_os::host::import_os_space_from_pack;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot, OS_SPACE_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

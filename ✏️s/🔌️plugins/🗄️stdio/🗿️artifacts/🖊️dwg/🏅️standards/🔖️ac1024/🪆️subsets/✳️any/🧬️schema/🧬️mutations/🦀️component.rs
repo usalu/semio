@@ -38,15 +38,15 @@ pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) ->
 impl Mutation<DwgSnapshot> for DwgMutation {
     type Diff = DwgDiff;
 
-    async fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DwgMutation::NoMutation => DwgDiff::default(),
             DwgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => diff::diff_set_version_info(base, version, *maintenance_version, *codepage),
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &DwgSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &DwgSnapshot) -> Vec<Self> {
         match self {
             DwgMutation::NoMutation => vec![DwgMutation::NoMutation],
             DwgMutation::SetSnapshot { .. } => vec![DwgMutation::SetSnapshot { snapshot: base.clone() }],
@@ -58,33 +58,33 @@ impl Mutation<DwgSnapshot> for DwgMutation {
 
 //#region Codecs
 impl OpText for DwgMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
 
-    async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
 impl OpBinary for DwgMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self).await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes).await
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion Codecs

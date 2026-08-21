@@ -19,11 +19,7 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 /// `#[artifact_schema(id = "s.dag.dag")]` on `DagArtifact`; `standard`/`subset` match this
 /// artifact's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
 /// `s.dag.dag@1/*#editor` / `s.dag.dag@1/*#viewer`.
-pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
-    artifact_kind: "s.dag.dag",
-    standard: semio_framework_plugin::app::StandardId("1"),
-    subset: semio_framework_plugin::app::SubsetId::ANY,
-};
+pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 pub use crate::artifacts::dag::snapshot::schema::{default_snapshot, DagSnapshot};
 pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};

@@ -19,10 +19,7 @@ pub struct LowpolyBounds {
 
 async fn grow(bounds: Option<LowpolyBounds>, point: [f32; 3]) -> LowpolyBounds {
     match bounds {
-        Some(bounds) => LowpolyBounds {
-            min: [bounds.min[0].min(point[0]), bounds.min[1].min(point[1]), bounds.min[2].min(point[2])],
-            max: [bounds.max[0].max(point[0]), bounds.max[1].max(point[1]), bounds.max[2].max(point[2])],
-        },
+        Some(bounds) => LowpolyBounds { min: [bounds.min[0].min(point[0]), bounds.min[1].min(point[1]), bounds.min[2].min(point[2])], max: [bounds.max[0].max(point[0]), bounds.max[1].max(point[1]), bounds.max[2].max(point[2])] },
         None => LowpolyBounds { min: point, max: point },
     }
 }
@@ -40,14 +37,7 @@ mod tests {
     use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
     async fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
-        LowpolyObject {
-            id: id.into(),
-            name: id.into(),
-            transform: LowpolyTransform { position, ..LowpolyTransform::default() },
-            smooth_shading: false,
-            mesh: None,
-            paint_layers: vec![LowpolyPaintLayer::new("Base")],
-        }
+        LowpolyObject { id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")] }
     }
 
     #[semio_framework_async_macros::async_test]

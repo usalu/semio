@@ -75,14 +75,7 @@ impl ArtifactViewer for FlowViewer {
 /// 🧱️ The manifest stitch: one call per taxonomy node, mirroring the mutation-capable module's
 /// `create_flow_app` doing the equivalent stitching for its own five windows.
 pub async fn create_flow_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(FLOW_DIALECT)
-        .document(["semio", "flow"])
-        .icon_id("flow")
-        .mode_def(view::definition())
-        .default_mode_id(view::FLOW_VIEW_MODE_VIEW)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(FLOW_DIALECT).document(["semio", "flow"]).icon_id("flow").mode_def(view::definition()).default_mode_id(view::FLOW_VIEW_MODE_VIEW).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

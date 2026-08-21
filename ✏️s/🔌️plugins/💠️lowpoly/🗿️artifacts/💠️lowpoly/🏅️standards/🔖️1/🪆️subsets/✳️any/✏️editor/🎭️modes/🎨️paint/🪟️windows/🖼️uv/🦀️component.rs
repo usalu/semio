@@ -1,13 +1,13 @@
 //! 🖼️ Lowpoly play app — the UV window: the 2D UV-canvas paint surface. Only the paint operations it
 //! shares with the Model window are scoped here (no mesh-editing/transform ops).
 
+use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
 use crate::editor::lowpoly::config::LowpolyConfig;
+use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILITY_DEFAULT;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::LowpolyView;
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::json;
 use std::collections::HashMap;

@@ -1,11 +1,11 @@
 //! 📄️ CAD play app panel — the document tree: every pane's objects (with their primitive children)
 //! and reference overlays, plus the scene's nodes.
 
+use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::{cad_action, cad_tree_item, CadPlayRuntime, CadPlayView};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
-use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
 use semio_framework_plugin::{
     Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
@@ -203,13 +203,13 @@ pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::cad::testkit::*;
-    use crate::editor::cad::config::CadConfig;
-    use crate::editor::cad::terminology::cad_labels;
-    use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::CadPaneId;
+    use crate::editor::cad::config::CadConfig;
+    use crate::editor::cad::terminology::cad_labels;
+    use crate::editor::cad::testkit::*;
+    use crate::editor::cad::{make_object_for_typology, CadPlayApp, CadPlayRuntime};
     use semio_framework_plugin::{ArtifactView, PluginApp, UiNode, ViewModel};
 
     #[semio_framework_async_macros::async_test]

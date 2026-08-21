@@ -2,9 +2,7 @@
 
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{vcs_action, VCS_INTERACTION_HISTORY};
-use semio_framework_plugin::{
-    tree_item_with_action, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::{tree_item_with_action, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 
 //#region 🔖️Constants

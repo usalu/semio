@@ -228,7 +228,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
         }
     }
     let removed_set: HashSet<&str> = removed.iter().map(String::as_str).collect();
-    items.retain(|it| !removed_set.contains(it.key()));
+    items.retain(|it| !removed_set.contains(&it.key()));
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
@@ -241,7 +241,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
 fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> (Vec<String>, Vec<(String, T::Diff)>, Vec<(usize, T)>) {
     let base_keys: HashSet<&str> = base.iter().map(|t| t.key()).collect();
     let other_keys: HashSet<&str> = other.iter().map(|t| t.key()).collect();
-    let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(t.key())).map(|t| t.key().to_string()).collect();
+    let removed: Vec<String> = base.iter().filter(|t| !other_keys.contains(&t.key())).map(|t| t.key().to_string()).collect();
     let mut modified = Vec::new();
     for bt in base {
         if let Some(ot) = other.iter().find(|o| o.key() == bt.key()) {
@@ -251,7 +251,7 @@ fn named_between<T: DxfNamedElem>(base: &[T], other: &[T]) -> (Vec<String>, Vec<
             }
         }
     }
-    let added: Vec<(usize, T)> = other.iter().enumerate().filter(|(_, t)| !base_keys.contains(t.key())).map(|(i, t)| (i, t.clone())).collect();
+    let added: Vec<(usize, T)> = other.iter().enumerate().filter(|(_, t)| !base_keys.contains(&t.key())).map(|(i, t)| (i, t.clone())).collect();
     (removed, modified, added)
 }
 
@@ -276,7 +276,7 @@ fn named_absorb_pair<T: DxfNamedElem>(
         }
     }
     let mut merged_modified: Vec<(String, T::Diff)> = d1_modified.iter().filter(|(k, _)| !merged_removed.contains(k)).cloned().collect();
-    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(t.key())).cloned().collect();
+    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(&t.key())).cloned().collect();
 
     for (key, d2d) in d2_modified {
         if added_keys.contains(key) {
@@ -1664,7 +1664,7 @@ fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnapshot {
 }
 
 impl MutationDiff<DxfSnapshot> for DxfDiff {
-    async fn apply(&self, base: &DxfSnapshot) -> MutationApplyResult<DxfSnapshot> {
+    fn apply(&self, base: &DxfSnapshot) -> MutationApplyResult<DxfSnapshot> {
         validate_dxf_diff(self, base)?;
         Ok(apply_dxf_diff_unchecked(self, base))
     }
@@ -1672,7 +1672,7 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract): every
     /// collection uses its own generic absorb-pair transport; `tables` recurses into its own
     /// three sub-collections.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.header_vars = match (self.header_vars.take(), other.header_vars) {
             (None, None) => None,
             (Some(a), None) => Some(a),
@@ -1702,12 +1702,12 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
 
 impl DiffAlgebra<DxfSnapshot> for DxfDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
-    async fn inverse(&self, base: &DxfSnapshot) -> Self {
+    fn inverse(&self, base: &DxfSnapshot) -> Self {
         let mutated = apply_dxf_diff_unchecked(self, base);
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
-    async fn between(base: &DxfSnapshot, other: &DxfSnapshot) -> Self {
+    fn between(base: &DxfSnapshot, other: &DxfSnapshot) -> Self {
         DxfDiff {
             header_vars: DxfHeaderVarsDiff::between(&base.header_vars, &other.header_vars),
             tables: DxfTablesDiff::between(&base.tables, &other.tables),
@@ -1716,7 +1716,7 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.header_vars.as_ref().map_or(true, DxfHeaderVarsDiff::is_empty)
             && self.tables.as_ref().map_or(true, DxfTablesDiff::is_empty)
             && self.blocks.as_ref().map_or(true, DxfBlocksDiff::is_empty)
@@ -3493,10 +3493,10 @@ fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
 }
 
 impl protocol::DiffCodec for DxfDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_dxf_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_dxf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | per-present-field payload`), matching
@@ -3509,7 +3509,7 @@ impl protocol::DiffCodec for DxfDiff {
     /// collection-triple/tri-state binary payload follows, genuinely structured
     /// (`#region 🔖️DiffBinaryCodecs`/`#region 🔖️CollectionTripleBinaryCodecs` above), never
     /// text-as-bytes.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.header_vars.is_some() {
             flags |= 0b0001;
@@ -3538,11 +3538,11 @@ impl protocol::DiffCodec for DxfDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let header_vars = if flags & 0b0001 != 0 { Some(dec_header_vars_diff_bin(&mut reader).map_err(|e| malformed("diff header_vars", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let tables = if flags & 0b0010 != 0 { Some(dec_tables_diff_bin(&mut reader).map_err(|e| malformed("diff tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let blocks = if flags & 0b0100 != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| malformed("diff blocks", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

@@ -7,8 +7,8 @@
 
 use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os::{
-    create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, register_app_io, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id, AppDefinition, MediaContract,
-    WorkflowSnapshot, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition,
+    create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, register_app_io, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id,
+    AppDefinition, MediaContract, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -77,10 +77,8 @@ pub async fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: O
 /// Operates directly on `WorkflowNode`/`WorkflowMediaPort` — a node's ports are typed `MediaPortSpec`s
 /// now, no more string `artifact_kind` join through a separate `OsMediaPort`.
 pub async fn negotiate_media_connect(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
-    let source_port =
-        projection.graph.nodes.iter().find(|node| node.id == source_node_id).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)).ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
-    let target_port =
-        projection.graph.nodes.iter().find(|node| node.id == target_node_id).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)).ok_or_else(|| format!("unknown target port {target_node_id}:{target_port_id}"))?;
+    let source_port = projection.graph.nodes.iter().find(|node| node.id == source_node_id).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)).ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
+    let target_port = projection.graph.nodes.iter().find(|node| node.id == target_node_id).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)).ok_or_else(|| format!("unknown target port {target_node_id}:{target_port_id}"))?;
     negotiate_media_contract(source_port, target_port)
 }
 //#endregion 🔖️MediaContractConnect

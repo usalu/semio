@@ -1,10 +1,10 @@
 //! 🕸️ Architect graph window — the program elements and their adjacencies as an undirected
 //! node-graph surface, laid out on a circle.
 
-use crate::editor::architect::chrome::empty_component_scene;
-use crate::editor::architect::config::ArchitectConfig;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::artifacts::program::ProgramSnapshot;
+use crate::editor::architect::chrome::empty_component_scene;
+use crate::editor::architect::config::ArchitectConfig;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde::{Deserialize, Serialize};
 

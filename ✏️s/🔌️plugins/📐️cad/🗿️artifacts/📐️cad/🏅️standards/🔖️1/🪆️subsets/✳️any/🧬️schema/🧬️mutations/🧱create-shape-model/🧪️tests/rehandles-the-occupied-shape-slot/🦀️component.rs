@@ -38,7 +38,12 @@ async fn replaces_the_shape_handle_in_place() {
     let handle = after.shape_model.as_ref().expect("create-shape-model leaves the slot occupied");
     assert_eq!(handle.child_id, "shape-model-2", "create-shape-model must install the payload's child id");
     assert_eq!(handle.target.to_uri(), "cad-shape-2!s.stdio.semio@v1/model", "create-shape-model must parse the payload target URI back into a real ArtifactRef");
-    assert!(after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("building-model-1") && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1") && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"), "create-shape-model must leave the other three fixed model slots untouched");
+    assert!(
+        after.building_model.as_ref().map(|c| c.child_id.as_str()) == Some("building-model-1")
+            && after.energy_model.as_ref().map(|c| c.child_id.as_str()) == Some("energy-model-1")
+            && after.structure_classic_model.as_ref().map(|c| c.child_id.as_str()) == Some("structure-classic-model-1"),
+        "create-shape-model must leave the other three fixed model slots untouched"
+    );
     assert_eq!(after.drawings.len(), 1, "create-shape-model must not touch the drawings child collection");
     assert_eq!(after, expected_after(), "create-shape-model/rehandles-the-occupied-shape-slot: applied state differs from the committed after-snapshot");
 }

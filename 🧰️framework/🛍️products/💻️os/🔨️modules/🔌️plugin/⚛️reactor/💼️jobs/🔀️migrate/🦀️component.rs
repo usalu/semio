@@ -34,13 +34,7 @@ pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
-        run_two_phase(
-            ctx,
-            restored,
-            move || async move { decode(&decode_input).await },
-            move || async move { execute(&execute_input).await },
-        )
-        .await
+        run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { execute(&execute_input).await }).await
     })
 }
 

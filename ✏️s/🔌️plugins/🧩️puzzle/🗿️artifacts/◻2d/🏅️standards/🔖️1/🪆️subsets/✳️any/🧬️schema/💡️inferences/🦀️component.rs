@@ -83,20 +83,8 @@ mod tests {
     //#region 🧸️Fixtures
     async fn parent_child_snapshot() -> Puzzle2dSnapshot {
         // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
-        let p = Puzzle2dNode {
-            id: "p".into(),
-            x: 5.0,
-            y: 7.0,
-            anchor: Puzzle2dNodeAnchor::Fixed,
-            handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }],
-            ..Default::default()
-        };
-        let c = Puzzle2dNode {
-            id: "c".into(),
-            anchor: Puzzle2dNodeAnchor::Derived,
-            handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }],
-            ..Default::default()
-        };
+        let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
+        let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
         Puzzle2dSnapshot { schema: crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
     }
@@ -125,13 +113,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️FastenedLayout
+use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
 /// 🔗️ Rehomed from the deleted `⚙️engine/📐️layout` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): compose-parity fastened layout, pure derived
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
 use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
-use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 async fn round_f(v: f64) -> f64 {
@@ -188,10 +176,7 @@ pub async fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
                 } else {
                     None
                 };
-                let parent_t = handle_id
-                    .and_then(|id| current_node.handles.iter().find(|handle| handle.id == id))
-                    .map(|handle| handle.angle / (2.0 * std::f64::consts::PI))
-                    .unwrap_or(0.0);
+                let parent_t = handle_id.and_then(|id| current_node.handles.iter().find(|handle| handle.id == id)).map(|handle| handle.angle / (2.0 * std::f64::consts::PI)).unwrap_or(0.0);
                 // 2d has no parent direction z; treat as horizontal unless encoded otherwise → use horizontal scale branch when parent not at origin.
                 let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {
                     let angle = 2.0 * std::f64::consts::PI * parent_t;
@@ -240,10 +225,61 @@ mod fastened_tests {
             schema: "puzzle.2d".into(),
             camera: Puzzle2dCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                Puzzle2dNode { id: "p".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }] },
-                Puzzle2dNode { id: "c".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, anchor: Puzzle2dNodeAnchor::Derived, handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }] },
+                Puzzle2dNode {
+                    id: "p".into(),
+                    node_kind: None,
+                    shape: None,
+                    x: 0.0,
+                    y: 0.0,
+                    radius: None,
+                    width: None,
+                    height: None,
+                    text: None,
+                    icon_kind: None,
+                    root: None,
+                    scale: None,
+                    visible: None,
+                    locked: None,
+                    anchor: Puzzle2dNodeAnchor::Fixed,
+                    handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                },
+                Puzzle2dNode {
+                    id: "c".into(),
+                    node_kind: None,
+                    shape: None,
+                    x: 0.0,
+                    y: 0.0,
+                    radius: None,
+                    width: None,
+                    height: None,
+                    text: None,
+                    icon_kind: None,
+                    root: None,
+                    scale: None,
+                    visible: None,
+                    locked: None,
+                    anchor: Puzzle2dNodeAnchor::Derived,
+                    handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                },
             ],
-            edges: vec![Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), edge_kind: None, source_tip: None, target_tip: None, visible: None, locked: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }],
+            edges: vec![Puzzle2dEdge {
+                id: "e".into(),
+                source: "p:h".into(),
+                target: "c:h".into(),
+                edge_kind: None,
+                source_tip: None,
+                target_tip: None,
+                visible: None,
+                locked: None,
+                gap: 0.0,
+                shift: 0.0,
+                rise: 0.0,
+                rotation: 0.0,
+                turn: 0.0,
+                tilt: 0.0,
+                x: 0.0,
+                y: 0.0,
+            }],
             meta: Puzzle2dMeta::default(),
         };
         fastened_layout_snapshot(&mut snapshot);

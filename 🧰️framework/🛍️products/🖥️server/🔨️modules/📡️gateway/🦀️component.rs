@@ -40,16 +40,11 @@ use tokio::sync::{broadcast, Mutex, Notify};
 
 use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Deciders, PolicyHook};
 use crate::contract::{
-    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock,
-    ModuleManifest, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal,
-    QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition, TenantId,
+    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition,
+    TenantId,
 };
 use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolvers, ResolverChain};
-use crate::storage::{
-    content_hash, AuthorityStore, AuthorityStores, BlobStore, BlobStores, MemoryAuthorityStore,
-    MemoryBlobStore, MemoryProjectionStore, MemorySessionStore, ProjectionStores, SessionStores,
-    StorageError, StorageProfile,
-};
+use crate::storage::{content_hash, AuthorityStore, AuthorityStores, BlobStore, BlobStores, MemoryAuthorityStore, MemoryBlobStore, MemoryProjectionStore, MemorySessionStore, ProjectionStores, SessionStores, StorageError, StorageProfile};
 
 //#region 🔖️Reexport
 /// 🚪️ The router type a [`ServerModule`] contributes routes to. Reexported so an instance never has
@@ -196,14 +191,7 @@ pub struct CountingModule;
 
 impl ServerModule for CountingModule {
     async fn manifest(&self) -> ModuleManifest {
-        ModuleManifest {
-            id: "counting".into(),
-            policies: vec![PolicyTemplate {
-                name: "author".into(),
-                grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }],
-            }],
-            ..Default::default()
-        }
+        ModuleManifest { id: "counting".into(), policies: vec![PolicyTemplate { name: "author".into(), grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }] }], ..Default::default() }
     }
 
     async fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
@@ -460,8 +448,7 @@ impl Presence {
 
     /// 📋️ Everyone currently present in `scope`, ordered by actor.
     pub fn roster(&self, scope: &str) -> Vec<PresenceSession> {
-        let mut roster: Vec<PresenceSession> =
-            self.sessions.iter().filter(|entry| entry.key().0 == scope).map(|entry| entry.value().clone()).collect();
+        let mut roster: Vec<PresenceSession> = self.sessions.iter().filter(|entry| entry.key().0 == scope).map(|entry| entry.value().clone()).collect();
         roster.sort_by(|left, right| left.actor.cmp(&right.actor));
         roster
     }
@@ -548,25 +535,14 @@ pub const CAPABILITY_HEADER: &str = "x-semio-capability";
 
 /// 🎟️ The bearer token of an `Authorization: Bearer …` header, if there is one.
 pub fn bearer(headers: &HeaderMap) -> Option<String> {
-    headers
-        .get(header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.strip_prefix("Bearer "))
-        .map(|value| value.to_string())
+    headers.get(header::AUTHORIZATION).and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer ")).map(|value| value.to_string())
 }
 
 /// 🪪️ Normalize what a caller presented into a transport-free [`Credential`]. `loopback` comes from
 /// the peer address and never from a header — it is a fact only the transport can establish, and a
 /// header claiming it would be a header granting itself the administration plane.
 pub fn credential(headers: &HeaderMap, peer: Option<SocketAddr>) -> Credential {
-    Credential {
-        bearer: bearer(headers),
-        capability: headers
-            .get(CAPABILITY_HEADER)
-            .and_then(|value| value.to_str().ok())
-            .map(|value| crate::contract::CapabilityProof(value.to_string())),
-        loopback: peer.is_some_and(|peer| peer.ip().is_loopback()),
-    }
+    Credential { bearer: bearer(headers), capability: headers.get(CAPABILITY_HEADER).and_then(|value| value.to_str().ok()).map(|value| crate::contract::CapabilityProof(value.to_string())), loopback: peer.is_some_and(|peer| peer.ip().is_loopback()) }
 }
 //#endregion 🔖️Credential
 
@@ -622,11 +598,7 @@ impl ServerState {
     pub fn now(&self) -> HybridLogicalClock {
         let millis = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as u64);
         let mut clock = self.clock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        *clock = if millis > clock.millis {
-            HybridLogicalClock { millis, counter: 0 }
-        } else {
-            HybridLogicalClock { millis: clock.millis, counter: clock.counter.saturating_add(1) }
-        };
+        *clock = if millis > clock.millis { HybridLogicalClock { millis, counter: 0 } } else { HybridLogicalClock { millis: clock.millis, counter: clock.counter.saturating_add(1) } };
         *clock
     }
 
@@ -680,21 +652,9 @@ pub struct BlobReceipt {
 /// 💾️ Store bytes at a client-supplied content address. The address is re-derived from the bytes
 /// and a mismatch is a [`ServerError::Conflict`]: the caller asked to bind an address to content
 /// that does not hash to it, which is the one thing a content-addressed store may never do.
-pub async fn put_blob(
-    Path(hash): Path<String>,
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-    body: Bytes,
-) -> Result<Json<BlobReceipt>, ServerError> {
+pub async fn put_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, body: Bytes) -> Result<Json<BlobReceipt>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::BlobWrite,
-        principal: resolved.principal,
-        scope: None,
-        resource: hash.clone(),
-        action: "write".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::BlobWrite, principal: resolved.principal, scope: None, resource: hash.clone(), action: "write".to_string() })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
     let computed = content_hash(&body).await;
     if computed != addressed {
@@ -705,40 +665,18 @@ pub async fn put_blob(
 }
 
 /// 📦️ Read bytes back by address.
-pub async fn get_blob(
-    Path(hash): Path<String>,
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-) -> Result<Response, ServerError> {
+pub async fn get_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>) -> Result<Response, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::BlobRead,
-        principal: resolved.principal,
-        scope: None,
-        resource: hash.clone(),
-        action: "read".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
     let bytes = state.blobs.lock().await.get(&addressed).await.ok_or_else(|| ServerError::NotFound(format!("no blob at {hash}")))?;
     Ok(([(header::CONTENT_TYPE, "application/octet-stream")], bytes).into_response())
 }
 
 /// ❓️ The cheap half of an upload negotiation: does this address already hold bytes.
-pub async fn head_blob(
-    Path(hash): Path<String>,
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-) -> StatusCode {
+pub async fn head_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>) -> StatusCode {
     let resolved = state.identify(&headers, Some(peer)).await;
-    let request = PolicyRequest {
-        point: PolicyPoint::BlobRead,
-        principal: resolved.principal,
-        scope: None,
-        resource: hash.clone(),
-        action: "read".to_string(),
-    };
+    let request = PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() };
     if let Err(error) = state.authorize(&request) {
         return error.status();
     }
@@ -895,12 +833,7 @@ impl AppRegistry {
 /// 📨️ Submit one command. The envelope's principal is overwritten with the resolved one before the
 /// turn runs — a client may address a command, it may never assert who is sending it. Accepted
 /// events are published onto the actor's durable lane so live subscribers see them without polling.
-pub async fn post_command(
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-    Json(envelope): Json<CommandEnvelope>,
-) -> Result<Json<CommandOutcome>, ServerError> {
+pub async fn post_command(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(envelope): Json<CommandEnvelope>) -> Result<Json<CommandOutcome>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
@@ -919,49 +852,23 @@ pub async fn post_command(
 }
 
 /// ❓️ Answer one query from the projections, after checking the caller may read it.
-pub async fn post_query(
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-    Json(envelope): Json<QueryEnvelope>,
-) -> Result<Json<QueryResult>, ServerError> {
+pub async fn post_query(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(envelope): Json<QueryEnvelope>) -> Result<Json<QueryResult>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::QueryAccess,
-        principal: envelope.principal.clone(),
-        scope: Some(envelope.scope.clone()),
-        resource: envelope.kind.clone(),
-        action: "read".to_string(),
-    })?;
-    let handler = state
-        .queries
-        .get(&envelope.kind)
-        .map(|entry| Arc::clone(entry.value()))
-        .ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::QueryAccess, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: envelope.kind.clone(), action: "read".to_string() })?;
+    let handler = state.queries.get(&envelope.kind).map(|entry| Arc::clone(entry.value())).ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
     let projections = state.projections.lock().await;
     Ok(Json(handler.handle(&envelope, &projections).await?))
 }
 
 /// 💨️ Publish one ephemeral frame onto its scope's lossy lane. Nothing is persisted and nothing is
 /// replayed — a subscriber that was not listening simply missed it.
-pub async fn post_ephemeral(
-    headers: HeaderMap,
-    ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
-    Json(frame): Json<EphemeralFrame>,
-) -> Result<Json<usize>, ServerError> {
+pub async fn post_ephemeral(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(frame): Json<EphemeralFrame>) -> Result<Json<usize>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut frame = frame;
     frame.principal = resolved.principal;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::Subscription,
-        principal: frame.principal.clone(),
-        scope: Some(frame.scope.clone()),
-        resource: frame.kind.clone(),
-        action: "publish".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::Subscription, principal: frame.principal.clone(), scope: Some(frame.scope.clone()), resource: frame.kind.clone(), action: "publish".to_string() })?;
     let lane = ephemeral_lane(&frame.scope);
     let bytes = serde_json::to_vec(&frame).map_err(|error| ServerError::BadRequest(error.to_string()))?;
     Ok(Json(state.fanout.publish(&lane, bytes)))
@@ -1049,13 +956,7 @@ pub async fn get_events(
 ) -> Result<Json<Vec<EventRecord>>, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
     let resolved = state.identify(&headers, Some(peer)).await;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::EventDelivery,
-        principal: resolved.principal,
-        scope: None,
-        resource: stream_lane(&actor),
-        action: "read".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::EventDelivery, principal: resolved.principal, scope: None, resource: stream_lane(&actor), action: "read".to_string() })?;
     Ok(Json(state.replay_events(&actor, query.since).await?))
 }
 
@@ -1070,13 +971,7 @@ pub async fn get_event_stream_ws(
 ) -> Result<Response, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
     let resolved = state.identify(&headers, Some(peer)).await;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::Subscription,
-        principal: resolved.principal,
-        scope: None,
-        resource: stream_lane(&actor),
-        action: "subscribe".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::Subscription, principal: resolved.principal, scope: None, resource: stream_lane(&actor), action: "subscribe".to_string() })?;
     Ok(ws.on_upgrade(move |socket| handle_event_stream(socket, actor, query.since, state)))
 }
 
@@ -1127,13 +1022,7 @@ pub async fn get_document_ws(
     }
     let scope = Scope(scope);
     let resolved = state.identify(&headers, Some(peer)).await;
-    state.authorize(&PolicyRequest {
-        point: PolicyPoint::Subscription,
-        principal: resolved.principal.clone(),
-        scope: Some(scope.clone()),
-        resource: document_lane(&scope),
-        action: "subscribe".to_string(),
-    })?;
+    state.authorize(&PolicyRequest { point: PolicyPoint::Subscription, principal: resolved.principal.clone(), scope: Some(scope.clone()), resource: document_lane(&scope), action: "subscribe".to_string() })?;
     Ok(ws.on_upgrade(move |socket| handle_document(socket, scope, query, resolved.principal, state)))
 }
 
@@ -1382,13 +1271,7 @@ impl ServerBuilder {
 
 /// 🚦️ The admission question one command envelope asks of the policy engine.
 fn admission_request(envelope: &CommandEnvelope) -> PolicyRequest {
-    PolicyRequest {
-        point: PolicyPoint::CommandAdmission,
-        principal: envelope.principal.clone(),
-        scope: Some(envelope.scope.clone()),
-        resource: format!("{}/{}", envelope.target.kind, envelope.target.id),
-        action: envelope.kind.clone(),
-    }
+    PolicyRequest { point: PolicyPoint::CommandAdmission, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: format!("{}/{}", envelope.target.kind, envelope.target.id), action: envelope.kind.clone() }
 }
 
 /// 🛣️ Every route the framework itself owns, before any module adds its own.
@@ -1422,16 +1305,7 @@ pub struct Server {
 impl Server {
     /// 🏗️ Start assembling a server over one storage profile.
     pub fn builder(profile: StorageProfile) -> ServerBuilder {
-        ServerBuilder {
-            profile,
-            modules: Vec::new(),
-            queries: Vec::new(),
-            apps: Vec::new(),
-            documents: None,
-            admin_token: None,
-            id: "server".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-        }
+        ServerBuilder { profile, modules: Vec::new(), queries: Vec::new(), apps: Vec::new(), documents: None, admin_token: None, id: "server".to_string(), version: env!("CARGO_PKG_VERSION").to_string() }
     }
 
     /// 🛣️ The fully wired router, ready to be served or mounted.
@@ -1453,9 +1327,7 @@ impl Server {
     /// handler so the loopback fact behind [`AdminGate`] stays a transport fact.
     pub async fn run(self, addr: SocketAddr) -> Result<(), ServerError> {
         let listener = tokio::net::TcpListener::bind(addr).await.map_err(|error| ServerError::Internal(error.to_string()))?;
-        axum::serve(listener, self.router.into_make_service_with_connect_info::<SocketAddr>())
-            .await
-            .map_err(|error| ServerError::Internal(error.to_string()))
+        axum::serve(listener, self.router.into_make_service_with_connect_info::<SocketAddr>()).await.map_err(|error| ServerError::Internal(error.to_string()))
     }
 }
 //#endregion 🔖️Server
@@ -1481,10 +1353,7 @@ mod tests {
 
     fn grant(state: &ServerState, point: PolicyPoint, action: &str) {
         let mut engine = state.policy.write().unwrap();
-        engine.register_template(PolicyTemplate {
-            name: format!("{point:?}-{action}"),
-            grants: vec![PolicyGrant { point, resource: "*".into(), action: action.to_string() }],
-        });
+        engine.register_template(PolicyTemplate { name: format!("{point:?}-{action}"), grants: vec![PolicyGrant { point, resource: "*".into(), action: action.to_string() }] });
         engine.assign("anonymous".to_string(), format!("{point:?}-{action}"));
     }
 
@@ -1669,15 +1538,11 @@ mod tests {
         grant(&state, PolicyPoint::BlobRead, "read");
 
         let honest = content_hash(b"hello").await.to_string();
-        let receipt = put_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello"))
-            .await
-            .expect("an honest address is accepted");
+        let receipt = put_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello")).await.expect("an honest address is accepted");
         assert_eq!(receipt.0.size, 5);
 
         let lie = content_hash(b"world").await.to_string();
-        let error = put_blob(Path(lie), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello"))
-            .await
-            .expect_err("a mismatched address is refused");
+        let error = put_blob(Path(lie), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello")).await.expect_err("a mismatched address is refused");
         assert_eq!(error.status(), StatusCode::CONFLICT);
 
         assert_eq!(head_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone())).await, StatusCode::OK);
@@ -1691,9 +1556,7 @@ mod tests {
     async fn a_blob_write_without_a_grant_is_forbidden() {
         let state = state().await;
         let hash = content_hash(b"hello").await.to_string();
-        let error = put_blob(Path(hash), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello"))
-            .await
-            .expect_err("closed by default");
+        let error = put_blob(Path(hash), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello")).await.expect_err("closed by default");
         assert_eq!(error.status(), StatusCode::FORBIDDEN);
     }
     //#endregion 🔖️Blob

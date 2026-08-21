@@ -5,12 +5,12 @@
 //! on `LowpolyPlayApp` (mirrors `flow`'s `Mutex<FlowEvalSession>` pattern) so `render(&self, ..)` can
 //! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::view::build_doc;
 use crate::artifacts::lowpoly::op::{LowpolyMutation, PixelRun};
 use crate::artifacts::lowpoly::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
 use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::editor::lowpoly::config::LowpolyConfig;
+use crate::editor::lowpoly::engine::LowpolyDocument;
+use crate::editor::lowpoly::view::build_doc;
 use base64::Engine;
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
@@ -161,12 +161,7 @@ pub async fn semantic_mutation_for_patch(id: String, before_transform: &crate::a
             return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::mutation::DeleteMesh { id }));
         }
         let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, after_mesh_workspace);
-        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::mutation::CreateMesh {
-            id,
-            child_id: handle.child_id,
-            target: handle.target,
-            mesh_workspace: after_mesh_workspace.to_string(),
-        }));
+        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::mutation::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
     }
     None
 }
@@ -486,7 +481,15 @@ impl LowpolyScratch {
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
     /// nothing; only `transformEnd` (or an unbracketed single dispatch) commits the accumulated diff.
-    pub async fn transform_selection(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, mode: &str, ids: Vec<u32>, transform: Transform, description: &str) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    pub async fn transform_selection(
+        &mut self,
+        projection: &LowpolySnapshot,
+        config: &LowpolyConfig,
+        mode: &str,
+        ids: Vec<u32>,
+        transform: Transform,
+        description: &str,
+    ) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
         if self.transform_drag_active {
             if self.transform.is_none() {
                 self.begin_transform_session(projection, config);

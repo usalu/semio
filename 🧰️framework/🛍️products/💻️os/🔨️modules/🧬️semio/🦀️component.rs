@@ -80,37 +80,18 @@ impl SemioEnvelope {
 
     /// @emoji 📜️ Full preamble line for text encodings, e.g. `semio gis.gismap.dsl v1`.
     pub fn preamble_line(&self) -> String {
-        format!(
-            "semio {}.{}.{} v{}",
-            self.plugin,
-            self.artifact,
-            self.component.as_str(),
-            self.version
-        )
+        format!("semio {}.{}.{} v{}", self.plugin, self.artifact, self.component.as_str(), self.version)
     }
 
     /// @emoji 🧬️ Binary envelope token without the `semio` keyword.
     pub fn binary_token(&self) -> String {
-        format!(
-            "{}.{}.{} v{}",
-            self.plugin,
-            self.artifact,
-            self.component.as_str(),
-            self.version
-        )
+        format!("{}.{}.{} v{}", self.plugin, self.artifact, self.component.as_str(), self.version)
     }
 
     /// @emoji 📖️ Parses `plugin.artifact` from a document type id.
     pub fn from_envelope_id(envelope_id: &str, component: Component, version: u16) -> SemioResult<Self> {
-        let (plugin, artifact) = envelope_id
-            .split_once('.')
-            .ok_or_else(|| SemioError::InvalidPreamble(format!("envelope id must be plugin.artifact, got {envelope_id}")))?;
-        Ok(Self {
-            plugin: plugin.to_string(),
-            artifact: artifact.to_string(),
-            component,
-            version,
-        })
+        let (plugin, artifact) = envelope_id.split_once('.').ok_or_else(|| SemioError::InvalidPreamble(format!("envelope id must be plugin.artifact, got {envelope_id}")))?;
+        Ok(Self { plugin: plugin.to_string(), artifact: artifact.to_string(), component, version })
     }
 }
 //#endregion 🔖️Envelope
@@ -146,34 +127,23 @@ pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
     if bytes.len() < token_end {
         return Err(SemioError::InvalidBinaryHeader("truncated token".into()));
     }
-    let token = std::str::from_utf8(&bytes[BINARY_HEADER_PREFIX_LEN..token_end])
-        .map_err(|_| SemioError::InvalidBinaryHeader("token not utf-8".into()))?;
+    let token = std::str::from_utf8(&bytes[BINARY_HEADER_PREFIX_LEN..token_end]).map_err(|_| SemioError::InvalidBinaryHeader("token not utf-8".into()))?;
     let envelope = parse_binary_token(token)?;
     let payload = bytes[token_end..].to_vec();
     Ok((envelope, payload))
 }
 
 fn parse_binary_token(token: &str) -> SemioResult<SemioEnvelope> {
-    let (body, version_str) = token
-        .rsplit_once(" v")
-        .ok_or_else(|| SemioError::InvalidBinaryHeader(format!("missing version in {token}")))?;
-    let version: u16 = version_str
-        .parse()
-        .map_err(|_| SemioError::InvalidBinaryHeader(format!("bad version in {token}")))?;
+    let (body, version_str) = token.rsplit_once(" v").ok_or_else(|| SemioError::InvalidBinaryHeader(format!("missing version in {token}")))?;
+    let version: u16 = version_str.parse().map_err(|_| SemioError::InvalidBinaryHeader(format!("bad version in {token}")))?;
     let parts: Vec<&str> = body.split('.').collect();
     if parts.len() < 3 {
         return Err(SemioError::InvalidBinaryHeader(format!("expected plugin.artifact.component, got {body}")));
     }
-    let component = Component::parse(parts[parts.len() - 1])
-        .ok_or_else(|| SemioError::InvalidBinaryHeader(format!("unknown component in {body}")))?;
+    let component = Component::parse(parts[parts.len() - 1]).ok_or_else(|| SemioError::InvalidBinaryHeader(format!("unknown component in {body}")))?;
     let artifact = parts[parts.len() - 2].to_string();
     let plugin = parts[..parts.len() - 2].join(".");
-    Ok(SemioEnvelope {
-        plugin,
-        artifact,
-        component,
-        version,
-    })
+    Ok(SemioEnvelope { plugin, artifact, component, version })
 }
 //#endregion 🔖️Binary
 
@@ -192,10 +162,7 @@ pub fn wrap_text(envelope: &SemioEnvelope, body: &str) -> String {
 /// @emoji 📖️ Parses a text `.semio` file into envelope and body (without preamble line).
 pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
     let mut lines = text.lines();
-    let first = lines
-        .next()
-        .ok_or_else(|| SemioError::InvalidPreamble("empty file".into()))?
-        .trim();
+    let first = lines.next().ok_or_else(|| SemioError::InvalidPreamble("empty file".into()))?.trim();
     let envelope = parse_preamble_line(first)?;
     let rest = text[first.len()..].trim_start_matches(['\r', '\n']);
     Ok((envelope, rest))
@@ -204,29 +171,17 @@ pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
 /// @emoji 🔍 Parses `semio plugin.artifact.component vN`.
 pub fn parse_preamble_line(line: &str) -> SemioResult<SemioEnvelope> {
     let line = line.trim();
-    let rest = line
-        .strip_prefix("semio ")
-        .ok_or_else(|| SemioError::InvalidPreamble(format!("expected semio preamble, got {line}")))?;
-    let (token, version_str) = rest
-        .rsplit_once(" v")
-        .ok_or_else(|| SemioError::InvalidPreamble(format!("missing version in {line}")))?;
-    let version: u16 = version_str
-        .parse()
-        .map_err(|_| SemioError::InvalidPreamble(format!("bad version in {line}")))?;
+    let rest = line.strip_prefix("semio ").ok_or_else(|| SemioError::InvalidPreamble(format!("expected semio preamble, got {line}")))?;
+    let (token, version_str) = rest.rsplit_once(" v").ok_or_else(|| SemioError::InvalidPreamble(format!("missing version in {line}")))?;
+    let version: u16 = version_str.parse().map_err(|_| SemioError::InvalidPreamble(format!("bad version in {line}")))?;
     let parts: Vec<&str> = token.split('.').collect();
     if parts.len() < 3 {
         return Err(SemioError::InvalidPreamble(format!("expected plugin.artifact.component, got {token}")));
     }
-    let component = Component::parse(parts[parts.len() - 1])
-        .ok_or_else(|| SemioError::InvalidPreamble(format!("unknown component in {token}")))?;
+    let component = Component::parse(parts[parts.len() - 1]).ok_or_else(|| SemioError::InvalidPreamble(format!("unknown component in {token}")))?;
     let artifact = parts[parts.len() - 2].to_string();
     let plugin = parts[..parts.len() - 2].join(".");
-    Ok(SemioEnvelope {
-        plugin,
-        artifact,
-        component,
-        version,
-    })
+    Ok(SemioEnvelope { plugin, artifact, component, version })
 }
 //#endregion 🔖️Text
 
@@ -270,30 +225,17 @@ struct RegistryState {
 
 fn registry_state() -> &'static Mutex<RegistryState> {
     static STATE: OnceLock<Mutex<RegistryState>> = OnceLock::new();
-    STATE.get_or_init(|| {
-        Mutex::new(RegistryState {
-            by_key: HashMap::new(),
-        })
-    })
+    STATE.get_or_init(|| Mutex::new(RegistryState { by_key: HashMap::new() }))
 }
 
 fn registry_key(envelope: &SemioEnvelope) -> String {
-    format!(
-        "{}.{}.{}",
-        envelope.plugin,
-        envelope.artifact,
-        envelope.component.as_str()
-    )
+    format!("{}.{}.{}", envelope.plugin, envelope.artifact, envelope.component.as_str())
 }
 
 /// @emoji 📝 Registers a verify/parse handler for one envelope.
 pub fn register_format(envelope: SemioEnvelope, handler: SemioHandler) {
     let key = registry_key(&envelope);
-    registry_state()
-        .lock()
-        .expect("semio registry")
-        .by_key
-        .insert(key, handler);
+    registry_state().lock().expect("semio registry").by_key.insert(key, handler);
 }
 
 /// @emoji 🔎 Resolves a handler from sniffed content.
@@ -301,11 +243,7 @@ pub fn resolve(bytes: &[u8]) -> SemioResult<SemioHandler> {
     let envelope = sniff(bytes)?;
     let key = registry_key(&envelope);
     let state = registry_state().lock().expect("semio registry");
-    state
-        .by_key
-        .get(&key)
-        .copied()
-        .ok_or_else(|| SemioError::UnknownEnvelope(key))
+    state.by_key.get(&key).copied().ok_or_else(|| SemioError::UnknownEnvelope(key))
 }
 
 /// @emoji ✅ Runs the registered handler for these bytes.
@@ -320,7 +258,7 @@ pub fn verify(bytes: &[u8]) -> SemioResult<()> {
 pub mod cli {
     use super::*;
 
-  /// @emoji 🏃 Dispatches argv; returns process exit code.
+    /// @emoji 🏃 Dispatches argv; returns process exit code.
     pub fn main_impl(args: &[String]) -> i32 {
         if args.is_empty() || args[0] == "help" || args[0] == "--help" {
             eprintln!("usage: semio <inspect|verify|open|convert> <path> [...]");
@@ -395,12 +333,7 @@ mod tests {
 
     #[test]
     fn text_preamble_round_trip() {
-        let env = SemioEnvelope {
-            plugin: "gis".into(),
-            artifact: "gismap".into(),
-            component: Component::Dsl,
-            version: 1,
-        };
+        let env = SemioEnvelope { plugin: "gis".into(), artifact: "gismap".into(), component: Component::Dsl, version: 1 };
         let wrapped = wrap_text(&env, "positions [id:TEXT] { }");
         let (parsed, body) = split_text_preamble(&wrapped).unwrap();
         assert_eq!(parsed, env);
@@ -409,12 +342,7 @@ mod tests {
 
     #[test]
     fn binary_header_round_trip() {
-        let env = SemioEnvelope {
-            plugin: "gis".into(),
-            artifact: "gismap".into(),
-            component: Component::Pack,
-            version: 1,
-        };
+        let env = SemioEnvelope { plugin: "gis".into(), artifact: "gismap".into(), component: Component::Pack, version: 1 };
         let inner = b"payload-bytes";
         let wrapped = wrap_binary(&env, inner);
         let (parsed, payload) = unwrap_binary(&wrapped).unwrap();
@@ -427,10 +355,7 @@ mod tests {
         let dsl_env = SemioEnvelope::from_envelope_id("gis.gismap", Component::Dsl, 1).unwrap();
         let text = wrap_text(&dsl_env, "schema=gis.map id=x");
         assert_eq!(sniff(text.as_bytes()).unwrap().component, Component::Dsl);
-        let bin = wrap_binary(
-            &SemioEnvelope::from_envelope_id("gis.gismap", Component::Pack, 1).unwrap(),
-            b"x",
-        );
+        let bin = wrap_binary(&SemioEnvelope::from_envelope_id("gis.gismap", Component::Pack, 1).unwrap(), b"x");
         assert_eq!(sniff(&bin).unwrap().component, Component::Pack);
     }
 }

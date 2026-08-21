@@ -8,10 +8,7 @@ async fn primary_asset_is_nonempty() {
 async fn inference_default_law() {
     use crate::artifacts::rewrite::standards::v1::subsets::any::schema::inferences::RewriteInference;
     use protocol::Inference;
-    assert_eq!(
-        RewriteInference::infer(&crate::artifacts::rewrite::RewriteSnapshot::default()),
-        RewriteInference::default()
-    );
+    assert_eq!(RewriteInference::infer(&crate::artifacts::rewrite::RewriteSnapshot::default()), RewriteInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

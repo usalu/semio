@@ -52,10 +52,7 @@ pub fn stage_flags_for(visibility: ShaderStageVisibility) -> vk::ShaderStageFlag
 /// `update_descriptor_sets`, see `crate::resources`).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn descriptor_set_layout_bindings(spec: &BindGroupSpec) -> Vec<vk::DescriptorSetLayoutBinding<'static>> {
-    spec.entries
-        .iter()
-        .map(|entry| vk::DescriptorSetLayoutBinding::default().binding(entry.binding).descriptor_type(descriptor_type_for(entry.kind)).descriptor_count(1).stage_flags(stage_flags_for(entry.visibility)))
-        .collect()
+    spec.entries.iter().map(|entry| vk::DescriptorSetLayoutBinding::default().binding(entry.binding).descriptor_type(descriptor_type_for(entry.kind)).descriptor_count(1).stage_flags(stage_flags_for(entry.visibility))).collect()
 }
 
 //#endregion 🗄️Descriptors

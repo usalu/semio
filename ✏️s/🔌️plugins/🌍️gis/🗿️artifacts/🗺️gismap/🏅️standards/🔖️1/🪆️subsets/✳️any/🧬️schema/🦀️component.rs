@@ -4,13 +4,13 @@ use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
 use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
-use semio_framework_plugin::{ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload, io_dispatch, resolve_ready};
+use schema::ArtifactSchema;
+use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
-use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashSet};
@@ -21,9 +21,12 @@ use std::collections::{BTreeMap, HashSet};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapArtifact {
-    #[state(artifact)] pub positions: Vec<MapFeature>,
-    #[state(artifact)] pub routes: Vec<MapFeature>,
-    #[state(artifact)] pub regions: Vec<MapFeature>,
+    #[state(artifact)]
+    pub positions: Vec<MapFeature>,
+    #[state(artifact)]
+    pub routes: Vec<MapFeature>,
+    #[state(artifact)]
+    pub regions: Vec<MapFeature>,
     /// 🕸️ Mirrors `GisMapSnapshot.image` — see that field's own doc comment and
     /// `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region. Carried verbatim (never
     /// derived) since, unlike `drawing`/`value`, nothing in this plugin can rebuild it from
@@ -33,13 +36,20 @@ pub struct GisMapArtifact {
     #[child(kind = "s.stdio.semio.image")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image: Option<GisMapImageChild>,
-    #[state(presence)] pub layer_visibility: BTreeMap<String, bool>,
-    #[state(presence)] pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(config)] pub camera_json: String,
-    #[state(config)] pub render_mode: String,
-    #[state(config)] pub vector_style: String,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub locale: String,
+    #[state(presence)]
+    pub layer_visibility: BTreeMap<String, bool>,
+    #[state(presence)]
+    pub layer_stroke_scale: BTreeMap<String, f64>,
+    #[state(config)]
+    pub camera_json: String,
+    #[state(config)]
+    pub render_mode: String,
+    #[state(config)]
+    pub vector_style: String,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔹Artifact
 
@@ -68,24 +78,12 @@ impl GisMapArtifact {
     /// `positions`/`routes`/`regions` actually contain; `image` carries straight through (real, but
     /// not derivable from anything this plugin owns — see the field's own doc comment).
     pub async fn to_snapshot(&self) -> GisMapSnapshot {
-        gis_map_snapshot_with_derived_children(GisMapSnapshot {
-            positions: self.positions.clone(),
-            routes: self.routes.clone(),
-            regions: self.regions.clone(),
-            image: self.image.clone(),
-            ..Default::default()
-        })
+        gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), image: self.image.clone(), ..Default::default() })
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
-        Self {
-            positions: snapshot.positions,
-            routes: snapshot.routes,
-            regions: snapshot.regions,
-            image: snapshot.image,
-            ..Self::default()
-        }
+        Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image, ..Self::default() }
     }
 
     /// Writes persistent fields from a snapshot into this artifact.
@@ -136,8 +134,8 @@ pub async fn gismap_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔹Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::gismap::{GisMapDiff, GisMapMutation, GisMapSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct GismapBuilderConstruction {
@@ -149,8 +147,12 @@ pub mod derived_construction {
         type Snapshot = GisMapSnapshot;
         type Mutation = GisMapMutation;
         type Diff = GisMapDiff;
-        async fn empty() -> Self { Self { snapshot: GisMapSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: GisMapSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -161,24 +163,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -187,8 +186,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::gismap::GisMapSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct GisMapParts {
@@ -282,12 +281,7 @@ pub async fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot
             })
             .unwrap_or_default()
     };
-    gis_map_snapshot_with_derived_children(GisMapSnapshot {
-        positions: features("positions"),
-        routes: features("routes"),
-        regions: features("regions"),
-        ..Default::default()
-    })
+    gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: features("positions"), routes: features("routes"), regions: features("regions"), ..Default::default() })
 }
 
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
@@ -398,7 +392,11 @@ async fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
             Some(SemioPoint2 { x, y })
         })
         .collect();
-    if vertices.is_empty() { None } else { Some(vertices) }
+    if vertices.is_empty() {
+        None
+    } else {
+        Some(vertices)
+    }
 }
 
 /// ✏️ One open (route) or closed (region) polyline lowered to a `DrawNode::Path`, vertices shifted
@@ -409,7 +407,11 @@ async fn polyline_draw_node(vertices: &[SemioPoint2], shift: impl Fn(&SemioPoint
         .enumerate()
         .map(|(index, vertex)| {
             let to = shift(vertex);
-            if index == 0 { PathSegment::MoveTo { to } } else { PathSegment::LineTo { to } }
+            if index == 0 {
+                PathSegment::MoveTo { to }
+            } else {
+                PathSegment::LineTo { to }
+            }
         })
         .collect();
     if closed {
@@ -441,19 +443,12 @@ async fn point_marker_draw_node(center: &SemioPoint2, radius: f64, shift: impl F
 /// into drawing geometry; both `gis2d_document_json_to_svg` (export, via `io_dispatch`) and any
 /// future gis drawing preview reuse it.
 pub async fn gis_map_snapshot_to_drawing(document: &GisMapSnapshot) -> SemioDrawingSnapshot {
-    let position_points: Vec<SemioPoint2> = document
-        .positions
-        .iter()
-        .filter_map(|feature| feature_lon_lat(&feature.data))
-        .map(|(lon, lat)| SemioPoint2 { x: lon, y: lat })
-        .collect();
+    let position_points: Vec<SemioPoint2> = document.positions.iter().filter_map(|feature| feature_lon_lat(&feature.data)).map(|(lon, lat)| SemioPoint2 { x: lon, y: lat }).collect();
     let route_lines: Vec<Vec<SemioPoint2>> = document.routes.iter().filter_map(|feature| feature_line(&feature.data)).collect();
     let region_polys: Vec<Vec<SemioPoint2>> = document.regions.iter().filter_map(|feature| feature_line(&feature.data)).collect();
 
     let all_points = position_points.iter().chain(route_lines.iter().flatten()).chain(region_polys.iter().flatten());
-    let (min_x, min_y, max_x, max_y) = all_points.fold((f64::MAX, f64::MAX, f64::MIN, f64::MIN), |(min_x, min_y, max_x, max_y), p| {
-        (min_x.min(p.x), min_y.min(p.y), max_x.max(p.x), max_y.max(p.y))
-    });
+    let (min_x, min_y, max_x, max_y) = all_points.fold((f64::MAX, f64::MAX, f64::MIN, f64::MIN), |(min_x, min_y, max_x, max_y), p| (min_x.min(p.x), min_y.min(p.y), max_x.max(p.x), max_y.max(p.y)));
     let (min_x, min_y, max_x, max_y) = if min_x.is_finite() { (min_x, min_y, max_x, max_y) } else { (0.0, 0.0, 0.0, 0.0) };
 
     let pad = 32.0;
@@ -552,7 +547,11 @@ async fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
         .enumerate()
         .map(|(index, v)| {
             let to = SemioPoint2 { x: v[0], y: v[1] };
-            if index == 0 { PathSegment::MoveTo { to } } else { PathSegment::LineTo { to } }
+            if index == 0 {
+                PathSegment::MoveTo { to }
+            } else {
+                PathSegment::LineTo { to }
+            }
         })
         .collect();
     if closed {
@@ -565,10 +564,7 @@ async fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
 /// per real (non-degenerate) entity, all under one layer.
 async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     let children: Vec<DrawNode> = drawing.entities.iter().filter_map(|entity| dwg_geometry_to_draw_node(&entity.geometry)).collect();
-    SemioDrawingSnapshot {
-        layers: vec![DrawLayer { id: "dwg-import".into(), name: "DWG Import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
-        ..SemioDrawingSnapshot::default()
-    }
+    SemioDrawingSnapshot { layers: vec![DrawLayer { id: "dwg-import".into(), name: "DWG Import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }], ..SemioDrawingSnapshot::default() }
 }
 
 /// 📍️ Walks a `DrawNode` tree collecting every `MoveTo`/`LineTo` endpoint — the vertex set the
@@ -643,11 +639,7 @@ mod relocated_engine_tests {
     async fn dwg_import_lowers_a_closed_polyline_through_a_draw_node_and_carries_the_close_segment() {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("0");
-        drawing.entities.push(DwgEntity {
-            layer,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], bulges: vec![0.0, 0.0, 0.0] },
-        });
+        drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], bulges: vec![0.0, 0.0, 0.0] } });
         let scene = dwg_drawing_to_semio_drawing(&drawing);
         let DrawNode::Group { children, .. } = &scene.layers[0].root else { panic!("expected a group root") };
         let DrawNode::Path { segments, .. } = &children[0] else { panic!("expected a path node") };

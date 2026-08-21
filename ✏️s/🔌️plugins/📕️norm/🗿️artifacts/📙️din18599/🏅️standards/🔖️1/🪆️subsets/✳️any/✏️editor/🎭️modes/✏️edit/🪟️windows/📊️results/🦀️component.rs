@@ -1,7 +1,7 @@
 //! 📊️ DIN V 18599 play app — the results window: every computed compliance check, one line each.
 
-use crate::editor::din18599::DinV18599Family;
 use crate::document::NormHost;
+use crate::editor::din18599::DinV18599Family;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants

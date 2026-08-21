@@ -6,13 +6,13 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
+use crate::artifacts::en1996::op::En1996Mutation;
+use crate::artifacts::en1996::En1996Snapshot;
+use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::editor::en1996::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::en1996::modes::edit as edit_mode;
 use crate::editor::en1996::modes::edit::windows::{inputs, results};
 use crate::editor::en1996::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::en1996::op::En1996Mutation;
-use crate::artifacts::en1996::En1996Snapshot;
-use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::presence::{NormPresence, NormPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{AppIo, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, LocalizedLabel, Media, MediaError, NoDraft, NoDraftMutation, UiNode};

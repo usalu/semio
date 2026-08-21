@@ -62,7 +62,13 @@ impl ArtifactViewer for Block5dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to representation") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

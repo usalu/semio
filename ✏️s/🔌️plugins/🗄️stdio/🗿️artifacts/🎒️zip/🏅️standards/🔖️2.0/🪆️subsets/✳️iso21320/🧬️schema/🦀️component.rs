@@ -63,11 +63,11 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
@@ -76,7 +76,7 @@ pub mod derived_construction {
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
 

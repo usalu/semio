@@ -29,14 +29,7 @@ pub struct VcsSnapshot {
 
 impl Default for VcsSnapshot {
     fn default() -> Self {
-        Self {
-            schema: VCS_DOCUMENT_SCHEMA.into(),
-            title: "VCS Demo".into(),
-            counter: 0,
-            notes: String::new(),
-            status: "new".into(),
-            tags: Vec::new(),
-        }
+        Self { schema: VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot

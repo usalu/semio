@@ -329,10 +329,7 @@ mod tests {
     use crate::editor::puzzle2d::engine::canvas;
     use crate::editor::puzzle2d::engine::canvas::geom_sel::cubic_bezier_point;
     use crate::editor::puzzle2d::engine::canvas::Point;
-    use crate::editor::puzzle2d::engine::{
-        compute_edge_bezier_points, handle_position_on_circle, BoardElementStyleKind, BoardHost, Interaction,
-        NodeDescJson, WireDescJson,
-    };
+    use crate::editor::puzzle2d::engine::{compute_edge_bezier_points, handle_position_on_circle, BoardElementStyleKind, BoardHost, Interaction, NodeDescJson, WireDescJson};
     use serde_json::json;
 
     /// 🔗️ Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.

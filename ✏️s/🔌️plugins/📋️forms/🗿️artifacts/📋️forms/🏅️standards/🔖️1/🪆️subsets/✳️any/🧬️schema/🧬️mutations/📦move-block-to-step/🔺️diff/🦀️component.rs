@@ -2,8 +2,8 @@
 //! `blocks` Vecs (one patch entry if `step_id == to_step_id`, two otherwise).
 
 use super::mutation::MoveBlockToStep;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
@@ -13,11 +13,7 @@ pub async fn diff_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnap
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);
     };
     let Some(current_index) = source_step.blocks.iter().position(|block| block.id == payload.block_id) else {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.step_id),
-            [payload.step_id.clone(), payload.block_id.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.step_id), [payload.step_id.clone(), payload.block_id.clone()]);
     };
     let block = source_step.blocks[current_index].clone();
 

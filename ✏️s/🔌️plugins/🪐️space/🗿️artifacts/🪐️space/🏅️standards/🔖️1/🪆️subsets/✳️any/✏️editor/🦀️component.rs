@@ -6,16 +6,20 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::SPACE_INDEX_DIALECT;
+use crate::editor::space_index::commands::{
+    copy_invite_link, create_artifact, delete_artifact, fold_directory_events, invite_member, open_artifact, open_artifact_with, presence_heartbeat, remove_member, rename_artifact, request_delete_artifact, request_invite_member, set_visibility,
+    touch_artifact,
+};
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use crate::editor::space_index::commands::{copy_invite_link, create_artifact, delete_artifact, fold_directory_events, invite_member, open_artifact, open_artifact_with, presence_heartbeat, remove_member, rename_artifact, request_delete_artifact, request_invite_member, set_visibility, touch_artifact};
 use crate::editor::space_index::modes::edit;
 use crate::editor::space_index::modes::edit::windows::main;
 use crate::editor::space_index::panels::members as members_panel;
+use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel, NoDraft, NoDraftMutation, NoPresence,
+    NoPresenceMutation, NoTransient, NoTransientMutation, UiNode,
 };
-use semio_framework_plugin::app::Dialect;
 use serde_json::Value;
 use store::EngineHandles;
 
@@ -120,7 +124,14 @@ impl ArtifactEditor for SpaceIndexEditor {
         command.command_id()
     }
 
-    async fn handle(command: &SpaceIndexCommand, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+    async fn handle(
+        command: &SpaceIndexCommand,
+        doc: &ArtifactView<'_, SSpaceSnapshot>,
+        cfg: &ConfigView<'_, SpaceIndexConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -144,10 +155,7 @@ impl ArtifactEditor for SpaceIndexEditor {
                 actor: str_field("actor").unwrap_or_default(),
             })),
             "deleteArtifact" => Ok(SpaceIndexCommand::DeleteArtifact(delete_artifact::DeleteArtifact { id: str_field("id").unwrap_or_default() })),
-            "renameArtifact" => Ok(SpaceIndexCommand::RenameArtifact(rename_artifact::RenameArtifact {
-                id: str_field("id").unwrap_or_default(),
-                new_name: str_field("newName").or_else(|| str_field("new_name")).unwrap_or_default(),
-            })),
+            "renameArtifact" => Ok(SpaceIndexCommand::RenameArtifact(rename_artifact::RenameArtifact { id: str_field("id").unwrap_or_default(), new_name: str_field("newName").or_else(|| str_field("new_name")).unwrap_or_default() })),
             "touchArtifact" => Ok(SpaceIndexCommand::TouchArtifact(touch_artifact::TouchArtifact {
                 id: str_field("id").unwrap_or_default(),
                 now_ms: u64_field("nowMs").or_else(|| u64_field("now_ms")).unwrap_or_default(),
@@ -254,7 +262,6 @@ pub(crate) mod testkit {
 
     #[allow(dead_code)]
     pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
-        
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 }
@@ -279,7 +286,22 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_declared_mutation_action_is_registered() {
         let definition = create_space_index_editor();
-        for command in ["createArtifact", "deleteArtifact", "renameArtifact", "touchArtifact", "requestDeleteArtifact", "openArtifact", "openArtifactWith", "inviteMember", "requestInviteMember", "removeMember", "setVisibility", "copyInviteLink", "foldDirectoryEvents", "presenceHeartbeat"] {
+        for command in [
+            "createArtifact",
+            "deleteArtifact",
+            "renameArtifact",
+            "touchArtifact",
+            "requestDeleteArtifact",
+            "openArtifact",
+            "openArtifactWith",
+            "inviteMember",
+            "requestInviteMember",
+            "removeMember",
+            "setVisibility",
+            "copyInviteLink",
+            "foldDirectoryEvents",
+            "presenceHeartbeat",
+        ] {
             assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
         }
     }

@@ -157,7 +157,7 @@ pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<HtmlSnapshot> for HtmlDiff {
-    async fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
+    fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
         if let Some(root) = &self.root {
             validate_html_node(&base.root, root)?;
         }
@@ -171,7 +171,7 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.doctype.is_some() {
             self.doctype = other.doctype;
         }
@@ -337,15 +337,15 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<HtmlSnapshot> for HtmlDiff {
-    async fn inverse(&self, base: &HtmlSnapshot) -> Self {
+    fn inverse(&self, base: &HtmlSnapshot) -> Self {
         HtmlDiff { doctype: self.doctype.as_ref().map(|_| base.doctype.clone()), root: self.root.as_ref().map(|d| inverse_node_diff(&base.root, d)) }
     }
 
-    async fn between(base: &HtmlSnapshot, other: &HtmlSnapshot) -> Self {
+    fn between(base: &HtmlSnapshot, other: &HtmlSnapshot) -> Self {
         HtmlDiff { doctype: if base.doctype != other.doctype { Some(other.doctype.clone()) } else { None }, root: node_diff_between(&base.root, &other.root) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.doctype.is_none() && self.root.is_none()
     }
 }
@@ -982,21 +982,21 @@ fn parse_html_diff(line: &str) -> Result<HtmlDiff, String> {
 }
 
 impl protocol::DiffCodec for HtmlDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_html_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_html_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification `SvgDiff`/`JsonDiff` (and the
     /// repo's only other hand-rolled `DiffCodec`s) use — satisfies every `DiffCodec` law without
     /// inventing a second wire format.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().await.into_bytes())
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

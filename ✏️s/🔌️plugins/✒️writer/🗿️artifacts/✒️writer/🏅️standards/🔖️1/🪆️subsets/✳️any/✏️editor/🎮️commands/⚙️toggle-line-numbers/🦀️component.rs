@@ -1,9 +1,9 @@
 //! ⚙️ ⚙️ Writer play app commands command — `toggle-line-numbers`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,7 +21,7 @@ pub async fn handle(_payload: &ToggleLineNumbers, _doc: &ArtifactView<'_, Writer
 #[cfg(test)]
 mod tests {
     use super::ToggleLineNumbers;
-        use crate::editor::writer::testkit::new_app;
+    use crate::editor::writer::testkit::new_app;
     use crate::editor::writer::WriterCommand;
 
     #[semio_framework_async_macros::async_test]

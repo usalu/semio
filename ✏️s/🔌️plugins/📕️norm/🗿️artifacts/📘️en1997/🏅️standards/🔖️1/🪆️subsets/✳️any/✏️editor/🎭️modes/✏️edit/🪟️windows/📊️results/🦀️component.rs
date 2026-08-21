@@ -1,7 +1,7 @@
 //! 📊️ EN 1997 play app — the results window: every computed compliance check, one line each.
 
-use crate::editor::en1997::En1997Family;
 use crate::document::NormHost;
+use crate::editor::en1997::En1997Family;
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 
 //#region 🔖️Constants

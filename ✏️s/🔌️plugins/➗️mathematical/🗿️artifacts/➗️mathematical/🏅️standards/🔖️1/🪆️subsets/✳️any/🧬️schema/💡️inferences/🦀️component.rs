@@ -46,10 +46,7 @@ impl protocol::InferenceSpec<MathematicalSnapshot> for MathematicalInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.topology", reads: &["notation", "results", "computed"] },
-            protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.roots", reads: &["equation"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.topology", reads: &["notation", "results", "computed"] }, protocol::InferenceFieldSpec { id: "s.mathematical.mathematical.inference.roots", reads: &["equation"] }]
     }
 }
 //#endregion 🔖️Inference

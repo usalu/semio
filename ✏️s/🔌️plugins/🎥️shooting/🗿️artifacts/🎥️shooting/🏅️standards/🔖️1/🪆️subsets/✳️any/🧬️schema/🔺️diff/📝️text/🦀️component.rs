@@ -12,45 +12,23 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::shooting::schema::diff::*;
 
-
 //#region 🔖️Apply
 /// 🧩 Applies an identified-collection delta to an asset list.
 pub async fn apply_assets_delta(items: &[ShootingAsset], delta: &ShootingAssetsDelta) -> protocol::MutationApplyResult<Vec<ShootingAsset>> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingAssetPatchEntry| {
-        (&entry.id, &entry.patch)
-    })
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingAssetPatchEntry| (&entry.id, &entry.patch))
 }
 
 /// 🧩 Applies an identified-collection delta to a shot list.
 pub async fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> protocol::MutationApplyResult<Vec<ShootingShot>> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingShotPatchEntry| {
-        (&entry.id, &entry.patch)
-    })
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingShotPatchEntry| (&entry.id, &entry.patch))
 }
 
 /// 🧩 Applies an identified-collection delta to a saved-camera list.
-pub async fn apply_saved_cameras_delta(
-    items: &[ShootingSavedCamera],
-    delta: &ShootingSavedCamerasDelta,
-) -> protocol::MutationApplyResult<Vec<ShootingSavedCamera>> {
-    apply_identified_delta(
-        items,
-        &delta.removed,
-        &delta.added,
-        &delta.patched,
-        delta.reordered.as_ref(),
-        |entry: &ShootingSavedCameraPatchEntry| (&entry.id, &entry.patch),
-    )
+pub async fn apply_saved_cameras_delta(items: &[ShootingSavedCamera], delta: &ShootingSavedCamerasDelta) -> protocol::MutationApplyResult<Vec<ShootingSavedCamera>> {
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingSavedCameraPatchEntry| (&entry.id, &entry.patch))
 }
 
-async fn apply_identified_delta<T, P, E, F>(
-    items: &[T],
-    removed: &[String],
-    added: &[T],
-    patched: &[E],
-    reordered: Option<&Vec<String>>,
-    entry_parts: F,
-) -> protocol::MutationApplyResult<Vec<T>>
+async fn apply_identified_delta<T, P, E, F>(items: &[T], removed: &[String], added: &[T], patched: &[E], reordered: Option<&Vec<String>>, entry_parts: F) -> protocol::MutationApplyResult<Vec<T>>
 where
     T: Clone + protocol::Identified<String> + Patchable<P>,
     P: Clone,
@@ -62,9 +40,7 @@ where
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
         }
-        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
-        })?;
+        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()]))?;
         next.remove(position);
     }
     seen.clear();
@@ -81,9 +57,7 @@ where
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
-        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
-        })?;
+        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()]))?;
         item.apply_patch(patch);
     }
     if let Some(order) = reordered {
@@ -101,9 +75,7 @@ where
         }
         let mut ordered = Vec::with_capacity(next.len());
         for id in order {
-            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
-                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
-            })?;
+            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]))?;
             ordered.push(next.remove(position));
         }
         next = ordered;
@@ -143,10 +115,7 @@ async fn absorb_shots_delta(target: &mut Option<ShootingShotsDelta>, incoming: O
     }
 }
 
-async fn absorb_saved_cameras_delta(
-    target: &mut Option<ShootingSavedCamerasDelta>,
-    incoming: Option<ShootingSavedCamerasDelta>,
-) {
+async fn absorb_saved_cameras_delta(target: &mut Option<ShootingSavedCamerasDelta>, incoming: Option<ShootingSavedCamerasDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {

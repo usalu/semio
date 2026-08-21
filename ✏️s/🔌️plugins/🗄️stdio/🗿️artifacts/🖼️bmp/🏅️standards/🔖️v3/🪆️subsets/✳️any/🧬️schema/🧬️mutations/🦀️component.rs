@@ -96,7 +96,7 @@ pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) ->
 impl Mutation<BmpSnapshot> for BmpMutation {
     type Diff = BmpDiff;
 
-    async fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BmpMutation::NoMutation => BmpDiff::default(),
             BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -119,10 +119,10 @@ impl Mutation<BmpSnapshot> for BmpMutation {
             BmpMutation::RemovePaletteEntry { index } => BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPaletteEntry { index, entry } => BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: vec![BmpPaletteModified { index: *index, entry: entry.clone() }], added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPixelData { pixels } => BmpDiff { pixels: Some(pixels.clone()), ..Default::default() },
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
         match self {
             BmpMutation::NoMutation => vec![BmpMutation::NoMutation],
             BmpMutation::SetSnapshot { .. } => {
@@ -166,32 +166,32 @@ impl Mutation<BmpSnapshot> for BmpMutation {
 /// `OpBinary` — see `f6-recon-report.md` §0/§2) — the same ~15-line body every `DslOps`-derived
 /// enum's `OpText` impl uses verbatim (`FlowMutationDsl`/`SpaceMutation`/gif89a precedent).
 impl protocol::OpText for BmpMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl protocol::OpBinary for BmpMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self).await
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes).await
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs

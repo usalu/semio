@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeSchema {
-    pub new_schema: String}
+    pub new_schema: String,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };

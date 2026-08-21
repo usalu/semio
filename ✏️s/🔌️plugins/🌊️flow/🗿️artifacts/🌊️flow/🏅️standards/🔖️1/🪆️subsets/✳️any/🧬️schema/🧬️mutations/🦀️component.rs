@@ -75,23 +75,10 @@ pub async fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<Flo
             CollectionMutation::Patch { id, patch } => FlowMutation::ReplaceWidget(super::replace_widget::mutation::ReplaceWidget { id, widget: patch }),
         },
         flow::FlowMutation::Synapses(operation) => match operation {
-            CollectionMutation::Add { index, item } => FlowMutation::ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets {
-                index,
-                id: item.id,
-                from: item.from,
-                from_port: item.from_port,
-                to: item.to,
-                to_port: item.to_port,
-            }),
+            CollectionMutation::Add { index, item } => FlowMutation::ConnectWidgets(super::connect_widgets::mutation::ConnectWidgets { index, id: item.id, from: item.from, from_port: item.from_port, to: item.to, to_port: item.to_port }),
             CollectionMutation::Remove { id } => FlowMutation::DisconnectWidgets(super::disconnect_widgets::mutation::DisconnectWidgets { id }),
             CollectionMutation::Move { id, to_index } => FlowMutation::ReorderSynapses(super::reorder_synapses::mutation::ReorderSynapses { id, to_index }),
-            CollectionMutation::Patch { id, patch } => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints {
-                id,
-                from: patch.from,
-                from_port: patch.from_port,
-                to: patch.to,
-                to_port: patch.to_port,
-            }),
+            CollectionMutation::Patch { id, patch } => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::mutation::UpdateSynapseEndpoints { id, from: patch.from, from_port: patch.from_port, to: patch.to, to_port: patch.to_port }),
         },
         flow::FlowMutation::SetLayout { entries } => FlowMutation::MoveWidgets(super::move_widgets::mutation::MoveWidgets { entries }),
         flow::FlowMutation::SetFixture { .. } => return None,
@@ -146,8 +133,7 @@ impl protocol::OpBinary for FlowMutation {
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         if bytes.first() == Some(&DUPLICATE_WIDGET_OP_BINARY_TAG) {
-            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_slice(&bytes[1..])
-                .map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
+            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_slice(&bytes[1..]).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
@@ -161,17 +147,11 @@ impl protocol::OpBinary for FlowMutation {
 impl protocol::OpText for FlowMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         if let Some(rest) = line.strip_prefix(DUPLICATE_WIDGET_OP_TEXT_KEYWORD) {
-            let payload: super::duplicate_widget::mutation::DuplicateWidget =
-                serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
+            let payload: super::duplicate_widget::mutation::DuplicateWidget = serde_json::from_str(rest).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
-        from_framework_mutation(framework_mutation).ok_or_else(|| {
-            store::TextError::new(
-                "set-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)",
-                store::TextSpan::at(1, 1),
-            )
-        })
+        from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("set-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
         let FlowMutation::DuplicateWidget(payload) = self else {
@@ -192,9 +172,9 @@ mod tests {
     use crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget;
     use crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets;
     use crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets;
-    use crate::artifacts::flow::schema::mutations::replace_widget::mutation::ReplaceWidget;
     use crate::artifacts::flow::schema::mutations::reorder_synapses::mutation::ReorderSynapses;
     use crate::artifacts::flow::schema::mutations::reorder_widgets::mutation::ReorderWidgets;
+    use crate::artifacts::flow::schema::mutations::replace_widget::mutation::ReplaceWidget;
     use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::mutation::UpdateSynapseEndpoints;
     use flow::{FlowLayoutEntry, Widget, WidgetLayout};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
@@ -242,7 +222,11 @@ mod tests {
     async fn delete_widget_cascades_severed_synapses() {
         let base = base_with_synapse();
         let outcome = FlowMutation::DeleteWidget(DeleteWidget { id: "w1".into() }).diff(&base);
-        assert!(outcome.messages().iter().any(|message| message.level == protocol::Severity::Info && message.code.0 == "mutation.cascade"), "deleting a widget that severs a synapse must carry an Info mutation.cascade message, got {:?}", outcome.messages());
+        assert!(
+            outcome.messages().iter().any(|message| message.level == protocol::Severity::Info && message.code.0 == "mutation.cascade"),
+            "deleting a widget that severs a synapse must carry an Info mutation.cascade message, got {:?}",
+            outcome.messages()
+        );
         assert!(outcome.diff().apply(&base).is_ok());
     }
 

@@ -1,9 +1,9 @@
 //! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`flow_extension_sdk::DrawingStore`].
 
-use semio_framework_2d::{block_on, DrawingError, Vec2};
+use flow_extension_sdk::with_drawing_kernel as with_kernel;
 use flow_extension_sdk::{DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle};
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use flow_extension_sdk::with_drawing_kernel as with_kernel;
+use semio_framework_2d::{block_on, DrawingError, Vec2};
 
 // #region 🔖️Helpers
 
@@ -634,15 +634,11 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_extension_sdk::{
-        boolean_segments_json, build_manifest_json, dispose_drawing, export_dwg_json, export_pdf_json, export_svg_json, import_dwg_json, render_scene_json,
-        retain_drawing_handles, trace_bitmap_json,
-    };
+    use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_dwg_json, export_pdf_json, export_svg_json, import_dwg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};
 
     fn number_dictionary(value: f64) -> Dictionary {
         Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
@@ -1110,10 +1106,8 @@ mod tests {
         extension_activate().expect("activate");
         let _ = extension_invoke;
     }
-
 }
 // #endregion 🔖️Tests
-
 
 // #region 🔖️ExtensionGuest
 #[cfg(feature = "component-guest")]
@@ -1162,9 +1156,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-            })?;
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
         }))
     }

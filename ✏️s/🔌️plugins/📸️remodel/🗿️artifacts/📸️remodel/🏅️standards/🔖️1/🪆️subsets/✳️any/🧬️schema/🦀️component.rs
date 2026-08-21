@@ -1,9 +1,6 @@
 //! 🧬️ Remodel artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::remodel::{
-    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob,
-    ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelSnapshot, VideoCodec,
-};
+use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelSnapshot, VideoCodec};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -68,22 +65,38 @@ pub async fn video_codec_from_label(label: &str) -> VideoCodec {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.remodel.remodel")]
 pub struct RemodelArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] pub streams: Vec<MediaStream>,
-    #[state(artifact)] pub assets: BTreeMap<String, RemodelAssetChild>,
-    #[state(artifact)] pub calibration: CalibrationState,
-    #[state(artifact)] pub params: ReconstructionParams,
-    #[state(artifact)] pub gcps: Vec<GroundControlPoint>,
-    #[state(artifact)] pub job: ReconstructionJob,
-    #[state(artifact)] pub results: ReconstructionResults,
-    #[state(presence)] pub selection: RemodelUiSelection,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(presence)] pub report_table: String,
-    #[state(presence)] pub frame_cursor: RemodelUiFrameCursor,
-    #[state(config)] pub camera: RemodelUiCamera,
-    #[state(config)] pub layers: RemodelUiLayers,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    pub streams: Vec<MediaStream>,
+    #[state(artifact)]
+    pub assets: BTreeMap<String, RemodelAssetChild>,
+    #[state(artifact)]
+    pub calibration: CalibrationState,
+    #[state(artifact)]
+    pub params: ReconstructionParams,
+    #[state(artifact)]
+    pub gcps: Vec<GroundControlPoint>,
+    #[state(artifact)]
+    pub job: ReconstructionJob,
+    #[state(artifact)]
+    pub results: ReconstructionResults,
+    #[state(presence)]
+    pub selection: RemodelUiSelection,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(presence)]
+    pub report_table: String,
+    #[state(presence)]
+    pub frame_cursor: RemodelUiFrameCursor,
+    #[state(config)]
+    pub camera: RemodelUiCamera,
+    #[state(config)]
+    pub layers: RemodelUiLayers,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -235,10 +248,10 @@ pub async fn remodel_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::remodel::schema::diff::RemodelDiff;
     use crate::artifacts::remodel::schema::mutations::RemodelMutation;
     use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelBuilderConstruction {
@@ -250,8 +263,12 @@ pub mod derived_construction {
         type Snapshot = RemodelSnapshot;
         type Mutation = RemodelMutation;
         type Diff = RemodelDiff;
-        async fn empty() -> Self { Self { snapshot: RemodelSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: RemodelSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RemodelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -262,24 +279,21 @@ pub mod derived_construction {
             let outcome = <RemodelMutation as protocol::Mutation<RemodelSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <RemodelDiff as protocol::MutationDiff<RemodelSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -288,8 +302,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::remodel::RemodelSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelParts {
@@ -364,11 +378,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn stage_display_covers_every_stage() {
-        let cases = [
-            (ReconstructionStage::Idle, "Idle"),
-            (ReconstructionStage::Done, "Done"),
-            (ReconstructionStage::Failed, "Failed"),
-        ];
+        let cases = [(ReconstructionStage::Idle, "Idle"), (ReconstructionStage::Done, "Done"), (ReconstructionStage::Failed, "Failed")];
         for (stage, expected) in cases {
             assert_eq!(stage_display(stage), expected);
         }

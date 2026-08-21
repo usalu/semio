@@ -1,9 +1,9 @@
 //! 📄️ Sequence play app panel — the document tree: steps (with control-flow slot nesting) and edges.
 
+use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
 use crate::editor::sequence::sequence_action;
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
-use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
 use semio_framework_plugin::{
     tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiControlNode, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };

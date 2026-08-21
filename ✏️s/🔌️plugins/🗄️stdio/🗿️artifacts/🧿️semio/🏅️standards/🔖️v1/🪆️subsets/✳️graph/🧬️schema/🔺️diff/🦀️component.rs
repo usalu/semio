@@ -52,7 +52,7 @@ impl SemioGraphDiff {
 }
 
 impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
-    async fn apply(&self, base: &SemioGraphSnapshot) -> protocol::MutationApplyResult<SemioGraphSnapshot> {
+    fn apply(&self, base: &SemioGraphSnapshot) -> protocol::MutationApplyResult<SemioGraphSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.nodes {
             next.nodes = list.values.clone();
@@ -63,7 +63,7 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.nodes.is_some() {
             self.nodes = other.nodes;
         }
@@ -79,13 +79,13 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
 /// mutable fields, so a change is fully described by "the new/old `nodes`/`edges` value", same
 /// shape every mutation triad's own `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
-    async fn between(base: &SemioGraphSnapshot, other: &SemioGraphSnapshot) -> Self {
+    fn between(base: &SemioGraphSnapshot, other: &SemioGraphSnapshot) -> Self {
         SemioGraphDiff { nodes: (base.nodes != other.nodes).then(|| SemioGraphNodeList { values: other.nodes.clone() }), edges: (base.edges != other.edges).then(|| SemioGraphEdgeList { values: other.edges.clone() }) }
     }
-    async fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Self {
         SemioGraphDiff { nodes: self.nodes.as_ref().map(|_| SemioGraphNodeList { values: base.nodes.clone() }), edges: self.edges.as_ref().map(|_| SemioGraphEdgeList { values: base.edges.clone() }) }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -255,10 +255,10 @@ fn parse_graph_diff(line: &str) -> Result<SemioGraphDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioGraphDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_graph_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_graph_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -266,7 +266,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
     /// REAL fixed fields; when present, each list follows as a real varint count + per-record
     /// binary encoding (reusing the snapshot facet's own `write_node`/`read_node`/`write_edge`/
     /// `read_edge`) rather than a text-blob-in-binary shortcut.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{write_edge, write_node};
         let presence: u8 = (if self.nodes.is_some() { 0b0000_0001 } else { 0 }) | (if self.edges.is_some() { 0b0000_0010 } else { 0 });
@@ -285,7 +285,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};
         if bytes.len() < 2 {
@@ -295,9 +295,9 @@ impl protocol::DiffCodec for SemioGraphDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]).await;
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let nodes = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 values.push(read_node(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff node", offset: 2, detail: e })?);
@@ -307,7 +307,7 @@ impl protocol::DiffCodec for SemioGraphDiff {
             None
         };
         let edges = if presence & 0b0000_0010 != 0 {
-            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 values.push(read_edge(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edge", offset: 2, detail: e })?);

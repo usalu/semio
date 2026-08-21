@@ -45,9 +45,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::ChangeLayerVisible(restore)] = inverse.as_slice() else {
-        panic!("change-layer-visible/hides-the-overlay-layer: the inverse must be exactly one change-layer-visible step, got {inverse:?}")
-    };
+    let [RasterMutation::ChangeLayerVisible(restore)] = inverse.as_slice() else { panic!("change-layer-visible/hides-the-overlay-layer: the inverse must be exactly one change-layer-visible step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "overlay", "change-layer-visible/hides-the-overlay-layer: the inverse must re-address the same layer");
     assert!(restore.new_visible, "change-layer-visible/hides-the-overlay-layer: the inverse must carry the base's own `visible = true`");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -114,7 +112,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-layer-visible/hides-the-overlay-layer: committed diff did not carry before to after");
 }

@@ -129,9 +129,7 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
         .extends("imperative")
         .mode(semio_framework_plugin::ExecutionMode::Linked)
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
-            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| {
-                semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message)
-            })
+            imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))
         })
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }

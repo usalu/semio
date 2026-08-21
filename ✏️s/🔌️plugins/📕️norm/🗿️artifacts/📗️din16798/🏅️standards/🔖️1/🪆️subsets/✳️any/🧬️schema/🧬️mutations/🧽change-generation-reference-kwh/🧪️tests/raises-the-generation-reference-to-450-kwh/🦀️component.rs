@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-generation-reference-kwh applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-generation-reference-kwh/raises-the-generation-reference-to-450-kwh: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.generation_reference_kwh, 450.0, "change-generation-reference-kwh/raises-the-generation-reference-to-450-kwh: generationReferenceKwh did not land on 450.0");
-    assert_eq!(snapshot.q_c_kwh, before().q_c_kwh, "change-generation-reference-kwh/raises-the-generation-reference-to-450-kwh: qCKwh must stay exactly as the before-snapshot had it — change-generation-reference-kwh owns generationReferenceKwh and nothing else");
+    assert_eq!(
+        snapshot.q_c_kwh,
+        before().q_c_kwh,
+        "change-generation-reference-kwh/raises-the-generation-reference-to-450-kwh: qCKwh must stay exactly as the before-snapshot had it — change-generation-reference-kwh owns generationReferenceKwh and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-generation-reference-kwh` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -143,7 +140,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-generation-reference-kwh/raises-the-generation-reference-to-450-kwh: committed diff did not carry before to after");
 }

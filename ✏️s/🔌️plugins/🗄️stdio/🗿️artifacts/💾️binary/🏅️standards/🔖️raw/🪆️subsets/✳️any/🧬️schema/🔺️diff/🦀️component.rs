@@ -54,13 +54,13 @@ pub struct BinaryDiff {
 }
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
-    async fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
+    fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
         validate_binary_diff(self, base)?;
         Ok(apply_binary_diff_unchecked(self, base))
     }
 
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.splices = absorb_splices(&self.splices, &other.splices);
     }
 }
@@ -97,14 +97,14 @@ fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> Bina
 }
 
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
-    async fn inverse(&self, base: &BinarySnapshot) -> Self {
+    fn inverse(&self, base: &BinarySnapshot) -> Self {
         let next = apply_binary_diff_unchecked(self, base);
-        Self::between(&next, base).await
+        Self::between(&next, base)
     }
 
     /// 🧭️ Minimal common-prefix/common-suffix splice: a single `ByteSplice` covering exactly
     /// the differing middle region (empty splice list iff `base.bytes == other.bytes`).
-    async fn between(base: &BinarySnapshot, other: &BinarySnapshot) -> Self {
+    fn between(base: &BinarySnapshot, other: &BinarySnapshot) -> Self {
         let a = &base.bytes;
         let b = &other.bytes;
         let mut prefix = 0usize;
@@ -121,7 +121,7 @@ impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
         BinaryDiff { splices }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.splices.is_empty()
     }
 }

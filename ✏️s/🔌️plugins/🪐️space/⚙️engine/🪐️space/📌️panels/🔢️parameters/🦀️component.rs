@@ -3,16 +3,22 @@
 use crate::engine::space::engine::parameter_entity_id;
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{s_play_action, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID};
-use semio_framework_os::{WorkflowSnapshot, WorkflowParameter};
+use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode,
-    FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
+    UiToggleNode, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
 use serde_json::json;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"), group: PanelGroup::Workbench, body_key: Some(S_PLAY_PARAMETERS_BODY_KEY.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
+        group: PanelGroup::Workbench,
+        body_key: Some(S_PLAY_PARAMETERS_BODY_KEY.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Manifest
 

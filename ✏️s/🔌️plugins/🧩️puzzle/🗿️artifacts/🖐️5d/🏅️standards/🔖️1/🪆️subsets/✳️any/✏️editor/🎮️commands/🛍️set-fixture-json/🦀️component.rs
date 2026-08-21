@@ -1,8 +1,8 @@
 //! 🛍️ `set-fixture-json` command.
 
-use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::Puzzle5dDocument;
+use serde_json::Value;
 
 /// 🧾️ Replaces the whole document from a raw JSON payload; an unparseable payload is a no-op.
 pub async fn set_fixture_json(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

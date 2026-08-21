@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Draw play app commands command — `canvas-pointer-down`.
 
+use crate::artifacts::draw::op::DrawMutation;
+use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
+use crate::artifacts::draw::{DrawCamera, DrawLayerNode, DrawSnapshot, PathSegment};
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::editor::draw::{DRAW_INTERACTION_DOMAIN, DRAW_INTERACTION_GRANULARITY};
-use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
-use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
-use semio_framework_plugin::{kernel::Effect, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️GestureContext
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
@@ -83,10 +83,7 @@ pub(crate) async fn request_interaction_action(action_id: &str, args: serde_json
 }
 
 pub(crate) async fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
-    request_interaction_action(
-        semio_framework::INTERACTION_SELECT_ACTION_ID,
-        serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }),
-    )
+    request_interaction_action(semio_framework::INTERACTION_SELECT_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }))
 }
 
 pub(crate) async fn interaction_hover_effect(ids: &[String]) -> Effect {
@@ -632,12 +629,6 @@ async fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Op
     }))
 }
 //#endregion 🔖️DrawSession
-
-
-
-
-
-
 
 use serde::{Deserialize, Serialize};
 

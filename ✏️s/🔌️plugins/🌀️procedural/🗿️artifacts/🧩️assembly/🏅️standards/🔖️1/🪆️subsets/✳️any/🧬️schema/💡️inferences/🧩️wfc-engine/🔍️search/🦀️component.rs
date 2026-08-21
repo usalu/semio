@@ -585,7 +585,16 @@ pub(crate) async fn solve_all_with_constraints<T: Topology>(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: Option<&ConstraintSet<'_>>) -> (Vec<Solution>, bool) {
+async fn solve_all_inner<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    limit: usize,
+    constraints: Option<&ConstraintSet<'_>>,
+) -> (Vec<Solution>, bool) {
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
     let mut init = initialize(model, topo, init_domains, fixed, constraints);

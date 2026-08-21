@@ -1,9 +1,6 @@
 //! 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::shooting::{
-    ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch,
-    ShootingSceneLighting, ShootingShot, ShootingShotPatch,
-};
+use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingSceneLighting, ShootingShot, ShootingShotPatch};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

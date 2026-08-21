@@ -137,20 +137,14 @@ pub mod app {
 
     use dsl::{to_dsl_value, DslValue};
     use protocol::OpText;
-    /// 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` closes `PluginApp`
-    /// over each fleet plugin's own per-plugin enum via `dyn_enum_close!`, cross-crate (see
-    /// 📓️terra-dyn-enum-macro-report.md's recipe §5) — replacing `Box<dyn PluginApp>` everywhere.
-    /// `dyn_enum_close!` itself is also used bare, in-crate, to close the zero-variant `NoPluginApp`
-    /// default (same module, trait declared first — finding 1's bare-invocation requirement).
-    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
     pub use semio_framework::AppDefinition;
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, Effect, HybridLogicalTimestamp, InverseMutation,
-            InvocationId, InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
+            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, Effect, HistoryEntry, HistoryPatch, HybridLogicalTimestamp, InverseMutation, InvocationId,
+            InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
@@ -159,6 +153,26 @@ pub mod app {
         RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
         START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
+    /// 🗃️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-dedyn, O1): `#[dyn_enum]` closes `PluginApp`
+    /// over each fleet plugin's own per-plugin enum via `dyn_enum_close!`, cross-crate (see
+    /// 📓️terra-dyn-enum-macro-report.md's recipe §5) — replacing `Box<dyn PluginApp>` everywhere.
+    /// `dyn_enum_close!` itself is also used bare, in-crate, to close the zero-variant `NoPluginApp`
+    /// default (same module, trait declared first — finding 1's bare-invocation requirement).
+    use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+    use semio_framework_ui_contract as ui;
+    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
+    /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
+    /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
+    /// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
+    /// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
+    /// `ActionDescriptor` have no drop-in replacement of the same name — see
+    /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
+    /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
+    /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
+    /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
+    /// too, since this module already used every one of the old wgpu-target types unqualified.
+    use semio_framework_ui_contract::*;
+    use semio_framework_ui_runtime::{ComponentTree, Present, PresentCx, TreeNode};
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -172,39 +186,9 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles,
-        GroupMeta, HistoryColumn, HistoryLane, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
+        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn, HistoryLane, MemberFactory,
+        Mutation, MutationDiff, NoMembers, SpaceMember,
     };
-    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
-    /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
-    /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-    /// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-framework-ui-contract`
-    /// and `semio-framework-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
-    /// `ActionDescriptor` have no drop-in replacement of the same name — see
-    /// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
-    /// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
-    /// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
-    /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
-    /// too, since this module already used every one of the old wgpu-target types unqualified.
-    use semio_framework_ui_contract::*;
-    use semio_framework_ui_contract as ui;
-    use semio_framework_ui_runtime::{ComponentTree, Present, PresentCx, TreeNode};
-    /// 🏷️ The ui crate's NON-node domains, named explicitly rather than glob-imported: localized
-    /// labels, locale/terminology axes, window measures and engagement, and the context-menu request
-    /// flow. The node schema moved to the contract, but these never did — they are separate concerns
-    /// that happen to share a home crate, and a second glob here would silently shadow the contract's
-    /// own types with the old ones, quietly undoing the migration.
-    use ui_wgpu::wgpu::{
-        ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget,
-        Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot,
-        WindowLayout, WindowMeasure, WindowOptions, collect_window_kind_ids_from_layout,
-        FRAMEWORK_HISTORY_BODY_KEY,
-    };
-    /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
-    /// as `ui_wgpu::wgpu::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
-    /// consumer" reasoning as `KeybindingActionDescriptor` below, so this stays bare (no name collision
-    /// with the contract's differently-named `MenuRef` to guard against, unlike that one).
-    use ui_wgpu::wgpu::UiMenuRef;
     /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`)
     /// is still declared as `ui_wgpu::wgpu::ActionDescriptor` and was not part of this migration's scope
     /// — it is a separate, un-migrated manifest domain (declarative keybinding data), not one of the
@@ -212,6 +196,20 @@ pub mod app {
     /// `ActionDescriptor`-shaped construction in this file reads as the genuine `ActionBinding` gap it
     /// is, instead of silently resolving to this one foreign survivor.
     use ui_wgpu::wgpu::ActionDescriptor as KeybindingActionDescriptor;
+    /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
+    /// as `ui_wgpu::wgpu::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
+    /// consumer" reasoning as `KeybindingActionDescriptor` below, so this stays bare (no name collision
+    /// with the contract's differently-named `MenuRef` to guard against, unlike that one).
+    use ui_wgpu::wgpu::UiMenuRef;
+    /// 🏷️ The ui crate's NON-node domains, named explicitly rather than glob-imported: localized
+    /// labels, locale/terminology axes, window measures and engagement, and the context-menu request
+    /// flow. The node schema moved to the contract, but these never did — they are separate concerns
+    /// that happen to share a home crate, and a second glob here would silently shadow the contract's
+    /// own types with the old ones, quietly undoing the migration.
+    use ui_wgpu::wgpu::{
+        collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, Locale, LocalizedLabel, NamedLayout, Terminology, WindowEngagement, WindowEngagementSlot,
+        WindowLayout, WindowMeasure, WindowOptions, FRAMEWORK_HISTORY_BODY_KEY,
+    };
 
     //#region 🔖️TreeConvert
     /// 🌉️ `BuiltNode` (contract crate's builder output) → `TreeNode` (runtime crate's reconciler
@@ -262,7 +260,6 @@ pub mod app {
         let name = serde_json::to_string(&kind).unwrap_or_default();
         serde_json::from_str(&name).unwrap_or(ui_wgpu::wgpu::SurfaceKind::Canvas2d)
     }
-
 
     // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
     // (`.map_err`/`.ok_or_else`) — see R9.
@@ -580,8 +577,8 @@ pub mod app {
     /// share one definition without an inverted dependency; re-exported here verbatim.
     pub use semio_framework::{
         io_compose_via, io_dialects_for, io_dispatch, io_keys_for, io_resolve, list_composer_entries, register_composer_entries, register_subset_validator, resolve_ready, set_io_fallback_dispatcher, subset_validator_entry_of, wire_artifact_compose,
-        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource, IoConfidence,
-        IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
+        wire_decode_composed_artifact, wire_list_composer_entries, Analysis, AnalyzeSource, ArtifactDialect, AsyncComposeFn, ComposeError, ComposeFuture, ComposeSource, ComposedArtifact, ComposerEntry, Composition, Dialect, ErasedComposeSource,
+        IoConfidence, IoDirection, IoFallback, IoFallbackDispatcher, IoKey, IoPayload, IoResolveError, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry, WireComposeSource, WireComposedArtifact,
     };
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
@@ -659,7 +656,7 @@ pub mod app {
                 // suspension exists in a codec body, and this fn-pointer thunk feeds the
                 // Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
                 let composed = resolve_ready(C::compose(&typed_sources))?;
-                let bytes = resolve_ready(ArtifactPack::encode_pack(&composed.snapshot));
+                let bytes = ArtifactPack::encode_pack(&composed.snapshot);
                 Ok(ComposedArtifact { dialect: C::WRITES, payload: IoPayload::Binary(bytes), diagnostics: composed.diagnostics, confidence: composed.confidence })
             })
         }
@@ -702,10 +699,9 @@ pub mod app {
                 // 🌉️ bridged via `resolve_ready` — see `composer_entry_of`'s doc: no real
                 // suspension exists in a codec body, and this fn-pointer thunk feeds the
                 // Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
-                let from =
-                    resolve_ready(<D::From as ArtifactPack>::decode_pack(bytes)).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let from = <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
                 let into = resolve_ready(D::deserialize(&from)).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
-                let bytes = resolve_ready(<D::Into as ArtifactPack>::encode_pack(&into));
+                let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
                 Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
             })
         }
@@ -743,9 +739,9 @@ pub mod app {
                 // 🌉️ bridged via `resolve_ready` — see `composer_entry_of`'s doc: no real
                 // suspension exists in a codec body, and this fn-pointer thunk feeds the
                 // Send-bounded `ComposeFuture` erasure table (R1), which plain AFIT can't satisfy.
-                let from = resolve_ready(<S::From as ArtifactPack>::decode_pack(bytes)).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
                 let into = resolve_ready(S::serialize(&from)).map_err(|e| ComposeError { message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
-                let bytes = resolve_ready(<S::Into as ArtifactPack>::encode_pack(&into));
+                let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
                 Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
             })
         }
@@ -1681,7 +1677,8 @@ pub mod app {
         }
         let service = registry
             .get(&request.artifact_kind, &request.inference_schema)
-            .await.copied()
+            .await
+            .copied()
             .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
         wire_artifact_infer_with_service(request, service).await
     }
@@ -2331,7 +2328,7 @@ pub mod app {
         }
 
         /// 🧬️ Captures an actual typed function pointer erased to its process-local code address.
-        pub async async fn from_function_pointer(function: *const ()) -> Self {
+        pub fn from_function_pointer(function: *const ()) -> Self {
             Self(function as usize)
         }
     }
@@ -2506,7 +2503,12 @@ pub mod app {
 
         /// 🗺️ Declares an explicit locale leaf in this artifact's plural definition.
         pub async fn localization(self, locale: ArtifactLocale, text: impl Into<String>, descriptor: impl Into<Vec<u8>>) -> Result<Self, ArtifactDefinitionError> {
-            let capability = ArtifactCapability::new(self.identity.child("localization").await?.child(locale.as_str().await).await?, ArtifactCapabilityKind::localization().await).await.localization(ArtifactLocalization::new(locale, text).await?).await?.descriptor(descriptor).await?;
+            let capability = ArtifactCapability::new(self.identity.child("localization").await?.child(locale.as_str().await).await?, ArtifactCapabilityKind::localization().await)
+                .await
+                .localization(ArtifactLocalization::new(locale, text).await?)
+                .await?
+                .descriptor(descriptor)
+                .await?;
             self.capability(capability).await
         }
 
@@ -2788,7 +2790,8 @@ pub mod app {
                 None => return Err(ArtifactDefinitionError::new("artifact-definition.runtime-capability", format!("no declared {} capability owns the runtime claims", kind.as_str()))),
             };
             definition.require_declared_capability(&kind, capability.identity(), &claims, None).await.map(|_| ())
-        }.await;
+        }
+        .await;
         if let Err(error) = result {
             *definition_error = Some(error);
         }
@@ -2913,7 +2916,13 @@ pub mod app {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
         pub async fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
-            require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema().await, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, descriptor.id).await.map(|claim| vec![claim])).await;
+            require_declared_capability_or_record(
+                &self.definition,
+                &mut self.definition_error,
+                ArtifactCapabilityKind::schema().await,
+                ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, descriptor.id).await.map(|claim| vec![claim]),
+            )
+            .await;
             ArtifactDeclarationBuilder {
                 kind: self.kind,
                 schemas: vec![descriptor],
@@ -2944,7 +2953,13 @@ pub mod app {
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
         pub async fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
             for item in items {
-                require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::schema().await, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, item.id).await.map(|claim| vec![claim])).await;
+                require_declared_capability_or_record(
+                    &self.definition,
+                    &mut self.definition_error,
+                    ArtifactCapabilityKind::schema().await,
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, item.id).await.map(|claim| vec![claim]),
+                )
+                .await;
                 self.schemas.push(item);
             }
             self
@@ -2953,7 +2968,13 @@ pub mod app {
         /// 💡️ Appends inference descriptors for transactional registration. Repeatable.
         pub async fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
             for item in items {
-                require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::inference().await, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, item.id).await.map(|claim| vec![claim])).await;
+                require_declared_capability_or_record(
+                    &self.definition,
+                    &mut self.definition_error,
+                    ArtifactCapabilityKind::inference().await,
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, item.id).await.map(|claim| vec![claim]),
+                )
+                .await;
                 self.inferences.push(item);
             }
             self
@@ -2969,7 +2990,8 @@ pub mod app {
                     &mut self.definition_error,
                     ArtifactCapabilityKind::inference().await,
                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, metadata.inference_schema).await.map(|claim| vec![claim]),
-                ).await;
+                )
+                .await;
                 self.inference_services.push(service);
             }
             self
@@ -2983,7 +3005,8 @@ pub mod app {
                     &mut self.definition_error,
                     ArtifactCapabilityKind::composer().await,
                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await.map(|claim| vec![claim]),
-                ).await;
+                )
+                .await;
                 self.composers.push(entry);
             }
             self
@@ -3018,12 +3041,7 @@ pub mod app {
                     Some(error) => Err(error),
                     None => Ok(claims),
                 };
-                require_declared_capability_or_record(
-                    &self.definition,
-                    &mut self.definition_error,
-                    ArtifactCapabilityKind::representation().await,
-                    claims_result,
-                ).await;
+                require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::representation().await, claims_result).await;
                 self.formats.push(row);
             }
             self
@@ -3037,7 +3055,8 @@ pub mod app {
                     &mut self.definition_error,
                     ArtifactCapabilityKind::subset_validator().await,
                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await.map(|claim| vec![claim]),
-                ).await;
+                )
+                .await;
                 self.subset_validators.push(entry);
             }
             self
@@ -3046,7 +3065,13 @@ pub mod app {
         /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
         pub async fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
             for spec in specs {
-                require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::grammar().await, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar().await, spec.id).await.map(|claim| vec![claim])).await;
+                require_declared_capability_or_record(
+                    &self.definition,
+                    &mut self.definition_error,
+                    ArtifactCapabilityKind::grammar().await,
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar().await, spec.id).await.map(|claim| vec![claim]),
+                )
+                .await;
             }
             self.languages.extend(specs);
             self
@@ -3065,12 +3090,7 @@ pub mod app {
                 },
                 Err(error) => Err(error),
             };
-            require_declared_capability_or_record(
-                &self.definition,
-                &mut self.definition_error,
-                ArtifactCapabilityKind::codec().await,
-                claims,
-            ).await;
+            require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::codec().await, claims).await;
             self.document_codecs.push(codec);
             self
         }
@@ -3096,12 +3116,7 @@ pub mod app {
                 },
                 Err(error) => Err(error),
             };
-            require_declared_capability_or_record(
-                &self.definition,
-                &mut self.definition_error,
-                ArtifactCapabilityKind::codec().await,
-                claims,
-            ).await;
+            require_declared_capability_or_record(&self.definition, &mut self.definition_error, ArtifactCapabilityKind::codec().await, claims).await;
             self.document_codecs.push(codec);
             self
         }
@@ -3251,7 +3266,9 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, service.metadata().inference_schema).await?]).await);
         }
         for entry in composers {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await?]).await);
+            rows.push(
+                ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await?]).await,
+            );
         }
         for row in formats {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
@@ -3264,19 +3281,22 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::representation().await, claims).await);
         }
         for entry in subset_validators {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(
-                ArtifactCapabilityKind::subset_validator().await,
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await?],
-            ).await);
+            rows.push(
+                ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await?])
+                    .await,
+            );
         }
         for spec in languages {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::grammar().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::grammar().await, spec.id).await?]).await);
         }
         for codec in document_codecs {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(
-                ArtifactCapabilityKind::codec().await,
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec().await, codec.schema.clone()).await?, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension().await, codec.extension).await?],
-            ).await);
+            rows.push(
+                ArtifactRuntimeCapabilityRequirement::new(
+                    ArtifactCapabilityKind::codec().await,
+                    vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec().await, codec.schema.clone()).await?, ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension().await, codec.extension).await?],
+                )
+                .await,
+            );
         }
         Ok(rows)
     }
@@ -3655,7 +3675,8 @@ pub mod app {
     impl FlowExtensionDeclaration {
         /// 🏗️ Declares a `flow.extension` manifest and its immutable native executable identity.
         pub async fn new(id: impl Into<String>, manifest: FlowExtensionManifest, executable_identity: FlowExtensionExecutableIdentity) -> Result<Self, PluginAssemblyError> {
-            let declaration = Self { id: ArtifactIdentity::parse(id).await.map_err(PluginAssemblyError::definition)?, extension_id: ArtifactIdentity::parse(manifest.id.clone()).await.map_err(PluginAssemblyError::definition)?, manifest, executable_identity };
+            let declaration =
+                Self { id: ArtifactIdentity::parse(id).await.map_err(PluginAssemblyError::definition)?, extension_id: ArtifactIdentity::parse(manifest.id.clone()).await.map_err(PluginAssemblyError::definition)?, manifest, executable_identity };
             declaration.validate_shape().await?;
             Ok(declaration)
         }
@@ -3762,8 +3783,7 @@ pub mod app {
 
         async fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
             let kind_str = kind.as_str().await;
-            let id =
-                self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind_str, artifact_kind) })?;
+            let id = self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind_str, artifact_kind) })?;
             let entry = self.by_id.get(id).expect("host-media target index always points to an entry");
             if entry.descriptor.document_schema != document_schema {
                 return Err(HostMediaRuntimeError {
@@ -4058,7 +4078,7 @@ pub mod app {
                 K: ::protocol::CompositeMutationKind<Snapshot, Op>,
             {
                 resolve_ready(async {
-                    let base = Snapshot::decode_pack(snapshot_pack).await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.snapshot-decode", error.to_string()))?;
+                    let base = Snapshot::decode_pack(snapshot_pack).map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.snapshot-decode", error.to_string()))?;
                     let kind: K = decode_contributed_wire(payload).await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.payload-decode", error))?;
                     let steps = ::protocol::plan_of(&kind, &base).await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.plan", error.to_string()))?;
                     let label = kind.label().await;
@@ -4066,7 +4086,7 @@ pub mod app {
                     let mut foreign = Vec::new();
                     for step in steps {
                         match step {
-                            ::protocol::PlanStep::Local(op) => owner_ops.push(op.encode_op().await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.op-encode", error.to_string()))?),
+                            ::protocol::PlanStep::Local(op) => owner_ops.push(op.encode_op().map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.op-encode", error.to_string()))?),
                             ::protocol::PlanStep::Foreign(hop) => foreign.push(hop),
                         }
                     }
@@ -4326,7 +4346,7 @@ pub mod app {
     }
 
     async fn decode_contributed_wire<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| error.to_string())?;
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
         dsl::from_dsl_value(value)
     }
 
@@ -4476,18 +4496,29 @@ pub mod app {
             let schema = capability(&owner, "schema", ArtifactCapabilityKind::schema().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, "s.stdio.ifc.v4").await.unwrap()).await.unwrap();
             let standard = capability(&owner, "standard", ArtifactCapabilityKind::standard().await);
             let profile = capability(&owner, "profile", ArtifactCapabilityKind::profile().await);
-            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, "s.stdio.ifc.standard.v4.dialect.any").await.unwrap()).await.unwrap();
+            let dialect = capability(&owner, "source-dialect", ArtifactCapabilityKind::source_dialect().await)
+                .await
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, "s.stdio.ifc.standard.v4.dialect.any").await.unwrap())
+                .await
+                .unwrap();
             let representation = capability(&owner, "representation", ArtifactCapabilityKind::representation().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::mime().await, "application/ifc").await.unwrap()).await.unwrap();
             let codec = capability(&owner, "codec", ArtifactCapabilityKind::codec().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec().await, "stdio.ifc.v4.pack").await.unwrap()).await.unwrap();
             let mutation = capability(&owner, "mutation", ArtifactCapabilityKind::mutation().await);
             let inference = capability(&owner, "inference", ArtifactCapabilityKind::inference().await);
             let resource = capability(&owner, "resource", ArtifactCapabilityKind::resource().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension().await, "ifc").await.unwrap()).await.unwrap();
             let localization = capability(&owner, "localization", ArtifactCapabilityKind::localization().await)
-                .await.localization(ArtifactLocalization::new(ArtifactLocale::parse("en").await.unwrap(), "Industry Foundation Classes").await.unwrap())
-                .await.unwrap()
+                .await
+                .localization(ArtifactLocalization::new(ArtifactLocale::parse("en").await.unwrap(), "Industry Foundation Classes").await.unwrap())
+                .await
+                .unwrap()
                 .localization(ArtifactLocalization::new(ArtifactLocale::parse("de").await.unwrap(), "Industriegrundklassen").await.unwrap())
-                .await.unwrap();
-            let conformance = capability(&owner, "conformance-suite", ArtifactCapabilityKind::conformance_suite().await).await.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension_implementation().await, "ifc-v4-conformance").await.unwrap()).await.unwrap();
+                .await
+                .unwrap();
+            let conformance = capability(&owner, "conformance-suite", ArtifactCapabilityKind::conformance_suite().await)
+                .await
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension_implementation().await, "ifc-v4-conformance").await.unwrap())
+                .await
+                .unwrap();
             let definition = [schema, standard.await, profile.await, dialect, representation, codec, mutation.await, inference.await, resource, localization, conformance]
                 .into_iter()
                 .try_fold(semio_framework::io::resolve_ready(ArtifactDefinition::new(owner.clone())), |definition, capability| semio_framework::io::resolve_ready(definition.capability(capability)))
@@ -4506,9 +4537,15 @@ pub mod app {
             for (index, namespace) in namespaces.into_iter().enumerate() {
                 let value = format!("shared-{index}");
                 let first = ArtifactDefinition::new(owner_a.clone())
-                    .await.capability(capability(&owner_a, &format!("first-{index}"), ArtifactCapabilityKind::resource().await).await.claim(ArtifactIdentityClaim::new(namespace.clone(), value.clone()).await.unwrap()).await.unwrap())
-                    .await.unwrap();
-                let second = ArtifactDefinition::new(owner_b.clone()).await.capability(capability(&owner_b, &format!("second-{index}"), ArtifactCapabilityKind::resource().await).await.claim(ArtifactIdentityClaim::new(namespace, value).await.unwrap()).await.unwrap()).await.unwrap();
+                    .await
+                    .capability(capability(&owner_a, &format!("first-{index}"), ArtifactCapabilityKind::resource().await).await.claim(ArtifactIdentityClaim::new(namespace.clone(), value.clone()).await.unwrap()).await.unwrap())
+                    .await
+                    .unwrap();
+                let second = ArtifactDefinition::new(owner_b.clone())
+                    .await
+                    .capability(capability(&owner_b, &format!("second-{index}"), ArtifactCapabilityKind::resource().await).await.claim(ArtifactIdentityClaim::new(namespace, value).await.unwrap()).await.unwrap())
+                    .await
+                    .unwrap();
                 let mut registry = ArtifactDefinitionRegistry::new().await;
                 registry.register(first).await.unwrap();
                 let error = registry.register(second).await.unwrap_err();
@@ -5008,13 +5045,16 @@ pub mod app {
             // `.panel_tab(...)`), the history panel's content is framework-generic (`HistoryView`), so
             // every app gets it unconditionally — unless it already declared the reserved id itself.
             if panel_tab_ids.insert(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
-                self.panel_tabs.push(PanelTabSpec::framework(
-                    PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
-                    LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
-                    PanelGroup::Settings,
-                    Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
-                    Vec::new(),
-                ).await);
+                self.panel_tabs.push(
+                    PanelTabSpec::framework(
+                        PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
+                        LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
+                        PanelGroup::Settings,
+                        Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
+                        Vec::new(),
+                    )
+                    .await,
+                );
             }
             let mut layout_window_ids = Vec::new();
             if let Some(layout) = &self.default_layout {
@@ -5157,7 +5197,8 @@ pub mod app {
                 }
             }
             let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
-            let mut keybindings: Vec<Keybinding> = self.keybindings.into_iter().map(|binding| Keybinding { keys: binding.keys, action: KeybindingActionDescriptor { controller_id: binding.controller_id, action: binding.action, args: None } }).collect();
+            let mut keybindings: Vec<Keybinding> =
+                self.keybindings.into_iter().map(|binding| Keybinding { keys: binding.keys, action: KeybindingActionDescriptor { controller_id: binding.controller_id, action: binding.action, args: None } }).collect();
             for history_action in actions.iter().filter(|action| matches!(action.kind, ActionKind::History | ActionKind::Clipboard)) {
                 if let Some(keys) = &history_action.keys {
                     if bound_keys.insert(keys.clone()) {
@@ -5170,7 +5211,11 @@ pub mod app {
                     if bound_keys.insert(keys.clone()) {
                         keybindings.push(Keybinding {
                             keys: keys.clone(),
-                            action: KeybindingActionDescriptor { controller_id: self.controller_id.clone(), action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(), args: Some(DslValue::Object(vec![("utilityId".into(), DslValue::String(utility.id.clone()))])) },
+                            action: KeybindingActionDescriptor {
+                                controller_id: self.controller_id.clone(),
+                                action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(),
+                                args: Some(DslValue::Object(vec![("utilityId".into(), DslValue::String(utility.id.clone()))])),
+                            },
                         });
                     }
                 }
@@ -5799,14 +5844,7 @@ pub mod app {
             let on_change = ActionId::v1("app", "setValue");
             let submit_action = ActionId::v1("app", "submit");
             let control = ui::input(InputKind::Text).id("ns-play-form.field.name").on(Trigger::Change, on_change).build();
-            let node = FormPanelBuilder::new("ns-play-form")
-                .await
-                .field("name", "Name", Some("Full name".into()), control)
-                .await
-                .submit("Submit", submit_action)
-                .await
-                .build()
-                .await;
+            let node = FormPanelBuilder::new("ns-play-form").await.field("name", "Name", Some("Full name".into()), control).await.submit("Submit", submit_action).await.build().await;
             assert_eq!(node.key, "ns-play-form");
             assert_eq!(node.children.len(), 2);
             let field = &node.children[0];
@@ -5837,13 +5875,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
             let action = ActionId::v1("app", "edit");
-            let node = entity_detail(
-                "Widget",
-                Some(Label::from("A widget")),
-                vec![KeyValueEntry { label: Label::from("Kind"), value: "gizmo".into() }],
-                vec![ui::button("Edit").icon("edit").on(Trigger::Activate, action).build()],
-            )
-            .await;
+            let node = entity_detail("Widget", Some(Label::from("A widget")), vec![KeyValueEntry { label: Label::from("Kind"), value: "gizmo".into() }], vec![ui::button("Edit").icon("edit").on(Trigger::Activate, action).build()]).await;
             assert_eq!(node.children.len(), 4);
             let Component::KeyValueList(key_value) = &node.children[2].component else { panic!("expected a KeyValue node") };
             assert_eq!(key_value.entries[0].value, "gizmo");
@@ -6067,7 +6099,7 @@ pub mod app {
         }
 
         pub async fn action(&self, action: &str, args: Option<Value>) -> (ActionId, Option<UiValue>) {
-            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_val.awaitue_to_ui_value))
+            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_value_to_ui_value))
         }
     }
     //#endregion 🔖️ActionFactory
@@ -6283,10 +6315,10 @@ pub mod app {
             let mut envelopes = Vec::new();
             for message in far.receive().await.expect("receive") {
                 if let BackboneMessage::Mutations { envelopes: operations } = message {
-                    envelopes.extend(protocol::decode_envelopes(&operations).await.expect("decode envelopes"));
+                    envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                 }
             }
-            let operations = protocol::encode_envelopes(&envelopes).await;
+            let operations = protocol::encode_envelopes(&envelopes);
 
             let mut receiver = new_app::<A>().await;
             receiver.ingest_operations(&operations).await.expect("ingest once");
@@ -6316,7 +6348,7 @@ pub mod app {
             let edits_before = app.store.envelope().await.vcs.edits.len();
             let mut prepared_ops: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
-                prepared_ops.push(::protocol::OpBinary::encode_op(op).await.expect("encode prepared op"));
+                prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
             }
             let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(origin.clone())).await;
             assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
@@ -6340,7 +6372,7 @@ pub mod app {
             let edits_before = app.store.envelope().await.vcs.edits.len();
             let mut prepared_ops: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
-                prepared_ops.push(::protocol::OpBinary::encode_op(op).await.expect("encode prepared op"));
+                prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
             }
             let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, label, Some(protocol::MutationOrigin::Owner)).await;
             assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected");
@@ -6425,7 +6457,8 @@ pub mod app {
                 async fn diff(&self, _snapshot: &DummySnapshot) -> ::protocol::MutationOutcome<DummyDiff> {
                     ::protocol::MutationOutcome::new(match self {
                         DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
-                    }).await
+                    })
+                    .await
                 }
 
                 async fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
@@ -6545,7 +6578,10 @@ pub mod app {
                 }
 
                 async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                        "text",
+                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+                    ))
                 }
             }
 
@@ -6663,7 +6699,8 @@ pub mod app {
                     ::protocol::MutationOutcome::new(match self {
                         TxnMutation::SetCount { value } => TxnDiff { count: Some(*value) },
                         TxnMutation::SetCountAndNotify { value } => TxnDiff { count: Some(*value) },
-                    }).await
+                    })
+                    .await
                 }
 
                 async fn inverse(&self, snapshot: &TxnSnapshot) -> Vec<Self> {
@@ -6798,7 +6835,10 @@ pub mod app {
                 }
 
                 async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                        "text",
+                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+                    ))
                 }
             }
 
@@ -7158,7 +7198,10 @@ pub mod app {
                 }
 
                 async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                        "text",
+                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+                    ))
                 }
             }
 
@@ -7193,7 +7236,10 @@ pub mod app {
                 }
 
                 async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new("text", semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None })))
+                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+                        "text",
+                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+                    ))
                 }
             }
 
@@ -7304,17 +7350,9 @@ pub mod app {
             let expected_schema_ids: Vec<&'static str> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter().map(|subset| subset.schema.descriptor.id)).collect();
             let mut expected_io_pairs: Vec<(String, String)> = Vec::new();
             for entry in declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| subset.io.entries.iter()) {
-                expected_io_pairs.push((
-                    semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate(),
-                    semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate(),
-                ));
+                expected_io_pairs.push((semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate(), semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate()));
             }
-            let expected_surface_ids: Vec<String> = declaration
-                .standards
-                .iter()
-                .flat_map(|standard| standard.subsets.iter())
-                .flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()])
-                .collect();
+            let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
             let plugin = super::Plugin::builder(plugin_id).await.label(plugin_id).await.version("0.0.1").await.declare_artifact(declaration).await.try_build().await.expect("a well-formed declaration tree must register");
 
@@ -7378,7 +7416,7 @@ pub mod app {
             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor).await
         }
 
-                /// 🪦️ REMOVED (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, registrar):
+        /// 🪦️ REMOVED (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, registrar):
         /// `build_definition_rejects_{,dialog_}select_arg_with_no_options` asserted that a Select
         /// argument declaring zero options is rejected. After the peer `ActionArgDef` redesign
         /// (`control` field -> `control()` derived from `ArgSchema`), `ActionArgControl::Select` is
@@ -7387,29 +7425,42 @@ pub mod app {
         /// an impossible outcome, not lost coverage — illegal state made unconstructible beats
         /// validating it. The defensive asserts in `validate_arg_defs` are kept as a tripwire in
         /// case `control()` ever widens again.
-#[semio_framework_async_macros::async_test]
+        #[semio_framework_async_macros::async_test]
         async fn build_definition_rejects_layout_with_unknown_window_kind() {
             let base = App::builder("bad-app", LocalizedLabel::data("Bad")).await;
-            let __chain = base.document(["semio", "bad"])
-                    .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await.mode_tools("edit", vec![])
-                    .await.window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.default_layout(create_default_layout(&["missing".into()], "row", None, None))
-                    .await;
+            let __chain = base
+                .document(["semio", "bad"])
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .mode_tools("edit", vec![])
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .default_layout(create_default_layout(&["missing".into()], "row", None, None))
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_valid_manifest() {
-            let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good")).await
+            let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good"))
+                .await
                 .document(["semio", "good"])
-                .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await.mode_tools("edit", vec![])
-                .await.window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.panel_tab("framework.panel.artifact", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await.build_definition().await;
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .mode_tools("edit", vec![])
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .panel_tab("framework.panel.artifact", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
+                .await
+                .default_layout(create_default_layout(&["main".into()], "row", None, None))
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.window_kinds.len(), 1);
             assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
             assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
@@ -7426,46 +7477,75 @@ pub mod app {
             assert_eq!(IconName::from("menu").as_str(), "list");
             assert_eq!(IconName::from("square-pen").as_str(), "pencil");
             assert_eq!(IconName::from("trees").as_str(), "list-tree");
-            let definition = App::builder(canonical_test_app_id("icon-app").await, LocalizedLabel::data("Icon")).await
+            let definition = App::builder(canonical_test_app_id("icon-app").await, LocalizedLabel::data("Icon"))
+                .await
                 .document(["semio", "icon"])
-                .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await.mode_tools("edit", vec![])
-                .await.window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await.build_definition().await;
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .mode_tools("edit", vec![])
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .default_layout(create_default_layout(&["main".into()], "row", None, None))
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
             let base = App::builder("bad-terminology-app", LocalizedLabel::data("Bad")).await;
-            let __chain = base.document(["semio", "bad"])
-                    .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await.mode_tools("edit", vec![])
-                    .await.window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
-                    .await.terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
-                    .await;
+            let __chain = base
+                .document(["semio", "bad"])
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .mode_tools("edit", vec![])
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .default_layout(create_default_layout(&["main".into()], "row", None, None))
+                .await
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_declared_terminology_document() {
-            let definition = App::builder(canonical_test_app_id("good-terminology-app").await, LocalizedLabel::data("Good")).await
+            let definition = App::builder(canonical_test_app_id("good-terminology-app").await, LocalizedLabel::data("Good"))
+                .await
                 .document(["semio", "good"])
-                .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                .await.mode_tools("edit", vec![])
-                .await.window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .await.default_layout(create_default_layout(&["main".into()], "row", None, None))
-                .await.terminology("reuse")
-                .await.terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
-                .await.build_definition().await;
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .mode_tools("edit", vec![])
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .default_layout(create_default_layout(&["main".into()], "row", None, None))
+                .await
+                .terminology("reuse")
+                .await
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.terminology_breadcrumbs.get("reuse").map(Vec::as_slice), Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice()));
         }
 
         async fn minimal_app(slug: &str) -> AppBuilder {
-            App::builder(canonical_test_app_id(slug).await, LocalizedLabel::data("App")).await.document(["semio", slug]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow).await
+            App::builder(canonical_test_app_id(slug).await, LocalizedLabel::data("App"))
+                .await
+                .document(["semio", slug])
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), format!("{slug}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
         }
 
         #[semio_framework_async_macros::async_test]
@@ -7541,8 +7621,16 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn operation_view_and_shell_actions_are_declared_with_their_kind() {
-            let definition =
-                minimal_app("typed-actions-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.view_action("setCamera", LocalizedLabel::data("Set Camera")).await.shell_action("exportPng", LocalizedLabel::data("Export PNG")).await.build_definition().await;
+            let definition = minimal_app("typed-actions-app")
+                .await
+                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
+                .await
+                .view_action("setCamera", LocalizedLabel::data("Set Camera"))
+                .await
+                .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
+                .await
+                .build_definition()
+                .await;
             let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
             assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
             assert_eq!(by_id("setCamera").kind, ActionKind::View);
@@ -7569,9 +7657,13 @@ pub mod app {
         async fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
             use semio_framework::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
             let definition = minimal_app("utility-app")
-                .await.utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await })
-                .await.utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
-                .await.build_definition().await;
+                .await
+                .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await })
+                .await
+                .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
+                .await
+                .build_definition()
+                .await;
             let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
             assert_eq!(set_active_utility.kind, ActionKind::View);
             assert!(!set_active_utility.in_palette);
@@ -7615,8 +7707,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
             use semio_framework::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
-            let definition =
-                minimal_app("tool-keybinding-app").await.tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await }).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition().await;
+            let definition = minimal_app("tool-keybinding-app")
+                .await
+                .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await })
+                .await
+                .mode_tools("edit", vec![ToolRef::new("fill").await])
+                .await
+                .build_definition()
+                .await;
             let set_active_tool = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
             assert_eq!(set_active_tool.kind, ActionKind::View);
             assert!(!set_active_tool.in_palette);
@@ -7634,7 +7732,14 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn action_args_attaches_declared_arguments() {
-            let definition = minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.required().await]).await.build_definition().await;
+            let definition = minimal_app("args-app")
+                .await
+                .mutation("resize", LocalizedLabel::data("Resize"))
+                .await
+                .action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.required().await])
+                .await
+                .build_definition()
+                .await;
             let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
             assert_eq!(resize.args.len(), 1);
             assert_eq!(resize.args[0].id, "scale");
@@ -7661,7 +7766,8 @@ pub mod app {
         async fn build_definition_carries_window_interactions_and_injects_framework_actions() {
             use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_HOVER_ACTION_ID};
             let definition = minimal_app("interaction-app")
-                .await.interaction(InteractionDefinition {
+                .await
+                .interaction(InteractionDefinition {
                     id: "world".into(),
                     label: LocalizedLabel::data("World"),
                     granularities: vec![GranularityDefinition { id: "object".into(), label: LocalizedLabel::data("Object"), icon_id: "box".into() }],
@@ -7669,22 +7775,27 @@ pub mod app {
                     hover: HoverSpec::default(),
                     selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
                 })
-                .await.window_kind_interactions("main", vec![InteractionRef::new("world").await])
-                .await.build_definition().await;
+                .await
+                .window_kind_interactions("main", vec![InteractionRef::new("world").await])
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.interactions.len(), 1);
             assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
             assert_eq!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
             assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
         }
 
-        
         #[semio_framework_async_macros::async_test]
         async fn declaring_introduction_injects_start_introduction_action() {
             use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("intro-app")
-                .await.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
-                .await.build_definition().await;
+                .await
+                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
+                .await
+                .build_definition()
+                .await;
             let start_introduction = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
             assert_eq!(start_introduction.kind, ActionKind::View);
             assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
@@ -7711,11 +7822,12 @@ pub mod app {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("dupe-step-app").await;
-            let __chain = __base.introduction(IntroductionDefinition {
-                        title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")), IntroductionStepDefinition::new("step", LocalizedLabel::data("B"), LocalizedLabel::data("b"))],
-                    })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition {
+                    title: LocalizedLabel::data("Welcome"),
+                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")), IntroductionStepDefinition::new("step", LocalizedLabel::data("B"), LocalizedLabel::data("b"))],
+                })
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7725,8 +7837,9 @@ pub mod app {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-window-app").await;
-            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing").await)] })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing").await)] })
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7736,19 +7849,21 @@ pub mod app {
             use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-panel-tab-app").await;
-            let __chain = __base.introduction(IntroductionDefinition {
-                        title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing").await)],
-                    })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition {
+                    title: LocalizedLabel::data("Welcome"),
+                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing").await)],
+                })
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
             let __base = minimal_app("bad-panel-tab-first-draggable-app").await;
-            let __chain = __base.introduction(IntroductionDefinition {
-                        title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing").await)],
-                    })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition {
+                    title: LocalizedLabel::data("Welcome"),
+                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing").await)],
+                })
+                .await;
             let result_first_draggable = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result_first_draggable.is_err());
         }
@@ -7758,13 +7873,14 @@ pub mod app {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-element-app").await;
-            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] })
-                    .await;
+            let __chain =
+                __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
             let __base = minimal_app("bad-element-show-app").await;
-            let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).show(vec!["not-camel-case".into()])] })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).show(vec!["not-camel-case".into()])] })
+                .await;
             let result_show = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result_show.is_err());
         }
@@ -7774,8 +7890,11 @@ pub mod app {
             use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("good-escape-hatch-app")
-                .await.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
-                .await.build_definition().await;
+                .await
+                .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
+                .await
+                .build_definition()
+                .await;
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 1);
         }
@@ -7785,11 +7904,12 @@ pub mod app {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-interaction-utility-app").await;
-            let __chain = __base.introduction(IntroductionDefinition {
-                        title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate").await])],
-                    })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition {
+                    title: LocalizedLabel::data("Welcome"),
+                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate").await])],
+                })
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7799,11 +7919,12 @@ pub mod app {
             use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let __base = minimal_app("bad-interaction-window-app").await;
-            let __chain = __base.introduction(IntroductionDefinition {
-                        title: LocalizedLabel::data("Welcome"),
-                        steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit").await])],
-                    })
-                    .await;
+            let __chain = __base
+                .introduction(IntroductionDefinition {
+                    title: LocalizedLabel::data("Welcome"),
+                    steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit").await])],
+                })
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7813,21 +7934,29 @@ pub mod app {
             use semio_framework::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
             use ui_wgpu::wgpu::LocalizedLabel;
             let definition = minimal_app("good-intro-app")
-                .await.mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                .await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
-                .await.window_kind_utilities("main", vec!["brush".into()])
-                .await.window_kind_action_refs("main", vec!["addLayer".into()])
-                .await.introduction(IntroductionDefinition {
+                .await
+                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
+                .await
+                .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
+                .await
+                .window_kind_utilities("main", vec!["brush".into()])
+                .await
+                .window_kind_action_refs("main", vec!["addLayer".into()])
+                .await
+                .introduction(IntroductionDefinition {
                     title: LocalizedLabel::data("Welcome"),
                     steps: vec![
                         IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi")),
                         IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main").await),
                         IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush").await]),
                         IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer").await]),
-                        IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::pan("main", "Pan").await, IntroductionInteraction::zoom("main", "Zoom").await]),
+                        IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…"))
+                            .interact(vec![IntroductionInteraction::pan("main", "Pan").await, IntroductionInteraction::zoom("main", "Zoom").await]),
                     ],
                 })
-                .await.build_definition().await;
+                .await
+                .build_definition()
+                .await;
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 5);
         }
@@ -7924,7 +8053,8 @@ pub mod app {
             tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
             tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
             tutorial.tracks.gestures = vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main").await, offset: None } }, cursor: None }];
-            let definition = minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition().await;
+            let definition =
+                minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition().await;
             assert_eq!(definition.tutorials.len(), 1);
             assert_eq!(definition.tutorials[0].id, "good-tour");
         }
@@ -7932,7 +8062,8 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn declaring_dialog_appends_to_definition() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition().await;
+            let definition =
+                minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition().await;
             assert_eq!(definition.dialogs.len(), 1);
             assert_eq!(definition.dialogs[0].id, "addLayer");
             assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
@@ -7942,10 +8073,13 @@ pub mod app {
         async fn build_definition_rejects_duplicate_dialog_ids() {
             use semio_framework::{ActionRef, DialogDefinition};
             let __base = minimal_app("dupe-dialog-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")))
-                    .await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer Again"), ActionRef::new("addLayer")))
-                    .await;
+            let __chain = __base
+                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
+                .await
+                .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")))
+                .await
+                .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer Again"), ActionRef::new("addLayer")))
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7963,9 +8097,7 @@ pub mod app {
         async fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
             use semio_framework::{ActionRef, DialogDefinition};
             let __base = minimal_app("bad-dialog-cancel-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing")))
-                    .await;
+            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -7981,24 +8113,29 @@ pub mod app {
         async fn build_definition_rejects_dialog_duplicate_arg_ids() {
             use semio_framework::{ActionArgDef, ActionRef, DialogDefinition};
             let __base = minimal_app("dupe-dialog-arg-app").await;
-            let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .await.dialog(
-                        DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))
-                            .args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).await, ActionArgDef::text("name", LocalizedLabel::data("Name Again")).await]),
-                    )
-                    .await;
+            let __chain = __base
+                .mutation("addLayer", LocalizedLabel::data("Add Layer"))
+                .await
+                .dialog(
+                    DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))
+                        .args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).await, ActionArgDef::text("name", LocalizedLabel::data("Name Again")).await]),
+                )
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
-        
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_app_and_mode_scope_commands() {
             use semio_framework::CommandDefinition;
             let definition = minimal_app("command-app")
-                .await.app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
-                .await.mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View).await)
-                .await.build_definition().await;
+                .await
+                .app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell)
+                .await
+                .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View).await)
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
             assert_eq!(definition.modes[0].commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["mode.focus"]);
         }
@@ -8015,9 +8152,11 @@ pub mod app {
         async fn build_definition_rejects_duplicate_mode_command_ids() {
             use semio_framework::CommandDefinition;
             let __base = minimal_app("dupe-mode-command-app").await;
-            let __chain = __base.mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View).await)
-                    .await.mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View).await)
-                    .await;
+            let __chain = __base
+                .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View).await)
+                .await
+                .mode_command("edit", CommandDefinition::new_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View).await)
+                .await;
             let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
@@ -8026,9 +8165,13 @@ pub mod app {
         async fn build_definition_derives_command_owner_from_structural_containment() {
             use semio_framework::CommandDefinition;
             let definition = minimal_app("structural-command-app")
-                .await.app_command("focus", LocalizedLabel::data("App Focus"), "app", ActionKind::View)
-                .await.mode_command("edit", CommandDefinition::new_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View).await)
-                .await.build_definition().await;
+                .await
+                .app_command("focus", LocalizedLabel::data("App Focus"), "app", ActionKind::View)
+                .await
+                .mode_command("edit", CommandDefinition::new_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View).await)
+                .await
+                .build_definition()
+                .await;
             assert_eq!(definition.commands[0].category, "app");
             assert_eq!(definition.modes[0].commands[0].category, "mode");
         }
@@ -8135,14 +8278,19 @@ pub mod app {
             assert_eq!(definition.id, "nakagin");
             assert_eq!(definition.artifact_json, "{\"kind\":\"demo\"}");
             assert!(definition.app_id.is_empty());
-            let app = App::from_builder(App::builder(canonical_test_app_id("puzzle2d-play").await, LocalizedLabel::data("Puzzle")).await.document(["semio", "puzzle"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
-                "main",
-                LocalizedLabel::data("Main"),
-                "puzzle.main",
-                SurfaceKind::Canvas2d,
-                IconName::AppWindow,
-            ).await)
-            .await.example_source(&source).await;
+            let app = App::from_builder(
+                App::builder(canonical_test_app_id("puzzle2d-play").await, LocalizedLabel::data("Puzzle"))
+                    .await
+                    .document(["semio", "puzzle"])
+                    .await
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "puzzle.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await,
+            )
+            .await
+            .example_source(&source)
+            .await;
             assert_eq!(app.examples.len(), 1);
             assert_eq!(app.examples[0].id, "nakagin");
             assert_eq!(app.examples[0].icon_id, IconName::from("building"));
@@ -8150,14 +8298,19 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn example_delegates_to_example_source() {
-            let app = App::from_builder(App::builder(canonical_test_app_id("demo-play").await, LocalizedLabel::data("Demo")).await.document(["semio", "demo"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
-                "main",
-                LocalizedLabel::data("Main"),
-                "demo.main",
-                SurfaceKind::Canvas2d,
-                IconName::AppWindow,
-            ).await)
-            .await.example("default", LocalizedLabel::native("Default", "Standard"), "{}", "file").await;
+            let app = App::from_builder(
+                App::builder(canonical_test_app_id("demo-play").await, LocalizedLabel::data("Demo"))
+                    .await
+                    .document(["semio", "demo"])
+                    .await
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "demo.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await,
+            )
+            .await
+            .example("default", LocalizedLabel::native("Default", "Standard"), "{}", "file")
+            .await;
             assert_eq!(app.examples.len(), 1);
             assert_eq!(app.examples[0].id, "default");
         }
@@ -8283,17 +8436,13 @@ pub mod app {
 
         /// 📦️ The child's content, pack-encoded, as of when this view was constructed.
         pub async fn pack(&self, slot: &str, child_id: &str) -> Result<Vec<u8>, Fault> {
-            self.children
-                .as_ref()
-                .and_then(|children| children.get(&(slot.to_string(), child_id.to_string())))
-                .map(|(_, pack)| pack.clone())
-                .ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))
+            self.children.as_ref().and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(_, pack)| pack.clone()).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))
         }
 
         /// 🧩️ {@link Self::pack} decoded as the child's snapshot type — what a composing app's
         /// `handle`/`render` actually calls.
         pub async fn typed<S: ArtifactPack>(&self, slot: &str, child_id: &str) -> Result<S, Fault> {
-            S::decode_pack(&self.pack(slot, child_id).await?).await.map_err(|error| plugin_sdk_fault(error.to_string()))
+            S::decode_pack(&self.pack(slot, child_id).await?).map_err(|error| plugin_sdk_fault(error.to_string()))
         }
 
         /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
@@ -8469,22 +8618,22 @@ pub mod app {
 
     impl store::ArtifactDsl for NoConfig {
         const EXTENSION: &'static str = "nocfg";
-        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no config", store::TextSpan::at(1, 1)))
         }
-        async fn print_dsl(&self) -> String {
+        fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoConfig {
-        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
@@ -8492,10 +8641,10 @@ pub mod app {
     impl store::ConfigRecord for NoConfig {}
 
     impl ::protocol::MutationDiff<NoConfig> for NoConfig {
-        async fn apply(&self, base: &NoConfig) -> protocol::MutationApplyResult<NoConfig> {
+        fn apply(&self, base: &NoConfig) -> protocol::MutationApplyResult<NoConfig> {
             Ok(base.clone())
         }
-        async fn absorb(&mut self, _other: Self) {}
+        fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8507,17 +8656,17 @@ pub mod app {
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         type Diff = NoConfig;
 
-        async fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
-            ::protocol::MutationOutcome::new(NoConfig::default()).await
+        fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
+            ::protocol::MutationOutcome::new(NoConfig::default())
         }
 
-        async fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
+        fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
             vec![NoConfigMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoConfigMutation {
-        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8529,7 +8678,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8543,11 +8692,11 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoConfigMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self).await
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes).await
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
         }
     }
     //#endregion 🔖️NoConfig
@@ -8567,31 +8716,31 @@ pub mod app {
 
     impl store::ArtifactDsl for NoPresence {
         const EXTENSION: &'static str = "nopres";
-        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no presence", store::TextSpan::at(1, 1)))
         }
-        async fn print_dsl(&self) -> String {
+        fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoPresence {
-        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
 
     impl ::protocol::MutationDiff<NoPresence> for NoPresence {
-        async fn apply(&self, base: &NoPresence) -> protocol::MutationApplyResult<NoPresence> {
+        fn apply(&self, base: &NoPresence) -> protocol::MutationApplyResult<NoPresence> {
             Ok(base.clone())
         }
-        async fn absorb(&mut self, _other: Self) {}
+        fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8603,17 +8752,17 @@ pub mod app {
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
         type Diff = NoPresence;
 
-        async fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
-            ::protocol::MutationOutcome::new(NoPresence::default()).await
+        fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
+            ::protocol::MutationOutcome::new(NoPresence::default())
         }
 
-        async fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
+        fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
             vec![NoPresenceMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoPresenceMutation {
-        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8625,7 +8774,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8639,11 +8788,11 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoPresenceMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self).await
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes).await
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
         }
     }
     //#endregion 🔖️NoPresence
@@ -8668,31 +8817,31 @@ pub mod app {
 
     impl store::ArtifactDsl for NoTransient {
         const EXTENSION: &'static str = "notrans";
-        async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
             if text.trim().is_empty() {
                 return Ok(Self::default());
             }
             Err(store::TextError::new("no transient", store::TextSpan::at(1, 1)))
         }
-        async fn print_dsl(&self) -> String {
+        fn print_dsl(&self) -> String {
             String::new()
         }
     }
 
     impl ArtifactPack for NoTransient {
-        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(Vec::new())
         }
-        async fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             Ok(Self::default())
         }
     }
 
     impl ::protocol::MutationDiff<NoTransient> for NoTransient {
-        async fn apply(&self, base: &NoTransient) -> protocol::MutationApplyResult<NoTransient> {
+        fn apply(&self, base: &NoTransient) -> protocol::MutationApplyResult<NoTransient> {
             Ok(base.clone())
         }
-        async fn absorb(&mut self, _other: Self) {}
+        fn absorb(&mut self, _other: Self) {}
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -8704,17 +8853,17 @@ pub mod app {
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
         type Diff = NoTransient;
 
-        async fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
-            ::protocol::MutationOutcome::new(NoTransient::default()).await
+        fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
+            ::protocol::MutationOutcome::new(NoTransient::default())
         }
 
-        async fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
+        fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
             vec![NoTransientMutation::Noop]
         }
     }
 
     impl ::protocol::OpText for NoTransientMutation {
-        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let variants = <Self as ::dsl::DslVariants>::variants();
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{keyword} ");
@@ -8726,7 +8875,7 @@ pub mod app {
             }
             Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
             let variants = <Self as ::dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -8740,11 +8889,11 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for NoTransientMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self).await
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::encode_op(self)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes).await
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            ::dsl::variants_binary::decode_op(bytes)
         }
     }
     //#endregion 🔖️NoTransient
@@ -8781,11 +8930,11 @@ pub mod app {
     }
 
     impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
-        async fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
+        fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
             let InteractionConfigMutation::SetState(state) = self;
             Ok(state.clone())
         }
-        async fn absorb(&mut self, other: Self) {
+        fn absorb(&mut self, other: Self) {
             *self = other;
         }
     }
@@ -8793,21 +8942,21 @@ pub mod app {
     impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
         type Diff = InteractionConfigMutation;
 
-        async fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
-            ::protocol::MutationOutcome::new(self.clone()).await
+        fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
+            ::protocol::MutationOutcome::new(self.clone())
         }
 
-        async fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
+        fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
             vec![InteractionConfigMutation::SetState(base.clone())]
         }
     }
 
     impl ::protocol::OpText for InteractionConfigMutation {
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let InteractionConfigMutation::SetState(state) = self;
             format!("set-interaction-state {}", serde_json::to_string(state).expect("InteractionState always serializes"))
         }
-        async fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
+        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let body = line.strip_prefix("set-interaction-state ").ok_or_else(|| ::store::TextError::new(format!("unknown interaction config op '{line}'"), ::store::TextSpan::at(1, 1)))?;
             let state: protocol::InteractionState = serde_json::from_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
             Ok(InteractionConfigMutation::SetState(state))
@@ -8815,11 +8964,11 @@ pub mod app {
     }
 
     impl ::protocol::OpBinary for InteractionConfigMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
             let InteractionConfigMutation::SetState(state) = self;
             serde_json::to_vec(state).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             let state: protocol::InteractionState = serde_json::from_slice(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
             Ok(InteractionConfigMutation::SetState(state))
         }
@@ -9281,7 +9430,7 @@ pub mod app {
             };
             let mut encoded: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
-                encoded.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                encoded.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
             ChildEmit { slot: slot.into(), child_id: child_id.into(), ops: encoded, op_schema, labels }
         }
@@ -9938,7 +10087,10 @@ pub mod app {
                 return Err(Fault::new(
                     FaultOrigin::App,
                     FaultCode::new("app.intent.version-mismatch"),
-                    format!("intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactApp::command_from_intent`'s own doc) — override it for a versioned contract", intent.action.name, intent.action.version),
+                    format!(
+                        "intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactApp::command_from_intent`'s own doc) — override it for a versioned contract",
+                        intent.action.name, intent.action.version
+                    ),
                 ));
             }
             Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
@@ -10069,8 +10221,8 @@ pub mod app {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().await.map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-            let bytes = doc.snapshot.encode_pack().await;
-            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes).await } })
+            let bytes = doc.snapshot.encode_pack();
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
         /// 🎞️ Builds the operation that replaces the whole document with `snapshot` — the seam the
         /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
@@ -10091,8 +10243,8 @@ pub mod app {
             let MediaPayload::Structured { json, .. } = &media.payload else {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
-            let bytes = store::pack_rt::pack_value_from_base64(json).await.map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).await.map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             match Self::whole_document_operation(snapshot).await {
                 Some(operation) => Ok(Emit::mutations(vec![operation]).await),
                 None => Err(MediaError::NotImplemented),
@@ -10958,10 +11110,10 @@ pub mod app {
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None);
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-            let mut store = ArtifactStore::new(envelope).await.expe.awaitct("failed to create document store");
+            let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
             let config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
-            let draft_store = store::DraftStore::new(draft_envelope).await.expe.awaitct("failed to create draft store");
-            let interaction_store = ConfigStore::new(interaction_envelope).await.expe.awaitct("failed to create interaction store");
+            let draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
+            let interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -11170,7 +11322,7 @@ pub mod app {
                 action_id: action_id.to_string(),
                 label,
                 kind,
-                timestamp: timestamp.unwrap_or_else(|| resolve_ready(store::now_iso())),
+                timestamp: timestamp.unwrap_or_else(store::now_iso),
                 edit_id,
                 config_edit_ids: config_edit_id.into_iter().collect(),
                 child_edit_ids: Vec::new(),
@@ -11224,7 +11376,7 @@ pub mod app {
                 let label = match edit.description.clone() {
                     Some(description) => description,
                     None => match edit.forwards.first() {
-                        Some(op) => op.print_op().await,
+                        Some(op) => op.print_op(),
                         None => edit.id.clone(),
                     },
                 };
@@ -11241,7 +11393,7 @@ pub mod app {
                 let label = match edit.description.clone() {
                     Some(description) => description,
                     None => match edit.forwards.first() {
-                        Some(op) => op.print_op().await,
+                        Some(op) => op.print_op(),
                         None => edit.id.clone(),
                     },
                 };
@@ -11269,7 +11421,7 @@ pub mod app {
                 let mut op_lines = Vec::new();
                 if let Some(edit) = edit {
                     for op in edit.forwards.iter() {
-                        op_lines.push(op.print_op().await);
+                        op_lines.push(op.print_op());
                     }
                 }
                 // 🪞️ Mirrors `store::ArtifactStore::edit_is_local` (private to that crate): an edit
@@ -11417,7 +11569,7 @@ pub mod app {
         }
 
         async fn record_rejected_dispatch(&mut self, policy: protocol::MergePolicy, messages: Vec<protocol::MutationMessage>) -> Fault {
-            self.dispatch_report = protocol::DispatchReport { policy, worst: protocol::worst_level(&messages).await, messages };
+            self.dispatch_report = protocol::DispatchReport { policy, worst: protocol::worst_level(&messages), messages };
             Fault::new(FaultOrigin::App, FaultCode::new("mutation.rejected"), "mutation rejected by the active merge policy")
         }
 
@@ -11446,10 +11598,10 @@ pub mod app {
         pub async fn preview(&self, ops: &[A::Mutation]) -> protocol::DispatchReport {
             let mut op_bytes: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
-                op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
             let messages = SpaceMember::preview_wire(&self.store, &op_bytes).await;
-            protocol::DispatchReport { policy: self.store.merge_policy().await, worst: protocol::worst_level(&messages).await, messages }
+            protocol::DispatchReport { policy: self.store.merge_policy().await, worst: protocol::worst_level(&messages), messages }
         }
 
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
@@ -11493,9 +11645,9 @@ pub mod app {
                 // panicking mid-invocation.
                 let mut inverse_op_bytes = Vec::with_capacity(inverse.len());
                 for op in inverse.iter() {
-                    inverse_op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                    inverse_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
                 }
-                let inverse_payload = protocol::encode_ops_vec(&inverse_op_bytes).await;
+                let inverse_payload = protocol::encode_ops_vec(&inverse_op_bytes);
                 for (index, forward) in forwards.iter().enumerate() {
                     let entry = mutation_meta.get(index);
                     // 🎯️ W6 kernel unification: `mutation_meta` entries are `protocol::MutationMeta`,
@@ -11508,13 +11660,13 @@ pub mod app {
                     let base_version = ArtifactVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
                     let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
                     let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
-                    let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| resolve_ready(HybridLogicalTimestamp::new(0, 0)));
+                    let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
                     mutations.push(KernelMutation {
                         id: mutation_id.clone(),
                         document,
                         base_version,
                         invocation_id: invocation_id.clone(),
-                        diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).await.unwrap_or_default() },
+                        diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default() },
                         inverse: InverseMutation {
                             target_mutation: mutation_id,
                             inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: inverse_payload.clone() },
@@ -11601,17 +11753,17 @@ pub mod app {
                 let mut running = self.store.snapshot().await.map_err(|error| error.into_fault())?;
                 let mut foreign = Vec::new();
                 for op in &artifact_mutations {
-                    foreign.extend(op.foreign_steps(&running).await);
-                    let outcome = op.diff(&running).await;
-                    if !outcome.is_applicable(protocol::MergePolicy::default()).await {
-                        return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages().await)));
+                    foreign.extend(op.foreign_steps(&running));
+                    let outcome = op.diff(&running);
+                    if !outcome.is_applicable(protocol::MergePolicy::default()) {
+                        return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
                     }
-                    running = outcome.diff().await.apply(&running).await.map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                    running = outcome.diff().apply(&running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                 }
                 if !foreign.is_empty() {
                     let mut local_ops = Vec::with_capacity(artifact_mutations.len());
                     for op in artifact_mutations.iter() {
-                        local_ops.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                        local_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
                     }
                     self.pending_transaction_proposal = Some(TransactionProposalDraft { local_ops, description: description.clone().unwrap_or_default(), coalesce_key: coalesce_key.clone().unwrap_or_default(), foreign });
                     return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
@@ -11620,21 +11772,17 @@ pub mod app {
 
             let mut artifact_op_bytes = Vec::with_capacity(artifact_mutations.len());
             for op in artifact_mutations.iter() {
-                artifact_op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                artifact_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
             let mut config_op_bytes = Vec::with_capacity(config_mutations.len());
             for op in config_mutations.iter() {
-                config_op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                config_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
             let mut draft_op_bytes = Vec::with_capacity(draft_mutations.len());
             for op in draft_mutations.iter() {
-                draft_op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                draft_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
-            self.last_emit_wire = Some((
-                protocol::encode_ops_vec(&artifact_op_bytes).await,
-                protocol::encode_ops_vec(&config_op_bytes).await,
-                protocol::encode_ops_vec(&draft_op_bytes).await,
-            ));
+            self.last_emit_wire = Some((protocol::encode_ops_vec(&artifact_op_bytes), protocol::encode_ops_vec(&config_op_bytes), protocol::encode_ops_vec(&draft_op_bytes)));
 
             // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
             if !draft_mutations.is_empty() {
@@ -11716,7 +11864,8 @@ pub mod app {
                 Ok(receipt) => self.record_dispatch_receipt(receipt),
                 Err(vcs::VcsError::Rejected { policy, messages }) => return Err(self.record_rejected_dispatch(policy, messages).await),
                 Err(error) => return Err(error.into_fault()),
-            }.await;
+            }
+            .await;
             self.cache = None;
             // 🕹️ Task 4: after EVERY artifact (document) dispatch, re-derive fresh topology and prune
             // any selection/hover id no longer present — a document edit that deleted a node must not
@@ -11806,7 +11955,7 @@ pub mod app {
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
             let mut parent_ops: Vec<Vec<u8>> = Vec::with_capacity(artifact_mutations.len());
             for op in artifact_mutations.iter() {
-                parent_ops.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
+                parent_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
 
             self.store.set_local_actor_id(Some(meta.actor.clone())).await;
@@ -11873,10 +12022,10 @@ pub mod app {
             if parent_touched {
                 if let Some((forwards, inverse, mutation_meta)) = self.store.edit_mutations().await {
                     let mut inverse_op_bytes = Vec::with_capacity(inverse.len());
-                for op in inverse.iter() {
-                    inverse_op_bytes.push(::protocol::OpBinary::encode_op(op).await.unwrap_or_default());
-                }
-                let inverse_payload = protocol::encode_ops_vec(&inverse_op_bytes).await;
+                    for op in inverse.iter() {
+                        inverse_op_bytes.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
+                    }
+                    let inverse_payload = protocol::encode_ops_vec(&inverse_op_bytes);
                     let document = ArtifactHandle(meta.instance_id as u128);
                     let schema = A::DOCUMENT_SCHEMA.to_string();
                     for (index, forward) in forwards.iter().enumerate() {
@@ -11885,13 +12034,13 @@ pub mod app {
                         let base_version = ArtifactVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
                         let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
                         let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
-                        let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| resolve_ready(HybridLogicalTimestamp::new(0, 0)));
+                        let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
                         mutations.push(KernelMutation {
                             id: mutation_id.clone(),
                             document,
                             base_version,
                             invocation_id: invocation_id.clone(),
-                            diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).await.unwrap_or_default() },
+                            diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default() },
                             inverse: InverseMutation {
                                 target_mutation: mutation_id,
                                 inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: inverse_payload.clone() },
@@ -11927,17 +12076,17 @@ pub mod app {
                     document,
                     base_version: ArtifactVersion(0),
                     invocation_id: invocation_id.clone(),
-                    diff: ArtifactDiff { schema: child_emit.op_schema.clone(), payload: protocol::encode_ops_vec(&child_emit.ops).await },
+                    diff: ArtifactDiff { schema: child_emit.op_schema.clone(), payload: protocol::encode_ops_vec(&child_emit.ops) },
                     inverse: InverseMutation {
                         target_mutation: mutation_id,
-                        inverse_diff: ArtifactDiff { schema: SchemaId(format!("{}.inverse", child_emit.op_schema.0)), payload: protocol::encode_ops_vec(&[]).await },
+                        inverse_diff: ArtifactDiff { schema: SchemaId(format!("{}.inverse", child_emit.op_schema.0)), payload: protocol::encode_ops_vec(&[]) },
                         base_version: ArtifactVersion(0),
                         dependencies: Vec::new(),
                         undo_policy: UndoPolicy::ExactBaseOnly,
                     },
                     dependencies: Vec::new(),
                     author: ActorId(meta.actor.clone()),
-                    timestamp: HybridLogicalTimestamp::new(0, 0).await,
+                    timestamp: HybridLogicalTimestamp::new(0, 0),
                 });
             }
 
@@ -12021,11 +12170,7 @@ pub mod app {
                 children.push((reference, member));
             }
 
-            let report = if action == "undo" {
-                CompositionCoordinator::undo_group(&parent_ref, &mut self.store, &mut children, group_id).await
-            } else {
-                CompositionCoordinator::redo_group(&parent_ref, &mut self.store, &mut children, group_id).await
-            };
+            let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut self.store, &mut children, group_id).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut self.store, &mut children, group_id).await };
             drop(children);
             self.cache = None;
 
@@ -12449,7 +12594,8 @@ pub mod app {
                         vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args.as_ref().map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)) }],
                         Vec::new(),
                         semio_framework::kernel::UiDirtyScope::None,
-                    ).await),
+                    )
+                    .await),
                     _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None).await),
                 }
             } else if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
@@ -12471,7 +12617,8 @@ pub mod app {
                     Vec::new(),
                     Vec::new(),
                     semio_framework::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false },
-                ).await)
+                )
+                .await)
             } else if action == NOTE_SHELL_COMMAND_ACTION_ID {
                 // 🗒️ Interception happens BEFORE the app ever sees this action — records a shell effect
                 // that already happened (dock drag, window resize/close, theme/locale change, …) into the
@@ -12586,7 +12733,7 @@ pub mod app {
         /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
         /// and calls the pure `ArtifactApp::handle` — the sole surface for an app's own behavior now.
         async fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).await.map_err(|error| error.into_fault())?;
+            let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.into_fault())?;
             self.dispatch_typed_command_inner(command, meta).await
         }
 
@@ -12753,7 +12900,8 @@ pub mod app {
             let kind = self
                 .registry
                 .window_action(&address.window_kind_id, &address.action_id)
-                .await.map(|definition| definition.kind)
+                .await
+                .map(|definition| definition.kind)
                 .ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?;
             let mut arguments = invocation.arguments.clone();
             arguments.insert("windowId".into(), Value::String(address.window_instance_id.clone()));
@@ -12794,10 +12942,10 @@ pub mod app {
         /// dispatches them directly — see the trait method's own doc for why this skips `handle`.
         async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             async fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
-                let op_bytes_list = protocol::decode_ops_vec(bytes).await.map_err(|error| error.into_fault())?;
+                let op_bytes_list = protocol::decode_ops_vec(bytes).map_err(|error| error.into_fault())?;
                 let mut decoded = Vec::with_capacity(op_bytes_list.len());
                 for op_bytes in op_bytes_list.iter() {
-                    decoded.push(<T as ::protocol::OpBinary>::decode_op(op_bytes).await.map_err(|error| error.into_fault())?);
+                    decoded.push(<T as ::protocol::OpBinary>::decode_op(op_bytes).map_err(|error| error.into_fault())?);
                 }
                 Ok(decoded)
             }
@@ -12831,7 +12979,7 @@ pub mod app {
             let (ops, resolved_label, resolved_origin): (Vec<A::Mutation>, String, protocol::MutationOrigin) = if !prepared_ops.is_empty() {
                 let mut decoded = Vec::with_capacity(prepared_ops.len());
                 for op_bytes in prepared_ops {
-                    match <A::Mutation as ::protocol::OpBinary>::decode_op(op_bytes).await {
+                    match <A::Mutation as ::protocol::OpBinary>::decode_op(op_bytes) {
                         Ok(op) => decoded.push(op),
                         Err(error) => {
                             return TransactionPrepareOutcome {
@@ -12843,7 +12991,7 @@ pub mod app {
                 }
                 (decoded, label.to_string(), origin.unwrap_or_default())
             } else {
-                match <A::Mutation as ::protocol::OpBinary>::decode_op(payload).await {
+                match <A::Mutation as ::protocol::OpBinary>::decode_op(payload) {
                     // 🚧️ The owner-mutation form carries no `origin` on the wire (contract §2/§5.3)
                     // — this member is by construction a foreign target of someone else's
                     // transaction, so the best available provenance is `Transaction` with an
@@ -12865,19 +13013,14 @@ pub mod app {
             };
             let mut foreign = Vec::new();
             for op in &ops {
-                foreign.extend(op.foreign_steps(&running).await);
-                let outcome = op.diff(&running).await;
-                if !outcome.is_applicable(protocol::MergePolicy::default()).await {
-                    return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages().await))) };
+                foreign.extend(op.foreign_steps(&running));
+                let outcome = op.diff(&running);
+                if !outcome.is_applicable(protocol::MergePolicy::default()) {
+                    return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
                 }
-                running = match outcome.diff().await.apply(&running).await {
+                running = match outcome.diff().apply(&running) {
                     Ok(next) => next,
-                    Err(error) => {
-                        return TransactionPrepareOutcome {
-                            foreign: Vec::new(),
-                            rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string())),
-                        }
-                    }
+                    Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string())) },
                 };
             }
             let base_generation = self.store.generation().await;
@@ -12994,12 +13137,7 @@ pub mod app {
                 protocol::encode_presence_interaction(&interaction, &mut bytes).await;
                 bytes
             };
-            EphemeralSnapshot {
-                presence: self.presence_store.local().await.encode_pack().await,
-                presence_generation: self.presence_store.generation().await,
-                transient_generation: self.transient_store.generation().await,
-                interaction: interaction_bytes,
-            }
+            EphemeralSnapshot { presence: self.presence_store.local().await.encode_pack(), presence_generation: self.presence_store.generation().await, transient_generation: self.transient_store.generation().await, interaction: interaction_bytes }
         }
 
         /// 👥️ For each peer ≠ own actor (already guaranteed by the wire wrapper that built `peers` —
@@ -13014,7 +13152,7 @@ pub mod app {
             for peer in peers {
                 seen.insert(peer.actor.clone());
                 if let Some(pack) = &peer.presence_pack {
-                    let presence = A::Presence::decode_pack(pack).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                    let presence = A::Presence::decode_pack(pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     self.presence_store.adopt_peer(peer.actor.clone(), presence, now_ms).await;
                 }
                 self.peer_presence.insert(peer.actor.clone(), PeerPresence { color: peer.color, surface: peer.surface.clone(), interaction: peer.interaction.clone() });
@@ -13068,7 +13206,7 @@ pub mod app {
         }
 
         async fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
-            let envelopes = protocol::decode_envelopes(mutations).await.map_err(|error| error.into_fault())?;
+            let envelopes = protocol::decode_envelopes(mutations).map_err(|error| error.into_fault())?;
             let mut reports = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
                 reports.push(self.store.ingest_remote(envelope).await.map_err(|error| error.into_fault())?);
@@ -13080,7 +13218,7 @@ pub mod app {
         async fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), Fault> {
             let mut mutations: Vec<A::Mutation> = Vec::new();
             for line in operations_text.lines().map(str::trim).filter(|line| !line.is_empty()) {
-                mutations.push(A::Mutation::parse_op(line).await.map_err(|error| error.into_fault())?);
+                mutations.push(A::Mutation::parse_op(line).map_err(|error| error.into_fault())?);
             }
             if mutations.is_empty() {
                 return Ok(());
@@ -13345,11 +13483,11 @@ pub mod app {
         }
 
         pub(crate) async fn wire_list_artifact_mutations(&self) -> Vec<u8> {
-            store::pack_rt::encode_wire_value(&to_dsl_value(&self.runtime.mutation_roster_entries().await).unwrap_or(DslValue::Null)).await
+            store::pack_rt::encode_wire_value(&to_dsl_value(&self.runtime.mutation_roster_entries().await).unwrap_or(DslValue::Null))
         }
 
         pub(crate) async fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
-            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).await.map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
+            let request: WireArtifactMutationPlanRequest = store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| dsl::from_dsl_value(value).map_err(plugin_sdk_fault))?;
             if request.mutation_id.trim().is_empty() {
                 return Err(plugin_sdk_fault("artifact-mutation-plan requires a non-empty mutation_id"));
             }
@@ -13363,7 +13501,7 @@ pub mod app {
                 label: output.label,
                 foreign: output.foreign,
             };
-            Ok(store::pack_rt::encode_wire_value(&to_dsl_value(&result).map_err(plugin_sdk_fault)?).await)
+            Ok(store::pack_rt::encode_wire_value(&to_dsl_value(&result).map_err(plugin_sdk_fault)?))
         }
 
         /// @emoji 🎛️ Declares a plugin-owned command and its program-level handler.
@@ -13414,7 +13552,10 @@ pub mod app {
         }
 
         pub async fn local_backbone_storage(self) -> Self {
-            self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).await.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin }).await
+            self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin })
+                .await
+                .capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
+                .await
         }
 
         /// 🧬️ Registers an already-wrapped app factory (definition + bare fn pointer — see
@@ -13652,7 +13793,8 @@ pub mod app {
                 let cell_ids: Vec<String> = (0..row.cells.len()).map(|index| format!("col{index}")).collect();
                 let mut cells: Vec<(&str, ui_wgpu::wgpu::TableCell)> = cell_ids.iter().zip(row.cells.iter()).map(|(id, value)| (id.as_str(), ui_wgpu::wgpu::TableCell::Text { value: value.clone() })).collect();
                 if has_actions {
-                    let buttons = row.actions.iter().map(|action| ui_wgpu::wgpu::UiTreeItemAction { icon_id: action.icon_id, label: action.label.clone(), action: action.action.clone(), placement: Some(ui_wgpu::wgpu::UiTreeActionPlacement::Row) }).collect();
+                    let buttons =
+                        row.actions.iter().map(|action| ui_wgpu::wgpu::UiTreeItemAction { icon_id: action.icon_id, label: action.label.clone(), action: action.action.clone(), placement: Some(ui_wgpu::wgpu::UiTreeActionPlacement::Row) }).collect();
                     cells.push(("actions", ui_wgpu::wgpu::TableCell::Buttons { buttons }));
                 }
                 rows.push(ui_wgpu::wgpu::table_row_json(row.id.clone(), None, &cells));
@@ -13748,7 +13890,8 @@ pub mod app {
         }
 
         async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation).await]).await
+            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation).await])
+                .await
         }
 
         async fn render(view: &ImageView) -> ui_wgpu::wgpu::UiNode {
@@ -14155,7 +14298,10 @@ pub mod app {
                 return Err(Fault::new(
                     FaultOrigin::App,
                     FaultCode::new("app.intent.version-mismatch"),
-                    format!("intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactEditor::command_from_intent`'s own doc) — override it for a versioned contract", intent.action.name, intent.action.version),
+                    format!(
+                        "intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactEditor::command_from_intent`'s own doc) — override it for a versioned contract",
+                        intent.action.name, intent.action.version
+                    ),
                 ));
             }
             Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
@@ -14218,8 +14364,8 @@ pub mod app {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().await.map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-            let bytes = doc.snapshot.encode_pack().await;
-            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes).await } })
+            let bytes = doc.snapshot.encode_pack();
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
         async fn whole_document_operation(_snapshot: Self::Snapshot) -> Option<Self::Mutation> {
             None
@@ -14231,8 +14377,8 @@ pub mod app {
             let MediaPayload::Structured { json, .. } = &media.payload else {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
-            let bytes = store::pack_rt::pack_value_from_base64(json).await.map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).await.map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             match Self::whole_document_operation(snapshot).await {
                 Some(operation) => Ok(Emit::mutations(vec![operation]).await),
                 None => Err(MediaError::NotImplemented),
@@ -14338,8 +14484,8 @@ pub mod app {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().await.map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
-            let bytes = doc.snapshot.encode_pack().await;
-            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes).await } })
+            let bytes = doc.snapshot.encode_pack();
+            Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
         /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
@@ -15212,8 +15358,8 @@ pub mod app {
             // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
             // imports instead, for exactly what this fixture needs from `app`.
             use super::super::{
-                testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, Component, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, Label, LocalizedLabel,
-                Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, TextProps, TreeNode, ViewEmit, Viewer,
+                testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, Component, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName,
+                InteractionView, Label, LocalizedLabel, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, TextProps, TreeNode, ViewEmit, Viewer,
             };
             use super::*;
             use serde::de::DeserializeOwned;
@@ -15341,7 +15487,14 @@ pub mod app {
                         async fn initial_snapshot() -> $snapshot {
                             $snapshot::default()
                         }
-                        async fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<$mutation>, Fault> {
+                        async fn handle(
+                            _command: &$command,
+                            doc: &ArtifactView<'_, $snapshot>,
+                            _cfg: &ConfigView<'_, NoConfig>,
+                            _interaction: &InteractionView<'_>,
+                            _draft: &DraftView<'_, NoDraft>,
+                            _engines: &EngineHandles,
+                        ) -> Result<Emit<$mutation>, Fault> {
                             Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
                         }
                         async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
@@ -15587,13 +15740,7 @@ pub mod app {
             #[semio_framework_async_macros::async_test]
             async fn io_route_finds_the_conformance_profile_hop() {
                 let _plugin = Plugin::<FixtureApps>::builder("w1c-fixture-route").await.label("w1c-fixture-route").await.version("0.0.1").await.declare_artifact(build_declaration().await).await.try_build().await.expect("fixture declares cleanly");
-                let route = semio_framework::io::io_mechanism::io_route(
-                    &ArtifactDialect::from(STD1_ANY_DIALECT),
-                    &ArtifactDialect::from(STD1_STRICT_DIALECT),
-                    3,
-                )
-                .await
-                .expect("a route from the base subset into its conformance profile must exist");
+                let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(STD1_ANY_DIALECT), &ArtifactDialect::from(STD1_STRICT_DIALECT), 3).await.expect("a route from the base subset into its conformance profile must exist");
                 assert_eq!(route.value.hops.len(), 1, "the profile hop is direct");
 
                 let payload = semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: 7 }.encode_pack().await);
@@ -15646,19 +15793,19 @@ pub mod app {
             Self::wrap(snapshot).await
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::wrap(S::parse_dsl(text).await?).await)
+            Ok(Self::wrap(S::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::wrap(S::decode_pack(bytes).await?).await)
+            Ok(Self::wrap(S::decode_pack(bytes)?).await)
         }
         async fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
             let mut snapshot = self.snapshot;
-            let diff = mutation.diff(&snapshot).await;
-            let outcome = diff.apply_to(&mut snapshot).await;
+            let diff = mutation.diff(&snapshot);
+            let outcome = diff.apply_to(&mut snapshot);
             (Self::wrap(snapshot).await, outcome)
         }
         async fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
-            match diff.apply(&self.snapshot).await {
+            match diff.apply(&self.snapshot) {
                 Ok(snapshot) => Ok(Self::wrap(snapshot).await),
                 Err(error) => Err(error),
             }
@@ -15683,20 +15830,20 @@ pub mod plugin_runtime {
         kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, QuotaSchema},
         AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
     };
+    /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
+    /// `plugin_dispatch_intents`/`plugin_take_presence` — this module (a sibling of `pub mod app`, not
+    /// nested inside it) has no glob import of the contract crate the way `mod app` does.
+    use semio_framework_ui_contract as ui_contract;
+    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-helpers`): `sdk-flip` flipped `plugin_render`/
+    /// `plugin_render_with_document` below to return `ComponentTree` but this module (a sibling of
+    /// `pub mod app`, not nested inside it) never gained an import for the name — added here.
+    use semio_framework_ui_runtime::ComponentTree;
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicU32, Ordering};
-    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-helpers`): `sdk-flip` flipped `plugin_render`/
-    /// `plugin_render_with_document` below to return `ComponentTree` but this module (a sibling of
-    /// `pub mod app`, not nested inside it) never gained an import for the name — added here.
-    use semio_framework_ui_runtime::ComponentTree;
-    /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
-    /// `plugin_dispatch_intents`/`plugin_take_presence` — this module (a sibling of `pub mod app`, not
-    /// nested inside it) has no glob import of the contract crate the way `mod app` does.
-    use semio_framework_ui_contract as ui_contract;
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
     thread_local! {
@@ -15717,7 +15864,7 @@ pub mod plugin_runtime {
     }
 
     async fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
-        store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue")).await
+        store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue"))
     }
 
     async fn push_app_fault(frames: &mut Vec<protocol::AppFrame>, in_reply_to: Option<u64>, fault: Fault) {
@@ -15739,7 +15886,7 @@ pub mod plugin_runtime {
     }
 
     pub(crate) async fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, Fault> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| plugin_internal_fault(error.to_string()))?;
         from_dsl_value(value).map_err(plugin_internal_fault)
     }
 
@@ -15750,7 +15897,7 @@ pub mod plugin_runtime {
     /// ⚖️ Executes the channel's local policy command and returns its canonical acknowledgment frame.
     /// 🗃️ sdk-dedyn (O1/§1.5): generic `<PA: PluginApp>` replaces `&mut dyn PluginApp`.
     pub(crate) async fn set_merge_policy_frames<PA: PluginApp>(app: &mut PA, seq: u64, policy: u8) -> Result<Vec<protocol::AppFrame>, Fault> {
-        let policy = protocol::MergePolicy::from_u8(policy).await.ok_or_else(|| Fault::new(FaultOrigin::Os, FaultCode::new("merge.invalid-policy"), format!("unknown merge policy ordinal {policy}")))?;
+        let policy = protocol::MergePolicy::from_u8(policy).ok_or_else(|| Fault::new(FaultOrigin::Os, FaultCode::new("merge.invalid-policy"), format!("unknown merge policy ordinal {policy}")))?;
         app.set_merge_policy(policy).await;
         Ok(vec![protocol::AppFrame::Done { in_reply_to: seq }])
     }
@@ -15800,7 +15947,7 @@ pub mod plugin_runtime {
         if view_state_bytes.is_empty() {
             ViewModel::default()
         } else {
-            store::pack_rt::decode_wire_value(view_state_bytes).await.ok().and_then(|value| from_dsl_value::<ViewModel>(value).ok()).unwrap_or_default()
+            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| from_dsl_value::<ViewModel>(value).ok()).unwrap_or_default()
         }
     }
 
@@ -15822,7 +15969,8 @@ pub mod plugin_runtime {
             list.push(instance);
             Ok(())
         })
-        .await.expect("test_push_instance must not fail");
+        .await
+        .expect("test_push_instance must not fail");
     }
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
@@ -15986,10 +16134,10 @@ pub mod plugin_runtime {
     /// (built wasm's SHA-256 vs `hashes.wasm_sha256`), not this test's job. `None` on any decode
     /// failure (caller treats that as "cannot compare", same as a missing file).
     pub async fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.ok()?;
+        let value = store::pack_rt::decode_wire_value(bytes).ok()?;
         let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
         descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
-        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?).await)
+        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -16176,7 +16324,8 @@ pub mod plugin_runtime {
         async fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
             let mutation_id = commit_test_contribution("s.wiretest.echo", "wiretest.echo.document", "wiretest-contributor-b", 5).await;
             let payload = crate::app::encode_contributed_wire(&WireTestMutationKind { delta: 5 }).await;
-            let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack().await, payload };
+            let request =
+                crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack().await, payload };
             let encoded = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect("matching artifact_kind must be accepted");
             let result: crate::app::WireArtifactMutationPlanResult = decode_wire_serialized(&encoded).await.expect("result decodes");
             assert_eq!(result.artifact_kind, "s.wiretest.echo");
@@ -16226,7 +16375,8 @@ pub mod plugin_runtime {
             let index = list.iter().position(|instance| instance.id == instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
             list.remove(index);
             Ok(())
-        }).await
+        })
+        .await
     }
 
     // 🚫️async: E1-adjacent pure lookup consumed by `with_instances_mut`'s sync callback
@@ -16255,7 +16405,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
-        }).await
+        })
+        .await
     }
 
     /// @emoji 🎛️ Dispatches a structurally addressed command to its actual owner. Plugin commands
@@ -16284,7 +16435,8 @@ pub mod plugin_runtime {
                 with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
                     resolve_ready(instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta))
-                }).await
+                })
+                .await
             }
         }
     }
@@ -16297,7 +16449,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.ingest_operations(mutations))
-        }).await
+        })
+        .await
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
@@ -16306,7 +16459,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.ingest_operations_text(operations_text))
-        }).await
+        })
+        .await
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_document_pack}.
@@ -16314,7 +16468,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.document_text())
-        }).await
+        })
+        .await
     }
 
     /// @emoji 📜️ Text-DSL counterpart of {@link plugin_load_document_pack}.
@@ -16322,7 +16477,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.load_document_text(files))
-        }).await
+        })
+        .await
     }
 
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes
@@ -16331,7 +16487,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.document_pack())
-        }).await
+        })
+        .await
     }
 
     /// @emoji 📦️ Replaces the instance's document from pack+spr bytes ({@link store::ArtifactPackFiles})
@@ -16340,7 +16497,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.load_document_pack(files))
-        }).await
+        })
+        .await
     }
 
     /// @emoji 🗂️ Registers `A::Snapshot`'s pack↔dsl codec under `schema` in the process-wide
@@ -16359,7 +16517,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.attach_backbone(backbone))
-        }).await
+        })
+        .await
     }
 
     /// @emoji ✂️ Detaches the instance's backbone channel; the document graph stays in memory.
@@ -16368,7 +16527,8 @@ pub mod plugin_runtime {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.detach_backbone());
             Ok(())
-        }).await
+        })
+        .await
     }
 
     /// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
@@ -16379,7 +16539,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.consume_media(port_id, artifact)).map_err(|error| plugin_internal_fault(error.to_string()))
-        }).await
+        })
+        .await
     }
 
     /// 🎞️ WIT `produce-media` glue — dispatches to `PluginApp::produce_media` and encodes the result back
@@ -16389,7 +16550,8 @@ pub mod plugin_runtime {
         let artifact = with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.produce_media(port_id)).map_err(|error| plugin_internal_fault(error.to_string()))
-        }).await?;
+        })
+        .await?;
         let descriptor_json = serde_json::to_string(&artifact.descriptor).map_err(|error| plugin_internal_fault(error.to_string()))?;
         Ok((descriptor_json, artifact.data))
     }
@@ -16425,7 +16587,8 @@ pub mod plugin_runtime {
         with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             resolve_ready(instance.app.render(&resolved_body_key, override_snapshot.as_deref(), &view_state))
-        }).await
+        })
+        .await
     }
 
     //#region 🔖️RefreshUi
@@ -16594,7 +16757,8 @@ pub mod plugin_runtime {
 
             Ok(serde_json::to_string(&response).unwrap_or_else(|_| "{}".into()))
         })
-        .await.map_err(|fault| fault.message)
+        .await
+        .map_err(|fault| fault.message)
     }
     //#endregion 🔖️RefreshUi
 
@@ -16632,7 +16796,8 @@ pub mod plugin_runtime {
             let items = resolve_ready(instance.app.context_menu(&request));
             Ok(serde_json::to_string(&ContextMenuResponse { items }).unwrap_or_else(|_| r#"{"items":[]}"#.into()))
         })
-        .await.map_err(|fault| fault.message)
+        .await
+        .map_err(|fault| fault.message)
     }
     //#endregion 🔖️ContextMenu
 
@@ -16772,14 +16937,7 @@ pub mod plugin_runtime {
         for step in proposal.foreign.iter() {
             foreign.push(encode_wire_serialized(step).await);
         }
-        protocol::AppFrame::TransactionProposal {
-            in_reply_to: seq,
-            proposal_id: format!("{instance_id}:{seq}"),
-            local_ops: proposal.local_ops,
-            description: proposal.description,
-            coalesce_key: proposal.coalesce_key,
-            foreign,
-        }
+        protocol::AppFrame::TransactionProposal { in_reply_to: seq, proposal_id: format!("{instance_id}:{seq}"), local_ops: proposal.local_ops, description: proposal.description, coalesce_key: proposal.coalesce_key, foreign }
     }
 
     /// 🔀️ `PluginExchangeOutput` — `plugin_exchange`'s return shape. `frames` still carries the
@@ -16824,14 +16982,20 @@ pub mod plugin_runtime {
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
 
         let dispatched = match input {
-            TaskResumeInput::Command(bytes) => with_instances_mut(|list| {
-                let instance = find_instance(list, instance_id)?;
-                resolve_ready(instance.app.handle_command_frame(&bytes, meta))
-            }).await,
-            TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops } => with_instances_mut(|list| {
-                let instance = find_instance(list, instance_id)?;
-                resolve_ready(instance.app.resume_task_emit(artifact_ops, config_ops, draft_ops, meta))
-            }).await,
+            TaskResumeInput::Command(bytes) => {
+                with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    resolve_ready(instance.app.handle_command_frame(&bytes, meta))
+                })
+                .await
+            }
+            TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops } => {
+                with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    resolve_ready(instance.app.resume_task_emit(artifact_ops, config_ops, draft_ops, meta))
+                })
+                .await
+            }
         };
 
         match dispatched {
@@ -16840,16 +17004,10 @@ pub mod plugin_runtime {
                     let instance = find_instance(list, instance_id)?;
                     Ok(resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())
                 })
-                .await.unwrap_or_default();
+                .await
+                .unwrap_or_default();
                 let (document_ops, config_ops, draft_ops) = emit_wire;
-                frames.push(protocol::AppFrame::Emit {
-                    in_reply_to: 0,
-                    document_ops,
-                    config_ops,
-                    draft_ops,
-                    output: encode_wire_serialized(&result.output).await,
-                    diagnostics: encode_wire_serialized(&result.diagnostics).await,
-                });
+                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output).await, diagnostics: encode_wire_serialized(&result.diagnostics).await });
                 push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
             }
             Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -16893,7 +17051,8 @@ pub mod plugin_runtime {
             let dispatched = with_instances_mut(|list| {
                 let instance = find_instance(list, instance_id)?;
                 resolve_ready(instance.app.handle_intent_frame(intent, &meta))
-            }).await;
+            })
+            .await;
 
             match dispatched {
                 Ok(result) => {
@@ -16901,16 +17060,10 @@ pub mod plugin_runtime {
                         let instance = find_instance(list, instance_id)?;
                         Ok(resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())
                     })
-                    .await.unwrap_or_default();
+                    .await
+                    .unwrap_or_default();
                     let (document_ops, config_ops, draft_ops) = emit_wire;
-                    frames.push(protocol::AppFrame::Emit {
-                        in_reply_to: 0,
-                        document_ops,
-                        config_ops,
-                        draft_ops,
-                        output: encode_wire_serialized(&result.output).await,
-                        diagnostics: encode_wire_serialized(&result.diagnostics).await,
-                    });
+                    frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output).await, diagnostics: encode_wire_serialized(&result.diagnostics).await });
                     push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                 }
                 Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -16936,7 +17089,9 @@ pub mod plugin_runtime {
         let drained = with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
             Ok(resolve_ready(instance.app.take_pending_presence()))
-        }).await.unwrap_or_default();
+        })
+        .await
+        .unwrap_or_default();
         drained
             .into_iter()
             .map(|mut update| {
@@ -17021,7 +17176,8 @@ pub mod plugin_runtime {
                         let instance = find_instance(list, instance_id)?;
                         resolve_ready(instance.app.begin_dispatch_report());
                         Ok(())
-                    }).await?;
+                    })
+                    .await?;
                     let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command).await {
                         Ok(invocation) => {
                             let active_mode_id = decode_view_state(&view_state).await.active_mode_id;
@@ -17032,7 +17188,8 @@ pub mod plugin_runtime {
                                 with_instances_mut(|list| {
                                     let instance = find_instance(list, instance_id)?;
                                     resolve_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
-                                }).await
+                                })
+                                .await
                             }
                         }
                         Err(_) => match decode_wire_serialized::<ManifestCommandInvocation>(&command).await {
@@ -17052,15 +17209,19 @@ pub mod plugin_runtime {
                                             with_instances_mut(|list| {
                                                 let instance = find_instance(list, instance_id)?;
                                                 resolve_ready(instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta))
-                                            }).await
+                                            })
+                                            .await
                                         }
                                     }
                                 }
                             }
-                            Err(_) => with_instances_mut(|list| {
-                                let instance = find_instance(list, instance_id)?;
-                                resolve_ready(instance.app.handle_command_frame(&command, &meta))
-                            }).await,
+                            Err(_) => {
+                                with_instances_mut(|list| {
+                                    let instance = find_instance(list, instance_id)?;
+                                    resolve_ready(instance.app.handle_command_frame(&command, &meta))
+                                })
+                                .await
+                            }
                         },
                     };
                     match dispatched {
@@ -17072,7 +17233,8 @@ pub mod plugin_runtime {
                             let (proposal, report) = with_instances_mut(|list| {
                                 let instance = find_instance(list, instance_id)?;
                                 Ok((resolve_ready(instance.app.take_pending_transaction_proposal()), resolve_ready(instance.app.dispatch_report()).clone()))
-                            }).await?;
+                            })
+                            .await?;
                             if let Some(proposal) = proposal {
                                 frames.push(transaction_proposal_frame(instance_id, seq, proposal).await);
                             } else {
@@ -17094,7 +17256,8 @@ pub mod plugin_runtime {
                             let report = with_instances_mut(|list| {
                                 let instance = find_instance(list, instance_id)?;
                                 Ok(resolve_ready(instance.app.dispatch_report()).clone())
-                            }).await?;
+                            })
+                            .await?;
                             push_dispatch_fault(&mut frames, seq, fault, &report).await;
                         }
                     }
@@ -17144,7 +17307,8 @@ pub mod plugin_runtime {
                                 let instance = find_instance(list, instance_id)?;
                                 Ok(resolve_ready(instance.app.take_pending_transaction_proposal()))
                             })
-                            .await.unwrap_or(None);
+                            .await
+                            .unwrap_or(None);
                             if let Some(proposal) = proposal {
                                 frames.push(transaction_proposal_frame(instance_id, seq, proposal).await);
                             } else {
@@ -17157,7 +17321,7 @@ pub mod plugin_runtime {
                     }
                 }
                 protocol::AppCommand::ApplyEnvelopes { seq, envelopes } => {
-                    let encoded = protocol::encode_envelopes(&envelopes).await;
+                    let encoded = protocol::encode_envelopes(&envelopes);
                     match plugin_ingest_operations(instance_id, &encoded).await {
                         Ok(reports) => {
                             mutated = true;
@@ -17172,7 +17336,8 @@ pub mod plugin_runtime {
                                 let open: Vec<protocol::Conflict> = with_instances_mut(|list| {
                                     let instance = find_instance(list, instance_id)?;
                                     Ok(resolve_ready(instance.app.open_conflicts()))
-                                }).await?;
+                                })
+                                .await?;
                                 frames.push(protocol::AppFrame::Conflicts { in_reply_to: None, conflicts: encode_wire_serialized(&open).await });
                             }
                         }
@@ -17456,7 +17621,8 @@ pub mod plugin_runtime {
                 let instance = find_instance(list, instance_id)?;
                 Ok(resolve_ready(instance.app.pending_effects()))
             })
-            .await.unwrap_or_default();
+            .await
+            .unwrap_or_default();
             for effect in effects.iter() {
                 effect_bytes.push(encode_wire_serialized(effect).await);
             }
@@ -17833,7 +17999,7 @@ pub mod plugin_runtime {
     /// (`store::pack_rt::encode_wire_value` of an empty list) until W1-A adds real extension-side
     /// inference wiring (mirroring `crate::app::wire_list_artifact_inference_services`, plugin-side).
     pub async fn extension_wire_list_artifact_inferences() -> Vec<u8> {
-        store::pack_rt::encode_wire_value(&dsl::DslValue::Array(Vec::new())).await
+        store::pack_rt::encode_wire_value(&dsl::DslValue::Array(Vec::new()))
     }
 
     /// 🚧️ PLACEHOLDER for W1-A. Companion to `extension_wire_list_artifact_inferences` — since the
@@ -17896,7 +18062,10 @@ pub mod plugin_runtime {
                         }
                     }
                     Err(_) => {
-                        assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `describe` and commit 🛂️descriptor.semio + 🔣️descriptor.json");
+                        assert!(
+                            !DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()),
+                            "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `describe` and commit 🛂️descriptor.semio + 🔣️descriptor.json"
+                        );
                     }
                 }
             }
@@ -17920,17 +18089,21 @@ pub mod plugin_runtime {
 
         use super::ContextMenuWireRequest;
         use crate::app::{deserializer_entry_of, resolve_ready, serializer_entry_of, ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
-        use crate::store::FaultFrom;
         use crate::app::{
-            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView,
-            Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp,
+            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState,
+            InteractionView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp,
         };
+        use crate::store::FaultFrom;
         use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::ArtifactHandle;
         use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
         use semio_framework::Fault;
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
+        /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
+        /// import too, rather than relying on `mod app`'s outer glob.
+        use semio_framework_ui_contract::{ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision};
         use serde::{Deserialize, Serialize};
         use serde_json::json;
         use std::collections::BTreeMap;
@@ -17938,10 +18111,6 @@ pub mod plugin_runtime {
         use store::{Backbone, BackboneMessage, MemoryBackbone};
         use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
         use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
-        /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
-        /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
-        /// import too, rather than relying on `mod app`'s outer glob.
-        use semio_framework_ui_contract::{ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision};
 
         /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs
         /// (`TestApp::APP_ID`, the `App::builder` ids below, every `CommandAddress`/`ActionAddress`/
@@ -18081,7 +18250,8 @@ pub mod plugin_runtime {
                 ::protocol::MutationOutcome::new(match self {
                     TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
                     TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
-                }).await
+                })
+                .await
             }
 
             async fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
@@ -18217,7 +18387,8 @@ pub mod plugin_runtime {
                 ::protocol::MutationOutcome::new(match self {
                     TestConfigMutation::SetSelected { value } => TestConfig { selected: value.clone() },
                     TestConfigMutation::Snapshot { selected } => TestConfig { selected: selected.clone() },
-                }).await
+                })
+                .await
             }
 
             async fn inverse(&self, base: &TestConfig) -> Vec<Self> {
@@ -18458,13 +18629,17 @@ pub mod plugin_runtime {
                     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
                     // task's eventual `TaskResolution::Command` follow-up is what mutates the
                     // document, on a LATER dispatch (see `ApplyCountFromTask` below).
-                    TestCommand::SpawnCountTask => Ok(Emit::task(AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
-                        let bytes = ctx.host.storage_read("counter").await?;
-                        let value = i32::from_le_bytes(bytes.try_into().unwrap_or([0; 4]));
-                        let command = TestCommand::ApplyCountFromTask { value };
-                        let encoded = <TestCommand as ::protocol::OpBinary>::encode_op(&command).await.map_err(|error| error.into_fault())?;
-                        Ok(TaskResolution::Command(encoded))
-                    }).await).await),
+                    TestCommand::SpawnCountTask => Ok(Emit::task(
+                        AsyncTask::new("spawn-count-task", |ctx: TaskCtx| async move {
+                            let bytes = ctx.host.storage_read("counter").await?;
+                            let value = i32::from_le_bytes(bytes.try_into().unwrap_or([0; 4]));
+                            let command = TestCommand::ApplyCountFromTask { value };
+                            let encoded = <TestCommand as ::protocol::OpBinary>::encode_op(&command).await.map_err(|error| error.into_fault())?;
+                            Ok(TaskResolution::Command(encoded))
+                        })
+                        .await,
+                    )
+                    .await),
                     TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount { value: *value }]).await),
                 }
             }
@@ -18557,13 +18732,17 @@ pub mod plugin_runtime {
         }
 
         async fn synthetic_play_app() -> App {
-            App::from_builder(App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic")).await.document(["state"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind(
-                "main",
-                LocalizedLabel::data("Main"),
-                "synthetic.main",
-                SurfaceKind::Canvas2d,
-                IconName::AppWindow,
-            ).await).await
+            App::from_builder(
+                App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
+                    .await
+                    .document(["state"])
+                    .await
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await,
+            )
+            .await
         }
 
         /// 🧪️ A registry-backed app declaring the contract-enforcement fixtures: an operation resolved by
@@ -18591,7 +18770,8 @@ pub mod plugin_runtime {
                 .await.app_command("incrementViaCommand", LocalizedLabel::data("Increment"), "counter", ActionKind::Mutation)
                 .await.app_command("setLabelViaCommand", LocalizedLabel::data("Set Label"), "counter", ActionKind::Mutation)
                 .await.mode_command("edit", CommandDefinition::new_catalog("mode.increment", LocalizedLabel::data("Mode Increment"), "counter", ActionKind::Mutation).await).await,
-            ).await;
+            )
+            .await;
             AppActionRegistry::from_definition(&app.definition).await
         }
 
@@ -18606,10 +18786,14 @@ pub mod plugin_runtime {
         async fn interaction_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
-                    .await.document(["state"])
-                    .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await.window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.interaction(semio_framework::InteractionDefinition {
+                    .await
+                    .document(["state"])
+                    .await
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await
+                    .interaction(semio_framework::InteractionDefinition {
                         id: "items".into(),
                         label: LocalizedLabel::data("Items"),
                         granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
@@ -18623,8 +18807,11 @@ pub mod plugin_runtime {
                             broadcast: true,
                         },
                     })
-                    .await.window_kind_interactions("main", vec![semio_framework::InteractionRef::new("items").await]).await,
-            ).await;
+                    .await
+                    .window_kind_interactions("main", vec![semio_framework::InteractionRef::new("items").await])
+                    .await,
+            )
+            .await;
             AppActionRegistry::from_definition(&app.definition).await
         }
 
@@ -18847,12 +19034,7 @@ pub mod plugin_runtime {
             let mark_interaction = |selected: &[&str], hovered: &[&str]| {
                 Some(protocol::PresenceInteraction {
                     app_id: "draw".to_string(),
-                    domains: vec![protocol::PresenceDomain {
-                        domain: "items".to_string(),
-                        granularity: "item".to_string(),
-                        selected: selected.iter().map(|id| id.to_string()).collect(),
-                        hovered: hovered.iter().map(|id| id.to_string()).collect(),
-                    }],
+                    domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.iter().map(|id| id.to_string()).collect(), hovered: hovered.iter().map(|id| id.to_string()).collect() }],
                 })
             };
             peers.insert("user:zed#s1".to_string(), PeerPresence { color: Some(7), surface: None, interaction: mark_interaction(&["item-1"], &[]) });
@@ -19105,7 +19287,8 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
             let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::new(TestApp::default()).await;
-            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })), &meta()).await
+            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })), &meta())
+                .await
                 .expect("noteShellCommand with inverse");
 
             let history = app.test_history().await;
@@ -19634,22 +19817,39 @@ pub mod plugin_runtime {
         async fn flat_menu_registry() -> AppActionRegistry {
             let app = App::from_builder(
                 App::builder(test_app_surface_id().await, LocalizedLabel::data("FlatMenuTest"))
-                    .await.document(["state"])
-                    .await.mode("edit", LocalizedLabel::data("Edit"), "pencil")
-                    .await.window_kind("main", LocalizedLabel::data("Main"), "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                    .await.mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
-                    .await.action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).await.required().await])
-                    .await.mutation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
-                    .await.mutation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
-                    .await.mutation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
-                    .await.mutation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
-                    .await.action_with(ActionDefinition::new_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Mutation).await.with_category("view").await)
-                    .await.action_with(ActionDefinition::new_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Mutation).await.with_category("view").await)
-                    .await.action_with(ActionDefinition::new_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Mutation).await.with_category("export").await)
-                    .await.action_with(ActionDefinition::new_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Mutation).await.with_category("export").await)
-                    .await.mutation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
-                    .await.mutation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10")).await,
-            ).await;
+                    .await
+                    .document(["state"])
+                    .await
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .await
+                    .window_kind("main", LocalizedLabel::data("Main"), "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .await
+                    .mutation("setLabelRequired", LocalizedLabel::data("Set Label"))
+                    .await
+                    .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).await.required().await])
+                    .await
+                    .mutation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
+                    .await
+                    .mutation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
+                    .await
+                    .mutation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
+                    .await
+                    .mutation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
+                    .await
+                    .action_with(ActionDefinition::new_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Mutation).await.with_category("view").await)
+                    .await
+                    .action_with(ActionDefinition::new_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Mutation).await.with_category("view").await)
+                    .await
+                    .action_with(ActionDefinition::new_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Mutation).await.with_category("export").await)
+                    .await
+                    .action_with(ActionDefinition::new_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Mutation).await.with_category("export").await)
+                    .await
+                    .mutation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
+                    .await
+                    .mutation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10"))
+                    .await,
+            )
+            .await;
             AppActionRegistry::from_definition(&app.definition).await
         }
 
@@ -19726,17 +19926,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn view_kind_intent_returning_operations_hard_faults() {
             let mut app = contract_app_under_test().await;
-            let intent = UiIntent {
-                surface: SurfaceId::from("s"),
-                revision: UiRevision(0),
-                node: UiNodeId::default(),
-                node_key: "bad".into(),
-                trigger: Trigger::Activate,
-                action: ActionId::v1("app", "badView"),
-                args: None,
-                input: None,
-                seq: 2,
-            };
+            let intent = UiIntent { surface: SurfaceId::from("s"), revision: UiRevision(0), node: UiNodeId::default(), node_key: "bad".into(), trigger: Trigger::Activate, action: ActionId::v1("app", "badView"), args: None, input: None, seq: 2 };
             let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
             assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
             assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
@@ -19874,22 +20064,25 @@ pub mod plugin_runtime {
             };
             let calls = Arc::new(AtomicUsize::new(0));
             let handler_calls = calls.clone();
-            let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").await.plugin_command(
-                CommandDefinition::new_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell).await,
-                Box::new(move |_, meta| {
-                    handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
-                    Ok(InvocationResult {
-                        output: dsl::DslValue::Null,
-                        mutations: Vec::new(),
-                        inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
-                        diagnostics: Vec::new(),
-                        requested_effects: Vec::new(),
-                        events: Vec::new(),
-                        ui_scope: UiDirtyScope::None,
-                        history_patch: None,
-                    })
-                }),
-            ).await;
+            let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0")
+                .await
+                .plugin_command(
+                    CommandDefinition::new_catalog("refresh", LocalizedLabel::data("Refresh"), "plugin", ActionKind::Shell).await,
+                    Box::new(move |_, meta| {
+                        handler_calls.fetch_add(meta.instance_id as usize, Ordering::SeqCst);
+                        Ok(InvocationResult {
+                            output: dsl::DslValue::Null,
+                            mutations: Vec::new(),
+                            inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
+                            diagnostics: Vec::new(),
+                            requested_effects: Vec::new(),
+                            events: Vec::new(),
+                            ui_scope: UiDirtyScope::None,
+                            history_patch: None,
+                        })
+                    }),
+                )
+                .await;
             let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::Plugin { plugin_id: "fixture".into() }, command_id: "refresh".into() }, arguments: Default::default() };
             plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1 }).await.expect("first app instance");
             plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2 }).await.expect("second app instance");
@@ -20010,19 +20203,23 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_rejects_transitive_flat_interaction() {
-            let __base = App::builder("bad-transitive-flat", LocalizedLabel::data("Bad")).await.document(["state"]).await.mode("edit", LocalizedLabel::data("Edit"), "pencil").await.window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow).await;
+            let __base = App::builder("bad-transitive-flat", LocalizedLabel::data("Bad"))
+                .await
+                .document(["state"])
+                .await
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await;
             let outcome = std::panic::catch_unwind(move || {
-                App::from_builder(
-                    __base
-                        .interaction(semio_framework::InteractionDefinition {
-                            id: "items".into(),
-                            label: LocalizedLabel::data("Items"),
-                            granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
-                            hierarchy: protocol::HierarchyProvider::Flat,
-                            hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
-                            selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
-                        }),
-                )
+                App::from_builder(__base.interaction(semio_framework::InteractionDefinition {
+                    id: "items".into(),
+                    label: LocalizedLabel::data("Items"),
+                    granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+                    hierarchy: protocol::HierarchyProvider::Flat,
+                    hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+                    selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+                }))
             });
             assert!(outcome.is_err(), "build_definition must reject transitive hover paired with HierarchyProvider::Flat");
         }
@@ -20055,7 +20252,16 @@ pub mod plugin_runtime {
             // below.
             let item = semio_framework_ui_runtime::TreeNode::new(
                 "item-1",
-                semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps { label: semio_framework_ui_contract::Label::from("Item 1"), description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, row_actions: Vec::new() }),
+                semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+                    label: semio_framework_ui_contract::Label::from("Item 1"),
+                    description: None,
+                    icon: None,
+                    default_open: None,
+                    draggable: None,
+                    drag_data: None,
+                    dimmed: None,
+                    row_actions: Vec::new(),
+                }),
             );
             let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
             let mut tree = semio_framework_ui_runtime::ComponentTree::new(
@@ -20193,7 +20399,8 @@ pub mod plugin_runtime {
                 first_ran_inner.set(true);
                 Ok(TaskResolution::Done)
             })
-            .await.keyed("search");
+            .await
+            .keyed("search");
             crate::reactor::spawn_task(instance, &meta, first.await).await.expect("first must be admitted");
             assert!(crate::reactor::test_support::task_key_is_live(instance, "search").await);
             assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1);
@@ -20204,7 +20411,8 @@ pub mod plugin_runtime {
                 second_ran_inner.set(true);
                 Ok(TaskResolution::Done)
             })
-            .await.keyed("search");
+            .await
+            .keyed("search");
             crate::reactor::spawn_task(instance, &meta, second.await).await.expect("second must be admitted, cancelling the first");
             assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
 
@@ -20277,7 +20485,8 @@ pub mod plugin_runtime {
                     Ok(TaskResolution::Done)
                 }
             })
-            .await.restartable(restart_command.clone());
+            .await
+            .restartable(restart_command.clone());
             crate::reactor::spawn_task(instance, &meta, task.await).await.expect("must spawn");
             crate::reactor::test_support::run_until_idle(8); // parks — still in flight when checkpointed
 
@@ -20404,7 +20613,8 @@ pub mod world3d_host {
                     on_change: action("setSunIntensity", None),
                 },
             ],
-        ).await
+        )
+        .await
     }
 
     /** 🌞️ Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
@@ -20621,7 +20831,8 @@ pub mod world3d_host {
                 vec![("plan", "Plan"), ("top", "Top"), ("bottom", "Bottom"), ("front", "Front"), ("back", "Back"), ("left", "Left"), ("right", "Right")],
                 "orthographicView",
             )],
-        ).await;
+        )
+        .await;
 
         let mut axo_children = vec![
             select(

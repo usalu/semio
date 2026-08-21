@@ -4,9 +4,9 @@
 //! an app-only view-state type (`LayoutConfig`) as a parameter stays at app level no matter how many
 //! consumers it has, because artifacts must never depend on apps.
 
-use crate::editor::layout::config::LayoutConfig;
-use crate::editor::layout::engine::scene::{LayoutEngine, build_display_list_for_page};
 use crate::artifacts::layout::{LayoutSnapshot, Page};
+use crate::editor::layout::config::LayoutConfig;
+use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use serde_json::{json, Value};
 
 //#region 🔖️ActivePage

@@ -1,8 +1,8 @@
 //! 🩹️ 🩹️ VCS play app commands command — `text-edit`.
 
-use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers

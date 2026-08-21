@@ -11,15 +11,15 @@ use serde::{Deserialize, Serialize};
 // ticket, SEMANTIC-MUTATIONS-OVERHAUL wave-C, owns `📦️glue.rs` for this plugin), matching the shape
 // sibling plugins (`gis`, `cad`, `fem`) use. `use super::<kind>;` below just brings each sibling
 // into this file's scope so the enum body can reference `<kind>::mutation::<Type>`.
-use super::resize_source_frame;
-use super::replace_source;
 use super::create_tile;
 use super::delete_tile;
 use super::delete_tiles;
 use super::rename_tile;
-use super::resize_tile_crop;
 use super::reorder_tiles;
+use super::replace_source;
 use super::replace_tiles;
+use super::resize_source_frame;
+use super::resize_tile_crop;
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
@@ -59,14 +59,12 @@ mod tests {
     }
 
     async fn round_trip(base: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(base, mutation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut backward = mutation.inverse(base);
         backward.reverse();
         let mut restored = forward.clone();
         for undo in &backward {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, undo).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, undo).expect("valid inverse mutation");
             restored = next;
         }
         // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`
@@ -83,10 +81,7 @@ mod tests {
         assert_eq!(present_working_scene(&created).1.len(), 1);
         let renamed = round_trip(&created, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Hero".into() }));
         assert_eq!(present_working_scene(&renamed).1[0].name, "Hero");
-        let resized = round_trip(
-            &renamed,
-            &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }),
-        );
+        let resized = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }));
         assert_eq!(present_working_scene(&resized).1[0].crop.width, 0.4);
         let deleted = round_trip(&resized, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
         assert!(present_working_scene(&deleted).1.is_empty());
@@ -123,9 +118,7 @@ mod tests {
         let base = default_present_snapshot();
         assert!(PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "gone".into() }).inverse(&base).is_empty());
         assert!(PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "gone".into(), new_name: "x".into() }).inverse(&base).is_empty());
-        assert!(PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } })
-            .inverse(&base)
-            .is_empty());
+        assert!(PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "gone".into(), new_crop: FigureTileFrame { x: 0.0, y: 0.0, width: 0.1, height: 0.1 } }).inverse(&base).is_empty());
         assert!(PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "gone".into(), to_index: 0 }).inverse(&base).is_empty());
         assert!(PresentMutation::DeleteTiles(delete_tiles::mutation::DeleteTiles { ids: vec!["gone".into()] }).inverse(&base).is_empty());
     }
@@ -168,17 +161,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
         let kinds: Vec<&str> = PresentMutation::kinds().iter().map(|descriptor| descriptor.kind).collect();
-        for expected in [
-            "resize-source-frame",
-            "replace-source",
-            "create-tile",
-            "delete-tile",
-            "delete-tiles",
-            "rename-tile",
-            "resize-tile-crop",
-            "reorder-tiles",
-            "replace-tiles",
-        ] {
+        for expected in ["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"] {
             assert!(kinds.contains(&expected), "missing semantic kind {expected}");
         }
     }
@@ -236,10 +219,7 @@ mod tests {
 
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot.
-pub async fn apply_present_mutation(
-    snapshot: &PresentSnapshot,
-    mutation: &PresentMutation,
-) -> protocol::MutationApplyResult<PresentSnapshot> {
+pub async fn apply_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> protocol::MutationApplyResult<PresentSnapshot> {
     vcs::apply_mutation(snapshot, mutation).map(|(next, _messages)| next)
 }
 

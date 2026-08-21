@@ -461,7 +461,18 @@ impl HasStackLayout for ContainerBuilder {}
 impl From<ContainerBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ContainerBuilder) -> Self {
-        assemble(builder.base, crate::Component::Container(crate::ContainerProps { role: builder.role, label: Some(builder.label), description: builder.description, required: builder.required, error: builder.error, default_open: builder.default_open, drop_overlay: builder.drop_overlay }))
+        assemble(
+            builder.base,
+            crate::Component::Container(crate::ContainerProps {
+                role: builder.role,
+                label: Some(builder.label),
+                description: builder.description,
+                required: builder.required,
+                error: builder.error,
+                default_open: builder.default_open,
+                drop_overlay: builder.drop_overlay,
+            }),
+        )
     }
 }
 //#endregion 🗂️Container
@@ -627,7 +638,10 @@ impl HasBase for InputBuilder {
 impl From<InputBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: InputBuilder) -> Self {
-        assemble(builder.base, crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept }))
+        assemble(
+            builder.base,
+            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept }),
+        )
     }
 }
 //#endregion ⌨️Input
@@ -970,7 +984,19 @@ impl HasStackLayout for TreeItemBuilder {}
 impl From<TreeItemBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeItemBuilder) -> Self {
-        assemble(builder.base, crate::Component::TreeItem(crate::TreeItemProps { label: builder.label, description: builder.description, icon: builder.icon, default_open: builder.default_open, draggable: builder.draggable, drag_data: builder.drag_data, dimmed: builder.dimmed, row_actions: builder.row_actions }))
+        assemble(
+            builder.base,
+            crate::Component::TreeItem(crate::TreeItemProps {
+                label: builder.label,
+                description: builder.description,
+                icon: builder.icon,
+                default_open: builder.default_open,
+                draggable: builder.draggable,
+                drag_data: builder.drag_data,
+                dimmed: builder.dimmed,
+                row_actions: builder.row_actions,
+            }),
+        )
     }
 }
 //#endregion 🌲️Tree

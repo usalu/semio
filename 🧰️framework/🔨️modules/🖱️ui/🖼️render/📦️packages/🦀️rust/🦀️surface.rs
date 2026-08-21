@@ -32,8 +32,8 @@
 use crate::backend::{DeviceCapabilities, PhysicalSize};
 use crate::element::Bounds;
 use crate::resource::ResourceRegistry;
-use crate::schedule::Deadline;
 use crate::scene::SceneBuilder;
+use crate::schedule::Deadline;
 use std::any::Any;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -331,13 +331,7 @@ impl AnySurface {
         Self {
             kind,
             inner: Box::new(surface),
-            vtable: SurfaceVTable {
-                update_snapshot: update_snapshot_erased::<S>,
-                prepare: prepare_erased::<S>,
-                render: render_erased::<S>,
-                handle_input: handle_input_erased::<S>,
-                next_deadline: next_deadline_erased::<S>,
-            },
+            vtable: SurfaceVTable { update_snapshot: update_snapshot_erased::<S>, prepare: prepare_erased::<S>, render: render_erased::<S>, handle_input: handle_input_erased::<S>, next_deadline: next_deadline_erased::<S> },
         }
     }
 

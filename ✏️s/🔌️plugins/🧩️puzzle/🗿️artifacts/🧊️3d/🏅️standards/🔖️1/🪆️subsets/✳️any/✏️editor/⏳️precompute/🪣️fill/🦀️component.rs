@@ -6,10 +6,10 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is interactive fill-tool session state,
 //! so it lives with the app, not the artifact.
 
+use crate::artifacts::puzzle3d::schema::{AttractionProps, BrushCompatibleCandidate, BrushPlacePayload, FillBuildProgress, Fixture, FixtureObject, KindCatalogBundle};
 use crate::editor::puzzle3d::precompute::brush::resolve_object_kind_mesh_url;
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, CollisionBody, Pose3d};
 use crate::editor::puzzle3d::precompute::FILL_COUNT_MAX;
-use crate::artifacts::puzzle3d::schema::{AttractionProps, BrushCompatibleCandidate, BrushPlacePayload, FillBuildProgress, Fixture, FixtureObject, KindCatalogBundle};
 use std::collections::HashMap;
 
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step

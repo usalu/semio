@@ -6,8 +6,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::artifacts::remodel::mutations::{apply_remodel_mutation, inverse_remodel_mutation, RemodelMutation};
-use crate::artifacts::remodel::{RemodelDiff, RemodelSnapshot};
 use crate::artifacts::remodel::MediaKind;
+use crate::artifacts::remodel::{RemodelDiff, RemodelSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -47,10 +47,7 @@ async fn appends_frame_two_and_restamps_the_stream_kind() {
 async fn inverse_removes_the_frame_at_the_base_frame_count() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::RemoveStreamFrame(payload)] if payload.id == "stream-a" && payload.frame_index == 2),
-        "add-stream-frame inverts to remove-stream-frame at index 2, the base frame count, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::RemoveStreamFrame(payload)] if payload.id == "stream-a" && payload.frame_index == 2), "add-stream-frame inverts to remove-stream-frame at index 2, the base frame count, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

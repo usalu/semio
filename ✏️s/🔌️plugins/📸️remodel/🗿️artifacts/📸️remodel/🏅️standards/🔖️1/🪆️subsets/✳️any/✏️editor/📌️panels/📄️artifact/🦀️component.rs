@@ -1,9 +1,9 @@
 //! 📄️ Remodel play app panel — the framework Document tab: reconstruction job status/progress plus the
 //! live viewport session state.
 
-use crate::editor::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::schema::stage_display;
 use crate::artifacts::remodel::{ReconstructionStage, RemodelSnapshot};
+use crate::editor::remodel::terminology::RemodelLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants

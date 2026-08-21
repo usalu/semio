@@ -10,11 +10,7 @@ pub async fn diff(payload: &super::mutation::RemoveBlock, base: &PlaybookSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);
     };
     if !step.blocks.iter().any(|block| block.id == payload.block_id) {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.step_id),
-            [payload.step_id.clone(), payload.block_id.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" does not exist in step \"{}\".", payload.block_id, payload.step_id), [payload.step_id.clone(), payload.block_id.clone()]);
     }
     if let Some(step) = steps.iter_mut().find(|step| step.id == payload.step_id) {
         step.blocks.retain(|block| block.id != payload.block_id);

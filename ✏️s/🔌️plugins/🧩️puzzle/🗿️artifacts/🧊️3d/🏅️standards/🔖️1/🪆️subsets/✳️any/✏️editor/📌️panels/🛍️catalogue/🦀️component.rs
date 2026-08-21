@@ -4,9 +4,7 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{puzzle3d_action, Puzzle3dScene};
-use semio_framework_plugin::{
-    Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -73,16 +71,7 @@ async fn object_kind_item(entry: &Value) -> UiTreeItemNode {
         .and_then(|value| value.as_str())
         .filter(|url| !url.is_empty())
         .map(str::to_string)
-        .or_else(|| {
-            entry
-                .get("representations")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-                .filter_map(|rep| rep.get("url").and_then(Value::as_str))
-                .find(|url| !url.is_empty())
-                .map(str::to_string)
-        });
+        .or_else(|| entry.get("representations").and_then(Value::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(Value::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
     UiTreeItemNode {
         presence: UiPresence::default(),

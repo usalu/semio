@@ -1,12 +1,12 @@
 //! 📄️ Lowpoly play app panel — the document tree: mesh objects and, per object, its vertex/edge/face
 //! component groups.
 
+use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::lowpoly_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, mesh_select_action, resolve_active_object_id, MESH_INTERACTION_DOMAIN, MESH_GRANULARITY_OBJECT, LowpolyView};
-use crate::editor::lowpoly::engine::LowpolyDocument;
+use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, mesh_select_action, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_plugin::{
-    IconName, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    IconName, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 use serde_json::json;
 
@@ -53,13 +53,7 @@ pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lowpo
                                 placement: Some(UiTreeActionPlacement::Menu),
                             }]);
                         }
-                        UiTreeItemNode {
-                            icon_id: IconName::from_str(icon),
-                            action: Some(mesh_select_action(mode, &row_id, "invertive")),
-                            actions,
-                            menu: None,
-                            ..UiTreeItemNode::base(row_id.clone(), Label::data(format!("{} {id}", label.as_str())))
-                        }
+                        UiTreeItemNode { icon_id: IconName::from_str(icon), action: Some(mesh_select_action(mode, &row_id, "invertive")), actions, menu: None, ..UiTreeItemNode::base(row_id.clone(), Label::data(format!("{} {id}", label.as_str()))) }
                     })
                     .collect();
                 UiTreeItemNode { icon_id: IconName::from_str(icon), items: Some(leaves), description: Some(format!("{count}")), menu: None, ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label) }

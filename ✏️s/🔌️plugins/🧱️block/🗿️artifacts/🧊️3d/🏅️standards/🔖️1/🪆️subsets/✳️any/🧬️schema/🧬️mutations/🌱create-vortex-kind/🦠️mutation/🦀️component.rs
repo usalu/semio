@@ -2,7 +2,7 @@
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::mutations::Block3dMutation;
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::{Block3dVortexKind};
+use crate::artifacts::block3d::Block3dVortexKind;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

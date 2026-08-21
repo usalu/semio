@@ -2,10 +2,10 @@
 //! a prior pin restores via `SetDefaultApp`; nothing to restore ⇒ no-op (`Vec::new()`, never a
 //! `NoMutation` sentinel).
 
-use super::mutation::ClearDefaultApp;
 use super::super::super::OpeningPreferences;
-use super::super::OpeningConfigMutation;
 use super::super::set_default_app::mutation::SetDefaultApp;
+use super::super::OpeningConfigMutation;
+use super::mutation::ClearDefaultApp;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ClearDefaultApp, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

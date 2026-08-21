@@ -1,15 +1,15 @@
 //! 📦️ Shooting play app commands — asset activation, bulk field patches, creation and GLB import.
 
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
-use crate::artifacts::shooting::schema::next_shooting_id;
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
 use crate::artifacts::shooting::mutations::change_asset_url::mutation::ChangeAssetUrl;
 use crate::artifacts::shooting::mutations::create_asset::mutation::CreateAsset;
 use crate::artifacts::shooting::mutations::rename_asset::mutation::RenameAsset;
 use crate::artifacts::shooting::mutations::set_active_asset::mutation::SetActiveAsset as SetActiveAssetMutation;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::artifacts::shooting::op::ShootingMutation;
+use crate::artifacts::shooting::schema::next_shooting_id;
+use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -35,7 +35,11 @@ pub mod set_active_asset {
 
     pub async fn handle(payload: &SetActiveAsset, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
-            Some(id) => Ok(Emit { artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })], config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }], ..Default::default() }),
+            Some(id) => Ok(Emit {
+                artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })],
+                config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }],
+                ..Default::default()
+            }),
             None => Ok(Emit::default()),
         }
     }
@@ -60,7 +64,11 @@ pub mod patch_assets {
         }
         let value = json!(payload.value);
         let mutations: Vec<ShootingMutation> = payload.asset_ids.iter().cloned().filter_map(|id| asset_mutation_for_field(id, &payload.field, &value)).collect();
-        if mutations.is_empty() { Ok(Emit::default()) } else { Ok(Emit::mutations(mutations)) }
+        if mutations.is_empty() {
+            Ok(Emit::default())
+        } else {
+            Ok(Emit::mutations(mutations))
+        }
     }
 }
 //#endregion 🔖️PatchAssets
@@ -83,7 +91,8 @@ pub mod add_asset {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("asset");
         let format = &payload.format;
-        let asset = ShootingAsset { id: id.clone(), name: format!("Asset {}", snapshot.assets.len() + 1), url: format!("/mesh/placeholder.{format}"), format: format.clone(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
+        let asset =
+            ShootingAsset { id: id.clone(), name: format!("Asset {}", snapshot.assets.len() + 1), url: format!("/mesh/placeholder.{format}"), format: format.clone(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit { artifact_mutations: vec![ShootingMutation::CreateAsset(CreateAsset { asset, index: Some(snapshot.assets.len()) }), ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id) })], ..Default::default() })
     }
 }
@@ -125,7 +134,7 @@ pub mod import_asset_request {
     pub struct ImportAssetRequest {}
 
     pub async fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(108),  accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
     }
 }
 //#endregion 🔖️ImportAssetRequest

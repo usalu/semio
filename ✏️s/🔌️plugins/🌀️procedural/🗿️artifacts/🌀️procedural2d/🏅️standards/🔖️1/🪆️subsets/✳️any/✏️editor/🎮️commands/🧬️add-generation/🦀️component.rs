@@ -1,13 +1,13 @@
 //! 🧬️ 🧬️ Procedural2d play app commands command — `add-generation`.
 
-use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::op::{generation_mutation_to_procedural2d, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::forms_bridge::flow_fixture_to_form_spec;
+use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
 use flow::FlowEvalSession;
 use flow::FlowFixture;
-use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -95,9 +95,9 @@ pub async fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Procedural2
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::procedural2d::commands::enter_generate;
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
-    use crate::editor::procedural2d::commands::enter_generate;
 
     #[semio_framework_async_macros::async_test]
     async fn add_generation_records_an_undoable_generation_operation() {

@@ -28,7 +28,8 @@
 /// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
-    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, ArtifactHandle, ArtifactSpec, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+    ArtifactHandle, ArtifactSpec, CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind,
+    SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
@@ -36,7 +37,6 @@ pub use crate::db_engine::{
 /// feature (default-on) is enabled, mirroring `db_engine`'s identically-named feature it forwards.
 #[cfg(feature = "vcs")]
 pub use crate::db_engine::vcs_integration;
-
 
 /// 🗄️#⃣ `CommandReceipt.state_hash`'s type — hashing is pack-style `ContentHash` throughout the
 /// `db` family per the contract, so it is nameable at the facade root without reaching past this

@@ -19,16 +19,17 @@ pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_fix
 pub(crate) const FILL_COUNT_MAX: usize = 1000;
 //#endregion 🔖️Constants
 
+use crate::artifacts::puzzle3d::schema::{
+    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
+    SceneConfig,
+};
+use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, order_brush_fill_compatible_candidates,
-    resolve_object_kind_mesh_url, vortex_world_from_object, weighted_order_fill_vortex_targets, AttractionVortexContext, TargetVortexWorld,
+    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, order_brush_fill_compatible_candidates, resolve_object_kind_mesh_url,
+    vortex_world_from_object, weighted_order_fill_vortex_targets, AttractionVortexContext, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::fill::{FillBuilder, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, solid_overlap_volume, world_bounds, world_volumes_contain_aabb, CollisionBody};
-use crate::artifacts::puzzle3d::schema::{
-    puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig,
-};
-use crate::artifacts::puzzle3d::Puzzle3dError;
 use std::collections::{HashMap, VecDeque};
 
 //#region 🔖️Clock
@@ -801,10 +802,10 @@ mod tests {
                     id: "Kind".to_string(),
                     representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/preview.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
                     scale: None,
-                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) , ..Default::default() }],
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }],
                 }],
-                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None , ..Default::default() }],
-                cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None , ..Default::default() }],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
+                cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None, ..Default::default() }],
             }),
             kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
             overlap_budget: DEFAULT_OVERLAP_BUDGET,

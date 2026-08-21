@@ -1,12 +1,12 @@
 //! 🗺️ GIS 2D play app commands — the document-mutating feature patches (positions and routes).
 
-use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
-use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations};
 use crate::artifacts::gismap::mutations::replace_route_data;
 use crate::artifacts::gismap::op::GisMapMutation;
+use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations};
 use crate::artifacts::gismap::GisMapSnapshot;
+use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use dsl::DslValue;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 

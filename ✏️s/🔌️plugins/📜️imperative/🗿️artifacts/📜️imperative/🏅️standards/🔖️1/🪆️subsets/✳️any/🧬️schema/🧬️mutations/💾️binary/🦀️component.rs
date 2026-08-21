@@ -14,13 +14,11 @@
 //! `🦀️component.rs`, assembled from the `🎮️commands/*` payload modules by
 //! `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::imperative::dsl::{dictionary_to_value_dsl_map, step_node_dsl_to_step, step_to_step_node_dsl, value_dsl_map_to_dictionary, StepNodeDsl, ValueDsl};
 use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
@@ -70,11 +68,7 @@ impl protocol::OpText for ImperativeMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -98,18 +92,11 @@ impl OpBinary for ImperativeMutationDsl {
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-
-
-
 async fn imperative_operation_to_dsl(operation: &ImperativeMutation) -> ImperativeMutationDsl {
     match operation {
-        ImperativeMutation::CreateStep(payload) => {
-            ImperativeMutationDsl::CreateStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) }
-        }
+        ImperativeMutation::CreateStep(payload) => ImperativeMutationDsl::CreateStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) },
         ImperativeMutation::DeleteStep(payload) => ImperativeMutationDsl::DeleteStep { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone() },
-        ImperativeMutation::ReorderSteps(payload) => {
-            ImperativeMutationDsl::ReorderSteps { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), to_index: payload.to_index }
-        }
+        ImperativeMutation::ReorderSteps(payload) => ImperativeMutationDsl::ReorderSteps { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), to_index: payload.to_index },
         ImperativeMutation::EditStepParams(payload) => {
             ImperativeMutationDsl::EditStepParams { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), id: payload.id.clone(), params: dictionary_to_value_dsl_map(&payload.new_params) }
         }

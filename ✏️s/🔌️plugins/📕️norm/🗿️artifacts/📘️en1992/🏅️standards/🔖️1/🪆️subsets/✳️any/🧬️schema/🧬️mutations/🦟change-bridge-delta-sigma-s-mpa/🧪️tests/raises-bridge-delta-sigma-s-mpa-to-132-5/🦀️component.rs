@@ -77,7 +77,10 @@ async fn change_bridge_delta_sigma_s_mpa_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-bridge-delta-sigma-s-mpa outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-bridge-delta-sigma-s-mpa/raises-bridge-delta-sigma-s-mpa-to-132-5: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
-    assert!(outcome.messages().is_empty(), "change-bridge-delta-sigma-s-mpa/raises-bridge-delta-sigma-s-mpa-to-132-5: moving bridge_delta_sigma_s_mpa from 100.0 to 132.5 must raise neither the leaf's `mutation.invariant` nor its `mutation.no-op` message");
+    assert!(
+        outcome.messages().is_empty(),
+        "change-bridge-delta-sigma-s-mpa/raises-bridge-delta-sigma-s-mpa-to-132-5: moving bridge_delta_sigma_s_mpa from 100.0 to 132.5 must raise neither the leaf's `mutation.invariant` nor its `mutation.no-op` message"
+    );
     assert!(vcs::apply_mutation(&before(), &mutation()).is_ok(), "change-bridge-delta-sigma-s-mpa/raises-bridge-delta-sigma-s-mpa-to-132-5: an applied outcome must survive the diff-apply seam");
 }
 

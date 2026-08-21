@@ -1,8 +1,8 @@
 //! 🔍️ Raster play app panel — the selected-layer(s) inspector.
 
+use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -11,7 +11,13 @@ pub const RASTER_PLAY_BODY_PROPERTIES: &str = "raster.play.properties";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(RASTER_PLAY_BODY_PROPERTIES.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(RASTER_PLAY_BODY_PROPERTIES.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

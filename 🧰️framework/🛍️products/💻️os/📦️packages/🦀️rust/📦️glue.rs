@@ -5,174 +5,168 @@
 #![allow(unused_extern_crates, ambiguous_glob_reexports, unused_imports)]
 
 extern crate self as dsl;
-extern crate self as semio_framework_os_kernel;
 extern crate self as dsl_grammar;
 extern crate self as dsl_notation;
-extern crate self as store;
-extern crate self as spr;
-extern crate self as vcs;
 pub extern crate self as semio_format;
-
+extern crate self as semio_framework_os_kernel;
+extern crate self as spr;
+extern crate self as store;
+extern crate self as vcs;
 
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /
 // `use protocol::` style paths resolve through these aliases to this crate root.
 
-
 #[path = "."]
 pub mod os_dsl {
-  #[path = "../../🔨️modules/🗣️dsl/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/🗣️dsl/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 
-  // 📡️ `span`/`diagnostic` are owned by `🧰️framework/🔨️modules/⚠️diagnostic` and reach the tree
-  // through the replication crate, which mounts them once — every `crate::os_dsl::Severity` /
-  // `TextSpan` / `Fault` path below resolves through these re-exports unchanged.
-  pub use protocol::diagnostic;
-  pub use protocol::span;
+    // 📡️ `span`/`diagnostic` are owned by `🧰️framework/🔨️modules/⚠️diagnostic` and reach the tree
+    // through the replication crate, which mounts them once — every `crate::os_dsl::Severity` /
+    // `TextSpan` / `Fault` path below resolves through these re-exports unchanged.
+    pub use protocol::diagnostic;
+    pub use protocol::span;
 
-  #[path = "../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs"]
-  pub mod token;
+    #[path = "../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs"]
+    pub mod token;
 
-  #[path = "../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs"]
-  pub mod lexer;
+    #[path = "../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs"]
+    pub mod lexer;
 
-  #[path = "../../🔨️modules/🗣️dsl/🎖️trust/🦀️component.rs"]
-  pub mod trust;
+    #[path = "../../🔨️modules/🗣️dsl/🎖️trust/🦀️component.rs"]
+    pub mod trust;
 
-  pub use self::span::*;
-  pub use self::diagnostic::*;
-  pub use self::token::*;
-  pub use self::lexer::*;
-  pub use self::trust::*;
+    pub use self::diagnostic::*;
+    pub use self::lexer::*;
+    pub use self::span::*;
+    pub use self::token::*;
+    pub use self::trust::*;
 
-  #[path = "."]
-  pub mod family {
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs"]
-    pub mod catalog;
+    #[path = "."]
+    pub mod family {
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs"]
+        pub mod catalog;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️component.rs"]
-    pub mod embed;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️component.rs"]
+        pub mod embed;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs"]
-    pub mod geo;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs"]
+        pub mod geo;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs"]
-    pub mod graph;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs"]
+        pub mod graph;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs"]
-    pub mod recipe;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs"]
+        pub mod recipe;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs"]
-    pub mod scene;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs"]
+        pub mod scene;
 
-    #[path = "../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs"]
-    pub mod sheet;
+        #[path = "../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs"]
+        pub mod sheet;
+    }
 
-  }
+    #[path = "../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs"]
+    pub mod fixture_sweep;
 
-  #[path = "../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs"]
-  pub mod fixture_sweep;
+    #[path = "../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs"]
+    pub mod grammar;
 
-  #[path = "../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs"]
-  pub mod grammar;
+    #[path = "../../🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs"]
+    pub mod lsp;
 
-  #[path = "../../🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs"]
-  pub mod lsp;
+    #[path = "../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs"]
+    pub mod notation;
 
-  #[path = "../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs"]
-  pub mod notation;
+    #[cfg(not(target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs"]
+    pub mod registry;
 
-  #[cfg(not(target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/🗣️dsl/📇️registry/🦀️component.rs"]
-  pub mod registry;
-
-  #[path = "../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs"]
-  pub mod schema;
-
+    #[path = "../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs"]
+    pub mod schema;
 }
 
 #[path = "."]
 pub mod os_pack {
-  #[path = "../../🔨️modules/🎒️pack/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/🎒️pack/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 
-  #[cfg(not(target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
-  pub mod cli;
+    #[cfg(not(target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
+    pub mod cli;
 
-  // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
-  // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
-  // below is only the schema-driven half: the record value codec and the arbitrary/law testkit.
-  pub use pack::async_;
-  pub use pack::codec;
-  pub use pack::codec::ids;
-  pub use pack::format;
-  pub use pack::http;
-  pub use pack::source;
-  #[cfg(not(target_arch = "wasm32"))]
-  pub use pack::io;
+    // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
+    // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
+    // below is only the schema-driven half: the record value codec and the arbitrary/law testkit.
+    pub use pack::async_;
+    pub use pack::codec;
+    pub use pack::codec::ids;
+    pub use pack::format;
+    pub use pack::http;
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use pack::io;
+    pub use pack::source;
 
-  // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
-  // re-exporting it a second time here would make every primitive an ambiguous glob.
+    // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
+    // re-exporting it a second time here would make every primitive an ambiguous glob.
 
-  #[path = "../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs"]
-  pub mod testkit;
+    #[path = "../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs"]
+    pub mod testkit;
 
-  #[path = "../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs"]
-  pub mod value;
-
+    #[path = "../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs"]
+    pub mod value;
 }
 
 #[path = "."]
 pub mod os_spr {
-  #[path = "../../🔨️modules/📡️spr/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/📡️spr/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 
-  // 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary,
-  // `.spr` format) lives in `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no
-  // longer owns it. This facade keeps every historical `protocol::`/`os_spr::` path working.
-  pub use protocol::causal;
-  pub use protocol::conflict;
-  pub use protocol::crypto;
-  pub use protocol::dictionary;
-  pub use protocol::format;
-  pub use protocol::ids;
-  pub use protocol::scalar;
-  pub use protocol::wire;
+    // 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary,
+    // `.spr` format) lives in `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no
+    // longer owns it. This facade keeps every historical `protocol::`/`os_spr::` path working.
+    pub use protocol::causal;
+    pub use protocol::conflict;
+    pub use protocol::crypto;
+    pub use protocol::dictionary;
+    pub use protocol::format;
+    pub use protocol::ids;
+    pub use protocol::scalar;
+    pub use protocol::wire;
 
-  #[path = "../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs"]
-  pub mod channel;
+    #[path = "../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs"]
+    pub mod channel;
 
-  #[cfg(not(target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/📡️spr/⌨️cli/🦀️component.rs"]
-  pub mod cli;
+    #[cfg(not(target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/📡️spr/⌨️cli/🦀️component.rs"]
+    pub mod cli;
 
-  // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor
-  // registry, composite planner). It re-exports `protocol::mutation`'s contract from its own file,
-  // so `os_spr::command::Mutation` and friends still resolve here.
-  #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️component.rs"]
-  pub mod command;
+    // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor
+    // registry, composite planner). It re-exports `protocol::mutation`'s contract from its own file,
+    // so `os_spr::command::Mutation` and friends still resolve here.
+    #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️component.rs"]
+    pub mod command;
 
-  pub use self::ids::*;
-  pub use self::dictionary::*;
-  pub use self::crypto::*;
-  pub use self::wire::*;
+    pub use self::crypto::*;
+    pub use self::dictionary::*;
+    pub use self::ids::*;
+    pub use self::wire::*;
 
-  #[path = "../../🔨️modules/📡️spr/📜️history/🦀️component.rs"]
-  pub mod history;
+    #[path = "../../🔨️modules/📡️spr/📜️history/🦀️component.rs"]
+    pub mod history;
 
-  #[cfg(not(target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/📡️spr/🔌️io/🦀️component.rs"]
-  pub mod io;
+    #[cfg(not(target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/📡️spr/🔌️io/🦀️component.rs"]
+    pub mod io;
 
-  #[path = "../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs"]
-  pub mod materialize;
+    #[path = "../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs"]
+    pub mod materialize;
 
-  #[path = "../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs"]
-  pub mod testkit;
-
+    #[path = "../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs"]
+    pub mod testkit;
 }
 
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
@@ -229,54 +223,53 @@ pub mod io_schema;
 
 #[path = "."]
 pub mod os_store {
-  #[path = "../../🔨️modules/🏪️store/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/🏪️store/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 
-  #[cfg(feature = "sync")]
-  #[path = "../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs"]
-  pub mod sync;
+    #[cfg(feature = "sync")]
+    #[path = "../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs"]
+    pub mod sync;
 
-  #[cfg(all(feature = "worker", target_arch = "wasm32"))]
-  #[path = "../../🔨️modules/🏪️store/👷️worker/🦀️component.rs"]
-  pub mod worker;
+    #[cfg(all(feature = "worker", target_arch = "wasm32"))]
+    #[path = "../../🔨️modules/🏪️store/👷️worker/🦀️component.rs"]
+    pub mod worker;
 }
 
 #[path = "."]
 pub mod os_engine {
-  #[path = "../../🔨️modules/⚙️engine/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/⚙️engine/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 }
 
 #[path = "."]
 pub mod os_inference {
-  #[path = "../../🔨️modules/💡️inference/🦀️component.rs"]
-  mod component;
-  pub use component::*;
+    #[path = "../../🔨️modules/💡️inference/🦀️component.rs"]
+    mod component;
+    pub use component::*;
 }
 
-
 pub use crate::os_dsl::*;
-pub use crate::os_store::*;
-pub use crate::os_store::test_support;
-pub use crate::os_spr::*;
-pub use crate::os_pack::*;
 pub use crate::os_inference::*;
+pub use crate::os_pack::*;
+pub use crate::os_spr::*;
+pub use crate::os_store::test_support;
+pub use crate::os_store::*;
 #[path = "../../🔨️modules/🧬️semio/🦀️component.rs"]
 pub mod os_semio;
 
 #[path = "../../🔨️modules/🧩️extension/🦀️component.rs"]
 pub mod os_extension;
 
-pub use crate::os_vcs::*;
 pub use crate::os_engine::*;
-pub use crate::os_semio::*;
 pub use crate::os_extension as extension;
+pub use crate::os_semio::*;
+pub use crate::os_vcs::*;
 
 // Former dsl_notation crate root surface
-pub use crate::os_dsl::notation::*;
 pub use crate::os_dsl::grammar::*;
+pub use crate::os_dsl::notation::*;
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
 
 //#region 🧪️Tests

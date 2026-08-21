@@ -11,21 +11,36 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub part_kind: BlockKindIdentity,
-    #[state(artifact)] pub part_2d: Block5dPart2d,
-    #[state(artifact)] pub part_3d: Block5dPart3d,
-    #[state(artifact)] pub representations: Vec<BlockRepresentation>,
-    #[state(artifact)] pub grip_kinds: Vec<Block5dGripKind>,
-    #[state(artifact)] pub grips: Vec<Block5dGripTemplate>,
-    #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
-    #[state(artifact)] pub attributes: Vec<BlockAttribute>,
-    #[state(artifact)] pub authors: Vec<BlockAuthor>,
-    #[state(artifact)] pub camera2d: BlockCamera2d,
-    #[state(artifact)] pub camera3d: BlockCamera3d,
-    #[state(artifact)] pub meta: BlockMeta,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub part_kind: BlockKindIdentity,
+    #[state(artifact)]
+    pub part_2d: Block5dPart2d,
+    #[state(artifact)]
+    pub part_3d: Block5dPart3d,
+    #[state(artifact)]
+    pub representations: Vec<BlockRepresentation>,
+    #[state(artifact)]
+    pub grip_kinds: Vec<Block5dGripKind>,
+    #[state(artifact)]
+    pub grips: Vec<Block5dGripTemplate>,
+    #[state(artifact)]
+    pub compatibility: Vec<BlockCompatibilityRule>,
+    #[state(artifact)]
+    pub attributes: Vec<BlockAttribute>,
+    #[state(artifact)]
+    pub authors: Vec<BlockAuthor>,
+    #[state(artifact)]
+    pub camera2d: BlockCamera2d,
+    #[state(artifact)]
+    pub camera3d: BlockCamera3d,
+    #[state(artifact)]
+    pub meta: BlockMeta,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -134,8 +149,8 @@ pub async fn block5d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::block5d::{Block5dDiff, Block5dMutation, Block5dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Block5dBuilderConstruction {
@@ -147,8 +162,12 @@ pub mod derived_construction {
         type Snapshot = Block5dSnapshot;
         type Mutation = Block5dMutation;
         type Diff = Block5dDiff;
-        async fn empty() -> Self { Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -159,24 +178,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -185,8 +201,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::block5d::Block5dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Block5dParts {

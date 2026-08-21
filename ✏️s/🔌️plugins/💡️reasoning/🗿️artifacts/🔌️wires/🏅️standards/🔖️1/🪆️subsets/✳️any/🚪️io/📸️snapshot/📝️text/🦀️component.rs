@@ -68,14 +68,7 @@ async fn to_text_error(message: String) -> store::TextError {
 /// `camera=<hex>` / `meta=<hex>` — five lines, each independently hex-decodable.
 async fn print_wires_snapshot_body(snapshot: &WiresSnapshot) -> String {
     let scene = wires_working_scene(snapshot);
-    format!(
-        "wires={}\nnodes={}\nedges={}\ncamera={}\nmeta={}",
-        enc_dsl(&snapshot.wires_fixture),
-        enc_dsl_list(&scene.nodes),
-        enc_dsl_list(&scene.edges),
-        enc_dsl(&snapshot.camera),
-        enc_dsl(&snapshot.meta),
-    )
+    format!("wires={}\nnodes={}\nedges={}\ncamera={}\nmeta={}", enc_dsl(&snapshot.wires_fixture), enc_dsl_list(&scene.nodes), enc_dsl_list(&scene.edges), enc_dsl(&snapshot.camera), enc_dsl(&snapshot.meta),)
 }
 
 async fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextError> {
@@ -104,12 +97,7 @@ async fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::T
         }
     }
     let content = crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges);
-    Ok(WiresSnapshot {
-        wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?,
-        content,
-        camera: camera.unwrap_or_else(crate::artifacts::wires::empty_camera),
-        meta: meta.unwrap_or(DslValue::Null),
-    })
+    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, camera: camera.unwrap_or_else(crate::artifacts::wires::empty_camera), meta: meta.unwrap_or(DslValue::Null) })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -155,9 +143,7 @@ mod tests {
     async fn populated() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))
-            .expect("valid mutation")
-            .0;
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node)).expect("valid mutation").0;
         snapshot
     }
 
@@ -169,8 +155,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_metabolism_fixture() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
-            .expect("valid metabolism fixture mutations");
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
         assert_eq!(crate::artifacts::wires::wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));

@@ -7,7 +7,6 @@
 
 use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
 
-
 //#region 🔒️GeometryAdapter
 /// 🔒️ Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this artifact depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]

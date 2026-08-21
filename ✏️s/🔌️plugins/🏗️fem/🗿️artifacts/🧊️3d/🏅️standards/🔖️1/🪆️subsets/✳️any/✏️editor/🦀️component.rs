@@ -10,23 +10,24 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
+use crate::artifacts::fem3d::op::Fem3dMutation;
+use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::editor::fem3d::commands::{
-    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection,
-    set_active_example, set_analysis_settings, set_camera, set_result_display, set_self_weight,
+    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
+    set_result_display, set_self_weight,
 };
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::editor::fem3d::modes::edit;
 use crate::editor::fem3d::modes::edit::windows::{model as window_model, results as window_results};
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, ConfigSpec, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind, UiNode,
+use semio_framework_plugin::{
+    create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaType, NoDraft, NoDraftMutation, SurfaceKind, UiNode,
 };
-use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FEM3D_APP_ID: &str = "fem3d-play";
@@ -482,7 +483,14 @@ impl ArtifactEditor for Fem3dPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &Fem3dCommand, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Fem3dCommand,
+        doc: &ArtifactView<'_, Fem3dSnapshot>,
+        cfg: &ConfigView<'_, Fem3dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -740,10 +748,7 @@ mod tests {
             assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
         }
         let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None });
-        assert_eq!(
-            nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(),
-            "010601026e3103000600010a020205000000000088b3c0"
-        );
+        assert_eq!(nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "010601026e3103000600010a020205000000000088b3c0");
     }
 
     /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Three rows

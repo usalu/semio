@@ -1372,7 +1372,7 @@ fn absorb_opc_diff(a: PptxOpcDiff, b: PptxOpcDiff) -> PptxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<PptxSnapshot> for PptxDiff {
-    async fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
+    fn apply(&self, base: &PptxSnapshot) -> MutationApplyResult<PptxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
             apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
@@ -1387,7 +1387,7 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
@@ -1407,7 +1407,7 @@ impl MutationDiff<PptxSnapshot> for PptxDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<PptxSnapshot> for PptxDiff {
-    async fn inverse(&self, base: &PptxSnapshot) -> Self {
+    fn inverse(&self, base: &PptxSnapshot) -> Self {
         PptxDiff {
             opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)),
             presentation: self.presentation.as_ref().map(|d| inverse_presentation_diff(&base.presentation, d)),
@@ -1415,11 +1415,11 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
         }
     }
 
-    async fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
+    fn between(base: &PptxSnapshot, other: &PptxSnapshot) -> Self {
         PptxDiff { opc: diff_opc(&base.opc, &other.opc), presentation: diff_presentation(&base.presentation, &other.presentation), xml_parts: (base.xml_parts != other.xml_parts).then(|| other.xml_parts.clone()) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.opc.is_none() && self.presentation.is_none() && self.xml_parts.is_none()
     }
 }
@@ -1646,21 +1646,21 @@ struct PptxDiffRecord {
 }
 
 impl protocol::DiffCodec for PptxDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         let record = PptxDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical pptx diff") };
-        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline).await
+        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
-        let model = PptxDiffRecord::__dsl_from_record(&record).await?;
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+        let model = PptxDiffRecord::__dsl_from_record(&record)?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })?;
-        Ok(store::pack_rt::encode_wire_value(&value).await)
+        Ok(store::pack_rt::encode_wire_value(&value))
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail })
     }
 }

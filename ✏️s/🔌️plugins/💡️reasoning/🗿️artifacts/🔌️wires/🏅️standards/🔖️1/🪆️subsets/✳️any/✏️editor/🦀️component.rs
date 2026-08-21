@@ -16,6 +16,8 @@
 //! `crate::editor::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactEditor::handle`.
 
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
@@ -26,13 +28,11 @@ use crate::editor::wires::commands::{force_layout, reorganize};
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::modes::edit;
 use crate::editor::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
-    MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, INTERACTION_SELECT_ACTION_ID,
+    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft,
+    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};
 use store::EngineHandles;
@@ -88,7 +88,7 @@ pub async fn wires_select_action_args(ids: &[String], granularity: &str, merge: 
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub async fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
-    Effect::DispatchAction {req: semio_framework_plugin::RequestId(112),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 
@@ -278,8 +278,7 @@ pub(crate) mod testkit {
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub async fn metabolism_app() -> WiresApp {
         let mut app = new_app();
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
-            .expect("valid metabolism fixture mutations");
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         let files = store::print_document_pack(&envelope).expect("print document pack");
         app.load_document_pack(&files).expect("load metabolism");
@@ -446,8 +445,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn metabolism_board_fixture_uses_mindmap_schema() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
-            .expect("valid metabolism fixture mutations");
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let board = crate::artifacts::wires::wires_working_board(&document);
         assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
         assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&board).len(), 7);
@@ -493,12 +491,8 @@ mod tests {
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = crate::artifacts::wires::empty_wires_snapshot();
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1")))
-            .expect("valid mutation")
-            .0;
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2")))
-            .expect("valid mutation")
-            .0;
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
         let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");

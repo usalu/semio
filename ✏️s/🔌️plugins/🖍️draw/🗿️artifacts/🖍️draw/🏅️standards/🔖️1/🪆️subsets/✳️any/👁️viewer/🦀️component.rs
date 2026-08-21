@@ -8,8 +8,8 @@ use crate::artifacts::draw::schema::default_draw_document;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DIALECT, DRAW_DOCUMENT_SCHEMA};
 use crate::viewer::draw::modes::view;
 use crate::viewer::draw::modes::view::windows::canvas;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -75,14 +75,7 @@ impl ArtifactViewer for DrawViewer {
 
 //#region 🔖️Manifest
 pub async fn create_draw_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(DRAW_DIALECT)
-        .document(["semio", "draw"])
-        .icon_id("draw")
-        .mode_def(view::definition())
-        .default_mode_id(view::DRAW_VIEW_MODE_VIEW)
-        .window_kind_def(canvas::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(DRAW_DIALECT).document(["semio", "draw"]).icon_id("draw").mode_def(view::definition()).default_mode_id(view::DRAW_VIEW_MODE_VIEW).window_kind_def(canvas::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

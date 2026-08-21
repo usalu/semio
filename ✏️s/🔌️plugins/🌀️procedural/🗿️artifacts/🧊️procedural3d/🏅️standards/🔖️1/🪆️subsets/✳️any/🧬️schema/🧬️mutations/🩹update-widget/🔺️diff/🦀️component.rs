@@ -1,9 +1,9 @@
 //! 🔺️ `update-widget` sparse diff construction.
 
+use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural3d::mutations::update_widget::mutation::UpdateWidget;
 use crate::artifacts::procedural3d::mutations::widget_index;
-use crate::artifacts::procedural3d::diff::Procedural3dDiff;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::Widget;
 
@@ -23,12 +23,5 @@ pub async fn diff(payload: &UpdateWidget, base: &Procedural3dSnapshot) -> protoc
     if base.fixture.widgets[index] == payload.widget {
         return protocol::MutationOutcome::new(Procedural3dDiff::default()).warn("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(
-        base,
-        WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] },
-        SynapsesDiff::default(),
-        LayoutDiff::default(),
-        None,
-        None,
-    ))
+    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, SynapsesDiff::default(), LayoutDiff::default(), None, None))
 }

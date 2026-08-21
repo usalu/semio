@@ -36,9 +36,7 @@ use std::sync::OnceLock;
 
 async fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES
-        .get_or_init(|| vec![crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.clone(), crate::examples::puzzle2d::concrete_forest::SOURCE.clone()])
-        .as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.clone(), crate::examples::puzzle2d::concrete_forest::SOURCE.clone()]).as_slice()
 }
 
 async fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {

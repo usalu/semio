@@ -16,12 +16,9 @@ use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode,
-    change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link,
-    create_page, create_story, delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame,
-    reorder_pages, rename_layout, rename_page, resize_frame, update_page_columns, update_page_margins,
+    change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link, create_page, create_story,
+    delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame, rename_layout, rename_page, reorder_pages, resize_frame, update_page_columns, update_page_margins,
 };
-
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`

@@ -23,7 +23,7 @@ pub use crate::io_schema::{ArtifactDialect, Dialect, StandardId, SubsetId};
 //#region 🔖️ArtifactRef
 /// 🧬️ `ArtifactKindId`/`is_canonical_artifact_kind`/`ArtifactRef` moved verbatim to
 /// `🚪️io/🧬️schema/🦀️component.rs` alongside `🔖️Dialect` above — see that region's doc comment.
-pub use crate::io_schema::{ArtifactKindId, ArtifactRef, is_canonical_artifact_kind};
+pub use crate::io_schema::{is_canonical_artifact_kind, ArtifactKindId, ArtifactRef};
 //#endregion 🔖️ArtifactRef
 
 //#region 🔐️CodecContracts
@@ -982,10 +982,7 @@ async fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'ent
     let mut proposed: BTreeMap<IoKey, &'entry ComposerEntry> = BTreeMap::new();
     for entry in entries {
         for &source in entry.reads {
-            let keys = [
-                IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import).await,
-                IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export).await,
-            ];
+            let keys = [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import).await, IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export).await];
             for key in keys {
                 if let Some(existing) = proposed.get(&key) {
                     if !same_composer_entry(existing, entry) {
@@ -1224,7 +1221,7 @@ pub struct SubsetValidatorEntry {
 
 /// 🎹️ Erases a typed `SubsetValidator` impl into a `SubsetValidatorEntry` row -- the
 /// `ComposerEntry::of::<C>()`-style helper for this trait.
-pub async fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
+pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
     // 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
     // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
     // to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.
@@ -2389,7 +2386,7 @@ mod tests {
 /// OLD registry above (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/`FormatCatalog`)
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
 pub mod io_mechanism {
-    use crate::io_schema::{ArtifactDialect, CARRIER_BINARY, CARRIER_TEXT, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute};
+    use crate::io_schema::{ArtifactDialect, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT};
     use dsl::Diagnostic;
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::RwLock;
@@ -2439,11 +2436,7 @@ pub mod io_mechanism {
             (None, None) => true,
             _ => false,
         };
-        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from)
-            && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into)
-            && left.fidelity == right.fidelity
-            && same_sniff
-            && std::ptr::fn_addr_eq(left.run, right.run)
+        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && same_sniff && std::ptr::fn_addr_eq(left.run, right.run)
     }
 
     async fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
@@ -2706,7 +2699,7 @@ pub mod io_mechanism {
             let IoPayload::Binary(bytes) = payload else {
                 return Err(IoError { message: "serializer_entry: expected a binary native payload".to_string(), diagnostics: Vec::new() });
             };
-            let value = super::resolve_ready(S::decode_pack(bytes)).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
+            let value = S::decode_pack(bytes).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
             super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
@@ -2721,7 +2714,7 @@ pub mod io_mechanism {
             let IoPayload::Text(text) = payload else {
                 return Err(IoError { message: "serializer_entry_text: expected a text native payload".to_string(), diagnostics: Vec::new() });
             };
-            let value = super::resolve_ready(S::parse_dsl(text)).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
+            let value = S::parse_dsl(text).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
             super::resolve_ready(T::serialize(&value))
         }
         IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
@@ -2748,7 +2741,7 @@ pub mod io_mechanism {
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: IoPayload::Binary(super::resolve_ready(outcome.value.encode_pack())), diagnostics })
+            Ok(IoOutcome { value: IoPayload::Binary(outcome.value.encode_pack()), diagnostics })
         }
         IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
@@ -2762,7 +2755,7 @@ pub mod io_mechanism {
             if let Some(conformance) = T::CONFORMANCE {
                 diagnostics.extend(conformance(&outcome.value));
             }
-            Ok(IoOutcome { value: IoPayload::Text(super::resolve_ready(outcome.value.print_dsl())), diagnostics })
+            Ok(IoOutcome { value: IoPayload::Text(outcome.value.print_dsl()), diagnostics })
         }
         IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
     }
@@ -2924,7 +2917,11 @@ pub mod io_mechanism {
         // `Option<fn(&S) -> Vec<Diagnostic>>` const (see that trait's own doc comment for why it
         // cannot be a closure or an `async fn` item).
         fn flag_non_object(value: &serde_json::Value) -> Vec<Diagnostic> {
-            if value.is_object() { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")] }
+            if value.is_object() {
+                Vec::new()
+            } else {
+                vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")]
+            }
         }
 
         #[semio_framework_async_macros::async_test]

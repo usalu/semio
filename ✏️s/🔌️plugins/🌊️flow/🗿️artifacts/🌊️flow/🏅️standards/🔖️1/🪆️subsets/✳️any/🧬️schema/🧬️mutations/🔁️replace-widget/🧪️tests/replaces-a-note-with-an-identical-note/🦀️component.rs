@@ -158,9 +158,5 @@ async fn the_guard_compares_the_whole_widget_value() {
     };
     assert_eq!(payload.widget, scene.widgets[0], "payload and scene value must be equal — that equality IS the no-op guard");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("replace", "widget", "replace-widget", "ReplacedWidget"),
-        "the fixture must be bound to replace-widget's own descriptor"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("replace", "widget", "replace-widget", "ReplacedWidget"), "the fixture must be bound to replace-widget's own descriptor");
 }

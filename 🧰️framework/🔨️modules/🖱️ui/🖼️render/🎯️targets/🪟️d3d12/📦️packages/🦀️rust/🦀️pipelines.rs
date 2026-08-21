@@ -37,12 +37,12 @@
 use crate::hlsl::{BLUR_DOWNSAMPLE_SHADER_HLSL, GLASS_SHADER_HLSL, SCENE_BLIT_SHADER_HLSL, UI_SHADER_HLSL, VECTOR_SHADER_HLSL, WORLD3D_LINES_SHADER_HLSL, WORLD3D_MESH_SHADER_HLSL};
 use crate::types::{World3dGpuInstance, World3dGpuVertex, WorldLineGpuVertex};
 use std::ffi::CString;
+use ui_render::{GlassInstance, QuadInstance, VectorVertex};
 use windows::core::PCSTR;
 use windows::Win32::Graphics::Direct3D::Fxc::D3DCompile;
 use windows::Win32::Graphics::Direct3D::ID3DBlob;
 use windows::Win32::Graphics::Direct3D12::*;
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT, DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_SAMPLE_DESC};
-use ui_render::{GlassInstance, QuadInstance, VectorVertex};
 
 //#region 🔖️Pipelines
 
@@ -193,7 +193,18 @@ impl SamplerHeap {
         let stride = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) } as usize;
         let start = unsafe { heap.GetCPUDescriptorHandleForHeapStart() };
 
-        let no_mip = D3D12_SAMPLER_DESC { Filter: D3D12_FILTER_MIN_MAG_MIP_LINEAR, AddressU: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressV: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressW: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, MipLODBias: 0.0, MaxAnisotropy: 1, ComparisonFunc: D3D12_COMPARISON_FUNC_NEVER, BorderColor: [0.0; 4], MinLOD: 0.0, MaxLOD: 0.0 };
+        let no_mip = D3D12_SAMPLER_DESC {
+            Filter: D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+            AddressU: D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            AddressV: D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            AddressW: D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
+            MipLODBias: 0.0,
+            MaxAnisotropy: 1,
+            ComparisonFunc: D3D12_COMPARISON_FUNC_NEVER,
+            BorderColor: [0.0; 4],
+            MinLOD: 0.0,
+            MaxLOD: 0.0,
+        };
         let with_mip = D3D12_SAMPLER_DESC { MaxLOD: f32::MAX, ..no_mip };
 
         for (index, sampler) in [&no_mip, &no_mip, &with_mip, &with_mip].into_iter().enumerate() {
@@ -268,16 +279,7 @@ fn glass_layout() -> Vec<D3D12_INPUT_ELEMENT_DESC> {
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn world3d_mesh_layout() -> Vec<D3D12_INPUT_ELEMENT_DESC> {
-    vec![
-        element(0, F3, 0, 0, false),
-        element(1, F3, 0, 12, false),
-        element(3, F4, 1, 0, true),
-        element(4, F4, 1, 16, true),
-        element(5, F4, 1, 32, true),
-        element(6, F4, 1, 48, true),
-        element(7, F4, 1, 64, true),
-        element(8, F4, 1, 80, true),
-    ]
+    vec![element(0, F3, 0, 0, false), element(1, F3, 0, 12, false), element(3, F4, 1, 0, true), element(4, F4, 1, 16, true), element(5, F4, 1, 32, true), element(6, F4, 1, 48, true), element(7, F4, 1, 64, true), element(8, F4, 1, 80, true)]
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -291,14 +293,36 @@ fn world3d_line_layout() -> Vec<D3D12_INPUT_ELEMENT_DESC> {
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn no_blend(write_mask: u8) -> D3D12_RENDER_TARGET_BLEND_DESC {
-    D3D12_RENDER_TARGET_BLEND_DESC { BlendEnable: false.into(), LogicOpEnable: false.into(), SrcBlend: D3D12_BLEND_ONE, DestBlend: D3D12_BLEND_ZERO, BlendOp: D3D12_BLEND_OP_ADD, SrcBlendAlpha: D3D12_BLEND_ONE, DestBlendAlpha: D3D12_BLEND_ZERO, BlendOpAlpha: D3D12_BLEND_OP_ADD, LogicOp: D3D12_LOGIC_OP_NOOP, RenderTargetWriteMask: write_mask }
+    D3D12_RENDER_TARGET_BLEND_DESC {
+        BlendEnable: false.into(),
+        LogicOpEnable: false.into(),
+        SrcBlend: D3D12_BLEND_ONE,
+        DestBlend: D3D12_BLEND_ZERO,
+        BlendOp: D3D12_BLEND_OP_ADD,
+        SrcBlendAlpha: D3D12_BLEND_ONE,
+        DestBlendAlpha: D3D12_BLEND_ZERO,
+        BlendOpAlpha: D3D12_BLEND_OP_ADD,
+        LogicOp: D3D12_LOGIC_OP_NOOP,
+        RenderTargetWriteMask: write_mask,
+    }
 }
 
 /// 🎨️ Mirrors `wgpu::BlendState::ALPHA_BLENDING` (`SourceAlpha`/`OneMinusSourceAlpha`, op `Add`, both
 /// channels) — the same factor pair Metal's `ALPHA_BLEND` constant uses.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn alpha_blend() -> D3D12_RENDER_TARGET_BLEND_DESC {
-    D3D12_RENDER_TARGET_BLEND_DESC { BlendEnable: true.into(), LogicOpEnable: false.into(), SrcBlend: D3D12_BLEND_SRC_ALPHA, DestBlend: D3D12_BLEND_INV_SRC_ALPHA, BlendOp: D3D12_BLEND_OP_ADD, SrcBlendAlpha: D3D12_BLEND_SRC_ALPHA, DestBlendAlpha: D3D12_BLEND_INV_SRC_ALPHA, BlendOpAlpha: D3D12_BLEND_OP_ADD, LogicOp: D3D12_LOGIC_OP_NOOP, RenderTargetWriteMask: D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8 }
+    D3D12_RENDER_TARGET_BLEND_DESC {
+        BlendEnable: true.into(),
+        LogicOpEnable: false.into(),
+        SrcBlend: D3D12_BLEND_SRC_ALPHA,
+        DestBlend: D3D12_BLEND_INV_SRC_ALPHA,
+        BlendOp: D3D12_BLEND_OP_ADD,
+        SrcBlendAlpha: D3D12_BLEND_SRC_ALPHA,
+        DestBlendAlpha: D3D12_BLEND_INV_SRC_ALPHA,
+        BlendOpAlpha: D3D12_BLEND_OP_ADD,
+        LogicOp: D3D12_LOGIC_OP_NOOP,
+        RenderTargetWriteMask: D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8,
+    }
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -335,7 +359,16 @@ fn no_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn mask_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_REPLACE, StencilDepthFailOp: D3D12_STENCIL_OP_REPLACE, StencilPassOp: D3D12_STENCIL_OP_REPLACE, StencilFunc: D3D12_COMPARISON_FUNC_ALWAYS };
-    D3D12_DEPTH_STENCIL_DESC { DepthEnable: true.into(), DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO, DepthFunc: D3D12_COMPARISON_FUNC_ALWAYS, StencilEnable: true.into(), StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8, StencilWriteMask: D3D12_DEFAULT_STENCIL_WRITE_MASK as u8, FrontFace: face, BackFace: face }
+    D3D12_DEPTH_STENCIL_DESC {
+        DepthEnable: true.into(),
+        DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO,
+        DepthFunc: D3D12_COMPARISON_FUNC_ALWAYS,
+        StencilEnable: true.into(),
+        StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8,
+        StencilWriteMask: D3D12_DEFAULT_STENCIL_WRITE_MASK as u8,
+        FrontFace: face,
+        BackFace: face,
+    }
 }
 
 /// 🔒 Mirrors `UI_CONTENT_PIPELINE`/`VECTOR_PIPELINE`'s depth/stencil spec: depth `Always`/no-write,
@@ -343,7 +376,16 @@ fn mask_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn content_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_KEEP, StencilDepthFailOp: D3D12_STENCIL_OP_KEEP, StencilPassOp: D3D12_STENCIL_OP_KEEP, StencilFunc: D3D12_COMPARISON_FUNC_EQUAL };
-    D3D12_DEPTH_STENCIL_DESC { DepthEnable: true.into(), DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO, DepthFunc: D3D12_COMPARISON_FUNC_ALWAYS, StencilEnable: true.into(), StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8, StencilWriteMask: 0, FrontFace: face, BackFace: face }
+    D3D12_DEPTH_STENCIL_DESC {
+        DepthEnable: true.into(),
+        DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO,
+        DepthFunc: D3D12_COMPARISON_FUNC_ALWAYS,
+        StencilEnable: true.into(),
+        StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8,
+        StencilWriteMask: 0,
+        FrontFace: face,
+        BackFace: face,
+    }
 }
 
 /// 🗻️ Mirrors `WORLD3D_OPAQUE_PIPELINE`'s depth/stencil spec: depth `Less`, write on; stencil `Equal`/
@@ -351,7 +393,16 @@ fn content_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn world3d_opaque_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_KEEP, StencilDepthFailOp: D3D12_STENCIL_OP_KEEP, StencilPassOp: D3D12_STENCIL_OP_KEEP, StencilFunc: D3D12_COMPARISON_FUNC_EQUAL };
-    D3D12_DEPTH_STENCIL_DESC { DepthEnable: true.into(), DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ALL, DepthFunc: D3D12_COMPARISON_FUNC_LESS, StencilEnable: true.into(), StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8, StencilWriteMask: 0, FrontFace: face, BackFace: face }
+    D3D12_DEPTH_STENCIL_DESC {
+        DepthEnable: true.into(),
+        DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ALL,
+        DepthFunc: D3D12_COMPARISON_FUNC_LESS,
+        StencilEnable: true.into(),
+        StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8,
+        StencilWriteMask: 0,
+        FrontFace: face,
+        BackFace: face,
+    }
 }
 
 /// 🫧️ Mirrors `WORLD3D_TRANSLUCENT_PIPELINE`/`WORLD3D_LINE_PIPELINE`'s shared depth/stencil spec:
@@ -359,7 +410,16 @@ fn world3d_opaque_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn world3d_translucent_depth_stencil() -> D3D12_DEPTH_STENCIL_DESC {
     let face = D3D12_DEPTH_STENCILOP_DESC { StencilFailOp: D3D12_STENCIL_OP_KEEP, StencilDepthFailOp: D3D12_STENCIL_OP_KEEP, StencilPassOp: D3D12_STENCIL_OP_KEEP, StencilFunc: D3D12_COMPARISON_FUNC_EQUAL };
-    D3D12_DEPTH_STENCIL_DESC { DepthEnable: true.into(), DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO, DepthFunc: D3D12_COMPARISON_FUNC_LESS_EQUAL, StencilEnable: true.into(), StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8, StencilWriteMask: 0, FrontFace: face, BackFace: face }
+    D3D12_DEPTH_STENCIL_DESC {
+        DepthEnable: true.into(),
+        DepthWriteMask: D3D12_DEPTH_WRITE_MASK_ZERO,
+        DepthFunc: D3D12_COMPARISON_FUNC_LESS_EQUAL,
+        StencilEnable: true.into(),
+        StencilReadMask: D3D12_DEFAULT_STENCIL_READ_MASK as u8,
+        StencilWriteMask: 0,
+        FrontFace: face,
+        BackFace: face,
+    }
 }
 
 //#endregion 🖇️FixedFunctionState
@@ -446,37 +506,154 @@ impl Pipelines {
         let ui_ps = compile_shader("ui_shader", UI_SHADER_HLSL, "ui_fragment_main", "ps_5_0")?;
         let ui_input = ui_layout();
 
-        let ui_mask = build_pso(device, &root_signature, "silhouette_mask_pipeline", &ui_vs, &ui_ps, &ui_input, blend_desc(no_blend(0)), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), mask_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DEPTH_STENCIL_FORMAT)?;
-        let ui_content = build_pso(device, &root_signature, "ui_pipeline", &ui_vs, &ui_ps, &ui_input, blend_desc(alpha_blend()), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), content_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DEPTH_STENCIL_FORMAT)?;
+        let ui_mask = build_pso(
+            device,
+            &root_signature,
+            "silhouette_mask_pipeline",
+            &ui_vs,
+            &ui_ps,
+            &ui_input,
+            blend_desc(no_blend(0)),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            mask_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
+        let ui_content = build_pso(
+            device,
+            &root_signature,
+            "ui_pipeline",
+            &ui_vs,
+            &ui_ps,
+            &ui_input,
+            blend_desc(alpha_blend()),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            content_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
 
         let vector_vs = compile_shader("vector_shader", VECTOR_SHADER_HLSL, "vector_vertex_main", "vs_5_0")?;
         let vector_ps = compile_shader("vector_shader", VECTOR_SHADER_HLSL, "vector_fragment_main", "ps_5_0")?;
-        let vector = build_pso(device, &root_signature, "vector_pipeline", &vector_vs, &vector_ps, &vector_layout(), blend_desc(alpha_blend()), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), content_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DEPTH_STENCIL_FORMAT)?;
+        let vector = build_pso(
+            device,
+            &root_signature,
+            "vector_pipeline",
+            &vector_vs,
+            &vector_ps,
+            &vector_layout(),
+            blend_desc(alpha_blend()),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            content_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
 
         let glass_vs = compile_shader("glass_shader", GLASS_SHADER_HLSL, "glass_vertex_main", "vs_5_0")?;
         let glass_ps = compile_shader("glass_shader", GLASS_SHADER_HLSL, "glass_fragment_main", "ps_5_0")?;
-        let glass = build_pso(device, &root_signature, "glass_pipeline", &glass_vs, &glass_ps, &glass_layout(), blend_desc(alpha_blend()), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), no_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, surface_format, DXGI_FORMAT(0))?;
+        let glass = build_pso(
+            device,
+            &root_signature,
+            "glass_pipeline",
+            &glass_vs,
+            &glass_ps,
+            &glass_layout(),
+            blend_desc(alpha_blend()),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            no_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            surface_format,
+            DXGI_FORMAT(0),
+        )?;
 
         let blur_vs = compile_shader("blur_downsample_shader", BLUR_DOWNSAMPLE_SHADER_HLSL, "blur_downsample_vertex_main", "vs_5_0")?;
         let blur_ps = compile_shader("blur_downsample_shader", BLUR_DOWNSAMPLE_SHADER_HLSL, "blur_downsample_fragment_main", "ps_5_0")?;
-        let blur_downsample = build_pso(device, &root_signature, "blur_downsample_pipeline", &blur_vs, &blur_ps, &[], blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), no_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DXGI_FORMAT(0))?;
+        let blur_downsample = build_pso(
+            device,
+            &root_signature,
+            "blur_downsample_pipeline",
+            &blur_vs,
+            &blur_ps,
+            &[],
+            blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            no_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DXGI_FORMAT(0),
+        )?;
 
         let blit_vs = compile_shader("scene_blit_shader", SCENE_BLIT_SHADER_HLSL, "scene_blit_vertex_main", "vs_5_0")?;
         let blit_ps = compile_shader("scene_blit_shader", SCENE_BLIT_SHADER_HLSL, "scene_blit_fragment_main", "ps_5_0")?;
-        let scene_blit = build_pso(device, &root_signature, "scene_blit_pipeline", &blit_vs, &blit_ps, &[], blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), no_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, surface_format, DXGI_FORMAT(0))?;
+        let scene_blit = build_pso(
+            device,
+            &root_signature,
+            "scene_blit_pipeline",
+            &blit_vs,
+            &blit_ps,
+            &[],
+            blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            no_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            surface_format,
+            DXGI_FORMAT(0),
+        )?;
 
         let world_mesh_vs = compile_shader("world3d_mesh_shader", WORLD3D_MESH_SHADER_HLSL, "world3d_mesh_vertex_main", "vs_5_0")?;
         let world_mesh_ps = compile_shader("world3d_mesh_shader", WORLD3D_MESH_SHADER_HLSL, "world3d_mesh_fragment_main", "ps_5_0")?;
         let world_mesh_layout = world3d_mesh_layout();
-        let world3d_opaque = build_pso(device, &root_signature, "world3d_pipeline", &world_mesh_vs, &world_mesh_ps, &world_mesh_layout, blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), world3d_opaque_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DEPTH_STENCIL_FORMAT)?;
+        let world3d_opaque = build_pso(
+            device,
+            &root_signature,
+            "world3d_pipeline",
+            &world_mesh_vs,
+            &world_mesh_ps,
+            &world_mesh_layout,
+            blend_desc(no_blend(D3D12_COLOR_WRITE_ENABLE_ALL.0 as u8)),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            world3d_opaque_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
         // 🫧️ Depth bias -2/-1.0 mirrors `WORLD3D_TRANSLUCENT_PIPELINE` and is baked into this PSO's
         // `RasterizerState` directly (see this file's header) — `🦀️world3d.rs` never sets it at
         // encode time the way the Metal backend's `encode_passes` does.
-        let world3d_translucent = build_pso(device, &root_signature, "world3d_pipeline_translucent", &world_mesh_vs, &world_mesh_ps, &world_mesh_layout, blend_desc(alpha_blend()), rasterizer(D3D12_CULL_MODE_BACK, -2, -1.0), world3d_translucent_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, scene_format, DEPTH_STENCIL_FORMAT)?;
+        let world3d_translucent = build_pso(
+            device,
+            &root_signature,
+            "world3d_pipeline_translucent",
+            &world_mesh_vs,
+            &world_mesh_ps,
+            &world_mesh_layout,
+            blend_desc(alpha_blend()),
+            rasterizer(D3D12_CULL_MODE_BACK, -2, -1.0),
+            world3d_translucent_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
 
         let world_line_vs = compile_shader("world3d_lines_shader", WORLD3D_LINES_SHADER_HLSL, "world3d_line_vertex_main", "vs_5_0")?;
         let world_line_ps = compile_shader("world3d_lines_shader", WORLD3D_LINES_SHADER_HLSL, "world3d_line_fragment_main", "ps_5_0")?;
-        let world3d_line = build_pso(device, &root_signature, "world3d_line_pipeline", &world_line_vs, &world_line_ps, &world3d_line_layout(), blend_desc(alpha_blend()), rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0), world3d_translucent_depth_stencil(), D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, scene_format, DEPTH_STENCIL_FORMAT)?;
+        let world3d_line = build_pso(
+            device,
+            &root_signature,
+            "world3d_line_pipeline",
+            &world_line_vs,
+            &world_line_ps,
+            &world3d_line_layout(),
+            blend_desc(alpha_blend()),
+            rasterizer(D3D12_CULL_MODE_NONE, 0, 0.0),
+            world3d_translucent_depth_stencil(),
+            D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
+            scene_format,
+            DEPTH_STENCIL_FORMAT,
+        )?;
 
         Ok(Self { root_signature, samplers, ui_mask, ui_content, vector, glass, blur_downsample, scene_blit, world3d_opaque, world3d_translucent, world3d_line })
     }

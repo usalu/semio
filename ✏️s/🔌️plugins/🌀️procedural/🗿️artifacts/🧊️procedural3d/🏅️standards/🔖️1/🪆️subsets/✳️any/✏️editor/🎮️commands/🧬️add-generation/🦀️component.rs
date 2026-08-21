@@ -1,13 +1,13 @@
 //! 🧬️ 🧬️ Procedural3d play app commands command — `add-generation`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
 use crate::artifacts::procedural3d::op::{generation_mutation_to_procedural3d, Procedural3dMutation};
+use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::FlowEvalSession;
 use flow::playbook::{apply_generation_mutation, generation_operations, selected_generation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use flow::FlowEvalSession;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -63,9 +63,9 @@ pub async fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Procedural3
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::procedural3d::commands::select_generation;
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
-    use crate::editor::procedural3d::commands::select_generation;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
 
     #[semio_framework_async_macros::async_test]

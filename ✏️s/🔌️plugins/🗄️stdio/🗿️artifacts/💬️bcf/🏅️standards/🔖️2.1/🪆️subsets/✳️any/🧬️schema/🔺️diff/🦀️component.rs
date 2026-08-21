@@ -326,7 +326,7 @@ pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfView
 
 //#region 🔖️Apply
 impl MutationDiff<BcfSnapshot> for BcfDiff {
-    async fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
+    fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
         validate_bcf_diff(self, base)?;
         let mut next = base.clone();
         if let Some(v) = &self.version {
@@ -341,7 +341,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;
         }
@@ -455,7 +455,7 @@ fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<BcfSnapshot> for BcfDiff {
-    async fn inverse(&self, base: &BcfSnapshot) -> Self {
+    fn inverse(&self, base: &BcfSnapshot) -> Self {
         BcfDiff {
             version: self.version.as_ref().map(|_| base.version.clone()),
             topics: self.topics.as_ref().map(|d| inverse_named(&base.topics, d, |t| t.guid.clone(), inverse_topic)),
@@ -463,7 +463,7 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
         }
     }
 
-    async fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
+    fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
         BcfDiff {
             version: if base.version != other.version { Some(other.version.clone()) } else { None },
             topics: between_named(&base.topics, &other.topics, |t| t.guid.clone(), between_topic),
@@ -471,7 +471,7 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.version.is_none() && self.topics.is_none() && self.parts.is_none()
     }
 }
@@ -1502,10 +1502,10 @@ fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
 }
 
 impl protocol::DiffCodec for BcfDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_bcf_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_bcf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [version][topics][parts]`), matching
@@ -1515,7 +1515,7 @@ impl protocol::DiffCodec for BcfDiff {
     /// that shortcut before this pilot ladder). `flags` bit0/bit1/bit2 mark
     /// `version`/`topics`/`parts` presence; each present field's own binary payload follows in
     /// that fixed order (see `🔖️BinaryCodecs` above).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.version.is_some() {
             flags |= 0b001;
@@ -1538,11 +1538,11 @@ impl protocol::DiffCodec for BcfDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let version = if flags & 0b001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let topics = if flags & 0b010 != 0 { Some(dec_topics_diff_bin(&mut reader).map_err(|e| malformed("diff topics", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let parts = if flags & 0b100 != 0 { Some(dec_parts_diff_bin(&mut reader).map_err(|e| malformed("diff parts", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

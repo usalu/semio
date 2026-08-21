@@ -2,8 +2,8 @@
 
 use crate::artifacts::shooting::diff::ShootingDiff;
 use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::ShootingSavedCamera;
+use crate::artifacts::shooting::ShootingSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 

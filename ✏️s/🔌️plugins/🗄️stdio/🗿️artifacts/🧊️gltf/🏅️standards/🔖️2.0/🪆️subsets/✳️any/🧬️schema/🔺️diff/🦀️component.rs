@@ -331,7 +331,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
             other.removed,
             other.modified.into_iter().map(|m| (m.index, m.diff)).collect(),
             other.added.into_iter().map(|a| (a.index, a.item)).collect(),
-            |d, o| d.absorb_into(o),
+            |d, o| { d.absorb_into(o); },
             |d, item| d.apply(item),
         );
         self.removed = removed;
@@ -1321,7 +1321,7 @@ impl protocol::DiffRegions for GltfDiff {
 //#endregion 🗺️TouchedRegions
 
 impl MutationDiff<GltfSnapshot> for GltfDiff {
-    async fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
         macro_rules! validate_collection {
             ($field:ident, $base:expr, $target:literal) => {
                 if let Some(diff) = &self.$field {
@@ -1410,13 +1410,13 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         }
         if let Some(scene) = next.document.scene {
             if scene >= next.document.scenes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-reference", format!("default scene index {scene} does not address a scene")).await.at(["document/scene"]).await);
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-reference", format!("default scene index {scene} does not address a scene")).at(["document/scene"]));
             }
         }
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         match (&mut self.asset, other.asset) {
             (Some(mine), Some(theirs)) => mine.absorb(theirs),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -1467,7 +1467,7 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
 }
 
 impl DiffAlgebra<GltfSnapshot> for GltfDiff {
-    async fn inverse(&self, base: &GltfSnapshot) -> Self {
+    fn inverse(&self, base: &GltfSnapshot) -> Self {
         let doc = &base.document;
         Self {
             asset: self.asset.as_ref().map(|d| d.inverse(&doc.asset)),
@@ -1494,7 +1494,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
         }
     }
 
-    async fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
+    fn between(base: &GltfSnapshot, other: &GltfSnapshot) -> Self {
         let (bd, od) = (&base.document, &other.document);
         let asset_diff = GltfAssetDiff::between(&bd.asset, &od.asset);
         let scenes_diff = GltfScenesDiff::between(&bd.scenes, &od.scenes);
@@ -1536,7 +1536,7 @@ impl DiffAlgebra<GltfSnapshot> for GltfDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -3814,10 +3814,10 @@ fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
 }
 
 impl protocol::DiffCodec for GltfDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_gltf_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_gltf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
@@ -3831,8 +3831,8 @@ impl protocol::DiffCodec for GltfDiff {
     /// binary `removed`/`modified`/`added` encoding (`write_bin_collection_blob`) — the blob's
     /// OWN internal shape isn't further protocol-walkable (`Prim::Ref` recursion gap), but this
     /// Rust side IS genuinely, fully structured real binary throughout, never text-as-bytes.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         // `asset`/`extensions_used`/`extensions_required`/`extensions`/`extras` are each wrapped
         // in a length-prefixed blob (matching `../💾️binary/📡️component.protocol.semio`'s
         // `Array(u8, Field(<name>_len))` shape exactly) — NOT bare-inline like `scene`/
@@ -3890,9 +3890,9 @@ impl protocol::DiffCodec for GltfDiff {
             })
         });
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
         let asset = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;

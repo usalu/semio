@@ -71,14 +71,14 @@ impl Default for CsvSnapshot {
 /// escaped `""` quotes, both CRLF and bare-LF line endings, and tracking per-field
 /// whether the source actually wrapped it in quotes (real, losslessly-retained
 /// information per RFC 4180 §2 rule 5 — quoting is optional).
-async fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
+fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
     let mut records = Vec::new();
     let mut fields: Vec<CsvField> = Vec::new();
     let mut cur = String::new();
     let mut cur_quoted = false;
     let mut in_quotes = false;
     let mut chars = text.chars().peekable();
-    async fn take_field(cur: &mut String, cur_quoted: &mut bool) -> CsvField {
+    fn take_field(cur: &mut String, cur_quoted: &mut bool) -> CsvField {
         CsvField { value: std::mem::take(cur), quoted: std::mem::take(cur_quoted) }
     }
     while let Some(ch) = chars.next() {
@@ -100,23 +100,23 @@ async fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
                 in_quotes = true;
                 cur_quoted = true;
             }
-            ',' => fields.push(take_field(&mut cur, &mut cur_quoted).await),
+            ',' => fields.push(take_field(&mut cur, &mut cur_quoted)),
             '\r' => {
                 if chars.peek() == Some(&'\n') {
                     chars.next();
                 }
-                fields.push(take_field(&mut cur, &mut cur_quoted).await);
+                fields.push(take_field(&mut cur, &mut cur_quoted));
                 records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             '\n' => {
-                fields.push(take_field(&mut cur, &mut cur_quoted).await);
+                fields.push(take_field(&mut cur, &mut cur_quoted));
                 records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             _ => cur.push(ch),
         }
     }
     if !cur.is_empty() || cur_quoted || !fields.is_empty() {
-        fields.push(take_field(&mut cur, &mut cur_quoted).await);
+        fields.push(take_field(&mut cur, &mut cur_quoted));
         records.push(CsvRecord { fields });
     }
     records
@@ -124,7 +124,7 @@ async fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
 
 /// 📤 Quotes a field when the source quoted it OR when RFC 4180 §2 rule 6 REQUIRES
 /// quoting (the value itself contains a comma, quote, or line break).
-async fn escape_field(field: &CsvField) -> String {
+fn escape_field(field: &CsvField) -> String {
     let needs_quote = field.quoted || field.value.contains(',') || field.value.contains('"') || field.value.contains('\n') || field.value.contains('\r');
     if needs_quote {
         format!("\"{}\"", field.value.replace('"', "\"\""))
@@ -133,7 +133,7 @@ async fn escape_field(field: &CsvField) -> String {
     }
 }
 
-async fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
+fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
     let mut out = String::new();
     for record in records {
         out.push_str(&record.fields.iter().map(escape_field).collect::<Vec<_>>().join(","));
@@ -148,33 +148,33 @@ async fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
 /// `records[0]` should be read as a header row — RFC 4180 draws no structural distinction
 /// between a header record and a data record on the wire, so decoding never drops or
 /// relocates the first record.
-pub async fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
+pub fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
     let records = parse_csv_records(text);
-    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records: records.await }
+    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records }
 }
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
-pub async fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
-    Ok(decode_csv_with(te.awaitxt, true))
+pub fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
+    Ok(decode_csv_with(text, true))
 }
 
 /// 📤 Encodes with LF line endings.
-pub async fn encode_csv(snap: &CsvSnapshot) -> String {
-    encode_csv_with(snap, "\n").await
+pub fn encode_csv(snap: &CsvSnapshot) -> String {
+    encode_csv_with(snap, "\n")
 }
 
 /// 📤 Encodes with a caller-chosen line ending (`"\n"` or `"\r\n"`).
-pub async fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
+pub fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
     if snap.records.is_empty() {
         return String::new();
     }
-    write_csv_records(&snap.records, line_ending).await
+    write_csv_records(&snap.records, line_ending)
 }
 //#endregion 🔖️SnapshotCodec
 //#endregion 🔖️Codec
 
 //#region 🔖️DocumentHelpers
-/// 🌱 Empty persistedasync  snapshot.
+/// 🌱 Empty persisted snapshot.
 pub fn empty_csv_snapshot() -> CsvSnapshot {
     CsvSnapshot::default()
 }
@@ -182,47 +182,47 @@ pub fn empty_csv_snapshot() -> CsvSnapshot {
 /// 📄️ The `demo` example, parsed once from `examples::demo::PRIMARY_TEXT` — the single source
 /// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`.
-pub async fn demo_csv_snapshot() -> CsvSnapshot {
-    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).await.unwrap_or_else(|_| empty_csv_snapshot())
+pub fn demo_csv_snapshot() -> CsvSnapshot {
+    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for CsvSnapshot {
     const EXTENSION: &'static str = "csv";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "stdio.csv"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_csv_with(bo.awaitdy, true))
+        Ok(decode_csv_with(body, true))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = encode_csv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for CsvSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = encode_csv(self).await.into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = encode_csv(self).into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_csv_with(&te.awaitxt, true))
+        Ok(decode_csv_with(&text, true))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -236,21 +236,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_csv_snapshot();
-        assert_eq!.await(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.schema, STDIO_CSV_DOCUMENT_SCHEMA);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn codec_round_trip() {
         let snap = empty_csv_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
-        assert_eq!(parsed.sch.awaitema, snap.schema);
+        let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
+        let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
-    async fn field_values(record: &CsvRecord) -> Vec<String> {
+    fn field_values(record: &CsvRecord) -> Vec<String> {
         record.fields.iter().map(|f| f.value.clone()).collect()
     }
 
@@ -258,18 +258,18 @@ mod tests {
     async fn quoted_field_with_embedded_comma_and_escaped_quote() {
         let text = "name,note\n\"Doe, John\",\"He said \"\"hi\"\"\"\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(field_val.awaitues(&snap.records[0]), vec!["name", "note"]);
-        assert_eq!(field_val.awaitues(&snap.records[1]), vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]);
-        ass.awaitert!(snap.records[1].fields[0].quoted, "comma-containing field must be recorded as quoted");
-        ass.awaitert!(snap.records[1].fields[1].quoted);
-        asse.awaitrt!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
+        assert_eq!(field_values(&snap.records[0]), vec!["name", "note"]);
+        assert_eq!(field_values(&snap.records[1]), vec!["Doe, John".to_string(), "He said \"hi\"".to_string()]);
+        assert!(snap.records[1].fields[0].quoted, "comma-containing field must be recorded as quoted");
+        assert!(snap.records[1].fields[1].quoted);
+        assert!(!snap.records[0].fields[0].quoted, "unquoted header field stays unquoted");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn quoted_field_with_embedded_newline_spans_records() {
         let text = "a,b\n\"line1\nline2\",2\n";
         let snap = decode_csv_with(text, true);
-        assert_eq!(field_val.awaitues(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
+        assert_eq!(field_values(&snap.records[1]), vec!["line1\nline2".to_string(), "2".to_string()]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -283,14 +283,14 @@ mod tests {
     async fn header_row_option_is_pure_metadata_first_record_always_decoded() {
         let text = "1,2\n3,4\n";
         let with_header = decode_csv_with(text, true);
-        assert!(wi.awaitth_header.has_header);
-        assert_eq!(wi.awaitth_header.records.len(), 2);
-        assert_eq!(field_values(&wi.awaitth_header.records[0]), vec!["1", "2"]);
-        assert_eq!(field_values(&wi.awaitth_header.records[1]), vec!["3", "4"]);
+        assert!(with_header.has_header);
+        assert_eq!(with_header.records.len(), 2);
+        assert_eq!(field_values(&with_header.records[0]), vec!["1", "2"]);
+        assert_eq!(field_values(&with_header.records[1]), vec!["3", "4"]);
 
         let without_header = decode_csv_with(text, false);
-        assert!(!witho.awaitut_header.has_header);
-        assert_eq!(witho.awaitut_header.records, wi.awaitth_header.records);
+        assert!(!without_header.has_header);
+        assert_eq!(without_header.records, with_header.records);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -301,14 +301,14 @@ mod tests {
         let text = encode_csv(&snap);
         assert_eq!(text, "\"plain\"\n");
         let reparsed = decode_csv_with(&text, false);
-        assert_eq!.await(reparsed.records, snap.records);
+        assert_eq!(reparsed.records, snap.records);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn encode_with_crlf_round_trips() {
         let snap = decode_csv_with("a,b\n1,2\n", true);
         let crlf_text = encode_csv_with(&snap, "\r\n");
-        assert!(crlf_text.await.contains("\r\n"));
+        assert!(crlf_text.contains("\r\n"));
         let reparsed = decode_csv_with(&crlf_text, true);
         assert_eq!(reparsed, snap);
     }
@@ -351,9 +351,9 @@ mod tests {
         let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
         std::fs::write(assets.join("🎒️example.pack.semio"), &pack_bytes).unwrap();
         let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
-        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).await.unwrap();
+        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
         std::fs::write(assets.join("📡️example.spr.semio"), &op_bytes).unwrap();
-        eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.await.len(), op_bytes.len());
+        eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.len(), op_bytes.len());
     }
     //#endregion 🔖️ScratchFixtureGen
 }

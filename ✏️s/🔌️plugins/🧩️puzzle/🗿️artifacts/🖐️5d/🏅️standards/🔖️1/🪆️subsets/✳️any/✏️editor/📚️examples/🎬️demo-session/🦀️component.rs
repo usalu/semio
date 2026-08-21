@@ -19,6 +19,4 @@ pub const ICON: &str = "play";
 pub const CMD_TEXT: &str = include_str!("🖼️assets/🎮️demo.cmd.semio");
 
 /// 📚️ Canonical example source for `App::example_source`.
-pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| {
-    ExampleSource::new(ID, label(), CMD_TEXT, ICON)
-});
+pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| ExampleSource::new(ID, label(), CMD_TEXT, ICON));

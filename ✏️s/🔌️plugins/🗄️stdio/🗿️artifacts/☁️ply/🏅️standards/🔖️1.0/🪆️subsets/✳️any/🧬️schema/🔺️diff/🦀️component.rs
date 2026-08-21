@@ -631,7 +631,7 @@ fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
 }
 
 impl MutationDiff<PlySnapshot> for PlyDiff {
-    async fn apply(&self, base: &PlySnapshot) -> MutationApplyResult<PlySnapshot> {
+    fn apply(&self, base: &PlySnapshot) -> MutationApplyResult<PlySnapshot> {
         if let Some(diff) = &self.elements {
             validate_elements_diff(&base.elements, diff)?;
         }
@@ -641,7 +641,7 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `elements`: name-keyed transport (no renames — `AddElement`/`RemoveElement` only), one
     /// nested `rows` absorb per surviving modified element.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.format.is_some() {
             self.format = other.format;
         }
@@ -654,14 +654,14 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
 
 impl DiffAlgebra<PlySnapshot> for PlyDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) from `between`.
-    async fn inverse(&self, base: &PlySnapshot) -> Self {
+    fn inverse(&self, base: &PlySnapshot) -> Self {
         let mutated = apply_ply_diff_unchecked(self, base);
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): name-keyed matching over `elements`, each modified
     /// element recursing into `element_between`.
-    async fn between(base: &PlySnapshot, other: &PlySnapshot) -> Self {
+    fn between(base: &PlySnapshot, other: &PlySnapshot) -> Self {
         let format = (base.format != other.format).then_some(other.format);
         let comments = (base.comments != other.comments).then(|| other.comments.clone());
         let elements = if base.elements == other.elements {
@@ -694,7 +694,7 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
         PlyDiff { format, comments, elements }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.format.is_none() && self.comments.is_none() && self.elements.as_ref().map_or(true, PlyElementsDiff::is_empty)
     }
 }
@@ -1493,18 +1493,18 @@ fn parse_ply_diff(line: &str) -> Result<PlyDiff, String> {
 }
 
 impl DiffCodec for PlyDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_ply_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ply_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
     /// the P2-W0 census). Matches `../💾️binary/📡️component.protocol.semio`'s real flag-per-field
     /// layout exactly, field for field, in struct order (`format`, `comments`, `elements`).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         write_bin_option(&mut w, &self.format, |w, f| write_bin_format(w, *f));
         write_bin_option(&mut w, &self.comments, |w, v: &Vec<String>| {
             let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
@@ -1512,9 +1512,9 @@ impl DiffCodec for PlyDiff {
             write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
         write_bin_option(&mut w, &self.elements, |w, v| write_bin_blob(w, &enc_elements_diff_bin(v)));
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
         let format = read_bin_option(&mut r, |r| read_bin_format(r)).map_err(diff_pack_err)?;
         let comments = read_bin_option(&mut r, |r| {

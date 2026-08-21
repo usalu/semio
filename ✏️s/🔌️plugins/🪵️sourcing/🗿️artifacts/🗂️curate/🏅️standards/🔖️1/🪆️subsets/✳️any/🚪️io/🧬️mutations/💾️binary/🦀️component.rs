@@ -5,13 +5,11 @@
 //! this codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/🗂️curate/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::curate::schema::mutations::SourcingMutation;
 use protocol::OpBinary;
@@ -30,7 +28,6 @@ pub async fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::Proto
 #[cfg(test)]
 mod tests {
     use super::*;
-    
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {

@@ -76,7 +76,11 @@ async fn a_missing_edge_is_reported_by_its_edge_id_not_by_an_endpoint() {
     assert_eq!(messages[0].level, protocol::Severity::Error, "disconnect-nodes has no Fatal branch at all — unlike its connect-nodes counterpart, which can raise duplicate-id");
     assert_eq!(messages[0].target, vec!["edge-severed".to_string()], "the diagnostic names the EDGE id, never node-source or node-sink");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("disconnect", "relationship", "disconnect-nodes", "DisconnectedNodes"), "the fixture must be bound to disconnect-nodes' own descriptor — entity `relationship`, not `node`");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("disconnect", "relationship", "disconnect-nodes", "DisconnectedNodes"),
+        "the fixture must be bound to disconnect-nodes' own descriptor — entity `relationship`, not `node`"
+    );
     assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Disconnect edge \"edge-severed\"", "disconnect-nodes' undo label quotes the edge id");
 }
 

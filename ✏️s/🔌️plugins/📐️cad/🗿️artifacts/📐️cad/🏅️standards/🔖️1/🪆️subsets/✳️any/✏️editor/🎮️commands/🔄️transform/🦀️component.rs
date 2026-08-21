@@ -1,13 +1,12 @@
 //! 🔄️ CAD play app commands — rigid transforms on the current selection plus the declarative model-definition transformations.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{apply_transformation_mutations, ids_or_selection};
-
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️TranslateSelection
 pub mod translate_selection {

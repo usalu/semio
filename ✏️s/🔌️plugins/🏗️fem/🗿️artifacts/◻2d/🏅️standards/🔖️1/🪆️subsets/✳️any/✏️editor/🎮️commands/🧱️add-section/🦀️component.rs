@@ -1,9 +1,9 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-section`.
 
-use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemSection;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;

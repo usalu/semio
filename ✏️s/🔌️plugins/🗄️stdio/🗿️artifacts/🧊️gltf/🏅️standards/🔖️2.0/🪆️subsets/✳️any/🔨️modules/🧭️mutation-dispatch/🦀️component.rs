@@ -254,14 +254,14 @@ impl GltfMutationDiff {
 }
 
 impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
-    async fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
         self.try_apply(base).map_err(|error| {
             let target = self.envelopes.first().map(|envelope| envelope.command_id.clone()).into_iter();
             semio_framework_plugin::resolve_ready(MutationApplyError::new("gltf.mutation.apply-rejected", error.to_string())).at(target)
         })
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.envelopes.extend(other.envelopes);
     }
 }
@@ -269,17 +269,17 @@ impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
 impl Mutation<GltfSnapshot> for GltfMutation {
     type Diff = GltfMutationDiff;
 
-    async fn diff(&self, base: &GltfSnapshot) -> MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &GltfSnapshot) -> MutationOutcome<Self::Diff> {
         match gltf_mutation_registry().and_then(|registry| registry.plan(&self.0, base)) {
             Ok(plan) => {
                 let phase = if self.0.phase == GltfMutationPhase::Mutation { GltfMutationPhase::Diff } else { GltfMutationPhase::Inverse };
-                MutationOutcome::new(GltfMutationDiff { envelopes: vec![GltfDiffEnvelope { command_id: self.0.command_id.clone(), version: self.0.version, phase, payload: plan.diff_payload, touched_paths: plan.touched_paths }] }).await
+                MutationOutcome::new(GltfMutationDiff { envelopes: vec![GltfDiffEnvelope { command_id: self.0.command_id.clone(), version: self.0.version, phase, payload: plan.diff_payload, touched_paths: plan.touched_paths }] })
             }
-            Err(error) => MutationOutcome::error("mutation.rejected", error.to_string(), [self.0.command_id.clone()]).await,
+            Err(error) => MutationOutcome::error("mutation.rejected", error.to_string(), [self.0.command_id.clone()]),
         }
     }
 
-    async fn inverse(&self, base: &GltfSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &GltfSnapshot) -> Vec<Self> {
         if self.0.phase != GltfMutationPhase::Mutation {
             return Vec::new();
         }

@@ -63,10 +63,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
             Some(FlattenParent::Child { parent_id, attraction_index, parent_vortex_id, child_vortex_id }) => {
                 let parent_object = snapshot.objects.iter().find(|o| &o.id == parent_id);
                 let child_object = snapshot.objects.iter().find(|o| &o.id == key);
-                let edge = parent_object
-                    .and_then(|p| find_vortex(p, parent_vortex_id))
-                    .zip(child_object.and_then(|c| find_vortex(c, child_vortex_id)))
-                    .zip(snapshot.attractions.get(*attraction_index));
+                let edge = parent_object.and_then(|p| find_vortex(p, parent_vortex_id)).zip(child_object.and_then(|c| find_vortex(c, child_vortex_id))).zip(snapshot.attractions.get(*attraction_index));
                 if let Some(((parent_vortex, child_vortex), attraction)) = edge {
                     let (pp, pd, _) = vortex_geom(parent_vortex);
                     let (cp, cd, _) = vortex_geom(child_vortex);
@@ -97,10 +94,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatPlane {
                 let parent_plane = parents.first().copied().unwrap_or_default();
                 let parent_object = snapshot.objects.iter().find(|o| &o.id == parent_id);
                 let child_object = snapshot.objects.iter().find(|o| &o.id == key);
-                let edge = parent_object
-                    .and_then(|p| find_vortex(p, parent_vortex_id))
-                    .zip(child_object.and_then(|c| find_vortex(c, child_vortex_id)))
-                    .zip(snapshot.attractions.get(*attraction_index));
+                let edge = parent_object.and_then(|p| find_vortex(p, parent_vortex_id)).zip(child_object.and_then(|c| find_vortex(c, child_vortex_id))).zip(snapshot.attractions.get(*attraction_index));
                 match edge {
                     Some(((parent_vortex, child_vortex), attraction)) => {
                         let (pp, pd, _) = vortex_geom(parent_vortex);
@@ -201,7 +195,15 @@ mod tests {
         let leaf = object("leaf", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
         let attraction_a = Puzzle3dAttraction { id: "a1".into(), attracting: "root:top".into(), attracted: "mid:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.0, y: 0.0 };
         let attraction_b = Puzzle3dAttraction { id: "a2".into(), attracting: "mid:top".into(), attracted: "leaf:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 1.0 };
-        Puzzle3dSnapshot { schema: crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".into(), meta: Default::default(), objects: vec![root, mid, leaf], attractions: vec![attraction_a, attraction_b], target_volumes: Vec::new(), references: Vec::new() }
+        Puzzle3dSnapshot {
+            schema: crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA.to_string(),
+            domain: "architecture".into(),
+            meta: Default::default(),
+            objects: vec![root, mid, leaf],
+            attractions: vec![attraction_a, attraction_b],
+            target_volumes: Vec::new(),
+            references: Vec::new(),
+        }
     }
     //#endregion 🧸️Fixtures
 

@@ -1,7 +1,7 @@
 //! 📄️ DIN 4108 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::editor::din4108::Din4108Family;
 use crate::document::NormHost;
+use crate::editor::din4108::Din4108Family;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants

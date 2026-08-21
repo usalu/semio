@@ -11,22 +11,38 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::raster::schema::RasterArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub id: Option<String>,
-    #[state(artifact)] pub title: Option<Option<String>>,
-    #[state(artifact)] pub layers: Option<RasterLayersDelta>,
-    #[state(artifact)] pub assets: Option<RasterAssetsDelta>,
-    #[state(presence)] pub selected_ids: Option<RasterStringList>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub brush_size: Option<f64>,
-    #[state(config)] pub brush_opacity: Option<f64>,
-    #[state(config)] pub composite_viewport: Option<Option<RasterViewportSize>>,
-    #[state(config)] pub camera_x: Option<f64>,
-    #[state(config)] pub camera_y: Option<f64>,
-    #[state(config)] pub camera_zoom: Option<f64>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(artifact)] pub hovered_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::raster::schema::RasterArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub id: Option<String>,
+    #[state(artifact)]
+    pub title: Option<Option<String>>,
+    #[state(artifact)]
+    pub layers: Option<RasterLayersDelta>,
+    #[state(artifact)]
+    pub assets: Option<RasterAssetsDelta>,
+    #[state(presence)]
+    pub selected_ids: Option<RasterStringList>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub brush_size: Option<f64>,
+    #[state(config)]
+    pub brush_opacity: Option<f64>,
+    #[state(config)]
+    pub composite_viewport: Option<Option<RasterViewportSize>>,
+    #[state(config)]
+    pub camera_x: Option<f64>,
+    #[state(config)]
+    pub camera_y: Option<f64>,
+    #[state(config)]
+    pub camera_zoom: Option<f64>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(artifact)]
+    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 

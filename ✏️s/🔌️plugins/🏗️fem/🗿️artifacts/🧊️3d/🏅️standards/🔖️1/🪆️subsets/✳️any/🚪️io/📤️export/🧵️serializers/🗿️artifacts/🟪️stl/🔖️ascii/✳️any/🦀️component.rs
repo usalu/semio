@@ -8,8 +8,8 @@
 //! and contribute no geometry; a bar/frame-only model exports a structurally valid, empty .stl.
 
 use semio_framework_plugin::{ArtifactSerializer, IoError};
-use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_ascii;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_ascii;
 
 //#region 🔖️Export
 pub async fn export(snapshot: &crate::artifacts::fem3d::Fem3dSnapshot) -> Result<Vec<u8>, IoError> {

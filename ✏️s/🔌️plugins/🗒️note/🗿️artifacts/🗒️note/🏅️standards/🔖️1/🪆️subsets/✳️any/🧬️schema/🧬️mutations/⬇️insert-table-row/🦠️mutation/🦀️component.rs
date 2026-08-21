@@ -1,6 +1,6 @@
 //! ⬇️ Note mutation — `InsertTableRow`: appends a blank row to a table block (width matches the current column count).
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

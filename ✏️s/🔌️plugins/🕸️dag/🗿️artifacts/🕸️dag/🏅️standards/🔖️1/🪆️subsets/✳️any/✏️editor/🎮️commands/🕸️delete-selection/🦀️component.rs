@@ -1,8 +1,8 @@
 //! 🕸️ 🕸️ DAG play app commands command — `delete-selection`.
 
-use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
+use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

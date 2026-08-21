@@ -9,13 +9,11 @@
 //! module's root component, assembled from the `🎮️commands/*` payload modules by
 //! `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::shooting::schema::mutations::text::ShootingMutation;
 use protocol::OpBinary;
@@ -48,7 +46,8 @@ mod tests {
     async fn shooting_document_text_round_trips_store_with_applied_operation() {
         use store::ArtifactCommand;
 
-        let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None))
+            .expect("valid artifact store fixture");
         let asset = crate::artifacts::shooting::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         let create = crate::artifacts::shooting::schema::mutations::create_asset::mutation::CreateAsset { asset, index: Some(0) };
         store.dispatch(ArtifactCommand::Apply { mutations: vec![ShootingMutation::CreateAsset(create)], description: None }).expect("apply");

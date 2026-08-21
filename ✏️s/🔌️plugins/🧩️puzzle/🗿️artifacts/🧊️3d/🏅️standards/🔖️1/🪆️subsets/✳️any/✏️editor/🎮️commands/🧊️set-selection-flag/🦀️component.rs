@@ -1,8 +1,8 @@
 //! 🧊️ `set-selection-flag` command.
 
-use serde_json::Value;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::apply_puzzle3d_selection_flag;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use serde_json::Value;
 
 /// 🙈️ Explicit `{entity, ids}` (the document tree's row actions) patches exactly those; otherwise the
 /// whole live object/vortex/target-volume selection is flagged at once (the context menu's path).

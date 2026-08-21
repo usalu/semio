@@ -9,8 +9,8 @@
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<VcsDemoMutation, VcsDemoConfigMutation>, Fault>`, the exact signature
@@ -19,7 +19,6 @@ extern crate semio_framework_schema as schema;
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
 // artefact of decomposition.
 #[allow(clippy::result_large_err)]
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -79,72 +78,72 @@ pub mod artifacts {
                                 pub use component::*;
                                 #[path = "."]
                                 pub mod add_tag {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️add-tag/🧪️tests/appends-urgent-tag/🦀️component.rs"]
                                     mod tests_appends_urgent_tag;
                                 }
                                 #[path = "."]
                                 pub mod rename_vcs {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-vcs/🧪️tests/retitles-the-document/🦀️component.rs"]
                                     mod tests_retitles_the_document;
                                 }
                                 #[path = "."]
                                 pub mod change_notes {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-notes/🧪️tests/rewrites-the-notes/🦀️component.rs"]
                                     mod tests_rewrites_the_notes;
                                 }
                                 #[path = "."]
                                 pub mod change_counter {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-counter/🧪️tests/sets-counter-to-seven/🦀️component.rs"]
                                     mod tests_sets_counter_to_seven;
                                 }
                                 #[path = "."]
                                 pub mod remove_tag {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-tag/🧪️tests/detaches-the-review-tag/🦀️component.rs"]
                                     mod tests_detaches_the_review_tag;
                                 }
                                 #[path = "."]
                                 pub mod change_status {
-                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦change-status/🧪️tests/draft-to-review/🦀️component.rs"]
                                     mod tests_draft_to_review;
@@ -158,31 +157,31 @@ pub mod artifacts {
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod diff {
-                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod mutations {
-                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
-                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod import {
@@ -335,20 +334,42 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::mutations::text::*; pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::VcsDemoMutation; }
-        pub mod dsl { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::mutations::binary::*; }
-        pub mod pack { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::binary::*; }
-        pub mod diff { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::diff::text::*; } }
-        pub mod mutations { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::*; }
-        pub mod snapshot {
-            pub mod schema { pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::*; }
-            pub mod pack { pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::binary::*; }
+        pub mod op {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::io::mutations::text::*;
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::VcsDemoMutation;
         }
-        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::VcsSnapshot;
-        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::VcsDemoMutation;
+        pub mod dsl {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::io::mutations::binary::*;
+        }
+        pub mod pack {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::vcs::standards::v1::subsets::any::io::diff::text::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::*;
+        }
+        pub mod snapshot {
+            pub mod schema {
+                pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::vcs::standards::v1::subsets::any::io::snapshot::binary::*;
+            }
+        }
         pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::diff::VcsDiff;
-
+        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::mutations::VcsDemoMutation;
+        pub use crate::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::VcsSnapshot;
 
         #[path = "."]
         pub mod examples {
@@ -397,18 +418,6 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📈️increment-counter/🦀️component.rs"]
-            pub mod increment_counter;
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-snapshot/🦀️component.rs"]
-            pub mod patch_snapshot;
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️text-edit/🦀️component.rs"]
-            pub mod text_edit;
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️edit/🦀️component.rs"]
-            pub mod edit;
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
-            pub mod set_locale;
-            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️no-operation/🦀️component.rs"]
-            pub mod no_operation;
             #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
             #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-move/🦀️component.rs"]
@@ -417,6 +426,18 @@ pub mod editor {
             pub mod canvas_pointer_up;
             #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-wheel/🦀️component.rs"]
             pub mod canvas_wheel;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️edit/🦀️component.rs"]
+            pub mod edit;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📈️increment-counter/🦀️component.rs"]
+            pub mod increment_counter;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️no-operation/🦀️component.rs"]
+            pub mod no_operation;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-snapshot/🦀️component.rs"]
+            pub mod patch_snapshot;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            pub mod set_locale;
+            #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️text-edit/🦀️component.rs"]
+            pub mod text_edit;
         }
 
         #[path = "."]
@@ -484,10 +505,10 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
-    pub mod art_vcs_demo;
     #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_vcs_demo_session;
+    #[path = "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
+    pub mod art_vcs_demo;
 }
 //#endregion 📚️Examples
 

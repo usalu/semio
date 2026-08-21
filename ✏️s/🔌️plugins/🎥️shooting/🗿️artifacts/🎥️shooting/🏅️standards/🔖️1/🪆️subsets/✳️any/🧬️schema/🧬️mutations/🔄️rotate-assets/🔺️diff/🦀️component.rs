@@ -3,8 +3,8 @@
 //! not.
 
 use super::mutation::RotateAssets;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::{quat_from_axis_angle, quat_mul, ShootingAssetPatch};
 
 pub async fn diff(payload: &RotateAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {

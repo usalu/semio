@@ -3,18 +3,16 @@
 //! See `procedural2d`'s sibling `🗣️dsl/🦀️component.rs` docstring for why the `*Dsl` mirror types below
 //! are LOCAL structural twins rather than derives on the foreign `flow`/`playbook` types directly.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{FormGeneration, GenerationPlayState};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
@@ -39,13 +37,15 @@ pub struct ValueDsl {
     decimal: Option<f64>,
     text: Option<String>,
     #[dsl(key = "dict")]
-    dictionary: Option<Vec<DictEntryDsl>>}
+    dictionary: Option<Vec<DictEntryDsl>>,
+}
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct DictEntryDsl {
     key: String,
     #[dsl(block)]
-    value: ValueDsl}
+    value: ValueDsl,
+}
 
 async fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
@@ -55,7 +55,8 @@ async fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
         NeuralValue::Atom(Atom::Integer(i)) => dsl_value.integer = Some(*i),
         NeuralValue::Atom(Atom::Decimal(d)) => dsl_value.decimal = Some(*d),
         NeuralValue::Atom(Atom::String(s)) => dsl_value.text = Some(s.clone()),
-        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_entries(dict))}
+        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_entries(dict)),
+    }
     dsl_value
 }
 
@@ -77,7 +78,8 @@ async fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     }
     match &dsl_value.dictionary {
         Some(entries) => NeuralValue::Dictionary(value_dsl_entries_to_dictionary(entries)),
-        None => NeuralValue::Atom(Atom::Null)}
+        None => NeuralValue::Atom(Atom::Null),
+    }
 }
 
 pub async fn dictionary_to_value_dsl_entries(dict: &Dictionary) -> Vec<DictEntryDsl> {
@@ -92,7 +94,8 @@ pub async fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictio
 pub struct CameraJsonDsl {
     x: f64,
     y: f64,
-    zoom: f64}
+    zoom: f64,
+}
 
 pub async fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
     CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
@@ -105,7 +108,8 @@ pub async fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct WidgetLayoutDsl {
     x: f64,
-    y: f64}
+    y: f64,
+}
 
 pub async fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
     WidgetLayoutDsl { x: layout.x, y: layout.y }
@@ -118,7 +122,8 @@ pub async fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct SynapseSpecDsl {
     id: String,
-    wire: dsl::Wire}
+    wire: dsl::Wire,
+}
 
 pub async fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
     SynapseSpecDsl {
@@ -127,7 +132,9 @@ pub async fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
             from: dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
             edge: Some((true, dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
             edge_label: dsl::WireEdgeLabel::default(),
-            properties: dsl::DslValue::Object(Vec::new())})}
+            properties: dsl::DslValue::Object(Vec::new()),
+        }),
+    }
 }
 
 pub async fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
@@ -145,39 +152,49 @@ pub enum WidgetDsl {
         input_ports: Vec<String>,
         output_ports: Vec<String>,
         #[dsl(table)]
-        params: Vec<DictEntryDsl>},
+        params: Vec<DictEntryDsl>,
+    },
     InputSlider {
         id: String,
         value: f64,
         min: f64,
         max: f64,
-        step: f64},
+        step: f64,
+    },
     InputNote {
         id: String,
-        text: String},
+        text: String,
+    },
     InputImage {
         id: String,
-        src: String},
+        src: String,
+    },
     Variable {
         id: String,
         name: String,
-        schema: String},
+        schema: String,
+    },
     OutputPreview {
         id: String,
         #[dsl(table)]
         preview: Vec<DictEntryDsl>,
-        expanded: Vec<String>},
+        expanded: Vec<String>,
+    },
     OutputAction {
         id: String,
-        action: String},
+        action: String,
+    },
     OutputExport {
         id: String,
-        format: String},
+        format: String,
+    },
     Cluster {
         id: String,
         name: String,
         tree: dsl::DslValue,
-        flow: dsl::DslValue}}
+        flow: dsl::DslValue,
+    },
+}
 
 pub async fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     match widget {
@@ -191,7 +208,8 @@ pub async fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_value_dsl_entries(preview), expanded: expanded.iter().cloned().collect() },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) }}
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) },
+    }
 }
 
 pub async fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
@@ -208,14 +226,17 @@ pub async fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextErr
             id,
             name,
             tree: dsl::from_dsl_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
-            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?}})
+            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
+        },
+    })
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct FormGenerationDsl {
     id: String,
     name: String,
-    values: BTreeMap<String, dsl::DslValue>}
+    values: BTreeMap<String, dsl::DslValue>,
+}
 
 pub async fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
     FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect() }
@@ -240,30 +261,26 @@ struct Procedural3dSnapshotDsl {
     selected_generation_id: Option<String>,
     preview_text: Option<String>,
     #[dsl(table)]
-    generations: Vec<FormGenerationDsl>}
+    generations: Vec<FormGenerationDsl>,
+}
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl store::ArtifactDsl for Procedural3dSnapshotDsl {
     const EXTENSION: &'static str = "procedural3d";
-    async fn envelope_id() -> &'static str { "procedural.procedural3d" }
+    async fn envelope_id() -> &'static str {
+        "procedural.procedural3d"
+    }
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
-            Err(_) => text};
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+            Err(_) => text,
+        };
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -271,32 +288,22 @@ impl store::ArtifactDsl for Procedural3dSnapshotDsl {
 impl store::ArtifactPack for Procedural3dSnapshotDsl {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+    async fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
-
-
-
 
 async fn procedural3d_document_to_dsl(document: &Procedural3dSnapshot) -> Procedural3dSnapshotDsl {
     let fixture = &document.fixture;
@@ -309,7 +316,8 @@ async fn procedural3d_document_to_dsl(document: &Procedural3dSnapshot) -> Proced
         layout: fixture.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
         selected_generation_id: generation.selected_generation_id.clone(),
         preview_text: generation.preview_text.clone(),
-        generations: generation.generations.iter().map(form_generation_to_dsl).collect()}
+        generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
+    }
 }
 
 async fn procedural3d_document_from_dsl(parsed: Procedural3dSnapshotDsl) -> Result<Procedural3dSnapshot, store::TextError> {
@@ -318,7 +326,8 @@ async fn procedural3d_document_from_dsl(parsed: Procedural3dSnapshotDsl) -> Resu
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Procedural3dSnapshot {
         fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
-        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }})
+        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
+    })
 }
 
 impl store::ArtifactDsl for Procedural3dSnapshot {
@@ -362,7 +371,7 @@ mod tests {
     use super::*;
     use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
     use semio_framework_os_kernel::os_store::test_support;
-    use store::{ArtifactDsl};
+    use store::ArtifactDsl;
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_empty_projection() {

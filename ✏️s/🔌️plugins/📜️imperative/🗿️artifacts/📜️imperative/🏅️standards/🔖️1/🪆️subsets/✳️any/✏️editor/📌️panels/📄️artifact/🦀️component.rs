@@ -1,8 +1,8 @@
 //! 📄️ Imperative play app panel — the document tree: the top-level steps of the current path.
 
+use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::terminology::ImperativeLabels;
 use crate::editor::imperative::IMPERATIVE_INTERACTION_STEPS;
-use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -41,12 +41,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// anymore (clicks are translated into `interactionSelect` generically).
 pub async fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let step_items: Vec<UiTreeItemNode> = path
-        .steps
-        .iter()
-        .enumerate()
-        .map(|(index, step)| tree_item_desc(step_row_id(&step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone())))
-        .collect();
+    let step_items: Vec<UiTreeItemNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone()))).collect();
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)
         .section_or_placeholder("imperative-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.document_empty)
         .interaction_domain(IMPERATIVE_INTERACTION_STEPS)

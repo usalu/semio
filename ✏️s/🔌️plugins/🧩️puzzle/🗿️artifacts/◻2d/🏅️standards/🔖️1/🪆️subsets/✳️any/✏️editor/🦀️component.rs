@@ -11,34 +11,38 @@
 //! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
 //! the new one.
 
-use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
-use crate::editor::puzzle2d::commands::{set_grid_snap_enabled, set_grid_factor, set_camera, focus_selection, apply_board_events, set_lod_mode_for_pane, lod_scale_json, add_node, patch_inspector, redraw_handles, force_layout, set_brush_kind_weights, set_brush_node_size, set_suggestion_offset, cycle_candidate, set_candidate_index, open_slot, commit_slot, cancel_slot, set_fill_count, fill_session_begin, fill_session_step, fill_session_clear, select_same_kind, delete_selection, duplicate_selection, set_selection_flag, set_locale, set_terminology, set_active_example, engagement_input, engagement_submit, engagement_abort, engagement_control_select, set_active_utility};
+use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::editor::puzzle2d::commands::{
+    add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, fill_session_begin, fill_session_clear,
+    fill_session_step, focus_selection, force_layout, lod_scale_json, open_slot, patch_inspector, redraw_handles, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index,
+    set_fill_count, set_grid_factor, set_grid_snap_enabled, set_locale, set_lod_mode_for_pane, set_selection_flag, set_suggestion_offset, set_terminology,
+};
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
+use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
+use crate::editor::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{catalogue, document, inspection};
+use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
 use crate::editor::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle2dLabels};
-use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
-use crate::editor::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
-use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactPresentation, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
+    SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
@@ -61,7 +65,6 @@ pub const PUZZLE2D_GRANULARITY_NODE: &str = "node";
 const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
-
 /// 🌉️ This app's own fixture (and `ArtifactApp::Snapshot`) stays a bare `serde_json::Value`, so the
 /// DSL-text example fixtures are parsed once into the typed `Puzzle2dSnapshot` and re-serialized to
 /// the JSON string this module's `serde_json::from_str`/`.example(...)` call sites expect. The typed
@@ -78,8 +81,12 @@ async fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String
     serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
 }
 
-pub async fn concrete_forest_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest") }
-pub async fn nakagin_example_json() -> String { parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin") }
+pub async fn concrete_forest_example_json() -> String {
+    parse_example_dsl_without_camera(crate::examples::puzzle2d::concrete_forest::DSL_TEXT, "concrete-forest")
+}
+pub async fn nakagin_example_json() -> String {
+    parse_example_dsl_without_camera(crate::examples::puzzle2d::nakagin_capsule_tower::DSL_TEXT, "nakagin")
+}
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
@@ -621,19 +628,43 @@ pub async fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScen
 /// 🐢️ Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
 /// canvas panes (never a panel or engagement/measure/utility refresh).
 pub async fn puzzle2d_window_only_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
+    UiDirtyScope::Partial {
+        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        panel_bodies: Vec::new(),
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: false,
+        labels: false,
+    }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for actions that additionally change the engagement bar (active utility,
 /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
 pub async fn puzzle2d_window_and_engagements_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: true, measures: false, labels: false }
+    UiDirtyScope::Partial {
+        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        panel_bodies: Vec::new(),
+        utilities: false,
+        tools: false,
+        engagements: true,
+        measures: false,
+        labels: false,
+    }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for settings surfaced in the measures sidebar (LOD mode, grid, brush
 /// weights, suggestion offset) but that never touch document content or the engagement bar.
 pub async fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
-    UiDirtyScope::Partial { window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false }
+    UiDirtyScope::Partial {
+        window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
+        panel_bodies: Vec::new(),
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: true,
+        labels: false,
+    }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` for a runtime-only selection change: the 3 canvas panes plus the
@@ -869,11 +900,7 @@ pub struct Puzzle2dPlayApp;
 impl Puzzle2dPlayApp {
     async fn scene_for(fixture: Value, config: &Puzzle2dConfig, window_id: Option<&str>) -> Puzzle2dScene {
         let active_utility = puzzle2d_active_utility(config, window_id);
-        Puzzle2dScene {
-            fixture,
-            runtime: config.clone(),
-            active_utility,
-        }
+        Puzzle2dScene { fixture, runtime: config.clone(), active_utility }
     }
 }
 
@@ -913,7 +940,14 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
     /// the host's own events and turn the mutated scene into the granular operation delta plus a
     /// config snapshot. No behaviour lives in this match.
-    async fn handle(command: &Puzzle2dCommand, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Puzzle2dCommand,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.snapshot;
         let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
         let before = doc.snapshot.0.clone();
@@ -1301,8 +1335,24 @@ pub(crate) mod testkit {
         // setInteractionGranularity to this reserved set.
         if matches!(
             action,
-            "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "noteShellCommand"
-                | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
+            "undo"
+                | "redo"
+                | "commitCheckpoint"
+                | "createAlternative"
+                | "switchAlternative"
+                | "checkoutCheckpoint"
+                | "copy"
+                | "cut"
+                | "paste"
+                | "revertToCommand"
+                | "historyFilter"
+                | "noteShellCommand"
+                | "interactionSelect"
+                | "interactionHover"
+                | "clearSelection"
+                | "selectAll"
+                | "setSelectionMode"
+                | "setInteractionGranularity"
         ) {
             return app.handle_action(action, args, &meta("local"));
         }

@@ -1,14 +1,14 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-drop`.
 
+use crate::artifacts::layout::mutations::LayoutMutation;
+use crate::artifacts::layout::LayoutDropPreviewState;
+use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::commands::{add_frame, add_page};
 use crate::editor::layout::config::LayoutConfig;
-use crate::artifacts::layout::LayoutDropPreviewState;
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -76,11 +76,7 @@ pub async fn handle(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>
         return Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]));
     }
     let (wx, wy) = screen_to_world_for_surface(cfg.snapshot, blueprint, payload.x, payload.y, payload.width, payload.height);
-    let mut emitted = if payload.kind == "page" {
-        add_page::handle(&add_page::AddPage {}, doc, cfg)?
-    } else {
-        add_frame::handle(&add_frame::AddFrame { kind: payload.kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)?
-    };
+    let mut emitted = if payload.kind == "page" { add_page::handle(&add_page::AddPage {}, doc, cfg)? } else { add_frame::handle(&add_frame::AddFrame { kind: payload.kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)? };
     emitted.config_mutations.push(LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() });
     Ok(emitted)
 }

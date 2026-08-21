@@ -1,8 +1,8 @@
 //! 📊️ Remodel play app — the Report window: a Table surface over whichever reconstruction dataset the
 //! config's `report_table` selects.
 
-use crate::editor::remodel::config::RemodelConfig;
 use crate::artifacts::remodel::RemodelSnapshot;
+use crate::editor::remodel::config::RemodelConfig;
 use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -77,10 +77,10 @@ pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::remodel::default_remodel_scene;
     use crate::editor::remodel::commands::set_report_table::SetReportTable;
     use crate::editor::remodel::testkit::{app, dispatch, render as render_body};
     use crate::editor::remodel::RemodelCommand;
-    use crate::artifacts::remodel::default_remodel_scene;
 
     #[semio_framework_async_macros::async_test]
     async fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {

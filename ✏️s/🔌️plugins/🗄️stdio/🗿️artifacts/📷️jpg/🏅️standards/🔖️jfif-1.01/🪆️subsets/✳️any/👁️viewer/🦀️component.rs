@@ -20,10 +20,10 @@ pub enum JpgAnyViewCommand {
 }
 
 impl protocol::OpBinary for JpgAnyViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(JpgAnyViewCommand::Noop)
     }
 }
@@ -58,7 +58,7 @@ impl ArtifactViewer for JpgAnyViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

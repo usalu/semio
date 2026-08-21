@@ -19,10 +19,10 @@ pub enum MdEditCommand {
 }
 
 impl protocol::OpBinary for MdEditCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "md-edit-command", offset: 0, detail: error.to_string() })
     }
 }
@@ -61,7 +61,7 @@ impl ArtifactEditor for MdEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
+            MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                 Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot { snapshot }]).await),
                 Err(_) => Ok(Emit::default()),
             },
@@ -71,7 +71,7 @@ impl ArtifactEditor for MdEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

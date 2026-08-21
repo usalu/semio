@@ -75,14 +75,7 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
 
 //#region 🔖️Manifest
 pub async fn create_playbook_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(PLAYBOOK_DIALECT)
-        .document(["semio", "playbook"])
-        .icon_id("eye")
-        .mode_def(view::definition())
-        .default_mode_id(view::PLAYBOOK_VIEW_MODE_VIEW)
-        .window_kind_def(steps::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(PLAYBOOK_DIALECT).document(["semio", "playbook"]).icon_id("eye").mode_def(view::definition()).default_mode_id(view::PLAYBOOK_VIEW_MODE_VIEW).window_kind_def(steps::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

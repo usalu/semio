@@ -22,11 +22,7 @@ pub struct FoldDirectoryEvents {
 //#region 🔖️Handle
 pub async fn handle(payload: &FoldDirectoryEvents, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let events: Vec<store::os_directory::DirectoryEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
-    let config_mutations = events
-        .iter()
-        .filter_map(|event| serde_json::to_string(event).ok())
-        .map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json })
-        .collect();
+    let config_mutations = events.iter().filter_map(|event| serde_json::to_string(event).ok()).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
     Ok(Emit { config_mutations, ..Default::default() })
 }
 //#endregion 🔖️Handle

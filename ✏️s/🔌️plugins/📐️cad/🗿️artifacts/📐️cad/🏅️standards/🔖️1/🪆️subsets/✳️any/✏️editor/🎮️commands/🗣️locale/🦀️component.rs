@@ -4,14 +4,13 @@
 //! `"locale"`/`"terminology"` rather than the kebab-cased forms their command ids would suggest —
 //! see the `as` literals in `crate::editor::cad`'s `app_commands!` invocation.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_config_from_runtime, runtime_of};
-
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetLocale
 pub mod set_locale {

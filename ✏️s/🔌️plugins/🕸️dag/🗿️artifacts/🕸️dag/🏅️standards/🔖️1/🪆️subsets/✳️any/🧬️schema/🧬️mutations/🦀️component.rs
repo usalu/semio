@@ -68,7 +68,6 @@ pub async fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutati
 }
 
 pub async fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
-    
     <DagMutation as protocol::Mutation<DagSnapshot>>::inverse(mutation, snapshot)
 }
 

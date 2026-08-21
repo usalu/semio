@@ -1,16 +1,15 @@
 //! 🤝️ CAD play app commands — the engagement REPL: input, submit, keyed transitions, abort, and the two world-pointer events that drive a live construction interaction.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
-use crate::editor::cad::engine::interaction::apply_event;
 use crate::artifacts::cad::CadPaneId;
+use crate::artifacts::cad::CadSnapshot;
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::engine::interaction::apply_event;
+use crate::editor::cad::CadDispatchCtx;
+use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-
 
 //#region 🔖️EngagementSubmit
 pub mod engagement_submit {

@@ -203,7 +203,10 @@ pub async fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCe
     let mut cells = Vec::new();
     for row in 0..rows {
         for column in 0..columns {
-            cells.push(SplitGridCell { key: format!("{}-r{row}-c{column}", spec.key_prefix), crop: crate::artifacts::present::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height } });
+            cells.push(SplitGridCell {
+                key: format!("{}-r{row}-c{column}", spec.key_prefix),
+                crop: crate::artifacts::present::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height },
+            });
         }
     }
     let _ = (cell_width, cell_height);

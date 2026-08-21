@@ -1,8 +1,8 @@
 //! 👁️ 👁️ Layout play app commands command — `focus-preflight-issue`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::artifacts::layout::{op::LayoutMutation, LayoutSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

@@ -885,7 +885,7 @@ fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnap
 
 //#region 🔖️Apply
 impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
-    async fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
+    fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
@@ -902,7 +902,7 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, b, |m| m.id.clone(), absorb_master_diff, apply_master));
         self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, b, |l| l.id.clone(), absorb_layout_diff, apply_layout));
         self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, slide_with_diff_applied));
@@ -912,7 +912,7 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
-    async fn inverse(&self, base: &SemioPresentationSnapshot) -> Self {
+    fn inverse(&self, base: &SemioPresentationSnapshot) -> Self {
         SemioPresentationDiff {
             masters: self.masters.as_ref().map(|d| inverse_named(&base.masters, d, |m| m.id.clone(), inverse_master)),
             layouts: self.layouts.as_ref().map(|d| inverse_named(&base.layouts, d, |l| l.id.clone(), inverse_layout)),
@@ -920,11 +920,11 @@ impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
         }
     }
 
-    async fn between(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> Self {
+    fn between(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> Self {
         diff_snapshot(base, other)
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.masters.is_none() && self.layouts.is_none() && self.slides.is_none()
     }
 }
@@ -1564,10 +1564,10 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 //#endregion 🔖️BinaryPrimitives
 
 impl protocol::DiffCodec for SemioPresentationDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_presentation_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_presentation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real
@@ -1579,7 +1579,7 @@ impl protocol::DiffCodec for SemioPresentationDiff {
     /// per-segment `Cond` because a SECOND `if`-guard on a field that's itself only conditionally
     /// decoded hard-errors `eval_cond` (`protocol-cond-cannot-chain`, per the grammar recipe's own
     /// gap table; every prior semio wave's own diff binary upgrade hit the identical shape).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.masters.is_some() {
@@ -1603,7 +1603,7 @@ impl protocol::DiffCodec for SemioPresentationDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

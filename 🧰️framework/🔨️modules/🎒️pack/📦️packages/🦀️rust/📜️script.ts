@@ -5,13 +5,13 @@ import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runC
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runCargo(this.repoRoot, ["test", "-p", "semio-framework-pack", ...rest]);
+    runCargo(["test", "-p", "semio-framework-pack", ...rest], this.repoRoot);
   }
 }
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(this.repoRoot, ["build", "-p", "semio-framework-pack", ...segments]);
+    runCargo(["build", "-p", "semio-framework-pack", ...segments], this.repoRoot);
   }
 }
 

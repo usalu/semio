@@ -77,7 +77,7 @@ interface Edit {
   end: number;
   before: string;
   after: string;
-  kind: "call-add-await" | "call-remove-await" | "def-remove-async" | "test-remove-async" | "defuse-call-add-await";
+  kind: "call-add-await" | "call-remove-await" | "def-remove-async" | "test-remove-async" | "defuse-call-add-await" | "test-sync-attribute";
   diagnosticCode: string | null;
   diagnosticMessage: string;
 }
@@ -120,8 +120,8 @@ function readJournal(): Edit[] {
 
 //#region cargo check invocation
 
-function runCargoCheckJson(crate: string, opts: { tests: boolean; target?: string }): RustcDiagnostic[] {
-  const args = ["check", "-p", crate, "--all-targets", "--message-format=json"];
+function runCargoCheckJson(crate: string, opts: { tests: boolean; libOnly?: boolean; target?: string }): RustcDiagnostic[] {
+  const args = ["check", "-p", crate, opts.libOnly ? "--lib" : "--all-targets", "--message-format=json"];
   if (opts.target) args.splice(2, 0, "--target", opts.target);
   const res = spawnSync("cargo", args, { cwd: ROOT, maxBuffer: 1024 * 1024 * 1024, encoding: "utf8" });
   const out = res.stdout ?? "";
@@ -169,6 +169,7 @@ const ASYNC_SIGNATURE_PATTERNS = [
   /has an incompatible type for trait/i,
   /recursion in an async fn requires boxing/i,
   /is not a `?future`?/i,
+  /`await` is only allowed inside `async` functions and blocks/i,
 ];
 
 function mentionsFutureOrAwait(d: RustcDiagnostic): boolean {
@@ -1596,9 +1597,39 @@ function tryPlanE0733(d: RustcDiagnostic, plan: PlanResult): boolean {
   return true;
 }
 
+function tryPlanE0728(d: RustcDiagnostic, plan: PlanResult): boolean {
+  if (d.code?.code !== "E0728" || !/`await` is only allowed inside `async` functions and blocks/i.test(d.message)) return false;
+  const primary = d.spans.find((span) => span.is_primary);
+  if (!primary) {
+    plan.residue.push({ file: "?", message: d.message, reason: "E0728 has no primary await-token span" });
+    return true;
+  }
+  const absPath = resolveFilePath(primary.file_name);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) return true;
+  const { src } = loadFile(absPath);
+  const awaitStart = toCharOffset(absPath, primary.byte_start);
+  const awaitEnd = toCharOffset(absPath, primary.byte_end);
+  if (src.slice(awaitStart, awaitEnd) !== "await" || src[awaitStart - 1] !== ".") {
+    plan.residue.push({ file: absPath, message: d.message, reason: `E0728 primary span is not the exact ".await" token at byte [${primary.byte_start},${primary.byte_end})` });
+    return true;
+  }
+  plan.edits.push({
+    file: absPath,
+    start: awaitStart - 1,
+    end: awaitEnd,
+    before: ".await",
+    after: "",
+    kind: "call-remove-await",
+    diagnosticCode: d.code.code,
+    diagnosticMessage: `${d.message} [E0728: compiler-span-keyed removal from a synchronous context]`,
+  });
+  return true;
+}
+
 function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
   if (tryPlanE0053(d, plan)) return;
   if (tryPlanE0733(d, plan)) return;
+  if (tryPlanE0728(d, plan)) return;
 
   const suggestions: Suggestion[] = [];
   collectSuggestions(d, suggestions);
@@ -1955,7 +1986,7 @@ function residueCategory(reason: string): string {
   return "other/unclassified";
 }
 
-async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; target?: string; verbose?: boolean }): Promise<void> {
+async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; libOnly?: boolean; target?: string; verbose?: boolean }): Promise<void> {
   const runId = randomRunId();
   console.log(`[run ${runId}] crate=${crate} dryRun=${opts.dryRun} target=${opts.target ?? "(host)"}`);
 
@@ -1969,7 +2000,7 @@ async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: n
     fnCandidateCache.clear();
     invalidateGlobalAsyncFnIndex();
 
-    const diags = runCargoCheckJson(crate, { tests: true, target: opts.target });
+    const diags = runCargoCheckJson(crate, { tests: !opts.libOnly, libOnly: opts.libOnly, target: opts.target });
     const totalErrors = countErrors(diags);
     const asyncDiags = diags.filter(isAsyncClassDiagnostic);
     const errorDiags = diags.filter((d) => d.level === "error" && !isExcludedDiag(d));
@@ -2643,6 +2674,37 @@ function stripStackedAwaits(dryRun: boolean): void {
 
 //#endregion
 
+//#region Audited pure-file de-async
+
+function deasyncPureFile(file: string, crate: string, dryRun: boolean): void {
+  const absPath = resolveFilePath(file);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) throw new Error(`pure-file target is not an editable repo file: ${absPath}`);
+  const runId = randomRunId();
+  const { src, clean } = loadFile(absPath);
+  const edits: PlannedEdit[] = [];
+  for (const match of clean.matchAll(/\basync\s+fn\b/g)) {
+    const start = match.index!;
+    edits.push({ file: absPath, start, end: start + "async ".length, before: "async ", after: "", kind: "def-remove-async", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact async-fn declaration token" });
+  }
+  for (const match of clean.matchAll(/\.await\b/g)) {
+    const start = match.index!;
+    edits.push({ file: absPath, start, end: start + ".await".length, before: ".await", after: "", kind: "call-remove-await", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact await-expression token" });
+  }
+  for (const match of src.matchAll(/#\[semio_framework_async_macros::async_test\]/g)) {
+    const start = match.index!;
+    edits.push({ file: absPath, start, end: start + match[0].length, before: match[0], after: "#[test]", kind: "test-sync-attribute", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: sync test attribute" });
+  }
+  const byFile = dedupeAndOrderEdits(edits);
+  console.log(`[pure-file ${runId}] ${absPath}: ${edits.length} exact syntax-token edits (dryRun=${dryRun})`);
+  if (dryRun) return;
+  for (const [target, ordered] of byFile) {
+    applyEditsToFile(target, ordered);
+    for (const edit of ordered) appendJournal({ ts: nowIso(), runId, iteration: 1, crate, ...edit });
+  }
+}
+
+//#endregion
+
 //#region CLI
 
 function parseArgs(argv: string[]): { cmd: string; opts: Record<string, string | boolean> } {
@@ -2669,6 +2731,7 @@ async function main(): Promise<void> {
     await runCrate(crate, {
       dryRun: !!opts["dry-run"],
       maxIterations: opts["max-iterations"] ? Number(opts["max-iterations"]) : 20,
+      libOnly: !!opts.lib,
       target: opts.target ? String(opts.target) : undefined,
       verbose: !!opts.verbose,
     });
@@ -2676,6 +2739,13 @@ async function main(): Promise<void> {
   }
   if (cmd === "strip-stacked-awaits") {
     stripStackedAwaits(!!opts["dry-run"]);
+    return;
+  }
+  if (cmd === "deasync-pure-file") {
+    const file = String(opts.file ?? "");
+    const crate = String(opts.crate ?? "");
+    if (!file || !crate) throw new Error("--file=<repo-relative-path> and --crate=<package-name> required");
+    deasyncPureFile(file, crate, !!opts["dry-run"]);
     return;
   }
   if (cmd === "revert") {

@@ -12,14 +12,14 @@
 #[cfg(target_arch = "wasm32")]
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 #[cfg(target_arch = "wasm32")]
+use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
+#[cfg(target_arch = "wasm32")]
+use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
+#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::{
     apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
-#[cfg(target_arch = "wasm32")]
-use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
-#[cfg(target_arch = "wasm32")]
-use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
 
 // #region 🔖️WasmHost
 #[cfg(target_arch = "wasm32")]
@@ -29,6 +29,8 @@ use wasm_bindgen::prelude::*;
 use web_sys::HtmlCanvasElement;
 
 #[cfg(target_arch = "wasm32")]
+use geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
+#[cfg(target_arch = "wasm32")]
 use js_sys::Promise;
 #[cfg(target_arch = "wasm32")]
 use std::cell::RefCell;
@@ -36,8 +38,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::future_to_promise;
-#[cfg(target_arch = "wasm32")]
-use geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]

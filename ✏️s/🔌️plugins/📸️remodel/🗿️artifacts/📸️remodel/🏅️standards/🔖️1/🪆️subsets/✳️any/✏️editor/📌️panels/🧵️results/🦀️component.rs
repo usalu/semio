@@ -1,7 +1,7 @@
 //! 🧵️ Remodel play app panel — the Results tab: the products a run (partially) produced.
 
-use crate::editor::remodel::terminology::RemodelLabels;
 use crate::artifacts::remodel::RemodelSnapshot;
+use crate::editor::remodel::terminology::RemodelLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants

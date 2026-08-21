@@ -1,9 +1,7 @@
 //! 🔍️ Flow play app panel — the active selection's inspector (name, per-kind fields).
 
 use crate::editor::flow::terminology::FlowPlayLabels;
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_INSPECTOR: &str = "flow.play.inspection";

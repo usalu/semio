@@ -60,13 +60,13 @@ fn print_op_args(m: &SemioKitMutation) -> String {
 }
 
 impl protocol::OpBinary for SemioKitMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_op_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use protocol::OpText;
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
@@ -79,7 +79,7 @@ impl protocol::OpBinary for SemioKitMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

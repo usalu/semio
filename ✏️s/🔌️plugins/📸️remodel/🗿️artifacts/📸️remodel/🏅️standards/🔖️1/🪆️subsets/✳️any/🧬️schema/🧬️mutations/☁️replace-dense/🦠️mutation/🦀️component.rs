@@ -2,7 +2,7 @@
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::RemodelMutation;
-use crate::artifacts::remodel::{RemodelSnapshot, DenseCloud};
+use crate::artifacts::remodel::{DenseCloud, RemodelSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

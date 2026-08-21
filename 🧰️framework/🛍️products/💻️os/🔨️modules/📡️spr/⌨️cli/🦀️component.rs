@@ -854,7 +854,10 @@ mod tests {
         }
         if with_checkpoint_and_alternative && !edit_ids.is_empty() {
             appender.append_change(&crate::os_spr::HistoryChange { id: "c0".to_string(), saved_at: "2026-07-27T00:01:00Z".to_string(), edit_ids: edit_ids.clone(), description: None }).await.unwrap();
-            appender.append_checkpoint(&crate::os_spr::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None }).await.unwrap();
+            appender
+                .append_checkpoint(&crate::os_spr::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None })
+                .await
+                .unwrap();
             appender.append_alternative(&crate::os_spr::HistoryAlternative { id: "alt-main".to_string(), name: "main".to_string(), checkpoint_ids: vec!["cp0".to_string()] }).await.unwrap();
             appender.set_active(Some("alt-main")).await.unwrap();
             appender.commit().await.unwrap();

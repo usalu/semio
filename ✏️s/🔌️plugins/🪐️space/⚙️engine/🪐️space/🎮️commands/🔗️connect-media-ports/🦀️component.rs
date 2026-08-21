@@ -26,9 +26,9 @@ pub async fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, Workflow
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::demo_space_projection;
     use crate::engine::space::testkit::{apply_mutations, studio_emit};
     use crate::engine::space::SpaceCommand;
-    use crate::demo_space_projection;
     use semio_framework_os::{register_artifact_descriptor, ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat};
 
     #[semio_framework_async_macros::async_test]

@@ -12,32 +12,36 @@
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
-use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::editor::puzzle5d::commands::{apply_sun, patch_part, patch_grip, patch_fastener, set_grid_snap_enabled, set_grid_factor, set_camera, set_camera_2d, set_camera_3d, zoom_to_selection, apply_board_events, translate_selection, rotate_selection, scale_selection, world_relocate, create_fastener, delete_fastener, retarget_fastener, edit_fastener, proximity_connect, set_lod_mode, add_brush_part, cycle_brush_candidate, register_brush_mesh, set_brush_placement_overlap_budget, set_kind_weight, engagement_control_select, set_suggestion_offset, select_same_kind, set_fixture_json, set_active_example, engagement_input, engagement_submit, engagement_abort, add_node, add_part_kind, delete_selection, duplicate_selection, set_selection_flag, set_active, set_fill_count};
+use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
+use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::editor::puzzle5d::commands::{
+    add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
+    engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active, set_active_example, set_brush_placement_overlap_budget,
+    set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_fixture_json, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, translate_selection, world_relocate, zoom_to_selection,
+};
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
-use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
+use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactPresentation, ConfigView, ArtifactEditor, Editor, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
+    InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod,
+    SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
-use store::EngineHandles;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
@@ -477,9 +481,11 @@ pub async fn part_scale_json(part: &Puzzle5dPart) -> [f64; 3] {
 /// 🎨️ Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
 pub async fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y: f64) {
     let flat_to_world = 1.0 / 48.0;
-    let origin = envelope.document.parts.first().map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| {
-        [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]]
-    });
+    let origin = envelope
+        .document
+        .parts
+        .first()
+        .map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| [peer.part_3d.origin[0] + (x - peer.part_2d.x) * flat_to_world, peer.part_3d.origin[1] - (y - peer.part_2d.y) * flat_to_world, peer.part_3d.origin[2]]);
     let id = next_part_id();
     let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
     let grips = grips_from_templates(&envelope.document, part_kind);
@@ -1486,7 +1492,15 @@ impl Puzzle5dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    async fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, config: &Puzzle5dConfig, interaction: &InteractionView<'_>) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+    async fn handle_action_impl(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        window_id: Option<&str>,
+        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
+        config: &Puzzle5dConfig,
+        interaction: &InteractionView<'_>,
+    ) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
         let before = doc.snapshot.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
@@ -1608,7 +1622,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    async fn copy_fragment( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+    async fn copy_fragment(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let (part_ids, fastener_ids) = puzzle5d_interaction_part_and_fastener_ids(interaction);
         let (parts, fasteners) = copy_selection_local(&document, &part_ids, &fastener_ids);
@@ -1631,7 +1645,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
     /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
     /// them is inert until the next real selection action overwrites it).
-    async fn cut_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle5dMutation> {
+    async fn cut_operations(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle5dMutation> {
         let before = doc.snapshot.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
@@ -1653,7 +1667,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// `fragment`/`placement`), so the new selection can't be threaded through this call; a following
     /// `setSelection` command (which the host already issues after a paste in practice) is what
     /// actually selects the pasted parts now.
-    async fn paste_operations( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
+    async fn paste_operations(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dMutation>, ClipboardError> {
         let expected = Self::clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
@@ -1678,7 +1692,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
-    async fn handle(command: &Puzzle5dCommand, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Puzzle5dCommand,
+        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle5dConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
         with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
     }
 
@@ -1743,7 +1764,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// fan-in from several producers), then bridges the before/after document through
     /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
     /// this never mutates anything directly, only real, undoable operations.
-    async fn import_media( port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -1764,13 +1785,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                         id: parsed_row.id.clone(),
                         name: parsed_row.name,
                         label: parsed_row.label,
-                        representations: parsed_row.mesh_url.map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation {
-                            id: "mesh".into(),
-                            name: "mesh".into(),
-                            url,
-                            mime: "model/gltf-binary".into(),
-                            ..Default::default()
-                        }]).unwrap_or_default(),
+                        representations: parsed_row
+                            .mesh_url
+                            .map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation { id: "mesh".into(), name: "mesh".into(), url, mime: "model/gltf-binary".into(), ..Default::default() }])
+                            .unwrap_or_default(),
                         grips: parsed_row
                             .vortices
                             .into_iter()
@@ -1827,25 +1845,25 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    async fn render( body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode  {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode {
         with_puzzle5d_app(|app| {
-                    let config = cfg.snapshot;
-                    let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
-                    let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
-                    let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
-                    let labels = puzzle5d_labels(config);
-                    match body_key {
-                        board2d::BODY_KEY => board2d::render(&envelope),
-                        world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow()),
-                        document_panel::BODY_KEY => document_panel::render(&envelope, labels),
-                        catalogue::BODY_KEY => catalogue::render(&envelope, labels),
-                        inspection::BODY_KEY => inspection::render(&envelope, labels),
-                        _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-                    }
-            })
+            let config = cfg.snapshot;
+            let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
+            let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
+            let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+            let labels = puzzle5d_labels(config);
+            match body_key {
+                board2d::BODY_KEY => board2d::render(&envelope),
+                world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow()),
+                document_panel::BODY_KEY => document_panel::render(&envelope, labels),
+                catalogue::BODY_KEY => catalogue::render(&envelope, labels),
+                inspection::BODY_KEY => inspection::render(&envelope, labels),
+                _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            }
+        })
     }
 
-    async fn window_engagements( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let labels = puzzle5d_labels(config);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -1863,26 +1881,22 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             .collect()
     }
 
-    async fn window_measures( doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>>  {
+    async fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         with_puzzle5d_app(|app| {
-                    let config = cfg.snapshot;
-                    let labels = puzzle5d_labels(config);
-                    PUZZLE5D_PLAY_WINDOWS
-                        .iter()
-                        .flat_map(|window| {
-                            window_instance_ids(window).into_iter().map(|wid| {
-                                let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
-                                let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
-                                let measures = if *window == board2d::WINDOW_KIND_ID {
-                                    board2d::window_measures(&envelope, &app.precompute.borrow(), labels)
-                                } else {
-                                    world3d::window_measures(&envelope, &app.precompute.borrow(), labels)
-                                };
-                                (wid, measures)
-                            })
-                        })
-                        .collect()
-            })
+            let config = cfg.snapshot;
+            let labels = puzzle5d_labels(config);
+            PUZZLE5D_PLAY_WINDOWS
+                .iter()
+                .flat_map(|window| {
+                    window_instance_ids(window).into_iter().map(|wid| {
+                        let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
+                        let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+                        let measures = if *window == board2d::WINDOW_KIND_ID { board2d::window_measures(&envelope, &app.precompute.borrow(), labels) } else { world3d::window_measures(&envelope, &app.precompute.borrow(), labels) };
+                        (wid, measures)
+                    })
+                })
+                .collect()
+        })
     }
 
     async fn context_menu(
@@ -1896,11 +1910,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let is_de = puzzle5d_is_de_locale(config);
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));
         let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
-        let part_ids: Vec<String> = request
-            .surface
-            .as_ref()
-            .map(|surface| surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == PUZZLE5D_GRANULARITY_PART).flat_map(|g| g.ids.iter().cloned()).collect())
-            .unwrap_or_default();
+        let part_ids: Vec<String> =
+            request.surface.as_ref().map(|surface| surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == PUZZLE5D_GRANULARITY_PART).flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
         puzzle5d_context_menu_items(&envelope, &part_ids, labels, is_de, registry)
     }
 }
@@ -2108,8 +2119,22 @@ pub(crate) mod testkit {
         // setInteractionGranularity to this reserved set.
         if matches!(
             action,
-            "undo" | "redo" | "checkpoint" | "alternative" | "revertToCommand" | "historyFilter" | "noteShellCommand" | "copy" | "cut" | "paste"
-                | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
+            "undo"
+                | "redo"
+                | "checkpoint"
+                | "alternative"
+                | "revertToCommand"
+                | "historyFilter"
+                | "noteShellCommand"
+                | "copy"
+                | "cut"
+                | "paste"
+                | "interactionSelect"
+                | "interactionHover"
+                | "clearSelection"
+                | "selectAll"
+                | "setSelectionMode"
+                | "setInteractionGranularity"
         ) {
             return app.handle_action(action, args, &meta("local"));
         }

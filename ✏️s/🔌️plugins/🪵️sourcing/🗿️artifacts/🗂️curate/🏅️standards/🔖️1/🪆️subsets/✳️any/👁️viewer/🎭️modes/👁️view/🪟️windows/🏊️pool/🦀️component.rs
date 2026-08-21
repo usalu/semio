@@ -24,10 +24,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// `TableCell::{Text,Number,Stepper,Buttons}` — a viewer renders nothing interactive per cell).
 pub async fn view_model(document: &CurateSnapshot) -> TableView {
     let stock = stock_of(document);
-    let rows = stock
-        .iter()
-        .map(|kind| vec![kind.id.clone(), kind.name.clone(), kind.module_id.clone(), kind.typology_path.join(" / "), kind.availability.to_string()])
-        .collect();
+    let rows = stock.iter().map(|kind| vec![kind.id.clone(), kind.name.clone(), kind.module_id.clone(), kind.typology_path.join(" / "), kind.availability.to_string()]).collect();
     TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
 }
 

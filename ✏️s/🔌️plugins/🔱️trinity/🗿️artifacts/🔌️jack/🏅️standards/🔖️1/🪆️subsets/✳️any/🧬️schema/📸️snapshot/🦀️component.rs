@@ -15,15 +15,18 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackSnapshot {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub name: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub name: String,
     #[state(artifact)]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[state(artifact)]
     #[serde(default)]
     pub manifest: Manifest,
-    #[state(artifact)] pub camera: Camera,
+    #[state(artifact)]
+    pub camera: Camera,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: JackContentChild,

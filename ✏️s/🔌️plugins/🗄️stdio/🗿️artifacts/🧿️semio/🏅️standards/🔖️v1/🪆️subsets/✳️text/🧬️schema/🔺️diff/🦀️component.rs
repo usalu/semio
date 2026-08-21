@@ -41,7 +41,7 @@ impl SemioTextDiff {
 }
 
 impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
-    async fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
+    fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.runs {
             next.runs = list.values.clone();
@@ -49,7 +49,7 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.runs.is_some() {
             self.runs = other.runs;
         }
@@ -62,13 +62,13 @@ impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
 /// mutable field, so a change is fully described by "the new/old `runs` value", same shape every
 /// mutation triad's own `🔺️diff` leaf already produces.
 impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
-    async fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
+    fn between(base: &SemioTextSnapshot, other: &SemioTextSnapshot) -> Self {
         SemioTextDiff { runs: (base.runs != other.runs).then(|| SemioTextRunList { values: other.runs.clone() }) }
     }
-    async fn inverse(&self, base: &SemioTextSnapshot) -> Self {
+    fn inverse(&self, base: &SemioTextSnapshot) -> Self {
         SemioTextDiff { runs: self.runs.as_ref().map(|_| SemioTextRunList { values: base.runs.clone() }) }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -159,10 +159,10 @@ fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioTextDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_text_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_text_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -171,7 +171,7 @@ impl protocol::DiffCodec for SemioTextDiff {
     /// (reusing the snapshot facet's own `write_run`/`read_run`) rather than a text-blob-in-binary
     /// shortcut — `text`'s diff has exactly one collection field, so no opaque multi-field payload
     /// chain is needed.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::write_run;
         let presence: u8 = if self.runs.is_some() { 0b0000_0001 } else { 0 };
@@ -184,7 +184,7 @@ impl protocol::DiffCodec for SemioTextDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::read_run;
         if bytes.len() < 2 {
@@ -194,9 +194,9 @@ impl protocol::DiffCodec for SemioTextDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]).await;
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let runs = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff runs count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff runs count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 values.push(read_run(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff run", offset: 2, detail: e })?);

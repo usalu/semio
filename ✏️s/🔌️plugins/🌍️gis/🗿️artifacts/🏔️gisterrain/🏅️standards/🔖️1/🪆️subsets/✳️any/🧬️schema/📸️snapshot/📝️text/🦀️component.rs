@@ -1,12 +1,10 @@
 //! 📜️ GIS terrain artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 
@@ -27,8 +25,7 @@ pub async fn print_dsl(document: &GisTerrainSnapshot) -> String {
 #[cfg(test)]
 mod tests {
 
-    
-            use super::*;
+    use super::*;
 
     #[semio_framework_async_macros::async_test]
     async fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {

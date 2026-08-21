@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdatePresentation` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block2d::diff::Block2dDiff;
+use crate::artifacts::block2d::Block2dPresentation;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::{Block2dPresentation};
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::UpdatePresentation, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

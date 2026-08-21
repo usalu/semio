@@ -1,13 +1,11 @@
 //! 🗣️ Puzzle 3d artifact — the textual `.puzzle3d` document grammar surface and its laws, plus the
 //! two handcrafted example fixtures the play app's example picker loads.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
@@ -30,7 +28,9 @@ pub async fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex};
+    use crate::artifacts::puzzle3d::{
+        Puzzle3dAttraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex,
+    };
 
     /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
@@ -69,7 +69,7 @@ mod tests {
             hidden: false,
             locked: false,
         });
-        projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0});
+        projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
         projection.target_volumes.push(Puzzle3dTargetVolume { id: "tv1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: Some(Puzzle3dScale::Vec3([2.0, 3.0, 4.0])), hidden: false, locked: false });
         projection.references.push(Puzzle3dReference {
             id: "r1".into(),
@@ -79,7 +79,10 @@ mod tests {
             locked: false,
             hidden: false,
         });
-        projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::artifacts::puzzle3d::Puzzle3dCompatSpecificity::Vortex }] };
+        projection.meta = Puzzle3dMeta {
+            kind_catalogs: None,
+            kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::artifacts::puzzle3d::Puzzle3dCompatSpecificity::Vortex }],
+        };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
@@ -105,7 +108,5 @@ mod tests {
     }
     //#endregion 🔖️CommandEnvelopeTests
 }
-
-
 
 //#endregion 🧪️Tests

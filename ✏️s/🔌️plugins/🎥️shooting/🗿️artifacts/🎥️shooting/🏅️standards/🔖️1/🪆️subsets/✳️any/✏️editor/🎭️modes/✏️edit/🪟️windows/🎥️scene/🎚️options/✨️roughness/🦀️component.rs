@@ -1,8 +1,8 @@
 //! ✨️ Scene-window option — the material-roughness slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_material_roughness`.
 
-use crate::editor::shooting::terminology::ShootingLabels;
 use crate::artifacts::shooting::ShootingSnapshot;
+use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

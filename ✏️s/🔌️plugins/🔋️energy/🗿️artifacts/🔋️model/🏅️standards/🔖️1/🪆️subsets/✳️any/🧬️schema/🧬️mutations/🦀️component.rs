@@ -39,7 +39,7 @@ pub enum EnergyModelMutation {
 mod tests {
     use super::*;
     use protocol::MutationDiff;
-    
+
     use protocol::Mutation;
 
     /// 🧾️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `new_model_json` must be a FULL,
@@ -54,9 +54,7 @@ mod tests {
     }
 
     async fn every_mutation() -> Vec<EnergyModelMutation> {
-        vec![EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel {
-            new_model_json: demo_model_json("demo"),
-        })]
+        vec![EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("demo") })]
     }
 
     async fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {

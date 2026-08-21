@@ -543,89 +543,240 @@ impl Default for ShellState {
 #[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellCommand {
     // ── Plugin runtime — audit UPSERT_LOADED_PLUGIN/REMOVE_LOADED_PLUGIN/SET_PLUGIN_STATUS/SET_PLUGIN_SUPERVISOR/SET_SESSION/SET_ERROR
-    RegisterLoadedPlugin { plugin: LoadedPlugin },
-    UnregisterLoadedPlugin { plugin_id: String },
-    SetPluginStatus { plugin_id: String, status: PluginPanelStatus },
-    SetPluginSupervisorState { plugin_id: String, state: PluginSupervisorState },
-    SetActiveSession { session: Option<ActiveSession> },
-    SetSessionError { error: Option<String> },
+    RegisterLoadedPlugin {
+        plugin: LoadedPlugin,
+    },
+    UnregisterLoadedPlugin {
+        plugin_id: String,
+    },
+    SetPluginStatus {
+        plugin_id: String,
+        status: PluginPanelStatus,
+    },
+    SetPluginSupervisorState {
+        plugin_id: String,
+        state: PluginSupervisorState,
+    },
+    SetActiveSession {
+        session: Option<ActiveSession>,
+    },
+    SetSessionError {
+        error: Option<String>,
+    },
 
     // ── App labels — audit SET_APP_LABELS_OVERLAY
-    SetAppLabelOverride { app_id: String, label_key: String, value: Option<String> },
+    SetAppLabelOverride {
+        app_id: String,
+        label_key: String,
+        value: Option<String>,
+    },
 
     // ── Action rail — audit SET_ACTION_PANE_FOLDED/SET_ACTION_PANE_EXPANDED/STAGE_ACTION_ARG/RESET_ACTION_ARGS/SET_ACTIVE_UTILITY/SET_ACTIVE_TOOL
-    SetActionPaneFolded { window_id: String, folded: bool },
-    SetActionPaneExpanded { window_id: String, action_id: Option<String> },
-    StageActionArg { window_id: String, action_id: String, arg_id: String, #[cfg_attr(feature = "typegen", ts(type = "unknown"))] value: JsonValue },
-    ResetActionArgs { window_id: String, action_id: String },
-    SetActiveUtility { window_id: String, utility_id: Option<String> },
-    SetActiveTool { tool_id: Option<String> },
+    SetActionPaneFolded {
+        window_id: String,
+        folded: bool,
+    },
+    SetActionPaneExpanded {
+        window_id: String,
+        action_id: Option<String>,
+    },
+    StageActionArg {
+        window_id: String,
+        action_id: String,
+        arg_id: String,
+        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+        value: JsonValue,
+    },
+    ResetActionArgs {
+        window_id: String,
+        action_id: String,
+    },
+    SetActiveUtility {
+        window_id: String,
+        utility_id: Option<String>,
+    },
+    SetActiveTool {
+        tool_id: Option<String>,
+    },
 
     // ── Command palette — audit SET_COMMAND_EXPANDED/STAGE_COMMAND_ARG/RESET_COMMAND_ARGS
-    SetCommandExpanded { command_id: Option<String> },
-    StageCommandArg { command_id: String, arg_id: String, #[cfg_attr(feature = "typegen", ts(type = "unknown"))] value: JsonValue },
-    ResetCommandArgs { command_id: String },
+    SetCommandExpanded {
+        command_id: Option<String>,
+    },
+    StageCommandArg {
+        command_id: String,
+        arg_id: String,
+        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+        value: JsonValue,
+    },
+    ResetCommandArgs {
+        command_id: String,
+    },
 
     // ── Panel layout — audit SET_PANEL_VISIBLE/SET_PANEL_SIZE/SET_PANEL_PATH/SET_DOCK_OVERRIDE/SET_PANEL_PATH_MEMORY/SET_TREE_OPEN_STATE/HYDRATE_DOCK_UI/RESET_DOCK/SET_ACTIVE_WINDOW_ID/SET_SHELL_LAYOUT/SET_ACTIVE_EXAMPLE_ID/SET_MOBILE_PANEL_PATH/SET_MOBILE_PANEL_VISIBLE/SET_EXTRA_WINDOW_INSTANCES/SET_WINDOW_TITLE/SET_WINDOW_ICON
-    SetPanelVisible { anchor: Anchor, visible: bool },
-    SetPanelSize { anchor: Anchor, size: f32 },
-    SetPanelPath { anchor: Anchor, path: Vec<String> },
-    SetDockOverride { dock: Option<LayoutNode> },
-    SetPanelPathMemory { panel_key: String, path: Option<String> },
-    SetTreeOpenState { tree_id: String, open: bool },
-    HydrateDockUi { dock: Option<DockUiState> },
+    SetPanelVisible {
+        anchor: Anchor,
+        visible: bool,
+    },
+    SetPanelSize {
+        anchor: Anchor,
+        size: f32,
+    },
+    SetPanelPath {
+        anchor: Anchor,
+        path: Vec<String>,
+    },
+    SetDockOverride {
+        dock: Option<LayoutNode>,
+    },
+    SetPanelPathMemory {
+        panel_key: String,
+        path: Option<String>,
+    },
+    SetTreeOpenState {
+        tree_id: String,
+        open: bool,
+    },
+    HydrateDockUi {
+        dock: Option<DockUiState>,
+    },
     ResetDock,
-    FocusWindow { window_id: Option<String> },
-    SetShellLayout { layout: Option<LayoutNode> },
-    SetActiveExample { example_id: String },
-    SetMobilePanelPath { path: Vec<String> },
-    SetMobilePanelVisible { visible: bool },
-    SetExtraWindows { windows: Vec<ExtraWindowInstance> },
-    SetWindowTitle { window_id: String, title: String },
-    SetWindowIcon { window_id: String, icon: IconName },
+    FocusWindow {
+        window_id: Option<String>,
+    },
+    SetShellLayout {
+        layout: Option<LayoutNode>,
+    },
+    SetActiveExample {
+        example_id: String,
+    },
+    SetMobilePanelPath {
+        path: Vec<String>,
+    },
+    SetMobilePanelVisible {
+        visible: bool,
+    },
+    SetExtraWindows {
+        windows: Vec<ExtraWindowInstance>,
+    },
+    SetWindowTitle {
+        window_id: String,
+        title: String,
+    },
+    SetWindowIcon {
+        window_id: String,
+        icon: IconName,
+    },
 
     // ── Overlays / dialogs — audit SET_SEARCH_OPEN/SET_FIND_OPEN/AUTO_START_INTRODUCTION/SET_INTRODUCTION_STEP/COMPLETE_INTRODUCTION_INTERACTION/SET_DIALOG/SET_TRANSIENT_NOTICE/SET_OPEN_WITH_FOCUS_ROLE
-    SetSearchOpen { open: bool },
-    SetFindOpen { open: bool },
-    AutoStartIntroduction { key: String },
-    SetIntroductionStep { step_index: Option<u32> },
-    CompleteIntroductionInteraction { interaction_index: u32 },
-    OpenDialog { dialog_id: String, #[cfg_attr(feature = "typegen", ts(type = "unknown"))] seed_args: Option<JsonValue> },
-    CloseDialog { dialog_id: Option<String> },
-    ShowTransientNotice { notice: TransientNotice },
+    SetSearchOpen {
+        open: bool,
+    },
+    SetFindOpen {
+        open: bool,
+    },
+    AutoStartIntroduction {
+        key: String,
+    },
+    SetIntroductionStep {
+        step_index: Option<u32>,
+    },
+    CompleteIntroductionInteraction {
+        interaction_index: u32,
+    },
+    OpenDialog {
+        dialog_id: String,
+        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+        seed_args: Option<JsonValue>,
+    },
+    CloseDialog {
+        dialog_id: Option<String>,
+    },
+    ShowTransientNotice {
+        notice: TransientNotice,
+    },
     DismissTransientNotice,
-    SetOpenWithFocusRole { role: Option<AppRole> },
+    SetOpenWithFocusRole {
+        role: Option<AppRole>,
+    },
 
     // ── Tutorial (semantic subset) — audit SET_TUTORIAL
-    SetActiveTutorial { tutorial_id: Option<String> },
+    SetActiveTutorial {
+        tutorial_id: Option<String>,
+    },
 
     // ── UI preferences — audit SET_UI_APPEARANCE/SET_UI_LAYOUT/SET_UI_DRIVER_ID/SET_UI_CUSTOM_DRIVERS/SET_UI_DRIVER_DRAFT/SET_UI_LOCALE/SET_UI_TERMINOLOGY/SET_UI_THEME_ID/SET_UI_CUSTOM_THEMES/SET_UI_THEME_DRAFT/SET_UI_KEYBINDING_OVERRIDES
-    SetUiAppearance { appearance: UiAppearance },
-    SetUiLayout { layout: UiChromeLayout },
-    SetUiDriver { driver_id: String },
-    SetUiCustomDriver { driver_id: String, driver: Option<UiDriver> },
-    SetUiDriverDraft { draft: Option<UiDriver> },
-    SetUiLocale { locale: UiLocale },
-    SetUiTerminology { terminology_id: String },
-    SetUiTheme { theme_id: String },
-    SetUiCustomTheme { theme_id: String, theme: Option<UiTheme> },
-    SetUiThemeDraft { draft: Option<UiTheme> },
-    SetUiKeybindingOverride { control_id: String, keys: Option<String> },
+    SetUiAppearance {
+        appearance: UiAppearance,
+    },
+    SetUiLayout {
+        layout: UiChromeLayout,
+    },
+    SetUiDriver {
+        driver_id: String,
+    },
+    SetUiCustomDriver {
+        driver_id: String,
+        driver: Option<UiDriver>,
+    },
+    SetUiDriverDraft {
+        draft: Option<UiDriver>,
+    },
+    SetUiLocale {
+        locale: UiLocale,
+    },
+    SetUiTerminology {
+        terminology_id: String,
+    },
+    SetUiTheme {
+        theme_id: String,
+    },
+    SetUiCustomTheme {
+        theme_id: String,
+        theme: Option<UiTheme>,
+    },
+    SetUiThemeDraft {
+        draft: Option<UiTheme>,
+    },
+    SetUiKeybindingOverride {
+        control_id: String,
+        keys: Option<String>,
+    },
 
     // ── Sync — audit SET_SYNC_BACKBONE_URI/SET_SYNC_CARD_KIND/SET_SYNC_DRAFT_PATH/SET_SYNC_STATUS_FOR_DOCUMENT
-    SetSyncBackboneUri { uri: Option<String> },
-    SetSyncCardKind { kind: Option<SyncCardKind> },
-    SetSyncDraftPath { path: String },
-    SetDocumentSyncStatus { document_id: String, status: ArtifactSyncStatus },
+    SetSyncBackboneUri {
+        uri: Option<String>,
+    },
+    SetSyncCardKind {
+        kind: Option<SyncCardKind>,
+    },
+    SetSyncDraftPath {
+        path: String,
+    },
+    SetDocumentSyncStatus {
+        document_id: String,
+        status: ArtifactSyncStatus,
+    },
 
     // ── Merge / conflicts — audit SET_MERGE_POLICY/SET_CONFLICTS/SET_SELECTED_CONFLICT_ID
-    SetMergePolicy { policy: MergePolicy },
-    SetConflicts { conflicts: Vec<Conflict> },
-    SelectConflict { conflict_id: Option<String> },
+    SetMergePolicy {
+        policy: MergePolicy,
+    },
+    SetConflicts {
+        conflicts: Vec<Conflict>,
+    },
+    SelectConflict {
+        conflict_id: Option<String>,
+    },
 
     // ── Host prefs — ShellHost `scope`/`openingPreferences` useState (audit §2)
-    SetStorageScope { scope: ShellScope },
-    SetOpeningPreference { role: String, dialect_id: Option<String> },
+    SetStorageScope {
+        scope: ShellScope,
+    },
+    SetOpeningPreference {
+        role: String,
+        dialect_id: Option<String>,
+    },
 }
 //#endregion 🎮️ShellCommand
 
@@ -651,14 +802,28 @@ pub enum ShellEvent {
     },
     /// Focus moved — either directly (`FocusWindow`) or automatically (the previously-focused
     /// window disappeared from `SetExtraWindows`'s new list).
-    WindowFocusChanged { previous: Option<String>, current: Option<String> },
+    WindowFocusChanged {
+        previous: Option<String>,
+        current: Option<String>,
+    },
     /// `SetActiveTool` cleared a window's active utility for mode↔tool mutual exclusion.
-    ActiveUtilityChanged { window_id: String, previous: Option<String>, current: Option<String> },
+    ActiveUtilityChanged {
+        window_id: String,
+        previous: Option<String>,
+        current: Option<String>,
+    },
     /// `SetActiveUtility` cleared the active tool for mode↔tool mutual exclusion.
-    ActiveToolChanged { previous: Option<String>, current: Option<String> },
+    ActiveToolChanged {
+        previous: Option<String>,
+        current: Option<String>,
+    },
     DockReset,
-    DialogOpened { dialog_id: String },
-    DialogClosed { dialog_id: String },
+    DialogOpened {
+        dialog_id: String,
+    },
+    DialogClosed {
+        dialog_id: String,
+    },
 }
 //#endregion 📣️ShellEvent
 
@@ -1508,7 +1673,13 @@ mod tests {
             s.active_window_id = Some("w2".to_string());
             write_ok("focus-after-closing-focused-window", s, ShellCommand::SetExtraWindows { windows: vec![window("w1")] });
         }
-        write_ok("set-shell-layout", base.clone(), ShellCommand::SetShellLayout { layout: Some(LayoutNode::Split { orientation: SplitOrientation::Horizontal, children: vec![LayoutNode::Leaf { window_id: "w1".to_string() }, LayoutNode::Leaf { window_id: "w2".to_string() }], sizes: vec![0.5, 0.5] }) });
+        write_ok(
+            "set-shell-layout",
+            base.clone(),
+            ShellCommand::SetShellLayout {
+                layout: Some(LayoutNode::Split { orientation: SplitOrientation::Horizontal, children: vec![LayoutNode::Leaf { window_id: "w1".to_string() }, LayoutNode::Leaf { window_id: "w2".to_string() }], sizes: vec![0.5, 0.5] }),
+            },
+        );
         write_ok("set-active-example", base.clone(), ShellCommand::SetActiveExample { example_id: "gallery.chair".to_string() });
         write_ok("set-mobile-panel-path", base.clone(), ShellCommand::SetMobilePanelPath { path: vec!["home".to_string()] });
         write_ok("set-mobile-panel-visible", base.clone(), ShellCommand::SetMobilePanelVisible { visible: true });
@@ -1548,12 +1719,20 @@ mod tests {
         write_ok("set-ui-appearance", base.clone(), ShellCommand::SetUiAppearance { appearance: UiAppearance::Dark });
         write_ok("set-ui-layout", base.clone(), ShellCommand::SetUiLayout { layout: UiChromeLayout::Compact });
         write_ok("set-ui-driver", base.clone(), ShellCommand::SetUiDriver { driver_id: "default".to_string() });
-        write_ok("set-ui-custom-driver", base.clone(), ShellCommand::SetUiCustomDriver { driver_id: "custom-1".to_string(), driver: Some(UiDriver { driver_id: "custom-1".to_string(), label: "My Driver".to_string(), config: serde_json::json!({}) }) });
+        write_ok(
+            "set-ui-custom-driver",
+            base.clone(),
+            ShellCommand::SetUiCustomDriver { driver_id: "custom-1".to_string(), driver: Some(UiDriver { driver_id: "custom-1".to_string(), label: "My Driver".to_string(), config: serde_json::json!({}) }) },
+        );
         write_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
         write_ok("set-ui-locale", base.clone(), ShellCommand::SetUiLocale { locale: UiLocale::De });
         write_ok("set-ui-terminology", base.clone(), ShellCommand::SetUiTerminology { terminology_id: "architecture".to_string() });
         write_ok("set-ui-theme", base.clone(), ShellCommand::SetUiTheme { theme_id: "mono".to_string() });
-        write_ok("set-ui-custom-theme", base.clone(), ShellCommand::SetUiCustomTheme { theme_id: "custom-1".to_string(), theme: Some(UiTheme { theme_id: "custom-1".to_string(), label: "My Theme".to_string(), tokens: HashMap::from([("accent".to_string(), "#f00".to_string())]) }) });
+        write_ok(
+            "set-ui-custom-theme",
+            base.clone(),
+            ShellCommand::SetUiCustomTheme { theme_id: "custom-1".to_string(), theme: Some(UiTheme { theme_id: "custom-1".to_string(), label: "My Theme".to_string(), tokens: HashMap::from([("accent".to_string(), "#f00".to_string())]) }) },
+        );
         write_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), tokens: HashMap::new() }) });
         write_ok("set-ui-keybinding-override", base.clone(), ShellCommand::SetUiKeybindingOverride { control_id: "os.toggleFullscreen".to_string(), keys: Some("Cmd+Ctrl+F".to_string()) });
         write_ok("set-sync-backbone-uri", base.clone(), ShellCommand::SetSyncBackboneUri { uri: Some("hub://space/doc".to_string()) });
@@ -1613,7 +1792,8 @@ mod tests {
         }
 
         let dir: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures");
-        let entries: Vec<PathBuf> = fs::read_dir(&dir).expect("fixtures dir must exist — run `cargo test --ignored write_fixtures` first").filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json")).collect();
+        let entries: Vec<PathBuf> =
+            fs::read_dir(&dir).expect("fixtures dir must exist — run `cargo test --ignored write_fixtures` first").filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json")).collect();
         assert!(!entries.is_empty(), "no fixtures found in {}", dir.display());
 
         let mut checked = 0usize;

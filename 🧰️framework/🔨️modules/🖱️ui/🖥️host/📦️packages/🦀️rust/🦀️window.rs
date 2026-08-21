@@ -365,7 +365,17 @@ mod native {
     impl<D: WindowDelegate> NativeHost<D> {
         // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn new(delegate: D) -> Self {
-            Self { window: None, pointers: PointerRegistry::new(), modifiers: ui_render::EventModifiers::default(), last_pointer_pos: (0.0, 0.0), last_cursor: None, clock: MonotonicClock::new(), pending_reason: None, delegate, _ui_token: crate::enqueue::UiThreadToken::mint() }
+            Self {
+                window: None,
+                pointers: PointerRegistry::new(),
+                modifiers: ui_render::EventModifiers::default(),
+                last_pointer_pos: (0.0, 0.0),
+                last_cursor: None,
+                clock: MonotonicClock::new(),
+                pending_reason: None,
+                delegate,
+                _ui_token: crate::enqueue::UiThreadToken::mint(),
+            }
         }
 
         // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -632,7 +642,16 @@ mod browser {
 
     impl<D: WindowDelegate + 'static> CanvasHost<D> {
         pub fn new(canvas: web_sys::HtmlCanvasElement, delegate: D) -> Self {
-            let state = Rc::new(RefCell::new(CanvasHostState { canvas: canvas.clone(), clock: BrowserClock::new(), raf_pending: false, document_hidden: false, last_cursor: None, raf_closure: None, delegate, _ui_token: crate::enqueue::UiThreadToken::mint() }));
+            let state = Rc::new(RefCell::new(CanvasHostState {
+                canvas: canvas.clone(),
+                clock: BrowserClock::new(),
+                raf_pending: false,
+                document_hidden: false,
+                last_cursor: None,
+                raf_closure: None,
+                delegate,
+                _ui_token: crate::enqueue::UiThreadToken::mint(),
+            }));
 
             let raf_state = state.clone();
             let raf_closure = Closure::wrap(Box::new(move |timestamp_ms: f64| on_animation_frame(&raf_state, timestamp_ms)) as Box<dyn FnMut(f64)>);

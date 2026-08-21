@@ -86,10 +86,7 @@ mod tests {
 
     async fn chain_snapshot() -> FlowSnapshot {
         let mut fixture = FlowSnapshot::default().to_fixture();
-        fixture.widgets = vec![
-            Widget::InputSlider { id: "a".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
-            Widget::InputSlider { id: "b".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
-        ];
+        fixture.widgets = vec![Widget::InputSlider { id: "a".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }, Widget::InputSlider { id: "b".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }];
         fixture.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
         FlowSnapshot::from_fixture(fixture)
     }

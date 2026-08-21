@@ -11,9 +11,6 @@ pub async fn diff(payload: &CreateRoute, base: &GisMapSnapshot) -> protocol::Mut
     if base.routes.iter().any(|feature| feature.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A route with id \"{}\" already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(GisMapDiff {
-        routes: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(GisMapDiff { routes: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

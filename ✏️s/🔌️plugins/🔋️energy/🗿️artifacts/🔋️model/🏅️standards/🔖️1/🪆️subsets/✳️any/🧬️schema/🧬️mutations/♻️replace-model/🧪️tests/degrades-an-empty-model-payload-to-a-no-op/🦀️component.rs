@@ -46,7 +46,11 @@ async fn the_degraded_replace_leaves_both_child_handles_alone() {
     let base = before();
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("replace-model applies to its committed before-document");
     assert_eq!(applied, expected_after(), "replace-model/degrades-an-empty-model-payload-to-a-no-op: the no-op replace must reproduce the committed after-snapshot");
-    assert_eq!((applied.structure.child_id.as_str(), applied.zones.child_id.as_str()), (base.structure.child_id.as_str(), base.zones.child_id.as_str()), "replace-model/degrades-an-empty-model-payload-to-a-no-op: a payload carrying no model must not re-mint structure or zones");
+    assert_eq!(
+        (applied.structure.child_id.as_str(), applied.zones.child_id.as_str()),
+        (base.structure.child_id.as_str(), base.zones.child_id.as_str()),
+        "replace-model/degrades-an-empty-model-payload-to-a-no-op: a payload carrying no model must not re-mint structure or zones"
+    );
 }
 
 /// ↩️ `replace-model` is its own inverse partner: the undo re-serializes the model read out of
@@ -58,7 +62,11 @@ async fn the_inverse_reserializes_the_base_model() {
     let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation(), &base);
     assert_eq!(inverse.len(), 1, "replace-model/degrades-an-empty-model-payload-to-a-no-op: replace is its own inverse partner, so exactly one undo step");
     let EnergyModelMutation::ReplaceModel(undo) = &inverse[0];
-    assert_eq!(undo.new_model_json, serde_json::to_string(&crate::model::Model::default()).expect("the default model serializes"), "replace-model/degrades-an-empty-model-payload-to-a-no-op: the undo must carry BASE's own model re-serialized in full, never the forward payload");
+    assert_eq!(
+        undo.new_model_json,
+        serde_json::to_string(&crate::model::Model::default()).expect("the default model serializes"),
+        "replace-model/degrades-an-empty-model-payload-to-a-no-op: the undo must carry BASE's own model re-serialized in full, never the forward payload"
+    );
     let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward replace-model applies");
     for step in &inverse {
         let redo = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &snapshot);
@@ -95,7 +103,11 @@ async fn declared_outcome_holds() {
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "replace-model/degrades-an-empty-model-payload-to-a-no-op: an unchanged model is a Warning");
     assert_eq!(produced.messages().len(), 1, "replace-model/degrades-an-empty-model-payload-to-a-no-op: exactly one diagnostic is raised");
-    assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "replace-model/degrades-an-empty-model-payload-to-a-no-op: raised diagnostic code differs from the declared one");
+    assert_eq!(
+        produced.messages()[0].code.0.as_str(),
+        declared["messages"][0]["code"].as_str().expect("declared message code is a string"),
+        "replace-model/degrades-an-empty-model-payload-to-a-no-op: raised diagnostic code differs from the declared one"
+    );
 }
 
 /// 🔺️ The committed diff is `EnergyModelDiff`'s all-null default: the oracle returns before it ever

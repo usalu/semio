@@ -133,7 +133,11 @@ async fn declared_outcome_holds() {
     assert_eq!(messages[0].code.0, "mutation.no-op", "a block already at the requested index is a no-op, never a target-missing");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "a redundant in-step move must not escalate to Error or Fatal");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("move", "block", "move-block-to-step", "MovedBlockToStep"), "the fixture must be bound to move-block-to-step's own descriptor — `move` because it crosses a container boundary, unlike a plain `reorder`");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("move", "block", "move-block-to-step", "MovedBlockToStep"),
+        "the fixture must be bound to move-block-to-step's own descriptor — `move` because it crosses a container boundary, unlike a plain `reorder`"
+    );
 }
 
 /// 🔺️ The delta a redundant in-step move produces is exactly the committed all-null `FormsDiff`:

@@ -10,16 +10,14 @@
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`. Its
 //! WASM bridge moved to `✏️editor/🌉️wasm/🦀️component.rs`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
-use crate::artifacts::present::schema::{empty_present_snapshot, PresentError};
 use crate::artifacts::present::schema::mutations::PresentMutation;
+use crate::artifacts::present::schema::{empty_present_snapshot, PresentError};
 use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use protocol::OpBinary;
 use store::{create_document_envelope, materialize_document_snapshot, ArtifactEnvelope, ArtifactStore};
@@ -83,7 +81,10 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile {
+                    index: 0,
+                    tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
+                })],
                 description: None,
             })
             .expect("apply");
@@ -96,7 +97,10 @@ mod tests {
         let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
-                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile {
+                    index: 0,
+                    tile: crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
+                })],
                 description: None,
             })
             .expect("apply");

@@ -7,13 +7,11 @@
 //! codec — is an APP concern, not an artifact one: it lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::sequence::schema::mutations::SequenceMutation;
 use protocol::OpBinary;
@@ -57,10 +55,7 @@ mod tests {
         let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         doc_store
-            .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false })],
-                description: None,
-            })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false })], description: None })
             .expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store);
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store);

@@ -120,10 +120,7 @@ mod tests {
     use protocol::Inference;
 
     async fn picked_snapshot() -> CurateSnapshot {
-        CurateSnapshot {
-            curated: vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 4 }, CuratedItem { object_id: "window-fixed-150x150".into(), count: 6 }],
-            ..CurateSnapshot::default()
-        }
+        CurateSnapshot { curated: vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 4 }, CuratedItem { object_id: "window-fixed-150x150".into(), count: 6 }], ..CurateSnapshot::default() }
     }
 
     #[semio_framework_async_macros::async_test]

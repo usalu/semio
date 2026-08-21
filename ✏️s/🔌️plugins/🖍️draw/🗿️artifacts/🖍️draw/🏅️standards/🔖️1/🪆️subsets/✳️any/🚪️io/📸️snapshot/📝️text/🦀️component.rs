@@ -1,12 +1,10 @@
 //! 📜️ Draw artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::draw::DrawSnapshot;
 
@@ -20,26 +18,20 @@ pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples
 /// the `DrawSnapshot` struct and its `Default` impl).
 impl store::ArtifactDsl for DrawSnapshot {
     const EXTENSION: &'static str = "draw";
-    async fn envelope_id() -> &'static str { "draw.draw" }
+    async fn envelope_id() -> &'static str {
+        "draw.draw"
+    }
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -117,7 +109,7 @@ mod tests {
             id: "dsl-fixture".into(),
             title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
             layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
-            assets: assets,
+            assets,
             artboard: Some(DrawArtboard { width: 640.0, height: 480.0 }),
         }
     }

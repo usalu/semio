@@ -1,9 +1,9 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `reorganize`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::artifacts::jack::mutations::move_node;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node};
+use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 async fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {

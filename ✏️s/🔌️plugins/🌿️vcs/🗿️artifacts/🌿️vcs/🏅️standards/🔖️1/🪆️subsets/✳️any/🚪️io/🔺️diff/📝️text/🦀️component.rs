@@ -13,40 +13,21 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub use crate::artifacts::vcs::schema::diff::*;
 
 //#region 🔖️Apply
-pub async fn apply_tags_delta(
-    tags: &[String],
-    delta: &VcsTagsDelta,
-) -> protocol::MutationApplyResult<Vec<String>> {
+pub async fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> protocol::MutationApplyResult<Vec<String>> {
     for (index, tag) in delta.removed.iter().enumerate() {
         if !tags.contains(tag) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed tag does not exist",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed tag does not exist").at(["removed".to_string(), index.to_string()]));
         }
         if delta.removed[..index].contains(tag) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "tag is removed more than once",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "tag is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
     }
     for (index, tag) in delta.added.iter().enumerate() {
         if tags.contains(tag) || delta.added[..index].contains(tag) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "added tag already exists",
-            )
-            .at(["added".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added tag already exists").at(["added".to_string(), index.to_string()]));
         }
         if delta.removed.contains(tag) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.conflicting-target",
-                "tag cannot be removed and added",
-            )
-            .at(["added".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "tag cannot be removed and added").at(["added".to_string(), index.to_string()]));
         }
     }
     let mut next = tags.to_vec();
@@ -95,8 +76,7 @@ impl VcsDiff {
                 next.status = status.clone();
             }
             if let Some(delta) = &self.tags {
-                next.tags = apply_tags_delta(&next.tags, delta)
-                    .map_err(|error| error.under(["tags"]))?;
+                next.tags = apply_tags_delta(&next.tags, delta).map_err(|error| error.under(["tags"]))?;
             }
             if let Some(list) = &self.selected_checkpoint_ids {
                 next.selected_checkpoint_ids = list.values.clone();
@@ -132,8 +112,7 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
                 next.status = status.clone();
             }
             if let Some(delta) = &self.tags {
-                next.tags = apply_tags_delta(&next.tags, delta)
-                    .map_err(|error| error.under(["tags"]))?;
+                next.tags = apply_tags_delta(&next.tags, delta).map_err(|error| error.under(["tags"]))?;
             }
             next
         })

@@ -59,13 +59,7 @@ fn structure_import_profile(model_definition_id: &'static str, prefer_presentati
 
 fn computers_manifest() -> CadComputersManifest {
     CadComputersManifest {
-        model_definition_ids: vec![
-            "aec.building.structure",
-            "aec.building.structure.classic",
-            "aec.building.structure.fem.line",
-            "aec.building.structure.fem.solid",
-            "aec.building.structure.fem.surface",
-        ],
+        model_definition_ids: vec!["aec.building.structure", "aec.building.structure.classic", "aec.building.structure.fem.line", "aec.building.structure.fem.solid", "aec.building.structure.fem.surface"],
         stat_computers: vec!["structure.stability"],
         property_computers: Vec::new(),
         import_profiles: vec![

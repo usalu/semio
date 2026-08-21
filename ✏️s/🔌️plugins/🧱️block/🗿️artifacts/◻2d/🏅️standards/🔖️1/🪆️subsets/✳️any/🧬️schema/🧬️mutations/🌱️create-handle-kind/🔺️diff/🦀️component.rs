@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateHandleKind` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block2d::diff::Block2dDiff;
-use crate::artifacts::block2d::diff::{Block2dHandleKindsDelta};
+use crate::artifacts::block2d::diff::Block2dHandleKindsDelta;
 use crate::artifacts::block2d::Block2dSnapshot;
 
 //#region 🔖️Diff

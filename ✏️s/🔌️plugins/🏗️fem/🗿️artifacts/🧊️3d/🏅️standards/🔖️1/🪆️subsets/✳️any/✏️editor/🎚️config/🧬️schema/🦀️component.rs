@@ -7,10 +7,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.3d.config")]
 pub struct Fem3dConfig {
-    #[state(config)] pub result_source_id: Option<String>,
-    #[state(config)] pub result_mode: String,
-    #[state(config)] pub result_mode_index: u32,
-    #[state(config)] pub camera: FemCamera,
+    #[state(config)]
+    pub result_source_id: Option<String>,
+    #[state(config)]
+    pub result_mode: String,
+    #[state(config)]
+    pub result_mode_index: u32,
+    #[state(config)]
+    pub camera: FemCamera,
 }
 
 //region 📎 App-schema descriptor
@@ -37,4 +41,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

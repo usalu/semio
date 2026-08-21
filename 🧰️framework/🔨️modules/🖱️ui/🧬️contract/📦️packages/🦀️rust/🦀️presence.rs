@@ -127,10 +127,7 @@ mod tests {
             surface: crate::SurfaceId::from("note.play.navigator"),
             node_key: "row-9".into(),
             own: OwnPresence { hovered: true, selected: true, previewed: false, color: Some(2) },
-            peers: vec![
-                PeerMark { actor: "a".into(), color: Some(1), hovered: true, selected: false, label: "A".into() },
-                PeerMark { actor: "b".into(), color: None, hovered: false, selected: true, label: "B".into() },
-            ],
+            peers: vec![PeerMark { actor: "a".into(), color: Some(1), hovered: true, selected: false, label: "A".into() }, PeerMark { actor: "b".into(), color: None, hovered: false, selected: true, label: "B".into() }],
             ttl_ms: 4_000,
         };
         let first = serde_json::to_string(&update).expect("serialize");

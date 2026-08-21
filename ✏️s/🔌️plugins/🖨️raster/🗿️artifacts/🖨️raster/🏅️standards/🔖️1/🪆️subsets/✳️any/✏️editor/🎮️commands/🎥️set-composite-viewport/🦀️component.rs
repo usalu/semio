@@ -1,9 +1,9 @@
 //! 🎥️ 🎥️ Raster play app commands command — `set-composite-viewport`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize};
 use crate::artifacts::raster::op::RasterMutation;
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

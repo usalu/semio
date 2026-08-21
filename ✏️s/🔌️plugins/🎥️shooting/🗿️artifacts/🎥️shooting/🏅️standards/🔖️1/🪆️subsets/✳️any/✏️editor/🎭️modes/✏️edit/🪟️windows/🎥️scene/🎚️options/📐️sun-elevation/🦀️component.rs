@@ -1,8 +1,8 @@
 //! 📐️ Scene-window option — the sun elevation slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_elevation`.
 
-use crate::editor::shooting::terminology::ShootingLabels;
 use crate::artifacts::shooting::ShootingSnapshot;
+use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

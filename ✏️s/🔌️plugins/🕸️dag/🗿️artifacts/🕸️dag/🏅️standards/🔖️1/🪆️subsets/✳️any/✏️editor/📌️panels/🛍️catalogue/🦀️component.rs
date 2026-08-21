@@ -1,7 +1,7 @@
 //! 🛍️ DAG play app panel — the node-kind catalogue (drag/click-to-add palette).
 
-use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::dag_action;
+use crate::editor::dag::terminology::DagPlayLabels;
 use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 
@@ -11,7 +11,13 @@ pub const DAG_PLAY_BODY_CATALOGUE: &str = "dag.play.catalogue";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(DAG_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        group: PanelGroup::Workbench,
+        body_key: Some(DAG_PLAY_BODY_CATALOGUE.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

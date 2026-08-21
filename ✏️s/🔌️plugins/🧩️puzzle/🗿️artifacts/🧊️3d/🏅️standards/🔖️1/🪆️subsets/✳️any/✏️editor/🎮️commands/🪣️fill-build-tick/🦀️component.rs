@@ -1,10 +1,10 @@
 //! 🪣️ `fill-build-tick` command.
 
 use crate::artifacts::puzzle3d::schema::PrecomputeLane;
-use semio_framework::kernel::UiDirtyScope;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::puzzle3d_fill_build_scope;
 use crate::editor::puzzle3d::puzzle3d_fill_tool_active;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use semio_framework::kernel::UiDirtyScope;
 
 /// 🪣️ No catch-up `setFillCount` dispatch here: `apply_puzzle3d_fill_count` always clamps the
 /// committed count to what's available at commit time, so `fill_count` can never run ahead of

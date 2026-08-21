@@ -3,12 +3,12 @@
 //! which needs a meshed solid's top surface) into `crate::model::Model` inputs — shared by
 //! `crate::fem3d_engine`'s `build_model`/`fem3d_solve_all` and `modal_buckling.rs`.
 
-use crate::fem3d_engine::Fem3dError;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemElement, FemLoad};
+use crate::fem3d_engine::Fem3dError;
 use crate::model::{Bar3, Dof, Element, Elements, Frame3, MemberUdl, NodalLoad, Node, Support};
-use std::collections::HashMap;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use std::collections::HashMap;
 
 // #region 🔖️SolidMeshing
 /// 📐️ Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula — mirrors `fem_2d`'s helper of
@@ -154,10 +154,7 @@ pub(crate) async fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshS
         let faces = crate::mesh::boundary_faces(&tets);
         let positions: Vec<SemioPoint3> = tets.points.iter().map(|p| SemioPoint3 { x: p[0], y: p[1], z: p[2] + solid.base_z }).collect();
         let indices: Vec<u32> = faces.iter().flat_map(|f| f.iter().copied()).collect();
-        meshes.push(SemioMesh {
-            id: solid.id.clone(),
-            primitives: vec![SemioPrimitive { id: format!("{}-surface", solid.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }],
-        });
+        meshes.push(SemioMesh { id: solid.id.clone(), primitives: vec![SemioPrimitive { id: format!("{}-surface", solid.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }] });
     }
     SemioMeshSnapshot { meshes, ..Default::default() }
 }

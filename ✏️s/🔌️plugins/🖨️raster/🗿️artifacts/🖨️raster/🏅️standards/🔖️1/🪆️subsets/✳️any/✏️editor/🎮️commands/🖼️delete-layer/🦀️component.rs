@@ -1,11 +1,11 @@
 //! 🖼️ 🖼️ Raster play app commands command — `delete-layer`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::mutations::delete_layer as layer_delete;
 use crate::artifacts::raster::op::RasterMutation;
+use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

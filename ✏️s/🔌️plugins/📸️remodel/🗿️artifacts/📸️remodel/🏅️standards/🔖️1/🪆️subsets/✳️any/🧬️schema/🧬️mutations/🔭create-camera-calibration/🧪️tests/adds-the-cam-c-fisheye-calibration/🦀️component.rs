@@ -46,10 +46,7 @@ async fn appends_cam_c_without_giving_it_a_rig_pose() {
 async fn inverse_is_a_single_delete_of_cam_c() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::DeleteCameraCalibration(payload)] if payload.camera_id == "cam-c"),
-        "create-camera-calibration's inverse for a fresh id is one delete-camera-calibration, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::DeleteCameraCalibration(payload)] if payload.camera_id == "cam-c"), "create-camera-calibration's inverse for a fresh id is one delete-camera-calibration, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

@@ -1,10 +1,10 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `set-self-weight`.
 
-use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use crate::artifacts::fem3d::mutations::change_load_case_self_weight;
 use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

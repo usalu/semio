@@ -68,7 +68,7 @@ pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) ->
 impl Mutation<TsvSnapshot> for TsvMutation {
     type Diff = TsvDiff;
 
-    async fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TsvMutation::NoMutation => TsvDiff::default(),
             TsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -81,10 +81,10 @@ impl Mutation<TsvSnapshot> for TsvMutation {
                 fields[*field_index] = Some(value.clone());
                 TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: vec![TsvRowModified { index: *row_index, diff: TsvRowDiff { fields: Some(fields) } }], added: Vec::new() }), ..TsvDiff::default() }
             }
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &TsvSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &TsvSnapshot) -> Vec<Self> {
         match self {
             TsvMutation::NoMutation => vec![TsvMutation::NoMutation],
             TsvMutation::SetSnapshot { .. } => vec![TsvMutation::SetSnapshot { snapshot: base.clone() }],
@@ -161,22 +161,22 @@ fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
 }
 
 impl OpText for TsvMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_tsv_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_tsv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `TsvDiff`'s hand-rolled codec.
 impl OpBinary for TsvMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().await.into_bytes())
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_op().into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

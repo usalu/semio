@@ -11,7 +11,5 @@ pub async fn deserialize(from: &PngSnapshot) -> Result<LowpolySnapshot, store::T
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<LowpolySnapshot, store::TextError> {
-    <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
-        <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
-    })
+    <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }

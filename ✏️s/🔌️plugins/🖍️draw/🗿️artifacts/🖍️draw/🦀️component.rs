@@ -458,10 +458,6 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration {
-        kind: ArtifactKindId::parse("s.draw.draw").expect("canonical draw kind"),
-        localization: &[],
-        standards: vec![crate::artifacts::draw::standards::v1::standard()],
-    }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.draw").expect("canonical draw kind"), localization: &[], standards: vec![crate::artifacts::draw::standards::v1::standard()] }
 }
 //#endregion 🔖️ArtifactKind

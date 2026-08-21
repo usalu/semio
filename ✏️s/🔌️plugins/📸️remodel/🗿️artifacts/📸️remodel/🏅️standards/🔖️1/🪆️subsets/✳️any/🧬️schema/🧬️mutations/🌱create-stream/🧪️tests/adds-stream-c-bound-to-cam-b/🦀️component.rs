@@ -45,10 +45,7 @@ async fn appends_stream_c_after_the_two_existing_streams() {
 async fn inverse_is_a_single_delete_of_stream_c() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::DeleteStream(payload)] if payload.id == "stream-c"),
-        "create-stream's inverse for a fresh id is one delete-stream for that id, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::DeleteStream(payload)] if payload.id == "stream-c"), "create-stream's inverse for a fresh id is one delete-stream for that id, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");
@@ -65,10 +62,7 @@ async fn declared_applied_outcome_writes_streams_only() {
     let produced = produced();
     assert!(produced.messages().is_empty(), "a fresh id with a known camera raises neither mutation.duplicate-id nor mutation.invariant, got {:?}", produced.messages());
     assert!(produced.diff().streams.is_some(), "create-stream writes the streams field");
-    assert!(
-        produced.diff().calibration.is_none() && produced.diff().gcps.is_none() && produced.diff().results.is_none() && produced.diff().assets.is_none(),
-        "create-stream writes streams alone"
-    );
+    assert!(produced.diff().calibration.is_none() && produced.diff().gcps.is_none() && produced.diff().results.is_none() && produced.diff().assets.is_none(), "create-stream writes streams alone");
 }
 
 /// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a

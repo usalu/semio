@@ -22,9 +22,6 @@ async fn inference_default_law() {
     use crate::artifacts::block3d::Block3dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(
-        crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::Block3dInference::infer(&Block3dSnapshot::default()),
-        crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::Block3dInference::default()
-    );
+    assert_eq!(crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::Block3dInference::infer(&Block3dSnapshot::default()), crate::artifacts::block3d::standards::v1::subsets::any::schema::inferences::Block3dInference::default());
 }
 //#endregion 🧪️InferenceLaws

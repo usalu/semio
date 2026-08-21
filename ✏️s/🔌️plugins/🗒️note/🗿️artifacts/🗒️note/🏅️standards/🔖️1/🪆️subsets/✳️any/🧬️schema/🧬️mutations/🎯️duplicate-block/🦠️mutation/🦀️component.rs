@@ -1,6 +1,6 @@
 //! 🎯 Note mutation — `DuplicateBlock`: copies a block to a new identity, placed after its source.
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

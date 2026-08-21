@@ -442,7 +442,7 @@ impl SemioImageDiff {
 }
 
 impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
-    async fn apply(&self, base: &SemioImageSnapshot) -> protocol::MutationApplyResult<SemioImageSnapshot> {
+    fn apply(&self, base: &SemioImageSnapshot) -> protocol::MutationApplyResult<SemioImageSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -470,7 +470,7 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -498,7 +498,7 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
 }
 
 impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
-    async fn inverse(&self, base: &SemioImageSnapshot) -> Self {
+    fn inverse(&self, base: &SemioImageSnapshot) -> Self {
         Self {
             width: self.width.map(|_| base.width),
             height: self.height.map(|_| base.height),
@@ -510,7 +510,7 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
         }
     }
 
-    async fn between(base: &SemioImageSnapshot, other: &SemioImageSnapshot) -> Self {
+    fn between(base: &SemioImageSnapshot, other: &SemioImageSnapshot) -> Self {
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
@@ -522,7 +522,7 @@ impl DiffAlgebra<SemioImageSnapshot> for SemioImageDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -751,10 +751,10 @@ fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
 }
 
 impl DiffCodec for SemioImageDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_image_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_image_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -766,7 +766,7 @@ impl DiffCodec for SemioImageDiff {
     /// be 0-7 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
     /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
     /// `eval_cond` — see `✳️flow`'s/`✳️mesh`'s pilot reports).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.width.is_some() {
@@ -814,7 +814,7 @@ impl DiffCodec for SemioImageDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

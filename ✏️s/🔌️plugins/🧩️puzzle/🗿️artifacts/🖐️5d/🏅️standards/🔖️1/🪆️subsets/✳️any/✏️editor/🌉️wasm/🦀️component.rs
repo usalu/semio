@@ -6,8 +6,8 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
 use crate::artifacts::puzzle5d::spr::{Puzzle5dEnvelope, Puzzle5dStore};
+use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
 use crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;

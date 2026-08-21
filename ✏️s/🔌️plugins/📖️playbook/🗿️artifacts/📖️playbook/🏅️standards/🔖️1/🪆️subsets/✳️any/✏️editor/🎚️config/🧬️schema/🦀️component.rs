@@ -6,8 +6,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.playbook.playbook.config")]
 pub struct PlaybookConfig {
-    #[state(config)] pub locale: String,
-    #[state(config)] pub contributions_json: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub contributions_json: String,
 }
 
 //#region 🔖️Register
@@ -36,4 +38,3 @@ pub async fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️Register
-

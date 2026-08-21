@@ -9,7 +9,6 @@
 //! is NOT graph-shaped in the `SemioGraphSnapshot` sense (that subset is an INSTANCE graph: nodes with
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
-
 use graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};

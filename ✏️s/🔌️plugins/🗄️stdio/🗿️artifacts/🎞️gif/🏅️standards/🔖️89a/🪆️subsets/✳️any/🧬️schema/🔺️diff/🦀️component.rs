@@ -673,7 +673,7 @@ impl GifDiff {
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
-    async fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
+    fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
         if let Some(frames) = &self.frames {
             validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"])?;
         }
@@ -714,7 +714,7 @@ impl MutationDiff<GifSnapshot> for GifDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -784,7 +784,7 @@ where
 }
 
 impl DiffAlgebra<GifSnapshot> for GifDiff {
-    async fn inverse(&self, base: &GifSnapshot) -> Self {
+    fn inverse(&self, base: &GifSnapshot) -> Self {
         Self {
             width: self.width.map(|_| base.width),
             height: self.height.map(|_| base.height),
@@ -798,7 +798,7 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
         }
     }
 
-    async fn between(base: &GifSnapshot, other: &GifSnapshot) -> Self {
+    fn between(base: &GifSnapshot, other: &GifSnapshot) -> Self {
         let frames_diff = GifFramesDiff::between(&base.frames, &other.frames);
         let comments_diff = GifCommentsDiff::between(&base.comments, &other.comments);
         let app_extensions_diff = GifAppExtensionsDiff::between(&base.app_extensions, &other.app_extensions);
@@ -815,7 +815,7 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -1608,10 +1608,10 @@ fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
 }
 
 impl DiffCodec for GifDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_gif_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_gif_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
@@ -1620,8 +1620,8 @@ impl DiffCodec for GifDiff {
     /// as a real defect to not repeat). Matches `../💾️binary/📡️component.protocol.semio`'s real
     /// flag-per-field layout exactly, field for field, in struct order (2-way flag for plain
     /// `Option<T>` fields, 3-way flag for the tri-state `gct`/`loop_count` fields).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
@@ -1635,9 +1635,9 @@ impl DiffCodec for GifDiff {
         write_bin_option(&mut w, &self.frames, |w, v| write_bin_blob(w, &enc_frames_diff_bin(v)));
         write_bin_option(&mut w, &self.comments, |w, v| write_bin_blob(w, &enc_comments_diff_bin(v)));
         write_bin_option(&mut w, &self.app_extensions, |w, v| write_bin_blob(w, &enc_app_extensions_diff_bin(v)));
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
         let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;

@@ -1,8 +1,8 @@
 //! 📃️ 📃️ Forms play app commands command — `update-form`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

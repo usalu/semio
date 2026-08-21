@@ -2,7 +2,7 @@
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::RemodelMutation;
-use crate::artifacts::remodel::{RemodelSnapshot, MotionTrackSummary};
+use crate::artifacts::remodel::{MotionTrackSummary, RemodelSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[dsl(keyword = "replace-tracks")]
 pub struct ReplaceTracks {
-
     pub tracks: Vec<MotionTrackSummary>,
 }
 

@@ -13,43 +13,80 @@ use serde_json::Value;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub objects: Vec<LowpolyObject>,
-    #[state(presence)] pub active_object_id: Option<String>,
-    #[state(presence)] pub selection: LowpolySelection,
-    #[state(presence)] pub selected_object_ids: Vec<String>,
-    #[state(presence)] pub paint_utility: String,
-    #[state(presence)] pub active_paint_layer: u32,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub show_edges: bool,
-    #[state(config)] pub sun_enabled: bool,
-    #[state(config)] pub sun_azimuth: f64,
-    #[state(config)] pub sun_elevation: f64,
-    #[state(config)] pub sun_intensity: f64,
-    #[state(config)] pub sun_color: String,
-    #[state(config)] pub world_camera_position_x: f64,
-    #[state(config)] pub world_camera_position_y: f64,
-    #[state(config)] pub world_camera_position_z: f64,
-    #[state(config)] pub world_camera_target_x: f64,
-    #[state(config)] pub world_camera_target_y: f64,
-    #[state(config)] pub world_camera_target_z: f64,
-    #[state(config)] pub world_camera_fov: f64,
-    #[state(config)] pub utility_params_json: String,
-    #[state(config)] pub paint_color_r: u32,
-    #[state(config)] pub paint_color_g: u32,
-    #[state(config)] pub paint_color_b: u32,
-    #[state(config)] pub paint_color_a: u32,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub selection_mode_default: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub locale: String,
-    #[state(artifact)] pub hovered_object_id: Option<String>,
-    #[state(artifact)] pub hovered_target_object_id: Option<String>,
-    #[state(artifact)] pub hovered_target_mode: Option<String>,
-    #[state(artifact)] pub hovered_target_id: Option<u32>,
-    #[state(artifact)] pub stroke_drag_active: bool,
-    #[state(artifact)] pub transform_drag_active: bool,
-    #[state(artifact)] pub preview_seq: i64,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub objects: Vec<LowpolyObject>,
+    #[state(presence)]
+    pub active_object_id: Option<String>,
+    #[state(presence)]
+    pub selection: LowpolySelection,
+    #[state(presence)]
+    pub selected_object_ids: Vec<String>,
+    #[state(presence)]
+    pub paint_utility: String,
+    #[state(presence)]
+    pub active_paint_layer: u32,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub show_edges: bool,
+    #[state(config)]
+    pub sun_enabled: bool,
+    #[state(config)]
+    pub sun_azimuth: f64,
+    #[state(config)]
+    pub sun_elevation: f64,
+    #[state(config)]
+    pub sun_intensity: f64,
+    #[state(config)]
+    pub sun_color: String,
+    #[state(config)]
+    pub world_camera_position_x: f64,
+    #[state(config)]
+    pub world_camera_position_y: f64,
+    #[state(config)]
+    pub world_camera_position_z: f64,
+    #[state(config)]
+    pub world_camera_target_x: f64,
+    #[state(config)]
+    pub world_camera_target_y: f64,
+    #[state(config)]
+    pub world_camera_target_z: f64,
+    #[state(config)]
+    pub world_camera_fov: f64,
+    #[state(config)]
+    pub utility_params_json: String,
+    #[state(config)]
+    pub paint_color_r: u32,
+    #[state(config)]
+    pub paint_color_g: u32,
+    #[state(config)]
+    pub paint_color_b: u32,
+    #[state(config)]
+    pub paint_color_a: u32,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub selection_mode_default: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(artifact)]
+    pub hovered_object_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_object_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_mode: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_id: Option<u32>,
+    #[state(artifact)]
+    pub stroke_drag_active: bool,
+    #[state(artifact)]
+    pub transform_drag_active: bool,
+    #[state(artifact)]
+    pub preview_seq: i64,
 }
 //#endregion 🔖️Artifact
 
@@ -101,19 +138,12 @@ impl Default for LowpolyArtifact {
 impl LowpolyArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::lowpoly::LowpolySnapshot {
-        crate::artifacts::lowpoly::LowpolySnapshot {
-            schema: self.schema.clone(),
-            objects: self.objects.clone(),
-        }
+        crate::artifacts::lowpoly::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::lowpoly::LowpolySnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            objects: snapshot.objects,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, objects: snapshot.objects, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -123,7 +153,6 @@ impl LowpolyArtifact {
     }
 }
 //#endregion 🔖️Conversions
-
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.lowpoly.lowpoly` — twenty handcrafted schema leaves.
@@ -413,10 +442,10 @@ pub async fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::lowpoly::schema::diff::LowpolyDiff;
     use crate::artifacts::lowpoly::schema::mutations::LowpolyMutation;
     use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct LowpolyBuilderConstruction {
@@ -428,8 +457,12 @@ pub mod derived_construction {
         type Snapshot = LowpolySnapshot;
         type Mutation = LowpolyMutation;
         type Diff = LowpolyDiff;
-        async fn empty() -> Self { Self { snapshot: LowpolySnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: LowpolySnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -440,24 +473,21 @@ pub mod derived_construction {
             let outcome = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -466,8 +496,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::lowpoly::LowpolySnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct LowpolyParts {
@@ -661,8 +691,8 @@ mod tests {
 #[cfg(all(test, feature = "cad-fixtures"))]
 mod export_concrete_forest_mesh_tests {
     use cad_plugin::artifacts::cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
     use serde_json::Value;
     use std::collections::HashMap;
 

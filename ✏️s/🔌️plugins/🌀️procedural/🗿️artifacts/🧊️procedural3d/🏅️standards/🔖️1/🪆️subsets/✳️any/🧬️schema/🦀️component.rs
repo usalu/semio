@@ -1,21 +1,22 @@
 //! 🧬️ Procedural3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::procedural3d::snapshot::schema::Procedural3dSnapshot;
-use flow::CameraJson;
-use flow::FlowFixture;
-use flow::playbook::GenerationPlayState;
-use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use crate::artifacts::procedural3d::dsl::{
     PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT, PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT, PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT, PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT, PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT,
-    PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT};
+    PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT,
+};
+use crate::artifacts::procedural3d::snapshot::schema::Procedural3dSnapshot;
+use crate::artifacts::procedural3d::widget_id;
 use flow::dag::DagFixture;
 use flow::forms_bridge::apply_generation_values_to_fixture;
-use flow::{flow_host_with_session, FlowEvalSession, FlowHost, Widget};
 use flow::playbook::selected_generation;
+use flow::playbook::GenerationPlayState;
+use flow::CameraJson;
+use flow::FlowFixture;
+use flow::{flow_host_with_session, FlowEvalSession, FlowHost, Widget};
+use schema::ArtifactSchema;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use store::ArtifactDsl;
-use crate::artifacts::procedural3d::widget_id;
 
 //#region 🔖️Procedural3dArtifact
 /// 🧬️ Procedural3dArtifact facet type.
@@ -24,20 +25,35 @@ use crate::artifacts::procedural3d::widget_id;
 #[artifact_schema(id = "s.procedural.procedural3d")]
 
 pub struct Procedural3dArtifact {
-    #[state(artifact)] pub fixture: FlowFixture,
-    #[state(artifact)] pub generation: GenerationPlayState,
-    #[state(presence)] pub selected_node_ids: Vec<String>,
-    #[state(config)] pub lod_mode: String,
-    #[state(config)] pub show_mode: String,
-    #[state(config)] pub selection_method: String,
-    #[state(artifact)] pub hovered_node_id: Option<String>,
-    #[state(config)] pub graph_camera: CameraJson,
-    #[state(config)] pub preview_camera: Procedural3dPreviewCamera,
-    #[state(config)] pub sun_json: String,
-    #[state(presence)] pub selected_generation_id: Option<String>,
-    #[state(artifact)] pub generation_preview_text: Option<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub locale: String}
+    #[state(artifact)]
+    pub fixture: FlowFixture,
+    #[state(artifact)]
+    pub generation: GenerationPlayState,
+    #[state(presence)]
+    pub selected_node_ids: Vec<String>,
+    #[state(config)]
+    pub lod_mode: String,
+    #[state(config)]
+    pub show_mode: String,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(artifact)]
+    pub hovered_node_id: Option<String>,
+    #[state(config)]
+    pub graph_camera: CameraJson,
+    #[state(config)]
+    pub preview_camera: Procedural3dPreviewCamera,
+    #[state(config)]
+    pub sun_json: String,
+    #[state(presence)]
+    pub selected_generation_id: Option<String>,
+    #[state(artifact)]
+    pub generation_preview_text: Option<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub locale: String,
+}
 //#endregion 🔖️Procedural3dArtifact
 
 //#region 🔖️PreviewCamera
@@ -51,18 +67,12 @@ pub struct Procedural3dPreviewCamera {
     pub target_x: f64,
     pub target_y: f64,
     pub target_z: f64,
-    pub fov: f64}
+    pub fov: f64,
+}
 
 impl Default for Procedural3dPreviewCamera {
     fn default() -> Self {
-        Self {
-            position_x: 4.0,
-            position_y: -4.0,
-            position_z: 3.0,
-            target_x: 0.0,
-            target_y: 0.0,
-            target_z: 0.0,
-            fov: 45.0}
+        Self { position_x: 4.0, position_y: -4.0, position_z: 3.0, target_x: 0.0, target_y: 0.0, target_z: 0.0, fov: 45.0 }
     }
 }
 //#endregion 🔖️PreviewCamera
@@ -83,25 +93,20 @@ impl Default for Procedural3dArtifact {
             selected_generation_id: None,
             generation_preview_text: None,
             active_utility_id: "move".into(),
-            locale: "en-US".into()}
+            locale: "en-US".into(),
+        }
     }
 }
 
 impl Procedural3dArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> Procedural3dSnapshot {
-        Procedural3dSnapshot {
-            fixture: self.fixture.clone(),
-            generation: self.generation.clone()}
+        Procedural3dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: Procedural3dSnapshot) -> Self {
-        Self {
-            fixture: snapshot.fixture,
-            generation: snapshot.generation,
-            ..Self::default()
-        }
+        Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -149,8 +154,8 @@ pub async fn procedural3d_artifact_schema_descriptor() -> schema::ArtifactSchema
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::procedural3d::{Procedural3dDiff, Procedural3dMutation, Procedural3dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Procedural3dBuilderConstruction {
@@ -162,8 +167,12 @@ pub mod derived_construction {
         type Snapshot = Procedural3dSnapshot;
         type Mutation = Procedural3dMutation;
         type Diff = Procedural3dDiff;
-        async fn empty() -> Self { Self { snapshot: Procedural3dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Procedural3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Procedural3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -174,24 +183,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Procedural3dDiff as protocol::MutationDiff<Procedural3dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -200,8 +206,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::procedural3d::Procedural3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Procedural3dParts {
@@ -311,7 +317,8 @@ pub async fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> 
         PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
         PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
         PROCEDURAL_EXAMPLE_BOX_SHELL => Some(PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT),
-        _ => None};
+        _ => None,
+    };
     dsl.and_then(|text| Procedural3dSnapshot::parse_dsl(text).ok())
 }
 
@@ -398,7 +405,8 @@ pub async fn gumball_xform_kind(operation: &str) -> &'static str {
     match operation {
         "rotate" => "brep.xform.rotate",
         "scale" => "brep.xform.scale",
-        _ => "brep.xform.translate"}
+        _ => "brep.xform.translate",
+    }
 }
 
 /// 🪪️ Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.

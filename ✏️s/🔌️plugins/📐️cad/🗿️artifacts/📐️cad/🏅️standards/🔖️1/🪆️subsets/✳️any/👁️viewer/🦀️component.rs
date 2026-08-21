@@ -59,7 +59,13 @@ impl ArtifactViewer for CadViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera
     /// orbit, "jump to pane") is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -74,14 +80,7 @@ impl ArtifactViewer for CadViewer {
 
 //#region 🔖️Manifest
 pub async fn create_cad_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(CAD_DIALECT)
-        .document(["semio", "cad"])
-        .icon_id("box")
-        .mode_def(view::definition())
-        .default_mode_id(view::CAD_VIEW_MODE_VIEW)
-        .window_kind_def(shape::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(CAD_DIALECT).document(["semio", "cad"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::CAD_VIEW_MODE_VIEW).window_kind_def(shape::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

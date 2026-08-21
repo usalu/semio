@@ -2,9 +2,9 @@
 //! torsion and member-UDL support), the `Tet4`/`Hex8` solid continuum elements, and `ShellFacet3`
 //! (flat facet shell: CST membrane + DKT bending + drilling stabilization).
 
+use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, MemberUdl, ShellState, SolidStress};
-use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 
 // #region 🔖️Bar3
 /// 🪵️ Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`
@@ -1364,13 +1364,16 @@ mod solid_tests {
 
         let mut elements: Vec<Elements> = Vec::new();
         for ix in 0..nx {
-            elements.push(Hex8 {
-                id: format!("hex{ix}"),
-                nodes: [corner_id(ix, 0, 0), corner_id(ix + 1, 0, 0), corner_id(ix + 1, 1, 0), corner_id(ix, 1, 0), corner_id(ix, 0, 1), corner_id(ix + 1, 0, 1), corner_id(ix + 1, 1, 1), corner_id(ix, 1, 1)],
-                e,
-                nu,
-                density: 0.0,
-            }.into());
+            elements.push(
+                Hex8 {
+                    id: format!("hex{ix}"),
+                    nodes: [corner_id(ix, 0, 0), corner_id(ix + 1, 0, 0), corner_id(ix + 1, 1, 0), corner_id(ix, 1, 0), corner_id(ix, 0, 1), corner_id(ix + 1, 0, 1), corner_id(ix + 1, 1, 1), corner_id(ix, 1, 1)],
+                    e,
+                    nu,
+                    density: 0.0,
+                }
+                .into(),
+            );
         }
 
         let supports = corners.iter().map(|&(iy, iz)| Support { node_id: corner_id(0, iy, iz), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }).collect();

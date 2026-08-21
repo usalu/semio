@@ -162,14 +162,10 @@ mod tests {
     }
 
     async fn round_trip(base: &En1999Snapshot, mutation: &En1999Mutation) -> En1999Snapshot {
-        let forward = vcs::apply_mutation(base, mutation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -199,9 +195,7 @@ mod tests {
         let _ = &mut target;
         let mut projected = base.clone();
         for mutation in En1999Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation)
-                .expect("snapshot mutation applies")
-                .0;
+            projected = vcs::apply_mutation(&projected, &mutation).expect("snapshot mutation applies").0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
@@ -247,57 +241,57 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🦀️component.rs"]
-    mod tests_change_m_ed_knm_raises_design_moment_to_9_5_knm;
-    #[path = "🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🦀️component.rs"]
-    mod tests_change_fatigue_m_flattens_sn_slope_to_m_5;
-    #[path = "🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🦀️component.rs"]
-    mod tests_change_weld_throat_mm_thickens_weld_throat_to_6_5_mm;
-    #[path = "🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🦀️component.rs"]
-    mod tests_change_v_weld_ed_kn_raises_weld_shear_to_48_kn;
-    #[path = "🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🦀️component.rs"]
-    mod tests_change_sheet_b_mm_widens_sheet_to_320_mm;
-    #[path = "🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🦀️component.rs"]
-    mod tests_change_sheet_k_sigma_raises_sheet_plate_buckling_k_sigma_to_6_25;
-    #[path = "🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🦀️component.rs"]
-    mod tests_change_it_mm4_raises_torsion_constant_to_10240_mm4;
-    #[path = "🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🦀️component.rs"]
-    mod tests_change_shell_t_mm_thickens_shell_to_6_25_mm;
-    #[path = "🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🦀️component.rs"]
-    mod tests_change_shell_r_mm_widens_shell_radius_to_750_mm;
-    #[path = "🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🦀️component.rs"]
-    mod tests_change_weld_length_mm_lengthens_weld_to_200_mm;
-    #[path = "🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🦀️component.rs"]
-    mod tests_change_delta_sigma_c_upgrades_detail_category_to_90_mpa;
-    #[path = "🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🦀️component.rs"]
-    mod tests_change_beta_w_raises_weld_correlation_beta_w_to_0_75;
-    #[path = "🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🦀️component.rs"]
-    mod tests_change_chi_lowers_buckling_chi_to_0_5;
     #[path = "🦂change-a-mm2/🧪️tests/enlarges-section-area-to-2250-mm2/🦀️component.rs"]
     mod tests_change_a_mm2_enlarges_section_area_to_2250_mm2;
-    #[path = "🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🦀️component.rs"]
-    mod tests_change_n_cycles_doubles_fatigue_cycles_to_2000000;
-    #[path = "🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🦀️component.rs"]
-    mod tests_change_theta_c_raises_fatigue_detail_theta_c_to_225_mpa;
-    #[path = "🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🦀️component.rs"]
-    mod tests_change_delta_sigma_ed_raises_fatigue_stress_range_to_62_5_mpa;
-    #[path = "🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🦀️component.rs"]
-    mod tests_change_sheet_t_mm_thickens_sheet_to_3_5_mm;
-    #[path = "🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🦀️component.rs"]
-    mod tests_change_n_ed_kn_raises_axial_force_to_180_kn;
-    #[path = "🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🦀️component.rs"]
-    mod tests_change_sheet_w_el_mm3_raises_sheet_section_modulus_to_12800_mm3;
-    #[path = "🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🦀️component.rs"]
-    mod tests_change_sigma_ed_shell_mpa_raises_shell_design_stress_to_165_mpa;
-    #[path = "🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🦀️component.rs"]
-    mod tests_change_l_cr_mm_lengthens_buckling_length_to_4000_mm;
     #[path = "🦗change-alloy/🧪️tests/switches-alloy-to-aw7020t6/🦀️component.rs"]
     mod tests_change_alloy_switches_alloy_to_aw7020t6;
     #[path = "🦘change-annex/🧪️tests/switches-national-annex-to-en/🦀️component.rs"]
     mod tests_change_annex_switches_national_annex_to_en;
+    #[path = "🐷change-beta-w/🧪️tests/raises-weld-correlation-beta-w-to-0-75/🦀️component.rs"]
+    mod tests_change_beta_w_raises_weld_correlation_beta_w_to_0_75;
+    #[path = "🕷️change-chi/🧪️tests/lowers-buckling-chi-to-0-5/🦀️component.rs"]
+    mod tests_change_chi_lowers_buckling_chi_to_0_5;
+    #[path = "🐴change-delta-sigma-c/🧪️tests/upgrades-detail-category-to-90-mpa/🦀️component.rs"]
+    mod tests_change_delta_sigma_c_upgrades_detail_category_to_90_mpa;
+    #[path = "🦉change-delta-sigma-ed/🧪️tests/raises-fatigue-stress-range-to-62-5-mpa/🦀️component.rs"]
+    mod tests_change_delta_sigma_ed_raises_fatigue_stress_range_to_62_5_mpa;
+    #[path = "🐎change-fatigue-m/🧪️tests/flattens-sn-slope-to-m-5/🦀️component.rs"]
+    mod tests_change_fatigue_m_flattens_sn_slope_to_m_5;
+    #[path = "🐜change-it-mm4/🧪️tests/raises-torsion-constant-to-10240-mm4/🦀️component.rs"]
+    mod tests_change_it_mm4_raises_torsion_constant_to_10240_mm4;
+    #[path = "🦔change-l-cr-mm/🧪️tests/lengthens-buckling-length-to-4000-mm/🦀️component.rs"]
+    mod tests_change_l_cr_mm_lengthens_buckling_length_to_4000_mm;
+    #[path = "🐍change-m-ed-knm/🧪️tests/raises-design-moment-to-9-5-knm/🦀️component.rs"]
+    mod tests_change_m_ed_knm_raises_design_moment_to_9_5_knm;
+    #[path = "🦄change-n-cycles/🧪️tests/doubles-fatigue-cycles-to-2000000/🦀️component.rs"]
+    mod tests_change_n_cycles_doubles_fatigue_cycles_to_2000000;
+    #[path = "🦎change-n-ed-kn/🧪️tests/raises-axial-force-to-180-kn/🦀️component.rs"]
+    mod tests_change_n_ed_kn_raises_axial_force_to_180_kn;
+    #[path = "🐗change-sheet-b-mm/🧪️tests/widens-sheet-to-320-mm/🦀️component.rs"]
+    mod tests_change_sheet_b_mm_widens_sheet_to_320_mm;
+    #[path = "🐘change-sheet-k-sigma/🧪️tests/raises-sheet-plate-buckling-k-sigma-to-6-25/🦀️component.rs"]
+    mod tests_change_sheet_k_sigma_raises_sheet_plate_buckling_k_sigma_to_6_25;
     #[path = "🦛change-sheet-m-ed-knm/🧪️tests/raises-sheet-design-moment-to-1-25-knm/🦀️component.rs"]
     mod tests_change_sheet_m_ed_knm_raises_sheet_design_moment_to_1_25_knm;
+    #[path = "🦌change-sheet-t-mm/🧪️tests/thickens-sheet-to-3-5-mm/🦀️component.rs"]
+    mod tests_change_sheet_t_mm_thickens_sheet_to_3_5_mm;
+    #[path = "🦏change-sheet-w-el-mm3/🧪️tests/raises-sheet-section-modulus-to-12800-mm3/🦀️component.rs"]
+    mod tests_change_sheet_w_el_mm3_raises_sheet_section_modulus_to_12800_mm3;
+    #[path = "🐫change-shell-r-mm/🧪️tests/widens-shell-radius-to-750-mm/🦀️component.rs"]
+    mod tests_change_shell_r_mm_widens_shell_radius_to_750_mm;
+    #[path = "🐪change-shell-t-mm/🧪️tests/thickens-shell-to-6-25-mm/🦀️component.rs"]
+    mod tests_change_shell_t_mm_thickens_shell_to_6_25_mm;
+    #[path = "🦒change-sigma-ed-shell-mpa/🧪️tests/raises-shell-design-stress-to-165-mpa/🦀️component.rs"]
+    mod tests_change_sigma_ed_shell_mpa_raises_shell_design_stress_to_165_mpa;
+    #[path = "🦇change-theta-c/🧪️tests/raises-fatigue-detail-theta-c-to-225-mpa/🦀️component.rs"]
+    mod tests_change_theta_c_raises_fatigue_detail_theta_c_to_225_mpa;
+    #[path = "🐑change-v-weld-ed-kn/🧪️tests/raises-weld-shear-to-48-kn/🦀️component.rs"]
+    mod tests_change_v_weld_ed_kn_raises_weld_shear_to_48_kn;
     #[path = "🦟change-w-el-mm3/🧪️tests/raises-section-modulus-to-40000-mm3/🦀️component.rs"]
     mod tests_change_w_el_mm3_raises_section_modulus_to_40000_mm3;
+    #[path = "🐮change-weld-length-mm/🧪️tests/lengthens-weld-to-200-mm/🦀️component.rs"]
+    mod tests_change_weld_length_mm_lengthens_weld_to_200_mm;
+    #[path = "🐐change-weld-throat-mm/🧪️tests/thickens-weld-throat-to-6-5-mm/🦀️component.rs"]
+    mod tests_change_weld_throat_mm_thickens_weld_throat_to_6_5_mm;
 }
 //#endregion 🧪️FixtureTests

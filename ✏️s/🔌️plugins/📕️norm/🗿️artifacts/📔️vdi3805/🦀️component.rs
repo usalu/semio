@@ -2,7 +2,6 @@
 
 pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
 
-
 use crate::document::{NormError, QuantityKind};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -1109,11 +1108,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const VDI3805_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect {
-    artifact_kind: "s.norm.vdi3805",
-    standard: semio_framework_plugin::app::StandardId("1"),
-    subset: semio_framework_plugin::app::SubsetId::ANY,
-};
+pub const VDI3805_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.vdi3805", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub const VDI3805_DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
 
 #[cfg(test)]

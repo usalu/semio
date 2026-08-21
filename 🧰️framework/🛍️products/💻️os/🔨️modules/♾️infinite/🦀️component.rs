@@ -1,19 +1,19 @@
 //! 🌐️ Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
-use base64::Engine;
 use crate::framework_surface_terrain::TerrainSessionCore;
+use base64::Engine;
 use ui_wgpu::wgpu::{
-    aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers, marquee_is_crossing_from_path,
-    mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, GpuContext, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController, PointerModifiers, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d,
-    UiComponentSceneNode, Vec3, WidgetContext,
+    aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    marquee_is_crossing_from_path, mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector,
+    screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, GpuContext, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController,
+    PointerModifiers, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext,
 };
 
 // 🚧️ `mesh_from_glb`/`MeshData` are the one remaining `semio_framework::` geometry import: real
 // GLB decoding, not reimplemented locally and not yet routed through stdio's gltf/mesh artifact
 // facet (that facet yields a structured document snapshot, not flat render buffers — see
 // 📓️wave-g1b-infinite-report.md for why wiring it is not a bounded edit).
-use semio_framework::{mesh_from_glb, optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MeshData, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_framework::{mesh_from_glb, optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, MeshData, SelectionMethod, SelectionMode, SelectionSpec};
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
@@ -596,7 +596,7 @@ fn chunk_bounds_radius(chunk_size: f64) -> f64 {
 
 fn chunk_distance_visible(cam_pos: Vec3, chunk_center: Vec3, chunk_size: f64, max_dist: f64, was_visible: bool) -> bool {
     let bounds_r = chunk_bounds_radius(chunk_size);
-    let dist = cam_pos.sub(chunk_center).await.length() as f64;
+    let dist = cam_pos.sub(chunk_center).length() as f64;
     let enter_dist = max_dist + bounds_r;
     let exit_dist = enter_dist + chunk_size * 0.5;
     if dist <= enter_dist {
@@ -649,7 +649,7 @@ fn default_lod_record() -> WorldLodRecord {
 
 fn scene_lod(state: &World3dState) -> f64 {
     let camera = state.orbit.to_camera();
-    let distance = camera.position.sub(camera.target).await.length() as f64;
+    let distance = camera.position.sub(camera.target).length() as f64;
     let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
     if state.lod.automatic || state.lod.depth_variable {
         auto_lod
@@ -785,10 +785,10 @@ fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
     let azimuth = sun.azimuth.unwrap_or(45.0).to_radians();
     let elevation = sun.elevation.unwrap_or(35.0).to_radians();
     let direction = Vec3::new((elevation.cos() * azimuth.cos()) as f32, (elevation.cos() * azimuth.sin()) as f32, elevation.sin() as f32);
-    if direction.await.length() < 1e-6 {
+    if direction.length() < 1e-6 {
         DEFAULT_LIGHT_DIR
     } else {
-        direction.await.normalize().to_array()
+        direction.normalize().to_array()
     }
 }
 
@@ -1280,12 +1280,8 @@ fn placeholder_ico_sphere(radius: f32, subdivisions: u32) -> WorldMeshBuffers {
         placeholder_normalize3([-t, 0.0, -1.0]),
         placeholder_normalize3([-t, 0.0, 1.0]),
     ];
-    let mut faces = vec![
-        [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
-        [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
-        [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
-        [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
-    ];
+    let mut faces =
+        vec![[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
     for _ in 0..subdivisions {
         let mut next = Vec::new();
         let mut midpoint_cache = HashMap::new();
@@ -1495,8 +1491,8 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
                 for chunk in mesh.edge_positions.as_chunks::<6>().0 {
                     let a = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
                     let b = instance.model.transform_point(Vec3::new(chunk[3], chunk[4], chunk[5]));
-                    lines.push(LineVertex3d { position: a.await.to_array(), color: wire_color });
-                    lines.push(LineVertex3d { position: b.await.to_array(), color: wire_color });
+                    lines.push(LineVertex3d { position: a.to_array(), color: wire_color });
+                    lines.push(LineVertex3d { position: b.to_array(), color: wire_color });
                 }
             }
         }
@@ -1565,9 +1561,9 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
                         continue;
                     }
                     let d = scale * 0.15;
-                    push_line_segment(lines, center.await.sub(Vec3::new(d, 0.0, 0.0)), center.await.add(Vec3::new(d, 0.0, 0.0)), color);
-                    push_line_segment(lines, center.await.sub(Vec3::new(0.0, d, 0.0)), center.await.add(Vec3::new(0.0, d, 0.0)), color);
-                    push_line_segment(lines, center.await.sub(Vec3::new(0.0, 0.0, d)), center.await.add(Vec3::new(0.0, 0.0, d)), color);
+                    push_line_segment(lines, center.sub(Vec3::new(d, 0.0, 0.0)), center.add(Vec3::new(d, 0.0, 0.0)), color);
+                    push_line_segment(lines, center.sub(Vec3::new(0.0, d, 0.0)), center.add(Vec3::new(0.0, d, 0.0)), color);
+                    push_line_segment(lines, center.sub(Vec3::new(0.0, 0.0, d)), center.add(Vec3::new(0.0, 0.0, d)), color);
                 }
             }
         }
@@ -1605,9 +1601,9 @@ fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mu
                     continue;
                 };
                 let verts = [instance.model.transform_point(mesh_vertex(mesh, tri[0])), instance.model.transform_point(mesh_vertex(mesh, tri[1])), instance.model.transform_point(mesh_vertex(mesh, tri[2]))];
-                let normal = verts[1].await.sub(verts[0]).cross(verts[2].await.sub(verts[0])).normalize();
+                let normal = verts[1].sub(verts[0]).cross(verts[2].sub(verts[0])).normalize();
                 let offset = if hovered.as_deref() == Some(id.as_str()) { FACE_OVERLAY_OFFSET } else { FACE_OVERLAY_OFFSET * 0.5 };
-                let verts = verts.map(|vert| vert.await.add(normal.scale(offset)));
+                let verts = verts.map(|vert| vert.add(normal.scale(offset)));
                 let bucket = buckets.iter_mut().find(|(bucket_color, _, _, _)| *bucket_color == color);
                 let bucket = if let Some(bucket) = bucket {
                     bucket
@@ -1670,13 +1666,13 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
     let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
-    let extent = gumball_extent(camera.position.sub(pivot).await.length());
+    let extent = gumball_extent(camera.position.sub(pivot).length());
     let pick_radius = extent * 0.08;
     let eye = gumball_eye(&camera, pivot);
     let mut best: Option<(f32, GumballHandle)> = None;
     let axes = [(GumballHandle::MoveX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]), (GumballHandle::MoveY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]), (GumballHandle::MoveZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0])];
     for (handle, axis, _) in axes {
-        let end = pivot.add(axis.await.scale(extent));
+        let end = pivot.add(axis.scale(extent));
         if let Some(dist) = ray_segment_distance(origin, dir, pivot, end) {
             if dist <= pick_radius && best.as_ref().is_none_or(|(best_dist, _)| dist < *best_dist) {
                 best = Some((dist, handle));
@@ -1696,7 +1692,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
             };
             let v = if normal.z.abs() > 0.9 { offset.y.abs() } else { offset.z.abs() };
             if u <= half && v <= half {
-                let dist = origin.sub(hit).await.length();
+                let dist = origin.sub(hit).length();
                 if best.as_ref().is_none_or(|(best_dist, _)| dist < *best_dist) {
                     best = Some((dist, handle));
                 }
@@ -1710,7 +1706,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
             };
             if let Some(hit) = ray_plane_point(origin, dir, pivot, normal) {
                 let radial = hit.sub(pivot);
-                let dist_ring = (radial.await.length() - extent * 0.85).abs();
+                let dist_ring = (radial.length() - extent * 0.85).abs();
                 if dist_ring <= pick_radius * 2.0 && best.as_ref().is_none_or(|(best_dist, _)| dist_ring < *best_dist) {
                     best = Some((dist_ring, handle));
                 }
@@ -1738,24 +1734,24 @@ fn append_gumball_geometry(lines: &mut Vec<LineVertex3d>, translucent: &mut Vec<
     let Some(pivot) = selection_centroid(state) else {
         return;
     };
-    let extent = gumball_extent(camera.position.sub(pivot).await.length());
+    let extent = gumball_extent(camera.position.sub(pivot).length());
     let axis_colors = [(Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]), (Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]), (Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0])];
     for (axis, color) in axis_colors {
-        let end = pivot.add(axis.await.scale(extent));
+        let end = pivot.add(axis.scale(extent));
         lines.push(LineVertex3d { position: pivot.to_array(), color });
-        lines.push(LineVertex3d { position: end.await.to_array(), color });
+        lines.push(LineVertex3d { position: end.to_array(), color });
     }
     let ring_segments = 48usize;
     for (normal, color) in [(Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 0.85]), (Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 0.85]), (Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 0.85])] {
         let tangent_a = if normal.x.abs() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
-        let tangent_b = normal.await.cross(tangent_a).normalize();
+        let tangent_b = normal.cross(tangent_a).normalize();
         let tangent_a = tangent_b.cross(normal).normalize();
         let radius = extent * 0.85;
         for step in 0..ring_segments {
             let a0 = step as f32 / ring_segments as f32 * std::f32::consts::TAU;
             let a1 = (step + 1) as f32 / ring_segments as f32 * std::f32::consts::TAU;
-            let p0 = pivot.add(tangent_a.scale(a0.cos() * radius)).await.add(tangent_b.scale(a0.sin() * radius));
-            let p1 = pivot.add(tangent_a.scale(a1.cos() * radius)).await.add(tangent_b.scale(a1.sin() * radius));
+            let p0 = pivot.add(tangent_a.scale(a0.cos() * radius)).add(tangent_b.scale(a0.sin() * radius));
+            let p1 = pivot.add(tangent_a.scale(a1.cos() * radius)).add(tangent_b.scale(a1.sin() * radius));
             lines.push(LineVertex3d { position: p0.to_array(), color });
             lines.push(LineVertex3d { position: p1.to_array(), color });
         }
@@ -1772,7 +1768,7 @@ fn append_gumball_geometry(lines: &mut Vec<LineVertex3d>, translucent: &mut Vec<
             } else {
                 Vec3::new(1.0, 0.0, 0.0)
             };
-            let bitangent = normal.await.cross(tangent).normalize();
+            let bitangent = normal.cross(tangent).normalize();
             let tangent = bitangent.cross(normal).normalize();
             let rotation = quat_from_basis(tangent, bitangent, normal);
             translucent.push(SceneDraw3d {
@@ -1797,12 +1793,12 @@ fn apply_gumball_preview(state: &mut World3dState) {
             let translation = instance.model.cols[3];
             let base = Vec3::new(translation[0], translation[1], translation[2]);
             if state.gumball_preview_translate.length() > 1e-4 {
-                let next = base.await.add(state.gumball_preview_translate);
+                let next = base.add(state.gumball_preview_translate);
                 instance.model.cols[3] = [next.x, next.y, next.z, 1.0];
             } else if state.gumball_preview_angle.abs() > 1e-6 {
                 if let Some(handle) = state.gumball_handle {
                     if let Some(axis) = handle.axis_dir() {
-                        let offset = base.await.sub(pivot);
+                        let offset = base.sub(pivot);
                         let rotated = rotate_vector(offset, axis, state.gumball_preview_angle);
                         let next = pivot.add(rotated);
                         instance.model.cols[3] = [next.x, next.y, next.z, 1.0];
@@ -1811,14 +1807,14 @@ fn apply_gumball_preview(state: &mut World3dState) {
             } else if (state.gumball_preview_scale.x - 1.0).abs() > 1e-6 || (state.gumball_preview_scale.y - 1.0).abs() > 1e-6 || (state.gumball_preview_scale.z - 1.0).abs() > 1e-6 {
                 if let Some(handle) = state.gumball_handle {
                     if let Some(axis) = handle.axis_dir() {
-                        let offset = base.await.sub(pivot);
+                        let offset = base.sub(pivot);
                         let scale = match handle {
                             GumballHandle::ScaleX => state.gumball_preview_scale.x,
                             GumballHandle::ScaleY => state.gumball_preview_scale.y,
                             GumballHandle::ScaleZ => state.gumball_preview_scale.z,
                             _ => 1.0,
                         };
-                        let scaled = pivot.add(axis.scale(offset.dot(axis) * (scale - 1.0)).await.add(offset));
+                        let scaled = pivot.add(axis.scale(offset.dot(axis) * (scale - 1.0)).add(offset));
                         instance.model.cols[3] = [scaled.x, scaled.y, scaled.z, 1.0];
                     }
                 }
@@ -2855,12 +2851,8 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         }
         "interactionHover" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
-            state.local_hover_id = args
-                .get("targets")
-                .and_then(|value| value.as_array())
-                .and_then(|targets| targets.first())
-                .and_then(|target| target.get("id").and_then(dsl_id_to_string))
-                .and_then(|id| parse_resolved_item_id(state, &id).map(str::to_string));
+            state.local_hover_id =
+                args.get("targets").and_then(|value| value.as_array()).and_then(|targets| targets.first()).and_then(|target| target.get("id").and_then(dsl_id_to_string)).and_then(|id| parse_resolved_item_id(state, &id).map(str::to_string));
         }
         "setSelection" => {
             if let Some(mode) = args.get("mode").and_then(|value| value.as_str()) {
@@ -2893,11 +2885,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
                 })),
             });
         }
-        return Some(ActionDescriptor {
-            controller_id: state.controller_id.clone(),
-            action: "worldSurfaceLeave".into(),
-            args: action_args(json!({ "surfaceId": state.surface_id, "pane": state.surface_id })),
-        });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldSurfaceLeave".into(), args: action_args(json!({ "surfaceId": state.surface_id, "pane": state.surface_id })) });
     }
     if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
         let hit = pick_vortex_at(state, x, y, inner);
@@ -3127,7 +3115,7 @@ fn gumball_drag_update(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
         if let Some(axis) = handle.axis_dir() {
             if let Some(current) = gumball_project_ray_onto_axis(origin, dir, pivot, axis, eye) {
                 let delta = current - state.gumball_drag_anchor;
-                state.gumball_preview_translate = axis.normalize().await.scale(delta);
+                state.gumball_preview_translate = axis.normalize().scale(delta);
             }
         } else if let Some(normal) = handle.plane_normal() {
             if let Some(current) = ray_plane_point(origin, dir, pivot, normal) {
@@ -3138,7 +3126,7 @@ fn gumball_drag_update(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
         if let Some(normal) = handle.plane_normal() {
             if let Some(hit) = ray_plane_point(origin, dir, pivot, normal) {
                 let current = hit.sub(pivot);
-                if current.await.length() > 1e-4 && state.gumball_drag_start_vec.length() > 1e-4 {
+                if current.length() > 1e-4 && state.gumball_drag_start_vec.length() > 1e-4 {
                     state.gumball_preview_angle = axis_rotate_angle(state.gumball_drag_start_vec, current, normal);
                 }
             }
@@ -3243,7 +3231,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                             continue;
                         }
                         let ray_dist = ray_segment_distance(origin, dir, a, b).unwrap_or(f32::INFINITY);
-                        let depth = a.await.add(b).scale(0.5).sub(origin).dot(dir);
+                        let depth = a.add(b).scale(0.5).sub(origin).dot(dir);
                         let better = match &best {
                             None => true,
                             Some((best_ray, best_depth, _, _)) => depth < *best_depth - 1e-4 || ((depth - *best_depth).abs() <= 1e-4 && ray_dist < *best_ray),
@@ -3406,7 +3394,7 @@ fn quat_normalize_f32(quat: [f32; 4]) -> [f32; 4] {
 fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
     let from = from.normalize();
     let to = to.normalize();
-    let r = from.await.dot(to) + 1.0;
+    let r = from.dot(to) + 1.0;
     let quat = if r < 0.000_001 {
         if from.x.abs() > from.z.abs() {
             [-from.y, from.x, 0.0, r]
@@ -3414,7 +3402,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
             [0.0, -from.z, from.y, r]
         }
     } else {
-        let cross = from.await.cross(to);
+        let cross = from.cross(to);
         [cross.x, cross.y, cross.z, r]
     };
     quat_normalize_f32(quat)
@@ -3422,10 +3410,10 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
     let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
-    if dir.await.dot(dir) < 1e-12 {
+    if dir.dot(dir) < 1e-12 {
         Vec3::new(0.0, 0.0, -1.0)
     } else {
-        dir.await.normalize()
+        dir.normalize()
     }
 }
 
@@ -3439,7 +3427,7 @@ fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: 
     let point_radius = radius * 0.18;
     let outward = !display_direction.is_some_and(|mode| mode == "inwards");
     let rotation = quat_from_unit_vectors(Vec3::new(0.0, 1.0, 0.0), dir);
-    let (shaft_center, head_base) = if outward { (pos.await.add(dir.scale(shaft_length * 0.5)), pos.await.add(dir.scale(shaft_length))) } else { (pos.await.sub(dir.scale(head_length + shaft_length * 0.5)), pos.await.sub(dir.scale(head_length))) };
+    let (shaft_center, head_base) = if outward { (pos.add(dir.scale(shaft_length * 0.5)), pos.add(dir.scale(shaft_length))) } else { (pos.sub(dir.scale(head_length + shaft_length * 0.5)), pos.sub(dir.scale(head_length))) };
     VortexArrowLayout { point_radius, shaft_radius, shaft_length, head_length, shaft_center: shaft_center.to_array(), head_base: head_base.to_array(), rotation }
 }
 
@@ -3534,7 +3522,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             continue;
         };
         let plane_position = reference.origin.unwrap_or([0.0, 0.0, 0.0]);
-        let plane_origin = Vec3::new(plane_position[0] as f32, plane_position[1] as f32, plane_position[2] as f32).await;
+        let plane_origin = Vec3::new(plane_position[0] as f32, plane_position[1] as f32, plane_position[2] as f32);
         let width = reference.width_world.unwrap_or(1.0) as f32;
         let image_aspect = state.reference_aspect.get(url).copied().unwrap_or(1.0);
         let height = width / image_aspect.max(0.01);
@@ -3545,7 +3533,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
         if offset.x.abs() > width * 0.5 || offset.y.abs() > height * 0.5 {
             continue;
         }
-        let distance = origin.sub(hit).await.length();
+        let distance = origin.sub(hit).length();
         if best.as_ref().is_none_or(|(best_distance, _)| distance < *best_distance) {
             best = Some((distance, url.to_string()));
         }
@@ -3607,7 +3595,7 @@ fn brush_preview_mesh_id(mesh_url: Option<&str>) -> String {
 fn append_box_wireframe(lines: &mut Vec<LineVertex3d>, origin: [f64; 3], orientation: [f64; 4], scale: [f64; 3], color: [f32; 4]) {
     let corners = [[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [-0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]];
     let model = Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [orientation[0] as f32, orientation[1] as f32, orientation[2] as f32, orientation[3] as f32], [scale[0] as f32, scale[1] as f32, scale[2] as f32]);
-    let world_corners: Vec<[f32; 3]> = corners.iter().map(|corner| model.transform_point(Vec3::new(corner[0], corner[1], corner[2])).await.to_array()).collect();
+    let world_corners: Vec<[f32; 3]> = corners.iter().map(|corner| model.transform_point(Vec3::new(corner[0], corner[1], corner[2])).to_array()).collect();
     let edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
     for (a, b) in edges {
         lines.push(LineVertex3d { position: world_corners[a], color });
@@ -3664,7 +3652,7 @@ pub fn apply_glb_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
         state.pending_glb_urls.remove(url);
         return;
     }
-    if let Ok(mesh) = mesh_from_glb(bytes).await {
+    if let Ok(mesh) = mesh_from_glb(bytes) {
         ingest_glb_mesh(state, url, mesh, mesh_id);
     }
 }
@@ -4117,10 +4105,7 @@ mod tests {
         );
         assert_eq!(state.local_hover_id.as_deref(), Some("obj-2"));
 
-        apply_world_action_preview(
-            &mut state,
-            &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) },
-        );
+        apply_world_action_preview(&mut state, &ActionDescriptor { controller_id: "controller-1".into(), action: "interactionHover".into(), args: action_args(json!({ "domainId": WORLD_INTERACTION_DOMAIN_ID, "channel": "pointer", "targets": [] })) });
         assert!(state.local_hover_id.is_none(), "empty targets clears hover");
     }
 
@@ -4437,7 +4422,7 @@ mod tests {
         let camera = state.orbit.to_camera();
         let mesh_ref = state.meshes.get("mesh-1").expect("mesh");
         let tri = mesh_ref.indices.get(0..3).expect("triangle");
-        let centroid = mesh_vertex(mesh_ref, tri[0]).add(mesh_vertex(mesh_ref, tri[1])).await.add(mesh_vertex(mesh_ref, tri[2])).scale(1.0 / 3.0);
+        let centroid = mesh_vertex(mesh_ref, tri[0]).add(mesh_vertex(mesh_ref, tri[1])).add(mesh_vertex(mesh_ref, tri[2])).scale(1.0 / 3.0);
         let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h).expect("face centroid projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("face pick");
         assert_eq!(picked.0, "face");
@@ -4458,7 +4443,7 @@ mod tests {
         let chunk = state.meshes.get("mesh-1").and_then(|mesh| mesh.edge_positions.get(0..6)).expect("edge");
         let a = Vec3::new(chunk[0], chunk[1], chunk[2]);
         let b = Vec3::new(chunk[3], chunk[4], chunk[5]);
-        let mid = a.await.add(b).scale(0.5);
+        let mid = a.add(b).scale(0.5);
         let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), mid, inner.w, inner.h).expect("edge midpoint projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("edge pick");
         assert_eq!(picked.0, "edge");

@@ -71,27 +71,12 @@ impl Default for FormsArtifact {
 impl FormsArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> FormsSnapshot {
-        FormsSnapshot {
-            schema: self.schema.clone(),
-            id: self.id.clone(),
-            version: self.version.clone(),
-            title: self.title.clone(),
-            structure: self.structure.clone(),
-            results: self.results.clone(),
-        }
+        FormsSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), structure: self.structure.clone(), results: self.results.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: FormsSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            id: snapshot.id,
-            version: snapshot.version,
-            title: snapshot.title,
-            structure: snapshot.structure,
-            results: snapshot.results,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, structure: snapshot.structure, results: snapshot.results, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -103,7 +88,6 @@ impl FormsArtifact {
         self.structure = snapshot.structure;
         self.results = snapshot.results;
     }
-
 }
 //#endregion 🔖️Conversions
 
@@ -112,8 +96,8 @@ impl FormsArtifact {
 /// forms' historical names (relocated from the deleted `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub use crate::playbook::{
-    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions,
-    is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
+    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, is_block_visible as is_question_visible,
+    is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
 
 pub async fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
@@ -332,8 +316,7 @@ mod tests {
     }
 
     async fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
-        crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation)
-            .expect("valid mutation diff")
+        crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
     }
 
     #[semio_framework_async_macros::async_test]

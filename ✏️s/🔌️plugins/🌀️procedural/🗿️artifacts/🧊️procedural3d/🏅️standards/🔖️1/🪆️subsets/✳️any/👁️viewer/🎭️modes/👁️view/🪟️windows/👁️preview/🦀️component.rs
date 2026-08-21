@@ -13,7 +13,7 @@
 //! than silently duplicating the other surface's session machinery.
 
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKit, WindowKindDefinition};
+use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKindDefinition, WindowKit};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants

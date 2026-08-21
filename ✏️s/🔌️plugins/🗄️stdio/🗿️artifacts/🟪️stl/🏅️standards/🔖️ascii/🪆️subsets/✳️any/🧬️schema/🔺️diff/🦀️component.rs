@@ -337,7 +337,7 @@ pub struct StlDiff {
 }
 
 impl MutationDiff<StlSnapshot> for StlDiff {
-    async fn apply(&self, base: &StlSnapshot) -> MutationApplyResult<StlSnapshot> {
+    fn apply(&self, base: &StlSnapshot) -> MutationApplyResult<StlSnapshot> {
         if let Some(diff) = &self.triangles {
             validate_triangles_diff(base.triangles.len(), diff)?;
         }
@@ -346,7 +346,7 @@ impl MutationDiff<StlSnapshot> for StlDiff {
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalar
     /// `solid_name`: LWW. `triangles`: see `absorb_triangles`.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.solid_name.is_some() {
             self.solid_name = other.solid_name;
         }
@@ -359,21 +359,21 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
     /// `self.apply(base)` back to `base` — `between` is the single source of truth for turning a
     /// state pair into a diff, so `inverse` doesn't duplicate its per-field logic (same pattern
     /// as this ticket's zip/xml precedent).
-    async fn inverse(&self, base: &StlSnapshot) -> Self {
+    fn inverse(&self, base: &StlSnapshot) -> Self {
         let mutated = apply_stl_diff_unchecked(self, base);
-        <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base).await
+        <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `triangles` uses index-pairwise matching (see
     /// `triangles_between`'s doc comment for the single-tail-kind-per-call caveat).
-    async fn between(base: &StlSnapshot, other: &StlSnapshot) -> Self {
+    fn between(base: &StlSnapshot, other: &StlSnapshot) -> Self {
         let solid_name = (base.solid_name != other.solid_name).then(|| other.solid_name.clone());
         let td = triangles_between(&base.triangles, &other.triangles);
         let triangles = if td.is_empty() { None } else { Some(td) };
         StlDiff { solid_name, triangles }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.solid_name.is_none() && self.triangles.as_ref().map_or(true, StlTrianglesDiff::is_empty)
     }
 }
@@ -766,10 +766,10 @@ fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
 }
 
 impl protocol::DiffCodec for StlDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_stl_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_stl_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1-FIX: REAL binary frame (`format u8 | flags u8 | [solid_name] | [triangles]`),
@@ -789,7 +789,7 @@ impl protocol::DiffCodec for StlDiff {
     /// `array-prim`/`record`-block constructs are unexercised anywhere in this codebase and
     /// `Prim::Ref`-adjacent array-of-records framing is the documented, non-blocking
     /// `mechanism_gaps` entry every collection-triple diff hits this wave).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags = 0u8;
         if self.solid_name.is_some() {
             flags |= 0b01;
@@ -806,10 +806,10 @@ impl protocol::DiffCodec for StlDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
-        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let flags = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let flags = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
         let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(StlDiff { solid_name, triangles })

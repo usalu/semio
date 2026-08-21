@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the payload is finite, so `change-n-ed-kn`'s `mutation.invariant` fatal cannot fire, and 75.0 differs from the committed 50.0, so its `mutation.no-op` warning cannot either");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the payload is finite, so `change-n-ed-kn`'s `mutation.invariant` fatal cannot fire, and 75.0 differs from the committed 50.0, so its `mutation.no-op` warning cannot either"
+    );
     assert!(produced.messages().is_empty(), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: an accepted change-n-ed-kn emits no diagnostics at all");
 }
 

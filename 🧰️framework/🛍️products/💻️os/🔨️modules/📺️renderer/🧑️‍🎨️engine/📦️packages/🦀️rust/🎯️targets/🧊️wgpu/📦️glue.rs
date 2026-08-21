@@ -7,13 +7,13 @@
 //!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
 //! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
-extern crate semio_framework_os_kernel as store_sync;
-extern crate semio_framework_os_kernel as dsl_core;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
 extern crate framework_surface_node_graph as framework_surface_tiled_map;
 extern crate infinite_canvas as infinite_world;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as dsl_core;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as store_sync;
 #[macro_export]
 macro_rules! action_args_json {
     ($($tt:tt)*) => {
@@ -107,7 +107,7 @@ use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
-use ui_wgpu::wgpu::{apply_window_cursor, fetch_font_bytes, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, SemioCursor, Theme};
+use ui_wgpu::wgpu::{apply_window_cursor, fetch_font_bytes, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerModifiers, SemioCursor, Theme};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
@@ -257,11 +257,7 @@ pub(crate) mod kernel_runtime {
                     continue;
                 }
                 let Some(parent) = entry.extends else { continue };
-                let record = ExtensionRecord {
-                    extension_id: entry.plugin_id.clone(),
-                    package: PackageId(entry.plugin_id),
-                    capability_requests: entry.capabilities.into_iter().map(|capability| CapabilityGrant { capability, scope: None }).collect(),
-                };
+                let record = ExtensionRecord { extension_id: entry.plugin_id.clone(), package: PackageId(entry.plugin_id), capability_requests: entry.capabilities.into_iter().map(|capability| CapabilityGrant { capability, scope: None }).collect() };
                 by_parent.entry(parent).or_default().push(record);
             }
             Self { by_parent }
@@ -289,12 +285,21 @@ pub(crate) mod kernel_runtime {
 
     //#region 🔖️Requests/Outcomes
     pub(crate) enum KernelRequest {
-        CreateApp { wasm_path: PathBuf, plugin_id: String, app_id: String },
-        DestroyApp { instance: u32 },
+        CreateApp {
+            wasm_path: PathBuf,
+            plugin_id: String,
+            app_id: String,
+        },
+        DestroyApp {
+            instance: u32,
+        },
         /// 📡️ `events` is normally one `Event::AppCommandEvent` (the `exchange` collapse,
         /// `📓️design-abi.md` §2/§4) but callers that need `surface-visible` (rendering) or other raw
         /// kernel events pass those directly — a single turn may carry several.
-        Exchange { instance: u32, events: Vec<Event> },
+        Exchange {
+            instance: u32,
+            events: Vec<Event>,
+        },
     }
 
     pub(crate) struct ExchangeOutcome {
@@ -499,7 +504,20 @@ pub(crate) mod kernel_runtime {
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
-            let actor = self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await?;
+            let actor = self
+                .runtime
+                .activate(
+                    package_id.clone(),
+                    plugin_ordinal,
+                    ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id },
+                    Lane::Interactive,
+                    None,
+                    ActivationEvent::Manual,
+                    &compiled,
+                    &[] as &[BrokerCapabilityGrant],
+                    &TURN_BUDGET,
+                )
+                .await?;
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -654,10 +672,28 @@ pub(crate) mod kernel_runtime {
         async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
             if events.is_empty() {
-                envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? } });
+                envelopes.push(Envelope {
+                    to: actor,
+                    from: Origin::Kernel,
+                    lane: Lane::Interactive,
+                    seq: next_seq(),
+                    deadline_ms: None,
+                    coalesce: None,
+                    cancel_of: None,
+                    payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? },
+                });
             } else {
                 for event in &events {
-                    envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(|error| error.to_string())? } });
+                    envelopes.push(Envelope {
+                        to: actor,
+                        from: Origin::Kernel,
+                        lane: Lane::Interactive,
+                        seq: next_seq(),
+                        deadline_ms: None,
+                        coalesce: None,
+                        cancel_of: None,
+                        payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(|error| error.to_string())? },
+                    });
                 }
             }
             for envelope in &envelopes {
@@ -885,10 +921,8 @@ fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, lane: 
 /// `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 #[cfg(not(target_arch = "wasm32"))]
 pub mod scale_bench {
-    use semio_framework::kernel::{
-        AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult,
-    };
-    use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult};
+    use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
     use serde::Deserialize;
@@ -954,8 +988,7 @@ pub mod scale_bench {
     /// live", budget 3 is actor count, shard count and per-shard ceiling. A trap from an
     /// `idle`/`cpu`/`ui`/`io`/`stateful` actor IS a real failure and still counts.
     fn unexpected_faults(outcomes: &[ShardOutcome], actors: &[ActorId], records: &[&RegistryRecord]) -> Vec<String> {
-        let by_design: std::collections::HashSet<u64> =
-            actors.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|(actor, _)| actor.0).collect();
+        let by_design: std::collections::HashSet<u64> = actors.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|(actor, _)| actor.0).collect();
         outcomes
             .iter()
             .filter_map(|outcome| match outcome {
@@ -1352,8 +1385,7 @@ pub mod scale_bench {
             return (fail, skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "budget 4's full-scale activation failed before this could run"));
         }
         let outcomes = env.drain();
-        let by_design: std::collections::HashSet<u64> =
-            activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
+        let by_design: std::collections::HashSet<u64> = activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
         let faults = outcomes.iter().filter(|o| matches!(o, ShardOutcome::Fault { actor, .. } if !by_design.contains(actor))).count();
         let rss = process_rss_bytes();
         let active = env.kernel().metrics().actors;
@@ -1361,7 +1393,13 @@ pub mod scale_bench {
         let row4 = row(
             4,
             "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)",
-            if rss.is_none() { "skipped" } else if pass4 { "pass" } else { "fail" },
+            if rss.is_none() {
+                "skipped"
+            } else if pass4 {
+                "pass"
+            } else {
+                "fail"
+            },
             json!({ "rssBytes": rss, "activatedCount": activated.len(), "activeActors": active, "faultCount": faults }),
             json!({ "maxBytes": memory_budget_bytes }),
             if rss.is_none() { "`ps -o rss=` did not return a value on this host" } else { "RSS sampled once via `ps -o rss= -p <pid>` immediately after all 2550 records were instantiated and given their InstanceOpen turn" },
@@ -1372,7 +1410,9 @@ pub mod scale_bench {
         let interactive_actor = activated.iter().find(|(_, profile)| profile == "idle").map(|(actor, _)| *actor);
         let row5 = match interactive_actor {
             None => skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "no idle-profile record to use as the interactive target"),
-            Some(_interactive_actor) if cpu_actors.len() < 40 => skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", &format!("only {} cpu-profile actors in registry, need 40", cpu_actors.len())),
+            Some(_interactive_actor) if cpu_actors.len() < 40 => {
+                skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", &format!("only {} cpu-profile actors in registry, need 40", cpu_actors.len()))
+            }
             Some(interactive_actor) => {
                 const ROUNDS: usize = 30;
                 const NATIVE_BUDGET_MS: f64 = 8.0;
@@ -1492,7 +1532,13 @@ pub mod scale_bench {
                 ShardOutcome::Fault { actor, message } if *actor == hang_actor.0 => Some(message.clone()),
                 _ => None,
             });
-            let killed = message.as_deref().map(|m| { let lower = m.to_ascii_lowercase(); lower.contains("deadline") || lower.contains("fuel") || lower.contains("cannot enter") }).unwrap_or(false);
+            let killed = message
+                .as_deref()
+                .map(|m| {
+                    let lower = m.to_ascii_lowercase();
+                    lower.contains("deadline") || lower.contains("fuel") || lower.contains("cannot enter")
+                })
+                .unwrap_or(false);
             (killed, message)
         };
         env.unregister(hang_actor);
@@ -1545,7 +1591,8 @@ pub mod scale_bench {
         }
         env.drain();
 
-        env.send_payload(actor_a, Payload::Suspend { checkpoint: true });
+        let operation = JobOperation { operation: actor_a.0, base_revision: 0, generation: actor_a.generation() as u64, preview_sequence: 0, seed: actor_a.0 };
+        env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 });
         if env.pump().is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Suspend");
         }
@@ -1565,14 +1612,14 @@ pub mod scale_bench {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
         };
-        env.send_payload(actor_b, Payload::Resume { checkpoint: Some(state.clone()) });
+        env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } });
         if env.pump().is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Resume");
         }
         let resume_outcomes = env.drain();
         let resumed = resume_outcomes.iter().any(|o| matches!(o, ShardOutcome::Resumed { actor } if *actor == actor_b.0));
 
-        env.send_payload(actor_b, Payload::Suspend { checkpoint: true });
+        env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 });
         if env.pump().is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "pump failed on post-resume re-Suspend");
         }
@@ -1831,6 +1878,17 @@ mod camera_dispatch_deadline_tests {
     }
 }
 
+/// 🪪️ P3c (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the capability a deferred
+/// `spawn_app_task` continuation needs to re-borrow the `AppRuntime` it was scheduled from, once its
+/// `.await` resumes. This used to be a field on `AppRuntime` itself (`self_weak`) — a genuine
+/// self-reference that forced `Rc<RefCell<AppRuntime>>` ownership on the whole struct and made it
+/// `!Send` in the strongest possible way (definitionally, not merely "contains a `!Send` handle").
+/// Every call site that needs one already has the real `Rc<RefCell<AppRuntime>>` in scope at its own
+/// call boundary (`OsHost::runtime`, or a `spawn_app_task` closure that already captured it) — so this
+/// is now an explicit parameter threaded down from there, never stored inside the struct it points
+/// back to. See `📓️p3c-explicit-app-handle.md` §1.
+type AppHandle = std::rc::Weak<RefCell<AppRuntime>>;
+
 struct AppRuntime {
     gpu: GpuContext,
     atlas: FontAtlas,
@@ -1859,7 +1917,6 @@ struct AppRuntime {
     caret_blink_at_ms: f64,
     caret_blink_visible: bool,
     asset_poll_pending: bool,
-    self_weak: std::rc::Weak<RefCell<AppRuntime>>,
     #[cfg(not(target_arch = "wasm32"))]
     plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
@@ -1867,6 +1924,18 @@ struct AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     native_reload_pending: bool,
 }
+
+/// 🧪️ P3c: `self_weak` was the only field that made `AppRuntime` definitionally `Rc<RefCell<_>>`-owned
+/// (see `AppHandle`'s own doc comment above). With it gone, this assertion lets the compiler — not a
+/// person re-deriving the per-field audit by hand every time a field is added — settle whether the
+/// struct is `Send` today. The mounted native compiler gate exercising this assertion is recorded in
+/// `📓️p3c-explicit-app-handle.md`; wasm32 deliberately excludes it because the renderer's
+/// browser-side handles are single-threaded platform values.
+#[cfg(not(target_arch = "wasm32"))]
+const _: fn() = || {
+    fn assert_send<T: Send>() {}
+    assert_send::<AppRuntime>();
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 fn resolve_asset_fetch_url(url: &str) -> String {
@@ -1915,8 +1984,8 @@ impl AppRuntime {
     /// holds `self` via `Rc<RefCell<AppRuntime>>`'s `try_borrow_mut()`, so re-borrowing that SAME
     /// cell from INSIDE `frame()`'s own call stack panics rather than working — true, but that only
     /// rules out borrowing synchronously; it does not rule out deferring the whole call. This now
-    /// uses the identical `self_weak`/`try_borrow_mut()`-held-across-`.await` pattern `on_context_menu`/
-    /// the camera-dispatch closures below already use: `spawn_app_task` queues the future, and it
+    /// uses the identical explicit-handle/`try_borrow_mut()`-held-across-`.await` pattern the camera-
+    /// dispatch closures below already use: `spawn_app_task` queues the future, and it
     /// only actually re-borrows from `about_to_wait`'s `poll_tasks()` tick — strictly AFTER `frame()`
     /// has already returned and dropped its own borrow, so there is no re-entrant conflict. Holding
     /// the borrow across `.boot()`'s `.await` makes `frame()`'s outer `try_borrow_mut()` fail (and
@@ -1924,7 +1993,7 @@ impl AppRuntime {
     /// frame-skip, not a UI-thread park; the winit event loop keeps pumping OS messages the whole
     /// time. See `📓️terra-shell-unpark-report.md`.
     #[cfg(not(target_arch = "wasm32"))]
-    fn maybe_reload_native_plugins(&mut self) {
+    fn maybe_reload_native_plugins(&mut self, handle: &AppHandle) {
         if !self.native_reload_pending {
             return;
         }
@@ -1939,7 +2008,7 @@ impl AppRuntime {
             }
         };
         self.shell.prepare_hot_reload(entries);
-        let runtime = self.self_weak.clone();
+        let runtime = handle.clone();
         spawn_app_task(async move {
             let Some(runtime) = runtime.upgrade() else { return };
             let Ok(mut app) = runtime.try_borrow_mut() else { return };
@@ -1955,7 +2024,7 @@ impl AppRuntime {
     /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
     /// list this method re-validates against LIVE state before acting on, never applies blindly. See
     /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
-    fn frame(&mut self, build_directives: &crate::frame_job::FrameDirectives) {
+    fn frame(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives) {
         if std::mem::take(&mut self.shell.fullscreen_toggle_requested) {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -1986,14 +2055,14 @@ impl AppRuntime {
         #[cfg(not(target_arch = "wasm32"))]
         {
             self.poll_native_plugin_hot_swap();
-            self.maybe_reload_native_plugins();
+            self.maybe_reload_native_plugins(handle);
             // 🎠️ terra-shell-unpark — same `self_weak`/`try_borrow_mut()`-held-across-`.await`
             // deferral as `maybe_reload_native_plugins` above (see its doc comment for why this is
             // sound despite `frame()` itself running inside a borrow): `pump_sync_events` no longer
             // runs to completion before the rest of `frame()` continues below, it resumes from
             // `about_to_wait`'s `poll_tasks()` tick. One tick of staleness on directory/sync events is
             // invisible at `ControlFlow::Poll`'s frame rate. See `📓️terra-shell-unpark-report.md`.
-            let runtime = self.self_weak.clone();
+            let runtime = handle.clone();
             spawn_app_task(async move {
                 let Some(runtime) = runtime.upgrade() else { return };
                 let Ok(mut app) = runtime.try_borrow_mut() else { return };
@@ -2032,7 +2101,7 @@ impl AppRuntime {
         if !expired_world3d_surfaces.is_empty() {
             let camera_actions: Vec<ActionDescriptor> = expired_world3d_surfaces.iter().filter_map(|surface_id| self.shell.world3d_states.get(surface_id).map(orbit_camera_action)).collect();
             if !camera_actions.is_empty() {
-                let runtime = self.self_weak.clone();
+                let runtime = handle.clone();
                 spawn_app_task(async move {
                     if let Some(runtime) = runtime.upgrade() {
                         if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2044,7 +2113,7 @@ impl AppRuntime {
         }
         let scene_camera_actions = scenes::sweep_expired_scene_camera_dispatches(app_now_ms());
         if !scene_camera_actions.is_empty() {
-            let runtime = self.self_weak.clone();
+            let runtime = handle.clone();
             spawn_app_task(async move {
                 if let Some(runtime) = runtime.upgrade() {
                     if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2074,7 +2143,7 @@ impl AppRuntime {
         self.shell.render_chrome(&mut self.draw, &mut self.overlay, &mut self.atlas, &self.icons, &mut self.input, &self.theme, &mut self.gpu);
         let scene_events = self.input.drain_events();
         if !scene_events.is_empty() {
-            let runtime = self.self_weak.clone();
+            let runtime = handle.clone();
             spawn_app_task(async move {
                 if let Some(runtime) = runtime.upgrade() {
                     if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2084,7 +2153,7 @@ impl AppRuntime {
             });
         }
         if !self.shell.tutorial_pending_document_ops.is_empty() {
-            let runtime = self.self_weak.clone();
+            let runtime = handle.clone();
             spawn_app_task(async move {
                 if let Some(runtime) = runtime.upgrade() {
                     if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2118,7 +2187,7 @@ impl AppRuntime {
                 }
                 if !graph_actions.is_empty() {
                     self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
-                    let runtime = self.self_weak.clone();
+                    let runtime = handle.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2134,7 +2203,7 @@ impl AppRuntime {
                     }
                 }
                 if !map_actions.is_empty() {
-                    let runtime = self.self_weak.clone();
+                    let runtime = handle.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2150,7 +2219,7 @@ impl AppRuntime {
                     }
                 }
                 if !board_actions.is_empty() {
-                    let runtime = self.self_weak.clone();
+                    let runtime = handle.clone();
                     spawn_app_task(async move {
                         if let Some(runtime) = runtime.upgrade() {
                             if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2184,7 +2253,7 @@ impl AppRuntime {
         };
         apply_window_cursor(&self.window, cursor, self.theme_dark, &mut self.last_cursor);
         if !self.asset_poll_pending {
-            self.poll_pending_assets();
+            self.poll_pending_assets(handle);
         }
     }
 
@@ -2200,13 +2269,13 @@ impl AppRuntime {
     /// wasm32 resolves relative URLs against the page origin for free). Removes 4 of the 17
     /// UI-thread-reachable `pollster::block_on` sites this packet's brief names (the former lines
     /// 2157/2170/2180/2184).
-    fn poll_pending_assets(&mut self) {
+    fn poll_pending_assets(&mut self, handle: &AppHandle) {
         let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
         glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
         let map = engine_canvas::collect_pending_map_tile_fetches();
         let ui_images = collect_pending_ui_image_fetches();
         if glb.is_empty() && map.is_empty() && ui_images.is_empty() {
-            let runtime = self.self_weak.clone();
+            let runtime = handle.clone();
             spawn_app_task(async move {
                 if let Some(runtime) = runtime.upgrade() {
                     if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2217,7 +2286,7 @@ impl AppRuntime {
             return;
         }
         self.asset_poll_pending = true;
-        let runtime = self.self_weak.clone();
+        let runtime = handle.clone();
         spawn_app_task(async move {
             struct AssetPollReset(std::rc::Weak<RefCell<AppRuntime>>);
             impl Drop for AssetPollReset {
@@ -2288,10 +2357,10 @@ impl AppRuntime {
         self.shell.screen_h = (css_height * dpr).max(1.0);
     }
 
-    fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+    fn handle_key(&mut self, handle: &AppHandle, action: KeyAction, modifiers: PointerModifiers) {
         if let KeyAction::Space(pressed) = &action {
             if self.shell.context_menu.is_some() && *pressed {
-                let runtime = self.self_weak.clone();
+                let runtime = handle.clone();
                 spawn_app_task(async move {
                     if let Some(runtime) = runtime.upgrade() {
                         if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2319,7 +2388,7 @@ impl AppRuntime {
         // via Enter/Escape never fired. `handle_keyboard_async`'s own top already reimplements the
         // exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
         // that duplication is gone, not just moved.
-        let runtime = self.self_weak.clone();
+        let runtime = handle.clone();
         spawn_app_task(async move {
             if let Some(runtime) = runtime.upgrade() {
                 if let Ok(mut app) = runtime.try_borrow_mut() {
@@ -2564,10 +2633,6 @@ impl AppRuntime {
             self.dispatch_actions(world_actions).await;
         }
     }
-
-    async fn handle_context_menu(&mut self, x: f32, y: f32) {
-        let _ = self.shell.handle_pointer_button(x, y, true, 2, &mut self.input, &self.theme).await;
-    }
 }
 
 //#region 🔖️OsHostDecomposition — SemioApp deletion
@@ -2591,7 +2656,7 @@ async fn boot_runtime(
     plugin_filter: String,
     #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
     #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
-) -> Result<(Rc<RefCell<AppRuntime>>, PointerCallbacks), String> {
+) -> Result<Rc<RefCell<AppRuntime>>, String> {
     let dpr = window.scale_factor() as f32;
     let size = window.inner_size();
     #[cfg(target_arch = "wasm32")]
@@ -2662,7 +2727,6 @@ async fn boot_runtime(
         caret_blink_at_ms: 0.0,
         caret_blink_visible: true,
         asset_poll_pending: false,
-        self_weak: std::rc::Weak::new(),
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]
@@ -2670,52 +2734,20 @@ async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
     }));
-    runtime.borrow_mut().self_weak = Rc::downgrade(&runtime);
 
-    let runtime_pointer = runtime.clone();
-    let runtime_move = runtime.clone();
-    let runtime_wheel = runtime.clone();
-    let runtime_keyboard = runtime.clone();
-    let runtime_context = runtime.clone();
-    let callbacks = PointerCallbacks {
-        on_move: Rc::new(move |x, y, down, button, modifiers| {
-            let runtime = runtime_move.clone();
-            spawn_app_task(async move {
-                if let Ok(mut app) = runtime.try_borrow_mut() {
-                    app.handle_pointer_move(x, y, down, button, modifiers).await;
-                }
-            });
-        }),
-        on_button: Rc::new(move |x, y, down, button, modifiers| {
-            let runtime = runtime_pointer.clone();
-            spawn_app_task(async move {
-                if let Ok(mut app) = runtime.try_borrow_mut() {
-                    app.handle_pointer_button(x, y, down, button, modifiers).await;
-                }
-            });
-        }),
-        on_wheel: Rc::new(move |delta, _x, _y, _modifiers| {
-            if let Ok(mut app) = runtime_wheel.try_borrow_mut() {
-                app.wheel_delta += delta;
-            }
-        }),
-        on_key: Rc::new(move |action, modifiers| {
-            if let Ok(mut app) = runtime_keyboard.try_borrow_mut() {
-                app.handle_key(action, modifiers);
-            }
-        }),
-        on_context_menu: Rc::new(move |x, y| {
-            let runtime = runtime_context.clone();
-            spawn_app_task(async move {
-                if let Ok(mut app) = runtime.try_borrow_mut() {
-                    app.handle_context_menu(x, y).await;
-                }
-            });
-        }),
-    };
-
+    // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one
+    // per input kind) and hand it back alongside `runtime`. `winit_app.rs`'s own `HostUserEvent` doc
+    // comment records that its one caller stopped using it at the P3a enqueue-only
+    // `WindowDelegate`/`dispatch_normalized_event` cutover -- `boot_runtime` was left constructing it
+    // anyway because touching this signature wasn't that packet's job. It is
+    // this packet's job (removing `self_weak`, see this crate's own `AppHandle` doc comment), and per
+    // AGENTS.md's no-legacy-code rule, dead construction is deleted outright. Right-click remains a
+    // lossless `DispatchEvent::PointerDown { button: Secondary }` in the enqueue-only contract;
+    // `winit_app::dispatch_normalized_event` maps it to button `2` and calls the canonical
+    // `handle_pointer_button`, whose Shell path opens the context menu. The redundant callbacks-only
+    // `handle_context_menu` wrapper is deleted with its sole caller. See `📓️p3c-explicit-app-handle.md`.
     log_debug("wgpu renderer booted");
-    Ok((runtime, callbacks))
+    Ok(runtime)
 }
 
 #[cfg(not(target_arch = "wasm32"))]

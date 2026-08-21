@@ -1,8 +1,8 @@
 //! 📝️ Procedural2d play app — the generation input-form window (generate mode).
 
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::terminology::Procedural2dLabels;
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::forms_bridge::flow_fixture_to_form_spec;
 use flow::playbook::{render_generation_form_body, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
@@ -28,7 +28,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

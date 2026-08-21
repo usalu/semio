@@ -149,5 +149,9 @@ async fn permutes_the_whole_position_order_without_touching_any_payload() {
     };
     assert_eq!((undo.id.as_str(), undo.to_index), ("pos-harbor", 0), "reorder-positions/moves-the-harbor-position-to-the-end: the inverse sends the feature back to the index BASE held it at");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("reorder", "positions", "reorder-positions", "ReorderedPositions"), "reorder-positions/moves-the-harbor-position-to-the-end: the fixture must be bound to reorder-positions' own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("reorder", "positions", "reorder-positions", "ReorderedPositions"),
+        "reorder-positions/moves-the-harbor-position-to-the-end: the fixture must be bound to reorder-positions' own descriptor"
+    );
 }

@@ -1,13 +1,13 @@
 //! 🧬️ 🧬️ Procedural3d play app commands command — `remove-generation`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
-use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
 use crate::artifacts::procedural3d::op::{generation_mutation_to_procedural3d, Procedural3dMutation};
+use crate::artifacts::procedural3d::schema::evaluate_generation_preview;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::FlowEvalSession;
 use flow::playbook::{apply_generation_mutation, generation_operations, selected_generation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use flow::FlowEvalSession;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -54,7 +54,8 @@ async fn handle_generation(action: &str, args: Option<&Value>, projection: &Proc
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "remove-generation")]
 pub struct RemoveGeneration {
-    pub id: String}
+    pub id: String,
+}
 
 pub async fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc.snapshot, cfg.snapshot))

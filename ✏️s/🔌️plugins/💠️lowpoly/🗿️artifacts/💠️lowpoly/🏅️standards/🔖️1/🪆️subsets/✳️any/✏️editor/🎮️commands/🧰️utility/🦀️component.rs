@@ -2,12 +2,12 @@
 //! also clears mid-gesture scratch so switching tools never leaves a stale drag behind) and per-utility
 //! parameter writes (`setUtilityParam`). Config-only.
 
+use crate::artifacts::lowpoly::op::LowpolyMutation;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{is_paint_utility, utility_params_value};
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 

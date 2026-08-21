@@ -28,8 +28,11 @@
 //! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(target_os = "windows")]
-#[path = "🦀️types.rs"]
-mod types;
+#[path = "🦀️backend.rs"]
+mod backend;
+#[cfg(target_os = "windows")]
+#[path = "🦀️frame_buffers.rs"]
+mod frame_buffers;
 #[cfg(target_os = "windows")]
 #[path = "🦀️hlsl.rs"]
 mod hlsl;
@@ -43,14 +46,11 @@ mod resources;
 #[path = "🦀️scene_target.rs"]
 mod scene_target;
 #[cfg(target_os = "windows")]
-#[path = "🦀️frame_buffers.rs"]
-mod frame_buffers;
+#[path = "🦀️types.rs"]
+mod types;
 #[cfg(target_os = "windows")]
 #[path = "🦀️world3d.rs"]
 mod world3d;
-#[cfg(target_os = "windows")]
-#[path = "🦀️backend.rs"]
-mod backend;
 
 #[cfg(target_os = "windows")]
 pub use backend::D3d12Backend;

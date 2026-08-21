@@ -150,7 +150,18 @@ pub struct AirExchangeResult {
 }
 
 /// 💨️ Compute combined infiltration and ventilation for a zone timestep.
-pub async fn compute_air_exchange(infiltration: &InfiltrationSpec, ventilation: &VentilationSpec, zone_volume_m3: f64, exterior_area_m2: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, wind_speed_m_s: f64, p_atm: f64) -> AirExchangeResult {
+pub async fn compute_air_exchange(
+    infiltration: &InfiltrationSpec,
+    ventilation: &VentilationSpec,
+    zone_volume_m3: f64,
+    exterior_area_m2: f64,
+    t_zone_c: f64,
+    w_zone: f64,
+    t_out_c: f64,
+    w_out: f64,
+    wind_speed_m_s: f64,
+    p_atm: f64,
+) -> AirExchangeResult {
     let inf_flow = infiltration_flow_m3_s(infiltration, zone_volume_m3, exterior_area_m2, t_out_c, t_zone_c, wind_speed_m_s, p_atm);
     let vent_flow = ventilation.design_flow_m3_s * ventilation.schedule_factor.clamp(0.0, 1.0);
     let (inf_sens, inf_lat) = ventilation_load_w(inf_flow, t_zone_c, w_zone, t_out_c, w_out, p_atm, 0.0);

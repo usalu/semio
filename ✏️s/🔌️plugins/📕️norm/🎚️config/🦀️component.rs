@@ -75,9 +75,7 @@ impl store::ConfigRecord for NormConfig {}
 /// `NormConfigMutation::Snapshot` already carries the full post-op config.
 impl protocol::MutationDiff<NormConfig> for NormConfig {
     async fn apply(&self, _base: &NormConfig) -> protocol::MutationApplyResult<NormConfig> {
-        Ok({
-            self.clone()
-        })
+        Ok({ self.clone() })
     }
     async fn absorb(&mut self, other: Self) {
         *self = other;

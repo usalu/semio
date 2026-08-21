@@ -1,8 +1,10 @@
 //! 🔍️ Animate present app panel — the inspector: field editors for the selected tile(s).
 
-use crate::editor::animate::terminology::AnimatePresentLabels;
 use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use crate::editor::animate::terminology::AnimatePresentLabels;
+use semio_framework_plugin::{
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_DETAILS: &str = "animate.present.play.details";
@@ -10,7 +12,13 @@ pub const PRESENT_PLAY_BODY_DETAILS: &str = "animate.present.play.details";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(PRESENT_PLAY_BODY_DETAILS.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(PRESENT_PLAY_BODY_DETAILS.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

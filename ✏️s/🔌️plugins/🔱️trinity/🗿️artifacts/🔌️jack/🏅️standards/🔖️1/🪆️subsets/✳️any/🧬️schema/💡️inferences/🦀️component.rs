@@ -47,10 +47,7 @@ impl protocol::InferenceSpec<JackSnapshot> for JackInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] },
-            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] }, protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] }]
     }
 }
 //#endregion 🔖️Inference

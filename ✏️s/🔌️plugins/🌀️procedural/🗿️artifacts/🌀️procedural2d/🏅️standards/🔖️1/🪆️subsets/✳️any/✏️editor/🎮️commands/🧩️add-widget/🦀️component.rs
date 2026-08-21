@@ -1,11 +1,11 @@
 //! 🧩️ 🧩️ Procedural2d play app commands command — `add-widget`.
 
-use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::schema::host_from_fixture;
 use crate::artifacts::procedural2d::op::{procedural2d_fixture_operations, Procedural2dMutation};
+use crate::artifacts::procedural2d::schema::host_from_fixture;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -15,7 +15,8 @@ pub struct AddWidget {
     pub kind: String,
     pub neuron_kind: Option<String>,
     pub x: Option<f64>,
-    pub y: Option<f64>}
+    pub y: Option<f64>,
+}
 
 /// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -23,7 +24,8 @@ pub async fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Procedural2dSnap
     let fixture = &doc.snapshot.fixture;
     let descriptor = match payload.kind.as_str() {
         "neuron" => json!({ "kind": "neuron", "neuronKind": payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
-        other => json!({ "kind": other }).to_string()};
+        other => json!({ "kind": other }).to_string(),
+    };
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     if host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok() {

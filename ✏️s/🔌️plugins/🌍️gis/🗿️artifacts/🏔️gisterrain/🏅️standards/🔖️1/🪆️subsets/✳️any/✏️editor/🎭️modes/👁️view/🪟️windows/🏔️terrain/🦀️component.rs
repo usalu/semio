@@ -4,14 +4,14 @@
 //! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
 //! editable/undoable document state (see `crate::artifacts::gisterrain`).
 
-use crate::editor::gis3d::config::Gis3dConfig;
-use crate::editor::gis3d::GIS3D_PLAY_APP_ID;
-use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
 /// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
 /// import — see `💡️inferences/🦀️component.rs`'s identical fix for the full story). Real home:
 /// `crate::artifacts::gisterrain::schema`'s `🔖️TerrainDescriptor` region.
 use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDescriptorJson};
+use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
+use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::editor::gis3d::config::Gis3dConfig;
+use crate::editor::gis3d::GIS3D_PLAY_APP_ID;
 use framework_surface::terrain::projection;
 use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};

@@ -1,10 +1,10 @@
 //! 🧺️ 🧺️ Sourcing curate app commands command — `drop-on-pool`.
 
-use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::schema::{curation_decision_for_set, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::{curation_decision_for_set, CurationDecision};
 use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🔀️ Turns a resolved curation decision into the real `SourcingMutation` it corresponds to — `None`

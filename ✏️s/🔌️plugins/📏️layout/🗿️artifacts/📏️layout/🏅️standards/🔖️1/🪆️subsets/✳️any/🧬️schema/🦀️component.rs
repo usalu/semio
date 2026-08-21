@@ -1,9 +1,6 @@
 //! 🧬️ Layout artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::layout::{
-    CharacterStyle, GridSettings, ImageLink, LayoutDropPreviewState, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread,
-    TextStory, LAYOUT_DOCUMENT_SCHEMA,
-};
+use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -206,8 +203,8 @@ pub async fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::layout::{LayoutDiff, LayoutMutation, LayoutSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
     pub struct LayoutBuilderConstruction {
@@ -220,12 +217,11 @@ pub mod derived_construction {
         type Mutation = LayoutMutation;
         type Diff = LayoutDiff;
         async fn empty() -> Self {
-            Self {
-                snapshot: crate::artifacts::layout::schema::default_document(),
-                diagnostics: Vec::new(),
-            }
+            Self { snapshot: crate::artifacts::layout::schema::default_document(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -236,24 +232,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <LayoutDiff as protocol::MutationDiff<LayoutSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -262,8 +255,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::layout::LayoutSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct LayoutParts {
@@ -355,46 +348,17 @@ async fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapsho
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         name: "Demo".into(),
         grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
-        paragraph_styles: vec![ParagraphStyle {
-            id: "paragraph.body".into(),
-            name: "Body".into(),
-            font_family: "Layout Sans".into(),
-            font_size: 12.0,
-            font_weight: 400,
-            leading: 14.4,
-            tracking: 0.0,
-            alignment: "left".into(),
-        }],
+        paragraph_styles: vec![ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() }],
         character_styles: Vec::new(),
-        stories: vec![TextStory {
-            id: "story-1".into(),
-            content: "Hello layout".into(),
-            style_runs: Vec::new(),
-        }],
-        links: vec![ImageLink {
-            id: "link-missing".into(),
-            path: "assets/missing.png".into(),
-            hash: "sha256:missing".into(),
-            width: 100,
-            height: 100,
-            dpi: 300,
-            color_profile: None,
-            state: Some("missing".into()),
-            proxy_data_url: None,
-        }],
+        stories: vec![TextStory { id: "story-1".into(), content: "Hello layout".into(), style_runs: Vec::new() }],
+        links: vec![ImageLink { id: "link-missing".into(), path: "assets/missing.png".into(), hash: "sha256:missing".into(), width: 100, height: 100, dpi: 300, color_profile: None, state: Some("missing".into()), proxy_data_url: None }],
         parent_pages: vec![ParentPage {
             id: "parent-1".into(),
             name: "Master".into(),
             width: 400.0,
             height: 500.0,
             layer_ids: vec!["layer-parent".into()],
-            layers: vec![crate::artifacts::layout::Layer {
-                id: "layer-parent".into(),
-                name: "Master".into(),
-                visible: true,
-                locked: false,
-                object_ids: vec!["frame-inherited".into()],
-            }],
+            layers: vec![crate::artifacts::layout::Layer { id: "layer-parent".into(), name: "Master".into(), visible: true, locked: false, object_ids: vec!["frame-inherited".into()] }],
             frames: vec![crate::artifacts::layout::Frame::Rect {
                 id: "frame-inherited".into(),
                 layer_id: "layer-parent".into(),
@@ -418,13 +382,7 @@ async fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapsho
                 columns: crate::artifacts::layout::PageColumns { count: 1, gutter: 0.0 },
                 guides: Vec::new(),
                 layer_ids: vec!["layer-1".into()],
-                layers: vec![crate::artifacts::layout::Layer {
-                    id: "layer-1".into(),
-                    name: "Content".into(),
-                    visible: true,
-                    locked: false,
-                    object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()],
-                }],
+                layers: vec![crate::artifacts::layout::Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()] }],
                 frames: vec![
                     crate::artifacts::layout::Frame::Text {
                         id: "frame-text-1".into(),

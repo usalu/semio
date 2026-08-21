@@ -483,17 +483,17 @@ impl PortDirectedGraph {
 
 // #region 🔖️ViewDelegation
 impl GraphView for PortDirectedGraph {
-    async fn node_count(&self) -> usize {
-        self.storage.node_count().await
+    fn node_count(&self) -> usize {
+        self.storage.node_count()
     }
     async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.storage.nodes()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
-        self.storage.contains_node(node).await
+    fn contains_node(&self, node: NodeId) -> bool {
+        self.storage.contains_node(node)
     }
-    async fn edge_count(&self) -> usize {
-        self.storage.edge_count().await
+    fn edge_count(&self) -> usize {
+        self.storage.edge_count()
     }
     async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges()
@@ -507,20 +507,20 @@ impl GraphView for PortDirectedGraph {
     async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.in_neighbors(node)
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        self.storage.degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        self.storage.degree(node)
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
-        self.storage.out_degree(node).await
+    fn out_degree(&self, node: NodeId) -> usize {
+        self.storage.out_degree(node)
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        self.storage.in_degree(node).await
+    fn in_degree(&self, node: NodeId) -> usize {
+        self.storage.in_degree(node)
     }
-    async fn is_directed(&self) -> bool {
-        self.storage.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.storage.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.storage.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.storage.is_multigraph()
     }
     async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges_between(u, v)
@@ -528,20 +528,20 @@ impl GraphView for PortDirectedGraph {
 }
 
 impl AttrView for PortDirectedGraph {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.storage.node_attrs(node).await
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+        self.storage.node_attrs(node)
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.storage.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.storage.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.storage.graph_attrs()
     }
 }
 
 impl EdgeWeights for PortDirectedGraph {
-    async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.storage.weight(edge).await
+    fn weight(&self, edge: EdgeRef) -> f64 {
+        self.storage.weight(edge)
     }
 }
 // #endregion 🔖️ViewDelegation

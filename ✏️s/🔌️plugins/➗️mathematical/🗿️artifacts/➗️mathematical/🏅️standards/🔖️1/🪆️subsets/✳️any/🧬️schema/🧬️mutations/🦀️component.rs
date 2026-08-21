@@ -19,8 +19,7 @@ use crate::artifacts::mathematical::{MathematicalDiff, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    change_coefficient, change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes,
-    insert_point, move_node, move_point, remove_point, replace_graph, replace_points, update_graph_algorithm,
+    change_coefficient, change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, insert_point, move_node, move_point, remove_point, replace_graph, replace_points, update_graph_algorithm,
 };
 
 //#region 🔖️Mutations
@@ -250,10 +249,7 @@ mod tests {
         let label = base.equation.expr.label;
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
-        assert_eq!(
-            after.equation.find(label).map(|node| node.kind.clone()),
-            Some(crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() })
-        );
+        assert_eq!(after.equation.find(label).map(|node| node.kind.clone()), Some(crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() }));
     }
 
     #[semio_framework_async_macros::async_test]

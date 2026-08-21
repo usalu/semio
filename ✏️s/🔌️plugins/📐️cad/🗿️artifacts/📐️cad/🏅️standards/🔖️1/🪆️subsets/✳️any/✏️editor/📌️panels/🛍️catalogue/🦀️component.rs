@@ -42,10 +42,10 @@ pub async fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::cad::testkit::*;
-    use crate::editor::cad::config::CadConfig;
-    use crate::editor::cad::CadPlayApp;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::editor::cad::config::CadConfig;
+    use crate::editor::cad::testkit::*;
+    use crate::editor::cad::CadPlayApp;
     use semio_framework_plugin::ArtifactView;
 
     #[semio_framework_async_macros::async_test]

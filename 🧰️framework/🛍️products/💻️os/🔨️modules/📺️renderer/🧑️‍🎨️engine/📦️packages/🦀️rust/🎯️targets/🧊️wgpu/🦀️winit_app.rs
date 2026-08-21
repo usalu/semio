@@ -22,6 +22,7 @@
 
 use crate::kernel_seam::KernelSeam;
 use crate::os_host::OsHost;
+use crate::AppHandle;
 use crate::AppRuntime;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -130,9 +131,10 @@ impl OsHost {
             let generation = self.events.current_generation();
             let drained = self.events.drain(ui_host::WorkerContext::new(generation));
             let runtime = self.runtime.clone();
+            let handle = Rc::downgrade(&self.runtime);
             crate::spawn_app_task(async move {
                 let Ok(mut app) = runtime.try_borrow_mut() else { return };
-                dispatch_drained_events(&mut app, drained).await;
+                dispatch_drained_events(&mut app, &handle, drained).await;
             });
         }
         // 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): a genuine, if narrow, worker
@@ -161,14 +163,15 @@ impl OsHost {
             // encode/submit seam — flagged for Phase 5 in `📓️p3a-render-snapshot.md`. This wrap makes
             // an overrun VISIBLE — any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`
             // (8ms) is recorded as a `ContractViolation`, queryable by this packet's exit gate.
-            let _watchdog = semio_framework_trace::Watchdog::start(
-                "os_renderer_frame",
-                render_frame_operation_id(),
-                semio_framework_trace::Generation(self.frame_generation),
-                semio_framework_trace::InteractiveStage::UiPresent,
-            );
+            let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_frame", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
             self.frame_generation = self.frame_generation.wrapping_add(1);
-            app.frame(&build_directives);
+            // 🪪️ P3c: `AppRuntime` no longer stores a weak handle to its own `Rc<RefCell<_>>` (that
+            // was the one field disqualifying it from `Send` — see `AppHandle`'s doc comment in
+            // `📦️glue.rs`). Every `frame()`-internal deferred continuation that used to clone
+            // `self.self_weak` now takes this parameter instead, computed here where the real
+            // `Rc<RefCell<AppRuntime>>` already lives (`self.runtime`).
+            let handle = Rc::downgrade(&self.runtime);
+            app.frame(&handle, &build_directives);
             app.last_cursor.map(|(cursor, _)| cursor)
         } else {
             None
@@ -230,25 +233,27 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// Reconstructing a synthetic [`DispatchEvent`] for the coalesced samples keeps this a thin adapter
 /// with zero duplicated dispatch logic, per CLAUDE.md's "if code is repeated, it MUST be close to
 /// each other" — there is exactly one place that knows how to turn a `DispatchEvent` into `AppRuntime`
-/// calls.
+/// calls. A right-click stays on this same lossless route as `PointerDown::Secondary`; the canonical
+/// `AppRuntime::handle_pointer_button` receives DOM button `2`, and `ShellState` opens the context
+/// menu in its pressed-secondary branch.
 // 🚫️async: U1 — sync fn boundary (spawned once per drain by `redraw` above); the `.await`s inside are
 // the same boundary-async exception `AppRuntime`'s own methods already are.
-async fn dispatch_drained_events(app: &mut AppRuntime, drained: ui_host::DrainedEvents) {
+async fn dispatch_drained_events(app: &mut AppRuntime, handle: &AppHandle, drained: ui_host::DrainedEvents) {
     if let Some(sample) = drained.pointer_move {
-        dispatch_normalized_event(app, DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y }).await;
+        dispatch_normalized_event(app, handle, DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y }).await;
     }
     if let Some(sample) = drained.scroll {
-        dispatch_normalized_event(app, DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y }).await;
+        dispatch_normalized_event(app, handle, DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y }).await;
     }
     for discrete in drained.discrete {
-        dispatch_normalized_event(app, discrete.event).await;
+        dispatch_normalized_event(app, handle, discrete.event).await;
     }
 }
 
 // 🚫️async: U1 — the fn itself is sync at its call boundary (spawned by `dispatch_drained_events`
 // above); the `.await`s inside it are the same boundary-async exception `AppRuntime`'s own methods
 // already are.
-async fn dispatch_normalized_event(app: &mut AppRuntime, event: DispatchEvent) {
+async fn dispatch_normalized_event(app: &mut AppRuntime, handle: &AppHandle, event: DispatchEvent) {
     match event {
         DispatchEvent::PointerMove { x, y, .. } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, app.modifiers.clone());
@@ -267,12 +272,12 @@ async fn dispatch_normalized_event(app: &mut AppRuntime, event: DispatchEvent) {
         }
         DispatchEvent::KeyDown { key, modifiers } => {
             if let Some(action) = key_action_from_dispatch(&key, true) {
-                app.handle_key(action, event_modifiers_to_pointer(modifiers));
+                app.handle_key(handle, action, event_modifiers_to_pointer(modifiers));
             }
         }
         DispatchEvent::KeyUp { key, modifiers } => {
             if let Some(action) = key_action_from_dispatch(&key, false) {
-                app.handle_key(action, event_modifiers_to_pointer(modifiers));
+                app.handle_key(handle, action, event_modifiers_to_pointer(modifiers));
             }
         }
         DispatchEvent::TextInput { .. } | DispatchEvent::Paste { .. } | DispatchEvent::Ime(_) => {
@@ -289,6 +294,16 @@ fn pointer_button_to_i16(button: PointerButton) -> i16 {
         PointerButton::Primary => 0,
         PointerButton::Middle => 1,
         PointerButton::Secondary => 2,
+    }
+}
+
+#[cfg(test)]
+mod p3c_tests {
+    use super::*;
+
+    #[test]
+    fn secondary_pointer_button_uses_context_menu_code() {
+        assert_eq!(pointer_button_to_i16(PointerButton::Secondary), 2);
     }
 }
 
@@ -335,12 +350,12 @@ fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::K
 /// this file's own module docstring on why `ui_host::NativeHost`'s single-phase construction cannot
 /// replace it. Only the STEADY-STATE control flow changes: `ControlFlow::Poll` → `WaitUntil`/`Wait`.
 /// No `callbacks` payload (the old variant carried `ui_wgpu::wgpu::PointerCallbacks`) — this file
-/// normalizes input itself via `ui_host::event` and drives `AppRuntime` directly (see
-/// `dispatch_normalized_event` above), so `boot_runtime`'s still-constructed `PointerCallbacks`
-/// return value is simply left unused at the one call site below, cheaper than editing
-/// `boot_runtime`'s own signature for a single caller.
+/// normalizes input itself via `ui_host::event` and drives `AppRuntime` through the enqueue-only
+/// `dispatch_normalized_event` path above, so `boot_runtime` returns only the runtime.
 pub enum HostUserEvent {
-    RuntimeReady { runtime: Rc<RefCell<AppRuntime>> },
+    RuntimeReady {
+        runtime: Rc<RefCell<AppRuntime>>,
+    },
     /// 🔔️ Payload-free — arriving at all is the signal. Sent by [`ProxyWaker`] (native only) so a
     /// `kernel_runtime::TASK_POOL` future completing on the kernel thread wakes this event loop out
     /// of `WaitUntil`/`Wait`; `user_event` below does nothing but let `about_to_wait` run again,
@@ -521,7 +536,7 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
             )
             .await;
             match result {
-                Ok((runtime, _callbacks)) => {
+                Ok(runtime) => {
                     let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime });
                 }
                 Err(error) => crate::log_debug(&format!("boot_runtime failed: {error}")),

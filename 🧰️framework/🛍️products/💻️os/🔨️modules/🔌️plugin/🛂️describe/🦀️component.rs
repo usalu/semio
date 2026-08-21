@@ -13,8 +13,7 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes,
-    PackageRole, PanelTabDefinition, PluginManifest,
+    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
 };
 
 /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
@@ -57,7 +56,8 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// single-plugin wasm instance every entry with `owner == plugin_id` is this package's own.
 async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     crate::app::list_artifact_inference_services()
-        .await.unwrap_or_default()
+        .await
+        .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
         .map(|metadata| ContributedInferenceMetadata {
@@ -143,7 +143,7 @@ pub async fn describe_plugin() -> Vec<u8> {
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null)).await
+    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
 }
 
 /// 🧩️ E1-describe: the `extension_exports!` counterpart of `describe_plugin` — added alongside it
@@ -199,5 +199,5 @@ pub async fn describe_extension() -> Vec<u8> {
         assets: Vec::new(),
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null)).await
+    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
 }

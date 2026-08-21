@@ -14,8 +14,17 @@ pub async fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSna
     let mut mutations = vec![crate::artifacts::puzzle3d::mutations::create_object::mutation::create_object(object.clone(), index)];
     for attraction in base.attractions.iter().filter(|attraction| vortex_ids.contains(&attraction.attracting) || vortex_ids.contains(&attraction.attracted)) {
         mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices::mutation::connect_vortices(
-            attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),
-            attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y,
+            attraction.id.clone(),
+            attraction.attracting.clone(),
+            attraction.attracted.clone(),
+            attraction.gap,
+            attraction.shift,
+            attraction.rise,
+            attraction.rotation,
+            attraction.turn,
+            attraction.tilt,
+            attraction.x,
+            attraction.y,
         ));
     }
     mutations

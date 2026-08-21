@@ -3,8 +3,8 @@
 //! when some do not.
 
 use super::mutation::ScaleAssets;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch};
 
 pub async fn diff(payload: &ScaleAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {

@@ -94,14 +94,14 @@ pub enum LasMutation {
 /// `header.number_of_point_records` in sync with the real collection length (`engine::encode_las`
 /// also independently recomputes both at encode time — see `LasHeader`'s doc comment — so this
 /// sync is a snapshot-level consistency guarantee, not the sole source of correctness).
-pub async fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
-    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
+    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -110,7 +110,7 @@ pub async fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutati
 impl Mutation<LasSnapshot> for LasMutation {
     type Diff = LasDiff;
 
-    async fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             LasMutation::NoMutation => LasDiff::default(),
             LasMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -133,7 +133,7 @@ impl Mutation<LasSnapshot> for LasMutation {
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
     /// prior value up in `base`; a stale/out-of-range index inverts to `NoMutation` (nothing to
     /// undo).
-    async fn inverse(&self, base: &LasSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &LasSnapshot) -> Vec<Self> {
         match self {
             LasMutation::NoMutation => vec![LasMutation::NoMutation],
             LasMutation::SetSnapshot { .. } => vec![LasMutation::SetSnapshot { snapshot: base.clone() }],
@@ -285,7 +285,7 @@ async fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
 //#endregion 🔖️TupleCodec
 
 //#region 🔖️TopLevel
-async fn print_las_mutation(m: &LasMutation) -> String {
+fn print_las_mutation(m: &LasMutation) -> String {
     match m {
         LasMutation::NoMutation => "no-mutation".to_string(),
         LasMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -331,11 +331,11 @@ async fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
 //#endregion 🔖️TopLevel
 
 impl protocol::OpText for LasMutation {
-    async fn print_op(&self) -> String {
-        print_las_mutation(self).await
+    fn print_op(&self) -> String {
+        print_las_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_las_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_las_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -355,7 +355,7 @@ async fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
     out.extend_from_slice(&t.2.to_le_bytes());
 }
 async fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
-    Ok((reader.read_f64_le().await.map_err(|e| e.to_string())?, reader.read_f64_le().await.map_err(|e| e.to_string())?, reader.read_f64_le().await.map_err(|e| e.to_string())?))
+    Ok((reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?))
 }
 
 /// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
@@ -375,9 +375,9 @@ async fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
 async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
     let schema = diff::read_str_lp(reader)?;
     let header = diff::dec_header_bin(reader)?;
-    let vlr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let vlr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let vlrs = (0..vlr_count).map(|_| diff::dec_vlr_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    let point_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let point_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let points = (0..point_count).map(|_| diff::dec_point_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(LasSnapshot { schema, header, vlrs, points })
 }
@@ -406,7 +406,7 @@ impl protocol::OpBinary for LasMutation {
     /// upgraded from F6's `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Every
     /// variant's payload is genuinely, individually field-by-field encoded below (see
     /// `#region 🔖️BinaryOpCodec` for the shared record encoders).
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         match self {
             LasMutation::NoMutation => out.push(TAG_NO_MUTATION),
@@ -479,40 +479,40 @@ impl protocol::OpBinary for LasMutation {
         }
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         async fn go(bytes: &[u8]) -> Result<LasMutation, String> {
-            let mut reader = store::ByteReader::new(bytes).await;
-            let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+            let mut reader = store::ByteReader::new(bytes);
+            let format = reader.read_u8().map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
                 return Err(format!("bad op format byte {format}"));
             }
-            let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+            let tag = reader.read_u8().map_err(|e| e.to_string())?;
             Ok(match tag {
                 TAG_NO_MUTATION => LasMutation::NoMutation,
                 TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader).await? },
-                TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().await.map_err(|e| e.to_string())?, minor: reader.read_u8().await.map_err(|e| e.to_string())? },
+                TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? },
                 TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? },
                 TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader)? },
-                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16 },
+                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16 },
                 TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader).await?, offset: dec_f64x3_bin(&mut reader).await? },
                 TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader).await?, min: dec_f64x3_bin(&mut reader).await? },
                 TAG_SET_POINTS_BY_RETURN => {
                     let mut counts = [0u32; 5];
                     for slot in counts.iter_mut() {
-                        *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+                        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
                     }
                     LasMutation::SetPointsByReturn { counts }
                 }
-                TAG_INSERT_VLR => LasMutation::InsertVlr { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, vlr: diff::dec_vlr_bin(&mut reader)? },
-                TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize },
-                TAG_SET_VLR_DATA => LasMutation::SetVlrData { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, data: diff::read_bytes_lp(&mut reader)? },
-                TAG_INSERT_POINT => LasMutation::InsertPoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
-                TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize },
-                TAG_SET_POINT => LasMutation::SetPoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
+                TAG_INSERT_VLR => LasMutation::InsertVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, vlr: diff::dec_vlr_bin(&mut reader)? },
+                TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
+                TAG_SET_VLR_DATA => LasMutation::SetVlrData { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, data: diff::read_bytes_lp(&mut reader)? },
+                TAG_INSERT_POINT => LasMutation::InsertPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
+                TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
+                TAG_SET_POINT => LasMutation::SetPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
                 other => return Err(format!("las mutation: unknown binary tag {other}")),
             })
         }
-        go(bytes).await.map_err(|e| protocol::ProtocolError::Malformed { what: "las op binary", offset: 0, detail: e })
+        go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las op binary", offset: 0, detail: e })
     }
 }
 //#endregion OpCodecs

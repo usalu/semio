@@ -1,10 +1,10 @@
 //! ⚙️ ⚙️ Remodel play app commands command — `set-mesh-params`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::update_mesh_params;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshParams, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

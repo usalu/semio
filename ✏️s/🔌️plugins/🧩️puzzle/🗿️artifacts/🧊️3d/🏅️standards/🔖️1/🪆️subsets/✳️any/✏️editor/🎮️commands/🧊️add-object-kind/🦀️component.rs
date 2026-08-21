@@ -1,11 +1,11 @@
 //! 🧊️ `add-object-kind` command.
 
-use serde_json::Value;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::next_object_id;
 use crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::Puzzle3dObject;
+use serde_json::Value;
 
 pub async fn add_object_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let object_kind = args.and_then(|value| value.get("objectKind")).and_then(|value| value.as_str()).unwrap_or("Object");

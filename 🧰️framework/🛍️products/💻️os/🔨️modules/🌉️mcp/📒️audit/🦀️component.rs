@@ -7,12 +7,12 @@
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::schema::RevisionStamp;
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
 //#region 🔖️ClientInfo
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

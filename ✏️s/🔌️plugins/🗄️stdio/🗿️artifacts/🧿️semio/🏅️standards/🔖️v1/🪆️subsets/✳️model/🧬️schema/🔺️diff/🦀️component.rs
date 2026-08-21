@@ -202,7 +202,7 @@ pub struct SemioModelDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    async fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
+    fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
@@ -219,7 +219,7 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.spatial = match (self.spatial.take(), other.spatial) {
             (None, b) => b,
             (a, None) => a,
@@ -289,7 +289,7 @@ fn apply_relation(relation: &mut ModelRelation, diff: &ModelRelationDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
-    async fn inverse(&self, base: &SemioModelSnapshot) -> Self {
+    fn inverse(&self, base: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
             spatial: self.spatial.as_ref().map(|d| inverse_named(&base.spatial, d, |n: &SpatialNode| n.id.clone(), inverse_spatial)),
             elements: self.elements.as_ref().map(|d| inverse_named(&base.elements, d, |e: &SemioModelElement| e.id.clone(), inverse_element)),
@@ -297,7 +297,7 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
         }
     }
 
-    async fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
+    fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
             spatial: between_named(&base.spatial, &other.spatial, |n: &SpatialNode| n.id.clone(), between_spatial),
             elements: between_named(&base.elements, &other.elements, |e: &SemioModelElement| e.id.clone(), between_element),
@@ -305,7 +305,7 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.spatial.is_none() && self.elements.is_none() && self.relations.is_none()
     }
 }
@@ -830,10 +830,10 @@ fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
 }
 
 impl DiffCodec for SemioModelDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_semio_model_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_model_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot (model): real binary diff frame, replacing the old `print_diff().into_bytes()`
@@ -845,7 +845,7 @@ impl DiffCodec for SemioModelDiff {
     /// 0-3 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
     /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
     /// `eval_cond` — same gap `stdio.semio.flow`'s own diff facet hit first).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.spatial.is_some() {
@@ -869,7 +869,7 @@ impl DiffCodec for SemioModelDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

@@ -77,7 +77,7 @@ web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "Web
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio-tungstenite = { version = "0.26", optional = true }
+tokio-tungstenite = { version = "0.26", optional = true, features = ["rustls-tls-webpki-roots"] }
 notify = { version = "8", optional = true }
 rusqlite = { version = "0.38.0", optional = true, features = ["bundled"] }
 # 🧵️ Same crate key as the base `[dependencies]` entry above — cargo unifies same-name deps declared

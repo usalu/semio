@@ -1,8 +1,10 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::wgpu::draw::{DrawList, FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
+use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
+use crate::wgpu::prepared::{PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
 use crate::wgpu::text::FontAtlas;
+use std::sync::Arc;
 use wgpu::Surface;
 
 pub struct GpuContext {
@@ -25,7 +27,7 @@ pub struct GpuContext {
 
 impl GpuContext {
     #[cfg(not(target_os = "wasi"))]
-    pub async fn from_window(window: std::sync::Arc<winit::window::Window>) -> Result<Self, String> {
+    pub async fn from_window(window: Arc<winit::window::Window>) -> Result<Self, String> {
         let dpr = window.scale_factor() as f32;
         let size = window.inner_size();
         let css_width = size.width as f32 / dpr;
@@ -134,17 +136,37 @@ impl GpuContext {
         self.mesh_store.evict_mesh(key);
     }
 
-    pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>, time_seconds: f32) -> Result<(), String> {
+    /// 🖥️ Applies one validated worker-owned packet and presents it under a non-Send UI token.
+    pub fn submit_prepared(&mut self, _token: &UiPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
+        gate.validate(&packet, live_revision, live_generation).map_err(|error| error.to_string())?;
+        self.apply_prepared_uploads(&packet.uploads);
+        self.render_prepared(&packet)?;
+        gate.commit_presented(packet);
+        Ok(())
+    }
+
+    fn apply_prepared_uploads(&mut self, uploads: &[PreparedRenderUpload]) {
+        for upload in uploads {
+            match upload {
+                PreparedRenderUpload::GlyphAtlas { pixels, width, height } => self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height),
+                PreparedRenderUpload::IconAtlas { pixels, width, height } => self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height),
+                PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture(key, pixels, *width, *height),
+                PreparedRenderUpload::Mesh { key, version, positions, normals, indices } => self.ensure_mesh(key, *version, positions, normals, indices),
+            }
+        }
+    }
+
+    fn render_prepared(&mut self, packet: &PreparedRenderPacket) -> Result<(), String> {
         self.ensure_scene_color();
         let scene = self.scene_color.as_ref().expect("scene_color");
         let frame = self.surface.get_current_texture().map_err(|err| format!("frame: {err:?}"))?;
         let view = frame.texture.create_view(&wgpu::TextureViewDescriptor { format: Some(self.color_target_format), ..Default::default() });
         let depth_view = self.depth_view.as_ref();
         let mut scene_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_scene") });
-        self.pipelines.render_scene_content(&self.device, &self.queue, &mut scene_encoder, scene, depth_view, draw, &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32, time_seconds);
+        self.pipelines.render_scene_content(&self.device, &self.queue, &mut scene_encoder, scene, depth_view, &packet.draw, &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32, packet.time_seconds);
         self.queue.submit(Some(scene_encoder.finish()));
         let mut composite_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_composite") });
-        self.pipelines.composite_to_swapchain(&self.device, &self.queue, &mut composite_encoder, &view, scene, depth_view, draw, overlay, &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32);
+        self.pipelines.composite_to_swapchain(&self.device, &self.queue, &mut composite_encoder, &view, scene, depth_view, &packet.draw, packet.overlay.as_ref(), &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32);
         self.queue.submit(Some(composite_encoder.finish()));
         frame.present();
         Ok(())

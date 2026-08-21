@@ -104,27 +104,27 @@ impl TxtSnapshot {
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️component.rs`.
 impl store::ArtifactDsl for TxtSnapshot {
     const EXTENSION: &'static str = "txt";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "stdio.txt"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         Ok(Self::from_body(text))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         self.to_body()
     }
 }
 
 impl store::ArtifactPack for TxtSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
         let raw = self.to_body();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

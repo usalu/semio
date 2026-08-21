@@ -31,12 +31,7 @@ pub struct GisMapInference {
 
 impl protocol::Inference<GisMapSnapshot> for GisMapInference {
     async fn infer(snapshot: &GisMapSnapshot) -> Self {
-        Self {
-            position_count: snapshot.positions.len(),
-            route_count: snapshot.routes.len(),
-            region_count: snapshot.regions.len(),
-            bounds: lon_lat_bounds(&all_lon_lat_pairs(snapshot)),
-        }
+        Self { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds: lon_lat_bounds(&all_lon_lat_pairs(snapshot)) }
     }
 }
 
@@ -92,12 +87,8 @@ mod tests {
     //#region 🧪️InferenceLaws
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        let snapshot = GisMapSnapshot {
-            positions: vec![MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }],
-            routes: Vec::new(),
-            regions: Vec::new(),
-            ..Default::default()
-        };
+        let snapshot =
+            GisMapSnapshot { positions: vec![MapFeature { id: "p1".into(), data: dsl::to_dsl_value(&serde_json::json!({ "lon": 1.0, "lat": 2.0 })).unwrap_or(dsl::DslValue::Null) }], routes: Vec::new(), regions: Vec::new(), ..Default::default() };
         assert_eq!(GisMapInference::infer(&snapshot), GisMapInference::infer(&snapshot));
     }
 

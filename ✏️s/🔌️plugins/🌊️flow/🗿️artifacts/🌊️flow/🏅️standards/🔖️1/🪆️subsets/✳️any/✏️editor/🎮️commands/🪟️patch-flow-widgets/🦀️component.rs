@@ -3,8 +3,8 @@
 use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{ FlowEvalSession, Widget};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use flow::{FlowEvalSession, Widget};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

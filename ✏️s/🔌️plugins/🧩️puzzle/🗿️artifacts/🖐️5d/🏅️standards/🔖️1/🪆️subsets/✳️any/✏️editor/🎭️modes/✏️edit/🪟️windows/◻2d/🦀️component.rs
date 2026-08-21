@@ -5,15 +5,13 @@
 //! LOD select in `🎚️options/🔭️lod`; the brush/fill Utility Options it shares with the 3D window come
 //! from the mode's own `🎚️options/*`.
 
+use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::options as mode_options;
 use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities};
-use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{
-    puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID,
-};
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dRuntime};
 use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
+use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
+use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{build_board2d_scene, Board2dScene, SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 

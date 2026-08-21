@@ -11,8 +11,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-
 //#region 🔖️Apply
 impl ImperativeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
@@ -89,10 +87,7 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
-    ImperativeDiff {
-        artifact: Some(Box::new(ImperativeArtifact::from_snapshot(snapshot))),
-        ..Default::default()
-    }
+    ImperativeDiff { artifact: Some(Box::new(ImperativeArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 
@@ -104,14 +99,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_diff_absorb_whole_artifact_wins() {
-        let mut diff = ImperativeDiff {
-            flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())),
-            ..Default::default()
-        };
-        let replacement = ImperativeDiff {
-            artifact: Some(Box::new(ImperativeArtifact::default())),
-            ..Default::default()
-        };
+        let mut diff = ImperativeDiff { flow: Some(crate::artifacts::imperative::imperative_flow_child_handle_and_cache(&crate::artifacts::imperative::Path::new())), ..Default::default() };
+        let replacement = ImperativeDiff { artifact: Some(Box::new(ImperativeArtifact::default())), ..Default::default() };
         diff.absorb(replacement);
         assert!(diff.artifact.is_some());
         assert!(diff.flow.is_none());

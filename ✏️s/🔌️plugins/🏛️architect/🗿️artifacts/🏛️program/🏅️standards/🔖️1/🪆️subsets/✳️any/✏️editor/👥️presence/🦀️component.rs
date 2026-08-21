@@ -31,9 +31,7 @@ impl Default for ArchitectPresence {
 
 impl protocol::MutationDiff<ArchitectPresence> for ArchitectPresence {
     async fn apply(&self, _base: &ArchitectPresence) -> protocol::MutationApplyResult<ArchitectPresence> {
-        Ok({
-            self.clone()
-        })
+        Ok({ self.clone() })
     }
     async fn absorb(&mut self, other: Self) {
         *self = other;

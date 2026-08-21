@@ -4,11 +4,9 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::gismap::diff::GisMapDiff;
 use crate::artifacts::gismap::mutations::{
-    create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data,
-    replace_route_data,
+    create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data,
 };
 use crate::artifacts::gismap::GisMapSnapshot;
 use protocol::Mutation;
@@ -53,13 +51,11 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     async fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(document, operation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(document, operation).expect("valid mutation");
         let backwards = operation.inverse(document);
         let mut restored = forward.clone();
         for back in &backwards {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, document, "inverse must exactly restore the pre-operation document");
@@ -79,10 +75,7 @@ mod tests {
         let document = GisMapSnapshot::default();
         let added = round_trip(&document, &GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") }));
         assert_eq!(added.positions.len(), 1);
-        let replaced = round_trip(
-            &added,
-            &GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "id": "p1", "label": "Home" })) }),
-        );
+        let replaced = round_trip(&added, &GisMapMutation::ReplacePositionData(replace_position_data::mutation::ReplacePositionData { id: "p1".into(), new_data: dsl_of(&json!({ "id": "p1", "label": "Home" })) }));
         assert_eq!(replaced.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
         let removed = round_trip(&replaced, &GisMapMutation::DeletePosition(delete_position::mutation::DeletePosition { id: "p1".into() }));
         assert!(removed.positions.is_empty());
@@ -150,9 +143,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None));
-        store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") })], description: None })
-            .expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::mutation::CreatePosition { index: 0, item: feature("p1") })], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     }
 
@@ -193,10 +184,7 @@ mod tests {
 }
 //#endregion 🔹Tests
 
-pub async fn apply_gis_map_mutation(
-    snapshot: &mut GisMapSnapshot,
-    mutation: &GisMapMutation,
-) -> protocol::MutationApplyResult<()> {
+pub async fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
     let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
     // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
     // after every mutation so the composed children never drift from what they actually describe

@@ -10,9 +10,9 @@
 //! `crate::editor::fem3d`'s shared `🎬️SceneRender` region (which only hosts helpers with 2+ consumer
 //! FILES, per the migration recipe's `DocumentHelpers` placement rule).
 
-use crate::editor::fem3d::config::Fem3dConfig;
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
 use crate::app_surface::{DisplayMode, ResultDisplay};
+use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
+use crate::editor::fem3d::config::Fem3dConfig;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, UiNode};
 
 /// 🪟️ The manifest's Results window kind id.
@@ -121,9 +121,9 @@ async fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &Fe
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
 async fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
+    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values;
-    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let (freq_hz, mut disp_map) = match fem3d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
@@ -144,9 +144,9 @@ async fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
 async fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values;
-    use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
 
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text(Label::data("No load case defined"));

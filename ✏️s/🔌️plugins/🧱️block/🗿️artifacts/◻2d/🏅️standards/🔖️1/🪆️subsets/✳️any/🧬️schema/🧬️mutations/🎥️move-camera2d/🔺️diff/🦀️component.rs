@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MoveCamera2d` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::{BlockCamera2d};
+use crate::BlockCamera2d;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::MoveCamera2d, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

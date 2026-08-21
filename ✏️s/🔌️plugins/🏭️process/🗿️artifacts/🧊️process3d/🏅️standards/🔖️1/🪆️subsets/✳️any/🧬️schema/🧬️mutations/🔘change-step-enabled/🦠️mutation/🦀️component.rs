@@ -26,7 +26,11 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStep
     }
 
     async fn label(&self) -> String {
-        if self.new_enabled { format!("Enable step \"{}\"", self.id) } else { format!("Disable step \"{}\"", self.id) }
+        if self.new_enabled {
+            format!("Enable step \"{}\"", self.id)
+        } else {
+            format!("Disable step \"{}\"", self.id)
+        }
     }
 
     async fn target(&self) -> Vec<String> {

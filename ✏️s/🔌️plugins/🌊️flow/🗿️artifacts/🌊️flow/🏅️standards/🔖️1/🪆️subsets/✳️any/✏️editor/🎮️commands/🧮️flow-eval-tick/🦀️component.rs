@@ -4,7 +4,7 @@ use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::host_from_snapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -14,7 +14,7 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 
 /// 🧵️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain.
 pub async fn eval_tick_effect() -> Effect {
-    Effect::DispatchAction {req: semio_framework_plugin::RequestId(107),  action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(107), action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Constants
 
@@ -54,12 +54,7 @@ pub async fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot
             "nodeHash": pending.node_hash,
         })
         .to_string();
-        effects.push(Effect::InvokeExtension {
-            req: semio_framework_plugin::RequestId(106),
-            extension_id: pending.extension_id,
-            capability: "evaluate".into(),
-            request_json,
-        });
+        effects.push(Effect::InvokeExtension { req: semio_framework_plugin::RequestId(106), extension_id: pending.extension_id, capability: "evaluate".into(), request_json });
     }
     Ok(Emit { effects, ..Default::default() })
 }

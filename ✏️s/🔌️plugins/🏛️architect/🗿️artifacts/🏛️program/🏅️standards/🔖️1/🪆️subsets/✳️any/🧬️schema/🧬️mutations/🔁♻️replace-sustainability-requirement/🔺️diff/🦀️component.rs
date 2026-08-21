@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceSustainabilityRequirement, base: &ProgramSnap
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This sustainability requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.sustainability_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { sustainability: Some(ProgramSustainabilityDelta { patched: vec![ProgramSustainabilityPatchEntry { id: payload.sustainability_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        sustainability: Some(ProgramSustainabilityDelta { patched: vec![ProgramSustainabilityPatchEntry { id: payload.sustainability_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

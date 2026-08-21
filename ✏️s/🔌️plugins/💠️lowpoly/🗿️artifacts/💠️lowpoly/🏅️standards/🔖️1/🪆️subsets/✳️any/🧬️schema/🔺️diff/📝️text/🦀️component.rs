@@ -1,21 +1,15 @@
 //! 🔺️ Lowpoly artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::lowpoly::schema::diff::{
-    LowpolyDiff, LowpolyObjectPatchEntry, LowpolyObjectsDelta, LowpolyPaintLayersDelta, LowpolyPaintStrokeAt,
-    PixelRun as SchemaPixelRun,
-};
+use crate::artifacts::lowpoly::schema::diff::{LowpolyDiff, LowpolyObjectPatchEntry, LowpolyObjectsDelta, LowpolyPaintLayersDelta, LowpolyPaintStrokeAt, PixelRun as SchemaPixelRun};
 use crate::artifacts::lowpoly::schema::LowpolyArtifact;
 use crate::artifacts::lowpoly::{apply_paint_layers_delta, LowpolySnapshot};
 use protocol::MutationDiff;
-
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
-
 
 //#region 🔖️Apply
 impl LowpolyDiff {
@@ -143,56 +137,32 @@ impl LowpolyDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a snapshot object list.
-pub async fn apply_objects_delta(
-    objects: &[crate::artifacts::lowpoly::LowpolyObject],
-    delta: &LowpolyObjectsDelta,
-) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
+pub async fn apply_objects_delta(objects: &[crate::artifacts::lowpoly::LowpolyObject], delta: &LowpolyObjectsDelta) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "object is removed more than once",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "object is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
         if !objects.iter().any(|object| &object.id == id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed object does not exist",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed object does not exist").at(["removed".to_string(), index.to_string()]));
         }
     }
-    let mut identities: std::collections::BTreeSet<_> =
-        objects.iter().map(|object| object.id.clone()).collect();
+    let mut identities: std::collections::BTreeSet<_> = objects.iter().map(|object| object.id.clone()).collect();
     for id in &delta.removed {
         identities.remove(id);
     }
     for (index, object) in delta.added.iter().enumerate() {
         if !identities.insert(object.id.clone()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "added object identity already exists",
-            )
-            .at(["added".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added object identity already exists").at(["added".to_string(), index.to_string()]));
         }
     }
     let mut patched = std::collections::BTreeSet::new();
     for (index, entry) in delta.patched.iter().enumerate() {
         if !patched.insert(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "object is patched more than once",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "object is patched more than once").at(["patched".to_string(), index.to_string()]));
         }
         if removed.contains(entry.id.as_str()) || !identities.contains(&entry.id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched object does not exist",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched object does not exist").at(["patched".to_string(), index.to_string()]));
         }
     }
     let mut next = objects.to_vec();
@@ -203,43 +173,24 @@ pub async fn apply_objects_delta(
         next.push(item.clone());
     }
     for (index, entry) in delta.patched.iter().enumerate() {
-        let object = next.iter_mut().find(|object| object.id == entry.id).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched object does not exist after structural edits",
-            )
-            .at(["patched".to_string(), index.to_string()])
-        })?;
+        let object = next
+            .iter_mut()
+            .find(|object| object.id == entry.id)
+            .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched object does not exist after structural edits").at(["patched".to_string(), index.to_string()]))?;
         use protocol::Patchable;
         object.apply_patch(&entry.patch);
         if let Some(paint) = &entry.paint_layers {
-            apply_paint_layers_delta(object, paint)
-                .map_err(|error| error.under(["patched".to_string(), index.to_string(), "paintLayers".to_string()]))?;
+            apply_paint_layers_delta(object, paint).map_err(|error| error.under(["patched".to_string(), index.to_string(), "paintLayers".to_string()]))?;
         }
     }
     if let Some(order) = &delta.reordered {
-        if order.len() != next.len()
-            || order.iter().enumerate().any(|(index, id)| {
-                order[..index].contains(id) || !next.iter().any(|object| &object.id == id)
-            })
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-order",
-                "object reorder must be a complete unique permutation",
-            )
-            .at(["reordered"]));
+        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|object| &object.id == id)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "object reorder must be a complete unique permutation").at(["reordered"]));
         }
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|object| (object.id.clone(), object)).collect();
+        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|object| (object.id.clone(), object)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            ordered.push(by_id.remove(id).ok_or_else(|| {
-                protocol::MutationApplyError::new(
-                    "mutation.apply.missing-target",
-                    "reordered object does not exist",
-                )
-                .at(["reordered".to_string(), id.clone()])
-            })?);
+            ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered object does not exist").at(["reordered".to_string(), id.clone()]))?);
         }
         next = ordered;
     }
@@ -333,28 +284,12 @@ pub async fn diff_objects_add(index: usize, item: crate::artifacts::lowpoly::Low
     let id = item.id.clone();
     let at = index.min(order.len());
     order.insert(at, id);
-    LowpolyDiff {
-        objects: Some(LowpolyObjectsDelta {
-            added: vec![item],
-            removed: Vec::new(),
-            patched: Vec::new(),
-            reordered: Some(order),
-        }),
-        ..LowpolyDiff::default()
-    }
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: vec![item], removed: Vec::new(), patched: Vec::new(), reordered: Some(order) }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Objects-remove field delta.
 pub async fn diff_objects_remove(id: String) -> LowpolyDiff {
-    LowpolyDiff {
-        objects: Some(LowpolyObjectsDelta {
-            added: Vec::new(),
-            removed: vec![id],
-            patched: Vec::new(),
-            reordered: None,
-        }),
-        ..LowpolyDiff::default()
-    }
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: vec![id], patched: Vec::new(), reordered: None }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Objects-move field delta.
@@ -365,28 +300,12 @@ pub async fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot
         let at = to_index.min(order.len());
         order.insert(at, moved);
     }
-    LowpolyDiff {
-        objects: Some(LowpolyObjectsDelta {
-            added: Vec::new(),
-            removed: Vec::new(),
-            patched: Vec::new(),
-            reordered: Some(order),
-        }),
-        ..LowpolyDiff::default()
-    }
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: Vec::new(), patched: Vec::new(), reordered: Some(order) }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Objects-patch field delta.
 pub async fn diff_objects_patch(id: String, patch: crate::artifacts::lowpoly::LowpolyObjectPatch) -> LowpolyDiff {
-    LowpolyDiff {
-        objects: Some(LowpolyObjectsDelta {
-            added: Vec::new(),
-            removed: Vec::new(),
-            patched: vec![LowpolyObjectPatchEntry { id, patch, paint_layers: None }],
-            reordered: None,
-        }),
-        ..LowpolyDiff::default()
-    }
+    LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: Vec::new(), patched: vec![LowpolyObjectPatchEntry { id, patch, paint_layers: None }], reordered: None }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Add-paint-layer field delta.
@@ -396,13 +315,7 @@ pub async fn diff_add_paint_layer(object_id: String, index: usize, layer: crate:
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
                 patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta {
-                    added: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayer {
-                        index: index as u32,
-                        layer,
-                    }],
-                    ..LowpolyPaintLayersDelta::default()
-                }),
+                paint_layers: Some(LowpolyPaintLayersDelta { added: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayer { index: index as u32, layer }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()
         }),
@@ -414,14 +327,7 @@ pub async fn diff_add_paint_layer(object_id: String, index: usize, layer: crate:
 pub async fn diff_remove_paint_layer(object_id: String, index: usize) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
-            patched: vec![LowpolyObjectPatchEntry {
-                id: object_id,
-                patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta {
-                    removed: vec![index as u32],
-                    ..LowpolyPaintLayersDelta::default()
-                }),
-            }],
+            patched: vec![LowpolyObjectPatchEntry { id: object_id, patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(), paint_layers: Some(LowpolyPaintLayersDelta { removed: vec![index as u32], ..LowpolyPaintLayersDelta::default() }) }],
             ..LowpolyObjectsDelta::default()
         }),
         ..LowpolyDiff::default()
@@ -429,23 +335,13 @@ pub async fn diff_remove_paint_layer(object_id: String, index: usize) -> Lowpoly
 }
 
 /// 🏗️ Patch-paint-layer field delta.
-pub async fn diff_patch_paint_layer(
-    object_id: String,
-    index: usize,
-    patch: crate::artifacts::lowpoly::schema::diff::LowpolyPaintLayerPatch,
-) -> LowpolyDiff {
+pub async fn diff_patch_paint_layer(object_id: String, index: usize, patch: crate::artifacts::lowpoly::schema::diff::LowpolyPaintLayerPatch) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
                 patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta {
-                    patched: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayerPatch {
-                        index: index as u32,
-                        patch,
-                    }],
-                    ..LowpolyPaintLayersDelta::default()
-                }),
+                paint_layers: Some(LowpolyPaintLayersDelta { patched: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayerPatch { index: index as u32, patch }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()
         }),
@@ -460,10 +356,7 @@ pub async fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
                 patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta {
-                    strokes: vec![LowpolyPaintStrokeAt { layer_index: layer_index as u32, runs }],
-                    ..LowpolyPaintLayersDelta::default()
-                }),
+                paint_layers: Some(LowpolyPaintLayersDelta { strokes: vec![LowpolyPaintStrokeAt { layer_index: layer_index as u32, runs }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()
         }),

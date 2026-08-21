@@ -35,10 +35,7 @@ async fn drops_stream_b_and_the_gcp_observation_that_referenced_it() {
     assert_eq!(applied, expected_after(), "delete-stream/removes-stream-b-and-cascades-its-gcp-observation: applied state differs from committed after-snapshot");
     let ids: Vec<&str> = applied.streams.iter().map(|stream| stream.id.as_str()).collect();
     assert_eq!(ids, ["stream-a"], "only stream-b is removed");
-    assert!(
-        applied.gcps.iter().all(|gcp| gcp.observations.iter().all(|observation| observation.stream_id != "stream-b")),
-        "every observation referencing the deleted stream is cascaded away"
-    );
+    assert!(applied.gcps.iter().all(|gcp| gcp.observations.iter().all(|observation| observation.stream_id != "stream-b")), "every observation referencing the deleted stream is cascaded away");
     assert_eq!(applied.gcps.len(), before().gcps.len(), "the cascade removes observations, never whole GCPs");
     assert_eq!(applied.assets, before().assets, "delete-stream leaves the assets its frames referenced in place");
 }
@@ -49,20 +46,14 @@ async fn drops_stream_b_and_the_gcp_observation_that_referenced_it() {
 async fn inverse_recreates_the_stream_but_not_the_cascaded_observation() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::CreateStream(payload)] if payload.stream.id == "stream-b"),
-        "delete-stream's inverse is one create-stream carrying the captured base stream, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::CreateStream(payload)] if payload.stream.id == "stream-b"), "delete-stream's inverse is one create-stream carrying the captured base stream, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot.streams, base.streams, "the stream itself comes back at its original position");
     assert_ne!(snapshot, base, "the cascaded GCP observation is NOT restored — delete-stream's cascade is one-way");
-    assert!(
-        snapshot.gcps.iter().all(|gcp| gcp.observations.is_empty()),
-        "the observation that referenced stream-b stays gone after the inverse"
-    );
+    assert!(snapshot.gcps.iter().all(|gcp| gcp.observations.is_empty()), "the observation that referenced stream-b stays gone after the inverse");
 }
 
 /// 🎯️ Declared `applied` with one `mutation.cascade` note counting the removed observations.
@@ -74,11 +65,7 @@ async fn declared_applied_outcome_reports_one_cascaded_observation() {
     let codes: Vec<&str> = produced.messages().iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.cascade"], "a stream with GCP references reports exactly one cascade note");
     assert_eq!(produced.messages()[0].level, protocol::Severity::Info, "a cascade is informational, never a rejection");
-    assert!(
-        produced.messages()[0].message.contains("1 GCP observation(s)"),
-        "the cascade note counts the removed observations, got {:?}",
-        produced.messages()[0].message
-    );
+    assert!(produced.messages()[0].message.contains("1 GCP observation(s)"), "the cascade note counts the removed observations, got {:?}", produced.messages()[0].message);
     assert!(produced.diff().streams.is_some() && produced.diff().gcps.is_some(), "a cascading delete-stream writes both streams and gcps");
 }
 

@@ -2,7 +2,7 @@
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::RemodelMutation;
-use crate::artifacts::remodel::{SfmParams, RemodelSnapshot};
+use crate::artifacts::remodel::{RemodelSnapshot, SfmParams};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

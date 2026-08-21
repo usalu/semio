@@ -1,9 +1,9 @@
 //! 🖼️ Raster play app — the composite window: the main paintable 2D surface.
 
+use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::modes::edit::windows::composite::options;
 use crate::editor::raster::raster_scene;
-use crate::artifacts::raster::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::{build_paint_2d_scene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

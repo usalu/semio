@@ -596,7 +596,11 @@ return vec4<f32>(color, in.color.a);
 "#;
 
 const WORLD3D_MESH_VERTEX_BUFFERS: &[VertexBufferSpec] = &[
-    VertexBufferSpec { stride: 24, step_mode: VertexStepMode::Vertex, attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x3, offset: 12 }] },
+    VertexBufferSpec {
+        stride: 24,
+        step_mode: VertexStepMode::Vertex,
+        attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x3, offset: 12 }],
+    },
     VertexBufferSpec {
         stride: 96,
         step_mode: VertexStepMode::Instance,
@@ -689,7 +693,11 @@ pub const WORLD3D_LINE_PIPELINE: PipelineSpec = PipelineSpec {
     label: "world3d_line_pipeline",
     vertex_entry: "vs_main",
     fragment_entry: "fs_main",
-    vertex_buffers: &[VertexBufferSpec { stride: 28, step_mode: VertexStepMode::Vertex, attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x4, offset: 12 }] }],
+    vertex_buffers: &[VertexBufferSpec {
+        stride: 28,
+        step_mode: VertexStepMode::Vertex,
+        attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x4, offset: 12 }],
+    }],
     bind_groups: &[WORLD_GLOBALS_BIND_GROUP],
     blend: BlendMode::AlphaBlending,
     color_write: ColorWriteMask::All,
@@ -767,7 +775,11 @@ pub const WORLD3D_TEXTURED_PIPELINE: PipelineSpec = PipelineSpec {
     vertex_entry: "vs_main",
     fragment_entry: "fs_main",
     vertex_buffers: &[
-        VertexBufferSpec { stride: 20, step_mode: VertexStepMode::Vertex, attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x2, offset: 12 }] },
+        VertexBufferSpec {
+            stride: 20,
+            step_mode: VertexStepMode::Vertex,
+            attributes: &[VertexAttributeSpec { shader_location: 0, format: VertexFormat::Float32x3, offset: 0 }, VertexAttributeSpec { shader_location: 1, format: VertexFormat::Float32x2, offset: 12 }],
+        },
         VertexBufferSpec {
             stride: 80,
             step_mode: VertexStepMode::Instance,
@@ -912,7 +924,8 @@ return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
 }
 "#;
 
-const SCENE_SAMPLE_BIND_GROUP: BindGroupSpec = BindGroupSpec { group_index: 0, entries: &[BindGroupEntrySpec { binding: 0, visibility: FRAGMENT_STAGE, kind: BindingKind::Texture2D }, BindGroupEntrySpec { binding: 1, visibility: FRAGMENT_STAGE, kind: BindingKind::Sampler }] };
+const SCENE_SAMPLE_BIND_GROUP: BindGroupSpec =
+    BindGroupSpec { group_index: 0, entries: &[BindGroupEntrySpec { binding: 0, visibility: FRAGMENT_STAGE, kind: BindingKind::Texture2D }, BindGroupEntrySpec { binding: 1, visibility: FRAGMENT_STAGE, kind: BindingKind::Sampler }] };
 
 /// 🎞️ Fullscreen triangle-pair, no vertex buffers, same shape as `BLUR_DOWNSAMPLE_PIPELINE`.
 pub const SCENE_BLIT_PIPELINE: PipelineSpec = PipelineSpec {
@@ -931,10 +944,7 @@ pub const SCENE_BLIT_PIPELINE: PipelineSpec = PipelineSpec {
 
 pub const BLUR_FAMILY: ShaderFamily = ShaderFamily {
     name: "blur",
-    variants: &[
-        ShaderVariant { name: "blur_downsample", wgsl: BLUR_DOWNSAMPLE_SHADER, pipelines: &[BLUR_DOWNSAMPLE_PIPELINE] },
-        ShaderVariant { name: "scene_blit", wgsl: SCENE_BLIT_SHADER, pipelines: &[SCENE_BLIT_PIPELINE] },
-    ],
+    variants: &[ShaderVariant { name: "blur_downsample", wgsl: BLUR_DOWNSAMPLE_SHADER, pipelines: &[BLUR_DOWNSAMPLE_PIPELINE] }, ShaderVariant { name: "scene_blit", wgsl: SCENE_BLIT_SHADER, pipelines: &[SCENE_BLIT_PIPELINE] }],
 };
 
 //#endregion 🌫️BlurFamily

@@ -47,29 +47,7 @@ pub async fn render(document: &Block3dSnapshot) -> semio_framework_plugin::UiNod
     build_world_3d_scene(
         SURFACE_ID,
         BLOCK3D_VIEW_CONTROLLER_ID,
-        world3d_scene_extended(
-            camera_json,
-            meshes_json,
-            instances_json,
-            selection_json,
-            Some(vortices_json),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        ),
+        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, Some(vortices_json), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
     )
 }
 

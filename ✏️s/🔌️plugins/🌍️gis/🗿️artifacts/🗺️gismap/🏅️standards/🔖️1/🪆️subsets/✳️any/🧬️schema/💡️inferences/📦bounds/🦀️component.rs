@@ -53,12 +53,7 @@ pub(crate) async fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64
 pub(crate) async fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
     pairs.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
-            Some(bounds) => GisMapBounds {
-                lon_min: bounds.lon_min.min(lon),
-                lon_max: bounds.lon_max.max(lon),
-                lat_min: bounds.lat_min.min(lat),
-                lat_max: bounds.lat_max.max(lat),
-            },
+            Some(bounds) => GisMapBounds { lon_min: bounds.lon_min.min(lon), lon_max: bounds.lon_max.max(lon), lat_min: bounds.lat_min.min(lat), lat_max: bounds.lat_max.max(lat) },
             None => GisMapBounds { lon_min: lon, lon_max: lon, lat_min: lat, lat_max: lat },
         })
     })

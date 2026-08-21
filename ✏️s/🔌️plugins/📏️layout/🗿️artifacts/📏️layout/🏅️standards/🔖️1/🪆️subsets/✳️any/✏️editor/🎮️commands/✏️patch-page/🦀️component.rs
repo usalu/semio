@@ -1,7 +1,5 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
-use crate::artifacts::layout::schema::text_to_rgba;
 use crate::artifacts::layout::mutations::change_frame_columns::mutation::ChangeFrameColumns;
 use crate::artifacts::layout::mutations::change_frame_fill::mutation::ChangeFrameFill;
 use crate::artifacts::layout::mutations::change_frame_stroke::mutation::ChangeFrameStroke;
@@ -18,8 +16,10 @@ use crate::artifacts::layout::mutations::resize_frame::mutation::ResizeFrame;
 use crate::artifacts::layout::mutations::update_page_columns::mutation::UpdatePageColumns;
 use crate::artifacts::layout::mutations::update_page_margins::mutation::UpdatePageMargins;
 use crate::artifacts::layout::mutations::LayoutMutation;
+use crate::artifacts::layout::schema::text_to_rgba;
 use crate::artifacts::layout::{Frame, LayoutSnapshot, Page, PageColumns, PageMargins};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared

@@ -102,15 +102,7 @@ pub struct AssemblySnapshot {
 
 impl Default for AssemblySnapshot {
     fn default() -> Self {
-        Self {
-            schema: ASSEMBLY_DOCUMENT_SCHEMA.into(),
-            seed: 0,
-            slots: Vec::new(),
-            edges: Vec::new(),
-            modules: Vec::new(),
-            weights: Vec::new(),
-            rules: Vec::new(),
-        }
+        Self { schema: ASSEMBLY_DOCUMENT_SCHEMA.into(), seed: 0, slots: Vec::new(), edges: Vec::new(), modules: Vec::new(), weights: Vec::new(), rules: Vec::new() }
     }
 }
 //#endregion 🔖️Snapshot

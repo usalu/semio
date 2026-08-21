@@ -1,11 +1,11 @@
 //! 🖼️ 🖼️ Raster play app commands command — `drop-layer-kind`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::artifacts::raster::schema::create_layer_of_kind;
 use crate::artifacts::raster::mutations::create_layer;
 use crate::artifacts::raster::op::RasterMutation;
+use crate::artifacts::raster::schema::create_layer_of_kind;
 use crate::artifacts::raster::RasterSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,8 +21,5 @@ pub struct DropLayerKind {
 pub async fn handle(payload: &DropLayerKind, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     let document = doc.snapshot;
     let layer = create_layer_of_kind(&payload.kind);
-    Ok(Emit {
-        artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })],
-        ..Default::default()
-    })
+    Ok(Emit { artifact_mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) })], ..Default::default() })
 }

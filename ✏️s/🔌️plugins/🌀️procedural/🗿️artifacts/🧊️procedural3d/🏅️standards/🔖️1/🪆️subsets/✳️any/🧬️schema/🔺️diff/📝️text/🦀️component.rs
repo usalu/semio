@@ -3,8 +3,8 @@
 use crate::artifacts::procedural3d::schema::diff::*;
 use crate::artifacts::procedural3d::schema::Procedural3dArtifact;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -14,25 +14,27 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 //#region 🔖️Collections
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WidgetsDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, Widget)>}
+    pub set: Vec<(usize, Widget)>,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapsesDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, SynapseSpec)>}
+    pub set: Vec<(usize, SynapseSpec)>,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(String, WidgetLayout)>}
+    pub set: Vec<(String, WidgetLayout)>,
+}
 
 pub(crate) async fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
     for id in &diff.removed {
@@ -70,14 +72,7 @@ async fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, Widge
 }
 
 /// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub async fn apply_fixture_helpers(
-    fixture: &FlowFixture,
-    widgets: &WidgetsDiff,
-    synapses: &SynapsesDiff,
-    layout: &LayoutDiff,
-    camera: Option<&CameraJson>,
-    schema: Option<&str>,
-) -> FlowFixture {
+pub async fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowFixture {
     let mut next = fixture.clone();
     apply_widgets_diff(&mut next.widgets, widgets);
     apply_synapses_diff(&mut next.synapses, synapses);
@@ -205,22 +200,8 @@ impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
-pub async fn diff_fixture_from_helpers(
-    base: &Procedural3dSnapshot,
-    widgets: WidgetsDiff,
-    synapses: SynapsesDiff,
-    layout: LayoutDiff,
-    camera: Option<CameraJson>,
-    schema: Option<String>,
-) -> Procedural3dDiff {
-    let fixture = apply_fixture_helpers(
-        &base.fixture,
-        &widgets,
-        &synapses,
-        &layout,
-        camera.as_ref(),
-        schema.as_deref(),
-    );
+pub async fn diff_fixture_from_helpers(base: &Procedural3dSnapshot, widgets: WidgetsDiff, synapses: SynapsesDiff, layout: LayoutDiff, camera: Option<CameraJson>, schema: Option<String>) -> Procedural3dDiff {
+    let fixture = apply_fixture_helpers(&base.fixture, &widgets, &synapses, &layout, camera.as_ref(), schema.as_deref());
     Procedural3dDiff { fixture: Some(fixture), ..Procedural3dDiff::default() }
 }
 
@@ -238,15 +219,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn diff_absorb_prefers_incoming_scalars() {
-        let mut first = Procedural3dDiff {
-            show_mode: Some("shaded".into()),
-            ..Procedural3dDiff::default()
-        };
-        first.absorb(Procedural3dDiff {
-            locale: Some("de-DE".into()),
-            preview_camera: Some(Procedural3dPreviewCamera::default()),
-            ..Procedural3dDiff::default()
-        });
+        let mut first = Procedural3dDiff { show_mode: Some("shaded".into()), ..Procedural3dDiff::default() };
+        first.absorb(Procedural3dDiff { locale: Some("de-DE".into()), preview_camera: Some(Procedural3dPreviewCamera::default()), ..Procedural3dDiff::default() });
         assert_eq!(first.show_mode.as_deref(), Some("shaded"));
         assert_eq!(first.locale.as_deref(), Some("de-DE"));
         assert!(first.preview_camera.is_some());

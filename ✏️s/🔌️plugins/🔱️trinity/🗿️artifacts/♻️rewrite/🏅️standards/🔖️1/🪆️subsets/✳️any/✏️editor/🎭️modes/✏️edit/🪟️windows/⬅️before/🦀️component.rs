@@ -1,7 +1,7 @@
 //! ⬅️ Trinity Rewrite app — Before window (editable node-graph over `before_fixture_json`).
 
-use crate::editor::rewrite::config::RewriteConfig;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfig;
 use semio_framework_plugin::UiNode;
 
 pub(crate) async fn render(state: &RewriteSnapshot, cfg: &RewriteConfig) -> UiNode {

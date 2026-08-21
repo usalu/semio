@@ -10,9 +10,9 @@
 use bytemuck::{Pod, Zeroable};
 use ui_render::{LineVertex3, MeshInstance};
 use windows::Win32::Graphics::Direct3D12::{
-    ID3D12Device, ID3D12Fence, ID3D12Resource, D3D12_CLEAR_VALUE, D3D12_HEAP_FLAG_NONE, D3D12_HEAP_PROPERTIES, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_TYPE_READBACK, D3D12_HEAP_TYPE_UPLOAD, D3D12_MEMORY_POOL_UNKNOWN,
-    D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_RESOURCE_BARRIER, D3D12_RESOURCE_BARRIER_0, D3D12_RESOURCE_BARRIER_FLAG_NONE, D3D12_RESOURCE_BARRIER_TYPE_TRANSITION, D3D12_RESOURCE_DESC, D3D12_RESOURCE_DIMENSION_BUFFER,
-    D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_FLAGS, D3D12_RESOURCE_STATES, D3D12_RESOURCE_TRANSITION_BARRIER, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_TEXTURE_LAYOUT_UNKNOWN,
+    ID3D12Device, ID3D12Fence, ID3D12Resource, D3D12_CLEAR_VALUE, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_HEAP_FLAG_NONE, D3D12_HEAP_PROPERTIES, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_TYPE_READBACK, D3D12_HEAP_TYPE_UPLOAD, D3D12_MEMORY_POOL_UNKNOWN,
+    D3D12_RESOURCE_BARRIER, D3D12_RESOURCE_BARRIER_0, D3D12_RESOURCE_BARRIER_FLAG_NONE, D3D12_RESOURCE_BARRIER_TYPE_TRANSITION, D3D12_RESOURCE_DESC, D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_FLAGS,
+    D3D12_RESOURCE_STATES, D3D12_RESOURCE_TRANSITION_BARRIER, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_TEXTURE_LAYOUT_UNKNOWN,
 };
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT, DXGI_SAMPLE_DESC};
 
@@ -184,7 +184,18 @@ pub const READBACK_HEAP: D3D12_HEAP_PROPERTIES = D3D12_HEAP_PROPERTIES { Type: D
 /// buffers and texture-upload staging buffers all share this shape.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn buffer_desc(size: u64) -> D3D12_RESOURCE_DESC {
-    D3D12_RESOURCE_DESC { Dimension: D3D12_RESOURCE_DIMENSION_BUFFER, Alignment: 0, Width: size.max(1), Height: 1, DepthOrArraySize: 1, MipLevels: 1, Format: DXGI_FORMAT(0), SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 }, Layout: D3D12_TEXTURE_LAYOUT_ROW_MAJOR, Flags: D3D12_RESOURCE_FLAGS(0) }
+    D3D12_RESOURCE_DESC {
+        Dimension: D3D12_RESOURCE_DIMENSION_BUFFER,
+        Alignment: 0,
+        Width: size.max(1),
+        Height: 1,
+        DepthOrArraySize: 1,
+        MipLevels: 1,
+        Format: DXGI_FORMAT(0),
+        SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+        Layout: D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+        Flags: D3D12_RESOURCE_FLAGS(0),
+    }
 }
 
 /// 📐️ A `D3D12_RESOURCE_DESC` for a `width`x`height` 2D texture with `mip_levels` levels and `flags`
@@ -192,7 +203,18 @@ pub fn buffer_desc(size: u64) -> D3D12_RESOURCE_DESC {
 /// raster images, the scene target + blur scratch, the depth/stencil buffer) shares this shape.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn texture2d_desc(format: DXGI_FORMAT, width: u32, height: u32, mip_levels: u16, flags: D3D12_RESOURCE_FLAGS) -> D3D12_RESOURCE_DESC {
-    D3D12_RESOURCE_DESC { Dimension: D3D12_RESOURCE_DIMENSION_TEXTURE2D, Alignment: 0, Width: width.max(1) as u64, Height: height.max(1), DepthOrArraySize: 1, MipLevels: mip_levels.max(1), Format: format, SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 }, Layout: D3D12_TEXTURE_LAYOUT_UNKNOWN, Flags: flags }
+    D3D12_RESOURCE_DESC {
+        Dimension: D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        Alignment: 0,
+        Width: width.max(1) as u64,
+        Height: height.max(1),
+        DepthOrArraySize: 1,
+        MipLevels: mip_levels.max(1),
+        Format: format,
+        SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+        Layout: D3D12_TEXTURE_LAYOUT_UNKNOWN,
+        Flags: flags,
+    }
 }
 
 /// 🏗️ Creates a `D3D12_HEAP_TYPE_UPLOAD` buffer of `size` bytes in the `GENERIC_READ` state (the only
@@ -230,7 +252,17 @@ pub fn create_upload_buffer(device: &ID3D12Device, bytes: &[u8], label: &str) ->
 /// scene target + blur scratch) and `🦀️backend.rs` (the depth/stencil buffer).
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn create_default_texture2d(device: &ID3D12Device, format: DXGI_FORMAT, width: u32, height: u32, mip_levels: u16, flags: D3D12_RESOURCE_FLAGS, initial_state: D3D12_RESOURCE_STATES, clear: Option<D3D12_CLEAR_VALUE>, label: &str) -> ID3D12Resource {
+pub fn create_default_texture2d(
+    device: &ID3D12Device,
+    format: DXGI_FORMAT,
+    width: u32,
+    height: u32,
+    mip_levels: u16,
+    flags: D3D12_RESOURCE_FLAGS,
+    initial_state: D3D12_RESOURCE_STATES,
+    clear: Option<D3D12_CLEAR_VALUE>,
+    label: &str,
+) -> ID3D12Resource {
     let desc = texture2d_desc(format, width, height, mip_levels, flags);
     let mut resource: Option<ID3D12Resource> = None;
     let clear_ptr = clear.as_ref().map(|value| value as *const _);

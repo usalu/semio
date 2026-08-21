@@ -58,7 +58,13 @@ impl ArtifactViewer for WriterViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// read-only outline toggle) is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -73,14 +79,7 @@ impl ArtifactViewer for WriterViewer {
 
 //#region 🔖️Manifest
 pub async fn create_writer_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(WRITER_DIALECT)
-        .document(["semio", "writer"])
-        .icon_id("writer")
-        .mode_def(view::definition())
-        .default_mode_id(view::WRITER_VIEW_MODE_VIEW)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(WRITER_DIALECT).document(["semio", "writer"]).icon_id("writer").mode_def(view::definition()).default_mode_id(view::WRITER_VIEW_MODE_VIEW).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

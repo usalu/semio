@@ -3,8 +3,8 @@
 //! fixed to match (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-
 //! RETIREMENT W5a), same single-blob-payload shape as before, just through the current fields.
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
+use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 
@@ -12,10 +12,7 @@ pub async fn serialize(snapshot: &Fem3dSnapshot) -> Result<CsvSnapshot, store::T
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         has_header: true,
-        records: vec![
-            CsvRecord { fields: vec![CsvField { value: "payload".into(), quoted: false }] },
-            CsvRecord { fields: vec![CsvField { value: <Fem3dSnapshot as store::ArtifactDsl>::print_dsl(snapshot), quoted: true }] },
-        ],
+        records: vec![CsvRecord { fields: vec![CsvField { value: "payload".into(), quoted: false }] }, CsvRecord { fields: vec![CsvField { value: <Fem3dSnapshot as store::ArtifactDsl>::print_dsl(snapshot), quoted: true }] }],
     })
 }
 

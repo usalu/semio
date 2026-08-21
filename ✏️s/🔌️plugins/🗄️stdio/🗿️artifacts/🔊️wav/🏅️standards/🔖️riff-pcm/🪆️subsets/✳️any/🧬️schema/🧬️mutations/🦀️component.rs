@@ -27,17 +27,17 @@ pub enum WavMutation {
 impl Mutation<WavSnapshot> for WavMutation {
     type Diff = WavDiff;
 
-    async fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             WavMutation::NoMutation => WavDiff::default(),
             WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             WavMutation::SetFmt { fmt } => diff_set_fmt(fmt.clone()),
             WavMutation::SetData { data } => diff_set_data(data.clone()),
             WavMutation::SetOtherChunks { chunks } => diff_set_other_chunks(chunks.clone()),
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
         match self {
             WavMutation::NoMutation => vec![WavMutation::NoMutation],
             WavMutation::SetSnapshot { .. } => vec![WavMutation::SetSnapshot { snapshot: base.clone() }],
@@ -71,19 +71,19 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 /// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
 /// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
 impl OpText for WavMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for WavMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }

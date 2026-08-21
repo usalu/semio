@@ -4,7 +4,10 @@
 //! geometry fingerprint, so this builder only reruns when the document actually changes.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_interaction_select, puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN};
+use crate::editor::puzzle3d::{
+    puzzle3d_action, puzzle3d_interaction_select, puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME,
+    PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
+};
 use semio_framework_plugin::{
     ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
@@ -77,12 +80,7 @@ pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec
                 .iter()
                 .map(|vortex| {
                     let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                    tree_item_with_action(
-                        full_id.clone(),
-                        vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()),
-                        Some("circle-dot"),
-                        puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_VORTEX, &full_id),
-                    )
+                    tree_item_with_action(full_id.clone(), vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), Some("circle-dot"), puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_VORTEX, &full_id))
                 })
                 .collect();
             let flag_args = {
@@ -162,14 +160,7 @@ pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec
     let attraction_items: Vec<UiTreeItemNode> = fixture
         .attractions
         .iter()
-        .map(|attraction| {
-            tree_item_with_action(
-                attraction.id.clone(),
-                format!("{} → {}", attraction.attracting, attraction.attracted),
-                Some("link"),
-                puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id),
-            )
-        })
+        .map(|attraction| tree_item_with_action(attraction.id.clone(), format!("{} → {}", attraction.attracting, attraction.attracted), Some("link"), puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id)))
         .collect();
     vec![
         UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_items },

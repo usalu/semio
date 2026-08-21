@@ -1,12 +1,12 @@
 //! 🌐️ 🌐️ Animate present app commands command — `reset-grid`.
 
-use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
-use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
+use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
+use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🎛️ App-scope command addressed locally as `"resetGrid"`; the owner is carried separately.

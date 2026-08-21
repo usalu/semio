@@ -88,7 +88,6 @@ impl LanguageSession {
     pub fn protocol_file(&self) -> Result<Option<ProtocolFile>, TextError> {
         self.spec.parsed_protocol()
     }
-
 }
 //#endregion 🔖️Session
 

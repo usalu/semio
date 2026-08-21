@@ -721,7 +721,13 @@ mod quick {
 
     fn sample_shell_frames() -> Vec<ShellToGateway> {
         vec![
-            ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::React, shell_session_id: "shell-1".into(), principal_actor: "agent:local".into(), flags: BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: true } },
+            ShellToGateway::Hello {
+                bridge_version: BRIDGE_VERSION,
+                shell_kind: ShellKind::React,
+                shell_session_id: "shell-1".into(),
+                principal_actor: "agent:local".into(),
+                flags: BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: true },
+            },
             ShellToGateway::ShellState { revision: 7, state: vec![1, 2, 3, 4] },
             ShellToGateway::ShellStatePatch { revision: 8, base_revision: 7, patch: vec![9, 9] },
             ShellToGateway::Instances { entries: vec![BridgeInstanceRef { plugin_id: "cad".into(), app_id: "viewport".into(), instance_id: "inst-1".into(), artifact_ref: "cad-1".into(), window_ids: vec!["win-1".into(), "win-2".into()] }] },

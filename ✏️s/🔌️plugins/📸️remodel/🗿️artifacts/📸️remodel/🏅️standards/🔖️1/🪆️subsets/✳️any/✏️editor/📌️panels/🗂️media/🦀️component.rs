@@ -1,10 +1,10 @@
 //! 🗂️ Remodel play app panel — the Media tab: an import drop zone plus a summary line per imported
 //! stream/asset.
 
+use crate::artifacts::remodel::{MediaKind, RemodelSnapshot};
 use crate::editor::remodel::commands::import_frames::REMODEL_MEDIA_ACCEPT;
 use crate::editor::remodel::remodel_action;
 use crate::editor::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::{MediaKind, RemodelSnapshot};
 use semio_framework_plugin::{ui_import_drop_zone, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode};
 
 //#region 🔖️Constants

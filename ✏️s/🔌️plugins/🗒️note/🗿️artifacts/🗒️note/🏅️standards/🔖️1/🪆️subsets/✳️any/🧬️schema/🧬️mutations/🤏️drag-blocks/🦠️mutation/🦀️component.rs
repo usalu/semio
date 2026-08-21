@@ -1,6 +1,6 @@
 //! 🤏 Note mutation — `DragBlocks`: offsets several blocks by the same relative amount (multi-select drag/nudge).
-use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

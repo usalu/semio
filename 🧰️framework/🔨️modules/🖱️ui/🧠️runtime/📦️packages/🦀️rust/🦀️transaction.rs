@@ -479,7 +479,11 @@ mod tests {
         fn try_send(&self, _command: crate::Command) -> Result<(), crate::SinkFull> {
             let seen = self.calls.get();
             self.calls.set(seen + 1);
-            if seen < self.accepts { Ok(()) } else { Err(crate::SinkFull) }
+            if seen < self.accepts {
+                Ok(())
+            } else {
+                Err(crate::SinkFull)
+            }
         }
     }
 
@@ -488,17 +492,7 @@ mod tests {
     }
 
     fn test_intent(surface: ui_contract::SurfaceId, node: crate::Entity<FakePresenter>, revision: ui_contract::UiRevision, trigger: ui_contract::Trigger, seq: u64) -> ui_contract::UiIntent {
-        ui_contract::UiIntent {
-            surface,
-            revision,
-            node: ui_contract::UiNodeId(node.id().0),
-            node_key: "root".into(),
-            trigger,
-            action: ui_contract::ActionId::v1("test", "act"),
-            args: None,
-            input: None,
-            seq,
-        }
+        ui_contract::UiIntent { surface, revision, node: ui_contract::UiNodeId(node.id().0), node_key: "root".into(), trigger, action: ui_contract::ActionId::v1("test", "act"), args: None, input: None, seq }
     }
 
     fn test_runtime() -> UiRuntime<AlwaysAcceptsSink, FakeDelta> {

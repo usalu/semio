@@ -41,4 +41,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️Registration
-

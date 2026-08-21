@@ -1,10 +1,10 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::editor::sequence::ops_from_host_mutation;
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceCamera, SequenceSnapshot};
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
+use crate::editor::sequence::ops_from_host_mutation;
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -82,9 +82,9 @@ pub mod set_viewport {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use crate::artifacts::sequence::SequenceCamera;
     use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
     use crate::editor::sequence::SequenceCommand;
-    use crate::artifacts::sequence::SequenceCamera;
     use semio_framework_plugin::{PluginApp, ViewModel};
     use serde_json::{json, Value};
 

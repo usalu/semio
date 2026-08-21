@@ -16,7 +16,8 @@ pub async fn definition() -> PanelTabDefinition {
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(PROCEDURAL2D_PLAY_BODY_CATALOGUE.into()),
-        children: Vec::new()}
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -50,7 +51,14 @@ pub async fn render(labels: &Procedural2dLabels) -> UiNode {
             false,
             ["preview", "generate", "wire"]
                 .iter()
-                .map(|mode| tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), semio_framework_plugin::Label::data(format!("{} {mode}", labels.show_prefix.as_str())), None, procedural2d_action("setShowMode", Some(json!({ "value": mode })))))
+                .map(|mode| {
+                    tree_item_with_action(
+                        format!("procedural2d-play-catalogue.mode.{mode}"),
+                        semio_framework_plugin::Label::data(format!("{} {mode}", labels.show_prefix.as_str())),
+                        None,
+                        procedural2d_action("setShowMode", Some(json!({ "value": mode }))),
+                    )
+                })
                 .collect(),
         )
         .build()

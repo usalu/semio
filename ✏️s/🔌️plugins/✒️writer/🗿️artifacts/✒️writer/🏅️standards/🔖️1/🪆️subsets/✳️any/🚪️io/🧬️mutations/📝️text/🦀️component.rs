@@ -1,9 +1,6 @@
 //! 🔧 Writer artifact — OpText/OpBinary codecs + grammar for serializing `WriterMutation`.
 
-pub use crate::artifacts::writer::schema::mutations::{
-    apply_writer_mutation, inverse_writer_mutation, WriterMutation, RenameWriter, ChangeUri, ChangeLanguage, EditText,
-    rename_writer, change_uri, change_language, edit_text,
-};
+pub use crate::artifacts::writer::schema::mutations::{apply_writer_mutation, change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, ChangeLanguage, ChangeUri, EditText, RenameWriter, WriterMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -19,11 +16,7 @@ impl protocol::OpText for WriterMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -54,13 +47,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     async fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text(
-            "writer.document",
-            "jack",
-            "jack",
-            "writer://jack",
-            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
-        )
+        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]

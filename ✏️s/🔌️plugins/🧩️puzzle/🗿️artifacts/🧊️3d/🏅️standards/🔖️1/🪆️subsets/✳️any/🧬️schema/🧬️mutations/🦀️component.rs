@@ -9,7 +9,6 @@
 //! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`/`puzzle5d`'s: the bridge
 //! round-trips through the typed `Puzzle3dSnapshot` instead of hand-splicing JSON per mutation kind.
 
-
 use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -166,18 +165,44 @@ pub async fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzz
     for attraction in &after.attractions {
         match before.attractions.iter().find(|entry| entry.id == attraction.id) {
             None => mutations.push(connect_vortices(
-                attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),
-                attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y,
+                attraction.id.clone(),
+                attraction.attracting.clone(),
+                attraction.attracted.clone(),
+                attraction.gap,
+                attraction.shift,
+                attraction.rise,
+                attraction.rotation,
+                attraction.turn,
+                attraction.tilt,
+                attraction.x,
+                attraction.y,
             )),
             Some(prior) if prior.attracting != attraction.attracting || prior.attracted != attraction.attracted => {
                 mutations.push(disconnect_vortices(attraction.id.clone()));
                 mutations.push(connect_vortices(
-                    attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(),
-                    attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y,
+                    attraction.id.clone(),
+                    attraction.attracting.clone(),
+                    attraction.attracted.clone(),
+                    attraction.gap,
+                    attraction.shift,
+                    attraction.rise,
+                    attraction.rotation,
+                    attraction.turn,
+                    attraction.tilt,
+                    attraction.x,
+                    attraction.y,
                 ));
             }
             Some(prior) => {
-                if prior.gap != attraction.gap || prior.shift != attraction.shift || prior.rise != attraction.rise || prior.rotation != attraction.rotation || prior.turn != attraction.turn || prior.tilt != attraction.tilt || prior.x != attraction.x || prior.y != attraction.y {
+                if prior.gap != attraction.gap
+                    || prior.shift != attraction.shift
+                    || prior.rise != attraction.rise
+                    || prior.rotation != attraction.rotation
+                    || prior.turn != attraction.turn
+                    || prior.tilt != attraction.tilt
+                    || prior.x != attraction.x
+                    || prior.y != attraction.y
+                {
                     mutations.push(replace_attraction_geometry(attraction.id.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y));
                 }
             }
@@ -281,13 +306,9 @@ pub async fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: 
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
     async fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
-        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
-        })?;
+        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
         let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
-        serde_json::to_value(next).map_err(|error| {
-            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
-        })
+        serde_json::to_value(next).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"]))
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
@@ -363,8 +384,7 @@ impl store::ArtifactPack for Puzzle3dPlaySnapshot {
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
     async fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
-        MutationDiff::<Value>::apply(self, &projection.0)
-            .map(Puzzle3dPlaySnapshot)
+        MutationDiff::<Value>::apply(self, &projection.0).map(Puzzle3dPlaySnapshot)
     }
     async fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
@@ -483,9 +503,17 @@ mod tests {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
         let base = empty();
         let object = Puzzle3dObject {
-            id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None,
+            id: "o1".into(),
+            label: None,
+            object_kind: None,
+            anchor: Default::default(),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
             vortices: vec![Puzzle3dVortex { id: "v1".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }],
-            hidden: false, locked: false,
+            hidden: false,
+            locked: false,
         };
         let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base);
         assert_mutation_inverse_law(&with_object, &move_object("o1".into(), [1.0, 2.0, 3.0]));
@@ -499,15 +527,42 @@ mod tests {
         assert_mutation_inverse_law(&with_object, &change_object_locked("o1".into(), true));
         assert_mutation_inverse_law(&with_object, &add_object_vortex("o1".into(), Puzzle3dVortex { id: "v2".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }, None));
         assert_mutation_inverse_law(&with_object, &remove_object_vortex("o1".into(), "v1".into()));
-        assert_mutation_inverse_law(&with_object, &replace_object_vortex("o1".into(), "v1".into(), Puzzle3dVortex { id: "v1".into(), vortex_kind: Some("k".into()), label: None, position: [1.0, 1.0, 1.0], direction: None, radius: None, hidden: false, locked: false }));
+        assert_mutation_inverse_law(
+            &with_object,
+            &replace_object_vortex("o1".into(), "v1".into(), Puzzle3dVortex { id: "v1".into(), vortex_kind: Some("k".into()), label: None, position: [1.0, 1.0, 1.0], direction: None, radius: None, hidden: false, locked: false }),
+        );
     }
 
     #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_vortices_inverse_law_and_cascade() {
         use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dVortex};
         let base = empty();
-        let object_a = Puzzle3dObject { id: "a".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "va".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false };
-        let object_b = Puzzle3dObject { id: "b".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "vb".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false };
+        let object_a = Puzzle3dObject {
+            id: "a".into(),
+            label: None,
+            object_kind: None,
+            anchor: Default::default(),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: vec![Puzzle3dVortex { id: "va".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }],
+            hidden: false,
+            locked: false,
+        };
+        let object_b = Puzzle3dObject {
+            id: "b".into(),
+            label: None,
+            object_kind: None,
+            anchor: Default::default(),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: vec![Puzzle3dVortex { id: "vb".into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }],
+            hidden: false,
+            locked: false,
+        };
         let mut projection = base;
         projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_a, None).diff(&projection).diff(), &projection);
         projection = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object_b, None).diff(&projection).diff(), &projection);
@@ -580,7 +635,8 @@ mod tests {
         assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true)); // change/set/update
         assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0])); // move/drag/rotate/scale/resize
         assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into()))); // edit/replace
-        assert_missing_target_is_error(&base, &disconnect_vortices("missing".into())); // disconnect/unbind
+        assert_missing_target_is_error(&base, &disconnect_vortices("missing".into()));
+        // disconnect/unbind
     }
 
     #[semio_framework_async_macros::async_test]

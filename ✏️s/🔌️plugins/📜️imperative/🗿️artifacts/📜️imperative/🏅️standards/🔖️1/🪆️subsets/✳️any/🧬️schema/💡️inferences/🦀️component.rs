@@ -88,12 +88,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     async fn chain_snapshot() -> ImperativeSnapshot {
-        let path = Path {
-            steps: vec![
-                Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() },
-                Step { id: "b".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() },
-            ],
-        };
+        let path = Path { steps: vec![Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }, Step { id: "b".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }] };
         crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &path, &BTreeMap::new())
     }
 

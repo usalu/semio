@@ -597,7 +597,16 @@ impl ActionAdapter {
         match self.policy.gate_approval(principal, capability, diff_summary, request.approval_handle.as_deref(), session, now_ms) {
             ApprovalGate::Required { approval_handle } => {
                 let error = GatewayError::new(GatewayErrorCode::ApprovalRequired, format!("capability {} requires approval before it can be invoked", capability.id)).with_details(serde_json::json!({ "approvalHandle": approval_handle }));
-                self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Denied { code: error.code }, Some(record.baseline.clone()), None, "approval_required", Some(error.clone()), None, now_ms);
+                self.record_audit(
+                    AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                    AuditDecision::Denied { code: error.code },
+                    Some(record.baseline.clone()),
+                    None,
+                    "approval_required",
+                    Some(error.clone()),
+                    None,
+                    now_ms,
+                );
                 return Err(error);
             }
             ApprovalGate::Proceed => {}
@@ -610,7 +619,16 @@ impl ActionAdapter {
         };
         if current != expected {
             let error = GatewayError::new(GatewayErrorCode::RevisionConflict, format!("expected revision cursor {} but current is {}", expected.cursor, current.cursor)).with_details(serde_json::json!({ "expected": expected, "actual": current }));
-            self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Denied { code: error.code }, Some(current.clone()), None, "revision_conflict", Some(error.clone()), None, now_ms);
+            self.record_audit(
+                AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                AuditDecision::Denied { code: error.code },
+                Some(current.clone()),
+                None,
+                "revision_conflict",
+                Some(error.clone()),
+                None,
+                now_ms,
+            );
             return Err(error);
         }
 
@@ -649,8 +667,26 @@ impl ActionAdapter {
         };
 
         match &commit_result {
-            Ok(report) => self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Allowed, Some(current.clone()), report.revision_after.clone(), "succeeded", None, report.undo_token.clone(), now_ms),
-            Err(error) => self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Denied { code: error.code }, Some(current.clone()), None, "failed", Some(error.clone()), None, now_ms),
+            Ok(report) => self.record_audit(
+                AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                AuditDecision::Allowed,
+                Some(current.clone()),
+                report.revision_after.clone(),
+                "succeeded",
+                None,
+                report.undo_token.clone(),
+                now_ms,
+            ),
+            Err(error) => self.record_audit(
+                AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                AuditDecision::Denied { code: error.code },
+                Some(current.clone()),
+                None,
+                "failed",
+                Some(error.clone()),
+                None,
+                now_ms,
+            ),
         }
 
         if let Some(handle) = prep_handle_id {
@@ -756,7 +792,9 @@ impl ActionAdapter {
             }
             self.handles.revoke(saga_handle);
             if compensation_failed {
-                return Err(GatewayError::new(GatewayErrorCode::CompensationFailed, "compensation of already-committed saga members failed; manual recovery required").with_details(serde_json::json!({ "originalError": error.to_tool_error_payload() })));
+                return Err(
+                    GatewayError::new(GatewayErrorCode::CompensationFailed, "compensation of already-committed saga members failed; manual recovery required").with_details(serde_json::json!({ "originalError": error.to_tool_error_payload() }))
+                );
             }
             return Err(error);
         }
@@ -767,7 +805,8 @@ impl ActionAdapter {
 
         let mut ordered = committed;
         ordered.sort_by_key(|(index, ..)| *index);
-        let members: Vec<SagaMemberResult> = ordered.into_iter().map(|(index, _, edit_id)| SagaMemberResult { prepared_handle: saga.members[index].prepared_handle.clone(), capability_id: saga.members[index].capability_id.clone(), edit_id }).collect();
+        let members: Vec<SagaMemberResult> =
+            ordered.into_iter().map(|(index, _, edit_id)| SagaMemberResult { prepared_handle: saga.members[index].prepared_handle.clone(), capability_id: saga.members[index].capability_id.clone(), edit_id }).collect();
         Ok(SagaReport { transaction_handle: saga_handle.to_string(), members, undo_token })
     }
     //#endregion 🔖️Saga
@@ -813,8 +852,8 @@ mod quick {
     use crate::audit::InMemoryAuditSink;
     use crate::catalog::{compile, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure};
     use crate::fixtures;
-    use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
     use semio_framework::manifest::kernel;
+    use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
     use semio_framework::{Locale, Terminology};
 
     fn synthetic_capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
@@ -1054,7 +1093,9 @@ mod quick {
         let principal = principal(&["artifact.write"]);
 
         // Occupy instance 0 with an externally-pending transaction that never clears.
-        let _ = channel.clone().exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), label: "external".into(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
+        let _ = channel
+            .clone()
+            .exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), label: "external".into(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
 
         let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap();
         let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap_err();

@@ -3,9 +3,9 @@
 //! that feeds remote {@link MutationEnvelope}s into a document's vcs edit timeline.
 //!
 //! # Threading model
-//! - **Native** (wgpu native host, tests): {@link ArtifactHost::open} spawns a dedicated `std::thread`
-//!   running a current-thread tokio runtime; the actor `select!`s over the store's outbound queue, a
-//!   semio_hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
+//! - **Native** (wgpu native host, tests): {@link ArtifactHost::open} schedules bounded actor turns
+//!   on the injected process `WorkerPool`; WebSocket readiness remains on the ambient Tokio I/O
+//!   reactor and all actor deadlines use the pool's `TimerWheel`.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
 //!   spawn_local` with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
 //!   production browser shell instead uses a TS twin (`🟦️backbone-worker.ts`, WS-E); this wasm actor
@@ -13,12 +13,12 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
+use crate::os_spr::PresencePeer;
 use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, ServerFrame};
 use crate::os_spr::{ActorId, MutationId};
-use crate::os_spr::PresencePeer;
+use crate::os_store::{reconcile_alternative, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::os_store::{reconcile_alternative, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles};
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
@@ -46,7 +46,7 @@ mod envelope_serde {
     where
         S: Serializer,
     {
-        let bytes = crate::io::resolve_ready(encode_envelopes(envelopes));
+        let bytes = encode_envelopes(envelopes);
         let mut seq = serializer.serialize_seq(Some(bytes.len()))?;
         for byte in bytes {
             seq.serialize_element(&byte)?;
@@ -82,7 +82,7 @@ mod envelope_serde {
         }
 
         let bytes = deserializer.deserialize_seq(BytesVisitor)?;
-        crate::io::resolve_ready(decode_envelopes(&bytes)).map_err(serde::de::Error::custom)
+        decode_envelopes(&bytes).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖️EnvelopeSerde
@@ -273,7 +273,7 @@ pub mod backbone_worker_wire {
     pub async fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(request)?;
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
         Ok(bytes)
     }
 
@@ -282,14 +282,14 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).await.map_err(|error| error.to_string())?;
+        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         from_dsl_value(dsl)
     }
 
     pub async fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
         let dsl = to_dsl_value(response)?;
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
         Ok(bytes)
     }
 
@@ -298,7 +298,7 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).await.map_err(|error| error.to_string())?;
+        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         from_dsl_value(dsl)
     }
 }
@@ -365,7 +365,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
         let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
         let timestamp = match meta.and_then(|meta| meta.hlt) {
             Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
-            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0).await,
+            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
         };
         let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(MutationEnvelope {
@@ -683,23 +683,23 @@ struct OpenDocument {
     cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
     events: broadcast::Sender<ArtifactEvent>,
     presence: PresenceHeartbeatProducer,
+    #[cfg(not(target_arch = "wasm32"))]
+    schedule: std::sync::Arc<dyn Fn() + Send + Sync>,
 }
 
 /// @emoji 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
-/// tests, or the browser wgpu build) owns every open document's actor + event fan-out. On native,
-/// `supervisor` is the ONE OS thread every open document's actor runs on (see
-/// `native_actor::spawn_actor`'s doc) — cloning `ArtifactHost` shares it, so the whole registry
-/// costs one thread total, not one per document.
-#[derive(Clone, Default)]
+/// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
+#[derive(Clone)]
 pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, OpenDocument>>>,
-    #[cfg(not(target_arch = "wasm32"))]
-    supervisor: native_actor::SupervisorHandle,
+    pool: std::sync::Arc<semio_framework_async::WorkerPool>,
 }
 
 impl ArtifactHost {
-    pub async fn new() -> Self {
-        Self::default()
+    /// @emoji 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
+    /// used by their service and renderer runtimes.
+    pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
+        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())), pool }
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
@@ -711,10 +711,16 @@ impl ArtifactHost {
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
-        spawn_actor(&self.supervisor, config, remote, cmd_rx, event_tx.clone()).await;
+        let schedule = spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
         #[cfg(target_arch = "wasm32")]
-        spawn_actor(config, remote, cmd_rx, event_tx.clone()).await;
-        let entry = OpenDocument { cmd_tx: cmd_tx.clone(), events: event_tx, presence: PresenceHeartbeatProducer::default() };
+        spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
+        let entry = OpenDocument {
+            cmd_tx: cmd_tx.clone(),
+            events: event_tx,
+            presence: PresenceHeartbeatProducer::default(),
+            #[cfg(not(target_arch = "wasm32"))]
+            schedule,
+        };
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(document_id, entry);
         ArtifactChannels { cmd_tx, channel_backbone }
     }
@@ -736,6 +742,8 @@ impl ArtifactHost {
     pub async fn send(&self, document_id: &str, message: ArtifactActorMsg) {
         if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
             let _ = document.cmd_tx.send(message);
+            #[cfg(not(target_arch = "wasm32"))]
+            (document.schedule)();
         }
     }
 
@@ -746,7 +754,10 @@ impl ArtifactHost {
         let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(document) = documents.get_mut(document_id) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer).await else { return false };
-        document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok()
+        let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok();
+        #[cfg(not(target_arch = "wasm32"))]
+        (document.schedule)();
+        sent
     }
 
     /// @emoji ✂️ Stops a document's actor: sends `Detach` (the actor's own `run()` loop breaks out
@@ -764,6 +775,8 @@ impl ArtifactHost {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
             let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
+            #[cfg(not(target_arch = "wasm32"))]
+            (document.schedule)();
         }
     }
 
@@ -783,13 +796,6 @@ impl Drop for ArtifactHost {
         for document_id in self.open_artifacts() {
             self.close(&document_id);
         }
-        // 🎯️ Dropping the supervisor's sender (rather than joining its thread) is the same
-        // never-block-the-caller discipline as `close()`: the supervisor's `rx.recv()` sees the
-        // channel close, its `LocalSet` loop ends, and the OS thread exits on its own.
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            *self.supervisor.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
-        }
     }
 }
 //#endregion 🔖️Host
@@ -798,9 +804,10 @@ impl Drop for ArtifactHost {
 #[cfg(not(target_arch = "wasm32"))]
 mod native_actor {
     use super::*;
-    use futures_util::{SinkExt, StreamExt};
+    use futures_util::{FutureExt, SinkExt, StreamExt};
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
+    use std::sync::Arc;
     use std::time::Duration;
     use tokio::time::Instant;
     use tokio_tungstenite::tungstenite::Message;
@@ -839,9 +846,7 @@ mod native_actor {
                     let Some(text_files) = storage.read(document_id, extension).await.map_err(|error| error.to_string())? else {
                         return Ok(None);
                     };
-                    let codec = crate::os_store::document_codec(schema)
-                        .await.map_err(|error| error.to_string())?
-                        .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"))?;
+                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"))?;
                     let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.map_err(|error| error.to_string())?;
                     Ok(Some((pack_files.pack, pack_files.spr)))
                 }
@@ -855,9 +860,7 @@ mod native_actor {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let codec = crate::os_store::document_codec(schema)
-                        .await.map_err(|error| error.to_string())?
-                        .ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
+                    let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
                     let mirror = (codec.print_mirror)(pack, spr).await.map_err(|error| error.to_string())?;
                     let pack_files = ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
                     storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
@@ -887,6 +890,8 @@ mod native_actor {
         /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
         session_color: Option<u8>,
         semio_hub: Option<HubConn>,
+        connect_rx: Option<mpsc::UnboundedReceiver<Result<WsStream, ()>>>,
+        connect_task: Option<tokio::task::JoinHandle<()>>,
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
@@ -912,6 +917,7 @@ mod native_actor {
         watcher: Option<notify::RecommendedWatcher>,
         fs_rx: Option<mpsc::UnboundedReceiver<()>>,
         fs_deadline: Option<Instant>,
+        started: bool,
     }
 
     impl ArtifactActor {
@@ -957,6 +963,8 @@ mod native_actor {
                 hub_surface,
                 session_color: None,
                 semio_hub: None,
+                connect_rx: None,
+                connect_task: None,
                 server_frontier: None,
                 resume_token: None,
                 backoff_ms: 500,
@@ -974,51 +982,57 @@ mod native_actor {
                 watcher: None,
                 fs_rx: None,
                 fs_deadline: None,
+                started: false,
             }
         }
 
-        pub(super) async fn run(mut self) {
-            self.setup().await;
-            self.try_connect_hub().await;
-            let mut poll = tokio::time::interval(Duration::from_millis(25));
-            poll.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            loop {
-                let reconnect_at = self.reconnect_at;
-                let fs_deadline = self.fs_deadline;
-                tokio::select! {
-                    biased;
-                    cmd = self.cmd_rx.recv() => {
-                        match cmd {
-                            None => { break; }
-                            Some(message) => {
-                                if self.handle_cmd(message).await {
-                                    break;
-                                }
+        /// @emoji 🏃️ Executes one bounded actor turn and reports whether the actor detached.
+        pub(super) async fn run_turn(&mut self) -> bool {
+            if !self.started {
+                self.started = true;
+                self.setup().await;
+                self.start_connect_hub().await;
+            }
+            for _ in 0..32 {
+                match self.cmd_rx.try_recv() {
+                    Ok(message) => {
+                        if self.handle_cmd(message).await {
+                            if let Some(task) = self.connect_task.take() {
+                                task.abort();
                             }
+                            return true;
                         }
                     }
-                    message = hub_next(&mut self.semio_hub), if self.semio_hub.is_some() => {
-                        self.on_hub_message(message).await;
-                    }
-                    changed = fs_next(&mut self.fs_rx), if self.fs_rx.is_some() => {
-                        if changed.is_some() {
-                            self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
-                        }
-                    }
-                    _ = sleep_opt(reconnect_at), if reconnect_at.is_some() => {
-                        self.reconnect_at = None;
-                        self.try_connect_hub().await;
-                    }
-                    _ = sleep_opt(fs_deadline), if fs_deadline.is_some() => {
-                        self.fs_deadline = None;
-                        self.handle_external_change().await;
-                    }
-                    _ = poll.tick() => {
-                        self.drain_and_relay().await;
-                        self.emit_status_if_changed().await;
-                    }
+                    Err(mpsc::error::TryRecvError::Empty) => break,
+                    Err(mpsc::error::TryRecvError::Disconnected) => return true,
                 }
             }
+            if let Some(message) = hub_next(&mut self.semio_hub).now_or_never() {
+                self.on_hub_message(message).await;
+            }
+            let connection = self.connect_rx.as_mut().and_then(|rx| rx.try_recv().ok());
+            if let Some(connection) = connection {
+                self.connect_rx = None;
+                self.connect_task = None;
+                self.finish_connect_hub(connection).await;
+            }
+            if let Some(rx) = self.fs_rx.as_mut() {
+                if rx.try_recv().is_ok() {
+                    self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
+                }
+            }
+            let now = Instant::now();
+            if self.reconnect_at.is_some_and(|deadline| deadline <= now) {
+                self.reconnect_at = None;
+                self.start_connect_hub().await;
+            }
+            if self.fs_deadline.is_some_and(|deadline| deadline <= now) {
+                self.fs_deadline = None;
+                self.handle_external_change().await;
+            }
+            self.drain_and_relay().await;
+            self.emit_status_if_changed().await;
+            false
         }
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored pack+spr and installs the file watcher.
@@ -1084,7 +1098,7 @@ mod native_actor {
             for message in messages {
                 match message {
                     BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.persist_operations(&envelopes).await;
                         self.relay_operations_to_hub(&envelopes).await;
                     }
@@ -1193,7 +1207,8 @@ mod native_actor {
                         message: "external history diverged while local operations are pending".into(),
                         target: vec![format!("folder://{}", self.document_id)],
                         op_index: None,
-                    })).await;
+                    }))
+                    .await;
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
@@ -1206,14 +1221,25 @@ mod native_actor {
         //#endregion 🔖️Folder
 
         //#region 🔖️Hub
-        async fn try_connect_hub(&mut self) {
+        async fn start_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
+            if self.connect_rx.is_some() {
+                return;
+            }
             let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let token = self.hub_token.clone();
             let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
             self.set_remote_state(RemoteState::Connecting).await;
-            match tokio_tungstenite::connect_async(url).await {
-                Ok((stream, _response)) => {
+            let (tx, rx) = mpsc::unbounded_channel();
+            self.connect_rx = Some(rx);
+            self.connect_task = Some(tokio::spawn(async move {
+                let result = tokio_tungstenite::connect_async(url).await.map(|(stream, _response)| stream).map_err(|_| ());
+                let _ = tx.send(result);
+            }));
+        }
+
+        async fn finish_connect_hub(&mut self, connection: Result<WsStream, ()>) {
+            match connection {
+                Ok(stream) => {
                     let (write, read) = stream.split();
                     self.semio_hub = Some(HubConn { write, read });
                     self.backoff_ms = 500;
@@ -1226,13 +1252,13 @@ mod native_actor {
                         // then anyway, so this placeholder is never validated this wave.
                         pack_schema_hash: [0u8; 32],
                         actor: ActorId(self.actor.clone()),
-                        token,
+                        token: self.hub_token.clone(),
                         resume_token: self.resume_token.clone(),
                         frontier: self.server_frontier.clone(),
                     };
                     self.send_client_frame(hello, Lane::Command).await;
                 }
-                Err(_error) => {
+                Err(()) => {
                     self.schedule_reconnect().await;
                 }
             }
@@ -1322,13 +1348,7 @@ mod native_actor {
                     // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: crate::os_dsl::Severity::Error,
-                        code: crate::os_dsl::FaultCode::new(code),
-                        message,
-                        target: vec![self.hub_base_url.clone().unwrap_or_default()],
-                        op_index: None,
-                    })).await;
+                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None })).await;
                 }
             }
         }
@@ -1395,7 +1415,7 @@ mod native_actor {
         async fn send_raw(&mut self, message: Message) {
             let mut failed = false;
             if let Some(conn) = self.semio_hub.as_mut() {
-                if conn.write.send(message).await.is_err() {
+                if !matches!(tokio::time::timeout(Duration::from_millis(4), conn.write.send(message)).await, Ok(Ok(()))) {
                     failed = true;
                 }
             }
@@ -1412,7 +1432,7 @@ mod native_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await;
             self.emit(ArtifactEvent::RemoteMutations { envelopes }).await;
         }
 
@@ -1443,6 +1463,14 @@ mod native_actor {
             }
         }
         //#endregion 🔖️Deliver
+    }
+
+    impl Drop for ArtifactActor {
+        fn drop(&mut self) {
+            if let Some(task) = self.connect_task.take() {
+                task.abort();
+            }
+        }
     }
 
     /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
@@ -1492,73 +1520,78 @@ mod native_actor {
         }
     }
 
-    async fn fs_next(rx: &mut Option<mpsc::UnboundedReceiver<()>>) -> Option<()> {
-        match rx {
-            Some(rx) => rx.recv().await,
-            None => std::future::pending().await,
+    struct ActorRunner {
+        pool: Arc<semio_framework_async::WorkerPool>,
+        runtime: tokio::runtime::Handle,
+        actor: std::sync::Mutex<Option<ArtifactActor>>,
+        scheduled: std::sync::atomic::AtomicBool,
+        timer_armed: std::sync::atomic::AtomicBool,
+        terminal: std::sync::atomic::AtomicBool,
+    }
+
+    impl ActorRunner {
+        fn schedule(self: &Arc<Self>) {
+            if self.terminal.load(std::sync::atomic::Ordering::Acquire) || self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                return;
+            }
+            let runner = self.clone();
+            self.pool.submit(semio_framework_async::Lane::UserVisible, Box::new(move || runner.run_job()));
+        }
+
+        fn run_job(self: Arc<Self>) {
+            let actor = self.actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            let Some(mut actor) = actor else {
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                return;
+            };
+            let terminal = self.runtime.block_on(actor.run_turn());
+            if terminal {
+                self.terminal.store(true, std::sync::atomic::Ordering::Release);
+            } else {
+                *self.actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(actor);
+            }
+            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            if !terminal {
+                self.arm_timer();
+            }
+        }
+
+        fn arm_timer(self: &Arc<Self>) {
+            if self.terminal.load(std::sync::atomic::Ordering::Acquire) || self.timer_armed.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                return;
+            }
+            let runner = self.clone();
+            let deadline_ms = self.pool.now_ms().saturating_add(4);
+            self.runtime.spawn(async move {
+                runner.pool.timer().sleep_until(deadline_ms).await;
+                runner.timer_armed.store(false, std::sync::atomic::Ordering::Release);
+                runner.schedule();
+            });
         }
     }
 
-    async fn sleep_opt(deadline: Option<Instant>) {
-        match deadline {
-            Some(deadline) => tokio::time::sleep_until(deadline).await,
-            None => std::future::pending().await,
-        }
-    }
-
-    /// @emoji 📨️ The `Send`-safe construction inputs for one document's actor — carried across the
-    /// channel into the supervisor thread (see [`spawn_actor`]'s doc), which is the only place
-    /// `ArtifactActor::new`/`run` (both genuinely `!Send`) actually execute.
-    pub(super) struct SpawnRequest {
+    /// @emoji 🚀️ Creates one finite-turn actor on the process WorkerPool. Tokio remains only the
+    /// platform I/O reactor; it never owns an actor or timer thread.
+    pub(super) async fn spawn_actor(
+        pool: Arc<semio_framework_async::WorkerPool>,
         config: ArtifactActorConfig,
         remote: ChannelBackboneRemote,
         cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
         events: broadcast::Sender<ArtifactEvent>,
-    }
-
-    /// @emoji 🧵️ `ArtifactHost`'s handle to its (lazily-started) supervisor thread's request queue —
-    /// `None` until the first document is opened.
-    pub(super) type SupervisorHandle = std::sync::Arc<std::sync::Mutex<Option<mpsc::UnboundedSender<SpawnRequest>>>>;
-
-    /// @emoji 🚀️ Hands `config`'s document off to `supervisor`'s ONE OS thread, lazily starting that
-    /// thread on the first call. Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the
-    /// old design — a dedicated OS thread PLUS an embedded single-thread `tokio::runtime` PER
-    /// document — with this: one shared supervisor thread per `ArtifactHost`, running a
-    /// `tokio::task::LocalSet` that every open document's actor is `spawn_local`-ed onto, driven by
-    /// `Handle::block_on` against the CALLER's ambient runtime (captured once, before the thread is
-    /// spawned) rather than a second, redundant reactor. This is not a style choice: a plain
-    /// `tokio::spawn` requires `Send`, and `ArtifactActor::run`'s future is genuinely `!Send` (it
-    /// calls through `os_vcs`/`os_dsl`/bundled `rusqlite`, none of which are `Send`-safe) — a
-    /// `LocalSet` is the one primitive that runs `!Send` futures on a tokio runtime at all, and it
-    /// requires a single pinned thread to do it. The result: an `ArtifactHost`'s OS thread cost is
-    /// now O(1) (one supervisor thread, however many documents are open on it) instead of the old
-    /// O(open documents) — the actual "unbounded ad-hoc threads" defect the Phase 0 census flagged
-    /// for this site. A stalled hub connection on one document (the "short connection shortage"
-    /// case) only holds up that one `spawn_local` task's own `tokio::select!` iteration; the
-    /// supervisor thread itself, and every other document's task on it, keep running.
-    pub(super) async fn spawn_actor(supervisor: &SupervisorHandle, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
-        let mut guard = supervisor.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if guard.is_none() {
-            let (tx, mut rx) = mpsc::unbounded_channel::<SpawnRequest>();
-            let handle = tokio::runtime::Handle::current();
-            let spawned = std::thread::Builder::new().name("sync-actor-supervisor".to_string()).spawn(move || {
-                let local = tokio::task::LocalSet::new();
-                handle.block_on(local.run_until(async move {
-                    while let Some(request) = rx.recv().await {
-                        tokio::task::spawn_local(async move {
-                            let actor = ArtifactActor::new(request.config, request.remote, request.cmd_rx, request.events).await;
-                            actor.run().await;
-                        });
-                    }
-                }));
-            });
-            if spawned.is_ok() {
-                *guard = Some(tx);
-            }
-        }
-        if let Some(tx) = guard.as_ref() {
-            let _ = tx.send(SpawnRequest { config, remote, cmd_rx, events });
-        }
+    ) -> Arc<dyn Fn() + Send + Sync> {
+        let actor = ArtifactActor::new(config, remote, cmd_rx, events).await;
+        let runner = Arc::new(ActorRunner {
+            pool,
+            runtime: tokio::runtime::Handle::current(),
+            actor: std::sync::Mutex::new(Some(actor)),
+            scheduled: std::sync::atomic::AtomicBool::new(false),
+            timer_armed: std::sync::atomic::AtomicBool::new(false),
+            terminal: std::sync::atomic::AtomicBool::new(false),
+        });
+        let runner_for_schedule = runner.clone();
+        let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_schedule.schedule());
+        runner.schedule();
+        schedule
     }
 }
 
@@ -1671,7 +1704,7 @@ mod wasm_actor {
             for message in messages {
                 match message {
                     BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.relay_operations(&envelopes).await;
                     }
                     BackboneMessage::Snapshot { .. } => {
@@ -1795,12 +1828,18 @@ mod wasm_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
+            let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await;
             let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
         }
     }
 
-    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
+    pub(super) async fn spawn_actor(
+        _pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+        config: ArtifactActorConfig,
+        remote: ChannelBackboneRemote,
+        mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
+        events: broadcast::Sender<ArtifactEvent>,
+    ) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
         let mut hub_space_id = None;
@@ -2125,25 +2164,21 @@ impl FolderTextStorage {
     }
 
     async fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder
-            .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Dsl))
+        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Dsl))
     }
 
     async fn ops_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder
-            .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Op))
+        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Op))
     }
 
     /// @emoji 🏷️ Path of the authoritative binary pack file.
     pub async fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder
-            .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Pack))
+        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Pack))
     }
 
     /// @emoji 🏷️ Path of the authoritative binary op-log file.
     pub async fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder
-            .join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
+        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
     }
 
     /// @emoji 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
@@ -2183,9 +2218,7 @@ impl FolderTextStorage {
         };
         let spr = std::fs::read(self.spr_path(document_id, envelope_id).await).map_err(|err| {
             if err.kind() == std::io::ErrorKind::NotFound {
-                vcs::VcsError::Backbone(format!(
-                    "{document_id} pack.semio exists but spr.semio is missing for envelope {envelope_id}"
-                ))
+                vcs::VcsError::Backbone(format!("{document_id} pack.semio exists but spr.semio is missing for envelope {envelope_id}"))
             } else {
                 vcs::VcsError::Backbone(err.to_string())
             }
@@ -2278,9 +2311,17 @@ impl crate::os_store::BlobStore for FolderSqliteStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{ArtifactId, Edit, OpBinary, OpText, Mutation, MutationDiff};
+    use crate::os_spr::{ArtifactId, Edit, Mutation, MutationDiff, OpBinary, OpText};
+    use crate::os_store::{
+        create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore,
+        PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText,
+    };
     use serde::{Deserialize, Serialize};
-    use crate::os_store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, pack_rt, PackEncodeOptions, PackDecodeOptions, PackError, ParsedDocumentText};
+
+    fn test_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
+        static POOL: std::sync::OnceLock<std::sync::Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
+        POOL.get_or_init(|| std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
+    }
 
     // 🎯️ `id` must be dotted `plugin.artifact` — `os_semio`'s preamble validator rejects a bare
     // extension (this crate never compiled with `--features sync` before this packet, so the
@@ -2294,9 +2335,14 @@ mod tests {
 
     impl ArtifactDsl for DemoSnapshot {
         const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-        async fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
+        async fn envelope_id() -> &'static str {
+            Self::__DSL_ENVELOPE_ID
+        }
         async fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
-            let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
+            let body = match semio_format::split_text_preamble(text) {
+                Ok((_, rest)) => rest,
+                Err(_) => text,
+            };
             let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
             Self::__dsl_from_record(&record)
         }
@@ -2321,7 +2367,9 @@ mod tests {
             let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
             Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
         }
-        async fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
+        async fn record_spec() -> Option<crate::os_dsl::RecordSpec> {
+            Some(Self::__dsl_spec())
+        }
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2354,11 +2402,7 @@ mod tests {
             for (keyword, spec_fn) in &variants {
                 let probe = format!("{} ", keyword);
                 if line == keyword.as_str() || line.starts_with(&probe) {
-                    let record = crate::os_dsl::parse(
-                        line,
-                        &spec_fn(),
-                        &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                    )?;
+                    let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                     return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
@@ -2392,20 +2436,12 @@ mod tests {
             }
             let ordinal = reader.read_u8().await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
-            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed {
-                what: "op ordinal",
-                offset: 1,
-                detail: format!("op ordinal {ordinal} out of range for {}", variants.len()),
-            })?;
+            let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| crate::os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
             let spec = spec_fn();
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
-                what: "op record",
-                offset,
-                detail: error.to_string(),
-            })
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
         }
     }
 
@@ -2415,7 +2451,8 @@ mod tests {
         async fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
             crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
-            }).await
+            })
+            .await
         }
 
         async fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -2501,7 +2538,20 @@ mod tests {
     /// document has no hub binding (folder-only) even if `session_color` is somehow set.
     #[semio_framework_async_macros::async_test]
     async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
-        let mut peer = PresencePeer { actor: "actor-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: Some(99), surface: Some("shell-should-never-set-this".into()), views: Vec::new(), ui: None };
+        let mut peer = PresencePeer {
+            actor: "actor-1".into(),
+            connected_at_ms: 1000,
+            label: None,
+            presence_pack: None,
+            user_id: None,
+            role: None,
+            drag_ghost_json: None,
+            interaction: None,
+            color: Some(99),
+            surface: Some("shell-should-never-set-this".into()),
+            views: Vec::new(),
+            ui: None,
+        };
         stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
         assert_eq!(peer.color, Some(7));
         assert_eq!(peer.surface.as_deref(), Some("s.space.home@1/*#editor"));
@@ -2581,18 +2631,10 @@ mod tests {
         write_client(
             &fixtures_dir,
             "📦️client-hello.bin",
-            &ClientFrame::Hello {
-                wire_version: 1,
-                protocol_version: 1,
-                schema: "demo/v1".to_string(),
-                pack_schema_hash: [7u8; 32],
-                actor: ActorId("actor-1".to_string()),
-                token: Some("token-1".to_string()),
-                resume_token: None,
-                frontier: None,
-            },
+            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], actor: ActorId("actor-1".to_string()), token: Some("token-1".to_string()), resume_token: None, frontier: None },
             Lane::Command,
-        ).await;
+        )
+        .await;
         write_client(&fixtures_dir, "📦️client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
         write_client(&fixtures_dir, "📦️client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
         write_client(&fixtures_dir, "📦️client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
@@ -2608,7 +2650,8 @@ mod tests {
             "📦️server-welcome-snapshot-inline.bin",
             &ServerFrame::Welcome { session_id: "session-2".to_string(), resume_token: "resume-2".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) } },
             Lane::Command,
-        ).await;
+        )
+        .await;
         write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command).await;
         write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
         write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
@@ -2617,7 +2660,8 @@ mod tests {
             "📦️server-ack-accepted.bin",
             &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
             Lane::Command,
-        ).await;
+        )
+        .await;
         write_server(
             &fixtures_dir,
             "📦️server-ack-transformed.bin",
@@ -2627,13 +2671,19 @@ mod tests {
                 frontier: frontier.clone(),
             },
             Lane::Command,
-        ).await;
+        )
+        .await;
         write_server(
             &fixtures_dir,
             "📦️server-ack-rejected.bin",
-            &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }], frontier: frontier.clone() },
+            &ServerFrame::Ack {
+                batch_id: 3,
+                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }],
+                frontier: frontier.clone(),
+            },
             Lane::Command,
-        ).await;
+        )
+        .await;
         write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
         write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
         write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
@@ -2688,13 +2738,7 @@ mod tests {
                     size: [1024.0, 768.0],
                     pointer: Some([0.5, 0.5, 0.5]),
                 },
-                crate::os_spr::PresenceWindowView {
-                    window_id: "w2".to_string(),
-                    space: "canvas".to_string(),
-                    kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 },
-                    size: [800.0, 600.0],
-                    pointer: None,
-                },
+                crate::os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None },
             ],
             ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         }
@@ -2729,10 +2773,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
-        let host = ArtifactHost::new().await;
+        let host = ArtifactHost::new(test_pool());
         let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
         let (events, _) = broadcast::channel(1);
-        host.inner.lock().unwrap().insert("doc".into(), OpenDocument { cmd_tx, events, presence: PresenceHeartbeatProducer::default() });
+        host.inner.lock().unwrap().insert("doc".into(), OpenDocument { cmd_tx, events, presence: PresenceHeartbeatProducer::default(), schedule: std::sync::Arc::new(|| {}) });
 
         let first = sample_presence_peer_with_interaction().await;
         assert!(host.presence_heartbeat("doc", 500, first.clone()).await);
@@ -2776,8 +2820,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     mod actor_tests {
         use super::*;
-        use futures_util::{SinkExt, StreamExt};
         use crate::os_spr::{decode_client_frame, encode_server_frame};
+        use futures_util::{SinkExt, StreamExt};
         use std::sync::Arc;
         use std::time::Duration;
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
@@ -2836,7 +2880,7 @@ mod tests {
         async fn folder_external_edit_delivers_remote_operations() {
             ensure_demo_codec_registered().await;
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = ArtifactHost::new().await;
+            let host = ArtifactHost::new(test_pool());
             let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
             let mut events = host.subscribe("doc-a").await;
             let mut store = ArtifactStore::new(demo_envelope("doc-a").await).await.expect("valid actor fixture");
@@ -3014,25 +3058,29 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new().await;
-            let channels_a = host_a.open(ArtifactActorConfig {
-                document_id: "shared".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
-                watch_external: false,
-                actor: "A".into(),
-            }).await;
+            let host_a = ArtifactHost::new(test_pool());
+            let channels_a = host_a
+                .open(ArtifactActorConfig {
+                    document_id: "shared".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "A".into(),
+                })
+                .await;
             let mut store_a = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor A fixture");
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
 
-            let host_b = ArtifactHost::new().await;
-            let channels_b = host_b.open(ArtifactActorConfig {
-                document_id: "shared".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
-                watch_external: false,
-                actor: "B".into(),
-            }).await;
+            let host_b = ArtifactHost::new(test_pool());
+            let channels_b = host_b
+                .open(ArtifactActorConfig {
+                    document_id: "shared".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "B".into(),
+                })
+                .await;
             let mut events_b = host_b.subscribe("shared").await;
             let mut store_b = ArtifactStore::new(demo_envelope("shared").await).await.expect("valid shared actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
@@ -3062,14 +3110,16 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new().await;
-            let channels_a = host_a.open(ArtifactActorConfig {
-                document_id: "catchup".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
-                watch_external: false,
-                actor: "A".into(),
-            }).await;
+            let host_a = ArtifactHost::new(test_pool());
+            let channels_a = host_a
+                .open(ArtifactActorConfig {
+                    document_id: "catchup".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "A".into(),
+                })
+                .await;
             let mut store_a = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor A fixture");
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
@@ -3082,9 +3132,16 @@ mod tests {
             }
 
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
-            let host_b = ArtifactHost::new().await;
-            let channels_b =
-                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() }).await;
+            let host_b = ArtifactHost::new(test_pool());
+            let channels_b = host_b
+                .open(ArtifactActorConfig {
+                    document_id: "catchup".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "B".into(),
+                })
+                .await;
             let mut events_b = host_b.subscribe("catchup").await;
             let mut store_b = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
@@ -3108,21 +3165,30 @@ mod tests {
             let base_url = format!("ws://{addr}");
 
             // Observer B stays connected to witness A's last operation.
-            let host_b = ArtifactHost::new().await;
-            let channels_b = host_b.open(ArtifactActorConfig {
-                document_id: "drain".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
-                watch_external: false,
-                actor: "B".into(),
-            }).await;
+            let host_b = ArtifactHost::new(test_pool());
+            let channels_b = host_b
+                .open(ArtifactActorConfig {
+                    document_id: "drain".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "B".into(),
+                })
+                .await;
             let mut events_b = host_b.subscribe("drain").await;
             let mut store_b = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor B fixture");
             store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
-            let host_a = ArtifactHost::new().await;
-            let channels_a =
-                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() }).await;
+            let host_a = ArtifactHost::new(test_pool());
+            let channels_a = host_a
+                .open(ArtifactActorConfig {
+                    document_id: "drain".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "A".into(),
+                })
+                .await;
             let mut store_a = ArtifactStore::new(demo_envelope("drain").await).await.expect("valid drain actor A fixture");
             store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
@@ -3146,9 +3212,16 @@ mod tests {
         async fn command_outcome_accepted_fires_after_hub_ack() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
-            let host = ArtifactHost::new().await;
-            let channels =
-                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() }).await;
+            let host = ArtifactHost::new(test_pool());
+            let channels = host
+                .open(ArtifactActorConfig {
+                    document_id: "outcome".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "A".into(),
+                })
+                .await;
             let mut events = host.subscribe("outcome").await;
             let mut store = ArtifactStore::new(demo_envelope("outcome").await).await.expect("valid outcome actor fixture");
             store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
@@ -3172,17 +3245,27 @@ mod tests {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            let host_a = ArtifactHost::new().await;
-            let channels_a = host_a.open(ArtifactActorConfig {
-                document_id: "preview".into(),
-                schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
-                watch_external: false,
-                actor: "A".into(),
-            }).await;
+            let host_a = ArtifactHost::new(test_pool());
+            let channels_a = host_a
+                .open(ArtifactActorConfig {
+                    document_id: "preview".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "A".into(),
+                })
+                .await;
 
-            let host_b = ArtifactHost::new().await;
-            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() }).await;
+            let host_b = ArtifactHost::new(test_pool());
+            host_b
+                .open(ArtifactActorConfig {
+                    document_id: "preview".into(),
+                    schema: "demo/v1".into(),
+                    bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }],
+                    watch_external: false,
+                    actor: "B".into(),
+                })
+                .await;
             let mut events_b = host_b.subscribe("preview").await;
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -3215,13 +3298,12 @@ mod tests {
 
         async fn replay_fixture(fixture: &ActorFixture) {
             ensure_demo_codec_registered().await;
-            let codec = crate::os_store::document_codec(&fixture.schema)
-                .await.expect("codec registry available")
-                .unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
+            let codec = crate::os_store::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
             let dir = tempfile::tempdir().expect("tempdir");
-            let host = ArtifactHost::new().await;
-            let channels =
-                host.open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+            let host = ArtifactHost::new(test_pool());
+            let channels = host
+                .open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() })
+                .await;
             let mut events = host.subscribe(&fixture.document_id).await;
             let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid fixture store");
             store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");

@@ -281,8 +281,8 @@ pub trait Identified<TId> {
 
 /// @emoji 🩹️ Applies a patch in place and returns the patch that undoes it (captured from prior state).
 pub trait Patchable<TPatch>: Sized {
-    async fn apply_patch(&mut self, patch: &TPatch);
-    async fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+    fn apply_patch(&mut self, patch: &TPatch);
+    fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 
 /// @emoji 🧺️ Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
@@ -330,7 +330,7 @@ where
         }
         CollectionMutation::Patch { id, patch } => {
             if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
-                item.apply_patch(patch).await;
+                item.apply_patch(patch);
             }
         }
     }
@@ -356,8 +356,8 @@ where
         CollectionMutation::Patch { id, patch } => {
             let prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
             let mut after = prior.clone();
-            after.apply_patch(patch).await;
-            let inverse_patch = after.diff_patch(&prior).await.expect("a patch that changed state must yield a computable inverse");
+            after.apply_patch(patch);
+            let inverse_patch = after.diff_patch(&prior).expect("a patch that changed state must yield a computable inverse");
             CollectionMutation::Patch { id: id.clone(), patch: inverse_patch }
         }
     }
@@ -405,8 +405,8 @@ pub async fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> 
 where
     Mutation: self::Mutation<P>,
 {
-    let (diff, messages) = operation.diff(snapshot).await.into_parts().await;
-    Ok((diff.apply(snapshot).await?, messages))
+    let (diff, messages) = operation.diff(snapshot).into_parts();
+    Ok((diff.apply(snapshot)?, messages))
 }
 
 //#endregion 🔖️Mutation
@@ -660,14 +660,8 @@ mod tests {
 
         // (5) Two peers that discover the same pin SET in different order (e.g. concurrent
         // parallel-child dispatch) still converge — the function sorts by `child_ref.to_uri()` internally.
-        let pins_two_ordered = vec![
-            CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() },
-            CompositionPin { child_ref: child_b_ref.clone(), checkpoint_id: "ck-child-b-1".into() },
-        ];
-        let pins_two_reordered = vec![
-            CompositionPin { child_ref: child_b_ref, checkpoint_id: "ck-child-b-1".into() },
-            CompositionPin { child_ref: child_a_ref, checkpoint_id: "ck-child-a-1".into() },
-        ];
+        let pins_two_ordered = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }, CompositionPin { child_ref: child_b_ref.clone(), checkpoint_id: "ck-child-b-1".into() }];
+        let pins_two_reordered = vec![CompositionPin { child_ref: child_b_ref, checkpoint_id: "ck-child-b-1".into() }, CompositionPin { child_ref: child_a_ref, checkpoint_id: "ck-child-a-1".into() }];
         let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);
         let id_reordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_reordered);
         assert_eq!(id_ordered.await, id_reordered.await, "two peers discovering the same pin set in different incidental order must converge on the identical id");

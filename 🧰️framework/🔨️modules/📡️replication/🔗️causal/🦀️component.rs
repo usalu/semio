@@ -211,7 +211,7 @@ pub enum FrontierComparison {
 /// (`min` of both ordinals) since this summary-only comparison cannot walk history to find the
 /// true common ancestor — callers wanting an exact count must consult the durable log via
 /// `protocol_history`.
-pub async fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> FrontierComparison {
+pub fn frontier_delta(local: &FrontierSummary, remote: &FrontierSummary) -> FrontierComparison {
     if local.head_edit_ordinal == remote.head_edit_ordinal && local.head_edit_id == remote.head_edit_id && local.chain_hash == remote.chain_hash {
         return FrontierComparison::Equal;
     }
@@ -237,7 +237,7 @@ pub enum TransformOutcome<Op> {
 /// @emoji 🧮️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
 /// (both assumed concurrent, same base). New trait — no prior `vcs`/`framework-core` equivalent.
 pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
-    async fn transform(&self, against: &Self) -> TransformOutcome<Self>
+    fn transform(&self, against: &Self) -> TransformOutcome<Self>
     where
         Self: Sized;
 }
@@ -275,12 +275,12 @@ pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
 /// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`inverse` work, and so
 /// there is exactly one place this chain is spelled out.
-pub async fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>) -> Vec<crate::ids::MutationId> {
+pub fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>) -> Vec<crate::ids::MutationId> {
     let mut out = Vec::with_capacity(edit.forwards.len());
     for (index, op) in edit.forwards.iter().enumerate() {
         let id = match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
             Some(id) => id,
-            None => match op.mutation_id().await {
+            None => match op.mutation_id() {
                 Some(id) => id,
                 None => crate::ids::MutationId(format!("{}#{index}", edit.id)),
             },
@@ -290,37 +290,37 @@ pub async fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &c
     out
 }
 
-pub async fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
+pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
     edit: &crate::mutation::Edit<Op>,
     document_id: &crate::ids::ArtifactId,
     schema: &crate::ids::SchemaId,
 ) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
-    let operation_ids = mutation_ids_for_edit(edit).await;
+    let operation_ids = mutation_ids_for_edit(edit);
     let mut out = Vec::with_capacity(edit.forwards.len());
     for (index, op) in edit.forwards.iter().enumerate() {
         let meta = edit.mutation_meta.get(index);
         let mutation_id = operation_ids[index].clone();
         let dependencies = match meta {
             Some(m) => m.dependencies.clone(),
-            None => op.dependencies().await,
+            None => op.dependencies(),
         };
         let actor = match meta.and_then(|m| m.author_id.clone()) {
             Some(actor) => actor,
-            None => match op.author_id().await {
+            None => match op.author_id() {
                 Some(actor) => actor,
                 None => crate::ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())),
             },
         };
         let timestamp = match meta.map(|m| m.timestamp) {
             Some(ts) => ts,
-            None => match op.timestamp().await {
+            None => match op.timestamp() {
                 Some(ts) => ts,
-                None => crate::ids::HybridLogicalTimestamp::new(0, 0).await,
+                None => crate::ids::HybridLogicalTimestamp::new(0, 0),
             },
         };
-        let payload = op.encode_op().await?;
+        let payload = op.encode_op()?;
         let inverse_payload = match edit.inverse.get(index) {
-            Some(inv) => crate::mutation::OpBinary::encode_op(inv).await?,
+            Some(inv) => crate::mutation::OpBinary::encode_op(inv)?,
             None => Vec::new(),
         };
         out.push(MutationEnvelope {
@@ -337,100 +337,99 @@ pub async fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + c
 }
 //#endregion 🔖️Bridge
 
-
 //#region 🔖️EnvelopeCodec
 /// @emoji 🎞️ Binary record codec for `MutationEnvelope`/`FrontierSummary`, built on
 /// `crate::wire::🔖️WireCodec`'s primitives — the storage/wire form `protocol_wire`'s frames
 /// embed and `db_sync`'s WAL uses directly (see the amendment's "storage AND communication both
 /// binary" requirement). Field declaration order, no tags — the same convention `os_dsl::op_rt` and
 /// `crate::wire::WireCodec` both use.
-async fn encode_hlc(out: &mut Vec<u8>, hlt: &crate::ids::HybridLogicalTimestamp) {
-    crate::wire::write_varint_u64(out, hlt.actor).await;
-    crate::wire::write_varint_u64(out, hlt.physical_ms).await;
-    crate::wire::write_varint_u64(out, hlt.logical).await;
+fn encode_hlc(out: &mut Vec<u8>, hlt: &crate::ids::HybridLogicalTimestamp) {
+    crate::wire::write_varint_u64(out, hlt.actor);
+    crate::wire::write_varint_u64(out, hlt.physical_ms);
+    crate::wire::write_varint_u64(out, hlt.logical);
 }
 
-async fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::ids::HybridLogicalTimestamp, crate::ProtocolError> {
-    let actor = crate::wire::read_varint_u64(bytes, pos).await?;
-    let physical_ms = crate::wire::read_varint_u64(bytes, pos).await?;
-    let logical = crate::wire::read_varint_u64(bytes, pos).await?;
+fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::ids::HybridLogicalTimestamp, crate::ProtocolError> {
+    let actor = crate::wire::read_varint_u64(bytes, pos)?;
+    let physical_ms = crate::wire::read_varint_u64(bytes, pos)?;
+    let logical = crate::wire::read_varint_u64(bytes, pos)?;
     Ok(crate::ids::HybridLogicalTimestamp { actor, physical_ms, logical })
 }
 
 /// @emoji 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> |
 /// diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc`.
-pub async fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
-    crate::write_str(out, &envelope.mutation_id.0).await;
-    crate::write_str(out, &envelope.document_id.0).await;
-    crate::write_str(out, &envelope.actor.0).await;
-    crate::wire::write_varint_u64(out, envelope.dependencies.len() as u64).await;
+pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
+    crate::write_str(out, &envelope.mutation_id.0);
+    crate::write_str(out, &envelope.document_id.0);
+    crate::write_str(out, &envelope.actor.0);
+    crate::wire::write_varint_u64(out, envelope.dependencies.len() as u64);
     for dependency in &envelope.dependencies {
-        crate::write_str(out, &dependency.0).await;
+        crate::write_str(out, &dependency.0);
     }
-    crate::write_str(out, &envelope.diff.schema.0).await;
-    crate::write_bytes(out, &envelope.diff.payload).await;
-    crate::write_str(out, &envelope.inverse.schema.0).await;
-    crate::write_bytes(out, &envelope.inverse.payload).await;
-    encode_hlc(out, &envelope.timestamp).await;
+    crate::write_str(out, &envelope.diff.schema.0);
+    crate::write_bytes(out, &envelope.diff.payload);
+    crate::write_str(out, &envelope.inverse.schema.0);
+    crate::write_bytes(out, &envelope.inverse.payload);
+    encode_hlc(out, &envelope.timestamp);
 }
 
 /// @emoji 🎯️ Inverse of [`encode_envelope`].
-pub async fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, crate::ProtocolError> {
-    let mutation_id = crate::ids::MutationId(crate::read_str(bytes, pos).await?);
-    let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos).await?);
-    let actor = crate::ids::ActorId(crate::read_str(bytes, pos).await?);
-    let dependency_count = crate::wire::read_varint_u64(bytes, pos).await?;
+pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope, crate::ProtocolError> {
+    let mutation_id = crate::ids::MutationId(crate::read_str(bytes, pos)?);
+    let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
+    let actor = crate::ids::ActorId(crate::read_str(bytes, pos)?);
+    let dependency_count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut dependencies = Vec::with_capacity(dependency_count as usize);
     for _ in 0..dependency_count {
-        dependencies.push(crate::ids::MutationId(crate::read_str(bytes, pos).await?));
+        dependencies.push(crate::ids::MutationId(crate::read_str(bytes, pos)?));
     }
-    let diff_schema = crate::ids::SchemaId(crate::read_str(bytes, pos).await?);
-    let diff_payload = crate::read_bytes(bytes, pos).await?;
-    let inverse_schema = crate::ids::SchemaId(crate::read_str(bytes, pos).await?);
-    let inverse_payload = crate::read_bytes(bytes, pos).await?;
-    let timestamp = decode_hlc(bytes, pos).await?;
+    let diff_schema = crate::ids::SchemaId(crate::read_str(bytes, pos)?);
+    let diff_payload = crate::read_bytes(bytes, pos)?;
+    let inverse_schema = crate::ids::SchemaId(crate::read_str(bytes, pos)?);
+    let inverse_payload = crate::read_bytes(bytes, pos)?;
+    let timestamp = decode_hlc(bytes, pos)?;
     Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
 
 /// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
 /// varint | chain_hash 32`.
-pub async fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
-    crate::write_str(out, &f.document_id.0).await;
-    crate::wire::write_varint_u64(out, f.head_edit_ordinal).await;
-    crate::write_str(out, &f.head_edit_id).await;
-    crate::wire::write_varint_u64(out, f.last_commit_seq).await;
-    crate::write_hash32(out, &f.chain_hash).await;
+pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
+    crate::write_str(out, &f.document_id.0);
+    crate::wire::write_varint_u64(out, f.head_edit_ordinal);
+    crate::write_str(out, &f.head_edit_id);
+    crate::wire::write_varint_u64(out, f.last_commit_seq);
+    crate::write_hash32(out, &f.chain_hash);
 }
 
 /// @emoji 🎯️ Inverse of [`encode_frontier`].
-pub async fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::ProtocolError> {
-    let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos).await?);
-    let head_edit_ordinal = crate::wire::read_varint_u64(bytes, pos).await?;
-    let head_edit_id = crate::read_str(bytes, pos).await?;
-    let last_commit_seq = crate::wire::read_varint_u64(bytes, pos).await?;
-    let chain_hash = crate::read_hash32(bytes, pos).await?;
+pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, crate::ProtocolError> {
+    let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
+    let head_edit_ordinal = crate::wire::read_varint_u64(bytes, pos)?;
+    let head_edit_id = crate::read_str(bytes, pos)?;
+    let last_commit_seq = crate::wire::read_varint_u64(bytes, pos)?;
+    let chain_hash = crate::read_hash32(bytes, pos)?;
     Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
 }
 
 /// @emoji 🎯️ `count varint | encode_envelope each` — for boundaries that move a whole batch of
 /// envelopes as one opaque byte blob (the WIT ABI, worker frames) instead of one wire frame per
 /// envelope (`ClientFrame::Commands`, which already carries `Vec<MutationEnvelope>` typed).
-pub async fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
+pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::wire::write_varint_u64(&mut out, envelopes.len() as u64).await;
+    crate::wire::write_varint_u64(&mut out, envelopes.len() as u64);
     for envelope in envelopes {
-        encode_envelope(envelope, &mut out).await;
+        encode_envelope(envelope, &mut out);
     }
     out
 }
 
 /// @emoji 🎯️ Inverse of [`encode_envelopes`].
-pub async fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
     let mut pos = 0usize;
-    let count = crate::wire::read_varint_u64(bytes, &mut pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
     let mut envelopes = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        envelopes.push(decode_envelope(bytes, &mut pos).await?);
+        envelopes.push(decode_envelope(bytes, &mut pos)?);
     }
     Ok(envelopes)
 }
@@ -438,22 +437,22 @@ pub async fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, cra
 /// @emoji 🎯️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"inverse": [...]})` convention for `InverseMutation`
 /// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
-pub async fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
+pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::wire::write_varint_u64(&mut out, ops.len() as u64).await;
+    crate::wire::write_varint_u64(&mut out, ops.len() as u64);
     for op in ops {
-        crate::write_bytes(&mut out, op).await;
+        crate::write_bytes(&mut out, op);
     }
     out
 }
 
 /// @emoji 🎯️ Inverse of [`encode_ops_vec`].
-pub async fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
+pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
     let mut pos = 0usize;
-    let count = crate::wire::read_varint_u64(bytes, &mut pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
     let mut ops = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        ops.push(crate::read_bytes(bytes, &mut pos).await?);
+        ops.push(crate::read_bytes(bytes, &mut pos)?);
     }
     Ok(ops)
 }
@@ -472,10 +471,10 @@ mod tests {
         delta: i64,
     }
     impl crate::mutation::MutationDiff<i64> for CausalAddDiff {
-        async fn apply(&self, base: &i64) -> crate::mutation::MutationApplyResult<i64> {
+        fn apply(&self, base: &i64) -> crate::mutation::MutationApplyResult<i64> {
             Ok(base + self.delta)
         }
-        async fn absorb(&mut self, other: Self) {
+        fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -486,22 +485,22 @@ mod tests {
     }
     impl crate::mutation::Mutation<i64> for CausalAddOp {
         type Diff = CausalAddDiff;
-        async fn diff(&self, _base: &i64) -> crate::mutation::MutationOutcome<CausalAddDiff> {
-            crate::mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta }).await
+        fn diff(&self, _base: &i64) -> crate::mutation::MutationOutcome<CausalAddDiff> {
+            crate::mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![CausalAddOp { delta: -self.delta }]
         }
     }
     /// @emoji 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
     /// u8 (=1) | delta i64 LE`.
     impl crate::mutation::OpBinary for CausalAddOp {
-        async fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> {
             let mut out = vec![1u8];
             out.extend_from_slice(&self.delta.to_le_bytes());
             Ok(out)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError> {
+        fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError> {
             if bytes.len() != 9 || bytes[0] != 1 {
                 return Err(crate::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
             }
@@ -511,7 +510,7 @@ mod tests {
         }
     }
     impl MutationTransform<i64> for CausalAddOp {
-        async fn transform(&self, against: &Self) -> TransformOutcome<Self> {
+        fn transform(&self, against: &Self) -> TransformOutcome<Self> {
             if self.delta == against.delta {
                 TransformOutcome::Unchanged(self.clone())
             } else if self.delta == 0 {
@@ -522,7 +521,7 @@ mod tests {
         }
     }
 
-    async fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
+    fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: crate::ids::MutationId(id.into()),
             document_id: crate::ids::ArtifactId("document-1".into()),
@@ -530,74 +529,74 @@ mod tests {
             dependencies: deps.into_iter().map(|dep| crate::ids::MutationId(dep.into())).collect(),
             diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
             inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
-            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0).await,
+            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Envelope
-    #[semio_framework_async_macros::async_test]
-    async fn operation_envelope_binary_round_trips() {
-        let envelope = sample_envelope("operation-1", vec!["operation-0"]).await;
+    #[test]
+    fn operation_envelope_binary_round_trips() {
+        let envelope = sample_envelope("operation-1", vec!["operation-0"]);
         let mut out = Vec::new();
-        encode_envelope(&envelope, &mut out).await;
+        encode_envelope(&envelope, &mut out);
         let mut pos = 0;
-        let round_tripped = decode_envelope(&out, &mut pos).await.expect("decode");
+        let round_tripped = decode_envelope(&out, &mut pos).expect("decode");
         assert_eq!(round_tripped, envelope);
     }
     //#endregion 🔖️Envelope
 
     //#region 🔖️MutationDag
-    #[semio_framework_async_macros::async_test]
-    async fn inserts_pending_until_dependencies_arrive() {
+    #[test]
+    fn inserts_pending_until_dependencies_arrive() {
         let mut dag = MutationDag::new();
-        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"]).await).unwrap(), InsertResult::Pending);
-        assert_eq!(dag.insert(sample_envelope("operation-1", vec![]).await).unwrap(), InsertResult::Applied);
+        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
+        assert_eq!(dag.insert(sample_envelope("operation-1", vec![])).unwrap(), InsertResult::Applied);
         assert_eq!(dag.applied.len(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn drains_applied_envelopes_in_causal_order() {
+    #[test]
+    fn drains_applied_envelopes_in_causal_order() {
         let mut dag = MutationDag::new();
-        dag.insert(sample_envelope("operation-2", vec!["operation-1"]).await).unwrap();
-        dag.insert(sample_envelope("operation-1", vec![]).await).unwrap();
+        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
+        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
         let drained = dag.drain_applied_envelopes();
         assert_eq!(drained.iter().map(|envelope| envelope.mutation_id.0.clone()).collect::<Vec<_>>(), vec!["operation-1".to_string(), "operation-2".to_string()]);
         assert!(dag.drain_applied_envelopes().is_empty(), "second drain yields nothing new");
-        dag.insert(sample_envelope("operation-3", vec![]).await).unwrap();
+        dag.insert(sample_envelope("operation-3", vec![])).unwrap();
         let drained = dag.drain_applied_envelopes();
         assert_eq!(drained.len(), 1);
         assert_eq!(drained[0].mutation_id.0, "operation-3");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn insert_duplicate_pending_operation_id_errors() {
+    #[test]
+    fn insert_duplicate_pending_operation_id_errors() {
         let mut dag = MutationDag::new();
-        dag.insert(sample_envelope("operation-2", vec!["operation-1"]).await).unwrap();
-        let err = dag.insert(sample_envelope("operation-2", vec!["operation-1"]).await).unwrap_err();
+        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
+        let err = dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap_err();
         assert_eq!(err, MutationDagError::Duplicate);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn insert_already_applied_operation_returns_already_applied_without_erroring() {
+    #[test]
+    fn insert_already_applied_operation_returns_already_applied_without_erroring() {
         let mut dag = MutationDag::new();
-        dag.insert(sample_envelope("operation-1", vec![]).await).unwrap();
-        let result = dag.insert(sample_envelope("operation-1", vec![]).await).unwrap();
+        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
+        let result = dag.insert(sample_envelope("operation-1", vec![])).unwrap();
         assert_eq!(result, InsertResult::AlreadyApplied);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
+    #[test]
+    fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
         let mut dag = MutationDag::new();
-        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"]).await).unwrap(), InsertResult::Pending);
+        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
         assert!(dag.ready().is_empty(), "dependency is not yet known to this dag");
         dag.seed_applied(crate::ids::MutationId("operation-1".to_string()));
         let ready_ids: Vec<String> = dag.ready().iter().map(|id| id.0.clone()).collect();
         assert_eq!(ready_ids, vec!["operation-2".to_string()]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn opdagerror_display_is_non_empty() {
+    #[test]
+    fn opdagerror_display_is_non_empty() {
         assert!(!MutationDagError::Duplicate.to_string().is_empty());
     }
 
@@ -610,12 +609,12 @@ mod tests {
         /// the "permutation-convergence" law the amendment's testing note asks for at the `quick`
         /// tier. True topological orders never hit the `insert`-classification quirk documented on
         /// `MutationDag` above (every dependency is already `applied`, not merely known, by induction).
-        async fn diamond(id_a: &str, id_b: &str, id_c: &str, id_d: &str) -> [(&'static str, MutationEnvelope); 4] {
-            [("a", sample_envelope(id_a, vec![]).await), ("b", sample_envelope(id_b, vec![id_a]).await), ("c", sample_envelope(id_c, vec![id_a]).await), ("d", sample_envelope(id_d, vec![id_b, id_c]).await)]
+        fn diamond(id_a: &str, id_b: &str, id_c: &str, id_d: &str) -> [(&'static str, MutationEnvelope); 4] {
+            [("a", sample_envelope(id_a, vec![])), ("b", sample_envelope(id_b, vec![id_a])), ("c", sample_envelope(id_c, vec![id_a])), ("d", sample_envelope(id_d, vec![id_b, id_c]))]
         }
 
-        async fn assert_converges(order: [&str; 4]) {
-            let nodes = diamond("A", "B", "C", "D").await;
+        fn assert_converges(order: [&str; 4]) {
+            let nodes = diamond("A", "B", "C", "D");
             let mut dag = MutationDag::new();
             for label in order {
                 let (_, envelope) = nodes.iter().find(|(l, _)| *l == label).expect("known label").clone();
@@ -628,23 +627,23 @@ mod tests {
             assert_eq!(ids, vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn topological_order_a_b_c_d_converges() {
-            assert_converges(["a", "b", "c", "d"]).await;
+        #[test]
+        fn topological_order_a_b_c_d_converges() {
+            assert_converges(["a", "b", "c", "d"]);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn topological_order_a_c_b_d_converges() {
-            assert_converges(["a", "c", "b", "d"]).await;
+        #[test]
+        fn topological_order_a_c_b_d_converges() {
+            assert_converges(["a", "c", "b", "d"]);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn topological_order_a_b_d_c_is_rejected_as_non_topological() {
+        #[test]
+        fn topological_order_a_b_d_c_is_rejected_as_non_topological() {
             // "d" before "c" is NOT a valid topological order (d depends on c) — insert must not
             // silently accept it as Applied; it must classify as Pending instead, proving this
             // test suite actually distinguishes topological from non-topological orderings rather
             // than accepting anything.
-            let nodes = diamond("A", "B", "C", "D").await;
+            let nodes = diamond("A", "B", "C", "D");
             let mut dag = MutationDag::new();
             for label in ["a", "b", "d"] {
                 let (_, envelope) = nodes.iter().find(|(l, _)| *l == label).expect("known label").clone();
@@ -663,41 +662,41 @@ mod tests {
     //#endregion 🔖️MutationDag
 
     //#region 🔖️Frontier
-    async fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
+    fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
         FrontierSummary { document_id: crate::ids::ArtifactId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_delta_identical_summaries_are_equal() {
-        let a = frontier("doc-1", 5, "edit-5", 3, 9).await;
+    #[test]
+    fn frontier_delta_identical_summaries_are_equal() {
+        let a = frontier("doc-1", 5, "edit-5", 3, 9);
         let b = a.clone();
-        assert_eq!(frontier_delta(&a, &b).await, FrontierComparison::Equal);
+        assert_eq!(frontier_delta(&a, &b), FrontierComparison::Equal);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_delta_greater_ordinal_is_ahead() {
-        let local = frontier("doc-1", 10, "edit-10", 4, 1).await;
-        let remote = frontier("doc-1", 5, "edit-5", 3, 2).await;
-        assert_eq!(frontier_delta(&local, &remote).await, FrontierComparison::Ahead);
+    #[test]
+    fn frontier_delta_greater_ordinal_is_ahead() {
+        let local = frontier("doc-1", 10, "edit-10", 4, 1);
+        let remote = frontier("doc-1", 5, "edit-5", 3, 2);
+        assert_eq!(frontier_delta(&local, &remote), FrontierComparison::Ahead);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_delta_lesser_ordinal_is_behind() {
-        let local = frontier("doc-1", 5, "edit-5", 3, 1).await;
-        let remote = frontier("doc-1", 10, "edit-10", 4, 2).await;
-        assert_eq!(frontier_delta(&local, &remote).await, FrontierComparison::Behind);
+    #[test]
+    fn frontier_delta_lesser_ordinal_is_behind() {
+        let local = frontier("doc-1", 5, "edit-5", 3, 1);
+        let remote = frontier("doc-1", 10, "edit-10", 4, 2);
+        assert_eq!(frontier_delta(&local, &remote), FrontierComparison::Behind);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_delta_same_ordinal_different_head_is_diverged() {
-        let local = frontier("doc-1", 5, "edit-5a", 3, 1).await;
-        let remote = frontier("doc-1", 5, "edit-5b", 3, 2).await;
-        assert_eq!(frontier_delta(&local, &remote).await, FrontierComparison::Diverged { common_edit_count: 5 });
+    #[test]
+    fn frontier_delta_same_ordinal_different_head_is_diverged() {
+        let local = frontier("doc-1", 5, "edit-5a", 3, 1);
+        let remote = frontier("doc-1", 5, "edit-5b", 3, 2);
+        assert_eq!(frontier_delta(&local, &remote), FrontierComparison::Diverged { common_edit_count: 5 });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_summary_serde_round_trips() {
-        let summary = frontier("doc-1", 7, "edit-7", 2, 5).await;
+    #[test]
+    fn frontier_summary_serde_round_trips() {
+        let summary = frontier("doc-1", 7, "edit-7", 2, 5);
         let json = serde_json::to_string(&summary).expect("serialize");
         let round_tripped: FrontierSummary = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, summary);
@@ -705,25 +704,25 @@ mod tests {
     //#endregion 🔖️Frontier
 
     //#region 🔖️Transform
-    #[semio_framework_async_macros::async_test]
-    async fn transform_unchanged_when_deltas_match() {
+    #[test]
+    fn transform_unchanged_when_deltas_match() {
         let a = CausalAddOp { delta: 3 };
         let b = CausalAddOp { delta: 3 };
-        assert_eq!(a.transform(&b).await, TransformOutcome::Unchanged(CausalAddOp { delta: 3 }));
+        assert_eq!(a.transform(&b), TransformOutcome::Unchanged(CausalAddOp { delta: 3 }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn transform_transformed_when_deltas_differ() {
+    #[test]
+    fn transform_transformed_when_deltas_differ() {
         let a = CausalAddOp { delta: 2 };
         let b = CausalAddOp { delta: 5 };
-        assert_eq!(a.transform(&b).await, TransformOutcome::Transformed(CausalAddOp { delta: 7 }));
+        assert_eq!(a.transform(&b), TransformOutcome::Transformed(CausalAddOp { delta: 7 }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn transform_conflict_case_carries_message() {
+    #[test]
+    fn transform_conflict_case_carries_message() {
         let a = CausalAddOp { delta: 0 };
         let b = CausalAddOp { delta: 9 };
-        match a.transform(&b).await {
+        match a.transform(&b) {
             TransformOutcome::Conflict(message) => assert!(!message.is_empty()),
             other => panic!("expected Conflict, got {other:?}"),
         }
@@ -731,8 +730,8 @@ mod tests {
     //#endregion 🔖️Transform
 
     //#region 🔖️Bridge
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explicit_meta() {
+    #[test]
+    fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explicit_meta() {
         let edit = crate::mutation::Edit::<CausalAddOp> {
             id: "edit-1".into(),
             actor: Some("actor-fallback".into()),
@@ -744,7 +743,7 @@ mod tests {
                     dependencies: vec![crate::ids::MutationId("op-0".into())],
                     base_version: 0,
                     author_id: Some(crate::ids::ActorId("actor-explicit".into())),
-                    timestamp: crate::ids::HybridLogicalTimestamp::new(1, 1000).await,
+                    timestamp: crate::ids::HybridLogicalTimestamp::new(1, 1000),
                     undo_policy: crate::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
                     semantic_kind: None,
@@ -757,7 +756,7 @@ mod tests {
                     dependencies: vec![crate::ids::MutationId("op-a".into())],
                     base_version: 1,
                     author_id: None,
-                    timestamp: crate::ids::HybridLogicalTimestamp::new(1, 2000).await,
+                    timestamp: crate::ids::HybridLogicalTimestamp::new(1, 2000),
                     undo_policy: crate::UndoPolicy::ExactBaseOnly,
                     payload_hash: None,
                     semantic_kind: None,
@@ -775,25 +774,25 @@ mod tests {
         let document_id = crate::ids::ArtifactId("doc-1".into());
         let schema = crate::ids::SchemaId("causal-add.v1".into());
 
-        let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).await.expect("encode succeeds");
+        let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 2);
 
         assert_eq!(envelopes[0].mutation_id, crate::ids::MutationId("op-a".into()));
         assert_eq!(envelopes[0].actor, crate::ids::ActorId("actor-explicit".into()));
         assert_eq!(envelopes[0].dependencies, vec![crate::ids::MutationId("op-0".into())]);
         assert_eq!(envelopes[0].document_id, document_id);
-        assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(1, 1000).await);
+        assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(1, 1000));
         assert_eq!(envelopes[0].diff.schema, schema);
-        assert_eq!(envelopes[0].diff.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: 1 }).await.unwrap());
-        assert_eq!(envelopes[0].inverse.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: -1 }).await.unwrap());
+        assert_eq!(envelopes[0].diff.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
+        assert_eq!(envelopes[0].inverse.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
         // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
         assert_eq!(envelopes[1].mutation_id, crate::ids::MutationId("op-b".into()));
         assert_eq!(envelopes[1].actor, crate::ids::ActorId("actor-fallback".into()));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_without_meta() {
+    #[test]
+    fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_without_meta() {
         let edit = crate::mutation::Edit::<CausalAddOp> {
             id: "edit-2".into(),
             actor: None,
@@ -809,17 +808,17 @@ mod tests {
         let document_id = crate::ids::ArtifactId("doc-2".into());
         let schema = crate::ids::SchemaId("causal-add.v1".into());
 
-        let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).await.expect("encode succeeds");
+        let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 1);
         assert_eq!(envelopes[0].mutation_id, crate::ids::MutationId("edit-2#0".into()));
         assert_eq!(envelopes[0].actor, crate::ids::ActorId("unknown".into()));
         assert!(envelopes[0].dependencies.is_empty());
-        assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(0, 0).await);
+        assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(0, 0));
         assert_eq!(envelopes[0].inverse.payload, Vec::<u8>::new(), "inverse vec shorter than forwards -> empty inverse payload");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_envelope_from_edit_propagates_an_encode_failure() {
+    #[test]
+    fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         let edit = crate::mutation::Edit::<CausalAddOp> {
             id: "edit-3".into(),
             actor: None,
@@ -837,34 +836,34 @@ mod tests {
         // size limit) aborts the whole batch rather than returning a partial Vec.
         let document_id = crate::ids::ArtifactId("doc-3".into());
         let schema = crate::ids::SchemaId("causal-add.v1".into());
-        assert!(mutation_envelope_from_edit(&edit, &document_id, &schema).await.is_ok());
+        assert!(mutation_envelope_from_edit(&edit, &document_id, &schema).is_ok());
     }
     //#endregion 🔖️Bridge
 
     //#region 🔖️EnvelopeCodec
-    #[semio_framework_async_macros::async_test]
-    async fn envelope_binary_round_trips() {
-        let envelope = sample_envelope("operation-1", vec!["operation-0", "operation-x"]).await;
+    #[test]
+    fn envelope_binary_round_trips() {
+        let envelope = sample_envelope("operation-1", vec!["operation-0", "operation-x"]);
         let mut out = Vec::new();
-        encode_envelope(&envelope, &mut out).await;
+        encode_envelope(&envelope, &mut out);
         let mut pos = 0;
-        let decoded = decode_envelope(&out, &mut pos).await.expect("decode");
+        let decoded = decode_envelope(&out, &mut pos).expect("decode");
         assert_eq!(decoded, envelope);
         assert_eq!(pos, out.len(), "decode must consume exactly the encoded bytes");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn envelope_binary_encoding_is_deterministic() {
-        let envelope = sample_envelope("operation-1", vec!["operation-0"]).await;
+    #[test]
+    fn envelope_binary_encoding_is_deterministic() {
+        let envelope = sample_envelope("operation-1", vec!["operation-0"]);
         let mut a = Vec::new();
         let mut b = Vec::new();
-        encode_envelope(&envelope, &mut a).await;
-        encode_envelope(&envelope, &mut b).await;
+        encode_envelope(&envelope, &mut a);
+        encode_envelope(&envelope, &mut b);
         assert_eq!(a, b);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
+    #[test]
+    fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         let envelope = MutationEnvelope {
             mutation_id: crate::ids::MutationId("op-empty".into()),
             document_id: crate::ids::ArtifactId("doc-empty".into()),
@@ -872,40 +871,40 @@ mod tests {
             dependencies: Vec::new(),
             diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
             inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
-            timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
         };
         let mut out = Vec::new();
-        encode_envelope(&envelope, &mut out).await;
+        encode_envelope(&envelope, &mut out);
         let mut pos = 0;
-        assert_eq!(decode_envelope(&out, &mut pos).await.unwrap(), envelope);
+        assert_eq!(decode_envelope(&out, &mut pos).unwrap(), envelope);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontier_binary_round_trips() {
-        let f = frontier("doc-1", 7, "edit-7", 3, 9).await;
+    #[test]
+    fn frontier_binary_round_trips() {
+        let f = frontier("doc-1", 7, "edit-7", 3, 9);
         let mut out = Vec::new();
-        encode_frontier(&f, &mut out).await;
+        encode_frontier(&f, &mut out);
         let mut pos = 0;
-        assert_eq!(decode_frontier(&out, &mut pos).await.unwrap(), f);
+        assert_eq!(decode_frontier(&out, &mut pos).unwrap(), f);
         assert_eq!(pos, out.len());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn envelopes_batch_binary_round_trips_including_empty() {
+    #[test]
+    fn envelopes_batch_binary_round_trips_including_empty() {
         let empty: Vec<MutationEnvelope> = Vec::new();
-        assert_eq!(decode_envelopes(&encode_envelopes(&empty).await).await.unwrap(), empty);
+        assert_eq!(decode_envelopes(&encode_envelopes(&empty)).unwrap(), empty);
 
-        let batch = vec![sample_envelope("operation-1", vec!["operation-0"]).await, sample_envelope("operation-2", Vec::new()).await];
-        assert_eq!(decode_envelopes(&encode_envelopes(&batch).await).await.unwrap(), batch);
+        let batch = vec![sample_envelope("operation-1", vec!["operation-0"]), sample_envelope("operation-2", Vec::new())];
+        assert_eq!(decode_envelopes(&encode_envelopes(&batch)).unwrap(), batch);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn ops_vec_binary_round_trips_including_empty() {
+    #[test]
+    fn ops_vec_binary_round_trips_including_empty() {
         let empty: Vec<Vec<u8>> = Vec::new();
-        assert_eq!(decode_ops_vec(&encode_ops_vec(&empty).await).await.unwrap(), empty);
+        assert_eq!(decode_ops_vec(&encode_ops_vec(&empty)).unwrap(), empty);
 
         let ops = vec![vec![1u8, 2, 3], Vec::new(), vec![9u8; 5]];
-        assert_eq!(decode_ops_vec(&encode_ops_vec(&ops).await).await.unwrap(), ops);
+        assert_eq!(decode_ops_vec(&encode_ops_vec(&ops)).unwrap(), ops);
     }
     //#endregion 🔖️EnvelopeCodec
 }

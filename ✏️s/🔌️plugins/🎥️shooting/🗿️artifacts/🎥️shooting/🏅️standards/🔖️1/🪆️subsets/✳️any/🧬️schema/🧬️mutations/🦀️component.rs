@@ -62,8 +62,8 @@ pub enum ShootingMutation {
 mod tests {
     use super::*;
     use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
-    use protocol::{Mutation, MutationDiff};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+    use protocol::{Mutation, MutationDiff};
 
     async fn sample_asset(id: &str) -> ShootingAsset {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
@@ -74,15 +74,11 @@ mod tests {
     }
 
     async fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
         let backwards = operation.inverse(snapshot);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = vcs::apply_mutation(&restored, back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, snapshot, "backwards() must exactly restore the pre-operation fixture");
         forward
@@ -227,7 +223,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
         let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
-        let create = ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
+        let create =
+            ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
         let with_camera = round_trip(&snapshot, &create);
         assert_eq!(with_camera.saved_cameras.len(), 1);
 
@@ -334,7 +331,10 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::mutation::CreateSavedCamera { saved_camera: saved_camera.clone(), index: Some(0) }));
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::DeleteSavedCamera(super::super::delete_saved_camera::mutation::DeleteSavedCamera { id: "cam1".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::RenameSavedCamera(super::super::rename_saved_camera::mutation::RenameSavedCamera { id: "cam1".into(), new_label: "Renamed".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView { id: "cam1".into(), new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() } }));
+        store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::mutation::ReplaceSavedCameraView {
+            id: "cam1".into(),
+            new_camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() },
+        }));
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReorderSavedCameras(super::super::reorder_saved_cameras::mutation::ReorderSavedCameras { id: "cam1".into(), to_index: 0 }));
         store::os_store::test_support::assert_op_line_round_trip(&ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::mutation::ReplaceShotCamera { shot_id: "s1".into(), new_camera: ShootingCamera::default() }));
 

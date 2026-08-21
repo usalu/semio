@@ -14,17 +14,7 @@ use crate::tui::theme::{Role, Surface, Theme};
 
 /// 🪟 Paints one 2-row corner tab. Top tabs bend their short wall down into the body hairline;
 /// bottom tabs bend upward. `bend` is false for non-innermost tabs in a multi-tab corner group.
-fn paint_corner_tab(
-    buf: &mut CellBuffer,
-    y: u16,
-    tab: &WindowTab,
-    short_wall_is_left: bool,
-    is_bottom: bool,
-    bend: bool,
-    text_fg: [u8; 3],
-    bg: [u8; 3],
-    border: [u8; 3],
-) {
+fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowTab, short_wall_is_left: bool, is_bottom: bool, bend: bool, text_fg: [u8; 3], bg: [u8; 3], border: [u8; 3]) {
     let width = tab.interior_width + 2;
     let top_y = y;
     let text_y = y + 1;
@@ -59,27 +49,13 @@ fn paint_corner_tab(
     }
 }
 
-fn paint_group(
-    buf: &mut CellBuffer,
-    rect: Rect,
-    layout: &WindowChipLayout,
-    corner: WindowStackCorner,
-    tabs: &[WindowCornerTab],
-    w: &WindowState,
-    theme: &Theme,
-    bg: [u8; 3],
-    border: [u8; 3],
-) {
+fn paint_group(buf: &mut CellBuffer, rect: Rect, layout: &WindowChipLayout, corner: WindowStackCorner, tabs: &[WindowCornerTab], w: &WindowState, theme: &Theme, bg: [u8; 3], border: [u8; 3]) {
     if tabs.is_empty() {
         return;
     }
     let is_bottom = !corner.is_top();
     let short_wall_is_left = !corner.is_left();
-    let y = if is_bottom {
-        layout.bottom_body_y.unwrap_or(rect.y + rect.height.saturating_sub(3))
-    } else {
-        rect.y
-    };
+    let y = if is_bottom { layout.bottom_body_y.unwrap_or(rect.y + rect.height.saturating_sub(3)) } else { rect.y };
     for (i, tab) in tabs.iter().enumerate() {
         let bend = if short_wall_is_left { i == 0 } else { i + 1 == tabs.len() };
         let active = tab.index == w.active_stack_tab;

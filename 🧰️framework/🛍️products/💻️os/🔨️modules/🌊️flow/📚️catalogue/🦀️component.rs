@@ -2,17 +2,12 @@
 
 use neural_engine as neural;
 
-
-use neural::{
-    ChannelSpec, OperatorInfo,
-    INPUT_KIND, OUTPUT_KIND,
-};
+use neural::{ChannelSpec, OperatorInfo, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
-use crate::registry::*;
 use crate::host::*;
-
+use crate::registry::*;
 
 // #region 🔖️Catalogue
 /// 🌿️ Nested catalogue group authored by neuron-kind module authors.
@@ -276,15 +271,7 @@ pub(crate) fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::wgpu
 
 /// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `session`, when set, contributes
 /// `eval_json`/`status_json` from the in-process [`FlowEvalSession`] (never persisted in config).
-pub fn flow_backed_node_graph_extras(
-    fixture: &FlowFixture,
-    lod_mode: &str,
-    proximity_distance: f64,
-    grid_visible: bool,
-    grid_snap_enabled: bool,
-    grid_factor: f64,
-    session: Option<&FlowEvalSession>,
-) -> FlowBackedNodeGraphExtras {
+pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     let status_json = session.map(|session| {
         let host = flow_host_with_session(fixture, session);

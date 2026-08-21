@@ -10,5 +10,6 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 pub async fn inverse(payload: &MoveWidget, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     match base.fixture.layout.get(&payload.id) {
         Some(previous) => vec![Procedural3dMutation::MoveWidget(MoveWidget { id: payload.id.clone(), layout: previous.clone() })],
-        None => vec![Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: payload.id.clone() })]}
+        None => vec![Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: payload.id.clone() })],
+    }
 }

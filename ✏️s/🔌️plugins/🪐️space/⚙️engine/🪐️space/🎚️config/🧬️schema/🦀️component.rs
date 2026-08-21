@@ -8,21 +8,36 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.space.config")]
 pub struct SpaceConfig {
-    #[state(config)] pub camera: BTreeMap<String, SpaceWindowCamera>,
-    #[state(config)] pub collapsed_node_ids: Vec<String>,
-    #[state(config)] pub preview_off_node_ids: Vec<String>,
-    #[state(config)] pub active_node_id: Option<String>,
-    #[state(config)] pub focused_node_id: Option<String>,
-    #[state(config)] pub clipboard_node_ids: Vec<String>,
-    #[state(config)] pub workflow_engagement_input: String,
-    #[state(config)] pub compiled_dag_engagement_input: String,
-    #[state(config)] pub pending_import_node_id: Option<String>,
-    #[state(config)] pub pending_import_format: Option<String>,
-    #[state(config)] pub active_panel_tab: String,
-    #[state(config)] pub space_id: Option<String>,
-    #[state(config)] pub client_id: Option<String>,
-    #[state(config)] pub client_name: Option<String>,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub camera: BTreeMap<String, SpaceWindowCamera>,
+    #[state(config)]
+    pub collapsed_node_ids: Vec<String>,
+    #[state(config)]
+    pub preview_off_node_ids: Vec<String>,
+    #[state(config)]
+    pub active_node_id: Option<String>,
+    #[state(config)]
+    pub focused_node_id: Option<String>,
+    #[state(config)]
+    pub clipboard_node_ids: Vec<String>,
+    #[state(config)]
+    pub workflow_engagement_input: String,
+    #[state(config)]
+    pub compiled_dag_engagement_input: String,
+    #[state(config)]
+    pub pending_import_node_id: Option<String>,
+    #[state(config)]
+    pub pending_import_format: Option<String>,
+    #[state(config)]
+    pub active_panel_tab: String,
+    #[state(config)]
+    pub space_id: Option<String>,
+    #[state(config)]
+    pub client_id: Option<String>,
+    #[state(config)]
+    pub client_name: Option<String>,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -49,4 +64,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

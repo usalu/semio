@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `CreateAsset`.
 use super::mutation::CreateAsset;
-use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::schema::mutations::DeleteAsset;
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse

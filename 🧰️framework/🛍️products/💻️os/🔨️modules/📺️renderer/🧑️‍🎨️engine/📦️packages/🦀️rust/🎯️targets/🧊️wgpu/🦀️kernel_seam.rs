@@ -181,16 +181,7 @@ mod tests {
     use ui_contract::{ActionId, SurfaceId, Trigger, UiNodeId, UiRevision};
 
     fn fake_intent(surface: &str) -> UiIntent {
-        UiIntent {
-            surface: SurfaceId(surface.to_string()),
-            revision: UiRevision(1),
-            node: UiNodeId(1),
-            node_key: "root".to_string(),
-            trigger: Trigger::Activate,
-            action: ActionId::default(),
-            args: None,
-            input: None,
-        }
+        UiIntent { surface: SurfaceId(surface.to_string()), revision: UiRevision(1), node: UiNodeId(1), node_key: "root".to_string(), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
     }
 
     fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {

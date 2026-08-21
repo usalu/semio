@@ -1,13 +1,13 @@
 //! 🧬️ 🧬️ Procedural2d play app commands command — `remove-generation`.
 
-use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::artifacts::procedural2d::op::{generation_mutation_to_procedural2d, Procedural2dMutation};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use flow::forms_bridge::flow_fixture_to_form_spec;
+use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
 use flow::FlowEvalSession;
 use flow::FlowFixture;
-use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -86,7 +86,8 @@ async fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactVie
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "remove-generation")]
 pub struct RemoveGeneration {
-    pub id: String}
+    pub id: String,
+}
 
 pub async fn handle(payload: &RemoveGeneration, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     Ok(handle_generation("removeGeneration", Some(&json!({ "id": payload.id })), doc, cfg, session))

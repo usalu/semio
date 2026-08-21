@@ -127,7 +127,7 @@ fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -
 impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
     type Diff = SemioAnimationDiff;
 
-    async fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         use SemioAnimationMutation::*;
         protocol::MutationOutcome::new(match self {
             NoMutation => SemioAnimationDiff::default(),
@@ -146,7 +146,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
         })
     }
 
-    async fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
         use SemioAnimationMutation::*;
         match self {
             NoMutation => vec![NoMutation],
@@ -226,7 +226,7 @@ fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
 /// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
 /// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
 impl OpText for SemioAnimationMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
         use SemioAnimationMutation::*;
         match self {
@@ -252,7 +252,7 @@ impl OpText for SemioAnimationMutation {
         }
     }
 
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
         use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
@@ -360,8 +360,8 @@ const OP_BINARY_FORMAT: u8 = 1;
 /// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
 /// `OpBinary` upgrade uses.
 impl OpBinary for SemioAnimationMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let printed = <Self as OpText>::print_op(self).await;
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let printed = <Self as OpText>::print_op(self);
         let args = match printed.split_once(':') {
             Some((_, rest)) => rest,
             None => "",
@@ -370,7 +370,7 @@ impl OpBinary for SemioAnimationMutation {
         out.extend_from_slice(args.as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
         let [format, tag, rest @ ..] = bytes else { return Err(malformed("op header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
         if *format != OP_BINARY_FORMAT {
@@ -379,7 +379,7 @@ impl OpBinary for SemioAnimationMutation {
         let keyword = OP_KEYWORDS.get(*tag as usize).ok_or_else(|| malformed("op tag", format!("unknown op tag {tag}")))?;
         let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
         let line = if *keyword == "N" { "N".to_string() } else { format!("{keyword}:{args}") };
-        <Self as OpText>::parse_op(&line).await.map_err(|e| malformed("op text", e.to_string()))
+        <Self as OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))
     }
 }
 //#endregion OpCodecs

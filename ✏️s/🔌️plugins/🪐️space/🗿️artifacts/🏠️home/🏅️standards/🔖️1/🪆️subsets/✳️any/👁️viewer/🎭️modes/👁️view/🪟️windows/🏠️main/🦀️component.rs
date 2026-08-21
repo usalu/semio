@@ -129,7 +129,13 @@ mod tests {
             actor: store::os_directory::DirectoryActor { kind: store::os_directory::DirectoryActorKind::User, id: "u".into() },
             space_id: Some("sp-1".into()),
             user_id: None,
-            body: store::os_directory::DirectoryEventBody::SpaceCreated { space_id: "sp-1".into(), name: "Fabrication".into(), space_kind: store::os_directory::DirectorySpaceKind::Studio, visibility: store::os_directory::DirectorySpaceVisibility::Public, owner_user_id: "u1".into() },
+            body: store::os_directory::DirectoryEventBody::SpaceCreated {
+                space_id: "sp-1".into(),
+                name: "Fabrication".into(),
+                space_kind: store::os_directory::DirectorySpaceKind::Studio,
+                visibility: store::os_directory::DirectorySpaceVisibility::Public,
+                owner_user_id: "u1".into(),
+            },
             recorded_at_ms: 1000,
         };
         let directory = store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event);

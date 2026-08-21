@@ -83,7 +83,8 @@ pub(crate) const DEPTH_STENCIL_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(crate) fn depth_stencil_state(spec: &DepthStencilSpec) -> wgpu::DepthStencilState {
-    let face = wgpu::StencilFaceState { compare: compare_function(spec.stencil.compare), fail_op: stencil_operation(spec.stencil.fail_op), depth_fail_op: stencil_operation(spec.stencil.depth_fail_op), pass_op: stencil_operation(spec.stencil.pass_op) };
+    let face =
+        wgpu::StencilFaceState { compare: compare_function(spec.stencil.compare), fail_op: stencil_operation(spec.stencil.fail_op), depth_fail_op: stencil_operation(spec.stencil.depth_fail_op), pass_op: stencil_operation(spec.stencil.pass_op) };
     wgpu::DepthStencilState {
         format: DEPTH_STENCIL_FORMAT,
         depth_write_enabled: spec.depth_write_enabled,

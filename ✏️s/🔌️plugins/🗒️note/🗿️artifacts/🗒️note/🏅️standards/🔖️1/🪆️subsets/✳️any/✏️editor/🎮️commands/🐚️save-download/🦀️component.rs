@@ -1,9 +1,9 @@
 //! 🐚️ 🐚️ Note play app commands command — `save-download`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

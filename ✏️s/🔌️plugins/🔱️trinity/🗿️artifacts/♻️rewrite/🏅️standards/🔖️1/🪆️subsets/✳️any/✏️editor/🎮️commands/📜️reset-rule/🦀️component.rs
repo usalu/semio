@@ -1,8 +1,8 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `reset-rule`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 /// 🧬️ `resetRule` is a genuine whole-document reset (back to the blank default rule) — not

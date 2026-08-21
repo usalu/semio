@@ -1,9 +1,9 @@
 //! 🕸️ S Studio app — Workflow window: definition + render (constitutional: ui/WindowKind + Render).
 //! The primary node-graph canvas: spawn/move/connect/select app instances, edit parameters.
 
+use crate::demo_space_projection;
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
-use crate::demo_space_projection;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_plugin::{
     build_node_graph_scene, resolve_labels_for_locale, InteractionRef, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
@@ -139,7 +139,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_workflow_scene() {
-        use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
+        use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
@@ -147,7 +147,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn workflow_scene_uses_flow_engine_with_fixture() {
-        use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
+        use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();

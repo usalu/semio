@@ -11,7 +11,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 /// 📦️ Encodes a `Fem3dMutation` to its binary command form.
 pub async fn encode_op(operation: &Fem3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -90,13 +89,9 @@ mod semio_protocol_conformance {
     }
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings {
-            settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
-        });
+        let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");
     }
-
 }
-

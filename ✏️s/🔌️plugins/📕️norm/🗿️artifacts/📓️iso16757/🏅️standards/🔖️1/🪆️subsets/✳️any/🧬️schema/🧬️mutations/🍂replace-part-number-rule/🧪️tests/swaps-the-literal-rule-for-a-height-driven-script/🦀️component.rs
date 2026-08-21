@@ -83,7 +83,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the Script variant differs from the committed Literal variant, so `replace-part-number-rule`'s `mutation.no-op` guard cannot fire");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the Script variant differs from the committed Literal variant, so `replace-part-number-rule`'s `mutation.no-op` guard cannot fire"
+    );
     assert!(produced.messages().is_empty(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: an accepted replace-part-number-rule emits no diagnostics at all");
 }
 

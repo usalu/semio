@@ -137,14 +137,14 @@ pub async fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Windo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::puzzle2d::config::Puzzle2dConfig;
+    use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
+    use crate::editor::puzzle2d::default_empty_fixture;
+    use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
+    use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
     use crate::editor::puzzle2d::modes::edit::windows::overview;
     use crate::editor::puzzle2d::terminology::puzzle2d_labels;
     use crate::editor::puzzle2d::testkit::*;
-    use crate::editor::puzzle2d::config::Puzzle2dConfig;
-    use crate::editor::puzzle2d::default_empty_fixture;
-    use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
-    use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
-    use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 
     #[semio_framework_async_macros::async_test]
     async fn brush_params_are_tagged_utility_options_not_engagement_controls() {

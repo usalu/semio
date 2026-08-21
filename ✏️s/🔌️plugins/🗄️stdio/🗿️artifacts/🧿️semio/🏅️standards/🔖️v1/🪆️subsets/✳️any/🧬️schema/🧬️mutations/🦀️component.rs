@@ -75,34 +75,34 @@ pub enum SemioMutation {
 impl Mutation<SemioSnapshot> for SemioMutation {
     type Diff = SemioDiff;
 
-    async fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
-            (SemioMutation::NoMutation, _) => protocol::MutationOutcome::new(SemioDiff::NoChange).await,
-            (SemioMutation::SetSnapshot { snapshot }, _) => protocol::MutationOutcome::new(SemioDiff::Replace(Box::new(snapshot.clone()))).await,
-            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b).await.map(SemioDiff::Brep).await,
-            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b).await.map(SemioDiff::Mesh).await,
-            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b).await.map(SemioDiff::Model).await,
-            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b).await.map(SemioDiff::Value).await,
-            (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b).await.map(SemioDiff::Document),
-            (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b).await.map(SemioDiff::Cad),
-            (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b).await.map(SemioDiff::Drawing),
-            (SemioMutation::Image(m), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(m, b).await.map(SemioDiff::Image),
-            (SemioMutation::Video(m), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(m, b).await.map(SemioDiff::Video),
-            (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(m, b).await.map(SemioDiff::Audio),
-            (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b).await.map(SemioDiff::Animation),
-            (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b).await.map(SemioDiff::Presentation),
-            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b).await.map(SemioDiff::Flow),
-            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b).await.map(SemioDiff::Text),
-            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(m, b).await.map(SemioDiff::Table),
-            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(m, b).await.map(SemioDiff::Graph),
-            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b).await.map(SemioDiff::Object),
-            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(m, b).await.map(SemioDiff::Kit),
+            (SemioMutation::NoMutation, _) => protocol::MutationOutcome::new(SemioDiff::NoChange),
+            (SemioMutation::SetSnapshot { snapshot }, _) => protocol::MutationOutcome::new(SemioDiff::Replace(Box::new(snapshot.clone()))),
+            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b).map(SemioDiff::Brep),
+            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b).map(SemioDiff::Mesh),
+            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b).map(SemioDiff::Model),
+            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b).map(SemioDiff::Value),
+            (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b).map(SemioDiff::Document),
+            (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b).map(SemioDiff::Cad),
+            (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b).map(SemioDiff::Drawing),
+            (SemioMutation::Image(m), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(m, b).map(SemioDiff::Image),
+            (SemioMutation::Video(m), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(m, b).map(SemioDiff::Video),
+            (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(m, b).map(SemioDiff::Audio),
+            (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b).map(SemioDiff::Animation),
+            (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b).map(SemioDiff::Presentation),
+            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b).map(SemioDiff::Flow),
+            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b).map(SemioDiff::Text),
+            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(m, b).map(SemioDiff::Table),
+            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(m, b).map(SemioDiff::Graph),
+            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b).map(SemioDiff::Object),
+            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(m, b).map(SemioDiff::Kit),
             _ => protocol::MutationOutcome::error("mutation.target-missing", "Mutation subset does not match the snapshot subset.", ["subset"]),
         }
     }
 
-    async fn inverse(&self, base: &SemioSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioSnapshot) -> Vec<Self> {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
             (SemioMutation::NoMutation, _) => vec![SemioMutation::NoMutation],
@@ -280,10 +280,10 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
 }
 
 impl OpText for SemioMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_semio_mutation(self)
     }
 }
@@ -294,36 +294,36 @@ impl OpBinary for SemioMutation {
     /// the 13 wrapped variants, the wrapped subset's OWN real `OpBinary::encode_op()` bytes
     /// (genuine reuse); for `SetSnapshot`, the wrapped snapshot's own real
     /// `ArtifactPack::encode_pack()` bytes; `NoMutation` carries no payload.
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
         let payload: Vec<u8> = match self {
             SemioMutation::NoMutation => Vec::new(),
-            SemioMutation::SetSnapshot { snapshot } => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot).await,
-            SemioMutation::Brep(m) => m.encode_op().await?,
-            SemioMutation::Mesh(m) => m.encode_op().await?,
-            SemioMutation::Model(m) => m.encode_op().await?,
-            SemioMutation::Value(m) => m.encode_op().await?,
-            SemioMutation::Document(m) => m.encode_op().await?,
-            SemioMutation::Cad(m) => m.encode_op().await?,
-            SemioMutation::Drawing(m) => m.encode_op().await?,
-            SemioMutation::Image(m) => m.encode_op().await?,
-            SemioMutation::Video(m) => m.encode_op().await?,
-            SemioMutation::Audio(m) => m.encode_op().await?,
-            SemioMutation::Animation(m) => m.encode_op().await?,
-            SemioMutation::Presentation(m) => m.encode_op().await?,
-            SemioMutation::Flow(m) => m.encode_op().await?,
-            SemioMutation::Text(m) => m.encode_op().await?,
-            SemioMutation::Table(m) => m.encode_op().await?,
-            SemioMutation::Graph(m) => m.encode_op().await?,
-            SemioMutation::Object(m) => m.encode_op().await?,
-            SemioMutation::Kit(m) => m.encode_op().await?,
+            SemioMutation::SetSnapshot { snapshot } => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot),
+            SemioMutation::Brep(m) => m.encode_op()?,
+            SemioMutation::Mesh(m) => m.encode_op()?,
+            SemioMutation::Model(m) => m.encode_op()?,
+            SemioMutation::Value(m) => m.encode_op()?,
+            SemioMutation::Document(m) => m.encode_op()?,
+            SemioMutation::Cad(m) => m.encode_op()?,
+            SemioMutation::Drawing(m) => m.encode_op()?,
+            SemioMutation::Image(m) => m.encode_op()?,
+            SemioMutation::Video(m) => m.encode_op()?,
+            SemioMutation::Audio(m) => m.encode_op()?,
+            SemioMutation::Animation(m) => m.encode_op()?,
+            SemioMutation::Presentation(m) => m.encode_op()?,
+            SemioMutation::Flow(m) => m.encode_op()?,
+            SemioMutation::Text(m) => m.encode_op()?,
+            SemioMutation::Table(m) => m.encode_op()?,
+            SemioMutation::Graph(m) => m.encode_op()?,
+            SemioMutation::Object(m) => m.encode_op()?,
+            SemioMutation::Kit(m) => m.encode_op()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated".to_string() });
@@ -336,25 +336,25 @@ impl OpBinary for SemioMutation {
         let payload = &bytes[2..];
         Ok(match tag {
             0 => SemioMutation::NoMutation,
-            1 => SemioMutation::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload).await? },
-            2 => SemioMutation::Brep(SemioBrepMutation::decode_op(payload).await?),
-            3 => SemioMutation::Mesh(SemioMeshMutation::decode_op(payload).await?),
-            4 => SemioMutation::Model(SemioModelMutation::decode_op(payload).await?),
-            5 => SemioMutation::Value(SemioValueMutation::decode_op(payload).await?),
-            6 => SemioMutation::Document(SemioDocumentMutation::decode_op(payload).await?),
-            7 => SemioMutation::Cad(SemioCadMutation::decode_op(payload).await?),
-            8 => SemioMutation::Drawing(SemioDrawingMutation::decode_op(payload).await?),
-            9 => SemioMutation::Image(SemioImageMutation::decode_op(payload).await?),
-            10 => SemioMutation::Video(SemioVideoMutation::decode_op(payload).await?),
-            11 => SemioMutation::Audio(SemioAudioMutation::decode_op(payload).await?),
-            12 => SemioMutation::Animation(SemioAnimationMutation::decode_op(payload).await?),
-            13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload).await?),
-            14 => SemioMutation::Flow(SemioFlowMutation::decode_op(payload).await?),
-            15 => SemioMutation::Text(SemioTextMutation::decode_op(payload).await?),
-            16 => SemioMutation::Table(SemioTableMutation::decode_op(payload).await?),
-            17 => SemioMutation::Graph(SemioGraphMutation::decode_op(payload).await?),
-            18 => SemioMutation::Object(SemioObjectMutation::decode_op(payload).await?),
-            19 => SemioMutation::Kit(SemioKitMutation::decode_op(payload).await?),
+            1 => SemioMutation::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? },
+            2 => SemioMutation::Brep(SemioBrepMutation::decode_op(payload)?),
+            3 => SemioMutation::Mesh(SemioMeshMutation::decode_op(payload)?),
+            4 => SemioMutation::Model(SemioModelMutation::decode_op(payload)?),
+            5 => SemioMutation::Value(SemioValueMutation::decode_op(payload)?),
+            6 => SemioMutation::Document(SemioDocumentMutation::decode_op(payload)?),
+            7 => SemioMutation::Cad(SemioCadMutation::decode_op(payload)?),
+            8 => SemioMutation::Drawing(SemioDrawingMutation::decode_op(payload)?),
+            9 => SemioMutation::Image(SemioImageMutation::decode_op(payload)?),
+            10 => SemioMutation::Video(SemioVideoMutation::decode_op(payload)?),
+            11 => SemioMutation::Audio(SemioAudioMutation::decode_op(payload)?),
+            12 => SemioMutation::Animation(SemioAnimationMutation::decode_op(payload)?),
+            13 => SemioMutation::Presentation(SemioPresentationMutation::decode_op(payload)?),
+            14 => SemioMutation::Flow(SemioFlowMutation::decode_op(payload)?),
+            15 => SemioMutation::Text(SemioTextMutation::decode_op(payload)?),
+            16 => SemioMutation::Table(SemioTableMutation::decode_op(payload)?),
+            17 => SemioMutation::Graph(SemioGraphMutation::decode_op(payload)?),
+            18 => SemioMutation::Object(SemioObjectMutation::decode_op(payload)?),
+            19 => SemioMutation::Kit(SemioKitMutation::decode_op(payload)?),
             other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }

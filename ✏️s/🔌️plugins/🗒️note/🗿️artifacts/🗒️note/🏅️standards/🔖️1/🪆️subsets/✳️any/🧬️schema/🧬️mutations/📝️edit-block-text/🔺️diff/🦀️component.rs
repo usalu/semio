@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `EditBlockText`. Error `target-missing` when the block is absent
 //! or not a text block.
 use super::mutation::EditBlockText;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &EditBlockText, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

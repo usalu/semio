@@ -19,7 +19,11 @@ async fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
         None,
         crate::os_dsl::schema::RecordLayout::Lines,
-        vec![crate::os_dsl::schema::FieldSpec::new(1, "name", crate::os_dsl::schema::Shape::Text), crate::os_dsl::schema::FieldSpec::new(2, "age", crate::os_dsl::schema::Shape::UInt), crate::os_dsl::schema::FieldSpec::new(3, "active", crate::os_dsl::schema::Shape::Bool)],
+        vec![
+            crate::os_dsl::schema::FieldSpec::new(1, "name", crate::os_dsl::schema::Shape::Text),
+            crate::os_dsl::schema::FieldSpec::new(2, "age", crate::os_dsl::schema::Shape::UInt),
+            crate::os_dsl::schema::FieldSpec::new(3, "active", crate::os_dsl::schema::Shape::Bool),
+        ],
     )
 }
 
@@ -314,7 +318,7 @@ async fn cmd_hash(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    match crate::os_pack::content_hash(&bytes).await {
+    match crate::os_pack::content_hash(&bytes) {
         Ok(hash) => {
             println!("{hash}");
             0
@@ -351,7 +355,7 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).await {
+    match crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()) {
         Ok((record, report)) => {
             let mut writer = crate::os_dsl::schema::Writer::new();
             crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
@@ -407,7 +411,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
             return 1;
         }
     };
-    let bytes = match crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await {
+    let bytes = match crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()) {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: encode failed: {error}");
@@ -479,14 +483,14 @@ async fn cmd_diff(rest: &[String]) -> i32 {
             return 2;
         };
         let options = crate::os_pack::DecodeOptions::default();
-        let record_a = match crate::os_pack::decode_document(&bytes_a, &spec, &options).await {
+        let record_a = match crate::os_pack::decode_document(&bytes_a, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_a}' failed: {error}");
                 return 1;
             }
         };
-        let record_b = match crate::os_pack::decode_document(&bytes_b, &spec, &options).await {
+        let record_b = match crate::os_pack::decode_document(&bytes_b, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_b}' failed: {error}");
@@ -504,8 +508,8 @@ async fn cmd_diff(rest: &[String]) -> i32 {
             1
         }
     } else {
-        let hash_a = crate::os_pack::content_hash(&bytes_a).await;
-        let hash_b = crate::os_pack::content_hash(&bytes_b).await;
+        let hash_a = crate::os_pack::content_hash(&bytes_a);
+        let hash_b = crate::os_pack::content_hash(&bytes_b);
         if let (Ok(hash_a), Ok(hash_b)) = (hash_a, hash_b) {
             if hash_a == hash_b && bytes_a.len() == bytes_b.len() {
                 println!("identical (content_hash {hash_a}, {} bytes)", bytes_a.len());

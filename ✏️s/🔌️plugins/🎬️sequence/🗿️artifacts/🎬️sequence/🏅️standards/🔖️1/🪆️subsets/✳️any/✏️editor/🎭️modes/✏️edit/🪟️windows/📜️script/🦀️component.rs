@@ -1,9 +1,9 @@
 //! 📜️ Sequence play app — the script window: the compiled imperative path plus the last `run` result.
 
-use crate::editor::sequence::config::SequenceConfig;
-use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
-use crate::editor::sequence::host_from_snapshot;
 use crate::artifacts::sequence::SequenceSnapshot;
+use crate::editor::sequence::config::SequenceConfig;
+use crate::editor::sequence::host_from_snapshot;
+use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

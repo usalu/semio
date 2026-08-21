@@ -1,12 +1,10 @@
 //! 📜️ `trinity.rewrite.rule` artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::rewrite::RewriteSnapshot;
 use store::ArtifactDsl;
@@ -32,8 +30,8 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
-    use std::collections::BTreeMap;
     use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
+    use std::collections::BTreeMap;
 
     async fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();

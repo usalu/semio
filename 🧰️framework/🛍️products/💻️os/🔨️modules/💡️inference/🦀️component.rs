@@ -263,11 +263,7 @@ pub async fn infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option
     for step in plan {
         let parent_hashes: Vec<DepHash> = step.parents.iter().filter_map(|p| hashes.get(p).copied()).collect();
         let input = F::dep_input(snapshot, &step.key, &step.parents).await;
-        let dep_hash = if step.parents.is_empty() {
-            DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input).await
-        } else {
-            DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes).await
-        };
+        let dep_hash = if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input).await } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes).await };
 
         let value = if let Some(cache) = cache.as_deref_mut() {
             match cache.get(dep_hash).await {
@@ -310,11 +306,15 @@ where
     let result = infer_field::<P, F>(snapshot, Some(cache)).await;
     let root = semio_framework_hash::merkle_collection(result.keys().enumerate().map(|(i, _)| i.to_string()).collect());
     let mut root_bytes = [0u8; 32];
-    let _ = hex::decode_to_slice(&{
-        let mut padded = blake3::hash(root.as_bytes()).to_hex().to_string();
-        padded.truncate(64);
-        padded
-    }, &mut root_bytes).await;
+    let _ = hex::decode_to_slice(
+        &{
+            let mut padded = blake3::hash(root.as_bytes()).to_hex().to_string();
+            padded.truncate(64);
+            padded
+        },
+        &mut root_bytes,
+    )
+    .await;
     session.roots.insert(F::FIELD_ID, (DepHash(root_bytes), encode(&result).await));
     result
 }

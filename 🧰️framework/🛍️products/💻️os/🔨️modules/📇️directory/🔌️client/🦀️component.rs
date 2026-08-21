@@ -22,7 +22,7 @@ use super::schema::{DirectoryCommand, DirectoryEvent, DirectoryStreamMessage, Do
 use semio_framework_async::OperationContext;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::sync::{PoisonError, RwLock};
+use std::sync::{Arc, PoisonError, RwLock};
 
 //#region 🔖️Transport
 /// 📨️ One HTTP verb `DirectoryClient` issues against the hub REST surface.
@@ -58,12 +58,36 @@ pub enum TransportError {
     DeadlineExceeded,
 }
 
+/// 🧵️ Native transports cross worker turns; browser transports remain local to the wasm event loop.
+#[cfg(not(target_arch = "wasm32"))]
+pub trait DirectoryTransportPlatform: Send + Sync {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Send + Sync> DirectoryTransportPlatform for T {}
+
+#[cfg(target_arch = "wasm32")]
+pub trait DirectoryTransportPlatform {}
+
+#[cfg(target_arch = "wasm32")]
+impl<T> DirectoryTransportPlatform for T {}
+
+/// 🧵️ Native connections move between finite worker turns; browser sockets remain event-loop local.
+#[cfg(not(target_arch = "wasm32"))]
+pub trait DirectoryConnectionPlatform: Send {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Send> DirectoryConnectionPlatform for T {}
+
+#[cfg(target_arch = "wasm32")]
+pub trait DirectoryConnectionPlatform {}
+
+#[cfg(target_arch = "wasm32")]
+impl<T> DirectoryConnectionPlatform for T {}
+
 /// 🔌️ The injection seam: no concrete HTTP client type may appear in any public signature
 /// outside an implementor of this trait. Native `ureq`, browser `web_sys::fetch`, or a test
-/// double all implement this identically. `?Send` (no `Send`/`Sync` supertrait): the browser
-/// impl closes over `wasm_bindgen::JsValue`-backed handles, which are never `Send` — same reason
-/// `🏪️store/🔄️sync`'s native actor deliberately runs on a CURRENT-THREAD tokio runtime rather
-/// than a multi-threaded one, so no future crossing an `.await` here ever needs to be `Send`.
+/// double all implement this identically. Native transports are `Send + Sync` and native HTTP
+/// futures are `Send`; wasm uses a platform-local marker because `JsValue` handles cannot move.
 /// `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) carries cancellation/deadline/
 /// trace/capability through to whichever concrete transport is wired — a native call routes it
 /// into `semio-framework-os-services`'s `HttpPool`/`ComputePool` (see `🔖️Native` below), so the
@@ -74,26 +98,31 @@ pub enum TransportError {
 // `DirectoryClient<T: DirectoryTransport>` below) — `open_ws` is a trait method that RETURNS a
 // runtime-chosen `DirectoryWsConnection` implementation, so the associated type `Ws` pushes that
 // choice to the implementor exactly per the `ResourceResolver` precedent, replacing
-// `Box<dyn DirectoryWsConnection>`. NOT touching the `#[async_trait(?Send)]` wrapper itself here —
-// its removal for this `🌎️hub/📇️directory` half is `os-ripple`'s assigned packet (R8), a different
-// concern from de-dyn'ing this one return type.
-#[async_trait::async_trait(?Send)]
-pub trait DirectoryTransport {
+// `Box<dyn DirectoryWsConnection>`.
+#[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait::async_trait(?Send))]
+pub trait DirectoryTransport: DirectoryTransportPlatform {
     type Ws: DirectoryWsConnection;
     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
-    async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError>;
+    fn open_ws(&self, ctx: &OperationContext, url: &str, timeout_ms: u64) -> Result<Self::Ws, TransportError>;
 }
 
 /// 🔌️ One open `/directory/ws` connection. Sequential by construction (`DirectoryStream` never
-/// calls `send_text`/`recv_text` concurrently), so a single stream/sink object suffices — no
+/// calls `send_text`/`try_recv_text` concurrently), so a single stream/sink object suffices — no
 /// split halves needed the way `🏪️store/🔄️sync`'s bidirectional relay requires.
-#[async_trait::async_trait(?Send)]
-pub trait DirectoryWsConnection {
-    async fn send_text(&mut self, text: String) -> Result<(), TransportError>;
-    /// 📭️ `Ok(None)` means the peer closed the connection cleanly — `DirectoryStream` treats
-    /// this the same as a transport error: reconnect with backoff.
-    async fn recv_text(&mut self) -> Result<Option<String>, TransportError>;
-    async fn close(&mut self);
+pub trait DirectoryWsConnection: DirectoryConnectionPlatform {
+    fn send_text(&mut self, text: String) -> Result<(), TransportError>;
+    /// 📭️ Nonblocking receive: `Pending` yields the worker immediately; `Closed` reconnects.
+    fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError>;
+    fn close(&mut self);
+}
+
+/// 📬️ One nonblocking WebSocket receive observation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DirectoryWsPoll {
+    Text(String),
+    Pending,
+    Closed,
 }
 //#endregion 🔖️Transport
 
@@ -175,23 +204,23 @@ pub struct DirectoryClient<T: DirectoryTransport> {
 }
 
 impl<T: DirectoryTransport> DirectoryClient<T> {
-    pub async fn new(transport: T, base_url: impl Into<String>) -> Self {
+    pub fn new(transport: T, base_url: impl Into<String>) -> Self {
         Self { transport, base_url: base_url.into(), token: RwLock::new(None) }
     }
 
-    pub async fn base_url(&self) -> &str {
+    pub fn base_url(&self) -> &str {
         &self.base_url
     }
 
-    pub async fn token(&self) -> Option<String> {
+    pub fn token(&self) -> Option<String> {
         self.token.read().unwrap_or_else(PoisonError::into_inner).clone()
     }
 
-    pub async fn set_token(&self, token: Option<String>) {
+    pub fn set_token(&self, token: Option<String>) {
         *self.token.write().unwrap_or_else(PoisonError::into_inner) = token;
     }
 
-    async fn url(&self, path: &str) -> String {
+    fn url(&self, path: &str) -> String {
         format!("{}{}", self.base_url.trim_end_matches('/'), path)
     }
 
@@ -203,7 +232,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
             return Err(DirectoryClientError::Cancelled);
         }
         let bearer = self.token();
-        let response = self.transport.http(ctx, method, &self.url(path).await, bearer.await.as_deref(), body).await?;
+        let response = self.transport.http(ctx, method, &self.url(path), bearer.as_deref(), body).await?;
         match response.status {
             200..=299 => Ok(serde_json::from_slice(&response.body)?),
             401 => Err(DirectoryClientError::Unauthorized),
@@ -240,8 +269,11 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         self.request_json(ctx, HttpMethod::Post, "/directory/commands", Some(body)).await
     }
 
-    pub async fn stream(&self, since: u64) -> DirectoryStream<'_, T> {
-        DirectoryStream::new(self, since).await
+    pub fn stream(self: &Arc<Self>, since: u64) -> DirectoryStream<T>
+    where
+        T: Clone,
+    {
+        DirectoryStream::new(self.clone(), since)
     }
 }
 //#endregion 🔖️Client
@@ -254,17 +286,17 @@ pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
 
 /// 🔗️ `remote://host:port` / `http(s)://…` → `ws(s)://host:port/directory/ws?token=&since=`
 /// (contract §C2). Pure and independently testable, mirroring `🏪️store/🔄️sync`'s `hub_ws_url`.
-pub async fn directory_ws_url(base_url: &str, token: &str, since: u64) -> String {
+pub fn directory_ws_url(base_url: &str, token: &str, since: u64) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    let encoded_token = urlencoding_component(token).await;
+    let encoded_token = urlencoding_component(token);
     format!("{scheme}://{authority}/directory/ws?token={encoded_token}&since={since}")
 }
 
 /// 🔤️ Minimal percent-encoding for the one query-string slot (`token`) that can carry
 /// characters `&`/`=`/`#`/space — avoids a new dependency for a three-character rule.
-async fn urlencoding_component(value: &str) -> String {
+fn urlencoding_component(value: &str) -> String {
     let mut encoded = String::with_capacity(value.len());
     for byte in value.bytes() {
         match byte {
@@ -276,92 +308,115 @@ async fn urlencoding_component(value: &str) -> String {
 }
 
 /// ⏱️ Doubling backoff capped at `HUB_RECONNECT_MAX_MS`, floored at `HUB_RECONNECT_MIN_MS`.
-pub async fn next_backoff_ms(current_ms: u64) -> u64 {
+pub fn next_backoff_ms(current_ms: u64) -> u64 {
     current_ms.saturating_mul(2).clamp(HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS)
 }
 
-/// 📡️ One `DirectoryStream::recv` outcome: either a decoded frame, or a signal that the
-/// connection dropped and the caller should sleep `after_ms` before calling `recv` again (the
-/// stream owns no timer itself — same division of labor as `🏪️store/🔄️sync`'s actor, which owns
-/// its own `tokio::time::interval`).
-#[derive(Clone, Debug, PartialEq)]
-pub enum DirectoryStreamEvent {
+/// 📡️ One finite stream turn. `Dial` is executed separately on `Lane::Io`; `ReconnectAt` is armed
+/// on the shared `TimerWheel`; `Idle` yields immediately instead of parking a worker on a socket.
+pub enum DirectoryStreamTurn<T: DirectoryTransport> {
+    Dial { transport: T, url: String },
     Message(DirectoryStreamMessage),
-    Reconnecting { after_ms: u64 },
+    ReconnectAt(u64),
+    Idle,
+    Closed,
 }
 
 /// 🔁️ `GET /directory/ws?since=` with auto-reconnect that resumes from the last `seq`/`headSeq`
 /// this stream has observed — never re-subscribes from the caller's original `since` after a
 /// drop, so the hub replays only the gap.
-pub struct DirectoryStream<'a, T: DirectoryTransport> {
-    client: &'a DirectoryClient<T>,
+pub struct DirectoryStream<T: DirectoryTransport> {
+    client: Arc<DirectoryClient<T>>,
     since: u64,
     connection: Option<T::Ws>,
     backoff_ms: u64,
+    reconnect_at_ms: Option<u64>,
+    dialing: bool,
     closed: bool,
 }
 
-impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
-    async fn new(client: &'a DirectoryClient<T>, since: u64) -> Self {
-        Self { client, since, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, closed: false }
+impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
+    fn new(client: Arc<DirectoryClient<T>>, since: u64) -> Self {
+        Self { client, since, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, reconnect_at_ms: None, dialing: false, closed: false }
     }
 
-    pub async fn since(&self) -> u64 {
+    pub fn since(&self) -> u64 {
         self.since
     }
 
-    pub async fn close(&mut self) {
+    pub fn close(&mut self) {
         self.closed = true;
-        self.connection = None;
+        if let Some(mut connection) = self.connection.take() {
+            connection.close();
+        }
     }
 
-    /// 🛑️ `ctx` is checked once per loop iteration (top of the loop, same as `request_json`) —
-    /// cancelling it closes the stream (same as `close()`) rather than leaving it silently stuck
-    /// reconnecting forever against a caller nobody is listening for anymore.
-    pub async fn recv(&mut self, ctx: &OperationContext) -> Option<DirectoryStreamEvent> {
+    /// 🔄️ Applies a completed I/O-lane dial without reading from the socket in the same turn.
+    pub fn complete_dial(&mut self, now_ms: u64, result: Result<T::Ws, TransportError>) -> DirectoryStreamTurn<T> {
+        self.dialing = false;
         if self.closed {
-            return None;
+            return DirectoryStreamTurn::Closed;
         }
-        loop {
-            if ctx.cancel.is_cancelled().await {
-                self.close().await;
-                return None;
+        match result {
+            Ok(connection) => {
+                self.connection = Some(connection);
+                self.backoff_ms = HUB_RECONNECT_MIN_MS;
+                self.reconnect_at_ms = None;
+                DirectoryStreamTurn::Idle
             }
-            if self.connection.is_none() {
-                let token = self.client.token().await.unwrap_or_default();
-                let url = directory_ws_url(self.client.base_url().await, &token, self.since).await;
-                match self.client.transport.open_ws(ctx, &url).await {
-                    Ok(connection) => {
-                        self.connection = Some(connection);
-                        self.backoff_ms = HUB_RECONNECT_MIN_MS;
+            Err(_) => self.reconnecting(now_ms),
+        }
+    }
+
+    /// 🔁️ Performs bounded, nonblocking protocol work only; at most eight invalid/control frames
+    /// are skipped before yielding so malformed traffic cannot monopolize a worker turn.
+    pub fn turn(&mut self, ctx: &OperationContext, now_ms: u64) -> DirectoryStreamTurn<T> {
+        if self.closed || ctx.cancel.is_cancelled_now() {
+            self.close();
+            return DirectoryStreamTurn::Closed;
+        }
+        if self.dialing {
+            return DirectoryStreamTurn::Idle;
+        }
+        if let Some(reconnect_at_ms) = self.reconnect_at_ms {
+            if now_ms < reconnect_at_ms {
+                return DirectoryStreamTurn::ReconnectAt(reconnect_at_ms);
+            }
+            self.reconnect_at_ms = None;
+        }
+        if self.connection.is_none() {
+            let token = self.client.token.read().unwrap_or_else(PoisonError::into_inner).clone().unwrap_or_default();
+            let url = directory_ws_url(&self.client.base_url, &token, self.since);
+            self.dialing = true;
+            return DirectoryStreamTurn::Dial { transport: self.client.transport.clone(), url };
+        }
+        for _ in 0..8 {
+            let Some(connection) = self.connection.as_mut() else { return self.reconnecting(now_ms) };
+            match connection.try_recv_text() {
+                Ok(DirectoryWsPoll::Text(text)) => {
+                    if let Ok(message) = serde_json::from_str::<DirectoryStreamMessage>(&text) {
+                        self.track(&message);
+                        return DirectoryStreamTurn::Message(message);
                     }
-                    Err(_) => return Some(self.reconnecting().await),
                 }
-            }
-            let Some(connection) = self.connection.as_mut() else { return Some(self.reconnecting().await) };
-            match connection.recv_text().await {
-                Ok(Some(text)) => match serde_json::from_str::<DirectoryStreamMessage>(&text) {
-                    Ok(message) => {
-                        self.track(&message).await;
-                        return Some(DirectoryStreamEvent::Message(message));
-                    }
-                    Err(_) => continue,
-                },
-                Ok(None) | Err(_) => {
+                Ok(DirectoryWsPoll::Pending) => return DirectoryStreamTurn::Idle,
+                Ok(DirectoryWsPoll::Closed) | Err(_) => {
                     self.connection = None;
-                    return Some(self.reconnecting().await);
+                    return self.reconnecting(now_ms);
                 }
             }
         }
+        DirectoryStreamTurn::Idle
     }
 
-    async fn reconnecting(&mut self) -> DirectoryStreamEvent {
-        let after_ms = self.backoff_ms;
-        self.backoff_ms = next_backoff_ms(self.backoff_ms).await;
-        DirectoryStreamEvent::Reconnecting { after_ms }
+    fn reconnecting(&mut self, now_ms: u64) -> DirectoryStreamTurn<T> {
+        let reconnect_at_ms = now_ms.saturating_add(self.backoff_ms);
+        self.reconnect_at_ms = Some(reconnect_at_ms);
+        self.backoff_ms = next_backoff_ms(self.backoff_ms);
+        DirectoryStreamTurn::ReconnectAt(reconnect_at_ms)
     }
 
-    async fn track(&mut self, message: &DirectoryStreamMessage) {
+    fn track(&mut self, message: &DirectoryStreamMessage) {
         match message {
             DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
             DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
@@ -369,6 +424,7 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
         }
     }
 }
+
 //#endregion 🔖️Stream
 
 //#region 🔖️Native
@@ -381,14 +437,15 @@ impl<'a, T: DirectoryTransport> DirectoryStream<'a, T> {
 /// method type unusable.
 #[cfg(all(feature = "ureq", feature = "sync", not(target_arch = "wasm32")))]
 pub mod native {
-    use super::{DirectoryTransport, DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
-    use futures_util::{SinkExt, StreamExt};
+    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{HostAsyncRuntime, OperationContext, ScopeHandle};
     use semio_framework_os_services::{ComputeError, ComputePool, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponse as PoolHttpResponse, HttpTransport};
     use std::io::Read;
+    use std::net::{TcpStream, ToSocketAddrs};
     use std::sync::Arc;
-    use tokio_tungstenite::tungstenite::Message;
+    use std::time::Duration;
+    use tokio_tungstenite::tungstenite::{self, client::IntoClientRequest, stream::MaybeTlsStream, Message};
 
     /// 🐎️ The ONE place this crate still names `ureq` directly — a plain, SYNCHRONOUS
     /// `HttpTransport` for `HttpPool`. No thread spawn here anymore: `HttpPool::request` runs this
@@ -438,30 +495,31 @@ pub mod native {
         }
     }
 
-    type TungsteniteStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+    type TungsteniteStream = tungstenite::WebSocket<MaybeTlsStream<TcpStream>>;
 
     pub struct TungsteniteConnection(TungsteniteStream);
 
-    #[async_trait::async_trait(?Send)]
     impl DirectoryWsConnection for TungsteniteConnection {
-        async fn send_text(&mut self, text: String) -> Result<(), TransportError> {
-            self.0.send(Message::Text(text.into())).await.map_err(|error| TransportError::Io(error.to_string()))
+        fn send_text(&mut self, text: String) -> Result<(), TransportError> {
+            self.0.send(Message::Text(text.into())).map_err(|error| TransportError::Io(error.to_string()))
         }
 
-        async fn recv_text(&mut self) -> Result<Option<String>, TransportError> {
-            loop {
-                return match self.0.next().await {
-                    Some(Ok(Message::Text(text))) => Ok(Some(text.to_string())),
-                    Some(Ok(Message::Ping(_) | Message::Pong(_))) => continue,
-                    Some(Ok(_)) => continue,
-                    Some(Err(error)) => Err(TransportError::Io(error.to_string())),
-                    None => Ok(None),
-                };
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            for _ in 0..8 {
+                match self.0.read() {
+                    Ok(Message::Text(text)) => return Ok(DirectoryWsPoll::Text(text.to_string())),
+                    Ok(Message::Close(_)) => return Ok(DirectoryWsPoll::Closed),
+                    Ok(Message::Ping(_) | Message::Pong(_) | Message::Binary(_) | Message::Frame(_)) => {}
+                    Err(tungstenite::Error::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => return Ok(DirectoryWsPoll::Pending),
+                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(DirectoryWsPoll::Closed),
+                    Err(error) => return Err(TransportError::Io(error.to_string())),
+                }
             }
+            Ok(DirectoryWsPoll::Pending)
         }
 
-        async fn close(&mut self) {
-            let _ = self.0.close(None).await;
+        fn close(&mut self) {
+            let _ = self.0.close(None);
         }
     }
 
@@ -487,6 +545,10 @@ pub mod native {
 
     impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
         pub async fn new(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
+            Self::new_now(runtime, scope, http_pool, package, actor)
+        }
+
+        pub fn new_now(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
             Self { runtime, scope, http_pool, package, actor }
         }
 
@@ -494,12 +556,16 @@ pub mod native {
         /// it) over a caller-supplied `runtime`/`scope`/`ComputePool` — still never constructs the
         /// runtime itself.
         pub async fn with_new_http_pool(runtime: Arc<R>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+            Self::with_new_http_pool_now(runtime, scope, compute, bytes_per_minute_cap, outstanding_cap, package, actor)
+        }
+
+        pub fn with_new_http_pool_now(runtime: Arc<R>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
             let transport: Arc<dyn HttpTransport> = Arc::new(UreqHttpTransport { agent: ureq::Agent::new() });
-            Self::new(runtime, scope, Arc::new(HttpPool::new(transport, compute, bytes_per_minute_cap, outstanding_cap).await), package, actor).await
+            Self::new_now(runtime, scope, Arc::new(HttpPool::new_now(transport, compute, bytes_per_minute_cap, outstanding_cap)), package, actor)
         }
     }
 
-    #[async_trait::async_trait(?Send)]
+    #[async_trait::async_trait]
     impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
         type Ws = TungsteniteConnection;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -511,11 +577,7 @@ pub mod native {
                 headers.push(("Authorization".to_string(), format!("Bearer {token}")));
             }
             let request = PoolHttpRequest { method: http_method_str(method).await.to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
-            match self
-                .http_pool
-                .request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request)
-                .await
-            {
+            match self.http_pool.request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await {
                 Ok(response) => Ok(HttpResponse { status: response.status, body: response.body }),
                 Err(error) => {
                     let cancelled = matches!(error, HttpPoolError::Compute(ComputeError::WorkerLost)) && ctx.cancel.is_cancelled().await;
@@ -528,12 +590,35 @@ pub mod native {
             }
         }
 
-        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled().await {
+        fn open_ws(&self, ctx: &OperationContext, url: &str, timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            if ctx.cancel.is_cancelled_now() {
                 return Err(TransportError::Cancelled);
             }
-            let (stream, _response) = tokio_tungstenite::connect_async(url).await.map_err(|error| TransportError::Io(error.to_string()))?;
-            Ok(TungsteniteConnection(stream))
+            let request = url.into_client_request().map_err(|error| TransportError::Io(error.to_string()))?;
+            let host = request.uri().host().ok_or_else(|| TransportError::Io("directory websocket URL has no host".to_string()))?.to_string();
+            let port = request.uri().port_u16().unwrap_or_else(|| if request.uri().scheme_str() == Some("wss") { 443 } else { 80 });
+            let timeout = Duration::from_millis(timeout_ms.max(1));
+            let addresses = (host.as_str(), port).to_socket_addrs().map_err(|error| TransportError::Io(error.to_string()))?;
+            let mut tcp = None;
+            for address in addresses {
+                if ctx.cancel.is_cancelled_now() {
+                    return Err(TransportError::Cancelled);
+                }
+                if let Ok(stream) = TcpStream::connect_timeout(&address, timeout) {
+                    tcp = Some(stream);
+                    break;
+                }
+            }
+            let tcp = tcp.ok_or_else(|| TransportError::Io(format!("unable to connect to {host}:{port}")))?;
+            tcp.set_read_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+            tcp.set_write_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+            let (mut socket, _) = tungstenite::client_tls(request, tcp).map_err(|error| TransportError::Io(error.to_string()))?;
+            match socket.get_mut() {
+                MaybeTlsStream::Plain(stream) => stream.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+                MaybeTlsStream::Rustls(stream) => stream.sock.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+                _ => return Err(TransportError::Io("nonblocking TLS directory sockets are not enabled".to_string())),
+            }
+            Ok(TungsteniteConnection(socket))
         }
     }
 }
@@ -545,13 +630,14 @@ pub mod native {
 /// (`🏪️store/🔄️sync`'s own module doc: "The production browser shell instead uses a TS twin").
 #[cfg(target_arch = "wasm32")]
 pub mod browser {
-    use super::{DirectoryTransport, DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
+    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_async::OperationContext;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{BinaryType, MessageEvent, RequestInit, Response, WebSocket};
 
+    #[derive(Clone)]
     pub struct BrowserDirectoryTransport;
 
     impl Default for BrowserDirectoryTransport {
@@ -590,8 +676,8 @@ pub mod browser {
             Ok(HttpResponse { status, body: bytes })
         }
 
-        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled().await {
+        fn open_ws(&self, ctx: &OperationContext, url: &str, _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            if ctx.cancel.is_cancelled_now() {
                 return Err(TransportError::Cancelled);
             }
             let socket = WebSocket::new(url).map_err(|error| TransportError::Io(format!("{error:?}")))?;
@@ -613,17 +699,20 @@ pub mod browser {
         incoming_rx: tokio::sync::mpsc::UnboundedReceiver<String>,
     }
 
-    #[async_trait::async_trait(?Send)]
     impl DirectoryWsConnection for BrowserWsConnection {
-        async fn send_text(&mut self, text: String) -> Result<(), TransportError> {
+        fn send_text(&mut self, text: String) -> Result<(), TransportError> {
             self.socket.send_with_str(&text).map_err(|error| TransportError::Io(format!("{error:?}")))
         }
 
-        async fn recv_text(&mut self) -> Result<Option<String>, TransportError> {
-            Ok(self.incoming_rx.recv().await)
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            match self.incoming_rx.try_recv() {
+                Ok(text) => Ok(DirectoryWsPoll::Text(text)),
+                Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(DirectoryWsPoll::Pending),
+                Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => Ok(DirectoryWsPoll::Closed),
+            }
         }
 
-        async fn close(&mut self) {
+        fn close(&mut self) {
             let _ = self.socket.close();
         }
     }
@@ -636,7 +725,7 @@ pub mod browser {
 /// use, rather than a second hand-rolled copy.
 #[cfg(test)]
 pub mod test_support {
-    use super::{DirectoryWsConnection, HttpMethod, HttpResponse, TransportError};
+    use super::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_async::OperationContext;
     use std::collections::VecDeque;
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -681,20 +770,24 @@ pub mod test_support {
     // `type Ws = FakeWs;` associated type.
     pub struct FakeWs(VecDeque<Result<Option<String>, TransportError>>);
 
-    #[async_trait::async_trait(?Send)]
     impl DirectoryWsConnection for FakeWs {
-        async fn send_text(&mut self, _text: String) -> Result<(), TransportError> {
+        fn send_text(&mut self, _text: String) -> Result<(), TransportError> {
             Ok(())
         }
 
-        async fn recv_text(&mut self) -> Result<Option<String>, TransportError> {
-            self.0.pop_front().unwrap_or(Ok(None))
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            match self.0.pop_front() {
+                Some(Ok(Some(text))) => Ok(DirectoryWsPoll::Text(text)),
+                Some(Ok(None)) => Ok(DirectoryWsPoll::Closed),
+                Some(Err(error)) => Err(error),
+                None => Ok(DirectoryWsPoll::Pending),
+            }
         }
 
-        async fn close(&mut self) {}
+        fn close(&mut self) {}
     }
 
-    #[async_trait::async_trait(?Send)]
+    #[async_trait::async_trait]
     impl super::DirectoryTransport for FakeTransport {
         type Ws = FakeWs;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -711,8 +804,8 @@ pub mod test_support {
             self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
         }
 
-        async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled().await {
+        fn open_ws(&self, ctx: &OperationContext, url: &str, _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            if ctx.cancel.is_cancelled_now() {
                 return Err(TransportError::Cancelled);
             }
             self.ws_urls.lock().unwrap().push(url.to_string());
@@ -728,32 +821,32 @@ mod tests {
     use super::*;
     use semio_framework_async::{CancelToken, TraceId};
 
-    async fn root_ctx() -> OperationContext {
-        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root().await, capability: None }
+    fn root_ctx() -> OperationContext {
+        OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: CancelToken::root_now(), capability: None }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ws_url_switches_scheme_and_encodes_query() {
-        assert_eq!(directory_ws_url("http://127.0.0.1:8787", "tok en", 0).await, "ws://127.0.0.1:8787/directory/ws?token=tok%20en&since=0");
-        assert_eq!(directory_ws_url("https://hub.example", "abc", 42).await, "wss://hub.example/directory/ws?token=abc&since=42");
+        assert_eq!(directory_ws_url("http://127.0.0.1:8787", "tok en", 0), "ws://127.0.0.1:8787/directory/ws?token=tok%20en&since=0");
+        assert_eq!(directory_ws_url("https://hub.example", "abc", 42), "wss://hub.example/directory/ws?token=abc&since=42");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn backoff_doubles_and_caps() {
-        assert_eq!(next_backoff_ms(500).await, 1000);
-        assert_eq!(next_backoff_ms(20_000).await, 30_000);
-        assert_eq!(next_backoff_ms(30_000).await, 30_000);
-        assert_eq!(next_backoff_ms(0).await, HUB_RECONNECT_MIN_MS);
+        assert_eq!(next_backoff_ms(500), 1000);
+        assert_eq!(next_backoff_ms(20_000), 30_000);
+        assert_eq!(next_backoff_ms(30_000), 30_000);
+        assert_eq!(next_backoff_ms(0), HUB_RECONNECT_MIN_MS);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn spaces_decodes_and_sends_bearer() {
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
-        client.set_token(Some("tok".to_string())).await;
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        client.set_token(Some("tok".to_string()));
 
-        let spaces = futures_lite::future::block_on(client.spaces(&root_ctx().await)).expect("decodes");
+        let spaces = client.spaces(&root_ctx()).await.expect("decodes");
         assert!(spaces.is_empty());
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].url, "http://hub.local/directory/spaces");
@@ -766,7 +859,7 @@ mod tests {
         transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() })).await;
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let error = futures_lite::future::block_on(client.await.me(&root_ctx().await)).expect_err("401 is unauthorized");
+        let error = client.me(&root_ctx()).await.expect_err("401 is unauthorized");
         assert!(matches!(error, DirectoryClientError::Unauthorized));
     }
 
@@ -774,35 +867,66 @@ mod tests {
     async fn stream_reconnects_and_resumes_from_last_seq() {
         let transport = FakeTransport::default();
         transport.push_ws(Err(TransportError::Io("refused".to_string()))).await;
-        let event = serde_json::json!({ "kind": "event", "event": { "seq": 7, "id": "e1", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } }).to_string();
+        let event =
+            serde_json::json!({ "kind": "event", "event": { "seq": 7, "id": "e1", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } })
+                .to_string();
         transport.push_ws(Ok(std::collections::VecDeque::from([Ok(Some(event)), Ok(None)]))).await;
         transport.push_ws(Err(TransportError::Io("refused again".to_string()))).await;
 
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
-        client.set_token(Some("tok".to_string())).await;
-        let mut stream = client.stream(0).await;
+        let client = Arc::new(DirectoryClient::new(transport.clone(), "http://hub.local"));
+        client.set_token(Some("tok".to_string()));
+        let mut stream = client.stream(0);
+        let ctx = root_ctx();
 
-        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx().await)), Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }), "call 1: the first dial fails outright");
-        match futures_lite::future::block_on(stream.recv(&root_ctx().await)) {
-            Some(DirectoryStreamEvent::Message(DirectoryStreamMessage::Event { event })) => assert_eq!(event.seq, 7),
-            other => panic!("call 2: expected the decoded event from the second (successful) dial, got {other:?}"),
+        let DirectoryStreamTurn::Dial { transport: dial, url } = stream.turn(&ctx, 0) else { panic!("first turn must dial") };
+        assert!(matches!(stream.complete_dial(0, dial.open_ws(&ctx, &url, 100)), DirectoryStreamTurn::ReconnectAt(HUB_RECONNECT_MIN_MS)));
+        assert!(matches!(stream.turn(&ctx, HUB_RECONNECT_MIN_MS), DirectoryStreamTurn::Dial { .. }));
+        let result = transport.open_ws(&ctx, &directory_ws_url("http://hub.local", "tok", 0), 100);
+        assert!(matches!(stream.complete_dial(HUB_RECONNECT_MIN_MS, result), DirectoryStreamTurn::Idle));
+        match stream.turn(&ctx, HUB_RECONNECT_MIN_MS) {
+            DirectoryStreamTurn::Message(DirectoryStreamMessage::Event { event }) => assert_eq!(event.seq, 7),
+            _ => panic!("second connection must deliver the event"),
         }
-        assert_eq!(stream.since().await, 7);
-        assert_eq!(
-            futures_lite::future::block_on(stream.recv(&root_ctx().await)),
-            Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }),
-            "call 3: the live connection's next frame is Ok(None) (peer closed) — reported WITHOUT a new dial yet, backoff still at the floor because the prior dial succeeded"
-        );
-        assert_eq!(
-            futures_lite::future::block_on(stream.recv(&root_ctx().await)),
-            Some(DirectoryStreamEvent::Reconnecting { after_ms: next_backoff_ms(HUB_RECONNECT_MIN_MS).await }),
-            "call 4: NOW the third dial actually happens (lazily, on this call) and fails, so the reported backoff has already advanced past the floor"
-        );
+        assert_eq!(stream.since(), 7);
+        assert!(matches!(stream.turn(&ctx, HUB_RECONNECT_MIN_MS), DirectoryStreamTurn::ReconnectAt(1_000)));
+        let DirectoryStreamTurn::Dial { transport: dial, url } = stream.turn(&ctx, 1_000) else { panic!("reconnect deadline must dial") };
+        assert!(matches!(stream.complete_dial(1_000, dial.open_ws(&ctx, &url, 100)), DirectoryStreamTurn::ReconnectAt(2_000)));
 
         let ws_urls = transport.ws_urls.lock().unwrap();
-        assert_eq!(ws_urls.len(), 3, "one failed dial (call 1), one live connection (call 2), one resumed dial (call 4)");
+        assert_eq!(ws_urls.len(), 3);
         assert!(ws_urls[0].ends_with("since=0"));
         assert!(ws_urls[2].ends_with("since=7"), "the resumed dial carries the last-seen seq, not the original since");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn stream_turn_is_bounded_and_preserves_event_order() {
+        let transport = FakeTransport::default();
+        let frames = (1..=2)
+            .map(|seq| {
+                Ok(Some(
+                    serde_json::json!({ "kind": "event", "event": { "seq": seq, "id": format!("e{seq}"), "hlc": { "physicalMs": seq, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": format!("sp-{seq}") }, "recordedAtMs": seq } })
+                        .to_string(),
+                ))
+            })
+            .collect();
+        transport.push_ws(Ok(frames)).await;
+        let client = Arc::new(DirectoryClient::new(transport, "http://hub.local"));
+        client.set_token(Some("tok".to_string()));
+        let ctx = root_ctx();
+        let mut stream = client.stream(0);
+        let DirectoryStreamTurn::Dial { transport, url } = stream.turn(&ctx, 0) else { panic!("first turn must dial") };
+        assert!(matches!(stream.complete_dial(0, transport.open_ws(&ctx, &url, 100)), DirectoryStreamTurn::Idle));
+
+        let started = std::time::Instant::now();
+        let mut seqs = Vec::new();
+        for _ in 0..2 {
+            match stream.turn(&ctx, 0) {
+                DirectoryStreamTurn::Message(DirectoryStreamMessage::Event { event }) => seqs.push(event.seq),
+                _ => panic!("scripted event must be delivered"),
+            }
+        }
+        assert_eq!(seqs, vec![1, 2]);
+        assert!(started.elapsed() < std::time::Duration::from_millis(8));
     }
 
     //#region 🔖️CancellationTests
@@ -813,10 +937,10 @@ mod tests {
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-        let ctx = root_ctx().await;
-        ctx.cancel.cancel().await;
+        let ctx = root_ctx();
+        ctx.cancel.cancel_now();
 
-        let result = futures_lite::future::block_on(client.await.spaces(&ctx));
+        let result = client.spaces(&ctx).await;
         assert!(matches!(result, Err(DirectoryClientError::Cancelled)), "got {result:?}");
         assert!(transport.requests.lock().unwrap().is_empty(), "an already-cancelled context must never even build a request");
     }
@@ -832,31 +956,30 @@ mod tests {
         let transport = FakeTransport::default();
         transport.yields_before_response.store(2, std::sync::atomic::Ordering::SeqCst);
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
-        let ctx = root_ctx().await;
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
+        let ctx = root_ctx();
 
         let request_fut = client.spaces(&ctx);
         let canceller_fut = async {
             futures_lite::future::yield_now().await;
             ctx.cancel.cancel().await;
         };
-        let (result, ()) = futures_lite::future::block_on(futures_lite::future::zip(request_fut, canceller_fut));
+        let (result, ()) = futures_lite::future::zip(request_fut, canceller_fut).await;
         assert!(matches!(result, Err(DirectoryClientError::Transport(TransportError::Cancelled))), "an in-flight request must observe cancellation, got {result:?}");
         assert!(transport.requests.lock().unwrap().is_empty(), "the cancelled call must never reach the scripted response — the response stays queued, unconsumed");
     }
 
-    /// 🧪️ `DirectoryStream::recv` checks `ctx` at the top of its own loop too — cancelling mid-
-    /// stream must close it (same as `DirectoryStream::close`) rather than reconnecting forever.
+    /// 🧪️ A cancelled context closes the finite stream state machine rather than reconnecting.
     #[semio_framework_async_macros::async_test]
     async fn cancelling_the_context_closes_an_open_stream() {
         let transport = FakeTransport::default();
-        let client = DirectoryClient::new(transport, "http://hub.local").await;
-        let mut stream = client.stream(0).await;
-        let ctx = root_ctx().await;
-        ctx.cancel.cancel().await;
+        let client = Arc::new(DirectoryClient::new(transport, "http://hub.local"));
+        let mut stream = client.stream(0);
+        let ctx = root_ctx();
+        ctx.cancel.cancel_now();
 
-        assert_eq!(futures_lite::future::block_on(stream.recv(&ctx)), None, "a cancelled context must end the stream, never dial");
-        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx().await)), None, "close() is sticky — a fresh, live context does not resurrect the stream");
+        assert!(matches!(stream.turn(&ctx, 0), DirectoryStreamTurn::Closed));
+        assert!(matches!(stream.turn(&root_ctx(), 0), DirectoryStreamTurn::Closed));
     }
     //#endregion 🔖️CancellationTests
 }

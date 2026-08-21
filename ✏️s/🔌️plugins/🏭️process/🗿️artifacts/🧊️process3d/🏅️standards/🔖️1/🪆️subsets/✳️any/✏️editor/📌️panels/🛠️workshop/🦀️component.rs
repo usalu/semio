@@ -1,12 +1,12 @@
 //! 🛠️ Process 3d play app panel — the workshop configurator: installed machines (select, remove) plus
 //! one section per installed catalog (add if not yet installed).
 
+use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot};
 use crate::editor::process3d::iconed_tree_item_with_action;
+use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
-use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
-use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot};
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode};
 use serde_json::json;
 
@@ -17,7 +17,13 @@ const PROCESS_3D_PLAY_PANEL_WORKSHOP: &str = "workshop";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(PROCESS_3D_PLAY_PANEL_WORKSHOP.into()), label: LocalizedLabel::native("Workshop", "Werkstatt"), group: PanelGroup::Workbench, body_key: Some(PROCESS_3D_PLAY_BODY_WORKSHOP.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(PROCESS_3D_PLAY_PANEL_WORKSHOP.into()),
+        label: LocalizedLabel::native("Workshop", "Werkstatt"),
+        group: PanelGroup::Workbench,
+        body_key: Some(PROCESS_3D_PLAY_BODY_WORKSHOP.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

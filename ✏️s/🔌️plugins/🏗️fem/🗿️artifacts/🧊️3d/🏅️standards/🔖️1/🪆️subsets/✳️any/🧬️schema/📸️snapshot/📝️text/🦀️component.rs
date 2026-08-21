@@ -8,7 +8,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 /// 📦️ The `fem3d-play` "default" example, embedded at compile time as handcrafted `.fem3d` DSL text —
 /// shared by the manifest's `.example(...)` registration, the `setActiveExample` handler, and every
 /// test fixture.
@@ -119,4 +118,3 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
-

@@ -7814,10 +7814,12 @@ pub mod vcs {
         use crate::external_adapters::futures_lite::future::block_on;
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
+        use semio_framework_os_kernel::os_spr::{MutationApplyResult, MutationDiff as OperationDiff, MutationOutcome, OpBinary, OpText};
         #[cfg(test)]
         use semio_framework_os_kernel::os_store::ArtifactCommand as ArtifactVcsCommand;
-        use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactEnvelope as ArtifactVcsEnvelope, ArtifactStore as ArtifactVcsStore};
-        use semio_framework_os_kernel::os_spr::{MutationApplyResult, MutationDiff as OperationDiff, MutationOutcome, OpText, OpBinary};
+        use semio_framework_os_kernel::os_store::{
+            create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactEnvelope as ArtifactVcsEnvelope, ArtifactStore as ArtifactVcsStore,
+        };
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7898,7 +7900,13 @@ pub mod vcs {
                     let operation = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
-                    operation.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
+                    operation
+                        .to_backwards(&kit)
+                        .await
+                        .expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path")
+                        .into_iter()
+                        .map(|row| ComposeWireOperation::from_operation(&row))
+                        .collect()
                 })
             }
         }
@@ -12795,11 +12803,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🔌 Hydrates one kit kind's ports, connectors, representations, and port compatibility from projection JSON.
-    pub(crate) async fn hydrate_type_from_snapshot_value(
-        ty: &Arc<crate::kit::r#type::Type>,
-        t_json: &serde_json::Value,
-        kit_scope_ports: &std::collections::HashMap<String, Arc<crate::kit::r#type::Port>>,
-    ) -> Result<(), ComposeError> {
+    pub(crate) async fn hydrate_type_from_snapshot_value(ty: &Arc<crate::kit::r#type::Type>, t_json: &serde_json::Value, kit_scope_ports: &std::collections::HashMap<String, Arc<crate::kit::r#type::Port>>) -> Result<(), ComposeError> {
         use std::collections::HashMap;
         let owner = Arc::downgrade(ty);
         let mut ports_by_id: HashMap<String, Arc<crate::kit::r#type::Port>> = HashMap::new();
@@ -12981,11 +12985,7 @@ pub mod kit_backbone {
         let kit_scope_ports = hydrate_kit_scope_ports_from_snapshot_value(json).await;
         let kit_owner = Arc::downgrade(kit);
 
-        async fn resolve_typology_for_entity_json(
-            kit: &Arc<crate::kit::Kit>,
-            nested_topo: &Arc<crate::gql_relay::Typology>,
-            entity_json: &serde_json::Value,
-        ) -> Arc<crate::gql_relay::Typology> {
+        async fn resolve_typology_for_entity_json(kit: &Arc<crate::kit::Kit>, nested_topo: &Arc<crate::gql_relay::Typology>, entity_json: &serde_json::Value) -> Arc<crate::gql_relay::Typology> {
             if let Some(tid) = entity_json.get("typology").and_then(json_entity_id_ref) {
                 if let Some(found) = kit.typology_by_id(&tid.into()).await {
                     return found;
@@ -13065,11 +13065,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
-    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(
-        des: &Arc<crate::kit::design::Design>,
-        kit: &Arc<crate::kit::Kit>,
-        d_json: &serde_json::Value,
-    ) -> Result<(), ComposeError> {
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &Arc<crate::kit::design::Design>, kit: &Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), ComposeError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
@@ -13112,11 +13108,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🔗 Hydrates design connections and wires parent/child piece graph links.
-    pub(crate) async fn hydrate_design_connections_from_snapshot_value(
-        des: &Arc<crate::kit::design::Design>,
-        kit: &Arc<crate::kit::Kit>,
-        d_json: &serde_json::Value,
-    ) -> Result<(), ComposeError> {
+    pub(crate) async fn hydrate_design_connections_from_snapshot_value(des: &Arc<crate::kit::design::Design>, kit: &Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), ComposeError> {
         {
             let mut conns = des.connections.write().await;
             conns.clear();
@@ -13125,18 +13117,8 @@ pub mod kit_backbone {
         let owner_des = Arc::downgrade(des);
         for cj in clist {
             let cid = cj.get("id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("connection missing id"))?;
-            let parent_piece_id = cj
-                .get("parent")
-                .or_else(|| cj.get("connecting"))
-                .and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece")))
-                .and_then(json_entity_id_ref)
-                .ok_or_else(|| ComposeError::invalid("connection parent piece"))?;
-            let child_piece_id = cj
-                .get("child")
-                .or_else(|| cj.get("connected"))
-                .and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece")))
-                .and_then(json_entity_id_ref)
-                .ok_or_else(|| ComposeError::invalid("connection child piece"))?;
+            let parent_piece_id = cj.get("parent").or_else(|| cj.get("connecting")).and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece"))).and_then(json_entity_id_ref).ok_or_else(|| ComposeError::invalid("connection parent piece"))?;
+            let child_piece_id = cj.get("child").or_else(|| cj.get("connected")).and_then(|s| s.get("piece").or_else(|| s.get("referencesPiece"))).and_then(json_entity_id_ref).ok_or_else(|| ComposeError::invalid("connection child piece"))?;
             let parent_piece = des.piece_by_external_id(&parent_piece_id.into()).await.ok_or_else(|| ComposeError::not_found("Piece", parent_piece_id))?;
             let child_piece = des.piece_by_external_id(&child_piece_id.into()).await.ok_or_else(|| ComposeError::not_found("Piece", child_piece_id))?;
             let parent_connector_id = cj.get("parent").or_else(|| cj.get("connecting")).and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector"))).and_then(json_entity_id_ref);
@@ -13397,14 +13379,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that operation's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
-        async fn edit_from_runtime_change(
-            graph: &Arc<Graph>,
-            workspace_id: &Id,
-            tx: &Arc<crate::vcs::Edit>,
-            change_idx: usize,
-            ch: &Arc<crate::vcs::Change>,
-            sequence_number: i32,
-        ) -> VersionEdit {
+        async fn edit_from_runtime_change(graph: &Arc<Graph>, workspace_id: &Id, tx: &Arc<crate::vcs::Edit>, change_idx: usize, ch: &Arc<crate::vcs::Change>, sequence_number: i32) -> VersionEdit {
             let mut forward_items: Vec<OperationStep> = Vec::new();
             let mut backward_items: Vec<OperationStep> = Vec::new();
             let forwards_list = ch.forwards.read().await.clone();
@@ -17624,15 +17599,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createType")]
-        async fn create_type(
-            &self,
-            ctx: &Context<'_>,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            image: Option<String>,
-            unit: Option<String>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17677,15 +17644,7 @@ pub mod gql {
         }
 
         #[graphql(name = "createDesign")]
-        async fn create_design(
-            &self,
-            ctx: &Context<'_>,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            image: Option<String>,
-            unit: Option<String>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -17925,15 +17884,7 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "createPort")]
-        async fn create_port(
-            &self,
-            ctx: &Context<'_>,
-            code: Option<String>,
-            label: Option<String>,
-            description: Option<String>,
-            icon: Option<String>,
-            order: Option<i32>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, label, description, icon, order);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -17951,14 +17902,7 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addConnector")]
-        async fn add_connector(
-            &self,
-            ctx: &Context<'_>,
-            code: String,
-            description: Option<String>,
-            icon: Option<String>,
-            #[graphql(name = "portId")] port_id: Option<Id>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, code, description, icon, port_id);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -18084,14 +18028,7 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "blueprintId")] blueprint_id: Id,
-            position: PositionInput,
-            name: Option<String>,
-            description: Option<String>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let Some((workspace_id, transaction_id)) = rt.wip_kit_scope.read().await.clone() else {
                 return Ok(crate::operation::CommandResponse::fail_msg("no active kit scope").await.into());
@@ -18161,12 +18098,7 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
         #[graphql(name = "deletePiecesAndConnections")]
-        async fn delete_pieces_and_connections(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "pieceIds")] piece_ids: Vec<Id>,
-            #[graphql(name = "connectionIds")] connection_ids: Vec<Id>,
-        ) -> async_graphql::Result<crate::operation::ResponseInterface> {
+        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> async_graphql::Result<crate::operation::ResponseInterface> {
             let _ = (ctx, self, piece_ids, connection_ids);
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
@@ -19238,9 +19170,9 @@ mod tests {
     /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with s technologies.
     #[test]
     fn vcs_typed_ops_materialize_projection() {
-        use serde::{Deserialize, Serialize};
-        use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactCommand as ArtifactVcsCommand, ArtifactStore as ArtifactVcsStore};
         use semio_framework_os_kernel::os_spr::{Mutation as Operation, MutationDiff as OperationDiff};
+        use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactCommand as ArtifactVcsCommand, ArtifactStore as ArtifactVcsStore};
+        use serde::{Deserialize, Serialize};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         struct KitProjection {
@@ -19294,13 +19226,21 @@ mod tests {
         }
 
         impl semio_framework_os_kernel::os_spr::OpText for KitOperation {
-            fn print_op(&self) -> String { "op".into() }
-            fn parse_op(_line: &str) -> Result<Self, semio_framework_os_kernel::os_store::TextError> { Ok(KitOperation::SetId { id: "patched".into() }) }
+            fn print_op(&self) -> String {
+                "op".into()
+            }
+            fn parse_op(_line: &str) -> Result<Self, semio_framework_os_kernel::os_store::TextError> {
+                Ok(KitOperation::SetId { id: "patched".into() })
+            }
         }
 
         impl semio_framework_os_kernel::os_spr::OpBinary for KitOperation {
-            fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_kernel::os_spr::ProtocolError> { Ok(vec![]) }
-            fn decode_op(_bytes: &[u8]) -> Result<Self, semio_framework_os_kernel::os_spr::ProtocolError> { Ok(KitOperation::SetId { id: "patched".into() }) }
+            fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_kernel::os_spr::ProtocolError> {
+                Ok(vec![])
+            }
+            fn decode_op(_bytes: &[u8]) -> Result<Self, semio_framework_os_kernel::os_spr::ProtocolError> {
+                Ok(KitOperation::SetId { id: "patched".into() })
+            }
         }
 
         let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);

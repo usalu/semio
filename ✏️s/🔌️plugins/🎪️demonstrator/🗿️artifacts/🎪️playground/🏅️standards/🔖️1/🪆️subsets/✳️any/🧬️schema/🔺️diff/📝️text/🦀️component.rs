@@ -1,7 +1,7 @@
 //! 🔺️ Playground artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundArtifact;
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundArtifact;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -11,7 +11,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::*;
-
 
 //#region 🔖️Apply
 impl PlaygroundDiff {
@@ -58,10 +57,7 @@ impl MutationDiff<PlaygroundSnapshot> for PlaygroundDiff {
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &PlaygroundSnapshot) -> PlaygroundDiff {
-    PlaygroundDiff {
-        artifact: Some(Box::new(PlaygroundArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    PlaygroundDiff { artifact: Some(Box::new(PlaygroundArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 

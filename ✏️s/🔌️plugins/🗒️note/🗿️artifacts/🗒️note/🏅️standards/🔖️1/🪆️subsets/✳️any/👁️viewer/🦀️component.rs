@@ -59,7 +59,13 @@ impl ArtifactViewer for NoteViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a
     /// live pan/zoom) is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -74,14 +80,7 @@ impl ArtifactViewer for NoteViewer {
 
 //#region 🔖️Manifest
 pub async fn create_note_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(NOTE_DIALECT)
-        .document(["semio", "note"])
-        .icon_id("note")
-        .mode_def(view::definition())
-        .default_mode_id(view::NOTE_VIEW_MODE_VIEW)
-        .window_kind_def(composite::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(NOTE_DIALECT).document(["semio", "note"]).icon_id("note").mode_def(view::definition()).default_mode_id(view::NOTE_VIEW_MODE_VIEW).window_kind_def(composite::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

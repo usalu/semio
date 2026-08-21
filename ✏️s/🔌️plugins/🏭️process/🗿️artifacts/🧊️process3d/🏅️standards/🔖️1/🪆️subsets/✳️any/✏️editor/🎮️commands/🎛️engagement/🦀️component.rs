@@ -1,11 +1,11 @@
 //! 🎛️ Process 3d play app commands — the engagement command-line input (a separate system from the
 //! utility bar switcher): submit / edit / abort.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::editor::process3d::set_active_utility_effect;
 use crate::artifacts::process3d::mutations::change_cursor::mutation::ChangeCursor;
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use crate::editor::process3d::set_active_utility_effect;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️EngagementSubmit
@@ -16,7 +16,12 @@ pub mod engagement_submit {
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {}
 
-    pub async fn handle(_payload: &EngagementSubmit, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        _payload: &EngagementSubmit,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let command_word = config.engagement_input.trim().to_lowercase();
@@ -49,7 +54,12 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub async fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &EngagementInput,
+        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
     }
 }
@@ -63,7 +73,12 @@ pub mod engagement_abort {
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
-    pub async fn handle(_payload: &EngagementAbort, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        _payload: &EngagementAbort,
+        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit { config_mutations: vec![Process3dConfigMutation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }
 }

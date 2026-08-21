@@ -22,8 +22,7 @@ pub async fn create_curated_item(item: CuratedItem) -> SourcingMutation {
 }
 
 impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for CreateCuratedItem {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "create", entity: "curated-item", kind: "create-curated-item", record: "CreatedCuratedItem" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "curated-item", kind: "create-curated-item", record: "CreatedCuratedItem" };
 
     async fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)

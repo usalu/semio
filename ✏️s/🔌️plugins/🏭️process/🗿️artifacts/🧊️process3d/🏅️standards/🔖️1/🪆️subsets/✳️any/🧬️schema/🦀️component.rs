@@ -16,34 +16,65 @@ use store::ArtifactDsl;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dArtifact {
-    #[state(artifact)] pub workshop: Workshop,
-    #[state(artifact)] pub stock_id: String,
-    #[state(artifact)] pub stock_label: String,
-    #[state(artifact)] pub stock_pose: Pose,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.brep")] pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.flow")] pub steps: store::ArtifactChild<SemioFlowSnapshot>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.brep")] pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
-    #[state(artifact)] pub resolved_up_to: Option<usize>,
-    #[state(presence)] pub selected_id: Option<String>,
-    #[state(presence)] pub selected_face_id: Option<usize>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera_position_x: f64,
-    #[state(config)] pub camera_position_y: f64,
-    #[state(config)] pub camera_position_z: f64,
-    #[state(config)] pub camera_target_x: f64,
-    #[state(config)] pub camera_target_y: f64,
-    #[state(config)] pub camera_target_z: f64,
-    #[state(config)] pub camera_fov: f64,
-    #[state(config)] pub sun_enabled: bool,
-    #[state(config)] pub sun_azimuth: f64,
-    #[state(config)] pub sun_elevation: f64,
-    #[state(config)] pub sun_intensity: f64,
-    #[state(config)] pub sun_color: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub contributions_json: String,
-    #[state(artifact)] pub hovered_id: Option<String>,
+    #[state(artifact)]
+    pub workshop: Workshop,
+    #[state(artifact)]
+    pub stock_id: String,
+    #[state(artifact)]
+    pub stock_label: String,
+    #[state(artifact)]
+    pub stock_pose: Pose,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.brep")]
+    pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.flow")]
+    pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.brep")]
+    pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
+    #[state(artifact)]
+    pub resolved_up_to: Option<usize>,
+    #[state(presence)]
+    pub selected_id: Option<String>,
+    #[state(presence)]
+    pub selected_face_id: Option<usize>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera_position_x: f64,
+    #[state(config)]
+    pub camera_position_y: f64,
+    #[state(config)]
+    pub camera_position_z: f64,
+    #[state(config)]
+    pub camera_target_x: f64,
+    #[state(config)]
+    pub camera_target_y: f64,
+    #[state(config)]
+    pub camera_target_z: f64,
+    #[state(config)]
+    pub camera_fov: f64,
+    #[state(config)]
+    pub sun_enabled: bool,
+    #[state(config)]
+    pub sun_azimuth: f64,
+    #[state(config)]
+    pub sun_elevation: f64,
+    #[state(config)]
+    pub sun_intensity: f64,
+    #[state(config)]
+    pub sun_color: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub contributions_json: String,
+    #[state(artifact)]
+    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -166,10 +197,10 @@ pub fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::process3d::schema::diff::Process3dDiff;
     use crate::artifacts::process3d::schema::mutations::Process3dMutation;
     use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Process3dBuilderConstruction {
@@ -181,8 +212,12 @@ pub mod derived_construction {
         type Snapshot = Process3dSnapshot;
         type Mutation = Process3dMutation;
         type Diff = Process3dDiff;
-        fn empty() -> Self { Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        fn empty() -> Self {
+            Self { snapshot: Process3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -193,24 +228,21 @@ pub mod derived_construction {
             let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Process3dDiff as protocol::MutationDiff<Process3dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -219,8 +251,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::process3d::Process3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Process3dParts {

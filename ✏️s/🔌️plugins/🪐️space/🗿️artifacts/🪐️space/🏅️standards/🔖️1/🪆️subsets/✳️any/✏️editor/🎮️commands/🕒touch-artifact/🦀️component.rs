@@ -27,12 +27,12 @@ mod tests {
     use super::*;
     use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn touch_artifact_stamps_the_row() {
         let mut app = testkit::new_app();
-        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local")).expect("create artifact");
+        app.dispatch_typed(SpaceIndexCommand::CreateArtifact(create_artifact::CreateArtifact { name: "First".into(), kind_id: "draw".into(), now_ms: 1, actor: "user:1".into() }), &semio_framework_plugin::testkit::meta("local"))
+            .expect("create artifact");
         let id = app.snapshot().unwrap().artifacts[0].id.clone();
         app.dispatch_typed(SpaceIndexCommand::TouchArtifact(TouchArtifact { id: id.clone(), now_ms: 99, actor: "user:2".into() }), &semio_framework_plugin::testkit::meta("local")).expect("touch artifact");
         let snapshot = app.snapshot().expect("projection");

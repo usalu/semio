@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-move`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::schema::{fixture_camera, node_position};
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

@@ -987,7 +987,7 @@ fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
 }
 
 impl MutationDiff<ObjSnapshot> for ObjDiff {
-    async fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
+    fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
         validate_obj_diff(self, base)?;
         Ok(apply_obj_diff_unchecked(self, base))
     }
@@ -995,7 +995,7 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Index-keyed
     /// collections use the label-simulation transport (`generic_absorb_pair`); name-keyed
     /// collections use `absorb_named_membership`; every other field is LWW.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.vertices = match (self.vertices.take(), other.vertices) {
             (None, None) => None,
             (Some(a), None) => Some(a),
@@ -1057,12 +1057,12 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
 
 impl DiffAlgebra<ObjSnapshot> for ObjDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
-    async fn inverse(&self, base: &ObjSnapshot) -> Self {
+    fn inverse(&self, base: &ObjSnapshot) -> Self {
         let mutated = apply_obj_diff_unchecked(self, base);
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
-    async fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
+    fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
         let vertices = ObjVerticesDiff::between(&base.vertices, &other.vertices);
         let texcoords = ObjTexCoordsDiff::between(&base.texcoords, &other.texcoords);
         let normals = ObjNormalsDiff::between(&base.normals, &other.normals);
@@ -1126,7 +1126,7 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.vertices.as_ref().map_or(true, ObjVerticesDiff::is_empty)
             && self.texcoords.as_ref().map_or(true, ObjTexCoordsDiff::is_empty)
             && self.normals.as_ref().map_or(true, ObjNormalsDiff::is_empty)
@@ -2160,10 +2160,10 @@ fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
 }
 
 impl DiffCodec for ObjDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_obj_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_obj_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags_lo u8 | flags_hi u8 | per-present-field
@@ -2185,7 +2185,7 @@ impl DiffCodec for ObjDiff {
     /// collection-triple SHAPE itself (`Prim::Ref` cannot express a `Vec<Modified{index,diff}>`
     /// record-array in the protocol grammar — the same wall every collection-triple diff in this
     /// wave hit, documented in that file), never any individual scalar/struct value.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags_lo: u8 = 0;
         let mut flags_hi: u8 = 0;
         if self.vertices.is_some() {
@@ -2251,12 +2251,12 @@ impl DiffCodec for ObjDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags_lo = reader.read_u8().await.map_err(|e| malformed("diff flags_lo", 1, e.to_string()))?;
-        let flags_hi = reader.read_u8().await.map_err(|e| malformed("diff flags_hi", 2, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags_lo = reader.read_u8().map_err(|e| malformed("diff flags_lo", 1, e.to_string()))?;
+        let flags_hi = reader.read_u8().map_err(|e| malformed("diff flags_hi", 2, e.to_string()))?;
         let vertices = if flags_lo & 0b0000_0001 != 0 { Some(dec_vertices_diff_bin(&mut reader).map_err(|e| malformed("diff vertices", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let texcoords = if flags_lo & 0b0000_0010 != 0 { Some(dec_texcoords_diff_bin(&mut reader).map_err(|e| malformed("diff texcoords", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let normals = if flags_lo & 0b0000_0100 != 0 { Some(dec_normals_diff_bin(&mut reader).map_err(|e| malformed("diff normals", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

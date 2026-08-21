@@ -93,7 +93,10 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "reorder-assets/moves-asset-hero-behind-asset-prop: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(committed["assets"]["reordered"][0], "asset-prop", "reorder-assets/moves-asset-hero-behind-asset-prop: the new order is a complete id sequence");
     assert_eq!(committed["assets"]["reordered"][1], "asset-hero", "reorder-assets/moves-asset-hero-behind-asset-prop: the moved asset is named last");
-    assert!(committed["assets"]["patched"].as_array().expect("patched is an array").is_empty() && committed["assets"]["added"].as_array().expect("added is an array").is_empty(), "reorder-assets/moves-asset-hero-behind-asset-prop: reordering is pure permutation — no record is patched or re-added");
+    assert!(
+        committed["assets"]["patched"].as_array().expect("patched is an array").is_empty() && committed["assets"]["added"].as_array().expect("added is an array").is_empty(),
+        "reorder-assets/moves-asset-hero-behind-asset-prop: reordering is pure permutation — no record is patched or re-added"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed reorder-assets sequence round-trips through `ShootingDiff` unchanged.

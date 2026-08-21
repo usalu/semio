@@ -12,28 +12,51 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] pub title: Option<String>,
-    #[state(artifact)] pub blocks: Vec<NoteBlockNode>,
-    #[state(artifact)] pub grid_visible: Option<bool>,
-    #[state(artifact)] pub grid_spacing: Option<f64>,
-    #[state(artifact)] pub grid_subdivisions: Option<f64>,
-    #[state(artifact)] pub grid_opacity: Option<f64>,
-    #[state(artifact)] pub snap_enabled: Option<bool>,
-    #[state(artifact)] pub snap_grid_spacing: Option<f64>,
-    #[state(artifact)] pub pencil_width: Option<f64>,
-    #[state(artifact)] pub eraser_radius: Option<f64>,
-    #[state(artifact)] pub assets: BTreeMap<String, NoteImageAsset>,
-    #[state(artifact)] #[link_slot(roles("any"))] pub linked_artifact: Option<store::ArtifactLink>,
-    #[state(presence)] pub selected_block_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub locale: String,
-    #[state(artifact)] pub hovered_block_id: Option<String>,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    pub title: Option<String>,
+    #[state(artifact)]
+    pub blocks: Vec<NoteBlockNode>,
+    #[state(artifact)]
+    pub grid_visible: Option<bool>,
+    #[state(artifact)]
+    pub grid_spacing: Option<f64>,
+    #[state(artifact)]
+    pub grid_subdivisions: Option<f64>,
+    #[state(artifact)]
+    pub grid_opacity: Option<f64>,
+    #[state(artifact)]
+    pub snap_enabled: Option<bool>,
+    #[state(artifact)]
+    pub snap_grid_spacing: Option<f64>,
+    #[state(artifact)]
+    pub pencil_width: Option<f64>,
+    #[state(artifact)]
+    pub eraser_radius: Option<f64>,
+    #[state(artifact)]
+    pub assets: BTreeMap<String, NoteImageAsset>,
+    #[state(artifact)]
+    #[link_slot(roles("any"))]
+    pub linked_artifact: Option<store::ArtifactLink>,
+    #[state(presence)]
+    pub selected_block_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub locale: String,
+    #[state(artifact)]
+    pub hovered_block_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 

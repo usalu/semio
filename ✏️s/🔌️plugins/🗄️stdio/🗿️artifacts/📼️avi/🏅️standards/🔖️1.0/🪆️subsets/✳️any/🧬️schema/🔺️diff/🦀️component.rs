@@ -340,7 +340,7 @@ fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
 }
 
 impl MutationDiff<AviSnapshot> for AviDiff {
-    async fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
+    fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
         if let Some(diff) = &self.streams {
             validate_indexed(&base.streams, diff, validate_stream_diff)?;
         }
@@ -356,7 +356,7 @@ impl MutationDiff<AviSnapshot> for AviDiff {
         })
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.main_header.is_some() {
             self.main_header = other.main_header;
         }
@@ -385,7 +385,7 @@ fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApply
 }
 
 impl DiffAlgebra<AviSnapshot> for AviDiff {
-    async fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
+    fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
         let streams_diff = between_indexed(&base.streams, &other.streams, between_stream, stream_diff_is_empty);
         let chunks_diff = between_indexed(&base.unknown_chunks, &other.unknown_chunks, between_riff, riff_diff_is_empty);
         Self {
@@ -395,7 +395,7 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
             unknown_chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
         }
     }
-    async fn inverse(&self, base: &AviSnapshot) -> Self {
+    fn inverse(&self, base: &AviSnapshot) -> Self {
         // 🔁️ Correct-by-construction (identical reasoning to mp4's `Mp4Diff::inverse`).
         let mut after = base.clone();
         if let Some(v) = &self.main_header {
@@ -410,9 +410,9 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
         if let Some(v) = &self.unknown_chunks {
             after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff);
         }
-        Self::between(&after, base).await
+        Self::between(&after, base)
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none()
     }
 }

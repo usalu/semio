@@ -2,12 +2,12 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
+use crate::artifacts::lowpoly::op::LowpolyMutation;
+use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{build_doc, primitive_kind};
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddPrimitive

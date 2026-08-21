@@ -146,5 +146,9 @@ async fn changes_only_the_imported_descriptor_string_and_inverts_to_the_base_str
     };
     assert_eq!(undo.new_imported_features_json, "null", "change-imported-features/imports-a-single-harbor-position-descriptor: the inverse restores BASE's descriptor string, not the diff's");
     let semantics = <GisTerrainMutation as protocol::SemanticMutation<GisTerrainSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "imported-features", "change-imported-features", "ChangedImportedFeatures"), "change-imported-features/imports-a-single-harbor-position-descriptor: the fixture must be bound to change-imported-features' own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("change", "imported-features", "change-imported-features", "ChangedImportedFeatures"),
+        "change-imported-features/imports-a-single-harbor-position-descriptor: the fixture must be bound to change-imported-features' own descriptor"
+    );
 }

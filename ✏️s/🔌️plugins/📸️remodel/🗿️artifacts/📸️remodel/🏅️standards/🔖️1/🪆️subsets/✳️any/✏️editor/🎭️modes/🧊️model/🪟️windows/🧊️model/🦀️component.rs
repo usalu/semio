@@ -1,10 +1,10 @@
 //! 🧊️ Remodel play app — the Model window: the World3d scene carrying the reconstructed mesh, the
 //! sparse/dense clouds, the recovered camera positions and the ground control points.
 
+use crate::artifacts::remodel::{PackedF32, RemodelSnapshot};
 use crate::editor::remodel::config::RemodelConfig;
 use crate::editor::remodel::modes::model::windows::model::options::layers;
 use crate::editor::remodel::terminology::RemodelLabels;
-use crate::artifacts::remodel::{PackedF32, RemodelSnapshot};
 use semio_framework_plugin::{
     build_world_3d_scene, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
@@ -140,13 +140,8 @@ pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
     // `InteractionView`, so this scene payload can no longer embed a live selection; every
     // not-yet-migrated `world3d_selection_json` call site in this repo already passes an empty
     // selection for the same reason.
-    let mut world_scene = world3d_scene(
-        world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov),
-        world_meshes_json(scene),
-        world_instances_json(config),
-        world3d_selection_json("rectangle", &[], None),
-        &WorldSunConfig::default(),
-    );
+    let mut world_scene =
+        world3d_scene(world3d_camera_json(config.camera.position, config.camera.target, config.camera.fov), world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);
     build_world_3d_scene(REMODEL_PLAY_SURFACE_MAIN, crate::editor::remodel::REMODEL_PLAY_APP_ID, world_scene)
 }
@@ -156,8 +151,8 @@ pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::remodel::testkit::{app, render as render_body};
     use crate::artifacts::remodel::default_remodel_scene;
+    use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
     async fn default_scene_seeds_the_world3d_mesh_json() {

@@ -1,9 +1,9 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `run-query`.
 
-use crate::editor::jack::config::JackConfigMutation;
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::JackSnapshot;
 use crate::core;
+use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::json;
 

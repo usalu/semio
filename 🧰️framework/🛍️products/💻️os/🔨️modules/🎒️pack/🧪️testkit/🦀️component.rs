@@ -12,7 +12,6 @@
 //! canonical text form so generated values stay representable by `vcs`/`dsl_derive`'s future
 //! DSL-bidirectional tests without this crate needing to depend on either of them.
 
-
 //#region 🔖️Corrupt
 /// 🧪️ Container-level corruption sweeps live with the container itself; re-exported so the
 /// historical `os_pack::testkit::fuzz_*` paths keep resolving.
@@ -331,11 +330,7 @@ impl RecordValueGen {
     fn generate_wire_node(&mut self) -> WireNode {
         let id = self.next_string(6);
         let id = if id.trim().is_empty() { "n".to_string() } else { id };
-        WireNode {
-            id,
-            kind: if self.next_bool() { Some(self.next_string(4)) } else { None },
-            port: if self.next_bool() { Some(self.next_string(4)) } else { None },
-        }
+        WireNode { id, kind: if self.next_bool() { Some(self.next_string(4)) } else { None }, port: if self.next_bool() { Some(self.next_string(4)) } else { None } }
     }
 
     fn generate_wire(&mut self, depth: u16, max_depth: u16) -> WireValue {
@@ -418,8 +413,8 @@ fn normalize_value(value: &FieldValue) -> FieldValue {
 /// pure-Absent noise [`normalize_record`] strips.
 pub async fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
-    let bytes = crate::os_pack::encode_document(spec, record, &options).await.expect("encode_document should succeed for a well-formed record");
-    let (decoded, _report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_document should succeed for a just-encoded pack file");
+    let bytes = crate::os_pack::encode_document(spec, record, &options).expect("encode_document should succeed for a well-formed record");
+    let (decoded, _report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode_document should succeed for a just-encoded pack file");
     assert_eq!(normalize_record(&decoded), normalize_record(record), "encode/decode round trip diverged (ignoring pure-Absent noise)");
 }
 
@@ -427,8 +422,8 @@ pub async fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordVal
 /// output across repeated calls, regardless of `HashMap` iteration order inside `record.fields`.
 pub async fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
     let options = crate::os_pack::EncodeOptions::default();
-    let a = crate::os_pack::encode_document(spec, record, &options).await.expect("first encode_document call");
-    let b = crate::os_pack::encode_document(spec, record, &options).await.expect("second encode_document call");
+    let a = crate::os_pack::encode_document(spec, record, &options).expect("first encode_document call");
+    let b = crate::os_pack::encode_document(spec, record, &options).expect("second encode_document call");
     assert_eq!(a, b, "encode_document must be byte-identical across repeated calls (canonical determinism law)");
 }
 
@@ -437,8 +432,8 @@ pub async fn assert_canonical_stable(spec: &RecordSpec, record: &RecordValue) {
 /// mechanism that lets an older reader tolerate a newer writer's additive schema evolution.
 pub async fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra_fields: &RecordValue, extra_ids: &[u16]) {
     let options = crate::os_pack::EncodeOptions::default();
-    let bytes = crate::os_pack::encode_document(spec, record_with_extra_fields, &options).await.expect("encode_document with extra fields");
-    let (decoded, report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_document with extra fields");
+    let bytes = crate::os_pack::encode_document(spec, record_with_extra_fields, &options).expect("encode_document with extra fields");
+    let (decoded, report) = crate::os_pack::decode_document(&bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode_document with extra fields");
 
     let mut expected_extra: Vec<u16> = extra_ids.to_vec();
     expected_extra.sort_unstable();
@@ -463,11 +458,11 @@ pub async fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordV
     let mut streamed_options = crate::os_pack::EncodeOptions::default();
     streamed_options.frame_size = 1;
 
-    let buffered_bytes = crate::os_pack::encode_document(spec, record, &buffered_options).await.expect("buffered (single-frame) encode_document");
-    let streamed_bytes = crate::os_pack::encode_document(spec, record, &streamed_options).await.expect("streamed (many-frame) encode_document");
+    let buffered_bytes = crate::os_pack::encode_document(spec, record, &buffered_options).expect("buffered (single-frame) encode_document");
+    let streamed_bytes = crate::os_pack::encode_document(spec, record, &streamed_options).expect("streamed (many-frame) encode_document");
 
-    let (buffered_decoded, _) = crate::os_pack::decode_document(&buffered_bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode buffered encoding");
-    let (streamed_decoded, _) = crate::os_pack::decode_document(&streamed_bytes, spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode streamed encoding");
+    let (buffered_decoded, _) = crate::os_pack::decode_document(&buffered_bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode buffered encoding");
+    let (streamed_decoded, _) = crate::os_pack::decode_document(&streamed_bytes, spec, &crate::os_pack::DecodeOptions::default()).expect("decode streamed encoding");
 
     assert_eq!(normalize_record(&buffered_decoded), normalize_record(&streamed_decoded), "single-frame and many-small-frame encodings of the same document must decode identically");
 }

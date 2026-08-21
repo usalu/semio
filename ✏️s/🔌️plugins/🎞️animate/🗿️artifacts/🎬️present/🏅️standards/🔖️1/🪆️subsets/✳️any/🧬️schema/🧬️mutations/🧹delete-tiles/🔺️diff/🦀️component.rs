@@ -24,11 +24,7 @@ pub async fn diff(payload: &DeleteTiles, base: &PresentSnapshot) -> protocol::Mu
     if missing.is_empty() {
         outcome
     } else {
-        outcome.absorb_messages([protocol::MutationMessage::warn(
-            "mutation.partial",
-            format!("{} of {} addressed tile(s) did not exist: {}.", missing.len(), payload.ids.len(), missing.join(", ")),
-        )
-        .at({
+        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} addressed tile(s) did not exist: {}.", missing.len(), payload.ids.len(), missing.join(", "))).at({
             let mut target = vec!["tiles".to_string()];
             target.extend(missing);
             target

@@ -12,11 +12,6 @@ pub async fn inverse(payload: &ChangeGenerationValue, base: &Procedural3dSnapsho
         .generations
         .iter()
         .find(|entry| entry.id == payload.id)
-        .map(|entry| {
-            vec![Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue {
-                id: payload.id.clone(),
-                question_id: payload.question_id.clone(),
-                new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(Value::Null)})]
-        })
+        .map(|entry| vec![Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(Value::Null) })])
         .unwrap_or_default()
 }

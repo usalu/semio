@@ -1,11 +1,11 @@
 //! 🪜️ Sequence play app commands — step CRUD: add/remove/move/patch/collapse a step, delete the
 //! current selection.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
-use crate::editor::sequence::{host_from_snapshot, ops_from_host_mutation};
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
+use crate::editor::sequence::{host_from_snapshot, ops_from_host_mutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddStep

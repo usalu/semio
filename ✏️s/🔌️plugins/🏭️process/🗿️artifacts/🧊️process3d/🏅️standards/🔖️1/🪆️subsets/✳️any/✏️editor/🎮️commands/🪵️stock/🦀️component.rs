@@ -1,9 +1,9 @@
 //! 🪵️ Process 3d play app commands — swap the stock kind (resets the process timeline).
 
+use crate::artifacts::process3d::{op::Process3dMutation, process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::terminology::process3d_labels;
-use crate::artifacts::process3d::{op::Process3dMutation, process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetStock
@@ -20,7 +20,12 @@ pub mod set_stock {
     /// whole-document replace, not a targeted edit — no in-history mutation exists for that (see
     /// `📓️taxonomy.md`'s forbidden vocabulary), so this routes through
     /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`) instead.
-    pub async fn handle(payload: &SetStock, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &SetStock,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
         let solid = match payload.kind.as_str() {

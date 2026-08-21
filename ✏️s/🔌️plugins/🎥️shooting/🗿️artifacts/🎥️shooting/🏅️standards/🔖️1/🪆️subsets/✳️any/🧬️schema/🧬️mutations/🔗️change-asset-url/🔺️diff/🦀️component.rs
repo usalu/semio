@@ -2,9 +2,9 @@
 //! when already at that url.
 
 use super::mutation::ChangeAssetUrl;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingAssetPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeAssetUrl, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.assets.iter().find(|asset| asset.id == payload.id) else {
@@ -14,10 +14,7 @@ pub async fn diff(payload: &ChangeAssetUrl, base: &ShootingSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Asset \"{}\" already has that url.", payload.id));
     }
     protocol::MutationOutcome::new(ShootingDiff {
-        assets: Some(ShootingAssetsDelta {
-            patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { url: Some(payload.new_url.clone()), ..Default::default() } }],
-            ..Default::default()
-        }),
+        assets: Some(ShootingAssetsDelta { patched: vec![ShootingAssetPatchEntry { id: payload.id.clone(), patch: ShootingAssetPatch { url: Some(payload.new_url.clone()), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

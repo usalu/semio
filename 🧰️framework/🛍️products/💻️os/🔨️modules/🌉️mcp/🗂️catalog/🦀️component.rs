@@ -282,7 +282,17 @@ fn framework_capabilities(apps: &[&manifest::AppDefinition], locale: Locale, ter
         }
         for action in actions {
             let id = format!("framework.{}", action.id);
-            map.entry(id.clone()).or_insert_with(|| capability_from_action(&id, CapabilityOwner::Framework, None, &action, CapabilitySource::Action { plugin_id: "framework".into(), app_id: "framework".into(), window_kind_id: "*".into(), action_id: action.id.clone() }, locale, terminology));
+            map.entry(id.clone()).or_insert_with(|| {
+                capability_from_action(
+                    &id,
+                    CapabilityOwner::Framework,
+                    None,
+                    &action,
+                    CapabilitySource::Action { plugin_id: "framework".into(), app_id: "framework".into(), window_kind_id: "*".into(), action_id: action.id.clone() },
+                    locale,
+                    terminology,
+                )
+            });
         }
     }
     map
@@ -500,13 +510,18 @@ fn capability_from_os_command(command: &manifest::CommandDefinition, locale: Loc
 /// untyped `DescriptorEntry` rows that have no `LocalizedLabel` to resolve.
 fn humanize(id: &str) -> String {
     let spaced: String = id.chars().flat_map(|character| if character.is_uppercase() { vec![' ', character] } else { vec![character] }).collect();
-    spaced.replace(['-', '_'], " ").split_whitespace().map(|word| {
-        let mut chars = word.chars();
-        match chars.next() {
-            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            None => String::new(),
-        }
-    }).collect::<Vec<_>>().join(" ")
+    spaced
+        .replace(['-', '_'], " ")
+        .split_whitespace()
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 //#endregion 🔖️CapabilityBuilders
 

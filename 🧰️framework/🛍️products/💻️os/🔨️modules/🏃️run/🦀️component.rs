@@ -56,7 +56,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use store::{BlobStore, NoBlobStore};
-use workflow::{MediaContract, PortFingerprint, RunNodeRecord, RunNodeStatus, RunMutation, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
+use workflow::{MediaContract, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug, thiserror::Error)]
@@ -339,12 +339,7 @@ fn dispatch_report_summary(report: &[u8]) -> String {
     }
     let Ok(value) = store::pack_rt::decode_wire_value(report) else { return String::new() };
     let Ok(decoded) = from_dsl_value::<protocol::DispatchReport>(value) else { return String::new() };
-    decoded
-        .messages
-        .iter()
-        .map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) })
-        .collect::<Vec<_>>()
-        .join("; ")
+    decoded.messages.iter().map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) }).collect::<Vec<_>>().join("; ")
 }
 
 /// 🧾 One rejected frame's full message: `` `app_id` <verb> (fault_code: fault_message)``, plus —
@@ -489,7 +484,8 @@ impl RunSink {
 /// which lives one layer up, at the plugin-manifest layer this crate doesn't depend on). Delivering an
 /// override into the actual bytes the app receives is deferred — see this wave's final report.
 fn node_parameter_overlay_bytes(node_id: &str, bindings: &[WorkflowParameterBinding], parameter_values: &[RunParameterValue]) -> Vec<u8> {
-    let mut pairs: Vec<(&str, &str)> = bindings.iter().filter(|binding| binding.node_id == node_id).filter_map(|binding| parameter_values.iter().find(|value| value.parameter_id == binding.parameter_id).map(|value| (binding.field_path.as_str(), value.value.as_str()))).collect();
+    let mut pairs: Vec<(&str, &str)> =
+        bindings.iter().filter(|binding| binding.node_id == node_id).filter_map(|binding| parameter_values.iter().find(|value| value.parameter_id == binding.parameter_id).map(|value| (binding.field_path.as_str(), value.value.as_str()))).collect();
     pairs.sort_unstable();
     let mut bytes = Vec::new();
     for (field_path, value) in pairs {
@@ -1477,16 +1473,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let mut envelopes = Vec::with_capacity(events.len().max(1));
         for event in &events {
             let seq = self.take_turn_seq();
-            envelopes.push(Envelope {
-                to: actor,
-                from: Origin::Kernel,
-                lane: Lane::Background,
-                seq,
-                deadline_ms: None,
-                coalesce: None,
-                cancel_of: None,
-                payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(RunError::Serde)? },
-            });
+            envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(RunError::Serde)? } });
         }
         for envelope in &envelopes {
             if !matches!(self.kernel.submit(envelope).await, Backpressure::Accept) {
@@ -1622,7 +1609,10 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
         if !self.compiled_for_plugin.contains_key(plugin_id) {
             let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
-            let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])) };
+            let package = semio_framework_plugin_host::PackageRef {
+                package: semio_framework_plugin_host::PackageId(plugin_id.to_string()),
+                hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])),
+            };
             let compiled = self.guest_runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }
@@ -1715,11 +1705,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
 
         let gaps = self.app_router.owned_surface_gaps();
         if !gaps.is_empty() {
-            return Err(RunError::Host(format!(
-                "plugin `{plugin_id}` loaded but left {} owned-surface gap(s): {}",
-                gaps.len(),
-                gaps.iter().map(|fault| format!("{}: {}", fault.code.0, fault.message)).collect::<Vec<_>>().join("; ")
-            )));
+            return Err(RunError::Host(format!("plugin `{plugin_id}` loaded but left {} owned-surface gap(s): {}", gaps.len(), gaps.iter().map(|fault| format!("{}: {}", fault.code.0, fault.message)).collect::<Vec<_>>().join("; "))));
         }
 
         self.manifests.insert(plugin_id.to_string(), manifest);
@@ -1774,10 +1760,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                 ))
             },
             |contributor, _artifact_kind, _mutation_id, _member, _payload| {
-                Err(semio_framework_plugin_host::TransactionError::rejected(
-                    "transaction.not-wired",
-                    format!("contributor `{contributor}`: artifact-mutation-plan has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md"),
-                ))
+                Err(semio_framework_plugin_host::TransactionError::rejected("transaction.not-wired", format!("contributor `{contributor}`: artifact-mutation-plan has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md")))
             },
             initiator,
             local_ops,
@@ -1790,10 +1773,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     pub fn undo_transaction_group(&self, members: &[semio_framework_plugin_host::TransactionMember], group_id: &str) {
         self.transaction_coordinator.undo_group(
             |plugin_id, _instance_id, _command| {
-                Err(semio_framework_plugin_host::TransactionError::rejected(
-                    "transaction.not-wired",
-                    format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md"),
-                ))
+                Err(semio_framework_plugin_host::TransactionError::rejected("transaction.not-wired", format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md")))
             },
             members,
             group_id,
@@ -1817,8 +1797,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// and delegates here.
     pub fn resolve_open_artifact(&self, artifact_ref: &str, role_wire: u8, plugin_id: &str, app_id: &str) -> Result<semio_framework::AppRef, semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
-        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(artifact_ref)
-            .map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.invalid-artifact-ref"), error))?;
+        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(artifact_ref).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
             return Err(semio_framework::Fault::new(
                 semio_framework::FaultOrigin::Os,
@@ -1905,11 +1884,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         let instance_handle = self.next_handle;
         self.next_handle += 1;
         let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: app_id.to_string(), instance_id: instance_handle };
-        let actor = self
-            .kernel
-            .activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET)
-            .await
-            .map_err(RunError::Host)?;
+        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(RunError::Host)?;
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
         let open_event = Event::InstanceOpen {

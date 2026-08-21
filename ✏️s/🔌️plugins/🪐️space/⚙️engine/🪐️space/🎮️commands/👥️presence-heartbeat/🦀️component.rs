@@ -33,9 +33,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn presence_heartbeat_declares_none_ui_scope() {
+        use crate::demo_space_projection;
         use crate::engine::space::testkit::studio_emit;
         use crate::engine::space::SpaceCommand;
-        use crate::demo_space_projection;
         use semio_framework::kernel::UiDirtyScope;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();

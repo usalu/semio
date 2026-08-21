@@ -77,14 +77,7 @@ mod tests {
 
     //#region 🧸️Fixtures
     async fn sample_snapshot() -> Fem3dSnapshot {
-        Fem3dSnapshot {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "n2".into(), x: 4.0, y: 0.0, z: 0.0 },
-                FemNode { id: "n3".into(), x: 4.0, y: 3.0, z: 2.0 },
-            ],
-            ..Default::default()
-        }
+        Fem3dSnapshot { nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0, z: 2.0 }], ..Default::default() }
     }
     //#endregion 🧸️Fixtures
 

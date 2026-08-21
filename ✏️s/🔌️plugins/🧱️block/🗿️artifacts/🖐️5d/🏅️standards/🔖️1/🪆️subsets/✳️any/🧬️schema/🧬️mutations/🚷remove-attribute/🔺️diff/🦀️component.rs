@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveAttribute` — real handcrafted delta, never apply-then-capture.
+use crate::artifacts::block5d::diff::Block5dAttributesDelta;
 use crate::artifacts::block5d::diff::Block5dDiff;
-use crate::artifacts::block5d::diff::{Block5dAttributesDelta};
 use crate::artifacts::block5d::Block5dSnapshot;
 
 //#region 🔖️Diff

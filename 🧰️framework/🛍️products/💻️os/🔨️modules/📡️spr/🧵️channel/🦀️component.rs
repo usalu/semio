@@ -232,21 +232,62 @@ pub enum AppCommand {
 /// @emoji 📬️ One frame the app engine sends to its client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppFrame {
-    Done { in_reply_to: u64 },
+    Done {
+        in_reply_to: u64,
+    },
     /// 🧾 `messages` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` for this
     /// dispatch — see contract-freeze.md §C8.
-    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8>, ui_scope: Vec<u8>, history_patch: Vec<u8>, messages: Vec<u8> },
-    DocumentChanged { envelopes: Vec<crate::os_spr::causal::MutationEnvelope>, origin: String },
-    Document { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
-    Config { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
-    ConfigChanged { envelopes: Vec<crate::os_spr::causal::MutationEnvelope>, origin: String },
-    ContextMenu { in_reply_to: u64, items: Vec<u8> },
-    Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
-    MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
+    Invocation {
+        in_reply_to: u64,
+        output: Vec<u8>,
+        diagnostics: Vec<u8>,
+        ui_scope: Vec<u8>,
+        history_patch: Vec<u8>,
+        messages: Vec<u8>,
+    },
+    DocumentChanged {
+        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
+        origin: String,
+    },
+    Document {
+        in_reply_to: u64,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        ops: String,
+    },
+    Config {
+        in_reply_to: u64,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        ops: String,
+    },
+    ConfigChanged {
+        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
+        origin: String,
+    },
+    ContextMenu {
+        in_reply_to: u64,
+        items: Vec<u8>,
+    },
+    Media {
+        in_reply_to: u64,
+        port: String,
+        descriptor: Vec<u8>,
+        data: Vec<u8>,
+    },
+    MediaFingerprint {
+        in_reply_to: u64,
+        port: String,
+        fingerprint: Vec<u8>,
+    },
     /// 🧾 `report` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` of the
     /// rejected dispatch, accompanying a `Fault.code == "mutation.rejected"` — see
     /// contract-freeze.md §C8/C9.
-    Error { in_reply_to: Option<u64>, fault: Vec<u8>, report: Vec<u8> },
+    Error {
+        in_reply_to: Option<u64>,
+        fault: Vec<u8>,
+        report: Vec<u8>,
+    },
     /// 📤️ Guest Emit bytes for host-applied store authority (document/config/draft op packs).
     Emit {
         in_reply_to: u64,
@@ -283,7 +324,10 @@ pub enum AppFrame {
         interaction: Vec<u8>,
     },
     /// 🧾️ Full history patch for initial host projection and gap recovery.
-    HistorySnapshot { in_reply_to: u64, history_patch: Vec<u8> },
+    HistorySnapshot {
+        in_reply_to: u64,
+        history_patch: Vec<u8>,
+    },
     /// 📣️ A guest's dispatch touched a foreign artifact — the host mints `txn_id`, resolves each
     /// opaque `ForeignStep` in `foreign` (one `store::pack_rt::encode_wire_value`-encoded serde
     /// form per element; not decoded at this layer), and drives the transaction protocol (contract
@@ -365,15 +409,15 @@ fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::Pr
 
 //#region 🔖️Combinators
 async fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
-    crate::os_spr::write_bool(out, value.is_some()).await;
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(v) = value {
-        crate::os_spr::write_varint_u64(out, *v).await;
+        crate::os_spr::write_varint_u64(out, *v);
     }
 }
 
 async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos).await? {
-        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos).await?))
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
     } else {
         Ok(None)
     }
@@ -382,14 +426,14 @@ async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crat
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
 /// presence-byte convention as {@link write_opt_u64} above.
 async fn write_opt_u8(out: &mut Vec<u8>, value: &Option<u8>) {
-    crate::os_spr::write_bool(out, value.is_some()).await;
+    crate::os_spr::write_bool(out, value.is_some());
     if let Some(v) = value {
         out.push(*v);
     }
 }
 
 async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos).await? {
+    if crate::os_spr::read_bool(bytes, pos)? {
         let byte = *bytes.get(*pos).ok_or_else(|| malformed("channel app-command opt-u8", *pos as u64, "truncated"))?;
         *pos += 1;
         Ok(Some(byte))
@@ -399,37 +443,37 @@ async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate:
 }
 
 async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64).await;
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::write_bytes(out, value).await;
+        crate::os_spr::write_bytes(out, value);
     }
 }
 
 async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos).await?;
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     // 🚫️async: R10 shape 2 — `read_bytes` is async but `Iterator::map`'s closure is sync; hoisted
     // into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::os_spr::read_bytes(bytes, pos).await?);
+        out.push(crate::os_spr::read_bytes(bytes, pos)?);
     }
     Ok(out)
 }
 
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64).await;
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::causal::encode_envelope(value, out).await;
+        crate::os_spr::causal::encode_envelope(value, out);
     }
 }
 
 async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::MutationEnvelope>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos).await?;
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     // 🚫️async: R10 shape 2 — `decode_envelope` is async but `Iterator::map`'s closure is sync;
     // hoisted into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::os_spr::causal::decode_envelope(bytes, pos).await?);
+        out.push(crate::os_spr::causal::decode_envelope(bytes, pos)?);
     }
     Ok(out)
 }
@@ -441,171 +485,171 @@ pub async fn encode_app_command(command: &AppCommand) -> Vec<u8> {
     match command {
         AppCommand::ConfigCommand { seq, command } => {
             out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, command).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
         }
         AppCommand::Command { seq, command, view_state } => {
             out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, command).await;
-            crate::os_spr::write_bytes(&mut out, view_state).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_bytes(&mut out, view_state);
         }
         AppCommand::CommandText { seq, line } => {
             out.push(2);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, line).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, line);
         }
         AppCommand::ContextMenu { seq, request } => {
             out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, request).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, request);
         }
         AppCommand::ArtifactCommand { seq, command } => {
             out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, command).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
         }
         AppCommand::ApplyEnvelopes { seq, envelopes } => {
             out.push(5);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             write_vec_envelope(&mut out, envelopes).await;
         }
         AppCommand::LoadDocument { seq, pack, spr } => {
             out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, pack).await;
-            crate::os_spr::write_bytes(&mut out, spr).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
         }
         AppCommand::ReadDocument { seq } => {
             out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::LoadConfig { seq, pack, spr } => {
             out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, pack).await;
-            crate::os_spr::write_bytes(&mut out, spr).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
         }
         AppCommand::ReadConfig { seq } => {
             out.push(9);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::MediaIn { seq, port, descriptor, data } => {
             out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, port).await;
-            crate::os_spr::write_bytes(&mut out, descriptor).await;
-            crate::os_spr::write_bytes(&mut out, data).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, descriptor);
+            crate::os_spr::write_bytes(&mut out, data);
         }
         AppCommand::MediaOut { seq, port, request } => {
             out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, port).await;
-            crate::os_spr::write_bytes(&mut out, request).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, request);
         }
         AppCommand::MediaFingerprint { seq, port } => {
             out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, port).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, port);
         }
         AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
             out.push(13);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_bytes(&mut out, command).await;
-            crate::os_spr::write_bytes(&mut out, document).await;
-            crate::os_spr::write_bytes(&mut out, document_spr).await;
-            crate::os_spr::write_bytes(&mut out, config).await;
-            crate::os_spr::write_bytes(&mut out, config_spr).await;
-            crate::os_spr::write_bytes(&mut out, draft).await;
-            crate::os_spr::write_bytes(&mut out, draft_spr).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_bytes(&mut out, command);
+            crate::os_spr::write_bytes(&mut out, document);
+            crate::os_spr::write_bytes(&mut out, document_spr);
+            crate::os_spr::write_bytes(&mut out, config);
+            crate::os_spr::write_bytes(&mut out, config_spr);
+            crate::os_spr::write_bytes(&mut out, draft);
+            crate::os_spr::write_bytes(&mut out, draft_spr);
         }
         AppCommand::LoadChildren { seq, entries } => {
             out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             write_vec_child_pack(&mut out, entries).await;
         }
         AppCommand::ReadChildren { seq } => {
             out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::ReadHistory { seq } => {
             out.push(16);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
             out.push(17);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, txn_id).await;
-            crate::os_spr::write_str(&mut out, mutation_id).await;
-            crate::os_spr::write_bytes(&mut out, payload).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_str(&mut out, mutation_id);
+            crate::os_spr::write_bytes(&mut out, payload);
             write_vec_bytes(&mut out, prepared_ops).await;
-            crate::os_spr::write_str(&mut out, label).await;
-            crate::os_spr::write_bytes(&mut out, origin).await;
+            crate::os_spr::write_str(&mut out, label);
+            crate::os_spr::write_bytes(&mut out, origin);
         }
         AppCommand::TransactionCommit { seq, txn_id } => {
             out.push(18);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
         }
         AppCommand::TransactionRollback { seq, txn_id } => {
             out.push(19);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, txn_id);
         }
         AppCommand::TransactionUndo { seq, group_id } => {
             out.push(20);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, group_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, group_id);
         }
         AppCommand::TransactionRedo { seq, group_id } => {
             out.push(21);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, group_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, group_id);
         }
         AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
             out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, artifact_ref).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_ref);
             out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id).await;
-            crate::os_spr::write_str(&mut out, app_id).await;
+            crate::os_spr::write_str(&mut out, plugin_id);
+            crate::os_spr::write_str(&mut out, app_id);
         }
         AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
             out.push(23);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, artifact_kind).await;
-            crate::os_spr::write_str(&mut out, standard).await;
-            crate::os_spr::write_str(&mut out, subset).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_kind);
+            crate::os_spr::write_str(&mut out, standard);
+            crate::os_spr::write_str(&mut out, subset);
             out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id).await;
-            crate::os_spr::write_str(&mut out, app_id).await;
+            crate::os_spr::write_str(&mut out, plugin_id);
+            crate::os_spr::write_str(&mut out, app_id);
         }
         AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
             out.push(24);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, artifact_kind).await;
-            crate::os_spr::write_str(&mut out, standard).await;
-            crate::os_spr::write_str(&mut out, subset).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, artifact_kind);
+            crate::os_spr::write_str(&mut out, standard);
+            crate::os_spr::write_str(&mut out, subset);
             out.push(*role);
         }
         AppCommand::SetMergePolicy { seq, policy } => {
             out.push(25);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             out.push(*policy);
         }
         AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
             out.push(26);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
-            crate::os_spr::write_str(&mut out, conflict_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            crate::os_spr::write_str(&mut out, conflict_id);
             out.push(*resolution);
         }
         AppCommand::ReadConflicts { seq } => {
             out.push(27);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
         }
         AppCommand::Presence { seq, own_color, peers } => {
             out.push(28);
-            crate::os_spr::write_varint_u64(&mut out, *seq).await;
+            crate::os_spr::write_varint_u64(&mut out, *seq);
             write_opt_u8(&mut out, own_color).await;
             write_vec_bytes(&mut out, peers).await;
         }
@@ -616,26 +660,21 @@ pub async fn encode_app_command(command: &AppCommand) -> Vec<u8> {
 /// @emoji 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
 /// both `AppCommand::LoadChildren` and `AppFrame::Children`.
 async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
-    crate::os_spr::write_varint_u64(out, entries.len() as u64).await;
+    crate::os_spr::write_varint_u64(out, entries.len() as u64);
     for entry in entries {
-        crate::os_spr::write_str(out, &entry.slot).await;
-        crate::os_spr::write_str(out, &entry.child_id).await;
-        crate::os_spr::write_str(out, &entry.dialect).await;
-        crate::os_spr::write_bytes(out, &entry.envelope_pack).await;
+        crate::os_spr::write_str(out, &entry.slot);
+        crate::os_spr::write_str(out, &entry.child_id);
+        crate::os_spr::write_str(out, &entry.dialect);
+        crate::os_spr::write_bytes(out, &entry.envelope_pack);
     }
 }
 
 /// @emoji 🧸️ Inverse of [`write_vec_child_pack`].
 async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildPackEntry>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos).await?;
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(ChildPackEntry {
-            slot: crate::os_spr::read_str(bytes, pos).await?,
-            child_id: crate::os_spr::read_str(bytes, pos).await?,
-            dialect: crate::os_spr::read_str(bytes, pos).await?,
-            envelope_pack: crate::os_spr::read_bytes(bytes, pos).await?,
-        });
+        entries.push(ChildPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, envelope_pack: crate::os_spr::read_bytes(bytes, pos)? });
     }
     Ok(entries)
 }
@@ -645,87 +684,87 @@ pub async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_sp
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let command = match tag {
-        0 => AppCommand::ConfigCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, command: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        1 => AppCommand::Command { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, command: crate::os_spr::read_bytes(bytes, &mut pos).await?, view_state: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        2 => AppCommand::CommandText { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, line: crate::os_spr::read_str(bytes, &mut pos).await? },
-        3 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, request: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        4 => AppCommand::ArtifactCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, command: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        5 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
-        6 => AppCommand::LoadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, pack: crate::os_spr::read_bytes(bytes, &mut pos).await?, spr: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        7 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
-        8 => AppCommand::LoadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, pack: crate::os_spr::read_bytes(bytes, &mut pos).await?, spr: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        9 => AppCommand::ReadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
-        10 => AppCommand::MediaIn { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, port: crate::os_spr::read_str(bytes, &mut pos).await?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos).await?, data: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        11 => AppCommand::MediaOut { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, port: crate::os_spr::read_str(bytes, &mut pos).await?, request: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        12 => AppCommand::MediaFingerprint { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, port: crate::os_spr::read_str(bytes, &mut pos).await? },
+        0 => AppCommand::ConfigCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        1 => AppCommand::Command { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)?, view_state: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => AppCommand::CommandText { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, line: crate::os_spr::read_str(bytes, &mut pos)? },
+        3 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        4 => AppCommand::ArtifactCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        5 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
+        6 => AppCommand::LoadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        7 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        8 => AppCommand::LoadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        9 => AppCommand::ReadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        10 => AppCommand::MediaIn { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        11 => AppCommand::MediaOut { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        12 => AppCommand::MediaFingerprint { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)? },
         13 => AppCommand::PureCommand {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            command: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            document: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            document_spr: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            config: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            config_spr: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            draft: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            draft_spr: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            command: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            document: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            document_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft_spr: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        14 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, entries: read_vec_child_pack(bytes, &mut pos).await? },
-        15 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
-        16 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
+        14 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
+        15 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        16 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         17 => AppCommand::TransactionPrepare {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            txn_id: crate::os_spr::read_str(bytes, &mut pos).await?,
-            mutation_id: crate::os_spr::read_str(bytes, &mut pos).await?,
-            payload: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            txn_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            mutation_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            payload: crate::os_spr::read_bytes(bytes, &mut pos)?,
             prepared_ops: read_vec_bytes(bytes, &mut pos).await?,
-            label: crate::os_spr::read_str(bytes, &mut pos).await?,
-            origin: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            label: crate::os_spr::read_str(bytes, &mut pos)?,
+            origin: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        18 => AppCommand::TransactionCommit { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, txn_id: crate::os_spr::read_str(bytes, &mut pos).await? },
-        19 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, txn_id: crate::os_spr::read_str(bytes, &mut pos).await? },
-        20 => AppCommand::TransactionUndo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, group_id: crate::os_spr::read_str(bytes, &mut pos).await? },
-        21 => AppCommand::TransactionRedo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, group_id: crate::os_spr::read_str(bytes, &mut pos).await? },
+        18 => AppCommand::TransactionCommit { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        19 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        20 => AppCommand::TransactionUndo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        21 => AppCommand::TransactionRedo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
         22 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let artifact_ref = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_ref = crate::os_spr::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command OpenArtifact.role", pos as u64, "truncated"))?;
             pos += 1;
-            let plugin_id = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let app_id = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
             AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id }
         }
         23 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let standard = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let subset = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
+            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
+            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetDefaultApp.role", pos as u64, "truncated"))?;
             pos += 1;
-            let plugin_id = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let app_id = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
             AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id }
         }
         24 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let standard = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let subset = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
+            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
+            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ClearDefaultApp.role", pos as u64, "truncated"))?;
             AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role }
         }
         25 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let policy = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetMergePolicy.policy", pos as u64, "truncated"))?;
             AppCommand::SetMergePolicy { seq, policy }
         }
         26 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let conflict_id = crate::os_spr::read_str(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let conflict_id = crate::os_spr::read_str(bytes, &mut pos)?;
             let resolution = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ResolveConflict.resolution", pos as u64, "truncated"))?;
             AppCommand::ResolveConflict { seq, conflict_id, resolution }
         }
-        27 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
+        27 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         28 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let own_color = read_opt_u8(bytes, &mut pos).await?;
             let peers = read_vec_bytes(bytes, &mut pos).await?;
             AppCommand::Presence { seq, own_color, peers }
@@ -741,144 +780,144 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
     match frame {
         AppFrame::Done { in_reply_to } => {
             out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
         }
         AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } => {
             out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, output).await;
-            crate::os_spr::write_bytes(&mut out, diagnostics).await;
-            crate::os_spr::write_bytes(&mut out, ui_scope).await;
-            crate::os_spr::write_bytes(&mut out, history_patch).await;
-            crate::os_spr::write_bytes(&mut out, messages).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, output);
+            crate::os_spr::write_bytes(&mut out, diagnostics);
+            crate::os_spr::write_bytes(&mut out, ui_scope);
+            crate::os_spr::write_bytes(&mut out, history_patch);
+            crate::os_spr::write_bytes(&mut out, messages);
         }
         AppFrame::DocumentChanged { envelopes, origin } => {
             out.push(2);
             write_vec_envelope(&mut out, envelopes).await;
-            crate::os_spr::write_str(&mut out, origin).await;
+            crate::os_spr::write_str(&mut out, origin);
         }
         AppFrame::Document { in_reply_to, pack, spr, ops } => {
             out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, pack).await;
-            crate::os_spr::write_bytes(&mut out, spr).await;
-            crate::os_spr::write_str(&mut out, ops).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
         AppFrame::Config { in_reply_to, pack, spr, ops } => {
             out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, pack).await;
-            crate::os_spr::write_bytes(&mut out, spr).await;
-            crate::os_spr::write_str(&mut out, ops).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
         AppFrame::ConfigChanged { envelopes, origin } => {
             out.push(5);
             write_vec_envelope(&mut out, envelopes).await;
-            crate::os_spr::write_str(&mut out, origin).await;
+            crate::os_spr::write_str(&mut out, origin);
         }
         AppFrame::ContextMenu { in_reply_to, items } => {
             out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, items).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, items);
         }
         AppFrame::Media { in_reply_to, port, descriptor, data } => {
             out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_str(&mut out, port).await;
-            crate::os_spr::write_bytes(&mut out, descriptor).await;
-            crate::os_spr::write_bytes(&mut out, data).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, descriptor);
+            crate::os_spr::write_bytes(&mut out, data);
         }
         AppFrame::MediaFingerprint { in_reply_to, port, fingerprint } => {
             out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_str(&mut out, port).await;
-            crate::os_spr::write_bytes(&mut out, fingerprint).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, port);
+            crate::os_spr::write_bytes(&mut out, fingerprint);
         }
         AppFrame::Error { in_reply_to, fault, report } => {
             out.push(9);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, fault).await;
-            crate::os_spr::write_bytes(&mut out, report).await;
+            crate::os_spr::write_bytes(&mut out, fault);
+            crate::os_spr::write_bytes(&mut out, report);
         }
         AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics } => {
             out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, document_ops).await;
-            crate::os_spr::write_bytes(&mut out, config_ops).await;
-            crate::os_spr::write_bytes(&mut out, draft_ops).await;
-            crate::os_spr::write_bytes(&mut out, output).await;
-            crate::os_spr::write_bytes(&mut out, diagnostics).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, document_ops);
+            crate::os_spr::write_bytes(&mut out, config_ops);
+            crate::os_spr::write_bytes(&mut out, draft_ops);
+            crate::os_spr::write_bytes(&mut out, output);
+            crate::os_spr::write_bytes(&mut out, diagnostics);
         }
         AppFrame::Draft { in_reply_to, pack, spr, ops } => {
             out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, pack).await;
-            crate::os_spr::write_bytes(&mut out, spr).await;
-            crate::os_spr::write_str(&mut out, ops).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, pack);
+            crate::os_spr::write_bytes(&mut out, spr);
+            crate::os_spr::write_str(&mut out, ops);
         }
         AppFrame::Children { in_reply_to, entries } => {
             out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries).await;
         }
         AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction } => {
             out.push(13);
-            crate::os_spr::write_bytes(&mut out, presence).await;
-            crate::os_spr::write_varint_u64(&mut out, *presence_generation).await;
-            crate::os_spr::write_varint_u64(&mut out, *transient_generation).await;
-            crate::os_spr::write_bytes(&mut out, interaction).await;
+            crate::os_spr::write_bytes(&mut out, presence);
+            crate::os_spr::write_varint_u64(&mut out, *presence_generation);
+            crate::os_spr::write_varint_u64(&mut out, *transient_generation);
+            crate::os_spr::write_bytes(&mut out, interaction);
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, history_patch).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_bytes(&mut out, history_patch);
         }
         AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, description, coalesce_key, foreign } => {
             out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to).await;
-            crate::os_spr::write_str(&mut out, proposal_id).await;
+            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            crate::os_spr::write_str(&mut out, proposal_id);
             write_vec_bytes(&mut out, local_ops).await;
-            crate::os_spr::write_str(&mut out, description).await;
-            crate::os_spr::write_str(&mut out, coalesce_key).await;
+            crate::os_spr::write_str(&mut out, description);
+            crate::os_spr::write_str(&mut out, coalesce_key);
             write_vec_bytes(&mut out, foreign).await;
         }
         AppFrame::TransactionPrepared { txn_id, foreign, rejection } => {
             out.push(16);
-            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_str(&mut out, txn_id);
             write_vec_bytes(&mut out, foreign).await;
-            crate::os_spr::write_bytes(&mut out, rejection).await;
+            crate::os_spr::write_bytes(&mut out, rejection);
         }
         AppFrame::TransactionCommitted { txn_id, edit_id } => {
             out.push(17);
-            crate::os_spr::write_str(&mut out, txn_id).await;
-            crate::os_spr::write_str(&mut out, edit_id).await;
+            crate::os_spr::write_str(&mut out, txn_id);
+            crate::os_spr::write_str(&mut out, edit_id);
         }
         AppFrame::TransactionRolledBack { txn_id } => {
             out.push(18);
-            crate::os_spr::write_str(&mut out, txn_id).await;
+            crate::os_spr::write_str(&mut out, txn_id);
         }
         AppFrame::MergeReport { in_reply_to, report } => {
             out.push(19);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, report).await;
+            crate::os_spr::write_bytes(&mut out, report);
         }
         AppFrame::Conflicts { in_reply_to, conflicts } => {
             out.push(20);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, conflicts).await;
+            crate::os_spr::write_bytes(&mut out, conflicts);
         }
         AppFrame::UiPatch { in_reply_to, surface, kind, revision, base_revision, ops } => {
             out.push(21);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_str(&mut out, surface).await;
-            crate::os_spr::write_str(&mut out, kind).await;
-            crate::os_spr::write_varint_u64(&mut out, *revision).await;
-            crate::os_spr::write_varint_u64(&mut out, *base_revision).await;
-            crate::os_spr::write_bytes(&mut out, ops).await;
+            crate::os_spr::write_str(&mut out, surface);
+            crate::os_spr::write_str(&mut out, kind);
+            crate::os_spr::write_varint_u64(&mut out, *revision);
+            crate::os_spr::write_varint_u64(&mut out, *base_revision);
+            crate::os_spr::write_bytes(&mut out, ops);
         }
         AppFrame::UiSnapshotEnd { revision } => {
             out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *revision).await;
+            crate::os_spr::write_varint_u64(&mut out, *revision);
         }
     }
     out
@@ -889,74 +928,65 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-frame tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let frame = match tag {
-        0 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
+        0 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         1 => AppFrame::Invocation {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            output: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            history_patch: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            messages: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            messages: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        2 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos).await? },
-        3 => AppFrame::Document { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, pack: crate::os_spr::read_bytes(bytes, &mut pos).await?, spr: crate::os_spr::read_bytes(bytes, &mut pos).await?, ops: crate::os_spr::read_str(bytes, &mut pos).await? },
-        4 => AppFrame::Config { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, pack: crate::os_spr::read_bytes(bytes, &mut pos).await?, spr: crate::os_spr::read_bytes(bytes, &mut pos).await?, ops: crate::os_spr::read_str(bytes, &mut pos).await? },
-        5 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos).await? },
-        6 => AppFrame::ContextMenu { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, items: crate::os_spr::read_bytes(bytes, &mut pos).await? },
+        2 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
+        3 => AppFrame::Document { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
+        4 => AppFrame::Config { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
+        5 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
+        6 => AppFrame::ContextMenu { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, items: crate::os_spr::read_bytes(bytes, &mut pos)? },
         7 => {
-            AppFrame::Media { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, port: crate::os_spr::read_str(bytes, &mut pos).await?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos).await?, data: crate::os_spr::read_bytes(bytes, &mut pos).await? }
+            AppFrame::Media { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? }
         }
-        8 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, port: crate::os_spr::read_str(bytes, &mut pos).await?, fingerprint: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        9 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos).await?, fault: crate::os_spr::read_bytes(bytes, &mut pos).await?, report: crate::os_spr::read_bytes(bytes, &mut pos).await? },
+        8 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        9 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos).await?, fault: crate::os_spr::read_bytes(bytes, &mut pos)?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
         10 => AppFrame::Emit {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            document_ops: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            config_ops: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            draft_ops: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            output: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            document_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            config_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            draft_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        11 => AppFrame::Draft {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            pack: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            spr: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            ops: crate::os_spr::read_str(bytes, &mut pos).await?,
-        },
-        12 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, entries: read_vec_child_pack(bytes, &mut pos).await? },
+        11 => AppFrame::Draft { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
+        12 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
         13 => AppFrame::Ephemeral {
-            presence: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-            presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            interaction: crate::os_spr::read_bytes(bytes, &mut pos).await?,
+            presence: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            interaction: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
-        14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos).await? },
+        14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         15 => AppFrame::TransactionProposal {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos).await?,
-            proposal_id: crate::os_spr::read_str(bytes, &mut pos).await?,
+            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            proposal_id: crate::os_spr::read_str(bytes, &mut pos)?,
             local_ops: read_vec_bytes(bytes, &mut pos).await?,
-            description: crate::os_spr::read_str(bytes, &mut pos).await?,
-            coalesce_key: crate::os_spr::read_str(bytes, &mut pos).await?,
+            description: crate::os_spr::read_str(bytes, &mut pos)?,
+            coalesce_key: crate::os_spr::read_str(bytes, &mut pos)?,
             foreign: read_vec_bytes(bytes, &mut pos).await?,
         },
-        16 => AppFrame::TransactionPrepared {
-            txn_id: crate::os_spr::read_str(bytes, &mut pos).await?,
-            foreign: read_vec_bytes(bytes, &mut pos).await?,
-            rejection: crate::os_spr::read_bytes(bytes, &mut pos).await?,
-        },
-        17 => AppFrame::TransactionCommitted { txn_id: crate::os_spr::read_str(bytes, &mut pos).await?, edit_id: crate::os_spr::read_str(bytes, &mut pos).await? },
-        18 => AppFrame::TransactionRolledBack { txn_id: crate::os_spr::read_str(bytes, &mut pos).await? },
-        19 => AppFrame::MergeReport { in_reply_to: read_opt_u64(bytes, &mut pos).await?, report: crate::os_spr::read_bytes(bytes, &mut pos).await? },
-        20 => AppFrame::Conflicts { in_reply_to: read_opt_u64(bytes, &mut pos).await?, conflicts: crate::os_spr::read_bytes(bytes, &mut pos).await? },
+        16 => AppFrame::TransactionPrepared { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, foreign: read_vec_bytes(bytes, &mut pos).await?, rejection: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        17 => AppFrame::TransactionCommitted { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, edit_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        18 => AppFrame::TransactionRolledBack { txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        19 => AppFrame::MergeReport { in_reply_to: read_opt_u64(bytes, &mut pos).await?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        20 => AppFrame::Conflicts { in_reply_to: read_opt_u64(bytes, &mut pos).await?, conflicts: crate::os_spr::read_bytes(bytes, &mut pos)? },
         21 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos).await?;
-            let surface = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let kind = crate::os_spr::read_str(bytes, &mut pos).await?;
-            let revision = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let base_revision = crate::os_spr::read_varint_u64(bytes, &mut pos).await?;
-            let ops = crate::os_spr::read_bytes(bytes, &mut pos).await?;
+            let surface = crate::os_spr::read_str(bytes, &mut pos)?;
+            let kind = crate::os_spr::read_str(bytes, &mut pos)?;
+            let revision = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let base_revision = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let ops = crate::os_spr::read_bytes(bytes, &mut pos)?;
             AppFrame::UiPatch { in_reply_to, surface, kind, revision, base_revision, ops }
         }
-        22 => AppFrame::UiSnapshotEnd { revision: crate::os_spr::read_varint_u64(bytes, &mut pos).await? },
+        22 => AppFrame::UiSnapshotEnd { revision: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -1068,39 +1098,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_pure_command_round_trips() {
-        assert_command_round_trips(&AppCommand::PureCommand {
-            seq: 18,
-            command: vec![1],
-            document: vec![2],
-            document_spr: vec![3],
-            config: vec![4],
-            config_spr: vec![5],
-            draft: vec![6],
-            draft_spr: vec![7],
-        }).await;
+        assert_command_round_trips(&AppCommand::PureCommand { seq: 18, command: vec![1], document: vec![2], document_spr: vec![3], config: vec![4], config_spr: vec![5], draft: vec![6], draft_spr: vec![7] }).await;
     }
 
     //#region 🔖️Transaction
     #[semio_framework_async_macros::async_test]
     async fn app_command_transaction_prepare_round_trips_owner_and_preplanned_forms() {
-        assert_command_round_trips(&AppCommand::TransactionPrepare {
-            seq: 1,
-            txn_id: "t".to_string(),
-            mutation_id: "m".to_string(),
-            payload: vec![9],
-            prepared_ops: Vec::new(),
-            label: String::new(),
-            origin: Vec::new(),
-        }).await;
-        assert_command_round_trips(&AppCommand::TransactionPrepare {
-            seq: 2,
-            txn_id: "t".to_string(),
-            mutation_id: String::new(),
-            payload: Vec::new(),
-            prepared_ops: vec![vec![1], vec![2, 2]],
-            label: "l".to_string(),
-            origin: vec![9],
-        }).await;
+        assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
+        assert_command_round_trips(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1133,7 +1138,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_set_default_app_round_trips() {
-        assert_command_round_trips(&AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }).await;
+        assert_command_round_trips(&AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() })
+            .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1223,14 +1229,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_emit_round_trips() {
-        assert_frame_round_trips(&AppFrame::Emit {
-            in_reply_to: 14,
-            document_ops: vec![1],
-            config_ops: vec![2],
-            draft_ops: vec![3],
-            output: vec![4],
-            diagnostics: vec![5],
-        }).await;
+        assert_frame_round_trips(&AppFrame::Emit { in_reply_to: 14, document_ops: vec![1], config_ops: vec![2], draft_ops: vec![3], output: vec![4], diagnostics: vec![5] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1264,14 +1263,7 @@ mod tests {
     //#region 🔖️Transaction
     #[semio_framework_async_macros::async_test]
     async fn app_frame_transaction_proposal_round_trips() {
-        assert_frame_round_trips(&AppFrame::TransactionProposal {
-            in_reply_to: 1,
-            proposal_id: "p".to_string(),
-            local_ops: vec![vec![1]],
-            description: "d".to_string(),
-            coalesce_key: "k".to_string(),
-            foreign: Vec::new(),
-        }).await;
+        assert_frame_round_trips(&AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], description: "d".to_string(), coalesce_key: "k".to_string(), foreign: Vec::new() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1308,22 +1300,8 @@ mod tests {
     //#region 🔖️UiPatch
     #[semio_framework_async_macros::async_test]
     async fn app_frame_ui_patch_round_trips_with_and_without_in_reply_to() {
-        assert_frame_round_trips(&AppFrame::UiPatch {
-            in_reply_to: Some(3),
-            surface: "1:body".to_string(),
-            kind: "window".to_string(),
-            revision: 5,
-            base_revision: 4,
-            ops: vec![1, 2, 3],
-        }).await;
-        assert_frame_round_trips(&AppFrame::UiPatch {
-            in_reply_to: None,
-            surface: "1:body".to_string(),
-            kind: "window".to_string(),
-            revision: 1,
-            base_revision: 0,
-            ops: Vec::new(),
-        }).await;
+        assert_frame_round_trips(&AppFrame::UiPatch { in_reply_to: Some(3), surface: "1:body".to_string(), kind: "window".to_string(), revision: 5, base_revision: 4, ops: vec![1, 2, 3] }).await;
+        assert_frame_round_trips(&AppFrame::UiPatch { in_reply_to: None, surface: "1:body".to_string(), kind: "window".to_string(), revision: 1, base_revision: 0, ops: Vec::new() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1421,37 +1399,12 @@ mod tests {
             ("MediaIn", AppCommand::MediaIn { seq: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaOut", AppCommand::MediaOut { seq: 1, port: "p".to_string(), request: vec![1] }),
             ("MediaFingerprint", AppCommand::MediaFingerprint { seq: 1, port: "p".to_string() }),
-            ("PureCommand", AppCommand::PureCommand {
-                seq: 1,
-                command: vec![1],
-                document: vec![2],
-                document_spr: vec![3],
-                config: vec![4],
-                config_spr: vec![5],
-                draft: vec![6],
-                draft_spr: vec![7],
-            }),
+            ("PureCommand", AppCommand::PureCommand { seq: 1, command: vec![1], document: vec![2], document_spr: vec![3], config: vec![4], config_spr: vec![5], draft: vec![6], draft_spr: vec![7] }),
             ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
             ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
-            ("TransactionPrepareOwner", AppCommand::TransactionPrepare {
-                seq: 1,
-                txn_id: "t".to_string(),
-                mutation_id: "m".to_string(),
-                payload: vec![9],
-                prepared_ops: Vec::new(),
-                label: String::new(),
-                origin: Vec::new(),
-            }),
-            ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare {
-                seq: 2,
-                txn_id: "t".to_string(),
-                mutation_id: String::new(),
-                payload: Vec::new(),
-                prepared_ops: vec![vec![1], vec![2, 2]],
-                label: "l".to_string(),
-                origin: vec![9],
-            }),
+            ("TransactionPrepareOwner", AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }),
+            ("TransactionPreparePrePlanned", AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }),
             ("TransactionCommit", AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }),
             ("TransactionRollback", AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }),
             ("TransactionUndo", AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }),
@@ -1480,26 +1433,12 @@ mod tests {
             ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
             ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99], report: vec![7] }),
-            ("Emit", AppFrame::Emit {
-                in_reply_to: 1,
-                document_ops: vec![1],
-                config_ops: vec![],
-                draft_ops: vec![],
-                output: vec![2],
-                diagnostics: vec![],
-            }),
+            ("Emit", AppFrame::Emit { in_reply_to: 1, document_ops: vec![1], config_ops: vec![], draft_ops: vec![], output: vec![2], diagnostics: vec![] }),
             ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
             ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
             ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7] }),
             ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
-            ("TransactionProposal", AppFrame::TransactionProposal {
-                in_reply_to: 1,
-                proposal_id: "p".to_string(),
-                local_ops: vec![vec![1]],
-                description: "d".to_string(),
-                coalesce_key: "k".to_string(),
-                foreign: Vec::new(),
-            }),
+            ("TransactionProposal", AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], description: "d".to_string(), coalesce_key: "k".to_string(), foreign: Vec::new() }),
             ("TransactionPrepared", AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }),
             ("TransactionCommitted", AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() }),
             ("TransactionRolledBack", AppFrame::TransactionRolledBack { txn_id: "t".to_string() }),

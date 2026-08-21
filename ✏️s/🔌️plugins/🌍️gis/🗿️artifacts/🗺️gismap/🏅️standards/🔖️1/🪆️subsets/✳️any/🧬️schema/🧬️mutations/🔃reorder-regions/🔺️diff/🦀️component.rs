@@ -20,9 +20,6 @@ pub async fn diff(payload: &ReorderRegions, base: &GisMapSnapshot) -> protocol::
     if ids == original {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Region \"{}\" is already at index {}.", payload.id, to));
     }
-    protocol::MutationOutcome::new(GisMapDiff {
-        regions: Some(GisMapFeaturesDelta { reordered: Some(ids), ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(GisMapDiff { regions: Some(GisMapFeaturesDelta { reordered: Some(ids), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

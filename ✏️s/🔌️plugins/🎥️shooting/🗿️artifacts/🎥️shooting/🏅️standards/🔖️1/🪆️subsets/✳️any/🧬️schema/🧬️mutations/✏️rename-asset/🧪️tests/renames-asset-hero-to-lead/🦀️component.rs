@@ -92,7 +92,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-asset/renames-asset-hero-to-lead: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(committed["assets"]["patched"][0]["patch"]["name"], "Lead", "rename-asset/renames-asset-hero-to-lead: `name` is the one filled patch slot");
-    assert!(committed["assets"]["patched"][0]["patch"]["url"].is_null() && committed["assets"]["patched"][0]["patch"]["origin"].is_null(), "rename-asset/renames-asset-hero-to-lead: url and transform slots stay null — this is a patch, not a replacement");
+    assert!(
+        committed["assets"]["patched"][0]["patch"]["url"].is_null() && committed["assets"]["patched"][0]["patch"]["origin"].is_null(),
+        "rename-asset/renames-asset-hero-to-lead: url and transform slots stay null — this is a patch, not a replacement"
+    );
     assert!(committed["assets"]["added"].as_array().expect("added is an array").is_empty(), "rename-asset/renames-asset-hero-to-lead: a rename never re-adds the record");
 }
 

@@ -1,9 +1,9 @@
 //! 🗺️ FEM 3D module engine — cheap solid mesh preview + nodal-averaged stress (pure FE algorithm,
 //! moved out of the artifact tree).
 
-use crate::fem3d_engine::{meshing, Fem3dError};
-use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::analyses;
+use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::fem3d_engine::{meshing, Fem3dError};
 use std::collections::HashMap;
 
 /// 🗺️ One meshed solid's cheap preview geometry — the full volume mesh (points/tets) plus its outer

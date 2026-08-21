@@ -51,20 +51,8 @@ mod tests {
     //#region 🧸️Fixtures
     async fn parent_child_snapshot() -> Puzzle2dSnapshot {
         // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
-        let p = Puzzle2dNode {
-            id: "p".into(),
-            x: 5.0,
-            y: 7.0,
-            anchor: Puzzle2dNodeAnchor::Fixed,
-            handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }],
-            ..Default::default()
-        };
-        let c = Puzzle2dNode {
-            id: "c".into(),
-            anchor: Puzzle2dNodeAnchor::Derived,
-            handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }],
-            ..Default::default()
-        };
+        let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
+        let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
         Puzzle2dSnapshot { schema: crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
     }

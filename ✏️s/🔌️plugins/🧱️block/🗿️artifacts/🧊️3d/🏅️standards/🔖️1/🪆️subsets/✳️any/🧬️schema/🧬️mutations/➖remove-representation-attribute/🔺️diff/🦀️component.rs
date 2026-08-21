@@ -11,6 +11,9 @@ pub async fn diff(payload: &super::mutation::RemoveRepresentationAttribute, base
     };
     let attributes: Vec<BlockAttribute> = existing.attributes.iter().filter(|attribute| attribute.key != payload.key).cloned().collect();
     let replacement = BlockRepresentation { attributes, ..existing.clone() };
-    protocol::MutationOutcome::new(Block3dDiff { representations: Some(Block3dRepresentationsDelta { patched: vec![Block3dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block3dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff {
+        representations: Some(Block3dRepresentationsDelta { patched: vec![Block3dRepresentationsPatchEntry { id: payload.id.clone(), patch: Block3dRepresentationsPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

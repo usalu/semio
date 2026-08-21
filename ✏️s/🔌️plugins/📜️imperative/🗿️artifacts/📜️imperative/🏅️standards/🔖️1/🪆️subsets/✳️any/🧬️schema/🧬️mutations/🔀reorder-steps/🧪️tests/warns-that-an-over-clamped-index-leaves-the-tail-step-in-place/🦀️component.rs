@@ -26,12 +26,7 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 /// 🛤️ The flat program the committed `flow` handle stands for: three `log.print` steps in order,
 /// with `step-3` occupying the tail slot the payload's clamped index lands on.
 fn cached_program() -> Path {
-    Path {
-        steps: ["step-1", "step-2", "step-3"]
-            .into_iter()
-            .map(|id| Step { id: id.into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() })
-            .collect(),
-    }
+    Path { steps: ["step-1", "step-2", "step-3"].into_iter().map(|id| Step { id: id.into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() }).collect() }
 }
 
 fn before() -> ImperativeSnapshot {
@@ -102,7 +97,11 @@ async fn declared_outcome_holds() {
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), Some(protocol::Severity::Warning), "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: an unchanged order is a Warning, never an Error");
     assert_eq!(produced.messages().len(), 1, "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: exactly one diagnostic is raised");
-    assert_eq!(produced.messages()[0].code.0.as_str(), declared["messages"][0]["code"].as_str().expect("declared message code is a string"), "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: raised diagnostic code differs from the declared one");
+    assert_eq!(
+        produced.messages()[0].code.0.as_str(),
+        declared["messages"][0]["code"].as_str().expect("declared message code is a string"),
+        "reorder-steps/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place: raised diagnostic code differs from the declared one"
+    );
 }
 
 /// 🔺️ The committed diff is `ImperativeDiff`'s all-null default: the oracle returns before it ever

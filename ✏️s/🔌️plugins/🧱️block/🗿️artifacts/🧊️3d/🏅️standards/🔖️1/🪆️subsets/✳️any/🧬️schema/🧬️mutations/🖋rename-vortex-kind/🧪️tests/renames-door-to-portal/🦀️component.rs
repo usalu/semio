@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block3d::mutations::{apply_block3d_mutation, inverse_block3d_mutation};
 use crate::artifacts::block3d::mutations::Block3dMutation;
+use crate::artifacts::block3d::mutations::{apply_block3d_mutation, inverse_block3d_mutation};
 use crate::artifacts::block3d::Block3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -35,7 +35,11 @@ async fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_block3d_mutation(&mut snapshot, &mutation()).expect("rename-vortex-kind applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "rename-vortex-kind/renames-door-to-portal: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.vortex_kind_extra[0], crate::artifacts::block3d::Block3dVortexKindExtra { id: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }, "rename-vortex-kind touches the kit half only: the block-owned overflow row must come through byte-identical");
+    assert_eq!(
+        snapshot.vortex_kind_extra[0],
+        crate::artifacts::block3d::Block3dVortexKindExtra { id: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
+        "rename-vortex-kind touches the kit half only: the block-owned overflow row must come through byte-identical"
+    );
 }
 
 /// ↩️ Applying the mutation then its inverse restores `before` exactly.
@@ -110,7 +114,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::block3d::diff::Block3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block3d::diff::Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::block3d::diff::Block3dDiff as protocol::MutationDiff<Block3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-vortex-kind/renames-door-to-portal: committed diff did not carry before to after");
 }

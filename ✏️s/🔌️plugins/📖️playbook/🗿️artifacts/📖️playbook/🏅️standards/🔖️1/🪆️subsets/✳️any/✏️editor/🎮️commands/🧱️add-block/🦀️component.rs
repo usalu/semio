@@ -1,10 +1,10 @@
 //! 🧱️ 🧱️ Playbook play app commands command — `add-block`.
 
-use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
-use crate::artifacts::playbook::schema::default_block;
 use crate::artifacts::playbook::op::{add_block_operation, PlaybookMutation};
+use crate::artifacts::playbook::schema::default_block;
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -32,11 +32,11 @@ pub async fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use AddBlock;
-    use crate::editor::playbook::testkit::{dispatch, playbook_app, playbook_app_with_registry};
-    use crate::editor::playbook::PlaybookCommand;
     use crate::editor::playbook::commands::move_block::MoveBlock;
     use crate::editor::playbook::commands::remove_block::RemoveBlock;
+    use crate::editor::playbook::testkit::{dispatch, playbook_app, playbook_app_with_registry};
+    use crate::editor::playbook::PlaybookCommand;
+    use AddBlock;
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the new block is no longer
     /// auto-selected by this command (selection is framework-owned now) — only the document edit itself.

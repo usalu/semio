@@ -12,10 +12,9 @@
 //! 🎯️ Design choice: only the mailbox core (`Envelope`, `Address`, `Receiver`, `SendFuture`,
 //! `RecvFuture`, the `Reply` oneshot pair, `Actor`/`ActorContext`, and the pure
 //! `RestartStrategy::decide` law) is `wasm32-unknown-unknown`-clean, per the contract's "core
-//! mailbox only" carve-out. Anything that actually spawns an OS thread (`ThreadSpawner`,
-//! `StdThreadSpawner`, `Supervisor`, `block_on` and its blocking convenience methods) is
-//! `#[cfg(not(target_arch = "wasm32"))]`, and the spawner/supervisor half is additionally gated
-//! behind the (default-on) `thread` Cargo feature.
+//! mailbox only" carve-out. The blocking convenience methods remain native entry-point bridges;
+//! `Supervisor` is native today but drives finite actor turns on the injected process-wide
+//! `WorkerPool` and never creates or parks a dedicated actor thread.
 
 use std::collections::VecDeque;
 use std::future::Future;
@@ -24,8 +23,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use crate::*;
 use crate::db_ids::GenerationId;
+use crate::*;
 
 //#region 🔖️Envelope
 /// @emoji ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing
@@ -105,6 +104,7 @@ struct MailboxState<M> {
 /// admitted before a crash survive the restart.
 struct MailboxInner<M> {
     state: Mutex<MailboxState<M>>,
+    consumer_wake: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
     capacities: MailboxCapacities,
     closed: AtomicBool,
     generation: AtomicU64,
@@ -126,6 +126,7 @@ impl<M: Send + 'static> MailboxInner<M> {
                 send_wakers: Vec::new(),
                 shed_previews: 0,
             }),
+            consumer_wake: Mutex::new(None),
             capacities,
             closed: AtomicBool::new(false),
             generation: AtomicU64::new(GenerationId::INITIAL.0),
@@ -159,6 +160,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         for waker in wakers {
             waker.wake();
         }
+        self.wake_consumer();
     }
 
     /// @emoji 🔓️ Reverses `close` for a fresh post-restart incarnation (only called by
@@ -177,6 +179,21 @@ impl<M: Send + 'static> MailboxInner<M> {
 
     fn shed_preview_count(&self) -> u64 {
         self.state.lock().unwrap().shed_previews
+    }
+
+    fn has_messages(&self) -> bool {
+        self.state.lock().unwrap().lanes.iter().any(|lane| !lane.is_empty())
+    }
+
+    fn set_consumer_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
+        *self.consumer_wake.lock().unwrap() = Some(wake);
+    }
+
+    fn wake_consumer(&self) {
+        let wake = self.consumer_wake.lock().unwrap().clone();
+        if let Some(wake) = wake {
+            wake();
+        }
     }
 
     /// @emoji 🎫️ The crate's core admission law: reject on a stale generation or a closed
@@ -212,6 +229,7 @@ impl<M: Send + 'static> MailboxInner<M> {
         for waker in wakers {
             waker.wake();
         }
+        self.wake_consumer();
         Admission::Accepted
     }
 
@@ -323,6 +341,21 @@ impl<M: Send + 'static> Address<M> {
     /// (see `try_admit`'s doc) — exposed for tests/observability, not part of the hot path.
     pub fn shed_preview_count(&self) -> u64 {
         self.inner.shed_preview_count()
+    }
+
+    /// @emoji 🔔️ Installs the finite-turn scheduler wake used by pool-hosted actors. Admission
+    /// and close call it after releasing mailbox locks, so scheduling can never recurse under the
+    /// mailbox mutex.
+    pub(crate) fn set_consumer_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
+        self.inner.set_consumer_wake(wake);
+    }
+
+    pub(crate) fn has_messages(&self) -> bool {
+        self.inner.has_messages()
+    }
+
+    pub(crate) fn is_idle_and_closed(&self) -> bool {
+        self.inner.is_idle_and_closed()
     }
 }
 
@@ -698,57 +731,9 @@ impl RestartStrategy {
 }
 //#endregion 🔖️Supervision
 
-//#region 🔖️ThreadSpawner
-/// @emoji 🧵️ How a `Supervisor` obtains OS threads to run actor incarnations on — an interface so
-/// `db_engine`'s `tokio` feature (or a test double) can substitute its own scheduling without this
-/// crate depending on any runtime crate.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-pub trait ThreadSpawner: Send + Sync {
-    // 🔀️ dedyn-fw-os-misc, O1/R11 case 3: `JoinHandleLike` has exactly one impl (`StdJoinHandle`,
-    // right below) — `Box<StdJoinHandle>` replaces `Box<dyn JoinHandleLike>`. `#[dyn_enum]` doesn't
-    // apply here even with a second implementor someday: its receiver classifier hard-rejects an
-    // explicit `self: Box<Self>` (`join`'s own receiver), which is exactly this trait's one method.
-    // `ThreadSpawner` itself (this trait) stays `dyn`-dispatched — out of this packet's family list.
-    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<StdJoinHandle>;
-}
-
-/// @emoji 🤝️ A join handle abstracted away from `std::thread::JoinHandle` specifically, so a
-/// non-`std::thread` `ThreadSpawner` (e.g. a pooled/test spawner) can implement it too.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-pub trait JoinHandleLike: Send {
-    fn join(self: Box<Self>);
-}
-
-/// @emoji 🏭️ The default `ThreadSpawner`: one `std::thread` per spawn, per the contract ("db_actor's
-/// default ThreadSpawner is std::thread + hand-rolled futures, not tokio").
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-pub struct StdThreadSpawner;
-
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-impl ThreadSpawner for StdThreadSpawner {
-    fn spawn(&self, name: String, task: Box<dyn FnOnce() + Send>) -> Box<StdJoinHandle> {
-        let handle = std::thread::Builder::new().name(name).spawn(task).expect("db_actor: failed to spawn OS thread");
-        Box::new(StdJoinHandle(Some(handle)))
-    }
-}
-
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-// 🔀️ `pub` (was private): now named in `ThreadSpawner::spawn`'s public return type.
-pub struct StdJoinHandle(Option<std::thread::JoinHandle<()>>);
-
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-impl JoinHandleLike for StdJoinHandle {
-    fn join(mut self: Box<Self>) {
-        if let Some(handle) = self.0.take() {
-            let _ = handle.join();
-        }
-    }
-}
-//#endregion 🔖️ThreadSpawner
-
 //#region 🔖️Runner
 /// @emoji 🏁️ Why an actor incarnation's message loop ended.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+#[cfg(not(target_arch = "wasm32"))]
 enum ActorOutcome {
     /// 🚪️ The mailbox closed and drained normally (graceful shutdown, e.g. `RestartAll`'s stop
     /// phase) — not a failure, `Supervisor::reap` does not restart on this outcome.
@@ -757,77 +742,140 @@ enum ActorOutcome {
     Panicked,
 }
 
-/// @emoji 🏃️ The actual message loop: `catch_unwind`-isolates every call into `Actor` code so one
-/// poisoned incarnation can never take down the OS thread pool or a sibling actor, then reports
-/// its terminal `ActorOutcome` back to the owning `Supervisor` through a `Reply` oneshot.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<NullEmit>, outcome_tx: ReplySender<ActorOutcome>) {
-    use std::panic::AssertUnwindSafe;
+#[cfg(not(target_arch = "wasm32"))]
+const ACTOR_TURN_MAX_MESSAGES: usize = 32;
 
-    let mut ctx = ActorContext { address, generation, emit: emit.clone() };
-    let start_outcome = std::panic::catch_unwind(AssertUnwindSafe(|| actor.on_start(&mut ctx)));
-    let mut poisoned = !matches!(start_outcome, Ok(Ok(())));
-    if !poisoned {
-        loop {
-            let envelope = match receiver.recv_blocking() {
-                Some(envelope) => envelope,
-                None => break,
-            };
-            // 🩹️ `AssertUnwindSafe` is justified: on a panic we discard `actor`/`ctx` entirely
-            // (never touched again in this incarnation) rather than trusting any partially
-            // mutated state, so unwind-safety of their contents genuinely does not matter here.
-            let step = std::panic::catch_unwind(AssertUnwindSafe(|| actor.handle(envelope.payload, &mut ctx)));
-            if step.is_err() {
-                poisoned = true;
-                break;
+#[cfg(not(target_arch = "wasm32"))]
+const ACTOR_TURN_MAX_MS: u64 = 4;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ActorRunnerState<A: Actor> {
+    actor: A,
+    context: ActorContext<A::Message>,
+    started: bool,
+}
+
+/// @emoji 🏃️ A finite actor-turn driver. Mailbox admission schedules at most one pool job; that
+/// job processes a bounded number of messages and resubmits only when work remains. No worker is
+/// parked waiting for a message, and cancellation/restart only flips atomics plus schedules one
+/// final turn.
+#[cfg(not(target_arch = "wasm32"))]
+struct ActorRunner<A: Actor> {
+    pool: Arc<semio_framework_async::WorkerPool>,
+    receiver: Receiver<A::Message>,
+    emit: Arc<NullEmit>,
+    state: Mutex<ActorRunnerState<A>>,
+    outcome: Mutex<Option<ReplySender<ActorOutcome>>>,
+    scheduled: AtomicBool,
+    cancelled: AtomicBool,
+    terminal: AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<A: Actor> ActorRunner<A> {
+    fn new(pool: Arc<semio_framework_async::WorkerPool>, actor: A, receiver: Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: Arc<NullEmit>, outcome: ReplySender<ActorOutcome>) -> Arc<Self> {
+        Arc::new(Self {
+            pool,
+            receiver,
+            emit: emit.clone(),
+            state: Mutex::new(ActorRunnerState { actor, context: ActorContext { address, generation, emit }, started: false }),
+            outcome: Mutex::new(Some(outcome)),
+            scheduled: AtomicBool::new(false),
+            cancelled: AtomicBool::new(false),
+            terminal: AtomicBool::new(false),
+        })
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        if self.terminal.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let runner = Arc::clone(self);
+        self.pool.submit(semio_framework_async::Lane::UserVisible, Box::new(move || runner.run_turn()));
+    }
+
+    fn cancel(self: &Arc<Self>) {
+        self.cancelled.store(true, Ordering::Release);
+        self.schedule();
+    }
+
+    fn finish(&self, outcome: ActorOutcome) {
+        if !self.terminal.swap(true, Ordering::AcqRel) {
+            if let Some(sender) = self.outcome.lock().unwrap().take() {
+                sender.send(outcome);
             }
         }
     }
-    if poisoned {
-        // 🚫️async: E5 executor bridge — `run_actor_loop` runs on its own dedicated OS thread (R4
-        // clause 2/4: the thread IS the executor), so `emit.emit(...)` (a real `async fn` in the
-        // `db_observe::Emit` trait) is driven via `block_on` rather than `.await`.
-        #[cfg(not(target_arch = "wasm32"))]
-        block_on(emit.emit(EmitEvent::new("db_actor.incarnation_poisoned").field("generation", EmitField::U64(generation.0))));
+
+    fn run_turn(self: Arc<Self>) {
+        use std::panic::AssertUnwindSafe;
+
+        let started_at = self.pool.now_ms();
+        let mut poisoned = false;
+        {
+            let mut state = self.state.lock().unwrap();
+            if !state.started && !self.cancelled.load(Ordering::Acquire) {
+                state.started = true;
+                let ActorRunnerState { actor, context, .. } = &mut *state;
+                poisoned = !matches!(std::panic::catch_unwind(AssertUnwindSafe(|| actor.on_start(context))), Ok(Ok(())));
+            }
+            for _ in 0..ACTOR_TURN_MAX_MESSAGES {
+                if poisoned || self.cancelled.load(Ordering::Acquire) || self.pool.now_ms().saturating_sub(started_at) >= ACTOR_TURN_MAX_MS {
+                    break;
+                }
+                let Some(envelope) = self.receiver.try_recv() else { break };
+                let ActorRunnerState { actor, context, .. } = &mut *state;
+                if std::panic::catch_unwind(AssertUnwindSafe(|| actor.handle(envelope.payload, context))).is_err() {
+                    poisoned = true;
+                }
+            }
+        }
+        if poisoned {
+            let generation = self.state.lock().unwrap().context.generation;
+            block_on(self.emit.emit(EmitEvent::new("db_actor.incarnation_poisoned").field("generation", EmitField::U64(generation.0))));
+            self.finish(ActorOutcome::Panicked);
+            return;
+        }
+        if self.cancelled.load(Ordering::Acquire) || self.receiver.inner.is_idle_and_closed() {
+            self.finish(ActorOutcome::Stopped);
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.receiver.inner.has_messages() {
+            self.schedule();
+        }
     }
-    outcome_tx.send(if poisoned { ActorOutcome::Panicked } else { ActorOutcome::Stopped });
 }
 
 /// @emoji 👨️‍👩️‍👧️ Owns `N` incarnations of the same `Actor` type, restarting them per
 /// `RestartStrategy` when `reap` observes a poisoned outcome. Scoped to a homogeneous child set
 /// (one actor type) deliberately — a heterogeneous supervision tree composes multiple
 /// `Supervisor`s, each escalating to whatever owns the next level up.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+#[cfg(not(target_arch = "wasm32"))]
 struct SupervisorSlot<M: Send + 'static> {
     mailbox: Arc<MailboxInner<M>>,
     address: Address<M>,
     generation: GenerationId,
     outcome_rx: ReplyReceiver<ActorOutcome>,
-    handle: Option<Box<StdJoinHandle>>,
+    runner_cancel: Arc<dyn Fn() + Send + Sync>,
 }
 
-// 🔀️ `Supervisor<A, S>` (was `Arc<dyn ThreadSpawner>`) — `fn spawn` in `ThreadSpawner` broke
-// `dyn` object-safety (R1); `StdThreadSpawner` is the ONLY implementor in this crate (repo-wide
-// grep confirms), so R11's closed-set-of-one rule applies: "exactly one impl ⇒ delete the trait
-// object and use the concrete type." `S` stays a free type param (not hardcoded to
-// `StdThreadSpawner`) so a genuine second implementor (the trait doc's own "db_engine's tokio
-// feature, or a test double") can still substitute without reopening this file.
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-pub struct Supervisor<A: Actor, S: ThreadSpawner> {
+#[cfg(not(target_arch = "wasm32"))]
+pub struct Supervisor<A: Actor> {
     strategy: RestartStrategy,
     capacities: MailboxCapacities,
-    spawner: Arc<S>,
+    pool: Arc<semio_framework_async::WorkerPool>,
     emit: Arc<NullEmit>,
     factory: Box<dyn Fn() -> A + Send + Sync>,
     slots: Mutex<Vec<SupervisorSlot<A::Message>>>,
 }
 
-#[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
+#[cfg(not(target_arch = "wasm32"))]
+impl<A: Actor> Supervisor<A> {
     /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
-    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<S>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
-        let supervisor = Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
+    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, pool: Arc<semio_framework_async::WorkerPool>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
+        let supervisor = Supervisor { strategy, capacities, pool, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
         let mut slots = Vec::with_capacity(children);
         for _ in 0..children {
             slots.push(supervisor.spawn_slot(None));
@@ -854,8 +902,17 @@ impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
         let (outcome_tx, outcome_rx) = oneshot();
         let actor = (self.factory)();
         let emit = self.emit.clone();
-        let handle = self.spawner.spawn(format!("db-actor-g{}", generation.0), Box::new(move || run_actor_loop(actor, &receiver, ctx_address, generation, &emit, outcome_tx)));
-        SupervisorSlot { mailbox, address, generation, outcome_rx, handle: Some(handle) }
+        let runner = ActorRunner::new(self.pool.clone(), actor, receiver, ctx_address, generation, emit, outcome_tx);
+        let weak = Arc::downgrade(&runner);
+        mailbox.set_consumer_wake(Arc::new(move || {
+            if let Some(runner) = weak.upgrade() {
+                runner.schedule();
+            }
+        }));
+        let runner_for_cancel = runner.clone();
+        let runner_cancel: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_cancel.cancel());
+        runner.schedule();
+        SupervisorSlot { mailbox, address, generation, outcome_rx, runner_cancel }
     }
 
     pub fn address(&self, index: usize) -> Address<A::Message> {
@@ -880,9 +937,6 @@ impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
         let mut failed_index = None;
         for (index, slot) in slots.iter_mut().enumerate() {
             if let Some(outcome) = slot.outcome_rx.try_recv() {
-                if let Some(handle) = slot.handle.take() {
-                    handle.join();
-                }
                 if matches!(outcome, ActorOutcome::Panicked) {
                     failed_index = Some(index);
                     break;
@@ -893,17 +947,13 @@ impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
         let decision = self.strategy.decide(failed_index);
         match decision {
             SupervisionDecision::RestartOne(index) => {
+                (slots[index].runner_cancel)();
                 let mailbox = slots[index].mailbox.clone();
                 slots[index] = self.spawn_slot(Some(mailbox));
             }
             SupervisionDecision::RestartAll => {
                 for slot in slots.iter() {
-                    slot.address.close();
-                }
-                for slot in slots.iter_mut() {
-                    if let Some(handle) = slot.handle.take() {
-                        handle.join();
-                    }
+                    (slot.runner_cancel)();
                 }
                 for index in 0..slots.len() {
                     let mailbox = slots[index].mailbox.clone();
@@ -919,6 +969,16 @@ impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
             }
         }
         Some(decision)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<A: Actor> Drop for Supervisor<A> {
+    fn drop(&mut self) {
+        for slot in self.slots.lock().unwrap().iter() {
+            slot.address.close();
+            (slot.runner_cancel)();
+        }
     }
 }
 //#endregion 🔖️Runner
@@ -1069,17 +1129,17 @@ mod tests {
     //#endregion 🔖️Reply
 
     //#region 🔖️Actor
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     enum EchoMessage {
         Double(i32, ReplySender<i32>),
         Crash,
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     #[derive(Default)]
     struct EchoActor;
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     impl Actor for EchoActor {
         type Message = EchoMessage;
 
@@ -1094,19 +1154,27 @@ mod tests {
         }
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn actor_pool(workers: usize) -> Arc<semio_framework_async::WorkerPool> {
+        Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig { process_kind: semio_framework_async::ProcessKind::InteractiveNative, cores: workers + 1, interactive_reserve: true }))
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn ask_pattern_round_trips_through_a_real_actor_thread() {
-        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 1);
+    fn ask_pattern_round_trips_through_a_bounded_actor_turn() {
+        let pool = actor_pool(2);
+        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), pool.clone(), Arc::new(NullEmit), EchoActor::default, 1);
         let address = supervisor.address(0);
         let reply = address.ask_blocking(Priority::Command, |tx| EchoMessage::Double(21, tx));
         assert_eq!(reply, Ok(42));
+        drop(supervisor);
+        pool.shutdown();
     }
     //#endregion 🔖️Actor
 
     //#region 🔖️Supervision
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-    fn reap_until_decided(supervisor: &Supervisor<EchoActor, StdThreadSpawner>) -> SupervisionDecision {
+    #[cfg(not(target_arch = "wasm32"))]
+    fn reap_until_decided(supervisor: &Supervisor<EchoActor>) -> SupervisionDecision {
         for _ in 0..200 {
             if let Some(decision) = supervisor.reap() {
                 return decision;
@@ -1123,10 +1191,11 @@ mod tests {
         assert_eq!(RestartStrategy::Escalate.decide(1), SupervisionDecision::Escalate);
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn one_for_one_restarts_only_the_failed_child_and_bumps_only_its_generation() {
-        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 2);
+        let pool = actor_pool(2);
+        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), pool.clone(), Arc::new(NullEmit), EchoActor::default, 2);
         let stale_child0 = supervisor.address(0);
         let untouched_child1_generation = supervisor.generation(1);
 
@@ -1140,12 +1209,15 @@ mod tests {
 
         let fresh_reply = supervisor.address(0).ask_blocking(Priority::Command, |tx| EchoMessage::Double(5, tx));
         assert_eq!(fresh_reply, Ok(10), "the restarted incarnation must be alive and answering");
+        drop(supervisor);
+        pool.shutdown();
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn one_for_all_restarts_every_child_and_bumps_every_generation() {
-        let supervisor = Supervisor::new(RestartStrategy::OneForAll, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 3);
+        let pool = actor_pool(2);
+        let supervisor = Supervisor::new(RestartStrategy::OneForAll, generous_capacities(), pool.clone(), Arc::new(NullEmit), EchoActor::default, 3);
 
         supervisor.address(1).send_blocking(Priority::Command, EchoMessage::Crash).unwrap();
         let decision = reap_until_decided(&supervisor);
@@ -1154,18 +1226,23 @@ mod tests {
         for index in 0..3 {
             assert_eq!(supervisor.generation(index), GenerationId::INITIAL.next(), "child {index} must also have restarted");
         }
+        drop(supervisor);
+        pool.shutdown();
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn escalate_reports_the_failure_without_restarting_anything() {
-        let supervisor = Supervisor::new(RestartStrategy::Escalate, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 1);
+        let pool = actor_pool(2);
+        let supervisor = Supervisor::new(RestartStrategy::Escalate, generous_capacities(), pool.clone(), Arc::new(NullEmit), EchoActor::default, 1);
 
         supervisor.address(0).send_blocking(Priority::Command, EchoMessage::Crash).unwrap();
         let decision = reap_until_decided(&supervisor);
 
         assert_eq!(decision, SupervisionDecision::Escalate);
         assert_eq!(supervisor.generation(0), GenerationId::INITIAL, "Escalate must not bump the generation itself");
+        drop(supervisor);
+        pool.shutdown();
     }
     //#endregion 🔖️Supervision
 

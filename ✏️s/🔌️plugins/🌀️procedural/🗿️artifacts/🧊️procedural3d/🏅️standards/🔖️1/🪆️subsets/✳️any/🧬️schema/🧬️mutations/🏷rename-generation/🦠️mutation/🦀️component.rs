@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct RenameGeneration {
     pub id: String,
-    pub new_name: String}
+    pub new_name: String,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for RenameGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "generation", kind: "rename-generation", record: "RenamedGeneration" };

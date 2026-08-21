@@ -7,26 +7,26 @@
 //! `🔖️Manifest` region that calls one passthrough per node (fem2d's mode/window declarations stay
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
+use crate::app_surface::{DisplayMode, ResultDisplay};
+use crate::artifacts::fem2d::op::Fem2dMutation;
+use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::editor::fem2d::commands::{
-    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection,
-    set_active_example, set_analysis_settings, set_camera, set_locale, set_result_display, set_self_weight,
+    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera, set_locale,
+    set_result_display, set_self_weight,
 };
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::Fem2dSnapshot;
-use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, AppIo, ConfigSpec, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, SurfaceKind,
-    UiNode,
+use semio_framework_plugin::{
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    NoDraft, NoDraftMutation, SurfaceKind, UiNode,
 };
-use store::EngineHandles;
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FEM2D_APP_ID: &str = "fem2d-play";
@@ -287,7 +287,14 @@ impl ArtifactEditor for Fem2dPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &Fem2dCommand, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Fem2dCommand,
+        doc: &ArtifactView<'_, Fem2dSnapshot>,
+        cfg: &ConfigView<'_, Fem2dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -669,9 +676,7 @@ mod tests {
     async fn two_instances_converge_on_disjoint_edits() {
         let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence");
 
-        instance_a
-            .dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::testkit::meta("actor-a"))
-            .expect("a adds a material");
+        instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::testkit::meta("actor-a")).expect("a adds a material");
         instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::testkit::meta("actor-b")).expect("b adds a node");
 
         // A neutral history action always dispatches through the store, which pumps inbound operations first.

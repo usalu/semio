@@ -149,5 +149,9 @@ async fn permutes_the_whole_route_order_without_touching_any_payload() {
     };
     assert_eq!((undo.id.as_str(), undo.to_index), ("route-bus", 2), "reorder-routes/moves-the-bus-route-to-the-front: the inverse sends the route back to the index BASE held it at");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("reorder", "routes", "reorder-routes", "ReorderedRoutes"), "reorder-routes/moves-the-bus-route-to-the-front: the fixture must be bound to reorder-routes' own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("reorder", "routes", "reorder-routes", "ReorderedRoutes"),
+        "reorder-routes/moves-the-bus-route-to-the-front: the fixture must be bound to reorder-routes' own descriptor"
+    );
 }

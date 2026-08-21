@@ -4,7 +4,6 @@
 //! shared `Puzzle3dError`, and the `artifact_kind()` spec the play app's manifest binds. Sibling
 //! nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
 
-
 use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors

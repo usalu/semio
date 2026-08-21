@@ -1,9 +1,9 @@
 //! 🧩️ CAD play app commands — host-pushed `CadComputer` extension contributions.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetContributions

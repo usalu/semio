@@ -16,13 +16,7 @@ pub async fn diff_update_page_margins(payload: &UpdatePageMargins, base: &Layout
         pages: Some(LayoutPagesDelta {
             patched: vec![LayoutPagePatchEntry {
                 id: payload.id.clone(),
-                patch: PagePatch {
-                    margin_top: Some(payload.top),
-                    margin_right: Some(payload.right),
-                    margin_bottom: Some(payload.bottom),
-                    margin_left: Some(payload.left),
-                    ..Default::default()
-                },
+                patch: PagePatch { margin_top: Some(payload.top), margin_right: Some(payload.right), margin_bottom: Some(payload.bottom), margin_left: Some(payload.left), ..Default::default() },
             }],
             ..Default::default()
         }),

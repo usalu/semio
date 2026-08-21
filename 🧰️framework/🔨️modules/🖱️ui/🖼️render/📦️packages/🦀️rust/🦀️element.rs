@@ -309,12 +309,7 @@ pub struct AnyElement {
 impl AnyElement {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new<E: Element + 'static>(element: E) -> Self {
-        Self {
-            element: Box::new(element),
-            layout_state: None,
-            prepaint_state: None,
-            vtable: ElementVTable { request_layout: request_layout_erased::<E>, prepaint: prepaint_erased::<E>, paint: paint_erased::<E> },
-        }
+        Self { element: Box::new(element), layout_state: None, prepaint_state: None, vtable: ElementVTable { request_layout: request_layout_erased::<E>, prepaint: prepaint_erased::<E>, paint: paint_erased::<E> } }
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

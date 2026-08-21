@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneSunIntensity`.
 
 use super::mutation::ChangeSceneSunIntensity;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeSceneSunIntensity, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_intensity.is_finite() || payload.new_intensity < 0.0 {

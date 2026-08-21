@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
+use crate::artifacts::note::schema::find_block_location;
 use crate::artifacts::note::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
-use crate::artifacts::note::schema::{find_block_location};
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
 use protocol::Mutation;
 

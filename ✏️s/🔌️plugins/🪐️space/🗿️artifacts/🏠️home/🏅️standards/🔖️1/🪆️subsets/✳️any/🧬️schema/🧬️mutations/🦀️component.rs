@@ -26,7 +26,6 @@ pub use super::change_catalog_generation::mutation::{change_catalog_generation, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
 
     #[semio_framework_async_macros::async_test]
     async fn home_op_text_round_trips_every_variant() {

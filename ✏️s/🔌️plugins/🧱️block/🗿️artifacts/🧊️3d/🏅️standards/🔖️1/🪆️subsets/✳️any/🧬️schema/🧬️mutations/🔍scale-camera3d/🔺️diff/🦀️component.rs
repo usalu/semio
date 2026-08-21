@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ScaleCamera3d` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::{BlockCamera3d};
+use crate::BlockCamera3d;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::ScaleCamera3d, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

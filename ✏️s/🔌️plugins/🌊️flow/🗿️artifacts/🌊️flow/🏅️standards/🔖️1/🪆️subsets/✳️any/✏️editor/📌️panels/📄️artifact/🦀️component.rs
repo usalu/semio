@@ -2,11 +2,9 @@
 
 use crate::artifacts::flow::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::artifacts::flow::FlowSnapshot;
-use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
 use crate::editor::flow::terminology::FlowPlayLabels;
-use semio_framework_plugin::{
-    tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
@@ -32,8 +30,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// click action is declared here anymore (clicks are translated into `interactionSelect` generically).
 pub async fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> UiNode {
     let live = fixture.to_fixture();
-    let widget_items: Vec<UiTreeItemNode> =
-        live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))).collect();
+    let widget_items: Vec<UiTreeItemNode> = live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))).collect();
     let synapse_items: Vec<UiTreeItemNode> =
         live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
     PanelTreeBuilder::new("flow-play-document")

@@ -314,8 +314,8 @@ mod analyze {
 
     //#endregion 🔖️Fingerprint
 
-// 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
-pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
+    // 🚫️async: E3 transitive — pure fn reachable only from a synchronous proc-macro entry point (R9-style propagation of E3)
+    pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
         let mut az = Analyzer { nodes: Vec::new(), names: HashMap::new(), guards: Vec::new(), actions: Vec::new(), outputs: Vec::new(), pending: Vec::new(), invoke_counter: 0, timer_counter: 0 };
         az.nodes.push(NodeIr { name: "root".to_string(), kind: NodeKindIr::Compound, parent: None, initial: None, children: Vec::new(), entry_actions: Vec::new(), exit_actions: Vec::new(), invokes: Vec::new(), timers: Vec::new() });
         az.names.insert("root".to_string(), 0);

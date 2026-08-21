@@ -20,9 +20,7 @@
 //! `childId`s are therefore documented placeholders for that digest.
 
 use crate::artifacts::mathematical::mutations::create_node::mutation::CreateNode;
-use crate::artifacts::mathematical::{
-    mathematical_children_from_state, mathematical_graph, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalNode, MathematicalSnapshot,
-};
+use crate::artifacts::mathematical::{mathematical_children_from_state, mathematical_graph, MathematicalDiff, MathematicalGeometry, MathematicalGraph, MathematicalMutation, MathematicalNode, MathematicalSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");
@@ -45,13 +43,7 @@ fn payload() -> CreateNode {
 /// payload tries to create — the collision `mutation.duplicate-id` guards against.
 fn colliding_graph() -> MathematicalGraph {
     let payload = payload();
-    MathematicalGraph {
-        directed: true,
-        nodes: vec![MathematicalNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y }],
-        edges: Vec::new(),
-        algorithm: String::new(),
-        algorithm_seed: None,
-    }
+    MathematicalGraph { directed: true, nodes: vec![MathematicalNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y }], edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }
 }
 
 /// 🧩️ Swaps the committed placeholder handles for the digests this plugin mints for the colliding
@@ -135,12 +127,6 @@ async fn declared_outcome_holds() {
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

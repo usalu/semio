@@ -72,11 +72,7 @@ async fn a_colliding_widget_id_is_a_fatal_duplicate_id() {
     assert_eq!(messages[0].level, protocol::Severity::Fatal, "duplicate-id is Fatal — no merge policy may absorb a duplicated widget identity");
     assert_eq!(messages[0].target, vec!["note-alpha".to_string()], "the diagnostic addresses the colliding WIDGET id");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("create", "widget", "create-widget", "CreatedWidget"),
-        "the fixture must be bound to create-widget's own descriptor"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "widget", "create-widget", "CreatedWidget"), "the fixture must be bound to create-widget's own descriptor");
 }
 
 /// ↩️ `create-widget`'s inverse is PAYLOAD-derived, not BASE-derived: it is a `delete-widget` of the
@@ -113,12 +109,6 @@ async fn declared_outcome_holds() {
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

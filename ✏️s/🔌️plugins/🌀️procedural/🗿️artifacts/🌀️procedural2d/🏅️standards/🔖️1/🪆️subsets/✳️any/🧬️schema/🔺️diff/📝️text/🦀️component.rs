@@ -3,8 +3,8 @@
 use crate::artifacts::procedural2d::schema::diff::*;
 use crate::artifacts::procedural2d::schema::Procedural2dArtifact;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -14,26 +14,28 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 //#region 🔖️Collections
 /// 🧬️ Sparse id-keyed collection helper used when constructing a whole `fixture` replacement.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WidgetsDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, Widget)>}
+    pub set: Vec<(usize, Widget)>,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapsesDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(usize, SynapseSpec)>}
+    pub set: Vec<(usize, SynapseSpec)>,
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutDiff {
     pub removed: Vec<String>,
-    pub set: Vec<(String, WidgetLayout)>}
+    pub set: Vec<(String, WidgetLayout)>,
+}
 
 pub(crate) async fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
     for id in &diff.removed {
@@ -71,14 +73,7 @@ async fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, Widge
 }
 
 /// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub async fn apply_fixture_helpers(
-    fixture: &FlowFixture,
-    widgets: &WidgetsDiff,
-    synapses: &SynapsesDiff,
-    layout: &LayoutDiff,
-    camera: Option<&CameraJson>,
-    schema: Option<&str>,
-) -> FlowFixture {
+pub async fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowFixture {
     let mut next = fixture.clone();
     apply_widgets_diff(&mut next.widgets, widgets);
     apply_synapses_diff(&mut next.synapses, synapses);
@@ -182,22 +177,8 @@ impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
-pub async fn diff_fixture_from_helpers(
-    base: &Procedural2dSnapshot,
-    widgets: WidgetsDiff,
-    synapses: SynapsesDiff,
-    layout: LayoutDiff,
-    camera: Option<CameraJson>,
-    schema: Option<String>,
-) -> Procedural2dDiff {
-    let fixture = apply_fixture_helpers(
-        &base.fixture,
-        &widgets,
-        &synapses,
-        &layout,
-        camera.as_ref(),
-        schema.as_deref(),
-    );
+pub async fn diff_fixture_from_helpers(base: &Procedural2dSnapshot, widgets: WidgetsDiff, synapses: SynapsesDiff, layout: LayoutDiff, camera: Option<CameraJson>, schema: Option<String>) -> Procedural2dDiff {
+    let fixture = apply_fixture_helpers(&base.fixture, &widgets, &synapses, &layout, camera.as_ref(), schema.as_deref());
     Procedural2dDiff { fixture: Some(fixture), ..Procedural2dDiff::default() }
 }
 
@@ -217,19 +198,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn diff_absorb_prefers_incoming_fixture_and_scalars() {
         let base = empty_procedural2d_snapshot();
-        let mut first = diff_fixture_from_helpers(
-            &base,
-            WidgetsDiff { removed: vec!["w1".into()], set: vec![] },
-            SynapsesDiff::default(),
-            LayoutDiff::default(),
-            Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }),
-            None,
-        );
-        let second = Procedural2dDiff {
-            show_mode: Some("wire".into()),
-            locale: Some("de-DE".into()),
-            ..Procedural2dDiff::default()
-        };
+        let mut first = diff_fixture_from_helpers(&base, WidgetsDiff { removed: vec!["w1".into()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }), None);
+        let second = Procedural2dDiff { show_mode: Some("wire".into()), locale: Some("de-DE".into()), ..Procedural2dDiff::default() };
         first.absorb(second);
         assert!(first.fixture.is_some());
         assert_eq!(first.show_mode.as_deref(), Some("wire"));
@@ -242,12 +212,7 @@ mod tests {
         let existing_id = widget_id(&snapshot.fixture.widgets[1]).to_string();
         let diff = diff_fixture_from_helpers(
             &snapshot,
-            WidgetsDiff {
-                removed: vec![],
-                set: vec![
-                    (0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }),
-                    (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() }),
-                ]},
+            WidgetsDiff { removed: vec![], set: vec![(0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }), (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() })] },
             SynapsesDiff::default(),
             LayoutDiff::default(),
             None,

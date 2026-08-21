@@ -1,8 +1,8 @@
 //! 🧭️ Architect trace window — the document-wide audit trail.
 
-use crate::editor::architect::chrome::{tree_item, tree_node, tree_section};
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::artifacts::program::ProgramSnapshot;
+use crate::editor::architect::chrome::{tree_item, tree_node, tree_section};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, UiTreeItemNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

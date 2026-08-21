@@ -1,9 +1,9 @@
 //! 📄️ Block 3D play app panel — the document tree: representation catalog + rim-vortex templates,
 //! selectable.
 
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::BLOCK3D_INTERACTION_VORTEX;
-use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -35,11 +35,7 @@ pub async fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> UiN
         .iter()
         .map(|representation| UiTreeItemNode { icon_id: Some("box".into()), ..tree_item_desc(format!("surface:{}", representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone()) })
         .collect();
-    let vortex_items: Vec<UiTreeItemNode> = definition
-        .vortices
-        .iter()
-        .map(|vortex| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("vortex:{}", vortex.id), Label::data(vortex.vortex_kind.clone()), None) })
-        .collect();
+    let vortex_items: Vec<UiTreeItemNode> = definition.vortices.iter().map(|vortex| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("vortex:{}", vortex.id), Label::data(vortex.vortex_kind.clone()), None) }).collect();
     builder
         .section_or_placeholder("block3d-play-document.representations", Some(labels.representations.into()), true, representation_items, labels.no_representations)
         .section_or_placeholder("block3d-play-document.vortices", Some(labels.vortices.into()), true, vortex_items, labels.no_vortices)

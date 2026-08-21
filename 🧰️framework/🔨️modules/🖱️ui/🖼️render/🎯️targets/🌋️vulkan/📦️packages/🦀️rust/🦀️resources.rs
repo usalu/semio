@@ -215,7 +215,17 @@ impl GpuResources {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[allow(clippy::too_many_arguments)]
-    fn upload_texture(&mut self, device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, id: TextureId, width: u32, height: u32, pixels: &[u8]) -> Result<(), VulkanGraphicsError> {
+    fn upload_texture(
+        &mut self,
+        device: &ash::Device,
+        memory_properties: &vk::PhysicalDeviceMemoryProperties,
+        command_pool: vk::CommandPool,
+        queue: vk::Queue,
+        id: TextureId,
+        width: u32,
+        height: u32,
+        pixels: &[u8],
+    ) -> Result<(), VulkanGraphicsError> {
         self.known_textures.insert(id);
         if pixels.is_empty() || width == 0 || height == 0 {
             return Ok(());
@@ -227,7 +237,17 @@ impl GpuResources {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[allow(clippy::too_many_arguments)]
-    fn create_or_update_mesh(&mut self, device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, id: MeshId, positions: &[f32], normals: &[f32], indices: &[u32]) -> Result<(), VulkanGraphicsError> {
+    fn create_or_update_mesh(
+        &mut self,
+        device: &ash::Device,
+        memory_properties: &vk::PhysicalDeviceMemoryProperties,
+        command_pool: vk::CommandPool,
+        queue: vk::Queue,
+        id: MeshId,
+        positions: &[f32],
+        normals: &[f32],
+        indices: &[u32],
+    ) -> Result<(), VulkanGraphicsError> {
         self.known_meshes.insert(id);
         let vertex_count = positions.len() / 3;
         let mut vertices = Vec::with_capacity(vertex_count * 6);
@@ -316,7 +336,16 @@ fn create_staging_buffer(device: &ash::Device, memory_properties: &vk::PhysicalD
 /// bytes_per_pixel`, no row padding) — the same assumption the Metal target's `replaceRegion` makes.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 #[allow(clippy::too_many_arguments)]
-fn create_sampled_image(device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, width: u32, height: u32, format: vk::Format, pixels: &[u8]) -> Result<VulkanImage, VulkanGraphicsError> {
+fn create_sampled_image(
+    device: &ash::Device,
+    memory_properties: &vk::PhysicalDeviceMemoryProperties,
+    command_pool: vk::CommandPool,
+    queue: vk::Queue,
+    width: u32,
+    height: u32,
+    format: vk::Format,
+    pixels: &[u8],
+) -> Result<VulkanImage, VulkanGraphicsError> {
     let (staging_buffer, staging_memory) = create_staging_buffer(device, memory_properties, pixels)?;
 
     let image_info = vk::ImageCreateInfo::default()
@@ -374,19 +403,41 @@ fn create_sampled_image(device: &ash::Device, memory_properties: &vk::PhysicalDe
 
     let subresource = vk::ImageSubresourceRange { aspect_mask: vk::ImageAspectFlags::COLOR, base_mip_level: 0, level_count: 1, base_array_layer: 0, layer_count: 1 };
     let upload = one_time_commands(device, command_pool, queue, |command_buffer| {
-        let to_transfer = vk::ImageMemoryBarrier::default().old_layout(vk::ImageLayout::UNDEFINED).new_layout(vk::ImageLayout::TRANSFER_DST_OPTIMAL).src_queue_family_index(vk::QUEUE_FAMILY_IGNORED).dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED).image(image).subresource_range(subresource).src_access_mask(vk::AccessFlags::empty()).dst_access_mask(vk::AccessFlags::TRANSFER_WRITE);
+        let to_transfer = vk::ImageMemoryBarrier::default()
+            .old_layout(vk::ImageLayout::UNDEFINED)
+            .new_layout(vk::ImageLayout::TRANSFER_DST_OPTIMAL)
+            .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .image(image)
+            .subresource_range(subresource)
+            .src_access_mask(vk::AccessFlags::empty())
+            .dst_access_mask(vk::AccessFlags::TRANSFER_WRITE);
         // 🔓️ SAFETY: `command_buffer` is in the recording state (guaranteed by `one_time_commands`);
         // `image` was just created above and is not referenced by any other in-flight command buffer.
         unsafe { device.cmd_pipeline_barrier(command_buffer, vk::PipelineStageFlags::TOP_OF_PIPE, vk::PipelineStageFlags::TRANSFER, vk::DependencyFlags::empty(), &[], &[], &[to_transfer]) };
 
-        let region = vk::BufferImageCopy::default().buffer_offset(0).buffer_row_length(0).buffer_image_height(0).image_subresource(vk::ImageSubresourceLayers { aspect_mask: vk::ImageAspectFlags::COLOR, mip_level: 0, base_array_layer: 0, layer_count: 1 }).image_offset(vk::Offset3D { x: 0, y: 0, z: 0 }).image_extent(vk::Extent3D { width, height, depth: 1 });
+        let region = vk::BufferImageCopy::default()
+            .buffer_offset(0)
+            .buffer_row_length(0)
+            .buffer_image_height(0)
+            .image_subresource(vk::ImageSubresourceLayers { aspect_mask: vk::ImageAspectFlags::COLOR, mip_level: 0, base_array_layer: 0, layer_count: 1 })
+            .image_offset(vk::Offset3D { x: 0, y: 0, z: 0 })
+            .image_extent(vk::Extent3D { width, height, depth: 1 });
         // 🔓️ SAFETY: `staging_buffer` holds exactly `pixels.len()` tightly-packed bytes (no row
         // padding — `buffer_row_length`/`buffer_image_height` of `0` means "tightly packed", per the
         // spec), matching `region`'s `image_extent`; `image` is in `TRANSFER_DST_OPTIMAL` from the
         // barrier just recorded above.
         unsafe { device.cmd_copy_buffer_to_image(command_buffer, staging_buffer, image, vk::ImageLayout::TRANSFER_DST_OPTIMAL, &[region]) };
 
-        let to_shader_read = vk::ImageMemoryBarrier::default().old_layout(vk::ImageLayout::TRANSFER_DST_OPTIMAL).new_layout(vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL).src_queue_family_index(vk::QUEUE_FAMILY_IGNORED).dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED).image(image).subresource_range(subresource).src_access_mask(vk::AccessFlags::TRANSFER_WRITE).dst_access_mask(vk::AccessFlags::SHADER_READ);
+        let to_shader_read = vk::ImageMemoryBarrier::default()
+            .old_layout(vk::ImageLayout::TRANSFER_DST_OPTIMAL)
+            .new_layout(vk::ImageLayout::SHADER_READ_ONLY_OPTIMAL)
+            .src_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .dst_queue_family_index(vk::QUEUE_FAMILY_IGNORED)
+            .image(image)
+            .subresource_range(subresource)
+            .src_access_mask(vk::AccessFlags::TRANSFER_WRITE)
+            .dst_access_mask(vk::AccessFlags::SHADER_READ);
         // 🔓️ SAFETY: same command buffer, still recording; the copy above is ordered before this
         // barrier by submission order within one command buffer (no reordering across `cmd_*` calls).
         unsafe { device.cmd_pipeline_barrier(command_buffer, vk::PipelineStageFlags::TRANSFER, vk::PipelineStageFlags::FRAGMENT_SHADER, vk::DependencyFlags::empty(), &[], &[], &[to_shader_read]) };
@@ -420,7 +471,14 @@ fn create_sampled_image(device: &ash::Device, memory_properties: &vk::PhysicalDe
 /// 📤️ Staging-buffer-then-copy for a plain data buffer (vertex/index data) — same shape as
 /// `create_sampled_image` without the layout transitions a buffer does not need.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn create_device_local_buffer(device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, usage: vk::BufferUsageFlags, bytes: &[u8]) -> Result<(vk::Buffer, vk::DeviceMemory), VulkanGraphicsError> {
+fn create_device_local_buffer(
+    device: &ash::Device,
+    memory_properties: &vk::PhysicalDeviceMemoryProperties,
+    command_pool: vk::CommandPool,
+    queue: vk::Queue,
+    usage: vk::BufferUsageFlags,
+    bytes: &[u8],
+) -> Result<(vk::Buffer, vk::DeviceMemory), VulkanGraphicsError> {
     let (staging_buffer, staging_memory) = create_staging_buffer(device, memory_properties, bytes)?;
     let size = bytes.len().max(1) as vk::DeviceSize;
     let buffer_info = vk::BufferCreateInfo::default().size(size).usage(usage | vk::BufferUsageFlags::TRANSFER_DST).sharing_mode(vk::SharingMode::EXCLUSIVE);

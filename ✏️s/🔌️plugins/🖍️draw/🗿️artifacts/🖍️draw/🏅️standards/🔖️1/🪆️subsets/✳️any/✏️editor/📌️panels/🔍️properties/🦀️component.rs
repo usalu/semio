@@ -30,10 +30,6 @@ pub async fn definition() -> PanelTabDefinition {
 /// falls through to the schema/utility/layer-count summary until a resolved-selection render path
 /// exists.
 pub async fn render(document: &DrawSnapshot, active_utility: &str) -> UiNode {
-    ui_stack_vertical(vec![
-        ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))),
-        ui_text(Label::data(format!("Utility: {active_utility}"))),
-        ui_text(Label::data(format!("Layers: {}", flatten_draw_layers(&document.layers).len()))),
-    ])
+    ui_stack_vertical(vec![ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))), ui_text(Label::data(format!("Utility: {active_utility}"))), ui_text(Label::data(format!("Layers: {}", flatten_draw_layers(&document.layers).len())))])
 }
 //#endregion 🔖️Render

@@ -114,7 +114,7 @@ pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) ->
 impl Mutation<XmlSnapshot> for XmlMutation {
     type Diff = XmlDiff;
 
-    async fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             XmlMutation::NoMutation => XmlDiff::default(),
             XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -148,10 +148,10 @@ impl Mutation<XmlSnapshot> for XmlMutation {
                 diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attrs_diff), children: None }))
             }
             XmlMutation::SetText { path, text } => diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }),
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &XmlSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &XmlSnapshot) -> Vec<Self> {
         match self {
             XmlMutation::NoMutation => vec![XmlMutation::NoMutation],
             XmlMutation::SetSnapshot { .. } => vec![XmlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -267,10 +267,10 @@ fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
 }
 
 impl OpText for XmlMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_xml_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_xml_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -333,7 +333,7 @@ pub(crate) fn dec_xml_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `XmlMutation`
 /// variant ordinal, in the same 0-7 order `print_xml_mutation`'s own keyword match uses.
 impl protocol::OpBinary for XmlMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             XmlMutation::NoMutation => 0,
             XmlMutation::SetSnapshot { .. } => 1,
@@ -385,11 +385,11 @@ impl protocol::OpBinary for XmlMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(XmlMutation::NoMutation),
             1 => {
@@ -397,30 +397,30 @@ impl protocol::OpBinary for XmlMutation {
                 Ok(XmlMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let has = reader.read_u8().await.map_err(|e| malformed("op declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetDeclaration { declaration })
             }
             3 => {
-                let has = reader.read_u8().await.map_err(|e| malformed("op doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetDoctype { doctype })
             }
             4 => {
                 let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XmlMutation::InsertElement { path, index, node })
             }
             5 => {
                 let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(XmlMutation::RemoveElement { path, index })
             }
             6 => {
                 let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().await.map_err(|e| malformed("op value presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let has = reader.read_u8().map_err(|e| malformed("op value presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(XmlMutation::SetAttribute { path, name, value })
             }

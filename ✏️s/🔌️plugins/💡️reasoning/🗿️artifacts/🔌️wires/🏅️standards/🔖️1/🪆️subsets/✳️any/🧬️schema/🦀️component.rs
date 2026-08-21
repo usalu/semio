@@ -50,23 +50,12 @@ impl Default for WiresArtifact {
 impl WiresArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::wires::WiresSnapshot {
-        crate::artifacts::wires::WiresSnapshot {
-            wires_fixture: self.wires_fixture.clone(),
-            content: self.content.clone(),
-            camera: self.camera.clone(),
-            meta: self.meta.clone(),
-        }
+        crate::artifacts::wires::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::wires::WiresSnapshot) -> Self {
-        Self {
-            wires_fixture: snapshot.wires_fixture,
-            content: snapshot.content,
-            camera: snapshot.camera,
-            meta: snapshot.meta,
-            ..Self::default()
-        }
+        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -130,10 +119,10 @@ pub async fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 /// not dead API (mirrors how `SurfaceDeclaration.mutation_roster` is kept unread, per debt tracked in
 /// `📓️w1-c-report.md` openQuestion 3).
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::wires::schema::diff::WiresDiff;
     use crate::artifacts::wires::schema::mutations::WiresMutation;
     use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
     pub struct WiresBuilderConstruction {
@@ -145,8 +134,12 @@ pub mod derived_construction {
         type Snapshot = WiresSnapshot;
         type Mutation = WiresMutation;
         type Diff = WiresDiff;
-        async fn empty() -> Self { Self { snapshot: crate::artifacts::wires::empty_wires_snapshot(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: crate::artifacts::wires::empty_wires_snapshot(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -157,24 +150,21 @@ pub mod derived_construction {
             let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }

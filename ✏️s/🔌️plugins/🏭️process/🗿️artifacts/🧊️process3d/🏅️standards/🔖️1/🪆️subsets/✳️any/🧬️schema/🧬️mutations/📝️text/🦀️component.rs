@@ -1,18 +1,16 @@
 //! 🔧️ Process3d artifact — OpText/OpBinary codecs + grammar for serializing `Process3dMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
 use crate::artifacts::process3d::schema::mutations::{
-    change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step,
-    move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities, replace_step_measure, replace_stock_solid,
+    change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
+    replace_step_measure, replace_stock_solid,
 };
 use crate::artifacts::process3d::{Capability, Pose, StepOrigin, WorkshopMachine};
 use protocol::OpText;
@@ -103,11 +101,7 @@ impl OpText for Process3dMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -159,7 +153,9 @@ async fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3
         Process3dMutationDsl::RenameStep { id, new_label } => Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id, new_label }),
         Process3dMutationDsl::ChangeStepEnabled { id, new_enabled } => Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id, new_enabled }),
         Process3dMutationDsl::ChangeStepOrigin { id, new_origin } => Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id, new_origin }),
-        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure_json } => Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure: serde_json::from_str(&new_measure_json).expect("valid ProcessMeasure json") }),
+        Process3dMutationDsl::ReplaceStepMeasure { id, new_measure_json } => {
+            Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure: serde_json::from_str(&new_measure_json).expect("valid ProcessMeasure json") })
+        }
         Process3dMutationDsl::ReorderSteps { id, to_index } => Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id, to_index }),
         Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index, machine }),
         Process3dMutationDsl::DeleteMachine { id } => Process3dMutation::DeleteMachine(delete_machine::mutation::DeleteMachine { id }),
@@ -290,7 +286,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn process3d_op_text_round_trips_replace_machine_capabilities_full() {
-        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id: "circularSaw".into(), new_capabilities: circular_saw_machine().capabilities }));
+        store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities {
+            id: "circularSaw".into(),
+            new_capabilities: circular_saw_machine().capabilities,
+        }));
     }
 
     #[semio_framework_async_macros::async_test]

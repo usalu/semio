@@ -3,13 +3,11 @@
 //! already derives `dsl::DslOps` directly (see `🔧️op`), so this file is a pure wrapper, unlike
 //! `jack`'s `📡️spr` which needs a full DSL mirror.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::rewrite::schema::mutations::text::RewriteRuleMutation;
 use protocol::OpBinary;

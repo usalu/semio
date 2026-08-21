@@ -55,11 +55,7 @@ async fn applies_to_committed_after() {
 async fn inverse_restores_before() {
     let base = before();
     let inverse = <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::inverse(&mutation(), &base);
-    assert_eq!(
-        inverse,
-        vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: String::new(), new_algorithm_seed: None })],
-        "update-graph-algorithm inverts to BASE's own (algorithm, seed) pair, got {inverse:?}"
-    );
+    assert_eq!(inverse, vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: String::new(), new_algorithm_seed: None })], "update-graph-algorithm inverts to BASE's own (algorithm, seed) pair, got {inverse:?}");
     let mut snapshot = <MathematicalDiff as protocol::MutationDiff<MathematicalSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::diff(step, &snapshot);

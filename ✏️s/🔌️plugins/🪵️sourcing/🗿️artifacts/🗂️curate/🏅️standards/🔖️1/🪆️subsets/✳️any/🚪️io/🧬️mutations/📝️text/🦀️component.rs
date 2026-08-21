@@ -39,11 +39,7 @@ impl OpText for SourcingMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -79,9 +75,7 @@ async fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMu
     match mutation {
         SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item }),
         SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id }),
-        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => {
-            SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id, new_count })
-        }
+        SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(change_curated_item_count::mutation::ChangeCuratedItemCount { object_id, new_count }),
     }
 }
 

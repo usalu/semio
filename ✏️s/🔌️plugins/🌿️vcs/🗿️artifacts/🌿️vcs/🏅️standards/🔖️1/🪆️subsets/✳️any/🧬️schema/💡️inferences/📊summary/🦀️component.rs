@@ -21,11 +21,7 @@ pub struct VcsSummary {
 /// this document has.
 pub async fn compute_vcs_summary(snapshot: &VcsSnapshot) -> VcsSummary {
     let trimmed = snapshot.notes.trim();
-    VcsSummary {
-        tag_count: snapshot.tags.len() as u32,
-        notes_word_count: trimmed.split_whitespace().count() as u32,
-        has_notes: !trimmed.is_empty(),
-    }
+    VcsSummary { tag_count: snapshot.tags.len() as u32, notes_word_count: trimmed.split_whitespace().count() as u32, has_notes: !trimmed.is_empty() }
 }
 //#endregion 🔖️Summary
 

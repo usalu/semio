@@ -342,14 +342,7 @@ pub mod ipc {
     pub enum ClientMsg {
         Attach { client_id: String },
         Detach,
-        Spawn {
-            session_id: String,
-            cmd: String,
-            args: Vec<String>,
-            cwd: Option<String>,
-            cols: u16,
-            rows: u16,
-        },
+        Spawn { session_id: String, cmd: String, args: Vec<String>, cwd: Option<String>, cols: u16, rows: u16 },
         Input { session_id: String, data: Vec<u8> },
         Resize { session_id: String, cols: u16, rows: u16 },
         Kill { session_id: String },
@@ -457,7 +450,6 @@ pub mod ipc {
         Ok((id.to_string(), payload[2 + id_len..].to_vec()))
     }
 
-
     #[cfg(unix)]
     pub fn connect(root: &Path) -> std::io::Result<std::os::unix::net::UnixStream> {
         std::os::unix::net::UnixStream::connect(socket_path(root))
@@ -553,12 +545,7 @@ pub mod daemon {
 
     impl<T: Write + Send> Supervisor<T> {
         pub fn new(root: &Path) -> std::io::Result<Self> {
-            Ok(Self {
-                sessions: HashMap::new(),
-                clients: Vec::new(),
-                event_log: EventLog::open(root)?,
-                _root: root.to_path_buf(),
-            })
+            Ok(Self { sessions: HashMap::new(), clients: Vec::new(), event_log: EventLog::open(root)?, _root: root.to_path_buf() })
         }
 
         fn broadcast_control(&mut self, msg: &ServerMsg) {
@@ -818,7 +805,6 @@ pub mod daemon {
     }
 }
 // #endregion 🔖️Daemon
-
 
 // #region 🔖️Dispatch
 /// 🚦️ Runs one `semio` invocation and returns its process exit code.

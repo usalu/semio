@@ -11,24 +11,25 @@
 //! routing table: `handle` → `RemodelCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::editor::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
-use crate::editor::remodel::modes::{analyze, capture, model};
-use crate::editor::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
-use crate::editor::remodel::engine::images as remodel_image;
-use crate::editor::remodel::terminology::remodel_labels;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{default_remodel_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, REMODEL_DOCUMENT_SCHEMA};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use crate::editor::remodel::engine::images as remodel_image;
+use crate::editor::remodel::modes::{analyze, capture, model};
+use crate::editor::remodel::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
+use crate::editor::remodel::presence::{RemodelPresence, RemodelPresenceMutation};
+use crate::editor::remodel::terminology::remodel_labels;
 use base64::Engine as _;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation,
+    SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+};
 use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const REMODEL_PLAY_APP_ID: &str = "remodel-play";
@@ -186,13 +187,13 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::editor::remodel::commands::{retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodel::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
 use crate::editor::remodel::commands::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
-use crate::editor::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 use crate::editor::remodel::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodel::commands::{export_qc_report, import_frames, import_video};
+use crate::editor::remodel::commands::{retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
+use crate::editor::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 //#endregion 🔖️Commands
 
 //#region 🔖️ActionBridge
@@ -440,8 +441,7 @@ impl ArtifactEditor for RemodelPlayApp {
                 // through the working-scene cache, honestly `Err` on a cold cache (documented
                 // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
                 // fabricated empty mesh.
-                let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&doc.snapshot.results.mesh.mesh)
-                    .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: composed mesh content not resolvable (cold working-scene cache)".into()))?;
+                let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: composed mesh content not resolvable (cold working-scene cache)".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
             }
@@ -513,7 +513,14 @@ impl ArtifactEditor for RemodelPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    async fn handle(command: &RemodelCommand, doc: &ArtifactView<'_, RemodelSnapshot>, cfg: &ConfigView<'_, RemodelConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &RemodelCommand,
+        doc: &ArtifactView<'_, RemodelSnapshot>,
+        cfg: &ConfigView<'_, RemodelConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -1104,10 +1111,7 @@ mod tests {
         };
         let emit = RemodelPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
         assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
-        let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| {
-            crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation)
-                .expect("valid mutation diff")
-        });
+        let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation).expect("valid mutation diff"));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODEL_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
@@ -1115,10 +1119,7 @@ mod tests {
         let history2 = HistoryView::empty();
         let doc2 = ArtifactView::new(&next, &history2);
         let emit2 = RemodelPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
-        let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| {
-            crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation)
-                .expect("valid mutation diff")
-        });
+        let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodel::op::apply_remodel_mutation(&scene, operation).expect("valid mutation diff"));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
         assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
     }

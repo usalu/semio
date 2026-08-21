@@ -7,7 +7,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::Block5dSnapshot;
 use protocol::Mutation;
@@ -137,8 +136,8 @@ mod tests {
     use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-    use protocol::SemanticMutation;
     use protocol::MutationDiff;
+    use protocol::SemanticMutation;
 
     async fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
@@ -154,7 +153,15 @@ mod tests {
 
     async fn seeded_snapshot() -> Block5dSnapshot {
         let mut base = empty_block5d_snapshot();
-        base.representations.push(BlockRepresentation { id: "r0".into(), name: "r0".into(), mesh_url: None, tags: vec!["lod0".into()], lod: None, description: String::new(), attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }] });
+        base.representations.push(BlockRepresentation {
+            id: "r0".into(),
+            name: "r0".into(),
+            mesh_url: None,
+            tags: vec!["lod0".into()],
+            lod: None,
+            description: String::new(),
+            attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }],
+        });
         base.grip_kinds.push(Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.link".into() });
         base.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.3, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.3 });
         base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
@@ -360,7 +367,8 @@ mod tests {
         assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())); // delete
         assert_missing_target_is_error(&base, &remove_author("missing".into())); // remove
         assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())); // change/set/update
-        assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0)); // move/drag/rotate/scale/resize
+        assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0));
+        // move/drag/rotate/scale/resize
     }
 
     #[semio_framework_async_macros::async_test]

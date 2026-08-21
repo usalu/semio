@@ -932,7 +932,7 @@ pub struct JpgDiff {
 }
 
 impl MutationDiff<JpgSnapshot> for JpgDiff {
-    async fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
+    fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
         validate_jpg_frame(base.frame.as_ref(), self.frame.as_ref())?;
         if let Some(quant) = &self.quant_tables {
             validate_jpg_quant_tables(&base.quant_tables, quant)?;
@@ -998,7 +998,7 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars
     /// (incl. every tri-state): LWW. `frame`: `absorb_frame`. `quant_tables`/`huffman_tables`:
     /// stable-key merge, no index-transport. `other_segments`: position-transported merge.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -1181,15 +1181,15 @@ where
 impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's/
     /// png's: the state delta from `self.apply(base)` back to `base`.
-    async fn inverse(&self, base: &JpgSnapshot) -> Self {
-        let mutated = self.apply(base).await.unwrap();
-        Self::between(&mutated, base).await
+    fn inverse(&self, base: &JpgSnapshot) -> Self {
+        let mutated = self.apply(base).unwrap();
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): id-keyed matching for `quant_tables`/
     /// `huffman_tables`/`frame.components`, position-pairwise `0..min(len)` for
     /// `other_segments`, tri-state comparison for every optional scalar.
-    async fn between(base: &JpgSnapshot, other: &JpgSnapshot) -> Self {
+    fn between(base: &JpgSnapshot, other: &JpgSnapshot) -> Self {
         let qd = between_quant_tables(&base.quant_tables, &other.quant_tables);
         let hd = between_huffman_tables(&base.huffman_tables, &other.huffman_tables);
         Self {
@@ -1212,7 +1212,7 @@ impl DiffAlgebra<JpgSnapshot> for JpgDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self == &Self::default()
     }
 }
@@ -2270,10 +2270,10 @@ fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
 }
 
 impl protocol::DiffCodec for JpgDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_jpg_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_jpg_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u16le | <present fields, in declaration
@@ -2286,7 +2286,7 @@ impl protocol::DiffCodec for JpgDiff {
     /// the real, non-recursive binary codecs in `§ValueBinaryCodecs`/`§DiffValueBinaryCodecs`
     /// above — no opaque tail anywhere in THIS frame (unlike xml's `XmlNodeDiff`, none of jpg's
     /// diff payloads are self-recursive).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u16 = 0;
         if self.width.is_some() {
             flags |= 1 << 0;
@@ -2389,24 +2389,24 @@ impl protocol::DiffCodec for JpgDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u16_le().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u16_le().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
 
-        let width = if flags & (1 << 0) != 0 { Some(reader.read_varint_u64().await.map_err(|e| malformed("diff width", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
-        let height = if flags & (1 << 1) != 0 { Some(reader.read_varint_u64().await.map_err(|e| malformed("diff height", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
+        let width = if flags & (1 << 0) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff width", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
+        let height = if flags & (1 << 1) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff height", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
         let pixels = if flags & (1 << 2) != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let re_encode_quality = if flags & (1 << 3) != 0 { Some(read_opt(&mut reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).map_err(|e| malformed("diff re-encode-quality", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let jfif_version = if flags & (1 << 4) != 0 { Some(dec_version_bin(&mut reader).map_err(|e| malformed("diff jfif-version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let jfif_density_units = if flags & (1 << 5) != 0 { Some(dec_density_units_bin(&mut reader).map_err(|e| malformed("diff jfif-density-units", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let jfif_x_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().await.map_err(|e| malformed("diff jfif-x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
-        let jfif_y_density = if flags & (1 << 7) != 0 { Some(reader.read_varint_u64().await.map_err(|e| malformed("diff jfif-y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
+        let jfif_x_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
+        let jfif_y_density = if flags & (1 << 7) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
         let jfif_thumbnail = if flags & (1 << 8) != 0 { Some(read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("diff jfif-thumbnail", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let frame = if flags & (1 << 9) != 0 { Some(dec_frame_change_bin(&mut reader).map_err(|e| malformed("diff frame", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let sof_marker = if flags & (1 << 10) != 0 { Some(reader.read_u8().await.map_err(|e| malformed("diff sof-marker", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
-        let arithmetic = if flags & (1 << 11) != 0 { Some(reader.read_u8().await.map_err(|e| malformed("diff arithmetic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0) } else { None };
+        let sof_marker = if flags & (1 << 10) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff sof-marker", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
+        let arithmetic = if flags & (1 << 11) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff arithmetic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0) } else { None };
         let quant_tables = if flags & (1 << 12) != 0 { Some(dec_quant_tables_diff_bin(&mut reader).map_err(|e| malformed("diff quant-tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let huffman_tables = if flags & (1 << 13) != 0 { Some(dec_huffman_tables_diff_bin(&mut reader).map_err(|e| malformed("diff huffman-tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let restart_interval = if flags & (1 << 14) != 0 { Some(read_opt(&mut reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("diff restart-interval", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

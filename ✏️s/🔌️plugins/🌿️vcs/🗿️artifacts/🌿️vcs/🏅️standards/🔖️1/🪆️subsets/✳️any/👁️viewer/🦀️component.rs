@@ -80,14 +80,7 @@ impl ArtifactViewer for VcsViewer {
 
 //#region 🔖️Manifest
 pub async fn create_vcs_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(VCS_DIALECT)
-        .document(["semio", "vcs"])
-        .icon_id("git-branch")
-        .mode_def(view::definition())
-        .default_mode_id(view::VCS_VIEW_MODE_VIEW)
-        .window_kind_def(history::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(VCS_DIALECT).document(["semio", "vcs"]).icon_id("git-branch").mode_def(view::definition()).default_mode_id(view::VCS_VIEW_MODE_VIEW).window_kind_def(history::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

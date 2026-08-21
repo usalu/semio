@@ -76,14 +76,7 @@ impl ArtifactViewer for FormsViewer {
 
 //#region 🔖️Manifest
 pub async fn create_forms_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(FORMS_DIALECT)
-        .document(["semio", "forms"])
-        .icon_id("forms")
-        .mode_def(view::definition())
-        .default_mode_id(view::FORMS_VIEW_MODE_VIEW)
-        .window_kind_def(try_wizard::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(FORMS_DIALECT).document(["semio", "forms"]).icon_id("forms").mode_def(view::definition()).default_mode_id(view::FORMS_VIEW_MODE_VIEW).window_kind_def(try_wizard::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

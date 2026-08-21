@@ -1,12 +1,12 @@
 //! 🖼️ 🖼️ Raster play app commands command — `patch-layers`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::artifacts::raster::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
-use crate::artifacts::raster::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, rename_layer, resize_layer};
 use crate::artifacts::raster::mutations::move_layer as spatial_move_layer;
+use crate::artifacts::raster::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, rename_layer, resize_layer};
 use crate::artifacts::raster::op::RasterMutation;
+use crate::artifacts::raster::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -69,15 +69,6 @@ async fn patch_value_json(value: &str) -> Value {
     serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️Shared
-
-
-
-
-
-
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "patch-layers")]

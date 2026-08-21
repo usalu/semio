@@ -10,23 +10,23 @@
 //! `TrinityRewriteCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
 use crate::artifacts::jack::{Camera, JackSnapshot, Node, PropertyValue};
-use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
+use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::{LayoutPoint, RewriteSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITE_DIALECT};
 use crate::editor::rewrite::config::{RewriteConfig, RewriteConfigMutation};
 use crate::editor::rewrite::presence::{RewritePresence, RewritePresenceMutation};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaType, NodeGraphViewport, PanelGroup, SurfaceKind, UiNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, DomainTopology, TopologyNode, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, NodeGraphViewport, PanelGroup, SelectionMethod,
+    SelectionMode, SelectionSpec, SurfaceKind, TopologyNode, UiNode, WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 // 🩹️ `InteractionView` is not re-exported at `semio_framework_plugin`'s crate root (unlike
 // `ConfigView`/`ArtifactView`/`DraftView`) — only reachable through its owning `app` submodule
 // (itself `pub mod`). Flagged as a likely framework oversight, not fixed here (framework file).
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
 use std::collections::{BTreeMap, HashMap};
+use store::EngineHandles;
 use store::{ArtifactDsl, ArtifactPack};
 
 //#region 🔖️Constants
@@ -173,16 +173,7 @@ async fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::schema::Lhs
         nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0, rule_layout));
         edges.push(crate::artifacts::jack::Edge { id: "lhs-match-where".into(), kind: "rewrite.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "lhs".into(),
-        Some("nakagin".into()),
-        crate::artifacts::jack::Manifest::nakagin_default(),
-        Camera { x: 0.0, y: 0.0, zoom: 1.0 },
-        nodes,
-        edges,
-        None,
-    )
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
 async fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
@@ -221,16 +212,7 @@ async fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, La
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
-    JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "rhs".into(),
-        Some("nakagin".into()),
-        crate::artifacts::jack::Manifest::nakagin_default(),
-        Camera { x: 0.0, y: 0.0, zoom: 1.0 },
-        nodes,
-        edges,
-        None,
-    )
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
 pub(crate) async fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
@@ -378,11 +360,7 @@ impl protocol::OpText for TrinityRewriteCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -402,11 +380,7 @@ impl protocol::OpBinary for TrinityRewriteCommand {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 0,
-            detail: format!("keyword {keyword:?} is not a declared variant"),
-        })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -424,19 +398,11 @@ impl protocol::OpBinary for TrinityRewriteCommand {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed {
-            what: "op variant",
-            offset: 1,
-            detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()),
-        })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "op record",
-            offset: reader.position() as u64,
-            detail: error.to_string(),
-        })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
@@ -514,7 +480,10 @@ impl ArtifactEditor for TrinityRewritePlayApp {
                 let fixture_json = after_fixture_json(doc.snapshot);
                 let fixture = JackSnapshot::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let bytes = ArtifactPack::encode_pack(&fixture);
-                Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media {
+                    media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
+                    payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
@@ -543,7 +512,14 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         }
     }
 
-    async fn handle(command: &TrinityRewriteCommand, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &TrinityRewriteCommand,
+        doc: &ArtifactView<'_, RewriteSnapshot>,
+        cfg: &ConfigView<'_, RewriteConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, Fault> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         match command {
@@ -772,7 +748,7 @@ mod tests {
     use super::*;
     use crate::artifacts::rewrite::schema::Rhs;
     use protocol::{OpBinary, OpText};
-    use semio_framework_plugin::{testkit, App, EditorApp, PluginApp, VcsArtifactApp, Locale, Terminology, ViewModel};
+    use semio_framework_plugin::{testkit, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
 
     /// 🎫️ See `jack`'s `trinity_jack_manifest_for_testkit` doc comment for why this wrapper exists
     /// (SDK gap, `testkit::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
@@ -860,7 +836,9 @@ mod tests {
     async fn set_viewport_writes_before_pane_config_camera_without_artifact_mutations() {
         let mut app = new_app();
         let before_state = app.snapshot().unwrap();
-        let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
+        let result = app
+            .dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local"))
+            .expect("viewport");
         assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.snapshot().unwrap(), before_state, "document is untouched by a viewport pan");
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
@@ -908,8 +886,9 @@ mod tests {
         let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 2);
         select_graph(&mut app, &["rhs-set-1"]);
-        let result =
-            app.dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local")).expect("delete selection");
+        let result = app
+            .dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
+            .expect("delete selection");
         assert!(!result.mutations.is_empty());
         let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);

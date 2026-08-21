@@ -154,7 +154,7 @@ pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &
 impl Mutation<SemioValueSnapshot> for SemioValueMutation {
     type Diff = SemioValueTreeDiff;
 
-    async fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioValueMutation::NoMutation => SemioValueTreeDiff::default(),
             SemioValueMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -215,12 +215,12 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
                     SemioValueTreeDiff::default()
                 }
             }
-        }).await
+        })
     }
 
     /// ↩️ Handcrafted mutation-level inverse, key/index/id-aware — reads the pre-mutation `base`
     /// state to recover the exact undo.
-    async fn inverse(&self, base: &SemioValueSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioValueSnapshot) -> Vec<Self> {
         match self {
             SemioValueMutation::NoMutation => vec![SemioValueMutation::NoMutation],
             SemioValueMutation::SetSnapshot { .. } => vec![SemioValueMutation::SetSnapshot { snapshot: base.clone() }],
@@ -369,10 +369,10 @@ fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, String> {
 }
 
 impl OpText for SemioValueMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_value_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_value_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -446,7 +446,7 @@ fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Se
 /// is real LEB128-varint-framed binary (never text-as-bytes) — same treatment json's own
 /// `JsonMutation::encode_op`/`decode_op` uses.
 impl protocol::OpBinary for SemioValueMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             SemioValueMutation::NoMutation => 0,
             SemioValueMutation::SetSnapshot { .. } => 1,
@@ -495,11 +495,11 @@ impl protocol::OpBinary for SemioValueMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(SemioValueMutation::NoMutation),
             1 => {
@@ -524,13 +524,13 @@ impl protocol::OpBinary for SemioValueMutation {
             }
             5 => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(SemioValueMutation::InsertListItem { path, index, value })
             }
             6 => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(SemioValueMutation::RemoveListItem { path, index })
             }
             7 => {

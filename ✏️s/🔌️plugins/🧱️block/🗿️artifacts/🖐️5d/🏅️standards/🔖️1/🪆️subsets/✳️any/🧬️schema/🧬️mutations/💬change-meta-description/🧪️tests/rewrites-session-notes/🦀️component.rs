@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block5d::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
 use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::artifacts::block5d::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
 use crate::artifacts::block5d::Block5dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -31,7 +31,11 @@ async fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_block5d_mutation(&mut snapshot, &mutation()).expect("change-meta-description applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-meta-description/rewrites-session-notes: applied state differs from committed after-snapshot");
-    assert_eq!((snapshot.meta.description.as_str(), snapshot.part_kind.description.as_str()), ("Reviewed during the fixture pass.", "One habitation capsule."), "change-meta-description must rewrite the session note, never the kind's own description");
+    assert_eq!(
+        (snapshot.meta.description.as_str(), snapshot.part_kind.description.as_str()),
+        ("Reviewed during the fixture pass.", "One habitation capsule."),
+        "change-meta-description must rewrite the session note, never the kind's own description"
+    );
 }
 
 /// ↩️ Applying the mutation then its inverse restores `before` exactly.
@@ -106,7 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::block5d::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block5d::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::block5d::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-meta-description/rewrites-session-notes: committed diff did not carry before to after");
 }

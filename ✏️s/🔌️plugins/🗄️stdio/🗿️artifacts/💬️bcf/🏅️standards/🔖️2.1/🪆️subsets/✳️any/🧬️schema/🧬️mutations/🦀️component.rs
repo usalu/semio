@@ -136,7 +136,7 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
 impl Mutation<BcfSnapshot> for BcfMutation {
     type Diff = BcfDiff;
 
-    async fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BcfMutation::NoMutation => BcfDiff::default(),
             BcfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -172,7 +172,7 @@ impl Mutation<BcfSnapshot> for BcfMutation {
         })
     }
 
-    async fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {
         match self {
             BcfMutation::NoMutation => vec![BcfMutation::NoMutation],
             BcfMutation::SetSnapshot { .. } => vec![BcfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -349,10 +349,10 @@ fn parse_bcf_mutation(line: &str) -> Result<BcfMutation, String> {
 }
 
 impl protocol::OpText for BcfMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_bcf_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_bcf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -398,7 +398,7 @@ fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, 
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `BcfMutation` variant ordinal, in the same 0-13 declaration order `enum BcfMutation` above uses.
 impl protocol::OpBinary for BcfMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             BcfMutation::NoMutation => 0,
             BcfMutation::SetSnapshot { .. } => 1,
@@ -490,11 +490,11 @@ impl protocol::OpBinary for BcfMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(BcfMutation::NoMutation),
             1 => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
@@ -507,7 +507,7 @@ impl protocol::OpBinary for BcfMutation {
                 let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let status = read_opt_str_bin(&mut reader).map_err(|e| malformed("op status", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let priority = read_opt_str_bin(&mut reader).map_err(|e| malformed("op priority", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let labels = if reader.read_u8().await.map_err(|e| malformed("op labels presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 let creation_date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_date", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author })
@@ -528,7 +528,7 @@ impl protocol::OpBinary for BcfMutation {
                 let date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op date", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op author", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let text = read_opt_str_bin(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let viewpoint_ref = if reader.read_u8().await.map_err(|e| malformed("op viewpoint_ref presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 {
+                let viewpoint_ref = if reader.read_u8().map_err(|e| malformed("op viewpoint_ref presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 {
                     Some(read_opt_str_bin(&mut reader).map_err(|e| malformed("op viewpoint_ref", semio_framework_plugin::resolve_ready(reader.position()), e))?)
                 } else {
                     None
@@ -548,20 +548,20 @@ impl protocol::OpBinary for BcfMutation {
             11 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let camera = if reader.read_u8().await.map_err(|e| malformed("op camera presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointCamera { topic_guid, guid, camera })
             }
             12 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let components =
-                    if reader.read_u8().await.map_err(|e| malformed("op components presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                    if reader.read_u8().map_err(|e| malformed("op components presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointComponents { topic_guid, guid, components })
             }
             13 => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let snapshot = if reader.read_u8().await.map_err(|e| malformed("op snapshot presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot })
             }
             other => Err(malformed("op tag", 1, format!("unknown BcfMutation tag {other}"))),

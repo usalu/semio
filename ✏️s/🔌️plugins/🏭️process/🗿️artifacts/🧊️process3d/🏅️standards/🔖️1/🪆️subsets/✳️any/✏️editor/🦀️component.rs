@@ -12,6 +12,8 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
+use crate::artifacts::process3d::op::Process3dMutation;
+use crate::artifacts::process3d::{MachineCatalog, MachineCatalogs, Process3dSnapshot};
 use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::modes::edit;
@@ -19,13 +21,11 @@ use crate::editor::process3d::modes::edit::windows::workpiece;
 use crate::editor::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
-use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::{MachineCatalog, MachineCatalogs, Process3dSnapshot};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
-    DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode,
-    NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu,
+    MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use serde_json::Value;
 use std::collections::HashMap;

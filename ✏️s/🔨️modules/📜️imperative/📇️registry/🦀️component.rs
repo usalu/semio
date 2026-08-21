@@ -47,13 +47,7 @@ static DEFAULT_CONTRIBUTIONS: OnceLock<fn() -> String> = OnceLock::new();
 static BOOTSTRAPPED: OnceLock<()> = OnceLock::new();
 
 async fn registry_state() -> &'static Mutex<RegistryState> {
-    REGISTRY_STATE.get_or_init(|| {
-        Mutex::new(RegistryState {
-            registry: Registry::new(),
-            catalogue_sections: Vec::new(),
-            contributions_json: "[]".into(),
-        })
-    })
+    REGISTRY_STATE.get_or_init(|| Mutex::new(RegistryState { registry: Registry::new(), catalogue_sections: Vec::new(), contributions_json: "[]".into() }))
 }
 
 async fn native_registrars() -> &'static Mutex<HashMap<String, NativeRegistrar>> {
@@ -101,11 +95,7 @@ async fn register_manifest_operators(registry: &mut Registry, plugin_id: &str, m
         }
         let extension_id = plugin_id.to_string();
         let operator_id = info.id.clone();
-        registry.register_operator(
-            info.clone(),
-            vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
-            &[],
-        );
+        registry.register_operator(info.clone(), vec![OperatorImpl { schemas: vec![], operator: Box::new(ContributedExtensionStub { extension_id, operator_id }) }], &[]);
     }
 }
 

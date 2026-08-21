@@ -138,10 +138,7 @@ impl Scheduler {
         for wave in &spec.waves {
             for task in &wave.tasks {
                 let blocked = !task.depends_on.is_empty();
-                statuses.insert(
-                    task.id.clone(),
-                    TaskStatus { state: if blocked { TaskState::Blocked } else { TaskState::Pending }, attempts: 0, message: None },
-                );
+                statuses.insert(task.id.clone(), TaskStatus { state: if blocked { TaskState::Blocked } else { TaskState::Pending }, attempts: 0, message: None });
                 if !blocked {
                     ready.push_back(task.id.clone());
                 }
@@ -195,12 +192,7 @@ impl Scheduler {
             status.state = if ok { TaskState::Succeeded } else { TaskState::Failed };
             status.message = message;
         }
-        let succeeded: HashSet<String> = self
-            .statuses
-            .iter()
-            .filter(|(_, status)| status.state == TaskState::Succeeded)
-            .map(|(id, _)| id.clone())
-            .collect();
+        let succeeded: HashSet<String> = self.statuses.iter().filter(|(_, status)| status.state == TaskState::Succeeded).map(|(id, _)| id.clone()).collect();
         for wave in &self.spec.waves {
             for task in &wave.tasks {
                 if self.statuses.get(&task.id).map(|status| status.state) == Some(TaskState::Blocked) && task.depends_on.iter().all(|dependency| succeeded.contains(dependency)) {
@@ -236,7 +228,11 @@ trait AgentRunner: Send {
 }
 
 fn probe_command() -> &'static str {
-    if cfg!(windows) { "where" } else { "which" }
+    if cfg!(windows) {
+        "where"
+    } else {
+        "which"
+    }
 }
 
 fn executable_on_path(binary: &str) -> bool {
@@ -246,8 +242,12 @@ fn executable_on_path(binary: &str) -> bool {
 struct CursorAgent;
 
 impl AgentRunner for CursorAgent {
-    fn id(&self) -> &str { "cursor-agent" }
-    fn available(&self) -> bool { executable_on_path("cursor-agent") }
+    fn id(&self) -> &str {
+        "cursor-agent"
+    }
+    fn available(&self) -> bool {
+        executable_on_path("cursor-agent")
+    }
     fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
         Command::new("cursor-agent").arg("-p").arg(prompt).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
     }
@@ -256,8 +256,12 @@ impl AgentRunner for CursorAgent {
 struct ClaudeAgent;
 
 impl AgentRunner for ClaudeAgent {
-    fn id(&self) -> &str { "claude" }
-    fn available(&self) -> bool { executable_on_path("claude") }
+    fn id(&self) -> &str {
+        "claude"
+    }
+    fn available(&self) -> bool {
+        executable_on_path("claude")
+    }
     fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
         Command::new("claude").args(["-p", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
     }
@@ -266,8 +270,12 @@ impl AgentRunner for ClaudeAgent {
 struct CodexAgent;
 
 impl AgentRunner for CodexAgent {
-    fn id(&self) -> &str { "codex" }
-    fn available(&self) -> bool { executable_on_path("codex") }
+    fn id(&self) -> &str {
+        "codex"
+    }
+    fn available(&self) -> bool {
+        executable_on_path("codex")
+    }
     fn spawn(&self, prompt: &str, cwd: &Path) -> std::io::Result<std::process::Child> {
         Command::new("codex").args(["exec", prompt]).current_dir(cwd).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()
     }
@@ -319,9 +327,15 @@ mod tests {
     struct UnavailableRunner;
 
     impl AgentRunner for UnavailableRunner {
-        fn id(&self) -> &str { "unavailable" }
-        fn available(&self) -> bool { false }
-        fn spawn(&self, _: &str, _: &Path) -> std::io::Result<std::process::Child> { unreachable!() }
+        fn id(&self) -> &str {
+            "unavailable"
+        }
+        fn available(&self) -> bool {
+            false
+        }
+        fn spawn(&self, _: &str, _: &Path) -> std::io::Result<std::process::Child> {
+            unreachable!()
+        }
     }
 
     #[test]

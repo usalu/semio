@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ResizeGrip3d` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::diff::{Block5dGripsDelta, Block5dGripsPatch, Block5dGripsPatchEntry};
+use crate::artifacts::block5d::Block5dGripTemplate;
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dGripTemplate};
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::ResizeGrip3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
@@ -13,6 +13,9 @@ pub async fn diff(payload: &super::mutation::ResizeGrip3d, base: &Block5dSnapsho
     if replacement == *existing {
         return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block5dDiff { grips: Some(Block5dGripsDelta { patched: vec![Block5dGripsPatchEntry { id: payload.id.clone(), patch: Block5dGripsPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff {
+        grips: Some(Block5dGripsDelta { patched: vec![Block5dGripsPatchEntry { id: payload.id.clone(), patch: Block5dGripsPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

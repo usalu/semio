@@ -12,7 +12,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::sequence::schema::diff::*;
 
-
 //#region 🔖️Apply
 impl SequenceDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
@@ -82,7 +81,6 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
     }
 }
 //#endregion 🔖️Apply
-
 
 //#region 🧪️Tests
 #[cfg(test)]

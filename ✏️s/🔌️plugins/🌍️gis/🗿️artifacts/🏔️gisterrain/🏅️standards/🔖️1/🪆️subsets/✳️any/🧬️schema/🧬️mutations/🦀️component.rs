@@ -4,7 +4,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::schema::mutations::{change_exaggeration, change_imported_features};
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
@@ -38,10 +37,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_exaggeration_and_change_imported_features_invert_to_the_prior_field_value() {
         let snapshot = GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() };
-        assert_eq!(
-            GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 9.0 }).inverse(&snapshot),
-            vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 1.5 })]
-        );
+        assert_eq!(GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 9.0 }).inverse(&snapshot), vec![GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 1.5 })]);
         assert_eq!(
             GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() }).inverse(&snapshot),
             vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "null".into() })]
@@ -67,10 +63,7 @@ mod tests {
 }
 //#endregion 🔹Tests
 
-pub async fn apply_gis_terrain_mutation(
-    snapshot: &mut GisTerrainSnapshot,
-    mutation: &GisTerrainMutation,
-) -> protocol::MutationApplyResult<()> {
+pub async fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) -> protocol::MutationApplyResult<()> {
     let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
     // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
     // every mutation so the composed child handle never drifts from what

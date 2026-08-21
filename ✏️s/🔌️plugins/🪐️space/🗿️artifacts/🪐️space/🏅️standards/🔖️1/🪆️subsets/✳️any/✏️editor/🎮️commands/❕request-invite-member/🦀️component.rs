@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct RequestInviteMember {}
 
 pub async fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(129),  dialog_id: "inviteMember".into(), args: None }))
+    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(129), dialog_id: "inviteMember".into(), args: None }))
 }
 
 //#region 🧪️Tests
@@ -22,7 +22,6 @@ pub async fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpa
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn request_invite_member_opens_the_dialog() {

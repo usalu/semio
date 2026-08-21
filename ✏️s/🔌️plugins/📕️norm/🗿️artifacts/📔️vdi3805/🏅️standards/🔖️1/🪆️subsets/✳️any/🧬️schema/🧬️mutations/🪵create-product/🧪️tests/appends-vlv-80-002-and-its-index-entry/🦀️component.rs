@@ -36,7 +36,11 @@ async fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.catalog.products.len(), 2, "create-product/appends-vlv-80-002-and-its-index-entry: the catalogue must hold both products");
     assert_eq!(snapshot.catalog.products[1].identity.article_number, "VLV-80-002", "create-product/appends-vlv-80-002-and-its-index-entry: a null insert index must append, not prepend");
-    assert_eq!(snapshot.index.entries.iter().find(|entry| entry.product_id == "VLV-80-002").and_then(|entry| entry.dn), Some(80), "create-product/appends-vlv-80-002-and-its-index-entry: the index entry must carry dn 80 extracted from the configuration");
+    assert_eq!(
+        snapshot.index.entries.iter().find(|entry| entry.product_id == "VLV-80-002").and_then(|entry| entry.dn),
+        Some(80),
+        "create-product/appends-vlv-80-002-and-its-index-entry: the index entry must carry dn 80 extracted from the configuration"
+    );
     assert_eq!(snapshot, expected_after(), "create-product/appends-vlv-80-002-and-its-index-entry: applied state differs from committed after-snapshot");
 }
 
@@ -76,11 +80,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

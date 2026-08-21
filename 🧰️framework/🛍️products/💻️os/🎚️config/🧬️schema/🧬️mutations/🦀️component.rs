@@ -29,17 +29,17 @@ impl Mutation<OpeningPreferences> for OpeningConfigMutation {
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): both leaves already return `MutationOutcome<OpeningPreferences>` (`Self::Diff`
     /// here IS `OpeningPreferences`, so no `.map` needed), forwarded as-is.
-    async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         match self {
-            OpeningConfigMutation::SetDefaultApp(op) => op.diff(base).await,
-            OpeningConfigMutation::ClearDefaultApp(op) => op.diff(base).await,
+            OpeningConfigMutation::SetDefaultApp(op) => super::set_default_app::diff::diff(op, base),
+            OpeningConfigMutation::ClearDefaultApp(op) => super::clear_default_app::diff::diff(op, base),
         }
     }
 
-    async fn inverse(&self, base: &OpeningPreferences) -> Vec<Self> {
+    fn inverse(&self, base: &OpeningPreferences) -> Vec<Self> {
         match self {
-            OpeningConfigMutation::SetDefaultApp(op) => op.inverse(base).await,
-            OpeningConfigMutation::ClearDefaultApp(op) => op.inverse(base).await,
+            OpeningConfigMutation::SetDefaultApp(op) => super::set_default_app::inverse::inverse(op, base),
+            OpeningConfigMutation::ClearDefaultApp(op) => super::clear_default_app::inverse::inverse(op, base),
         }
     }
 }
@@ -51,25 +51,25 @@ impl Mutation<OpeningPreferences> for OpeningConfigMutation {
 // (all external, `📡️replication`) are async only because that crate's own universal-async pass made
 // them so — none of this does real I/O (pure struct diffing), so `block_on` never actually parks.
 pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) -> protocol::MutationApplyResult<()> {
-    *snapshot = semio_framework_async::block_on(async { mutation.diff(snapshot).await.diff().await.apply(snapshot).await })?;
+    *snapshot = semio_framework_async::block_on(async { mutation.diff(snapshot).diff().apply(snapshot) })?;
     Ok(())
 }
 
 pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &OpeningConfigMutation) -> Vec<OpeningConfigMutation> {
-    semio_framework_async::block_on(mutation.inverse(snapshot))
+    mutation.inverse(snapshot)
 }
 
-pub use super::set_default_app::mutation::{set_default_app, SetDefaultApp};
 pub use super::clear_default_app::mutation::{clear_default_app, ClearDefaultApp};
+pub use super::set_default_app::mutation::{set_default_app, SetDefaultApp};
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use super::*;
     /// 🪪️ Declared at the schema level, so from inside this test module it needs one more `super`
     /// than the file-level `use super::super::OpeningPreferences;` above (see this file's header note).
     use super::super::super::DefaultApp;
+    use super::*;
     use semio_framework::{AppRef, AppRole, ArtifactDialect};
 
     #[semio_framework_async_macros::async_test]

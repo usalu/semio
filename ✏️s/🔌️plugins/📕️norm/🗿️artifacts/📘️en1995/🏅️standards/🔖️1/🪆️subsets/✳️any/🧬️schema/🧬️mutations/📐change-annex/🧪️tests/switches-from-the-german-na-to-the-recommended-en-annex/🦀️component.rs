@@ -81,7 +81,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an enum cannot be non-finite, so `change-annex` carries only an equality guard, and `AnnexChoice::En` differs from the committed `De`");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an enum cannot be non-finite, so `change-annex` carries only an equality guard, and `AnnexChoice::En` differs from the committed `De`"
+    );
     assert!(produced.messages().is_empty(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: an accepted change-annex emits no diagnostics at all");
 }
 

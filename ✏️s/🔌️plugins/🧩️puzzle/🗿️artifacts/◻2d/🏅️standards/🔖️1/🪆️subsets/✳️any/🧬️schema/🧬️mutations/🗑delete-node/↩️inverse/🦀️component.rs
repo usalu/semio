@@ -14,9 +14,20 @@ pub async fn inverse(payload: &super::mutation::DeleteNode, base: &Puzzle2dSnaps
     let mut mutations = vec![crate::artifacts::puzzle2d::mutations::create_node::mutation::create_node(node.clone(), index)];
     for edge in base.edges.iter().filter(|edge| handle_ids.contains(&edge.source.as_str()) || handle_ids.contains(&edge.target.as_str())) {
         mutations.push(crate::artifacts::puzzle2d::mutations::connect_handles::mutation::connect_handles(
-            edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(),
-            edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y,
-            edge.source_tip.clone(), edge.target_tip.clone(),
+            edge.id.clone(),
+            edge.source.clone(),
+            edge.target.clone(),
+            edge.edge_kind.clone(),
+            edge.gap,
+            edge.shift,
+            edge.rise,
+            edge.rotation,
+            edge.turn,
+            edge.tilt,
+            edge.x,
+            edge.y,
+            edge.source_tip.clone(),
+            edge.target_tip.clone(),
         ));
     }
     mutations

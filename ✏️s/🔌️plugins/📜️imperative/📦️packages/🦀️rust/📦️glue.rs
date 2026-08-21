@@ -17,8 +17,8 @@
 #![allow(unexpected_cfgs)]
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault>`, the exact signature
@@ -27,7 +27,6 @@ extern crate semio_framework_schema as schema;
 // the trait impl itself (only on the free functions the taxonomy split creates), so this is a pure
 // artefact of decomposition.
 #[allow(clippy::result_large_err)]
-
 //#region 🗿️Artifacts
 #[path = "."]
 pub mod artifacts {
@@ -55,20 +54,20 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs"]
+                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod topology {
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️component.rs"]
@@ -92,54 +91,54 @@ pub mod artifacts {
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
-                                pub mod text;
                                 #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs"]
                                 pub mod binary;
+                                #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs"]
+                                pub mod text;
                                 #[path = "."]
                                 pub mod create_step {
-                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/rejects-a-duplicate-step-id-at-the-root-path/🦀️component.rs"]
                                     mod tests_rejects_a_duplicate_step_id_at_the_root_path;
                                 }
                                 #[path = "."]
                                 pub mod delete_step {
-                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/rejects-a-root-step-id-addressed-inside-a-branch-body/🦀️component.rs"]
                                     mod tests_rejects_a_root_step_id_addressed_inside_a_branch_body;
                                 }
                                 #[path = "."]
                                 pub mod reorder_steps {
-                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/warns-that-an-over-clamped-index-leaves-the-tail-step-in-place/🦀️component.rs"]
                                     mod tests_warns_that_an_over_clamped_index_leaves_the_tail_step_in_place;
                                 }
                                 #[path = "."]
                                 pub mod edit_step_params {
-                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🦠️mutation/🦀️component.rs"]
-                                    pub mod mutation;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
                                     #[cfg(test)]
                                     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧edit-step-params/🧪️tests/warns-that-step-1-already-carries-the-requested-params/🦀️component.rs"]
                                     mod tests_warns_that_step_1_already_carries_the_requested_params;
@@ -278,13 +277,35 @@ pub mod artifacts {
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
-        pub mod op { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::text::*; }
-        pub mod dsl { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::text::*; }
-        pub mod spr { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::*;  pub mod schema { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::text::*; } }
-        pub mod mutations { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::*; }
-        pub mod snapshot { pub mod schema { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::binary::*; } }
-
+        pub mod op {
+            pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::text::*;
+        }
+        pub mod dsl {
+            pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::text::*;
+        }
+        pub mod spr {
+            pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::binary::*;
+        }
+        pub mod diff {
+            pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::*;
+            pub mod schema {
+                pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::*;
+            }
+            pub mod text {
+                pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::diff::text::*;
+            }
+        }
+        pub mod mutations {
+            pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::mutations::*;
+        }
+        pub mod snapshot {
+            pub mod schema {
+                pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::*;
+            }
+            pub mod pack {
+                pub use crate::artifacts::imperative::standards::v1::subsets::any::schema::snapshot::binary::*;
+            }
+        }
 
         #[path = "."]
         pub mod examples {
@@ -341,24 +362,24 @@ pub mod editor {
             pub mod add_step;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️add-step-at/🦀️component.rs"]
             pub mod add_step_at;
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step/🦀️component.rs"]
-            pub mod remove_step;
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step-at/🦀️component.rs"]
-            pub mod remove_step_at;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️move-step/🦀️component.rs"]
             pub mod move_step;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️move-step-at/🦀️component.rs"]
             pub mod move_step_at;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step/🦀️component.rs"]
+            pub mod remove_step;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️remove-step-at/🦀️component.rs"]
+            pub mod remove_step_at;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️run/🦀️component.rs"]
+            pub mod run;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            pub mod set_contributions;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
+            pub mod set_locale;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️set-step-params/🦀️component.rs"]
             pub mod set_step_params;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️set-step-params-at/🦀️component.rs"]
             pub mod set_step_params_at;
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️run/🦀️component.rs"]
-            pub mod run;
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
-            pub mod set_locale;
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
-            pub mod set_contributions;
         }
 
         #[path = "."]
@@ -381,10 +402,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
-            pub mod document;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
+            #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
+            pub mod document;
             #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
@@ -425,16 +446,16 @@ pub mod viewer {
 //#region 🧩️Extensions
 #[path = "."]
 pub mod extensions {
+    #[path = "../../🧩️extensions/🎮️control/🦀️component.rs"]
+    pub mod control;
     #[path = "../../🧩️extensions/📣️effect/🦀️component.rs"]
     pub mod effect;
+    #[path = "../../🧩️extensions/🧠️logic/🦀️component.rs"]
+    pub mod logic;
     #[path = "../../🧩️extensions/🧮️math/🦀️component.rs"]
     pub mod math;
     #[path = "../../🧩️extensions/📝️text/🦀️component.rs"]
     pub mod text;
-    #[path = "../../🧩️extensions/🧠️logic/🦀️component.rs"]
-    pub mod logic;
-    #[path = "../../🧩️extensions/🎮️control/🦀️component.rs"]
-    pub mod control;
 }
 //#endregion 🧩️Extensions
 
@@ -451,13 +472,13 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
+    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
+    pub mod app_imperative_demo_session;
     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_imperative_demo;
     #[cfg(test)]
     #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_imperative_demo_tests;
-    #[path = "../../🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
-    pub mod app_imperative_demo_session;
 }
 //#endregion 📚️Examples
 

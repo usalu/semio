@@ -1,6 +1,6 @@
 //! 🧬️ Curate artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::curate::{CuratedItem, CurateSnapshot, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
+use crate::artifacts::curate::{CurateSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
 use schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
@@ -39,35 +39,19 @@ fn default_contributions_json() -> String {
 
 impl Default for CurateArtifact {
     fn default() -> Self {
-        Self {
-            catalog: crate::artifacts::curate::catalog_child_handle(&[]),
-            stock_extra: Vec::new(),
-            curated: Vec::new(),
-            filters: Filters::default(),
-            locale: "en-US".into(),
-            contributions_json: default_contributions_json(),
-        }
+        Self { catalog: crate::artifacts::curate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
 impl CurateArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> CurateSnapshot {
-        CurateSnapshot {
-            catalog: self.catalog.clone(),
-            stock_extra: self.stock_extra.clone(),
-            curated: self.curated.clone(),
-        }
+        CurateSnapshot { catalog: self.catalog.clone(), stock_extra: self.stock_extra.clone(), curated: self.curated.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: CurateSnapshot) -> Self {
-        Self {
-            catalog: snapshot.catalog,
-            stock_extra: snapshot.stock_extra,
-            curated: snapshot.curated,
-            ..Self::default()
-        }
+        Self { catalog: snapshot.catalog, stock_extra: snapshot.stock_extra, curated: snapshot.curated, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -604,16 +588,10 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
     }
     let mut modules = Vec::new();
     for entry in parse_contributions(contributions_json) {
-        let Some(payload) = entry
-            .topic_contribution
-            .as_ref()
-            .filter(|topic| topic.topic == "sourcing.module")
-            .and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok())
-        else {
+        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "sourcing.module").and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok()) else {
             continue;
         };
-        let (app_id, module_id, label, typology_json, kinds_json) =
-            (payload.app_id, payload.module_id, payload.label, payload.typology_json, payload.kinds_json);
+        let (app_id, module_id, label, typology_json, kinds_json) = (payload.app_id, payload.module_id, payload.label, payload.typology_json, payload.kinds_json);
         if app_id != SOURCING_CURATE_APP_ID {
             continue;
         }

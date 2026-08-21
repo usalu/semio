@@ -55,8 +55,8 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
-                IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
+                IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_vt_conformance(&snapshot),

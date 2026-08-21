@@ -1,9 +1,9 @@
 //! 🪜️ 🪜️ Playbook play app commands command — `update-playbook`.
 
-use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

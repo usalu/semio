@@ -17,7 +17,11 @@ pub async fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<Lo
             let bytes = pixels
                 .map(|buffer| {
                     let end = (start + run.bytes.len()).min(buffer.len());
-                    if start < buffer.len() { buffer[start..end].to_vec() } else { Vec::new() }
+                    if start < buffer.len() {
+                        buffer[start..end].to_vec()
+                    } else {
+                        Vec::new()
+                    }
                 })
                 .unwrap_or_default();
             PixelRun { offset: run.offset, bytes }

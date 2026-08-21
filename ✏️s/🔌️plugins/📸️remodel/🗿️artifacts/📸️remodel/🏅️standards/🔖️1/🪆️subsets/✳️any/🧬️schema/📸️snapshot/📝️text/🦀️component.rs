@@ -4,13 +4,11 @@
 //! file, so there is no `REMODEL_EXAMPLE_TEXT` constant here — its single "default" example is
 //! generated at runtime from `default_remodel_scene().print_dsl()` (see `create_remodel_app`).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::remodel::RemodelSnapshot;
 

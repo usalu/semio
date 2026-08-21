@@ -354,7 +354,14 @@ mod document_helpers_tests {
         let nodes = document.nodes();
         let edges = document.edges();
         let node_id = nodes.first().expect("fixture has a node").id.clone();
-        let touching_edges = edges.iter().filter(|edge| { let (from, _) = split_endpoint(&edge.source); let (to, _) = split_endpoint(&edge.target); from == node_id || to == node_id }).count();
+        let touching_edges = edges
+            .iter()
+            .filter(|edge| {
+                let (from, _) = split_endpoint(&edge.source);
+                let (to, _) = split_endpoint(&edge.target);
+                from == node_id || to == node_id
+            })
+            .count();
         assert!(touching_edges > 0, "fixture must exercise the cascade-capturing case");
         let operations = remove_nodes_operations(&document, std::slice::from_ref(&node_id));
         assert_eq!(operations.len(), 1, "delete-node's own diff/inverse captures the edge cascade internally");

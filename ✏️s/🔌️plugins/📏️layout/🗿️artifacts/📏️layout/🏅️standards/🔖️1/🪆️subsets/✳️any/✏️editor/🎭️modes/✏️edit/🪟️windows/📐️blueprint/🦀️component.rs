@@ -1,10 +1,10 @@
 //! 📐️ Layout play app — the Blueprint window: the editable authoring surface with chrome (guides,
 //! margins, dashed inherited-frame strokes) — the only window content-authoring actions are scoped to.
 
+use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::canvas::canvas_layers;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::LAYOUT_PLAY_APP_ID;
-use crate::artifacts::layout::LayoutSnapshot;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

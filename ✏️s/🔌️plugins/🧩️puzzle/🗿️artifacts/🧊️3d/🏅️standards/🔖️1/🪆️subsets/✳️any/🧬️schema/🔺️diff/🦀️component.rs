@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle3d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume};
 use crate::artifacts::puzzle3d::schema::Puzzle3dArtifact;
+use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume};
 use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -11,46 +11,86 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.puzzle.puzzle3d")]
 pub struct Puzzle3dDiff {
-    #[state(artifact)] pub artifact: Option<Box<Puzzle3dArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub domain: Option<String>,
-    #[state(artifact)] pub meta: Option<Puzzle3dMeta>,
-    #[state(artifact)] pub objects: Option<Puzzle3dObjectsDelta>,
-    #[state(artifact)] pub attractions: Option<Puzzle3dAttractionsDelta>,
-    #[state(artifact)] pub target_volumes: Option<Puzzle3dTargetVolumesDelta>,
-    #[state(artifact)] pub references: Option<Puzzle3dReferencesDelta>,
-    #[state(presence)] pub selected_object_ids: Option<Puzzle3dStringList>,
-    #[state(presence)] pub selected_vortex_ids: Option<Puzzle3dStringList>,
-    #[state(presence)] pub selected_attraction_ids: Option<Puzzle3dStringList>,
-    #[state(presence)] pub selected_target_volume_ids: Option<Puzzle3dStringList>,
-    #[state(presence)] pub selected_reference_ids: Option<Puzzle3dStringList>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub camera_position_x: Option<f64>,
-    #[state(config)] pub camera_position_y: Option<f64>,
-    #[state(config)] pub camera_position_z: Option<f64>,
-    #[state(config)] pub camera_target_x: Option<f64>,
-    #[state(config)] pub camera_target_y: Option<f64>,
-    #[state(config)] pub camera_target_z: Option<f64>,
-    #[state(config)] pub camera_zoom: Option<f64>,
-    #[state(config)] pub selection_method: Option<String>,
-    #[state(config)] pub selection_mode_default: Option<String>,
-    #[state(config)] pub engagement_input: Option<String>,
-    #[state(config)] pub grid_visible: Option<bool>,
-    #[state(config)] pub grid_snap_enabled: Option<bool>,
-    #[state(config)] pub grid_spacing: Option<f64>,
-    #[state(config)] pub overlap_budget: Option<f64>,
-    #[state(config)] pub fill_count: Option<u32>,
-    #[state(config)] pub brush_candidate_index: Option<u32>,
-    #[state(config)] pub lod_automatic: Option<bool>,
-    #[state(config)] pub lod_depth_variable: Option<bool>,
-    #[state(config)] pub lod_manual: Option<f64>,
-    #[state(config)] pub proximity_radius: Option<f64>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(config)] pub runtime_extras_json: Option<String>,
-    #[state(artifact)] pub hovered_object_id: Option<Option<String>>,
-    #[state(artifact)] pub hovered_vortex_full_id: Option<Option<String>>,
-    #[state(artifact)] pub hovered_kind_id: Option<Option<String>>,
-    #[state(artifact)] pub preview_seq: Option<i64>,
+    #[state(artifact)]
+    pub artifact: Option<Box<Puzzle3dArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub domain: Option<String>,
+    #[state(artifact)]
+    pub meta: Option<Puzzle3dMeta>,
+    #[state(artifact)]
+    pub objects: Option<Puzzle3dObjectsDelta>,
+    #[state(artifact)]
+    pub attractions: Option<Puzzle3dAttractionsDelta>,
+    #[state(artifact)]
+    pub target_volumes: Option<Puzzle3dTargetVolumesDelta>,
+    #[state(artifact)]
+    pub references: Option<Puzzle3dReferencesDelta>,
+    #[state(presence)]
+    pub selected_object_ids: Option<Puzzle3dStringList>,
+    #[state(presence)]
+    pub selected_vortex_ids: Option<Puzzle3dStringList>,
+    #[state(presence)]
+    pub selected_attraction_ids: Option<Puzzle3dStringList>,
+    #[state(presence)]
+    pub selected_target_volume_ids: Option<Puzzle3dStringList>,
+    #[state(presence)]
+    pub selected_reference_ids: Option<Puzzle3dStringList>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub camera_position_x: Option<f64>,
+    #[state(config)]
+    pub camera_position_y: Option<f64>,
+    #[state(config)]
+    pub camera_position_z: Option<f64>,
+    #[state(config)]
+    pub camera_target_x: Option<f64>,
+    #[state(config)]
+    pub camera_target_y: Option<f64>,
+    #[state(config)]
+    pub camera_target_z: Option<f64>,
+    #[state(config)]
+    pub camera_zoom: Option<f64>,
+    #[state(config)]
+    pub selection_method: Option<String>,
+    #[state(config)]
+    pub selection_mode_default: Option<String>,
+    #[state(config)]
+    pub engagement_input: Option<String>,
+    #[state(config)]
+    pub grid_visible: Option<bool>,
+    #[state(config)]
+    pub grid_snap_enabled: Option<bool>,
+    #[state(config)]
+    pub grid_spacing: Option<f64>,
+    #[state(config)]
+    pub overlap_budget: Option<f64>,
+    #[state(config)]
+    pub fill_count: Option<u32>,
+    #[state(config)]
+    pub brush_candidate_index: Option<u32>,
+    #[state(config)]
+    pub lod_automatic: Option<bool>,
+    #[state(config)]
+    pub lod_depth_variable: Option<bool>,
+    #[state(config)]
+    pub lod_manual: Option<f64>,
+    #[state(config)]
+    pub proximity_radius: Option<f64>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(config)]
+    pub runtime_extras_json: Option<String>,
+    #[state(artifact)]
+    pub hovered_object_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub hovered_vortex_full_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub hovered_kind_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub preview_seq: Option<i64>,
 }
 //#endregion 🔖️Diff
 
@@ -163,4 +203,3 @@ pub struct Puzzle3dReferencePatch {
 }
 
 //#endregion 🔖️DeltaHelpers
-

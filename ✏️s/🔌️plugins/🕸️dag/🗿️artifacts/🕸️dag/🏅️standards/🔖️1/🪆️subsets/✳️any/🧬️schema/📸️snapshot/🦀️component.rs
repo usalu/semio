@@ -49,8 +49,7 @@ impl Default for DagSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub async fn default_snapshot() -> DagSnapshot {
-    crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT)
-        .expect("bundled dag example DSL must parse")
+    crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT).expect("bundled dag example DSL must parse")
 }
 //#endregion 🔖️Snapshot
 

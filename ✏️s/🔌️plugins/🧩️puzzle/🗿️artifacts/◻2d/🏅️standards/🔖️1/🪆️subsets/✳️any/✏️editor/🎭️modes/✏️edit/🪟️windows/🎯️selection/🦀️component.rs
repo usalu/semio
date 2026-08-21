@@ -1,11 +1,11 @@
 //! 🎯️ Puzzle 2d play app — the Selection window: a non-interactive canvas pane framing the
 //! fixture's lower-left quadrant, framed by `🎭️modes/✏️edit`'s triptych camera.
 
+use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::options;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_localized, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC};
-use crate::editor::puzzle2d::engine::BoardHost;
 use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants

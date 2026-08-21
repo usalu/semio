@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteBlock`.
 use super::mutation::DeleteBlock;
-use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::schema::mutations::CreateBlock;
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse

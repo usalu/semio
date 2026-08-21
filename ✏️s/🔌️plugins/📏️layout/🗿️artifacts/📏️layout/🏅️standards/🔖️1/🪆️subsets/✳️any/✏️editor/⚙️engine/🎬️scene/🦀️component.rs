@@ -26,13 +26,11 @@ use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
-    DrawCanvas, DrawLayer, DrawNode, DrawStyle, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 
 use crate::artifacts::layout::io::{compose_svg_from_drawing, rect_path_segments, LayoutError};
 use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
-use crate::artifacts::layout::{Frame, LayoutBounds, LayoutSnapshot, LayoutRect, Page, ParagraphStyle, TextStory};
+use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 
 //#region 🖼️Display
 #[derive(Clone, Debug)]
@@ -425,10 +423,7 @@ async fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapsh
         for (index, glyph) in run.glyphs.iter().enumerate() {
             let name = format!("glyph-{}-{index}", run.object_id);
             styles.push(DrawStyle { name: name.clone(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None });
-            children.push(DrawNode::Path {
-                segments: rect_path_segments(glyph.x as f64, glyph.y as f64, (glyph.font_size * 0.45) as f64, glyph.font_size as f64),
-                style: Some(name),
-            });
+            children.push(DrawNode::Path { segments: rect_path_segments(glyph.x as f64, glyph.y as f64, (glyph.font_size * 0.45) as f64, glyph.font_size as f64), style: Some(name) });
         }
     }
 

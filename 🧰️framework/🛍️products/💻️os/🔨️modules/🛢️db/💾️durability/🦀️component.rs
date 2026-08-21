@@ -1,6 +1,6 @@
 //! 💾 Durability class, frontier sync, and epoch fencing.
 
-use crate::db_ids::{DbError, ArtifactId};
+use crate::db_ids::{ArtifactId, DbError};
 
 //#region 🔖️Durability
 /// @emoji 💾️ How durably a command's effects are guaranteed to survive a crash before its

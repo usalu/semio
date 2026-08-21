@@ -1,0 +1,17 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:19://! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:433:/// `HttpPool` admits onto its bounded pool — no per-call `std::thread::spawn` and no private
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:453:    /// old unbounded `std::thread::spawn` per call) and races it against `ctx.deadline_ms` via the
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:2059:                            // 🎠️ terra-shell-unpark — this used to `pollster::block_on` the kernel
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:5866:        let result = pollster::block_on(shell.finish_dock_drag(10.0, 10.0, &input));
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7350:        pollster::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7455:    // 🔌️ Plain `#[test]` + `pollster::block_on` (not `#[tokio::test]`) — matches the rest of this crate's
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7456:    // async-from-sync convention (see e.g. `pollster::block_on(self.shell.boot())` in the native event
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7463:        pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7471:        pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7479:        pollster::block_on(shell.apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7481:        pollster::block_on(shell.apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7492:        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7495:        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12202:        let chrome = std::thread::spawn(move || {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12217:        std::thread::spawn(move || {
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:13054:        let consumed = pollster::block_on(shell.handle_shell_hit(&hit)).expect("group-row click never errors");

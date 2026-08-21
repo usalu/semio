@@ -160,13 +160,7 @@ impl PostgresDirectory {
         let actor = DirectoryActor { kind: DirectoryActorKind::System, id: "system:seed".into() };
         let mut clock = HubClock::new();
         let events = vec![
-            NewDirectoryEvent {
-                hlc: clock.tick(),
-                actor: actor.clone(),
-                space_id: None,
-                user_id: Some("seed".into()),
-                body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() },
-            },
+            NewDirectoryEvent { hlc: clock.tick(), actor: actor.clone(), space_id: None, user_id: Some("seed".into()), body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() } },
             NewDirectoryEvent {
                 hlc: clock.tick(),
                 actor: actor.clone(),
@@ -357,10 +351,7 @@ impl HubDirectory for PostgresDirectory {
         .fetch_all(&self.pool)
         .await
         .map_err(backend)?;
-        Ok(rows
-            .into_iter()
-            .filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role)))
-            .collect())
+        Ok(rows.into_iter().filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role))).collect())
     }
 
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
@@ -380,9 +371,7 @@ impl HubDirectory for PostgresDirectory {
         .map_err(backend)?;
         Ok(rows
             .into_iter()
-            .filter_map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at, role)| {
-                SpaceRole::parse(&role).map(|role| (UserRecord { id, email, display_name, password_hash, sso_subject, sso_provider, created_at }, role))
-            })
+            .filter_map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at, role)| SpaceRole::parse(&role).map(|role| (UserRecord { id, email, display_name, password_hash, sso_subject, sso_provider, created_at }, role)))
             .collect())
     }
 
@@ -453,11 +442,7 @@ impl HubDirectory for PostgresDirectory {
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
         let rows: Vec<(String, String, String, String, i64, i64, Option<i64>)> =
-            sqlx_core::query_as::query_as("SELECT id, token, space_id, role, created_at, expires_at, revoked_at FROM hub_space_invite WHERE space_id = $1 ORDER BY created_at DESC")
-                .bind(space_id)
-                .fetch_all(&self.pool)
-                .await
-                .map_err(backend)?;
+            sqlx_core::query_as::query_as("SELECT id, token, space_id, role, created_at, expires_at, revoked_at FROM hub_space_invite WHERE space_id = $1 ORDER BY created_at DESC").bind(space_id).fetch_all(&self.pool).await.map_err(backend)?;
         Ok(rows.into_iter().map(invite_from_row).collect())
     }
     //#endregion
@@ -479,7 +464,17 @@ impl HubDirectory for PostgresDirectory {
             .execute(&self.pool)
             .await
             .map_err(backend)?;
-        Ok(SyncSessionRecord { id, space_id: space_id.to_string(), document_id: document_id.to_string(), surface: surface.to_string(), user_id: user_id.map(str::to_string), space_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
+        Ok(SyncSessionRecord {
+            id,
+            space_id: space_id.to_string(),
+            document_id: document_id.to_string(),
+            surface: surface.to_string(),
+            user_id: user_id.map(str::to_string),
+            space_role,
+            client_label: client_label.to_string(),
+            connected_at,
+            disconnected_at: None,
+        })
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()> {
@@ -584,10 +579,7 @@ impl HubDirectory for PostgresDirectory {
         sqlx_core::query::query("DELETE FROM hub_space").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_user").execute(&mut *tx).await.map_err(backend)?;
         let rows: Vec<(i64, String, i64, i64, String, String, Option<String>, Option<String>, serde_json::Value, i64)> =
-            sqlx_core::query_as::query_as("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event ORDER BY seq")
-                .fetch_all(&mut *tx)
-                .await
-                .map_err(backend)?;
+            sqlx_core::query_as::query_as("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event ORDER BY seq").fetch_all(&mut *tx).await.map_err(backend)?;
         let events = rows.into_iter().map(event_from_row).collect::<DirectoryResult<Vec<_>>>()?;
         let mut replayed = 0u64;
         for event in &events {
@@ -618,16 +610,7 @@ fn sync_session_from_row(row: (String, String, String, String, Option<String>, O
 fn event_from_row(row: (i64, String, i64, i64, String, String, Option<String>, Option<String>, serde_json::Value, i64)) -> DirectoryResult<DirectoryEvent> {
     let (seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at_ms) = row;
     let body: DirectoryEventBody = serde_json::from_value(payload).map_err(backend)?;
-    Ok(DirectoryEvent {
-        seq: seq as u64,
-        id,
-        hlc: Hlc { physical_ms: hlc_physical, logical: hlc_logical as u32 },
-        actor: DirectoryActor { kind: actor_kind_from_str(&actor_kind), id: actor_id },
-        space_id,
-        user_id,
-        body,
-        recorded_at_ms,
-    })
+    Ok(DirectoryEvent { seq: seq as u64, id, hlc: Hlc { physical_ms: hlc_physical, logical: hlc_logical as u32 }, actor: DirectoryActor { kind: actor_kind_from_str(&actor_kind), id: actor_id }, space_id, user_id, body, recorded_at_ms })
 }
 
 //#region 🧪️Tests

@@ -1,12 +1,12 @@
 //! 🔍️ Sequence play app panel — inspection: the selected step's kind and params.
 
-use crate::editor::sequence::terminology::SequenceLabels;
 use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
-use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use crate::editor::sequence::terminology::SequenceLabels;
 use semio_framework_plugin::Label;
+use semio_framework_plugin::{
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_BODY_INSPECTOR: &str = "sequence.play.inspection";

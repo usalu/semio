@@ -1,8 +1,8 @@
 //! 🔺️ `reorder-step` — sparse diff construction.
 
 use super::mutation::ReorderStep;
-use crate::artifacts::forms::schema::diff::FormsStepsDelta;
 use crate::artifacts::forms::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::schema::diff::FormsStepsDelta;
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff

@@ -106,7 +106,11 @@ async fn declared_outcome_holds() {
     assert_eq!(messages[0].code.0, "mutation.no-op", "a step already at the requested index is a no-op, never a target-missing");
     assert_eq!(messages[0].level, protocol::Severity::Warning, "a redundant reorder must not escalate to Error or Fatal");
     let semantics = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("reorder", "step", "reorder-step", "ReorderedStep"), "the fixture must be bound to reorder-step's own descriptor — reorder is list repositioning, never the spatial `move` verb");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("reorder", "step", "reorder-step", "ReorderedStep"),
+        "the fixture must be bound to reorder-step's own descriptor — reorder is list repositioning, never the spatial `move` verb"
+    );
 }
 
 /// 🔺️ The delta a redundant reorder produces is exactly the committed all-null `FormsDiff`: the

@@ -1,9 +1,9 @@
 //! 🗺️ FEM 2D module engine — cheap mesh preview + nodal stress bridge (pure FE algorithm, moved out of
 //! the artifact tree).
 
+use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::fem2d_engine::meshing::build_nodes_and_elements;
 use crate::fem2d_engine::Fem2dError;
-use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::model::Support;
 use std::collections::HashMap;
 

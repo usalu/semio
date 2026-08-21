@@ -1,8 +1,8 @@
 //! 📋️ Block 2D play app — the board window: a lightweight summary surface (block2d's only window
 //! kind; the full node-kind editing surface lives in the document/inspection panels).
 
-use crate::editor::block2d::terminology::Block2dLabels;
 use crate::artifacts::block2d::Block2dSnapshot;
+use crate::editor::block2d::terminology::Block2dLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

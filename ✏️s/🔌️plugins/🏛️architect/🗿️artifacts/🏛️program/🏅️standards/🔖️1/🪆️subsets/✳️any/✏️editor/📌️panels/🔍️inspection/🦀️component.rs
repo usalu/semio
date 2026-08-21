@@ -1,7 +1,7 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::artifacts::program::ProgramSnapshot;
+use crate::editor::architect::config::{active_register, ArchitectConfig};
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };

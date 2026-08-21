@@ -1,10 +1,10 @@
 //! 🧠️ Local-first action kernel contracts: actions, operations, capabilities, window I/O.
 
-use serde::{Deserialize, Serialize};
-pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
-use dsl::DslValue;
-use ui_wgpu::wgpu::UiNode;
 use crate::manifest::MediaType;
+use dsl::DslValue;
+pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
+use serde::{Deserialize, Serialize};
+use ui_wgpu::wgpu::UiNode;
 
 //#region 🔖️Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -263,25 +263,44 @@ pub struct RequestId(pub u64);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Effect {
-    OpenWindow { req: RequestId, kind: WindowKindId, params: DslValue },
-    CloseWindow { window: WindowHandle },
-    Notify { message: String },
+    OpenWindow {
+        req: RequestId,
+        kind: WindowKindId,
+        params: DslValue,
+    },
+    CloseWindow {
+        window: WindowHandle,
+    },
+    Notify {
+        message: String,
+    },
     /// 📋️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
     /// available, session-local fallback otherwise) — emitted by `VcsArtifactApp`'s `copy`/`cut`
     /// interception, never constructed by an app directly.
-    ClipboardWrite { fragment: ClipboardFragment },
+    ClipboardWrite {
+        fragment: ClipboardFragment,
+    },
     RequestSync,
     /// @emoji 🧭️ Navigates the shell to a URI (studio/instance/document route).
-    Navigate { uri: String },
+    Navigate {
+        uri: String,
+    },
     /// @emoji 📂️ Replaces the active app instance's document with pack+spr bytes — the host-owned
     /// counterpart of `loadAppArtifactPack`, used when the plugin resolves a catalog/example studio
     /// and needs the shell to swap the live store without going through a persistence binding.
-    LoadDocument { pack: Vec<u8>, spr: Vec<u8> },
+    LoadDocument {
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+    },
     /// @emoji 🌐️ Opens an external URL in a new browser tab — the host-bridge substitute for a program
     /// reaching into `web-sys`/`window()` directly, which the plugin capability lint forbids.
-    OpenExternalUrl { url: String },
+    OpenExternalUrl {
+        url: String,
+    },
     /// @emoji 🗂️ Replaces the active studio/window panel state with a serialized panel JSON.
-    SetPanel { panel_json: String },
+    SetPanel {
+        panel_json: String,
+    },
     /// @emoji ⬇️ Downloads an in-memory media export as a file (base64 or utf-8 `data`).
     DownloadMediaExport {
         filename: String,
@@ -291,7 +310,9 @@ pub enum Effect {
         encoding: Option<String>,
     },
     /// @emoji 🖼️ Renders one or more icon-scene requests to images and downloads each.
-    IconRenderExport { items: Vec<IconRenderExportItem> },
+    IconRenderExport {
+        items: Vec<IconRenderExportItem>,
+    },
     /// @emoji 📤️ Asks the shell to open a file picker and re-dispatch `import_action` with the
     /// picked file's contents as `{ payload, name }` args. When `multiple` is set, the picker allows
     /// selecting several files and `import_action` is re-dispatched once per file, sequentially, each
@@ -353,11 +374,16 @@ pub enum Effect {
     },
     /// @emoji 🧰️ Programmatically switches the host-owned active utility of a window instance — the effect
     /// form of `setActiveUtility`, letting a plugin change utilities without a user click.
-    SetActiveUtility { window_id: String, utility_id: String },
+    SetActiveUtility {
+        window_id: String,
+        utility_id: String,
+    },
     /// @emoji 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect
     /// form of `setActiveTool`, letting a plugin change tools without a user click. Empty `tool_id`
     /// deactivates the current tool.
-    SetActiveTool { tool_id: String },
+    SetActiveTool {
+        tool_id: String,
+    },
     /// @emoji 🗨️ Opens a declared `AppDefinition.dialogs` entry; `args` (an object keyed by arg id)
     /// pre-seeds the staged form. Kernel-altitude — plain `String`/`Value`, no manifest types.
     OpenDialog {
@@ -412,13 +438,26 @@ pub enum Effect {
     // --- new variants (📓️design-abi.md §2's table; nothing constructs these yet) ---
     /// @emoji 📨️ Replaces every non-UI/non-event `AppFrame::*` plus `backbone-send` — `target`
     /// picks shell vs. backbone vs. a specific plugin/extension/topic.
-    SendMessage { target: MessageEndpoint, payload: Vec<u8> },
+    SendMessage {
+        target: MessageEndpoint,
+        payload: Vec<u8>,
+    },
     /// @emoji 📣️ Replaces `AppFrame::Events` — a pub/sub broadcast, not a directed message.
-    PublishEvent { topic: String, payload: Vec<u8> },
-    BlobWrite { req: RequestId, media_type: MediaType, bytes: Vec<u8> },
+    PublishEvent {
+        topic: String,
+        payload: Vec<u8>,
+    },
+    BlobWrite {
+        req: RequestId,
+        media_type: MediaType,
+        bytes: Vec<u8>,
+    },
     /// @emoji 📥️ Also answers a lazy `read-asset` miss (assets are preloaded in
     /// `Event::InstanceOpen.assets`; this is the fallback for one that wasn't).
-    BlobLoad { req: RequestId, hash: String },
+    BlobLoad {
+        req: RequestId,
+        hash: String,
+    },
     HttpRequest {
         req: RequestId,
         method: String,
@@ -430,9 +469,21 @@ pub enum Effect {
         #[serde(default)]
         stream: bool,
     },
-    DocumentRead { req: RequestId, doc: ArtifactHandle, lane: String },
-    DocumentWrite { req: RequestId, doc: ArtifactHandle, lane: String, ops: Vec<u8> },
-    LinkResolve { req: RequestId, link: String },
+    DocumentRead {
+        req: RequestId,
+        doc: ArtifactHandle,
+        lane: String,
+    },
+    DocumentWrite {
+        req: RequestId,
+        doc: ArtifactHandle,
+        lane: String,
+        ops: Vec<u8>,
+    },
+    LinkResolve {
+        req: RequestId,
+        link: String,
+    },
     /// @emoji 🔍️ On-demand io-dialect lookup — the routing table itself is preloaded in
     /// `Event::InstanceOpen`; this is only for entries that weren't.
     RegistryQuery {
@@ -443,25 +494,71 @@ pub enum Effect {
     },
     /// @emoji 🧵️ Routed by the host `IoRouter` to the owning plugin as an `Event::Request` — one
     /// hop, no re-entrancy.
-    IoCompose { req: RequestId, key: String, sources: Vec<String> },
-    CacheDerive { req: RequestId, engine_id: String, input: Vec<u8> },
-    CacheRead { req: RequestId, engine_id: String, key: String },
+    IoCompose {
+        req: RequestId,
+        key: String,
+        sources: Vec<String>,
+    },
+    CacheDerive {
+        req: RequestId,
+        engine_id: String,
+        input: Vec<u8>,
+    },
+    CacheRead {
+        req: RequestId,
+        engine_id: String,
+        key: String,
+    },
     /// @emoji ⏱️ Replaces self-tick loops and `pending_effects()` polling — the host wakes the
     /// instance with `Event::Timer { id }` after `after_ms`, repeating if `repeat` is set.
-    SetTimer { id: u64, after_ms: u64, #[serde(default)] repeat: bool },
-    SpawnJob { job: u64, kind: String, input: Vec<u8>, placement: JobPlacement },
-    CancelJob { job: u64 },
+    SetTimer {
+        id: u64,
+        after_ms: u64,
+        #[serde(default)]
+        repeat: bool,
+    },
+    SpawnJob {
+        job: u64,
+        kind: String,
+        input: Vec<u8>,
+        placement: JobPlacement,
+    },
+    CancelJob {
+        job: u64,
+    },
     /// @emoji ↩️ Answers an inbound `Event::Request { req, .. }` within a bounded number of turns.
-    Respond { req: RequestId, result: RequestOutcome },
-    StorageRead { req: RequestId, key: String },
-    StorageWrite { req: RequestId, key: String, bytes: Vec<u8> },
-    StorageDelete { req: RequestId, key: String },
-    RequestCapability { req: RequestId, capability: CapabilityRequest },
-    ReleaseCapability { id: CapabilityId },
+    Respond {
+        req: RequestId,
+        result: RequestOutcome,
+    },
+    StorageRead {
+        req: RequestId,
+        key: String,
+    },
+    StorageWrite {
+        req: RequestId,
+        key: String,
+        bytes: Vec<u8>,
+    },
+    StorageDelete {
+        req: RequestId,
+        key: String,
+    },
+    RequestCapability {
+        req: RequestId,
+        capability: CapabilityRequest,
+    },
+    ReleaseCapability {
+        id: CapabilityId,
+    },
     /// @emoji 📡️ Replaces `backbone-poll`/`backbone-status` — inbound traffic on `topic` arrives
     /// as `Event::Message`.
-    Subscribe { topic: String },
-    Unsubscribe { topic: String },
+    Subscribe {
+        topic: String,
+    },
+    Unsubscribe {
+        topic: String,
+    },
 }
 
 /// 🚦 Where a spawned job runs — `📓️design-abi.md` §2's `spawn-job.placement`: `Inline` shares
@@ -585,7 +682,7 @@ pub enum UiDirtyScope {
         measures: bool,
         #[serde(default)]
         labels: bool,
-    }
+    },
 }
 
 /// 🧾️ One host-projectable row in the session command timeline. The payload is deliberately
@@ -676,7 +773,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer};
+pub use semio_framework_os_kernel::{decode_presence_peer, encode_presence_peer, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window
@@ -801,48 +898,96 @@ pub enum Event {
         quotas: QuotaSchema,
     },
     InstanceClose,
-    Activate { reason: ActivationEvent },
+    Activate {
+        reason: ActivationEvent,
+    },
     SuspendRequest,
-    CapabilityChanged { change: CapabilityChange },
-    QuotaChanged { quotas: QuotaSchema },
+    CapabilityChanged {
+        change: CapabilityChange,
+    },
+    QuotaChanged {
+        quotas: QuotaSchema,
+    },
 
     /// 📡️ The `exchange(id, cmds)` → `poll([app-command{id,seq,cmd}…], budget)` collapse
     /// (`📓️design-abi.md` §2 "`exchange` collapse") — routes to the existing `PluginApp` dispatch
     /// unchanged.
-    AppCommandEvent { instance: PluginInstanceId, seq: u64, command: Vec<u8> },
+    AppCommandEvent {
+        instance: PluginInstanceId,
+        seq: u64,
+        command: Vec<u8>,
+    },
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
     /// `semio_framework_ui_contract::UiIntent`. Split out of `AppCommandEvent` so the host can
     /// tell a genuine UI interaction from a channel command without decoding the payload —
     /// `component.wit`'s `events::ui-intent-event`.
-    UiIntent { instance: PluginInstanceId, intent: Vec<u8> },
+    UiIntent {
+        instance: PluginInstanceId,
+        intent: Vec<u8>,
+    },
 
-    SurfaceVisible { surface: String },
-    SurfaceHidden { surface: String },
-    SurfaceResized { surface: String, width: u32, height: u32 },
-    PatchAck { surface: String, revision: u64 },
+    SurfaceVisible {
+        surface: String,
+    },
+    SurfaceHidden {
+        surface: String,
+    },
+    SurfaceResized {
+        surface: String,
+        width: u32,
+        height: u32,
+    },
+    PatchAck {
+        surface: String,
+        revision: u64,
+    },
     /// 🩹️ Guest resends a full patch body (not a diff) on rejection — `revision`/`reason` name
     /// what the host couldn't apply.
-    PatchRejected { surface: String, revision: u64, reason: String },
+    PatchRejected {
+        surface: String,
+        revision: u64,
+        reason: String,
+    },
 
-    Completed { req: RequestId, result: RequestOutcome },
-    HttpChunk { req: RequestId, bytes: Vec<u8>, done: bool },
+    Completed {
+        req: RequestId,
+        result: RequestOutcome,
+    },
+    HttpChunk {
+        req: RequestId,
+        bytes: Vec<u8>,
+        done: bool,
+    },
     JobProgress {
         job: u64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         progress: Option<Vec<u8>>,
     },
-    JobCompleted { job: u64, result: RequestOutcome },
+    JobCompleted {
+        job: u64,
+        result: RequestOutcome,
+    },
 
-    Message { source: MessageEndpoint, payload: Vec<u8> },
+    Message {
+        source: MessageEndpoint,
+        payload: Vec<u8>,
+    },
 
-    Timer { id: u64 },
+    Timer {
+        id: u64,
+    },
     Wake,
 
     /// ↩️ The former `extension.invoke`/`artifact-compose`/`io-run`/`io-sniff`/`artifact-infer`/
     /// `artifact-mutation-plan`/`migrate-artifact` — answered with `Effect::Respond` within a
     /// bounded number of turns, or by spawning a job.
-    Request { req: RequestId, from: MessageEndpoint, capability: String, payload: Vec<u8> },
+    Request {
+        req: RequestId,
+        from: MessageEndpoint,
+        capability: String,
+        payload: Vec<u8>,
+    },
 }
 //#endregion 🔖️Event
 
@@ -894,7 +1039,7 @@ pub struct Budget {
 pub enum TurnStatus {
     Idle,
     MoreWork,
-    CheckpointReady,
+    CheckpointReady { checkpoint: semio_framework_actor::JobCheckpoint },
     Faulted(Vec<u8>),
 }
 

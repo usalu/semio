@@ -12,10 +12,10 @@
 //! rule for `EngineRep`-class types — the same class of transient bridge this module's sibling
 //! (`step_text` ↔ `SemioBrepSnapshot`, in `🚪️io/🦀️component.rs`) already uses for STEP.
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
 use semio_framework_3d::engine::Vec3;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
 use serde_json::Value;
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
@@ -23,10 +23,10 @@ use std::collections::HashMap;
 // is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
 // same real mesh→OBJ encoder `⚙️engine/🦀️component.rs`'s `export_solids_as` now uses, no
 // reimplementation.
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
 //#region 🔖️EphemeralImportTypes
@@ -795,8 +795,34 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn semio_model_snapshot_from_objects_round_trips_via_objects_from_model_snapshot() {
         let objects = vec![
-            CadObject { id: "object-a".into(), label: "A".into(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: Some("h1".into()), primitives: Vec::new() },
-            CadObject { id: "object-b".into(), label: "B".into(), typology: "building.building.slab".into(), visible: true, locked: false, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: None, primitives: Vec::new() },
+            CadObject {
+                id: "object-a".into(),
+                label: "A".into(),
+                typology: "spatial.shape.primitive.box".into(),
+                visible: true,
+                locked: false,
+                origin: [0.0, 0.0, 0.0],
+                orientation: None,
+                scale: None,
+                mesh_url: None,
+                extent: None,
+                solid_handle: Some("h1".into()),
+                primitives: Vec::new(),
+            },
+            CadObject {
+                id: "object-b".into(),
+                label: "B".into(),
+                typology: "building.building.slab".into(),
+                visible: true,
+                locked: false,
+                origin: [1.0, 2.0, 3.0],
+                orientation: None,
+                scale: None,
+                mesh_url: None,
+                extent: None,
+                solid_handle: None,
+                primitives: Vec::new(),
+            },
         ];
         let model = semio_model_snapshot_from_objects(&objects);
         assert_eq!(model.elements.len(), 2);

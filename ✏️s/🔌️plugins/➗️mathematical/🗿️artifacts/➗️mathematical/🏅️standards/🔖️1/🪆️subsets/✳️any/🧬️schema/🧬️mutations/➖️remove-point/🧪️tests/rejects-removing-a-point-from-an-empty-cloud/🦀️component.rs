@@ -58,7 +58,11 @@ async fn a_base_state_index_past_the_end_is_reported_as_a_decimal_string() {
     assert_eq!(messages[0].level, protocol::Severity::Error, "remove-point has no Fatal branch at all — an absent point is a miss, not an invariant breach");
     assert_eq!(messages[0].target, vec!["0".to_string()], "the diagnostic names the bare index, not a geometry/points path");
     let semantics = <MathematicalMutation as protocol::SemanticMutation<MathematicalSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("remove", "point", "remove-point", "RemovedPoint"), "the fixture must be bound to remove-point's own descriptor — `remove`, the index-keyed counterpart of `delete`");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("remove", "point", "remove-point", "RemovedPoint"),
+        "the fixture must be bound to remove-point's own descriptor — `remove`, the index-keyed counterpart of `delete`"
+    );
 }
 
 /// ↩️ `remove-point` inverts by re-`insert`ing the exact point it captured from BASE. With no point
@@ -94,12 +98,6 @@ async fn declared_outcome_holds() {
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }

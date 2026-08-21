@@ -28,8 +28,8 @@ path = "📦️glue.rs"
 typegen = ["dep:ts-rs"]
 
 [dependencies]
+semio-framework-job = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
-thiserror = "2.0.18"
 ts-rs = { version = "10", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

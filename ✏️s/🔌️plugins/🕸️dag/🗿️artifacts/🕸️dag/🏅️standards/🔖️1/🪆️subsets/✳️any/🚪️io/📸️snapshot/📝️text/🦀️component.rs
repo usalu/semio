@@ -14,11 +14,9 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 /// 📄️ The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
 /// tests parse.
-pub const DAG_EXAMPLE_TEXT: &str =
-    include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const DAG_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.dag` DSL text into a `DagSnapshot`.
 pub async fn parse_dsl(text: &str) -> Result<DagSnapshot, store::TextError> {
@@ -116,10 +114,7 @@ mod tests {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
             use crate::artifacts::dag::snapshot::schema::DagSnapshot;
             use crate::artifacts::dag::{dag_content_child_handle_and_cache, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
-            let nodes = vec![
-                DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() },
-                DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() },
-            ];
+            let nodes = vec![DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() }, DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() }];
             let edges = vec![DagFixtureEdge { id: "edge-1".into(), source: "slider-a@out".into(), target: "slider-b@in".into(), ..Default::default() }];
             let content = dag_content_child_handle_and_cache(nodes, edges);
             let snapshot = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content };
@@ -156,4 +151,3 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
-

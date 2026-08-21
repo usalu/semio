@@ -91,14 +91,14 @@ pub enum IfcMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
-pub async fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
-    let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
+    let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -107,7 +107,7 @@ pub async fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutati
 impl Mutation<IfcSnapshot> for IfcMutation {
     type Diff = IfcDiff;
 
-    async fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             IfcMutation::NoMutation => IfcDiff::default(),
             IfcMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -125,7 +125,7 @@ impl Mutation<IfcSnapshot> for IfcMutation {
 
     /// ↩️ Handcrafted, key-aware mutation-level inverses. Entity/arg-targeted variants look the
     /// prior value up in `base`; a stale/absent id/index inverts to `NoMutation` (nothing to undo).
-    async fn inverse(&self, base: &IfcSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &IfcSnapshot) -> Vec<Self> {
         let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
         match self {
             IfcMutation::NoMutation => vec![IfcMutation::NoMutation],
@@ -182,7 +182,7 @@ async fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
     Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header).await?, entities })
 }
 
-async fn print_ifc_mutation(m: &IfcMutation) -> String {
+fn print_ifc_mutation(m: &IfcMutation) -> String {
     match m {
         IfcMutation::NoMutation => "no-mutation".to_string(),
         IfcMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_ifc_snapshot(snapshot)),
@@ -222,11 +222,11 @@ async fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
 }
 
 impl OpText for IfcMutation {
-    async fn print_op(&self) -> String {
-        print_ifc_mutation(self).await
+    fn print_op(&self) -> String {
+        print_ifc_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_ifc_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -269,7 +269,7 @@ async fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcS
 /// reused diff-sibling primitives) — the only place the recursion bottoms out through a fully
 /// spec-expressible per-variant tag (`enc_ifc_value_bin`), never an opaque byte-chain fallback.
 impl OpBinary for IfcMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             IfcMutation::NoMutation => 0,
             IfcMutation::SetSnapshot { .. } => 1,
@@ -286,7 +286,7 @@ impl OpBinary for IfcMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             IfcMutation::NoMutation => {}
-            IfcMutation::SetSnapshot { snapshot } => enc_ifc_snapshot_bin(snapshot, &mut out).await,
+            IfcMutation::SetSnapshot { snapshot } => enc_ifc_snapshot_bin(snapshot, &mut out),
             IfcMutation::SetFileDescription { values } => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileName { values } => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileSchema { values } => enc_ifc_value_list_bin(values, &mut out),
@@ -294,7 +294,7 @@ impl OpBinary for IfcMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_entity_bin(entity, &mut out);
             }
-            IfcMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id).await,
+            IfcMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id),
             IfcMutation::SetEntityName { id, name } => {
                 store::pack_rt::write_varint_u64(&mut out, *id);
                 write_str_bin(&mut out, name);
@@ -317,15 +317,15 @@ impl OpBinary for IfcMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(IfcMutation::NoMutation),
             1 => {
-                let snapshot = dec_ifc_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetSnapshot { snapshot })
             }
             2 => {
@@ -341,34 +341,34 @@ impl OpBinary for IfcMutation {
                 Ok(IfcMutation::SetFileSchema { values })
             }
             5 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::InsertEntity { index, entity })
             }
             6 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 Ok(IfcMutation::RemoveEntity { id })
             }
             7 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetEntityName { id, name })
             }
             8 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::SetEntityArg { id, index, value })
             }
             9 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(IfcMutation::InsertEntityArg { id, index, value })
             }
             10 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(IfcMutation::RemoveEntityArg { id, index })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

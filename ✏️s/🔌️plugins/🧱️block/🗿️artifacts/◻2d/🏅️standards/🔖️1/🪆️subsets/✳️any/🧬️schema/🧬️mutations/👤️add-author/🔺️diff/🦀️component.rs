@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `AddAuthor` — real handcrafted delta, never apply-then-capture.
+use crate::artifacts::block2d::diff::Block2dAuthorList;
 use crate::artifacts::block2d::diff::Block2dDiff;
-use crate::artifacts::block2d::diff::{Block2dAuthorList};
 use crate::artifacts::block2d::Block2dSnapshot;
 
 //#region 🔖️Diff

@@ -9,9 +9,9 @@ pub mod scene {
     use crate::editor::animate::engine::animation::animation::{apply_parent_opacity_tree, compile_animations, interpolate_at, Animation, Animations, Wait};
     use crate::editor::animate::engine::camera::camera::{Camera, MovingCamera, ThreeDCamera, ZoomedCamera};
     use crate::editor::animate::engine::config::config::AnimateConfig;
+    use crate::editor::animate::engine::rate::updater::run_updaters;
     use crate::editor::animate::engine::scene::section::SectionList;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
-    use crate::editor::animate::engine::rate::updater::run_updaters;
     use std::collections::HashMap;
 
     /// 🎬️ User-authored animation scene contract.
@@ -589,12 +589,11 @@ pub mod section {
 pub mod sobject {
     //! 🧩️ Sobject trait, VSobject paths, groups, transforms, and layout helpers.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::rate::updater::Updater;
-    use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
+    use crate::editor::animate::engine::text::color::Color;
     use geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
+    use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
     use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-
 
     async fn next_id() -> u64 {
         ({ u64::from_str_radix(&blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex()[..8], 16).unwrap_or(1) })

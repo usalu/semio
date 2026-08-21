@@ -14,8 +14,18 @@ pub async fn inverse(payload: &super::mutation::DeletePart, base: &Puzzle5dSnaps
     let mut mutations = vec![crate::artifacts::puzzle5d::mutations::create_part::mutation::create_part(part.clone(), index)];
     for fastener in base.fasteners.iter().filter(|fastener| grip_ids.contains(&fastener.source) || grip_ids.contains(&fastener.target)) {
         mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips::mutation::connect_grips(
-            fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
-            fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+            fastener.id.clone(),
+            fastener.source.clone(),
+            fastener.target.clone(),
+            fastener.fastener_kind.clone(),
+            fastener.gap,
+            fastener.shift,
+            fastener.rise,
+            fastener.rotation,
+            fastener.turn,
+            fastener.tilt,
+            fastener.x,
+            fastener.y,
         ));
     }
     mutations

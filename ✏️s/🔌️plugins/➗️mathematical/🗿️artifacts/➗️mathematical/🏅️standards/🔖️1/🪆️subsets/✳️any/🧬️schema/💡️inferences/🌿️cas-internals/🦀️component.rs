@@ -2641,8 +2641,8 @@ pub mod polybridge {
     //! types over those generators, and reconstruct canonical `Expr`s from the result.
 
     use crate::cas::expr::{Expr, Kind};
-    use number::{Integer, Natural, Rational};
     use crate::polynomial::{MonomialOrder, PolyM, PolyU};
+    use number::{Integer, Natural, Rational};
 
     // #region 🔖️PolyMap
     /// 🗺️ The ordered list of generators a conversion was performed against; `gens[i]` is polynomial
@@ -3029,8 +3029,8 @@ pub mod simplify {
 
     use crate::cas::expr::{Expr, Kind};
     use crate::cas::polybridge;
-    use number::Rational;
     use crate::polynomial::PolyU;
+    use number::Rational;
 
     // #region 🔖️Expand
     pub async fn expand(e: &Expr) -> Expr {
@@ -4415,8 +4415,8 @@ pub mod rootof {
     //! numeric queries (sign, refinement, `f64` approximation) that need real algebra to answer.
 
     use crate::cas::expr::{Expr, Kind};
-    use number::{Integer, Natural, Rational};
     use crate::polynomial::{AlgebraicReal, PolyU};
+    use number::{Integer, Natural, Rational};
 
     // #region 🔖️Conversion
     async fn clear_denominators(coeffs: &[Rational]) -> PolyU<Integer> {
@@ -4508,8 +4508,8 @@ pub mod solve {
 
     use crate::cas::expr::{Constant, Expr, Kind, RelationalOperator};
     use crate::cas::fnkind::FnKind;
-    use number::{Integer, Natural, Rational};
     use crate::polynomial::PolyU;
+    use number::{Integer, Natural, Rational};
 
     // #region 🔖️SolutionSet
     #[derive(Clone, Debug, PartialEq)]
@@ -5268,8 +5268,8 @@ pub mod integrate {
 
     use crate::cas::expr::{Constant, Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use number::{Integer, Rational};
     use crate::polynomial::PolyU;
+    use number::{Integer, Rational};
 
     // #region 🔖️Integrate
     const MAX_BY_PARTS_DEPTH: u32 = 3;
@@ -5699,8 +5699,8 @@ pub mod sums {
 
     use crate::cas::expr::{Constant, Expr, Kind};
     use crate::cas::fnkind::FnKind;
-    use number::Rational;
     use crate::polynomial::PolyU;
+    use number::Rational;
 
     // #region 🔖️ClosedForm
     /// Σ `sum_{k=lo}^{hi} e(k)` in closed form, for `e` polynomial or geometric in `n`; `None` otherwise.
@@ -5841,8 +5841,8 @@ pub mod ode {
 
     use crate::cas::expr::{Expr, Kind, RelationalOperator};
     use crate::cas::fnkind::FnKind;
-    use number::{Integer, Rational};
     use crate::polynomial::PolyU;
+    use number::{Integer, Rational};
 
     // #region 🔖️OdeSolution
     #[derive(Clone, Debug, PartialEq)]

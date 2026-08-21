@@ -1,19 +1,16 @@
 //! 🔺️ Rewrite artifact — sparse field-delta diff codec and apply/absorb.
 
-
 use crate::artifacts::rewrite::schema::diff::RewriteDiff;
 use crate::artifacts::rewrite::schema::RewriteArtifact;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 //#region 🔖️Apply
 impl RewriteDiff {
@@ -31,16 +28,13 @@ impl RewriteDiff {
                 next.rhs_json = value.clone();
             }
             if let Some(bindings) = &self.parameter_bindings {
-                apply_map_delta(&mut next.parameter_bindings, bindings)
-                    .map_err(|error| error.under(["parameterBindings"]))?;
+                apply_map_delta(&mut next.parameter_bindings, bindings).map_err(|error| error.under(["parameterBindings"]))?;
             }
             if let Some(layout) = &self.rule_layout {
-                apply_map_delta(&mut next.rule_layout, layout)
-                    .map_err(|error| error.under(["ruleLayout"]))?;
+                apply_map_delta(&mut next.rule_layout, layout).map_err(|error| error.under(["ruleLayout"]))?;
             }
             if let Some(modes) = &self.lod_mode_by_window {
-                apply_map_delta(&mut next.lod_mode_by_window, modes)
-                    .map_err(|error| error.under(["lodModeByWindow"]))?;
+                apply_map_delta(&mut next.lod_mode_by_window, modes).map_err(|error| error.under(["lodModeByWindow"]))?;
             }
             if let Some(value) = &self.before_pane_camera {
                 next.before_pane_camera = value.clone();
@@ -56,17 +50,10 @@ impl RewriteDiff {
     }
 }
 
-async fn apply_map_delta<V: Clone>(
-    target: &mut BTreeMap<String, V>,
-    delta: &BTreeMap<String, Option<V>>,
-) -> protocol::MutationApplyResult<()> {
+async fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
     for (key, value) in delta {
         if value.is_none() && !target.contains_key(key) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed map entry does not exist",
-            )
-            .at([key.as_str()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed map entry does not exist").at([key.as_str()]));
         }
     }
     for (key, value) in delta {
@@ -107,12 +94,10 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
                 next.rhs_json = value.clone();
             }
             if let Some(bindings) = &self.parameter_bindings {
-                apply_map_delta(&mut next.parameter_bindings, bindings)
-                    .map_err(|error| error.under(["parameterBindings"]))?;
+                apply_map_delta(&mut next.parameter_bindings, bindings).map_err(|error| error.under(["parameterBindings"]))?;
             }
             if let Some(layout) = &self.rule_layout {
-                apply_map_delta(&mut next.rule_layout, layout)
-                    .map_err(|error| error.under(["ruleLayout"]))?;
+                apply_map_delta(&mut next.rule_layout, layout).map_err(|error| error.under(["ruleLayout"]))?;
             }
             next
         })

@@ -121,17 +121,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ifc::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -178,14 +178,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <IfcSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
+                    AnalyzeSource::Text(text) => match <IfcSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
+                    AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;

@@ -274,7 +274,7 @@ fn wrap_runs_diff(block: &DocBlock, runs: RunsDiff) -> Option<DocBlockDiff> {
 impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
     type Diff = SemioDocumentDiff;
 
-    async fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioDocumentMutation::NoMutation => SemioDocumentDiff::default(),
             SemioDocumentMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -302,11 +302,11 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 _ => SemioDocumentDiff::default(),
             },
             SemioDocumentMutation::SetRunText { path, run_index, text } => {
-                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
+                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
+                let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
                 if &run.text == text {
-                    return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await;
+                    return protocol::MutationOutcome::new(SemioDocumentDiff::default());
                 }
                 let rd: RunsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *run_index, diff: DocRunDiff { text: Some(text.clone()), style: None } }], ..Default::default() };
                 match wrap_runs_diff(block, rd) {
@@ -315,8 +315,8 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 }
             }
             SemioDocumentMutation::SetRunStyle { path, run_index, style } => {
-                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
-                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()).await };
+                let Some(block) = block_at(base, path) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
+                let Some(runs) = runs_of(block) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
                 let Some(run) = runs.get(*run_index) else { return protocol::MutationOutcome::new(SemioDocumentDiff::default()) };
                 if &run.style == style {
                     return protocol::MutationOutcome::new(SemioDocumentDiff::default());
@@ -400,10 +400,10 @@ impl Mutation<SemioDocumentSnapshot> for SemioDocumentMutation {
                 },
                 _ => SemioDocumentDiff::default(),
             },
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<Self> {
         match self {
             SemioDocumentMutation::NoMutation => vec![SemioDocumentMutation::NoMutation],
             SemioDocumentMutation::SetSnapshot { .. } => vec![SemioDocumentMutation::SetSnapshot { snapshot: base.clone() }],
@@ -625,10 +625,10 @@ fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutation, String> 
 }
 
 impl OpText for SemioDocumentMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_document_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_document_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -697,13 +697,13 @@ fn print_document_mutation_args(m: &SemioDocumentMutation) -> String {
 /// `print_document_mutation`/`parse_document_mutation` text codec rather than re-deriving a second
 /// independent encoding.
 impl OpBinary for SemioDocumentMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_document_mutation_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -715,7 +715,7 @@ impl OpBinary for SemioDocumentMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

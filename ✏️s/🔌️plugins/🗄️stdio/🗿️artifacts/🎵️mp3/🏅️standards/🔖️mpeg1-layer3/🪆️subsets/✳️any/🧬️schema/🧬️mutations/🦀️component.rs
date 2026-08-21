@@ -26,17 +26,17 @@ pub enum Mp3Mutation {
 impl Mutation<Mp3Snapshot> for Mp3Mutation {
     type Diff = Mp3Diff;
 
-    async fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
             Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()),
             Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()),
             Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()),
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
+    fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
         match self {
             Mp3Mutation::NoMutation => vec![Mp3Mutation::NoMutation],
             Mp3Mutation::SetSnapshot { .. } => vec![Mp3Mutation::SetSnapshot { snapshot: base.clone() }],
@@ -70,19 +70,19 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 /// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
 /// comment) — an op is always plain JSON here.
 impl OpText for Mp3Mutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for Mp3Mutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }

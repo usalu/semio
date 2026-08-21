@@ -99,10 +99,7 @@ pub use super::resize_block::mutation::{resize_block, ResizeBlock};
 
 //#region 🔖️Helpers
 /// ▶️ Applies `mutation` via its diff — the sole apply path now (no hand-written match dispatch).
-pub async fn apply_note_mutation(
-    snapshot: &NoteSnapshot,
-    mutation: &NoteMutation,
-) -> protocol::MutationApplyResult<NoteSnapshot> {
+pub async fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {
     let (diff, _messages) = mutation.diff(snapshot).into_parts();
     MutationDiff::apply(&diff, snapshot)
 }
@@ -123,22 +120,35 @@ mod tests {
     async fn sample_snapshot() -> NoteSnapshot {
         let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
-            id: "b1".into(), name: "Text".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false,
-            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            id: "b1".into(),
+            name: "Text".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 100.0,
+            height: 40.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]),
+            font_size: 18.0,
+            font_weight: "normal".into(),
+            align: "left".into(),
         });
-        snapshot.blocks.push(NoteBlockNode::Ink {
-            id: "b2".into(), name: "Ink".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false,
-            points: vec![[0.0, 0.0]], stroke_width: 3.0, color: [0.0, 0.0, 0.0, 1.0],
-        });
+        snapshot.blocks.push(NoteBlockNode::Ink { id: "b2".into(), name: "Ink".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false, points: vec![[0.0, 0.0]], stroke_width: 3.0, color: [0.0, 0.0, 0.0, 1.0] });
         snapshot.blocks.push(NoteBlockNode::Table {
-            id: "b3".into(), name: "Table".into(), x: 0.0, y: 0.0, width: 200.0, height: 100.0, rotation: 0.0, visible: true, locked: false,
+            id: "b3".into(),
+            name: "Table".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 200.0,
+            height: 100.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
             columns: vec!["A".into(), "B".into()],
             rows: vec![vec![crate::artifacts::note::NoteTableCell { content: String::new() }, crate::artifacts::note::NoteTableCell { content: String::new() }]],
         });
-        snapshot.blocks.push(NoteBlockNode::Math {
-            id: "b4".into(), name: "Math".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false,
-            tex: "x".into(), display_mode: true,
-        });
+        snapshot.blocks.push(NoteBlockNode::Math { id: "b4".into(), name: "Math".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false, tex: "x".into(), display_mode: true });
         snapshot.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None });
         snapshot
     }
@@ -198,8 +208,19 @@ mod tests {
     async fn block_lifecycle_inverse_law_create_delete_duplicate() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
-            id: "b99".into(), name: "New".into(), x: 5.0, y: 6.0, width: 80.0, height: 30.0, rotation: 0.0, visible: true, locked: false,
-            content: crate::artifacts::note::note_text_child_handle_and_cache("b99", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            id: "b99".into(),
+            name: "New".into(),
+            x: 5.0,
+            y: 6.0,
+            width: 80.0,
+            height: 30.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b99", &[]),
+            font_size: 18.0,
+            font_weight: "normal".into(),
+            align: "left".into(),
         };
         assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None));
         assert_mutation_inverse_law(&base, &delete_block("b1".into()));
@@ -244,8 +265,19 @@ mod tests {
     async fn create_delete_block_round_trip_grows_and_shrinks_projection() {
         let base = sample_snapshot();
         let new_block = NoteBlockNode::Text {
-            id: "b100".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
-            content: crate::artifacts::note::note_text_child_handle_and_cache("b100", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            id: "b100".into(),
+            name: "New".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 10.0,
+            height: 10.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b100", &[]),
+            font_size: 18.0,
+            font_weight: "normal".into(),
+            align: "left".into(),
         };
         let added = round_trip(&base, &create_block(new_block, None, None));
         assert_eq!(added.blocks.len(), base.blocks.len() + 1);
@@ -269,8 +301,19 @@ mod tests {
     async fn create_block_duplicate_id_is_fatal() {
         let base = sample_snapshot();
         let existing = NoteBlockNode::Text {
-            id: "b1".into(), name: "Dup".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
-            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            id: "b1".into(),
+            name: "Dup".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 10.0,
+            height: 10.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]),
+            font_size: 18.0,
+            font_weight: "normal".into(),
+            align: "left".into(),
         };
         let outcome = create_block(existing, None, None).diff(&base);
         assert_fatal_never_applies(&outcome);
@@ -331,8 +374,19 @@ mod tests {
     async fn duplicate_block_missing_source_is_error() {
         let base = sample_snapshot();
         let block = NoteBlockNode::Text {
-            id: "b101".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
-            content: crate::artifacts::note::note_text_child_handle_and_cache("b101", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+            id: "b101".into(),
+            name: "New".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 10.0,
+            height: 10.0,
+            rotation: 0.0,
+            visible: true,
+            locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b101", &[]),
+            font_size: 18.0,
+            font_weight: "normal".into(),
+            align: "left".into(),
         };
         assert_missing_target_is_error(&base, &duplicate_block("ghost".into(), block));
     }

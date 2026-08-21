@@ -1,10 +1,10 @@
 //! 📐️ 📐️ Forms play app commands command — `patch-vector-field`.
 
-use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::parse_value_json;
 use crate::artifacts::forms::schema::update_block_operation;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
+use crate::editor::forms::parse_value_json;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -23,9 +23,6 @@ async fn patch_vector_field(spec: &FormsSnapshot, question_id: &str, field_key: 
     })
 }
 //#endregion 🔖️Shell
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "patch-vector-field")]
@@ -48,11 +45,11 @@ pub async fn handle(payload: &PatchVectorField, doc: &ArtifactView<'_, FormsSnap
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::forms::commands::add_vector_field::AddVectorField;
+    use crate::editor::forms::commands::remove_vector_field::RemoveVectorField;
     use crate::editor::forms::testkit::{dispatch, forms_app};
     use crate::editor::forms::FormsCommand;
-    use crate::editor::forms::commands::add_vector_field::AddVectorField;
     use PatchVectorField;
-    use crate::editor::forms::commands::remove_vector_field::RemoveVectorField;
 
     async fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "vector".into(), step_id: None }));

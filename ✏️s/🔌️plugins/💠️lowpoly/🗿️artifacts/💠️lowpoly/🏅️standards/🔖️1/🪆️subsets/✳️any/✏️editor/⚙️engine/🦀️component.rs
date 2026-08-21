@@ -71,12 +71,7 @@ impl LowpolyDocument {
     }
 
     pub async fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, String>) -> Result<Self, LowpolyCoreError> {
-        let next_object_serial = snapshot
-            .objects
-            .iter()
-            .filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok())
-            .max()
-            .unwrap_or(100);
+        let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
         let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
         doc.ensure_all_paint_buffers();

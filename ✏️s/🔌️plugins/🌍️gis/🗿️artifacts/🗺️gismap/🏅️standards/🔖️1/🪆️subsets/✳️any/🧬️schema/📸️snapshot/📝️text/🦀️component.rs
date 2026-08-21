@@ -1,12 +1,10 @@
 //! 📜️ GIS map artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::gismap::GisMapSnapshot;
 
@@ -27,7 +25,7 @@ pub async fn print_dsl(document: &GisMapSnapshot) -> String {
 #[cfg(test)]
 mod tests {
 
-                use super::*;
+    use super::*;
     use crate::artifacts::gismap::MapFeature;
     use serde_json::json;
 

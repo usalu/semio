@@ -24,9 +24,7 @@ pub async fn deserialize(from: &PngSnapshot) -> Result<CurateSnapshot, store::Te
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
-    <CurateSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
-        <CurateSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
-    })
+    <CurateSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <CurateSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }
 
 pub struct PngIntoCurate;

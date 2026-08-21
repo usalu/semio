@@ -13,10 +13,7 @@ pub async fn serialize(snapshot: &EnergyModelSnapshot) -> Result<CsvSnapshot, st
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         has_header: true,
-        records: vec![
-            CsvRecord { fields: vec![field("payload".into())] },
-            CsvRecord { fields: vec![field(<EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(snapshot))] },
-        ],
+        records: vec![CsvRecord { fields: vec![field("payload".into())] }, CsvRecord { fields: vec![field(<EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(snapshot))] }],
     })
 }
 

@@ -19,23 +19,34 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
+pub use semio_framework_job as job;
+
 //#region 🧵️Pack
 /// 🧵️ Hand-rolled binary codec primitives shared by every type's `pack_encode`/`pack_decode` pair
 /// below — LEB128 varints, length-prefixed bytes/strings, fixed 32-byte hashes, option/vec
 /// combinators. Self-contained (no dependency on `🎒️pack`, which lives in the os-product layer).
 pub mod pack {
     /// 🚨️ The one error type every `pack_decode` returns.
-    #[derive(thiserror::Error, Debug, Clone, Copy, PartialEq, Eq)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum PackError {
-        #[error("pack: truncated at offset {0} reading {1}")]
         Truncated(usize, &'static str),
-        #[error("pack: invalid tag {tag} for {what} at offset {offset}")]
         InvalidTag { what: &'static str, tag: u8, offset: usize },
-        #[error("pack: invalid utf8 in {0} at offset {1}")]
         InvalidUtf8(&'static str, usize),
-        #[error("pack: overlong varint at offset {0}")]
         OverlongVarint(usize),
     }
+
+    impl std::fmt::Display for PackError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Truncated(offset, what) => write!(formatter, "pack: truncated at offset {offset} reading {what}"),
+                Self::InvalidTag { what, tag, offset } => write!(formatter, "pack: invalid tag {tag} for {what} at offset {offset}"),
+                Self::InvalidUtf8(what, offset) => write!(formatter, "pack: invalid utf8 in {what} at offset {offset}"),
+                Self::OverlongVarint(offset) => write!(formatter, "pack: overlong varint at offset {offset}"),
+            }
+        }
+    }
+
+    impl std::error::Error for PackError {}
 
     pub async fn write_u8(out: &mut Vec<u8>, v: u8) {
         out.push(v);
@@ -503,6 +514,329 @@ pub mod lane_defaults {
 //#endregion ⚖️LaneDefaults
 //#endregion ⚖️Budget
 
+//#region 🪪️JobBridge
+/// 🪪️ Stable operation identity carried by every actor job turn and publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobOperation {
+    pub operation: u64,
+    pub base_revision: u64,
+    pub generation: u64,
+    pub preview_sequence: u64,
+    pub seed: u64,
+}
+
+impl JobOperation {
+    pub fn from_job(operation: job::Operation) -> Self {
+        Self { operation: operation.operation.0, base_revision: operation.base_revision.0, generation: operation.generation.0, preview_sequence: operation.preview_sequence, seed: operation.seed }
+    }
+
+    pub fn into_job(self) -> job::Operation {
+        job::Operation { operation: job::OperationId(self.operation), base_revision: job::RevisionId(self.base_revision), generation: job::Generation(self.generation), preview_sequence: self.preview_sequence, seed: self.seed }
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.operation).await;
+        pack::write_u64(out, self.base_revision).await;
+        pack::write_u64(out, self.generation).await;
+        pack::write_u64(out, self.preview_sequence).await;
+        pack::write_u64(out, self.seed).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            operation: pack::read_u64(bytes, pos, "JobOperation::operation").await?,
+            base_revision: pack::read_u64(bytes, pos, "JobOperation::base_revision").await?,
+            generation: pack::read_u64(bytes, pos, "JobOperation::generation").await?,
+            preview_sequence: pack::read_u64(bytes, pos, "JobOperation::preview_sequence").await?,
+            seed: pack::read_u64(bytes, pos, "JobOperation::seed").await?,
+        })
+    }
+}
+
+/// 📸️ Opaque resumable state plus the committed progress boundary it represents.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobCheckpoint {
+    pub state: Vec<u8>,
+    pub applied_progress: u64,
+}
+
+impl JobCheckpoint {
+    pub fn from_job(checkpoint: job::Checkpoint) -> Self {
+        Self { state: checkpoint.state, applied_progress: checkpoint.applied_progress }
+    }
+
+    pub fn into_job(self) -> job::Checkpoint {
+        job::Checkpoint { state: self.state, applied_progress: self.applied_progress }
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_bytes(out, &self.state).await;
+        pack::write_u64(out, self.applied_progress).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { state: pack::read_bytes(bytes, pos, "JobCheckpoint::state").await?, applied_progress: pack::read_u64(bytes, pos, "JobCheckpoint::applied_progress").await? })
+    }
+}
+
+/// 🏁️ Final persisted job state and its authoritative output candidate.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobCommitCandidate {
+    pub state: Vec<u8>,
+    pub output: Vec<u8>,
+}
+
+impl JobCommitCandidate {
+    pub fn from_job(candidate: job::CommitCandidate) -> Self {
+        Self { state: candidate.state, output: candidate.output }
+    }
+
+    pub fn into_job(self) -> job::CommitCandidate {
+        job::CommitCandidate { state: self.state, output: self.output }
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_bytes(out, &self.state).await;
+        pack::write_bytes(out, &self.output).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { state: pack::read_bytes(bytes, pos, "JobCommitCandidate::state").await?, output: pack::read_bytes(bytes, pos, "JobCommitCandidate::output").await? })
+    }
+}
+
+/// 🚦️ Lossless actor-wire mirror of one universal `StepOutcome`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum JobStepOutcome {
+    Yield,
+    PreviewReady { preview: Vec<u8> },
+    CheckpointReady { checkpoint: JobCheckpoint },
+    Complete { candidate: JobCommitCandidate },
+    Cancelled,
+    Fault { detail: Vec<u8> },
+}
+
+impl JobStepOutcome {
+    pub fn from_job(outcome: job::StepOutcome) -> Self {
+        match outcome {
+            job::StepOutcome::Yield => Self::Yield,
+            job::StepOutcome::PreviewReady(preview) => Self::PreviewReady { preview },
+            job::StepOutcome::CheckpointReady(checkpoint) => Self::CheckpointReady { checkpoint: JobCheckpoint::from_job(checkpoint) },
+            job::StepOutcome::Complete(candidate) => Self::Complete { candidate: JobCommitCandidate::from_job(candidate) },
+            job::StepOutcome::Cancelled => Self::Cancelled,
+            job::StepOutcome::Fault(fault) => Self::Fault { detail: fault.detail },
+        }
+    }
+
+    pub fn into_job(self) -> job::StepOutcome {
+        match self {
+            Self::Yield => job::StepOutcome::Yield,
+            Self::PreviewReady { preview } => job::StepOutcome::PreviewReady(preview),
+            Self::CheckpointReady { checkpoint } => job::StepOutcome::CheckpointReady(checkpoint.into_job()),
+            Self::Complete { candidate } => job::StepOutcome::Complete(candidate.into_job()),
+            Self::Cancelled => job::StepOutcome::Cancelled,
+            Self::Fault { detail } => job::StepOutcome::Fault(job::JobFault { detail }),
+        }
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Self::Yield => pack::write_u8(out, 0).await,
+            Self::PreviewReady { preview } => {
+                pack::write_u8(out, 1).await;
+                pack::write_bytes(out, preview).await;
+            }
+            Self::CheckpointReady { checkpoint } => {
+                pack::write_u8(out, 2).await;
+                checkpoint.pack_encode(out).await;
+            }
+            Self::Complete { candidate } => {
+                pack::write_u8(out, 3).await;
+                candidate.pack_encode(out).await;
+            }
+            Self::Cancelled => pack::write_u8(out, 4).await,
+            Self::Fault { detail } => {
+                pack::write_u8(out, 5).await;
+                pack::write_bytes(out, detail).await;
+            }
+        }
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        match pack::read_u8(bytes, pos, "JobStepOutcome").await? {
+            0 => Ok(Self::Yield),
+            1 => Ok(Self::PreviewReady { preview: pack::read_bytes(bytes, pos, "JobStepOutcome::PreviewReady").await? }),
+            2 => Ok(Self::CheckpointReady { checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
+            3 => Ok(Self::Complete { candidate: JobCommitCandidate::pack_decode(bytes, pos).await? }),
+            4 => Ok(Self::Cancelled),
+            5 => Ok(Self::Fault { detail: pack::read_bytes(bytes, pos, "JobStepOutcome::Fault").await? }),
+            tag => Err(pack::PackError::InvalidTag { what: "JobStepOutcome", tag, offset: *pos }),
+        }
+    }
+}
+
+/// 🎫️ One explicitly-addressed bounded job turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobTurn {
+    pub job: u64,
+    pub operation: JobOperation,
+    pub step_sequence: u64,
+}
+
+impl JobTurn {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.job).await;
+        self.operation.pack_encode(out).await;
+        pack::write_u64(out, self.step_sequence).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { job: pack::read_u64(bytes, pos, "JobTurn::job").await?, operation: JobOperation::pack_decode(bytes, pos).await?, step_sequence: pack::read_u64(bytes, pos, "JobTurn::step_sequence").await? })
+    }
+}
+
+/// 📡️ One validated, replay-addressable publication from a bounded job turn.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobPublication {
+    pub turn: JobTurn,
+    pub outcome: JobStepOutcome,
+}
+
+impl JobPublication {
+    pub fn turn_status(&self) -> TurnStatus {
+        match &self.outcome {
+            JobStepOutcome::Yield => TurnStatus::MoreWork,
+            JobStepOutcome::PreviewReady { preview } => TurnStatus::PreviewReady { preview: preview.clone(), sequence: self.turn.operation.preview_sequence.saturating_sub(1) },
+            JobStepOutcome::CheckpointReady { checkpoint } => TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
+            JobStepOutcome::Complete { candidate } => TurnStatus::CommitReady { candidate: candidate.clone() },
+            JobStepOutcome::Cancelled => TurnStatus::Cancelled,
+            JobStepOutcome::Fault { detail } => TurnStatus::Faulted { detail: detail.clone() },
+        }
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.turn.pack_encode(out).await;
+        self.outcome.pack_encode(out).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { turn: JobTurn::pack_decode(bytes, pos).await?, outcome: JobStepOutcome::pack_decode(bytes, pos).await? })
+    }
+}
+
+/// 📜️ Ordered actor job publications forming the deterministic replay wire log.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct JobReplayLog {
+    pub entries: Vec<JobPublication>,
+}
+
+impl JobReplayLog {
+    pub fn push(&mut self, publication: JobPublication) {
+        self.entries.push(publication);
+    }
+
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_vec(out, &self.entries, JobPublication::pack_encode).await;
+    }
+
+    pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { entries: pack::read_vec(bytes, pos, "JobReplayLog::entries", JobPublication::pack_decode).await? })
+    }
+}
+
+/// 🚫️ Publication validation failure detected before actor-visible state can change.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum JobPublicationError {
+    OperationMismatch { active: u64, published: u64 },
+    Stale { live_revision: u64, live_generation: u64 },
+    StepSequence { expected: u64, published: u64 },
+    PreviewSequence { before: u64, after: u64 },
+    Terminal,
+}
+
+impl std::fmt::Display for JobPublicationError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OperationMismatch { active, published } => write!(formatter, "job bridge operation mismatch: active={active}, published={published}"),
+            Self::Stale { live_revision, live_generation } => write!(formatter, "job bridge stale revision/generation: live revision={live_revision}, generation={live_generation}"),
+            Self::StepSequence { expected, published } => write!(formatter, "job bridge step sequence mismatch: expected={expected}, published={published}"),
+            Self::PreviewSequence { before, after } => write!(formatter, "job bridge preview cursor mismatch: before={before}, after={after}"),
+            Self::Terminal => formatter.write_str("job bridge received a turn after a terminal publication"),
+        }
+    }
+}
+
+impl std::error::Error for JobPublicationError {}
+
+/// 🌉️ Stateful actor bridge that invokes exactly one `InteractiveJob::step` per turn.
+pub struct JobTurnBridge {
+    operation: job::Operation,
+    next_step_sequence: u64,
+    terminal: bool,
+}
+
+impl JobTurnBridge {
+    pub fn new(operation: job::Operation) -> Self {
+        Self { operation, next_step_sequence: 0, terminal: false }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn step<J: job::InteractiveJob + ?Sized>(
+        &mut self,
+        job: &mut J,
+        turn: JobTurn,
+        active_operation: job::OperationId,
+        live_revision: job::RevisionId,
+        live_generation: job::Generation,
+        site: &'static str,
+        stage: job::InteractiveStage,
+        budget: job::StepBudget,
+        cancel: job::CancelToken,
+        now_ms: fn() -> u64,
+    ) -> Result<JobPublication, JobPublicationError> {
+        if self.terminal {
+            return Err(JobPublicationError::Terminal);
+        }
+        if turn.operation.operation != active_operation.0 || self.operation.operation != active_operation {
+            return Err(JobPublicationError::OperationMismatch { active: active_operation.0, published: turn.operation.operation });
+        }
+        if turn.step_sequence != self.next_step_sequence {
+            return Err(JobPublicationError::StepSequence { expected: self.next_step_sequence, published: turn.step_sequence });
+        }
+        if !matches!(job::validate_commit(&self.operation, live_revision, live_generation), job::CommitValidation::Accepted)
+            || turn.operation.base_revision != live_revision.0
+            || turn.operation.generation != live_generation.0
+            || turn.operation.base_revision != self.operation.base_revision.0
+            || turn.operation.generation != self.operation.generation.0
+            || turn.operation.preview_sequence != self.operation.preview_sequence
+            || turn.operation.seed != self.operation.seed
+        {
+            return Err(JobPublicationError::Stale { live_revision: live_revision.0, live_generation: live_generation.0 });
+        }
+        let before = self.operation.preview_sequence;
+        let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_ms, &mut self.operation.preview_sequence);
+        let after = self.operation.preview_sequence;
+        let preview = matches!(outcome, job::StepOutcome::PreviewReady(_));
+        if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
+            return Err(JobPublicationError::PreviewSequence { before, after });
+        }
+        let terminal = outcome.is_terminal();
+        let publication = JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome: JobStepOutcome::from_job(outcome) };
+        self.next_step_sequence += 1;
+        self.terminal = terminal;
+        Ok(publication)
+    }
+}
+//#endregion 🪪️JobBridge
+
 //#region ✉️Envelope
 /// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
 /// lives in the kernel crate; this crate only ever routes by this bare numeric id.
@@ -588,10 +922,12 @@ pub enum Payload {
         bytes: Vec<u8>,
     },
     Suspend {
-        checkpoint: bool,
+        operation: JobOperation,
+        applied_progress: u64,
     },
     Resume {
-        checkpoint: Option<Vec<u8>>,
+        operation: JobOperation,
+        checkpoint: JobCheckpoint,
     },
     /// 🐛️ Same class of bug as [`Payload::Event`], payload is an integer this time (`serde_json`:
     /// "cannot serialize tagged newtype variant ... containing an integer") — struct variant, not
@@ -600,7 +936,7 @@ pub enum Payload {
         seq: u64,
     },
     JobStep {
-        job: u64,
+        turn: JobTurn,
     },
 }
 
@@ -611,24 +947,23 @@ impl Payload {
                 pack::write_u8(out, 0).await;
                 pack::write_bytes(out, bytes).await;
             }
-            Payload::Suspend { checkpoint } => {
+            Payload::Suspend { operation, applied_progress } => {
                 pack::write_u8(out, 1).await;
-                pack::write_bool(out, *checkpoint).await;
+                operation.pack_encode(out).await;
+                pack::write_u64(out, *applied_progress).await;
             }
-            Payload::Resume { checkpoint } => {
+            Payload::Resume { operation, checkpoint } => {
                 pack::write_u8(out, 2).await;
-                pack::write_bool(out, checkpoint.is_some()).await;
-                if let Some(v) = checkpoint {
-                    pack::write_bytes(out, v).await;
-                }
+                operation.pack_encode(out).await;
+                checkpoint.pack_encode(out).await;
             }
             Payload::Cancel { seq } => {
                 pack::write_u8(out, 3).await;
                 pack::write_u64(out, *seq).await;
             }
-            Payload::JobStep { job } => {
+            Payload::JobStep { turn } => {
                 pack::write_u8(out, 4).await;
-                pack::write_u64(out, *job).await;
+                turn.pack_encode(out).await;
             }
         }
     }
@@ -636,10 +971,10 @@ impl Payload {
         let tag = pack::read_u8(bytes, pos, "Payload").await?;
         match tag {
             0 => Ok(Payload::Event { bytes: pack::read_bytes(bytes, pos, "Payload::Event").await? }),
-            1 => Ok(Payload::Suspend { checkpoint: pack::read_bool(bytes, pos, "Payload::Suspend").await? }),
-            2 => Ok(Payload::Resume { checkpoint: pack::read_opt_bytes(bytes, pos, "Payload::Resume").await? }),
+            1 => Ok(Payload::Suspend { operation: JobOperation::pack_decode(bytes, pos).await?, applied_progress: pack::read_u64(bytes, pos, "Payload::Suspend::applied_progress").await? }),
+            2 => Ok(Payload::Resume { operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel").await? }),
-            4 => Ok(Payload::JobStep { job: pack::read_u64(bytes, pos, "Payload::JobStep").await? }),
+            4 => Ok(Payload::JobStep { turn: JobTurn::pack_decode(bytes, pos).await? }),
             other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
         }
     }
@@ -714,12 +1049,22 @@ impl Envelope {
 pub enum TurnStatus {
     Idle,
     MoreWork,
-    CheckpointReady,
+    CheckpointReady {
+        checkpoint: JobCheckpoint,
+    },
     /// 🐛️ Struct variant, not the newtype `Faulted(Vec<u8>)` this used to be — same sequence-payload
     /// serde defect as [`Payload::Event`]; see that variant's doc for the full explanation.
     Faulted {
         detail: Vec<u8>,
     },
+    PreviewReady {
+        preview: Vec<u8>,
+        sequence: u64,
+    },
+    CommitReady {
+        candidate: JobCommitCandidate,
+    },
+    Cancelled,
 }
 
 impl TurnStatus {
@@ -727,11 +1072,24 @@ impl TurnStatus {
         match self {
             TurnStatus::Idle => pack::write_u8(out, 0).await,
             TurnStatus::MoreWork => pack::write_u8(out, 1).await,
-            TurnStatus::CheckpointReady => pack::write_u8(out, 2).await,
+            TurnStatus::CheckpointReady { checkpoint } => {
+                pack::write_u8(out, 2).await;
+                checkpoint.pack_encode(out).await;
+            }
             TurnStatus::Faulted { detail } => {
                 pack::write_u8(out, 3).await;
                 pack::write_bytes(out, detail).await;
             }
+            TurnStatus::PreviewReady { preview, sequence } => {
+                pack::write_u8(out, 4).await;
+                pack::write_bytes(out, preview).await;
+                pack::write_u64(out, *sequence).await;
+            }
+            TurnStatus::CommitReady { candidate } => {
+                pack::write_u8(out, 5).await;
+                candidate.pack_encode(out).await;
+            }
+            TurnStatus::Cancelled => pack::write_u8(out, 6).await,
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
@@ -739,8 +1097,11 @@ impl TurnStatus {
         match tag {
             0 => Ok(TurnStatus::Idle),
             1 => Ok(TurnStatus::MoreWork),
-            2 => Ok(TurnStatus::CheckpointReady),
+            2 => Ok(TurnStatus::CheckpointReady { checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             3 => Ok(TurnStatus::Faulted { detail: pack::read_bytes(bytes, pos, "TurnStatus::Faulted").await? }),
+            4 => Ok(TurnStatus::PreviewReady { preview: pack::read_bytes(bytes, pos, "TurnStatus::PreviewReady::preview").await?, sequence: pack::read_u64(bytes, pos, "TurnStatus::PreviewReady::sequence").await? }),
+            5 => Ok(TurnStatus::CommitReady { candidate: JobCommitCandidate::pack_decode(bytes, pos).await? }),
+            6 => Ok(TurnStatus::Cancelled),
             other => Err(pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
         }
     }
@@ -2368,15 +2729,24 @@ pub enum ActivationEvent {
 }
 
 /// 🚨️ Errors the [`Kernel`] façade's fallible operations return.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KernelError {
-    #[error("unknown actor")]
     UnknownActor,
-    #[error("no exclusive shard available")]
     NoExclusiveShard,
-    #[error("invalid status transition")]
     InvalidTransition,
 }
+
+impl std::fmt::Display for KernelError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownActor => formatter.write_str("unknown actor"),
+            Self::NoExclusiveShard => formatter.write_str("no exclusive shard available"),
+            Self::InvalidTransition => formatter.write_str("invalid status transition"),
+        }
+    }
+}
+
+impl std::error::Error for KernelError {}
 
 /// 🏛️ Per-actor bookkeeping the [`Scheduler`] doesn't need to see: kind, capabilities, status,
 /// failure ladder, metrics, and which window (if any) its scene patches target.
@@ -2842,7 +3212,37 @@ impl Kernel {
 mod tests {
     mod quick {
         use crate::*;
+        use std::collections::VecDeque;
         use std::sync::Arc;
+
+        //#region 🔖️ErrorContracts
+        fn assert_error_contract(error: &(dyn std::error::Error + 'static), expected: &str) {
+            assert_eq!(error.to_string(), expected);
+            assert!(error.source().is_none());
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn owned_errors_preserve_thiserror_display_and_source_contracts() {
+            let cases: Vec<(Box<dyn std::error::Error>, &str)> = vec![
+                (Box::new(pack::PackError::Truncated(7, "header")), "pack: truncated at offset 7 reading header"),
+                (Box::new(pack::PackError::InvalidTag { what: "Lane", tag: 9, offset: 12 }), "pack: invalid tag 9 for Lane at offset 12"),
+                (Box::new(pack::PackError::InvalidUtf8("PackageId", 23)), "pack: invalid utf8 in PackageId at offset 23"),
+                (Box::new(pack::PackError::OverlongVarint(31)), "pack: overlong varint at offset 31"),
+                (Box::new(JobPublicationError::OperationMismatch { active: 5, published: 8 }), "job bridge operation mismatch: active=5, published=8"),
+                (Box::new(JobPublicationError::Stale { live_revision: 13, live_generation: 21 }), "job bridge stale revision/generation: live revision=13, generation=21"),
+                (Box::new(JobPublicationError::StepSequence { expected: 34, published: 55 }), "job bridge step sequence mismatch: expected=34, published=55"),
+                (Box::new(JobPublicationError::PreviewSequence { before: 89, after: 144 }), "job bridge preview cursor mismatch: before=89, after=144"),
+                (Box::new(JobPublicationError::Terminal), "job bridge received a turn after a terminal publication"),
+                (Box::new(KernelError::UnknownActor), "unknown actor"),
+                (Box::new(KernelError::NoExclusiveShard), "no exclusive shard available"),
+                (Box::new(KernelError::InvalidTransition), "invalid status transition"),
+            ];
+
+            for (error, expected) in cases {
+                assert_error_contract(error.as_ref(), expected);
+            }
+        }
+        //#endregion 🔖️ErrorContracts
 
         //#region 🔖️Helpers
         async fn env(to: ActorId, lane: Lane, seq: u64) -> Envelope {
@@ -2852,7 +3252,223 @@ mod tests {
         async fn ok_turn() -> TurnResult {
             TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
         }
+
+        fn bridge_operation() -> job::Operation {
+            job::Operation::new(job::OperationId(91), job::RevisionId(7), job::Generation(3), 0x5eed)
+        }
+
+        fn bridge_turn(step_sequence: u64, preview_sequence: u64) -> JobTurn {
+            let mut operation = bridge_operation();
+            operation.preview_sequence = preview_sequence;
+            JobTurn { job: 44, operation: JobOperation::from_job(operation), step_sequence }
+        }
+
+        fn bridge_now_ms() -> u64 {
+            10
+        }
+
+        struct ScriptJob {
+            outcomes: VecDeque<JobStepOutcome>,
+            calls: usize,
+        }
+
+        impl job::InteractiveJob for ScriptJob {
+            fn step(&mut self, cx: &mut job::StepContext<'_>) -> job::StepOutcome {
+                self.calls += 1;
+                let outcome = self.outcomes.pop_front().expect("scripted bridge outcome");
+                if matches!(outcome, JobStepOutcome::PreviewReady { .. }) {
+                    cx.next_preview_sequence();
+                }
+                outcome.into_job()
+            }
+        }
+
+        struct UnsequencedPreviewJob;
+
+        impl job::InteractiveJob for UnsequencedPreviewJob {
+            fn step(&mut self, _cx: &mut job::StepContext<'_>) -> job::StepOutcome {
+                job::StepOutcome::PreviewReady(vec![1])
+            }
+        }
         //#endregion 🔖️Helpers
+
+        //#region 🪪️JobBridge
+        #[test]
+        fn job_bridge_invokes_exactly_one_step_per_turn() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield, JobStepOutcome::Yield]), calls: 0 };
+            let publication = bridge
+                .step(
+                    &mut job,
+                    bridge_turn(0, 0),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.one-step",
+                    job::InteractiveStage::InteractiveStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms,
+                )
+                .expect("first job turn");
+            assert_eq!(job.calls, 1);
+            assert!(matches!(publication.outcome, JobStepOutcome::Yield));
+        }
+
+        #[test]
+        fn job_bridge_preserves_checkpoint_state_and_applied_progress() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            let checkpoint = JobCheckpoint { state: vec![4, 5, 6], applied_progress: 73 };
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0 };
+            let publication = bridge
+                .step(
+                    &mut job,
+                    bridge_turn(0, 0),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.checkpoint",
+                    job::InteractiveStage::BackgroundStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms,
+                )
+                .expect("checkpoint publication");
+            assert_eq!(publication.outcome, JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() });
+            assert_eq!(publication.turn_status(), TurnStatus::CheckpointReady { checkpoint });
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn job_bridge_cancellation_is_terminal_and_skips_the_job() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            let cancel = job::root_cancel_token();
+            cancel.cancel().await;
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0 };
+            let publication = bridge
+                .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, bridge_now_ms)
+                .expect("cancel publication");
+            assert_eq!(job.calls, 0);
+            assert!(matches!(publication.outcome, JobStepOutcome::Cancelled));
+            assert!(matches!(
+                bridge.step(
+                    &mut job,
+                    bridge_turn(1, 0),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.cancel",
+                    job::InteractiveStage::InteractiveStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms
+                ),
+                Err(JobPublicationError::Terminal)
+            ));
+        }
+
+        #[test]
+        fn job_bridge_rejects_stale_commit_before_work_or_publication() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } }]), calls: 0 };
+            let result = bridge.step(
+                &mut job,
+                bridge_turn(0, 0),
+                operation.operation,
+                job::RevisionId(8),
+                operation.generation,
+                "actor.job.stale",
+                job::InteractiveStage::InteractiveStep,
+                job::StepBudget::new(100, 20),
+                job::root_cancel_token(),
+                bridge_now_ms,
+            );
+            assert!(matches!(result, Err(JobPublicationError::Stale { live_revision: 8, live_generation: 3 })));
+            assert_eq!(job.calls, 0);
+        }
+
+        #[test]
+        fn job_bridge_rejects_replayed_preview_identity_before_work() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0 };
+            assert!(matches!(
+                bridge.step(
+                    &mut job,
+                    bridge_turn(0, 1),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.replayed-preview",
+                    job::InteractiveStage::InteractiveStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms,
+                ),
+                Err(JobPublicationError::Stale { .. })
+            ));
+            assert_eq!(job.calls, 0);
+        }
+
+        #[test]
+        fn job_bridge_rejects_a_preview_without_exactly_one_sequence_advance() {
+            let operation = bridge_operation();
+            let mut bridge = JobTurnBridge::new(operation);
+            assert!(matches!(
+                bridge.step(
+                    &mut UnsequencedPreviewJob,
+                    bridge_turn(0, 0),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.preview-order",
+                    job::InteractiveStage::InteractiveStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms,
+                ),
+                Err(JobPublicationError::PreviewSequence { before: 0, after: 0 })
+            ));
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn job_replay_log_is_byte_identical_for_the_same_identity_and_outcomes() {
+            async fn run() -> Vec<u8> {
+                let operation = bridge_operation();
+                let mut bridge = JobTurnBridge::new(operation);
+                let mut job = ScriptJob {
+                    outcomes: VecDeque::from([
+                        JobStepOutcome::Yield,
+                        JobStepOutcome::PreviewReady { preview: vec![9, 8] },
+                        JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: vec![7, 6], applied_progress: 5 } },
+                        JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![3], output: vec![2, 1] } },
+                    ]),
+                    calls: 0,
+                };
+                let mut log = JobReplayLog::default();
+                let mut turn = bridge_turn(0, 0);
+                loop {
+                    let publication = bridge
+                        .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_ms)
+                        .expect("replay publication");
+                    let terminal = matches!(publication.outcome, JobStepOutcome::Complete { .. });
+                    turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
+                    log.push(publication);
+                    if terminal {
+                        break;
+                    }
+                }
+                let mut bytes = Vec::new();
+                log.pack_encode(&mut bytes).await;
+                bytes
+            }
+
+            assert_eq!(run().await, run().await);
+        }
+        //#endregion 🪪️JobBridge
 
         //#region 🔖️PackRoundTrips
         macro_rules! round_trip {
@@ -2878,7 +3494,27 @@ mod tests {
         round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive).await);
         round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
         round_trip!(pack_round_trip_origin, Origin, Origin::Bus { topic: "os.runtime.metrics".into() });
-        round_trip!(pack_round_trip_payload, Payload, Payload::Resume { checkpoint: Some(vec![9, 9, 9]) });
+        round_trip!(pack_round_trip_job_operation, JobOperation, JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 2, seed: 99 });
+        round_trip!(pack_round_trip_job_checkpoint, JobCheckpoint, JobCheckpoint { state: vec![9, 8, 7], applied_progress: 42 });
+        round_trip!(pack_round_trip_job_step_outcome, JobStepOutcome, JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![6, 5], output: vec![4, 3] } });
+        round_trip!(
+            pack_round_trip_job_publication,
+            JobPublication,
+            JobPublication {
+                turn: JobTurn { job: 44, operation: JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 1, seed: 99 }, step_sequence: 5 },
+                outcome: JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: vec![2, 1], applied_progress: 73 } },
+            }
+        );
+        round_trip!(
+            pack_round_trip_job_replay_log,
+            JobReplayLog,
+            JobReplayLog { entries: vec![JobPublication { turn: JobTurn { job: 44, operation: JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 0, seed: 99 }, step_sequence: 0 }, outcome: JobStepOutcome::Yield }] }
+        );
+        round_trip!(
+            pack_round_trip_payload,
+            Payload,
+            Payload::Resume { operation: JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 2, seed: 99 }, checkpoint: JobCheckpoint { state: vec![9, 9, 9], applied_progress: 42 } }
+        );
         round_trip!(pack_round_trip_coalesce_key, CoalesceKey, CoalesceKey("pointer-move".into()));
         round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0).await, Lane::Interactive, 7).await);
         round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted { detail: vec![1, 2] });
@@ -3630,6 +4266,13 @@ mod tests {
         ActorKind::export().unwrap();
         Lane::export().unwrap();
         Budget::export().unwrap();
+        JobOperation::export().unwrap();
+        JobCheckpoint::export().unwrap();
+        JobCommitCandidate::export().unwrap();
+        JobStepOutcome::export().unwrap();
+        JobTurn::export().unwrap();
+        JobPublication::export().unwrap();
+        JobReplayLog::export().unwrap();
         WindowId::export().unwrap();
         Origin::export().unwrap();
         Payload::export().unwrap();

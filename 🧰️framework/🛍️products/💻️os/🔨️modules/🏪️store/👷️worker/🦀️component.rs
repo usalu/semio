@@ -15,6 +15,7 @@ struct DocumentEntry {
 #[wasm_bindgen]
 pub struct BackboneWorkerHost {
     host: ArtifactHost,
+    pool: std::sync::Arc<semio_framework_async::WorkerPool>,
     documents: std::collections::HashMap<String, DocumentEntry>,
 }
 
@@ -23,11 +24,13 @@ impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
     pub async fn new() -> Self {
         console_error_panic_hook::set_once();
-        Self { host: ArtifactHost::new(), documents: std::collections::HashMap::new() }
+        let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        Self { host: ArtifactHost::new(pool.clone()), pool, documents: std::collections::HashMap::new() }
     }
 
     #[wasm_bindgen(js_name = handleRequestBytes)]
     pub async fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+        let _ = self.pool.pump(0);
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
             BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {

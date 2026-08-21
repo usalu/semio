@@ -12,11 +12,6 @@ use std::collections::HashSet;
 pub async fn inverse(payload: &DeleteTiles, base: &PresentSnapshot) -> Vec<PresentMutation> {
     let (_, tiles) = crate::artifacts::present::present_working_scene(base);
     let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
-    tiles
-        .iter()
-        .enumerate()
-        .filter(|(_, tile)| targets.contains(tile.id.as_str()))
-        .map(|(index, tile)| PresentMutation::CreateTile(CreateTile { index, tile: tile.clone() }))
-        .collect()
+    tiles.iter().enumerate().filter(|(_, tile)| targets.contains(tile.id.as_str())).map(|(index, tile)| PresentMutation::CreateTile(CreateTile { index, tile: tile.clone() })).collect()
 }
 //#endregion 🔹Inverse

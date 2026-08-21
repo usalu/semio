@@ -14,7 +14,9 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<PlaybookSnapshot, String> {
     let mut snap: PlaybookSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| e.to_string())?;
-    if snap.schema.is_empty() { snap.schema = PLAYBOOK_DOCUMENT_SCHEMA.into(); }
+    if snap.schema.is_empty() {
+        snap.schema = PLAYBOOK_DOCUMENT_SCHEMA.into();
+    }
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     Ok(snap)
 }

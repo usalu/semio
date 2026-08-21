@@ -16,8 +16,7 @@ pub struct ReplaceMachineCapabilities {
 }
 
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceMachineCapabilities {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "replace", entity: "machine", kind: "replace-machine-capabilities", record: "ReplacedMachineCapabilities" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "machine", kind: "replace-machine-capabilities", record: "ReplacedMachineCapabilities" };
 
     async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::replace_machine_capabilities::diff::diff(self, base)

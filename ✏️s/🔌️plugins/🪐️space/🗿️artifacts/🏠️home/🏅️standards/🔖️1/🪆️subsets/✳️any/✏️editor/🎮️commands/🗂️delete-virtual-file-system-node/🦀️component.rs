@@ -1,9 +1,9 @@
 //! 🗂️ 🗂️ S Home launcher app command — `delete-virtual-file-system-node`.
 
-use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::mutations::change_catalog_generation;
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
+use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 use semio_framework_os::delete_os_space;

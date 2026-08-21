@@ -123,8 +123,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff did not carry before to after");
     assert_eq!(produced.assets, before().assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applying the committed diff must not mint a handle either");
 }

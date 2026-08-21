@@ -126,7 +126,7 @@ pub struct JsonDiff {
 }
 
 impl MutationDiff<JsonSnapshot> for JsonDiff {
-    async fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
+    fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
         if let Some(diff) = &self.value {
             validate_value_diff(diff, &base.value)?;
         }
@@ -141,7 +141,7 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
     /// helpers below for the array/object transport algorithm). A composed collection diff that
     /// ends up structurally empty (e.g. an `Insert` immediately cancelled by a matching `Remove`)
     /// collapses back to `None` rather than surviving as a no-op `Some(Array{diff: <empty>})`.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.value = match (self.value.take(), other.value) {
             (None, None) => None,
             (Some(d1), None) => Some(d1),
@@ -162,16 +162,16 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
     /// `between(mid, base)` is — by the `between_roundtrip_law` — exactly the diff that restores
     /// `base` when applied to `mid`.
-    async fn inverse(&self, base: &JsonSnapshot) -> Self {
+    fn inverse(&self, base: &JsonSnapshot) -> Self {
         let mid = apply_json_diff_unchecked(self, base);
-        Self::between(&mid, base).await
+        Self::between(&mid, base)
     }
 
-    async fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
+    fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
         JsonDiff { value: value_diff_between(&base.value, &other.value) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.value.is_none()
     }
 }
@@ -1126,10 +1126,10 @@ fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
 }
 
 impl protocol::DiffCodec for JsonDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_json_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_json_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-P1: REAL binary frame (`format u8 | has_value u8 | value-diff payload`), matching
@@ -1137,17 +1137,17 @@ impl protocol::DiffCodec for JsonDiff {
     /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
     /// `DiffCodec` impls were still on that shortcut per the P2-W0 census; this is the first real
     /// upgrade, per the ticket's own "be the good example" framing).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.value.is_some() { 1 } else { 0 }];
         if let Some(value) = &self.value {
             enc_value_diff_bin(value, &mut out);
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
-        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let has_value = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
         let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(JsonDiff { value })
     }

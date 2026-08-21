@@ -1,10 +1,10 @@
 //! 🖌️ Block 3D play app — world window option: the surface-brush's vortex-kind/radius/flip group.
 
+use crate::artifacts::block3d::Block3dSnapshot;
 use crate::editor::block3d::config::Block3dConfig;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::resolve_brush_vortex_kind_id;
 use crate::editor::block3d::BLOCK3D_UTILITY_SURFACE_BRUSH;
-use crate::artifacts::block3d::Block3dSnapshot;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 pub async fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Block3dLabels) -> WindowMeasure {

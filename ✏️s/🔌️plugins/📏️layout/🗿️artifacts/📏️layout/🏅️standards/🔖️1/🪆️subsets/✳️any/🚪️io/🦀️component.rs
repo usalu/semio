@@ -1,7 +1,11 @@
 //! 🚪️ IO s.layout (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"] }
-pub async fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"] }
+pub async fn import_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+}
+pub async fn export_stdio_kinds() -> &'static [&'static str] {
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
+}
 pub async fn layout_to_wire(from: &crate::artifacts::layout::LayoutSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
@@ -13,17 +17,16 @@ pub async fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::layout::LayoutSnapshot;
     use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutAnalyzer;
+    use crate::artifacts::layout::LayoutSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
+    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.layout", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
     const DEP_DXF: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-
 
     pub struct LayoutComposerComposition;
 
@@ -89,7 +92,6 @@ pub mod derived_composition {
                         }
                     }
                 }
-
             }
             Err(ComposeError { message: "LayoutComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
@@ -136,12 +138,10 @@ pub enum LayoutError {
 /// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
 /// region's own header on the "more than one consumer" rule).
 use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId, io_dispatch, resolve_ready};
+use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
-    DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
 use serde_json::Value;
 
@@ -265,23 +265,13 @@ async fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingS
             styles.push(DrawStyle { name: style_name.clone(), fill, stroke, stroke_width: stroke.map(|_| 1.0), opacity: None });
             children.push(DrawNode::Path { segments, style: Some(style_name) });
         }
-        layers.push(DrawLayer {
-            id: page.id.clone(),
-            name: page.name.clone(),
-            visible: true,
-            root: DrawNode::Group { transform: SemioTransform { translation: SemioPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }, children },
-        });
+        layers.push(DrawLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: DrawNode::Group { transform: SemioTransform { translation: SemioPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }, children } });
         canvas_width = (x_offset + page.width).max(canvas_width);
         canvas_height = page.height.max(canvas_height);
         x_offset += page.width + PAGE_GAP;
     }
 
-    SemioDrawingSnapshot {
-        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas: DrawCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
-        styles,
-        layers,
-    }
+    SemioDrawingSnapshot { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas: DrawCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers }
 }
 
 pub async fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
@@ -322,10 +312,7 @@ async fn dwg_rect_pages(drawing: &DwgDrawing) -> Vec<(f64, f64, f64, f64)> {
 /// geometry through the real, schema-owning `SemioDrawingSnapshot`/`DrawNode` shape instead of a
 /// bespoke tuple list, symmetric with the export direction above.
 async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
-    let children: Vec<DrawNode> = dwg_rect_pages(drawing)
-        .into_iter()
-        .map(|(x, y, width, height)| DrawNode::Path { segments: rect_path_segments(x, y, width, height), style: None })
-        .collect();
+    let children: Vec<DrawNode> = dwg_rect_pages(drawing).into_iter().map(|(x, y, width, height)| DrawNode::Path { segments: rect_path_segments(x, y, width, height), style: None }).collect();
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas::default(),
@@ -420,11 +407,7 @@ mod media_import_export_tests {
     #[semio_framework_async_macros::async_test]
     async fn dwg_import_frames_page_to_rectangular_polyline() {
         let mut drawing = DwgDrawing::default();
-        drawing.entities.push(DwgEntity {
-            layer: 0,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] },
-        });
+        drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         assert_eq!(document.pages.len(), 1);
@@ -452,11 +435,7 @@ mod media_import_export_tests {
     #[semio_framework_async_macros::async_test]
     async fn dwg_import_mints_and_caches_a_real_background_drawing_child() {
         let mut drawing = DwgDrawing::default();
-        drawing.entities.push(DwgEntity {
-            layer: 0,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] },
-        });
+        drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
@@ -472,11 +451,7 @@ mod media_import_export_tests {
     async fn svg_export_merges_cached_background_drawing_behind_pages() {
         ensure_stdio_semio_drawing_registered();
         let mut drawing = DwgDrawing::default();
-        drawing.entities.push(DwgEntity {
-            layer: 0,
-            color: DwgColor::ByLayer,
-            geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] },
-        });
+        drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         assert!(document.background_drawing.is_some());
@@ -516,10 +491,10 @@ mod media_import_export_tests {
 /// module's `entries()` (`&'static [ComposerEntry]`, owning storage) — deliberately different return
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
-    use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutComposer as LayoutAnyComposer;
     use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutBuilder as LayoutAnyBuilder;
+    use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutComposer as LayoutAnyComposer;
+    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
@@ -560,28 +535,32 @@ pub mod io_registry {
 
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     async fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let text = crate::artifacts::layout::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let text = crate::artifacts::layout::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
-    Box::pin(async move {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let text = crate::artifacts::layout::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    })
-}
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let text = crate::artifacts::layout::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
     pub async fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<LayoutAnyComposer>(),
-            ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_svg },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<LayoutAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_json },
+                ]
+            })
+            .as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry

@@ -15,8 +15,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<Puzzle3dSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let snap: Puzzle3dSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("puzzle3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let snap: Puzzle3dSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("puzzle3d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(snap)
 }
 

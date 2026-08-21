@@ -46,9 +46,7 @@ async fn the_whole_transform_facet_moves_atomically() {
     assert_eq!(after_layer.transform.scale_x, 2.0, "the payload's scale_x lands on the layer transform");
     assert_eq!(after_layer.transform.scale_y, 1.5, "the payload's scale_y lands on the layer transform");
     assert_eq!(after_layer.transform.rotation, 0.0, "the payload's rotation lands on the layer transform");
-    let (DrawLayerNode::Shape(before_shape), DrawLayerNode::Shape(after_shape)) =
-        (find_draw_layer(&base, "shape-a").expect("before carries shape-a"), find_draw_layer(&snapshot, "shape-a").expect("after carries shape-a"))
-    else {
+    let (DrawLayerNode::Shape(before_shape), DrawLayerNode::Shape(after_shape)) = (find_draw_layer(&base, "shape-a").expect("before carries shape-a"), find_draw_layer(&snapshot, "shape-a").expect("after carries shape-a")) else {
         panic!("translates-and-scales-shape-a targets a shape layer");
     };
     assert_eq!(after_shape.rect, before_shape.rect, "a layer transform never bakes itself into the shape's local geometry");

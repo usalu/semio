@@ -100,13 +100,13 @@ pub enum PngMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv precedent).
 pub async fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) -> protocol::MutationOutcome<PngDiff> {
-    let outcome = <PngMutation as Mutation<PngSnapshot>>::diff(mutation, snapshot).await;
-    match MutationDiff::apply(outcome.diff().await, snapshot).await {
+    let outcome = <PngMutation as Mutation<PngSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -115,7 +115,7 @@ pub async fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutati
 impl Mutation<PngSnapshot> for PngMutation {
     type Diff = PngDiff;
 
-    async fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PngMutation::NoMutation => PngDiff::default(),
             PngMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -139,7 +139,7 @@ impl Mutation<PngSnapshot> for PngMutation {
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Out-of-range targets invert to
     /// `NoMutation` (nothing to undo).
-    async fn inverse(&self, base: &PngSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &PngSnapshot) -> Vec<Self> {
         match self {
             PngMutation::NoMutation => vec![PngMutation::NoMutation],
             PngMutation::SetSnapshot { .. } => vec![PngMutation::SetSnapshot { snapshot: base.clone() }],
@@ -236,7 +236,7 @@ async fn dec_png_snapshot(s: &str) -> Result<PngSnapshot, String> {
     })
 }
 
-async fn print_png_mutation(m: &PngMutation) -> String {
+fn print_png_mutation(m: &PngMutation) -> String {
     match m {
         PngMutation::NoMutation => "no-mutation".to_string(),
         PngMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_png_snapshot(snapshot)),
@@ -289,11 +289,11 @@ async fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
 }
 
 impl OpText for PngMutation {
-    async fn print_op(&self) -> String {
-        print_png_mutation(self).await
+    fn print_op(&self) -> String {
+        print_png_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_png_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_png_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -314,99 +314,99 @@ async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 }
 
 impl OpBinary for PngMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         match self {
             PngMutation::NoMutation => {
-                w.write_u8(0).await;
+                w.write_u8(0);
             }
             PngMutation::SetSnapshot { snapshot } => {
-                w.write_u8(1).await;
+                w.write_u8(1);
                 diff::write_bin_snapshot(&mut w, snapshot);
             }
             PngMutation::SetHeader { width, height, bit_depth, color_type, interlace } => {
-                w.write_u8(2).await;
-                w.write_u32_le(*width).await;
-                w.write_u32_le(*height).await;
-                w.write_u8(*bit_depth).await;
-                w.write_u8(color_type.to_u8()).await;
-                w.write_u8(if *interlace { 1 } else { 0 }).await;
+                w.write_u8(2);
+                w.write_u32_le(*width);
+                w.write_u32_le(*height);
+                w.write_u8(*bit_depth);
+                w.write_u8(color_type.to_u8());
+                w.write_u8(if *interlace { 1 } else { 0 });
             }
             PngMutation::SetPalette { plte } => {
-                w.write_u8(3).await;
+                w.write_u8(3);
                 diff::write_bin_option(&mut w, plte, |w, v: &Vec<PngRgb>| diff::write_bin_vec(w, v, diff::write_bin_rgb));
             }
             PngMutation::SetTransparency { trns } => {
-                w.write_u8(4).await;
+                w.write_u8(4);
                 diff::write_bin_option(&mut w, trns, diff::write_bin_transparency);
             }
             PngMutation::SetGamma { gama } => {
-                w.write_u8(5).await;
+                w.write_u8(5);
                 diff::write_bin_option(&mut w, gama, |w, v: &u32| w.write_u32_le(*v));
             }
             PngMutation::SetChromaticities { chrm } => {
-                w.write_u8(6).await;
+                w.write_u8(6);
                 diff::write_bin_option(&mut w, chrm, diff::write_bin_chromaticities);
             }
             PngMutation::SetSrgbIntent { srgb } => {
-                w.write_u8(7).await;
+                w.write_u8(7);
                 diff::write_bin_option(&mut w, srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
             }
             PngMutation::SetPhysicalDims { phys } => {
-                w.write_u8(8).await;
+                w.write_u8(8);
                 diff::write_bin_option(&mut w, phys, diff::write_bin_physical_dims);
             }
             PngMutation::SetTimestamp { time } => {
-                w.write_u8(9).await;
+                w.write_u8(9);
                 diff::write_bin_option(&mut w, time, diff::write_bin_timestamp);
             }
             PngMutation::SetBackground { bkgd } => {
-                w.write_u8(10).await;
+                w.write_u8(10);
                 diff::write_bin_option(&mut w, bkgd, diff::write_bin_background);
             }
             PngMutation::InsertTextChunk { index, chunk } => {
-                w.write_u8(11).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(11);
+                w.write_varint_u64(*index as u64);
                 diff::write_bin_text_chunk(&mut w, chunk);
             }
             PngMutation::RemoveTextChunk { index } => {
-                w.write_u8(12).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(12);
+                w.write_varint_u64(*index as u64);
             }
             PngMutation::SetTextChunk { index, chunk } => {
-                w.write_u8(13).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(13);
+                w.write_varint_u64(*index as u64);
                 diff::write_bin_text_chunk(&mut w, chunk);
             }
             PngMutation::SetPixels { pixels } => {
-                w.write_u8(14).await;
+                w.write_u8(14);
                 diff::write_bin_blob(&mut w, pixels);
             }
             PngMutation::InsertUnknownChunk { index, chunk } => {
-                w.write_u8(15).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(15);
+                w.write_varint_u64(*index as u64);
                 diff::write_bin_chunk(&mut w, chunk);
             }
             PngMutation::RemoveUnknownChunk { index } => {
-                w.write_u8(16).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(16);
+                w.write_varint_u64(*index as u64);
             }
         }
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes).await;
-        let ordinal = r.read_u8().await.map_err(op_pack_err)?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let ordinal = r.read_u8().map_err(op_pack_err)?;
         let mutation = match ordinal {
             0 => PngMutation::NoMutation,
             1 => PngMutation::SetSnapshot { snapshot: diff::read_bin_snapshot(&mut r).map_err(op_pack_err)? },
             2 => PngMutation::SetHeader {
-                width: r.read_u32_le().await.map_err(op_pack_err)?,
-                height: r.read_u32_le().await.map_err(op_pack_err)?,
-                bit_depth: r.read_u8().await.map_err(op_pack_err)?,
-                color_type: PngColorType::from_u8(r.read_u8().await.map_err(op_pack_err)?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
-                interlace: r.read_u8().await.map_err(op_pack_err)? != 0,
+                width: r.read_u32_le().map_err(op_pack_err)?,
+                height: r.read_u32_le().map_err(op_pack_err)?,
+                bit_depth: r.read_u8().map_err(op_pack_err)?,
+                color_type: PngColorType::from_u8(r.read_u8().map_err(op_pack_err)?).map_err(|e| protocol::ProtocolError::Malformed { what: "png op color type", offset: 0, detail: e })?,
+                interlace: r.read_u8().map_err(op_pack_err)? != 0,
             },
             3 => PngMutation::SetPalette { plte: diff::read_bin_option(&mut r, |r| diff::read_bin_vec(r, diff::read_bin_rgb)).map_err(op_pack_err)? },
             4 => PngMutation::SetTransparency { trns: diff::read_bin_option(&mut r, diff::read_bin_transparency).map_err(op_pack_err)? },
@@ -417,23 +417,23 @@ impl OpBinary for PngMutation {
             9 => PngMutation::SetTimestamp { time: diff::read_bin_option(&mut r, diff::read_bin_timestamp).map_err(op_pack_err)? },
             10 => PngMutation::SetBackground { bkgd: diff::read_bin_option(&mut r, diff::read_bin_background).map_err(op_pack_err)? },
             11 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::InsertTextChunk { index, chunk }
             }
-            12 => PngMutation::RemoveTextChunk { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },
+            12 => PngMutation::RemoveTextChunk { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
             13 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let chunk = diff::read_bin_text_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::SetTextChunk { index, chunk }
             }
             14 => PngMutation::SetPixels { pixels: diff::read_bin_blob(&mut r).map_err(op_pack_err)? },
             15 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let chunk = diff::read_bin_chunk(&mut r).map_err(op_pack_err)?;
                 PngMutation::InsertUnknownChunk { index, chunk }
             }
-            16 => PngMutation::RemoveUnknownChunk { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },
+            16 => PngMutation::RemoveUnknownChunk { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
             other => {
                 return Err(protocol::ProtocolError::Malformed { what: "png op ordinal", offset: 0, detail: format!("unknown ordinal {other}") });
             }

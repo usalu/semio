@@ -21,7 +21,7 @@
 
 use crate::artifacts::jack::diff::JackDiff;
 use crate::artifacts::jack::mutations::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation, TrinityGraphMutation};
-use crate::artifacts::jack::{cache_jack_content, jack_working_scene, JackSnapshot, Edge, EntityRef, PropertyBag};
+use crate::artifacts::jack::{cache_jack_content, jack_working_scene, Edge, EntityRef, JackSnapshot, PropertyBag};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");

@@ -6,10 +6,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.dag.dag.config")]
 pub struct DagConfig {
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -37,4 +41,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

@@ -11,6 +11,7 @@ use std::time::Duration;
 
 use crate::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
 use crate::{ByteRange, PackError};
+use semio_framework_async::WorkerPool;
 
 /// @emoji 📨️ One range-request against `url`, optionally revalidated against a previously seen
 /// etag via `if_range_etag`.
@@ -59,6 +60,34 @@ impl Default for RetryPolicy {
     }
 }
 
+/// @emoji ⏱️ The process runtime used for retry deadlines. The clock must use the same
+/// millisecond epoch supplied to `WorkerPool::pump` on wasm; native callers can use `native`.
+#[derive(Clone)]
+pub struct RetryRuntime {
+    pool: Arc<WorkerPool>,
+    now_ms: Arc<dyn Fn() -> u64 + Send + Sync>,
+}
+
+impl RetryRuntime {
+    /// @emoji 🧩️ Injects the process pool and its matching monotonic clock.
+    pub fn new(pool: Arc<WorkerPool>, now_ms: Arc<dyn Fn() -> u64 + Send + Sync>) -> Self {
+        Self { pool, now_ms }
+    }
+
+    /// @emoji 🖥️ Binds retry deadlines to a native pool's monotonic clock.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn native(pool: Arc<WorkerPool>) -> Self {
+        let clock_pool = pool.clone();
+        Self::new(pool, Arc::new(move || clock_pool.now_ms()))
+    }
+
+    async fn sleep(&self, duration: Duration) {
+        let delay_ms = u64::try_from(duration.as_millis()).unwrap_or(u64::MAX);
+        let deadline_ms = (self.now_ms)().saturating_add(delay_ms);
+        self.pool.timer().sleep_until(deadline_ms).await;
+    }
+}
+
 /// @emoji 🚦️ `u64::MAX` sentinel meaning "length not yet observed" for `SharedState::known_len`,
 /// since `AtomicU64` has no built-in `Option`.
 const LEN_UNKNOWN: u64 = u64::MAX;
@@ -103,6 +132,7 @@ struct InnerSource<T: RangeTransport> {
     transport: T,
     retry_policy: RetryPolicy,
     shared: Arc<SharedState>,
+    runtime: RetryRuntime,
 }
 
 impl<T: RangeTransport> InnerSource<T> {
@@ -146,7 +176,7 @@ impl<T: RangeTransport> InnerSource<T> {
                 Err(error) if Self::is_transient(&error) && attempt < self.retry_policy.max_retries => {
                     let delay = self.backoff_for(attempt).await;
                     if delay > Duration::ZERO {
-                        sleep(delay).await;
+                        self.runtime.sleep(delay).await;
                     }
                     attempt += 1;
                 }
@@ -154,54 +184,6 @@ impl<T: RangeTransport> InnerSource<T> {
             }
         }
     }
-}
-
-/// @emoji 💤️ A tiny runtime-neutral async sleep (no `tokio` dependency): the *first* `poll`
-/// spawns a one-shot timer thread that owns the actual waiting and calls `Waker::wake` once
-/// `duration` elapses; `poll` itself never blocks and is called at most twice (once to arm the
-/// timer, once — from the timer thread's wake — to observe it fired).
-async fn sleep(duration: Duration) {
-    struct SleepState {
-        woken: bool,
-        waker: Option<std::task::Waker>,
-        spawned: bool,
-    }
-    struct Sleep {
-        deadline: std::time::Instant,
-        state: Arc<Mutex<SleepState>>,
-    }
-    impl std::future::Future for Sleep {
-        type Output = ();
-
-        // 🚫️async: E1 impl of the externally-declared `Future` trait; `poll`'s signature is
-        // fixed by `std::future::Future` and must stay sync. The wait itself happens on the
-        // dedicated timer thread spawned (once) below, never inside this fn.
-        fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
-            let mut state = self.state.lock().unwrap();
-            if state.woken || std::time::Instant::now() >= self.deadline {
-                return std::task::Poll::Ready(());
-            }
-            state.waker = Some(cx.waker().clone());
-            if !state.spawned {
-                state.spawned = true;
-                let deadline = self.deadline;
-                let state_handle = self.state.clone();
-                std::thread::spawn(move || {
-                    let now = std::time::Instant::now();
-                    if deadline > now {
-                        std::thread::sleep(deadline - now);
-                    }
-                    let mut state = state_handle.lock().unwrap();
-                    state.woken = true;
-                    if let Some(waker) = state.waker.take() {
-                        waker.wake();
-                    }
-                });
-            }
-            std::task::Poll::Pending
-        }
-    }
-    Sleep { deadline: std::time::Instant::now() + duration, state: Arc::new(Mutex::new(SleepState { woken: false, waker: None, spawned: false })) }.await;
 }
 
 impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
@@ -235,15 +217,15 @@ impl<T: RangeTransport> HttpPackSource<T> {
     /// known length or etag yet.
     // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
     // call sites (`let source = HttpPackSource::new(...);`, unawaited) keep compiling.
-    pub fn new(url: String, transport: T) -> Self {
-        Self::with_retry_policy(url, transport, RetryPolicy::default())
+    pub fn new(url: String, transport: T, runtime: RetryRuntime) -> Self {
+        Self::with_retry_policy(url, transport, RetryPolicy::default(), runtime)
     }
 
     /// @emoji 🆕️ As `new`, but with an explicit `RetryPolicy`.
     // 🚫️async: no suspension point — same constructor reasoning as `new` above.
-    pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy) -> Self {
+    pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy, runtime: RetryRuntime) -> Self {
         let shared = Arc::new(SharedState::new());
-        let inner = InnerSource { url, transport, retry_policy, shared: shared.clone() };
+        let inner = InnerSource { url, transport, retry_policy, shared: shared.clone(), runtime };
         Self { shared, scheduler: ReadScheduler::new(inner) }
     }
 }
@@ -404,6 +386,11 @@ mod tests {
     use super::*;
     use std::sync::atomic::AtomicU32;
 
+    fn retry_runtime() -> (RetryRuntime, Arc<WorkerPool>) {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
+        (RetryRuntime::native(pool.clone()), pool)
+    }
+
     //#region 🔖️Transport
     /// @emoji 🧪️ An in-memory `RangeTransport` test double: serves slices of `data`, can be
     /// scripted to fail transiently N times before succeeding, and records every request it
@@ -449,45 +436,27 @@ mod tests {
         }
     }
 
-    /// 🧪️ Regression test for the poll-sleep defect this packet fixes: `sleep`'s inner `Sleep`
-    /// future must resolve after its duration elapses without ever blocking inside `poll` — the
-    /// actual wait now happens on a dedicated timer thread that calls `Waker::wake`. Proven by
-    /// counting polls: a busy-poll implementation (the original 200µs-sleep version) would rack
-    /// up roughly `15ms / 200µs` ≈ 75 polls; a correct implementation polls a small constant
-    /// number of times (arm the timer, then observe it fired) regardless of the duration.
+    /// 🧪️ Retry waits use the process TimerWheel and make forward progress without
+    /// creating a per-wait OS thread.
     #[test]
-    fn sleep_resolves_via_timer_thread_without_busy_polling() {
-        // Boxed + pinned rather than generic-over-`F: Unpin`: an `async fn`'s generated future
-        // has no guaranteed `Unpin` impl, so this sidesteps that entirely.
-        struct CountingPoll {
-            inner: std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>,
-            polls: Arc<AtomicU32>,
-        }
-        impl std::future::Future for CountingPoll {
-            type Output = ();
-            fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
-                self.polls.fetch_add(1, Ordering::SeqCst);
-                self.inner.as_mut().poll(cx)
-            }
-        }
-
-        let polls = Arc::new(AtomicU32::new(0));
-        let counted = CountingPoll { inner: Box::pin(sleep(Duration::from_millis(15))), polls: polls.clone() };
-        futures_lite::future::block_on(counted);
-
-        let observed = polls.load(Ordering::SeqCst);
-        assert!(observed <= 4, "sleep's Future::poll must be driven by Waker::wake from its timer thread, not busy-spinning; observed {observed} polls waiting out 15ms");
+    fn retry_runtime_sleep_resolves_via_worker_pool_timer_wheel() {
+        let (runtime, pool) = retry_runtime();
+        futures_lite::future::block_on(runtime.sleep(Duration::from_millis(15)));
+        assert_eq!(pool.worker_count(), 2);
+        pool.shutdown();
     }
 
     #[test]
     fn successful_range_fetch_returns_exact_slice() {
         let data: Vec<u8> = (0..64u16).map(|value| value as u8).collect();
         let transport = FakeTransport::new(data.clone(), "etag-1");
-        let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport);
+        let (runtime, pool) = retry_runtime();
+        let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport, runtime);
 
         let bytes = futures_lite::future::block_on(source.read_at(10, 20)).unwrap();
         assert_eq!(bytes, data[10..30].to_vec());
         assert_eq!(source.len(), 64);
+        pool.shutdown();
     }
 
     #[test]
@@ -495,7 +464,8 @@ mod tests {
         let data: Vec<u8> = (0..32u16).map(|value| value as u8).collect();
         let transport = FakeTransport::new(data, "etag-abc");
         let inspector = transport.clone();
-        let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport);
+        let (runtime, pool) = retry_runtime();
+        let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport, runtime);
 
         // Sequential (not concurrent) reads: each completes and its coalescing group is
         // finalized before the next begins, so these must land as two separate physical fetches
@@ -507,6 +477,8 @@ mod tests {
         assert_eq!(seen.len(), 2, "expected exactly two physical fetches, one per read_at call");
         assert_eq!(seen[0].if_range_etag, None, "the first request has no prior etag to revalidate against");
         assert_eq!(seen[1].if_range_etag.as_deref(), Some("etag-abc"), "the second request must carry the etag observed from the first response for revalidation");
+        drop(seen);
+        pool.shutdown();
     }
 
     #[test]
@@ -514,24 +486,27 @@ mod tests {
         let data: Vec<u8> = (0..16u16).map(|value| value as u8).collect();
         let transport = FakeTransport::new(data.clone(), "etag-r").failing_first(2);
         let inspector = transport.clone();
-        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 5, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(20) });
+        let (runtime, pool) = retry_runtime();
+        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 5, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(20) }, runtime);
 
         let bytes = futures_lite::future::block_on(source.read_at(0, 16)).unwrap();
         assert_eq!(bytes, data);
         assert_eq!(inspector.call_count.load(Ordering::SeqCst), 3, "two failures then one success = three calls");
+        pool.shutdown();
     }
 
     #[test]
     fn exhausting_retries_surfaces_the_transient_error() {
         let transport = FakeTransport::new(vec![0u8; 8], "etag-x").failing_first(10);
         let inspector = transport.clone();
-        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 2, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(5) });
+        let (runtime, pool) = retry_runtime();
+        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 2, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(5) }, runtime);
 
         let result = futures_lite::future::block_on(source.read_at(0, 8));
         assert!(result.is_err());
         assert_eq!(inspector.call_count.load(Ordering::SeqCst), 3, "initial attempt + 2 retries = three calls");
+        pool.shutdown();
     }
     //#endregion 🔖️Transport
-
 }
 //#endregion 🧪️Tests

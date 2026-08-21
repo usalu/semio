@@ -123,11 +123,7 @@ mod tests {
     }
 
     async fn snapshot_with_grips(grips: Vec<Block5dGripTemplate>) -> Block5dSnapshot {
-        Block5dSnapshot {
-            part_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() },
-            grips,
-            ..Block5dSnapshot::default()
-        }
+        Block5dSnapshot { part_kind: BlockKindIdentity { id: "capsule".into(), name: "capsule".into(), label: "Capsule".into(), ..Default::default() }, grips, ..Block5dSnapshot::default() }
     }
     //#endregion 🧸️Fixtures
 

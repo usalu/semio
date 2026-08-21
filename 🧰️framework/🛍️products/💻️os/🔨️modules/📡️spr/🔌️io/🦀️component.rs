@@ -13,16 +13,16 @@ mod native {
     use std::path::{Path, PathBuf};
 
     use crate::os_pack::{CodecId, PackSource};
-    use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
     use crate::os_spr::format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
     use crate::os_spr::history::{decode_history, encode_active, encode_alternative, encode_change, encode_checkpoint, encode_doc, encode_edit, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
+    use crate::os_spr::wire::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
     /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
     /// public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-    // 🚫️async: R9 pure accessor — only consumers are `Result::map_err`'s sync closure; no
-    // suspension point exists in the body either.
+                                             // 🚫️async: R9 pure accessor — only consumers are `Result::map_err`'s sync closure; no
+                                             // suspension point exists in the body either.
     fn io_err(err: std::io::Error) -> ProtocolError {
         ProtocolError::Io(err.to_string())
     }
@@ -256,18 +256,18 @@ mod native {
     /// the family): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
     /// (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`.
     async fn encode_compaction_payload(options: &CompactOptions) -> Vec<u8> {
-        let mut out = crate::os_pack::ByteWriter::new().await;
-        out.write_u8(1).await;
-        out.write_u8(options.drop_ephemeral as u8).await;
+        let mut out = crate::os_pack::ByteWriter::new();
+        out.write_u8(1);
+        out.write_u8(options.drop_ephemeral as u8);
         match options.keep_snapshots {
-            KeepSnapshots::All => out.write_u8(0).await,
-            KeepSnapshots::LatestPerAlternative => out.write_u8(1).await,
+            KeepSnapshots::All => out.write_u8(0),
+            KeepSnapshots::LatestPerAlternative => out.write_u8(1),
             KeepSnapshots::LatestN(n) => {
-                out.write_u8(2).await;
-                out.write_varint_u64(n as u64).await;
+                out.write_u8(2);
+                out.write_varint_u64(n as u64);
             }
         }
-        out.into_bytes().await
+        out.into_bytes()
     }
 
     /// @emoji ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
@@ -279,15 +279,15 @@ mod native {
         let len = dict.len().await;
         if len > *base {
             let entries = dict.entries_since(*base).await;
-            let mut payload = crate::os_pack::ByteWriter::new().await;
-            payload.write_u8(1).await;
-            payload.write_varint_u64(*base as u64).await;
-            payload.write_varint_u64(entries.len() as u64).await;
+            let mut payload = crate::os_pack::ByteWriter::new();
+            payload.write_u8(1);
+            payload.write_varint_u64(*base as u64);
+            payload.write_varint_u64(entries.len() as u64);
             for entry in entries {
-                payload.write_varint_u64(entry.len() as u64).await;
-                payload.write_bytes(entry.as_bytes()).await;
+                payload.write_varint_u64(entry.len() as u64);
+                payload.write_bytes(entry.as_bytes());
             }
-            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await?;
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await?;
             *base = len;
         }
         Ok(())
@@ -582,7 +582,11 @@ mod native {
             file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
             file.appender().await.append_edit(&sample_edit("edit-2").await).await.unwrap();
             file.appender().await.append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }).await.unwrap();
-            file.appender().await.append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None }).await.unwrap();
+            file.appender()
+                .await
+                .append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None })
+                .await
+                .unwrap();
             file.appender().await.append_alternative(&HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }).await.unwrap();
             file.appender().await.set_active(Some("alt-1")).await.unwrap();
             file.appender().await.commit().await.unwrap();

@@ -612,7 +612,7 @@ fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
 }
 
 impl MutationDiff<IfcSnapshot> for IfcDiff {
-    async fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
+    fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }
@@ -621,7 +621,7 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
     /// `entities`: see [`absorb_entities`].
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.file_description.is_some() {
             self.file_description = other.file_description;
         }
@@ -638,13 +638,13 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
 impl DiffAlgebra<IfcSnapshot> for IfcDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction, per zip's precedent):
     /// the state delta from `self.apply(base)` back to `base`.
-    async fn inverse(&self, base: &IfcSnapshot) -> Self {
+    fn inverse(&self, base: &IfcSnapshot) -> Self {
         let mutated = apply_ifc_diff_unchecked(self, base);
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`).
-    async fn between(base: &IfcSnapshot, other: &IfcSnapshot) -> Self {
+    fn between(base: &IfcSnapshot, other: &IfcSnapshot) -> Self {
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
             file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
@@ -653,7 +653,7 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map_or(true, IfcEntitiesDiff::is_empty)
     }
 }
@@ -1311,10 +1311,10 @@ fn parse_ifc_diff(line: &str) -> Result<IfcDiff, String> {
 }
 
 impl protocol::DiffCodec for IfcDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_ifc_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_ifc_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | field payloads...`), matching
@@ -1328,7 +1328,7 @@ impl protocol::DiffCodec for IfcDiff {
     /// `index` fields — only the innermost recursive `IfcValue::Aggregate`/`TypedValue` payload
     /// bottoms out via `enc_ifc_value_bin`'s own recursive call (not an opaque tail: `IfcValue` is
     /// fully spec-expressible per variant, see that fn's own doc comment).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.file_description {
@@ -1345,11 +1345,11 @@ impl protocol::DiffCodec for IfcDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let file_description = if flags & 1 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let file_name = if flags & 2 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let file_schema = if flags & 4 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

@@ -110,7 +110,9 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
 fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
-        return Err("usage: semio-os-mcp <stdio|http> [--folder <dir> | --hub <url> --space <id> [--token <t>]] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --token <t> --audit-dir <dir> --allow-origin <origin>]".to_string());
+        return Err(
+            "usage: semio-os-mcp <stdio|http> [--folder <dir> | --hub <url> --space <id> [--token <t>]] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --token <t> --audit-dir <dir> --allow-origin <origin>]".to_string()
+        );
     };
     match mode.as_str() {
         "stdio" => Ok(Mode::Stdio(parse_stdio_args(&mut argv)?)),

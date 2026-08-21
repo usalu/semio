@@ -1,8 +1,8 @@
 //! 🔺️ Diff fragment yielded by `DeleteAsset`. Error `target-missing` when the key is absent.
 use super::mutation::DeleteAsset;
+use crate::artifacts::note::schema::diff::note_asset_removed_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_asset_removed_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteAsset, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

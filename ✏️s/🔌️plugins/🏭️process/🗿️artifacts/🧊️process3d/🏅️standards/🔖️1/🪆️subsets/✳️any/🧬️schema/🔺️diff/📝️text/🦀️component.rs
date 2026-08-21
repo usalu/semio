@@ -12,7 +12,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::process3d::schema::diff::*;
 
-
 use crate::artifacts::process3d::schema::Process3dArtifact;
 use crate::artifacts::process3d::Process3dSnapshot;
 use protocol::MutationDiff;
@@ -65,21 +64,51 @@ impl Process3dDiff {
             if let Some(value) = &self.engagement_input {
                 next.engagement_input = value.clone();
             }
-            if let Some(value) = self.camera_position_x { next.camera_position_x = value; }
-            if let Some(value) = self.camera_position_y { next.camera_position_y = value; }
-            if let Some(value) = self.camera_position_z { next.camera_position_z = value; }
-            if let Some(value) = self.camera_target_x { next.camera_target_x = value; }
-            if let Some(value) = self.camera_target_y { next.camera_target_y = value; }
-            if let Some(value) = self.camera_target_z { next.camera_target_z = value; }
-            if let Some(value) = self.camera_fov { next.camera_fov = value; }
-            if let Some(value) = self.sun_enabled { next.sun_enabled = value; }
-            if let Some(value) = self.sun_azimuth { next.sun_azimuth = value; }
-            if let Some(value) = self.sun_elevation { next.sun_elevation = value; }
-            if let Some(value) = self.sun_intensity { next.sun_intensity = value; }
-            if let Some(value) = &self.sun_color { next.sun_color = value.clone(); }
-            if let Some(value) = &self.locale { next.locale = value.clone(); }
-            if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
-            if let Some(value) = &self.hovered_id { next.hovered_id = value.clone(); }
+            if let Some(value) = self.camera_position_x {
+                next.camera_position_x = value;
+            }
+            if let Some(value) = self.camera_position_y {
+                next.camera_position_y = value;
+            }
+            if let Some(value) = self.camera_position_z {
+                next.camera_position_z = value;
+            }
+            if let Some(value) = self.camera_target_x {
+                next.camera_target_x = value;
+            }
+            if let Some(value) = self.camera_target_y {
+                next.camera_target_y = value;
+            }
+            if let Some(value) = self.camera_target_z {
+                next.camera_target_z = value;
+            }
+            if let Some(value) = self.camera_fov {
+                next.camera_fov = value;
+            }
+            if let Some(value) = self.sun_enabled {
+                next.sun_enabled = value;
+            }
+            if let Some(value) = self.sun_azimuth {
+                next.sun_azimuth = value;
+            }
+            if let Some(value) = self.sun_elevation {
+                next.sun_elevation = value;
+            }
+            if let Some(value) = self.sun_intensity {
+                next.sun_intensity = value;
+            }
+            if let Some(value) = &self.sun_color {
+                next.sun_color = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.contributions_json {
+                next.contributions_json = value.clone();
+            }
+            if let Some(value) = &self.hovered_id {
+                next.hovered_id = value.clone();
+            }
             next
         })
     }
@@ -166,10 +195,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
-    Process3dDiff {
-        artifact: Some(Box::new(Process3dArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    Process3dDiff { artifact: Some(Box::new(Process3dArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 
@@ -182,10 +208,7 @@ mod tests {
     async fn a_whole_artifact_diff_wins_over_every_field_diff() {
         let base = crate::artifacts::process3d::empty_process3d_snapshot();
         let replacement = Process3dSnapshot { stock_label: "Beam".into(), ..crate::artifacts::process3d::empty_process3d_snapshot() };
-        let mut diff = Process3dDiff {
-            stock_label: Some("Ignored".into()),
-            ..Default::default()
-        };
+        let mut diff = Process3dDiff { stock_label: Some("Ignored".into()), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }

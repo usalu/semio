@@ -2,7 +2,7 @@
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::diff::{Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::{Block3dVortexTemplate};
+use crate::artifacts::block3d::Block3dVortexTemplate;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::MoveVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
@@ -13,6 +13,9 @@ pub async fn diff(payload: &super::mutation::MoveVortex, base: &Block3dSnapshot)
     if replacement == *existing {
         return protocol::MutationOutcome::new(Block3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block3dDiff { vortices: Some(Block3dVorticesDelta { patched: vec![Block3dVorticesPatchEntry { id: payload.id.clone(), patch: Block3dVorticesPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block3dDiff {
+        vortices: Some(Block3dVorticesDelta { patched: vec![Block3dVorticesPatchEntry { id: payload.id.clone(), patch: Block3dVorticesPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

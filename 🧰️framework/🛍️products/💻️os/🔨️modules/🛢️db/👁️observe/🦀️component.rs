@@ -20,10 +20,10 @@
 //! blake3 `ContentHash`) and `ContentHash` itself as `DeterminismVerifier`'s digest type, since
 //! that's exactly the type `CommandReceipt.state_hash` carries per the frozen `db` facade API.
 
+use crate::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
-use crate::*;
 
 //#region 🔖️Util
 /// @emoji 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
@@ -714,11 +714,7 @@ mod tests {
     //#region 🔖️Json
     #[semio_framework_async_macros::async_test]
     async fn encode_emit_event_json_escapes_and_shapes_fields() {
-        let event = EmitEvent::new("wal.append")
-            .with_document(ArtifactId::from("doc\"1"))
-            .field("bytes", EmitField::U64(42))
-            .field("ok", EmitField::Bool(true))
-            .field("note", EmitField::Text("line\nbreak".to_string()));
+        let event = EmitEvent::new("wal.append").with_document(ArtifactId::from("doc\"1")).field("bytes", EmitField::U64(42)).field("ok", EmitField::Bool(true)).field("note", EmitField::Text("line\nbreak".to_string()));
 
         let json = encode_emit_event_json(&event);
         assert!(json.starts_with("{\"name\":\"wal.append\""));

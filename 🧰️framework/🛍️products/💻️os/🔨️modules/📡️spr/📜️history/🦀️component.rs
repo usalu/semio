@@ -10,7 +10,7 @@
 
 use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
 use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
-use crate::os_spr::format::{Blake3Hasher, FrameCursor, HEADER_SIZE, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
+use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
 
@@ -609,13 +609,13 @@ async fn malformed_fmt(what: &'static str, format: u8) -> ProtocolError {
 }
 
 async fn write_str_field(out: &mut ByteWriter, s: &str) {
-    out.write_varint_u64(s.len() as u64).await;
-    out.write_bytes(s.as_bytes()).await;
+    out.write_varint_u64(s.len() as u64);
+    out.write_bytes(s.as_bytes());
 }
 
 async fn read_str_field(input: &mut ByteReader<'_>) -> Result<String, ProtocolError> {
-    let len = input.read_varint_u64().await? as usize;
-    let bytes = input.read_bytes(len).await?;
+    let len = input.read_varint_u64()? as usize;
+    let bytes = input.read_bytes(len)?;
     std::str::from_utf8(bytes).map(str::to_string).map_err(|_| ProtocolError::Malformed { what: "utf8", offset: 0, detail: "invalid utf-8".to_string() })
 }
 
@@ -635,7 +635,8 @@ async fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
         async |idx: u32| dict.resolve(idx).await.map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
         |ord: u64| ordinal_to_id(ord).map_err(|_| crate::os_pack::PackError::Malformed { what: "edit ordinal", offset: ord, detail: "unresolvable".to_string() }),
     )
-    .await.map_err(ProtocolError::from)
+    .await
+    .map_err(ProtocolError::from)
 }
 
 //#region 🔖️Message
@@ -645,47 +646,47 @@ async fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
 /// @emoji 🎯️ `level u8 | code(idfield, dict-interned) | message(strfield) | target_count varint +
 /// target(strfield)* | op_index presence u8 + [varint]`.
 async fn write_history_message(out: &mut ByteWriter, message: &HistoryMessage, dict: &mut DictBuilder) -> Result<(), ProtocolError> {
-    out.write_u8(message.level).await;
+    out.write_u8(message.level);
     write_id_field(out, &message.code, dict, &|_: &str| None).await?;
     write_str_field(out, &message.message).await;
-    out.write_varint_u64(message.target.len() as u64).await;
+    out.write_varint_u64(message.target.len() as u64);
     for target in &message.target {
         write_str_field(out, target).await;
     }
     match message.op_index {
         Some(index) => {
-            out.write_u8(1).await;
-            out.write_varint_u64(index as u64).await;
+            out.write_u8(1);
+            out.write_varint_u64(index as u64);
         }
-        None => out.write_u8(0).await,
+        None => out.write_u8(0),
     }
     Ok(())
 }
 
 /// @emoji 🎯️ Inverse of [`write_history_message`].
 async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result<HistoryMessage, ProtocolError> {
-    let level = input.read_u8().await?;
+    let level = input.read_u8()?;
     if crate::os_dsl::Severity::from_u8(level).is_none() {
-        return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position().await as u64 - 1, detail: format!("unknown severity {level}") });
+        return Err(ProtocolError::Malformed { what: "history message severity", offset: input.position() as u64 - 1, detail: format!("unknown severity {level}") });
     }
     let code = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     let message = read_str_field(input).await?;
-    let target_count = input.read_varint_u64().await?;
+    let target_count = input.read_varint_u64()?;
     let mut target = Vec::with_capacity(target_count as usize);
     for _ in 0..target_count {
         target.push(read_str_field(input).await?);
     }
-    let has_op_index = input.read_u8().await?;
+    let has_op_index = input.read_u8()?;
     let op_index = match has_op_index {
         0 => None,
         1 => {
-            let raw = input.read_varint_u64().await?;
+            let raw = input.read_varint_u64()?;
             // 🚫️async: R10 shape 1 — `position()` is async but `map_err`'s closure is sync; the
             // offset is captured up front instead of awaited inside the closure.
-            let offset = input.position().await as u64;
+            let offset = input.position() as u64;
             Some(u32::try_from(raw).map_err(|_| ProtocolError::Malformed { what: "history message operation index", offset, detail: "exceeds u32".to_string() })?)
         }
-        value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position().await as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
+        value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position() as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
     };
     Ok(HistoryMessage { level, code, message, target, op_index })
 }
@@ -693,16 +694,16 @@ async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> 
 
 //#region 🔖️Doc
 pub async fn encode_doc(doc_id: &str, schema: &str, dict: &mut DictBuilder) -> Vec<u8> {
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     write_id_field(&mut out, doc_id, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
     write_id_field(&mut out, schema, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
-    out.into_bytes().await
+    out.into_bytes()
 }
 
 pub async fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String), ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("doc", format).await);
     }
@@ -730,27 +731,27 @@ async fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) -> Result<(), Pr
         return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "requires text or binary".to_string() });
     }
     let tag = (op.text.is_some() as u8) | ((op.binary.is_some() as u8) << 1);
-    out.write_u8(tag).await;
+    out.write_u8(tag);
     if let Some(text) = &op.text {
         write_str_field(out, text).await;
     }
     if let Some(binary) = &op.binary {
-        out.write_varint_u64(binary.len() as u64).await;
-        out.write_bytes(binary).await;
+        out.write_varint_u64(binary.len() as u64);
+        out.write_bytes(binary);
     }
     Ok(())
 }
 
 /// @emoji 🎯️ Inverse of [`write_op_payload`].
 async fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, ProtocolError> {
-    let op_tag = input.read_u8().await?;
+    let op_tag = input.read_u8()?;
     if op_tag & 0b11 == 0 {
         return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "requires text or binary bit set".to_string() });
     }
     let text = if op_tag & 0b01 != 0 { Some(read_str_field(input).await?) } else { None };
     let binary = if op_tag & 0b10 != 0 {
-        let len = input.read_varint_u64().await? as usize;
-        Some(input.read_bytes(len).await?.to_vec())
+        let len = input.read_varint_u64()? as usize;
+        Some(input.read_bytes(len)?.to_vec())
     } else {
         None
     };
@@ -780,26 +781,26 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     if !meta.messages.is_empty() {
         presence |= 1 << 6;
     }
-    out.write_u8(presence).await;
+    out.write_u8(presence);
     if let Some(op_id) = &meta.op_id {
         write_id_field(out, op_id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(meta.dependencies.len() as u64).await;
+    out.write_varint_u64(meta.dependencies.len() as u64);
     for dep in &meta.dependencies {
         write_id_field(out, dep, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(meta.base_version).await;
+    out.write_varint_u64(meta.base_version);
     if let Some(author) = &meta.author_id {
         write_id_field(out, author, dict, edit_ordinal_of).await?;
     }
     if let Some((actor, physical_ms, logical)) = &meta.hlt {
-        out.write_varint_u64(*actor).await;
-        out.write_varint_i64(*physical_ms).await;
-        out.write_varint_u64(*logical).await;
+        out.write_varint_u64(*actor);
+        out.write_varint_i64(*physical_ms);
+        out.write_varint_u64(*logical);
     }
-    out.write_u8(meta.undo_policy).await;
+    out.write_u8(meta.undo_policy);
     if let Some(hash) = &meta.payload_hash {
-        out.write_bytes(hash).await;
+        out.write_bytes(hash);
     }
     // 🎯️ Appended past the pre-existing tail (bit4 of the same presence byte) — a decoder reading
     // a byte-log written before this field existed sees bit4 unset (that bit never existed in the
@@ -820,7 +821,7 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
     // this field" contract) — the durable message ledger, not reproducible from a fresh replay.
     if !meta.messages.is_empty() {
-        out.write_varint_u64(meta.messages.len() as u64).await;
+        out.write_varint_u64(meta.messages.len() as u64);
         for message in &meta.messages {
             write_history_message(out, message, dict).await?;
         }
@@ -829,25 +830,25 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
 }
 
 async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryOpMeta, ProtocolError> {
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     let op_id = if presence & (1 << 0) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
-    let dep_count = input.read_varint_u64().await?;
+    let dep_count = input.read_varint_u64()?;
     let mut dependencies = Vec::with_capacity(dep_count as usize);
     for _ in 0..dep_count {
         dependencies.push(read_id_field(input, dict, ordinal_to_id).await?);
     }
-    let base_version = input.read_varint_u64().await?;
+    let base_version = input.read_varint_u64()?;
     let author_id = if presence & (1 << 1) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
     let hlt = if presence & (1 << 2) != 0 {
-        let actor = input.read_varint_u64().await?;
-        let physical_ms = input.read_varint_i64().await?;
-        let logical = input.read_varint_u64().await?;
+        let actor = input.read_varint_u64()?;
+        let physical_ms = input.read_varint_i64()?;
+        let logical = input.read_varint_u64()?;
         Some((actor, physical_ms, logical))
     } else {
         None
     };
-    let undo_policy = input.read_u8().await?;
-    let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32().await?) } else { None };
+    let undo_policy = input.read_u8()?;
+    let payload_hash = if presence & (1 << 3) != 0 { Some(input.read_array32()?) } else { None };
     let group_id = if presence & (1 << 4) != 0 { Some(read_id_field(input, dict, ordinal_to_id).await?) } else { None };
     let origin = if presence & (1 << 5) != 0 {
         let encoded = read_str_field(input).await?;
@@ -856,7 +857,7 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
         crate::os_spr::command::MutationOrigin::Owner
     };
     let messages = if presence & (1 << 6) != 0 {
-        let count = input.read_varint_u64().await?;
+        let count = input.read_varint_u64()?;
         let mut messages = Vec::with_capacity(count as usize);
         for _ in 0..count {
             messages.push(read_history_message(input, dict).await?);
@@ -870,8 +871,8 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
 
 pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     let mut presence = 0u8;
     if edit.actor.is_some() {
         presence |= 1 << 0;
@@ -891,7 +892,7 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if !edit.inverse.is_empty() {
         presence |= 1 << 5;
     }
-    out.write_u8(presence).await;
+    out.write_u8(presence);
     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
     let mut prev_epoch_ms = crate::os_spr::scalar::scalar::write_timestamp(&mut out, &edit.started_at, None).await;
     if let Some(actor) = &edit.actor {
@@ -910,12 +911,12 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if edit.ops.len() as u64 > ProtocolLimits::default().max_op_count_per_edit as u64 {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
     }
-    out.write_varint_u64(edit.ops.len() as u64).await;
+    out.write_varint_u64(edit.ops.len() as u64);
     for op in &edit.ops {
         write_op_payload(&mut out, op).await?;
     }
     if !edit.inverse.is_empty() {
-        out.write_varint_u64(edit.inverse.len() as u64).await;
+        out.write_varint_u64(edit.inverse.len() as u64);
         for op in &edit.inverse {
             write_op_payload(&mut out, op).await?;
         }
@@ -928,17 +929,17 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
             write_op_meta(&mut out, meta, dict, edit_ordinal_of).await?;
         }
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryEdit, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("edit", format).await);
     }
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     let (started_at, mut prev_epoch_ms) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
     let actor = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, ordinal_to_id).await?) } else { None };
@@ -952,7 +953,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let _ = prev_epoch_ms;
     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
-    let op_count = input.read_varint_u64().await?;
+    let op_count = input.read_varint_u64()?;
     let max_ops = ProtocolLimits::default().max_op_count_per_edit as u64;
     if op_count > max_ops {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
@@ -962,7 +963,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
         ops.push(read_op_payload(&mut input).await?);
     }
     let inverse = if presence & (1 << 5) != 0 {
-        let back_count = input.read_varint_u64().await?;
+        let back_count = input.read_varint_u64()?;
         if back_count > max_ops {
             return Err(ProtocolError::LimitExceeded("edit inverse op count exceeds ProtocolLimits::max_op_count_per_edit"));
         }
@@ -990,36 +991,36 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
 //#region 🔖️Change
 pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     let mut presence = 0u8;
     if change.description.is_some() {
         presence |= 1 << 0;
     }
-    out.write_u8(presence).await;
+    out.write_u8(presence);
     write_id_field(&mut out, &change.id, dict, &|_: &str| None).await?;
     crate::os_spr::scalar::scalar::write_timestamp(&mut out, &change.saved_at, None).await;
-    out.write_varint_u64(change.edit_ids.len() as u64).await;
+    out.write_varint_u64(change.edit_ids.len() as u64);
     for edit_id in &change.edit_ids {
         write_id_field(&mut out, edit_id, dict, edit_ordinal_of).await?;
     }
     if let Some(description) = &change.description {
         write_str_field(&mut out, description).await;
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryChange, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("change", format).await);
     }
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     let (saved_at, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
-    let edit_count = input.read_varint_u64().await?;
+    let edit_count = input.read_varint_u64()?;
     let mut edit_ids = Vec::with_capacity(edit_count as usize);
     for _ in 0..edit_count {
         edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
@@ -1031,8 +1032,8 @@ pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_
 
 //#region 🔖️Checkpoint
 pub async fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     let mut presence = 0u8;
     if checkpoint.parent_id.is_some() {
         presence |= 1 << 0;
@@ -1040,17 +1041,17 @@ pub async fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBu
     if checkpoint.message.is_some() {
         presence |= 1 << 1;
     }
-    out.write_u8(presence).await;
+    out.write_u8(presence);
     write_id_field(&mut out, &checkpoint.id, dict, &|_: &str| None).await?;
     crate::os_spr::scalar::scalar::write_timestamp(&mut out, &checkpoint.timestamp, None).await;
-    out.write_varint_u64(checkpoint.change_ids.len() as u64).await;
+    out.write_varint_u64(checkpoint.change_ids.len() as u64);
     for change_id in &checkpoint.change_ids {
         write_id_field(&mut out, change_id, dict, &|_: &str| None).await?;
     }
     if let Some(parent) = &checkpoint.parent_id {
         write_id_field(&mut out, parent, dict, &|_: &str| None).await?;
     }
-    out.write_varint_u64(checkpoint.authors.len() as u64).await;
+    out.write_varint_u64(checkpoint.authors.len() as u64);
     for author in &checkpoint.authors {
         write_id_field(&mut out, &author.id, dict, &|_: &str| None).await?;
         write_str_field(&mut out, &author.name).await;
@@ -1058,25 +1059,25 @@ pub async fn encode_checkpoint(checkpoint: &HistoryCheckpoint, dict: &mut DictBu
     if let Some(message) = &checkpoint.message {
         write_str_field(&mut out, message).await;
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 pub async fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<HistoryCheckpoint, ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("checkpoint", format).await);
     }
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     let (timestamp, _) = crate::os_spr::scalar::scalar::read_timestamp(&mut input, None).await?;
-    let change_count = input.read_varint_u64().await?;
+    let change_count = input.read_varint_u64()?;
     let mut change_ids = Vec::with_capacity(change_count as usize);
     for _ in 0..change_count {
         change_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
     }
     let parent_id = if presence & (1 << 0) != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?) } else { None };
-    let author_count = input.read_varint_u64().await?;
+    let author_count = input.read_varint_u64()?;
     let mut authors = Vec::with_capacity(author_count as usize);
     for _ in 0..author_count {
         let author_id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
@@ -1090,26 +1091,26 @@ pub async fn decode_checkpoint(payload: &[u8], dict: &DictReader) -> Result<Hist
 
 //#region 🔖️Alternative
 pub async fn encode_alternative(alternative: &HistoryAlternative, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     write_id_field(&mut out, &alternative.id, dict, &|_: &str| None).await?;
     write_str_field(&mut out, &alternative.name).await;
-    out.write_varint_u64(alternative.checkpoint_ids.len() as u64).await;
+    out.write_varint_u64(alternative.checkpoint_ids.len() as u64);
     for checkpoint_id in &alternative.checkpoint_ids {
         write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 pub async fn decode_alternative(payload: &[u8], dict: &DictReader) -> Result<HistoryAlternative, ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("alternative", format).await);
     }
     let id = read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
     let name = read_str_field(&mut input).await?;
-    let checkpoint_count = input.read_varint_u64().await?;
+    let checkpoint_count = input.read_varint_u64()?;
     let mut checkpoint_ids = Vec::with_capacity(checkpoint_count as usize);
     for _ in 0..checkpoint_count {
         checkpoint_ids.push(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
@@ -1120,26 +1121,30 @@ pub async fn decode_alternative(payload: &[u8], dict: &DictReader) -> Result<His
 
 //#region 🔖️Active
 pub async fn encode_active(alternative_id: Option<&str>, dict: &mut DictBuilder) -> Vec<u8> {
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     match alternative_id {
         Some(id) => {
-            out.write_u8(1).await;
+            out.write_u8(1);
             write_id_field(&mut out, id, dict, &|_: &str| None).await.expect("write_id never fails for an in-memory ByteWriter");
         }
-        None => out.write_u8(0).await,
+        None => out.write_u8(0),
     }
-    out.into_bytes().await
+    out.into_bytes()
 }
 
 pub async fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>, ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("active", format).await);
     }
-    let presence = input.read_u8().await?;
-    if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?)) } else { Ok(None) }
+    let presence = input.read_u8()?;
+    if presence & 1 != 0 {
+        Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?))
+    } else {
+        Ok(None)
+    }
 }
 //#endregion 🔖️Active
 
@@ -1156,48 +1161,48 @@ pub const REC_CURSOR: u8 = 0x40;
 /// edit-ordinal refs), same as every other edit-id reference in this crate.
 pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
-    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 }).await;
-    out.write_varint_u64(cursor.applied_edit_ids.len() as u64).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 });
+    out.write_varint_u64(cursor.applied_edit_ids.len() as u64);
     for id in &cursor.applied_edit_ids {
         write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(cursor.redo_edit_ids.len() as u64).await;
+    out.write_varint_u64(cursor.redo_edit_ids.len() as u64);
     for id in &cursor.redo_edit_ids {
         write_id_field(&mut out, id, dict, edit_ordinal_of).await?;
     }
     if let Some(checkpoint_id) = &cursor.checkpoint_id {
         write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None).await?;
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 /// @emoji 🎯️ Inverse of [`encode_cursor`].
 pub async fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryCursor, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("cursor", format).await);
     }
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     if presence & !1 != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position().await as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
+        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position() as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
     }
-    let applied_count = input.read_varint_u64().await?;
+    let applied_count = input.read_varint_u64()?;
     let mut applied_edit_ids = Vec::with_capacity(applied_count as usize);
     for _ in 0..applied_count {
         applied_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
     }
-    let redo_count = input.read_varint_u64().await?;
+    let redo_count = input.read_varint_u64()?;
     let mut redo_edit_ids = Vec::with_capacity(redo_count as usize);
     for _ in 0..redo_count {
         redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id).await?);
     }
     let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?) } else { None };
-    if input.remaining().await != 0 {
-        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position().await as u64, detail: "trailing payload bytes".to_string() });
+    if input.remaining() != 0 {
+        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
     }
     Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
 }
@@ -1217,10 +1222,10 @@ pub const REC_COMPOSITION: u8 = 0x41;
 /// coding is what keeps the overlay small on a document with a long pinned history.
 pub async fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
     let plain: &dyn Fn(&str) -> Option<u64> = &|_: &str| None;
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
     let presence = u8::from(composition.owner.is_some()) | (u8::from(composition.dialect.is_some()) << 1);
-    out.write_u8(presence).await;
+    out.write_u8(presence);
     if let Some((parent, slot, child_id)) = &composition.owner {
         for field in [parent, slot, child_id] {
             write_id_field(&mut out, field, dict, plain).await?;
@@ -1231,27 +1236,27 @@ pub async fn encode_composition(composition: &HistoryComposition, dict: &mut Dic
             write_id_field(&mut out, field, dict, plain).await?;
         }
     }
-    out.write_varint_u64(composition.checkpoint_pins.len() as u64).await;
+    out.write_varint_u64(composition.checkpoint_pins.len() as u64);
     for (checkpoint_id, pins) in &composition.checkpoint_pins {
         write_id_field(&mut out, checkpoint_id, dict, plain).await?;
-        out.write_varint_u64(pins.len() as u64).await;
+        out.write_varint_u64(pins.len() as u64);
         for (child_uri, child_checkpoint_id) in pins {
             write_id_field(&mut out, child_uri, dict, plain).await?;
             write_id_field(&mut out, child_checkpoint_id, dict, plain).await?;
         }
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 /// @emoji 🧩️ Inverse of [`encode_composition`].
 pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
     let miss: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("composition", format).await);
     }
-    let presence = input.read_u8().await?;
+    let presence = input.read_u8()?;
     // 🚫️async: R10 shape 1 — `read_id_field` is async but a plain closure can't await; hoisted into
     // a nested async fn (`dict`/`miss` threaded through explicitly, since a nested fn can't capture).
     async fn read_triple<'r>(input: &mut ByteReader<'_>, dict: &'r DictReader, miss: &dyn Fn(u64) -> Result<&'r str, ProtocolError>) -> Result<(String, String, String), ProtocolError> {
@@ -1259,11 +1264,11 @@ pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Res
     }
     let owner = if presence & 1 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
     let dialect = if presence & 2 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
-    let group_count = input.read_varint_u64().await?;
+    let group_count = input.read_varint_u64()?;
     let mut checkpoint_pins = Vec::with_capacity(group_count as usize);
     for _ in 0..group_count {
         let checkpoint_id = read_id_field(&mut input, dict, miss).await?;
-        let pin_count = input.read_varint_u64().await?;
+        let pin_count = input.read_varint_u64()?;
         let mut pins = Vec::with_capacity(pin_count as usize);
         for _ in 0..pin_count {
             pins.push((read_id_field(&mut input, dict, miss).await?, read_id_field(&mut input, dict, miss).await?));
@@ -1299,25 +1304,25 @@ async fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(),
 async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
     validate_conflict_tags(conflict.kind, conflict.status, 0).await?;
     write_id_field(out, &conflict.id, dict, &|_: &str| None).await?;
-    out.write_u8(conflict.kind).await;
-    out.write_u8(conflict.status).await;
-    out.write_varint_u64(conflict.actors.len() as u64).await;
+    out.write_u8(conflict.kind);
+    out.write_u8(conflict.status);
+    out.write_varint_u64(conflict.actors.len() as u64);
     for actor in &conflict.actors {
         write_id_field(out, actor, dict, &|_: &str| None).await?;
     }
-    out.write_varint_u64(conflict.hlt.0).await;
-    out.write_varint_u64(conflict.hlt.1).await;
-    out.write_varint_u64(conflict.hlt.2).await;
-    out.write_varint_u64(conflict.edit_ids.len() as u64).await;
+    out.write_varint_u64(conflict.hlt.0);
+    out.write_varint_u64(conflict.hlt.1);
+    out.write_varint_u64(conflict.hlt.2);
+    out.write_varint_u64(conflict.edit_ids.len() as u64);
     for edit_id in &conflict.edit_ids {
         write_id_field(out, edit_id, dict, edit_ordinal_of).await?;
     }
-    out.write_varint_u64(conflict.envelopes.len() as u64).await;
+    out.write_varint_u64(conflict.envelopes.len() as u64);
     for envelope in &conflict.envelopes {
-        out.write_varint_u64(envelope.len() as u64).await;
-        out.write_bytes(envelope).await;
+        out.write_varint_u64(envelope.len() as u64);
+        out.write_bytes(envelope);
     }
-    out.write_varint_u64(conflict.messages.len() as u64).await;
+    out.write_varint_u64(conflict.messages.len() as u64);
     for message in &conflict.messages {
         write_history_message(out, message, dict).await?;
     }
@@ -1326,27 +1331,27 @@ async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: 
 
 async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryConflict, ProtocolError> {
     let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?;
-    let kind = input.read_u8().await?;
-    let status = input.read_u8().await?;
-    validate_conflict_tags(kind, status, input.position().await as u64 - 2).await?;
-    let actor_count = input.read_varint_u64().await?;
+    let kind = input.read_u8()?;
+    let status = input.read_u8()?;
+    validate_conflict_tags(kind, status, input.position() as u64 - 2).await?;
+    let actor_count = input.read_varint_u64()?;
     let mut actors = Vec::with_capacity(actor_count as usize);
     for _ in 0..actor_count {
         actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).await?);
     }
-    let hlt = (input.read_varint_u64().await?, input.read_varint_u64().await?, input.read_varint_u64().await?);
-    let edit_id_count = input.read_varint_u64().await?;
+    let hlt = (input.read_varint_u64()?, input.read_varint_u64()?, input.read_varint_u64()?);
+    let edit_id_count = input.read_varint_u64()?;
     let mut edit_ids = Vec::with_capacity(edit_id_count as usize);
     for _ in 0..edit_id_count {
         edit_ids.push(read_id_field(input, dict, ordinal_to_id).await?);
     }
-    let envelope_count = input.read_varint_u64().await?;
+    let envelope_count = input.read_varint_u64()?;
     let mut envelopes = Vec::with_capacity(envelope_count as usize);
     for _ in 0..envelope_count {
-        let len = input.read_varint_u64().await? as usize;
-        envelopes.push(input.read_bytes(len).await?.to_vec());
+        let len = input.read_varint_u64()? as usize;
+        envelopes.push(input.read_bytes(len)?.to_vec());
     }
-    let message_count = input.read_varint_u64().await?;
+    let message_count = input.read_varint_u64()?;
     let mut messages = Vec::with_capacity(message_count as usize);
     for _ in 0..message_count {
         messages.push(read_history_message(input, dict).await?);
@@ -1365,35 +1370,35 @@ async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
 /// docstring states for op payloads.
 pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
-    let mut out = ByteWriter::new().await;
-    out.write_u8(1).await;
-    out.write_varint_u64(conflicts.len() as u64).await;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    out.write_varint_u64(conflicts.len() as u64);
     for conflict in conflicts {
         write_conflict(&mut out, conflict, dict, edit_ordinal_of).await?;
     }
-    Ok(out.into_bytes().await)
+    Ok(out.into_bytes())
 }
 
 /// @emoji 🎯️ Inverse of [`encode_conflicts`].
 pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<Vec<HistoryConflict>, ProtocolError> {
     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("conflict", format).await);
     }
-    let count = input.read_varint_u64().await?;
+    let count = input.read_varint_u64()?;
     let mut conflicts = Vec::with_capacity(count as usize);
     let mut ids = HashSet::new();
     for _ in 0..count {
         let conflict = read_conflict(&mut input, dict, ordinal_to_id).await?;
         if !ids.insert(conflict.id.clone()) {
-            return Err(ProtocolError::Malformed { what: "conflict", offset: input.position().await as u64, detail: format!("duplicate conflict id {}", conflict.id) });
+            return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: format!("duplicate conflict id {}", conflict.id) });
         }
         conflicts.push(conflict);
     }
-    if input.remaining().await != 0 {
-        return Err(ProtocolError::Malformed { what: "conflict", offset: input.position().await as u64, detail: "trailing payload bytes".to_string() });
+    if input.remaining() != 0 {
+        return Err(ProtocolError::Malformed { what: "conflict", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
     }
     Ok(conflicts)
 }
@@ -1432,28 +1437,28 @@ async fn flush_dict_delta<S: PackSink>(writer: &mut SprWriter<S>, dict: &DictBui
     let len = dict.len().await;
     if len > *base {
         let entries = dict.entries_since(*base).await;
-        let mut payload = ByteWriter::new().await;
-        payload.write_u8(1).await;
-        payload.write_varint_u64(*base as u64).await;
-        payload.write_varint_u64(entries.len() as u64).await;
+        let mut payload = ByteWriter::new();
+        payload.write_u8(1);
+        payload.write_varint_u64(*base as u64);
+        payload.write_varint_u64(entries.len() as u64);
         for entry in entries {
-            payload.write_varint_u64(entry.len() as u64).await;
-            payload.write_bytes(entry.as_bytes()).await;
+            payload.write_varint_u64(entry.len() as u64);
+            payload.write_bytes(entry.as_bytes());
         }
-        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await?;
+        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await?;
         *base = len;
     }
     Ok(())
 }
 
 async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), ProtocolError> {
-    let mut input = ByteReader::new(payload).await;
-    let format = input.read_u8().await?;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
     if format > 1 {
         return Err(malformed_fmt("dict", format).await);
     }
-    let base_count = input.read_varint_u64().await? as u32;
-    let count = input.read_varint_u64().await?;
+    let base_count = input.read_varint_u64()? as u32;
+    let count = input.read_varint_u64()?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
         entries.push(read_str_field(&mut input).await?);
@@ -1902,19 +1907,19 @@ pub const SEC_SNAPSHOT_OFFSETS: u8 = 0x04;
 pub const SEC_SEALED_OFFSETS: u8 = 0x05;
 
 async fn write_pair_section(out: &mut ByteWriter, kind: u8, entries: &[(u64, u64)]) {
-    out.write_u8(kind).await;
-    out.write_varint_u64(entries.len() as u64).await;
+    out.write_u8(kind);
+    out.write_varint_u64(entries.len() as u64);
     for (a, b) in entries {
-        out.write_varint_u64(*a).await;
-        out.write_varint_u64(*b).await;
+        out.write_varint_u64(*a);
+        out.write_varint_u64(*b);
     }
 }
 
 async fn write_offsets_section(out: &mut ByteWriter, kind: u8, offsets: &[u64]) {
-    out.write_u8(kind).await;
-    out.write_varint_u64(offsets.len() as u64).await;
+    out.write_u8(kind);
+    out.write_varint_u64(offsets.len() as u64);
     for offset in offsets {
-        out.write_varint_u64(*offset).await;
+        out.write_varint_u64(*offset);
     }
 }
 
@@ -1953,20 +1958,20 @@ impl IndexBuilder {
     }
 
     pub async fn build(&self) -> Vec<u8> {
-        let mut out = ByteWriter::new().await;
-        out.write_u8(1).await;
+        let mut out = ByteWriter::new();
+        out.write_u8(1);
         write_pair_section(&mut out, SEC_EDIT_OFFSETS, &self.edits).await;
-        out.write_u8(SEC_CHECKPOINT_OFFSETS).await;
-        out.write_varint_u64(self.checkpoints.len() as u64).await;
+        out.write_u8(SEC_CHECKPOINT_OFFSETS);
+        out.write_varint_u64(self.checkpoints.len() as u64);
         for (id, offset, edit_ordinal) in &self.checkpoints {
             write_str_field(&mut out, id).await;
-            out.write_varint_u64(*offset).await;
-            out.write_varint_u64(*edit_ordinal).await;
+            out.write_varint_u64(*offset);
+            out.write_varint_u64(*edit_ordinal);
         }
         write_offsets_section(&mut out, SEC_DICT_OFFSETS, &self.dict_offsets).await;
         write_pair_section(&mut out, SEC_SNAPSHOT_OFFSETS, &self.snapshots).await;
         write_offsets_section(&mut out, SEC_SEALED_OFFSETS, &self.sealed).await;
-        out.into_bytes().await
+        out.into_bytes()
     }
 }
 
@@ -1978,50 +1983,50 @@ pub struct IndexReader<'a> {
 
 impl<'a> IndexReader<'a> {
     pub async fn open(payload: &'a [u8]) -> Result<Self, ProtocolError> {
-        let mut input = ByteReader::new(payload).await;
-        let format = input.read_u8().await?;
+        let mut input = ByteReader::new(payload);
+        let format = input.read_u8()?;
         if format > 1 {
             return Err(malformed_fmt("index", format).await);
         }
         let mut edits = Vec::new();
         let mut checkpoints = Vec::new();
         let mut snapshots = Vec::new();
-        while input.remaining().await > 0 {
-            let kind = input.read_u8().await?;
-            let count = input.read_varint_u64().await?;
+        while input.remaining() > 0 {
+            let kind = input.read_u8()?;
+            let count = input.read_varint_u64()?;
             match kind {
                 SEC_EDIT_OFFSETS => {
                     for _ in 0..count {
-                        let ordinal = input.read_varint_u64().await?;
-                        let offset = input.read_varint_u64().await?;
+                        let ordinal = input.read_varint_u64()?;
+                        let offset = input.read_varint_u64()?;
                         edits.push((ordinal, offset));
                     }
                 }
                 SEC_CHECKPOINT_OFFSETS => {
                     for _ in 0..count {
-                        let len = input.read_varint_u64().await? as usize;
-                        let bytes = input.read_bytes(len).await?;
+                        let len = input.read_varint_u64()? as usize;
+                        let bytes = input.read_bytes(len)?;
                         let id = std::str::from_utf8(bytes).map_err(|_| ProtocolError::Malformed { what: "index checkpoint id utf8", offset: 0, detail: "invalid utf-8".to_string() })?;
-                        let offset = input.read_varint_u64().await?;
-                        let edit_ordinal = input.read_varint_u64().await?;
+                        let offset = input.read_varint_u64()?;
+                        let edit_ordinal = input.read_varint_u64()?;
                         checkpoints.push((id, offset, edit_ordinal));
                     }
                 }
                 SEC_DICT_OFFSETS => {
                     for _ in 0..count {
-                        input.read_varint_u64().await?;
+                        input.read_varint_u64()?;
                     }
                 }
                 SEC_SNAPSHOT_OFFSETS => {
                     for _ in 0..count {
-                        let ordinal = input.read_varint_u64().await?;
-                        let offset = input.read_varint_u64().await?;
+                        let ordinal = input.read_varint_u64()?;
+                        let offset = input.read_varint_u64()?;
                         snapshots.push((ordinal, offset));
                     }
                 }
                 SEC_SEALED_OFFSETS => {
                     for _ in 0..count {
-                        input.read_varint_u64().await?;
+                        input.read_varint_u64()?;
                     }
                 }
                 other => return Err(ProtocolError::Malformed { what: "index section kind", offset: 0, detail: format!("unknown section {other:#x}") }),

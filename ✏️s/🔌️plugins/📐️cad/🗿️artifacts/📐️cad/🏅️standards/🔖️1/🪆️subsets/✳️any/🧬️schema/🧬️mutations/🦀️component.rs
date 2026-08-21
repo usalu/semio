@@ -80,26 +80,26 @@ pub enum CadMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Leaves
-use super::create_shape_model;
-use super::delete_shape_model;
-use super::create_building_model;
-use super::delete_building_model;
-use super::create_energy_model;
-use super::delete_energy_model;
-use super::create_structure_classic_model;
-use super::delete_structure_classic_model;
-use super::create_drawing;
-use super::delete_drawing;
-use super::create_node;
-use super::delete_node;
-use super::rename_node;
+use super::change_active_model_definition;
 use super::change_reference_hidden;
 use super::change_reference_locked;
 use super::change_reference_width;
+use super::create_building_model;
+use super::create_drawing;
+use super::create_energy_model;
+use super::create_node;
+use super::create_shape_model;
+use super::create_structure_classic_model;
+use super::delete_building_model;
+use super::delete_drawing;
+use super::delete_energy_model;
+use super::delete_node;
+use super::delete_shape_model;
+use super::delete_structure_classic_model;
 use super::move_reference;
+use super::rename_node;
 use super::replace_reference_media;
 use super::replace_references;
-use super::change_active_model_definition;
 //#endregion 🔖️Leaves
 
 //#region 🧪️Tests
@@ -108,11 +108,10 @@ pub mod tests {
     use super::*;
     use crate::artifacts::cad::mutations::{
         change_active_model_definition::mutation::ChangeActiveModelDefinition, change_reference_hidden::mutation::ChangeReferenceHidden, change_reference_locked::mutation::ChangeReferenceLocked,
-        change_reference_width::mutation::ChangeReferenceWidth, create_building_model::mutation::CreateBuildingModel, create_drawing::mutation::CreateDrawing, create_energy_model::mutation::CreateEnergyModel,
-        create_node::mutation::CreateNode, create_shape_model::mutation::CreateShapeModel, create_structure_classic_model::mutation::CreateStructureClassicModel, delete_building_model::mutation::DeleteBuildingModel,
-        delete_drawing::mutation::DeleteDrawing, delete_energy_model::mutation::DeleteEnergyModel, delete_node::mutation::DeleteNode, delete_shape_model::mutation::DeleteShapeModel,
-        delete_structure_classic_model::mutation::DeleteStructureClassicModel, move_reference::mutation::MoveReference, rename_node::mutation::RenameNode, replace_reference_media::mutation::ReplaceReferenceMedia,
-        replace_references::mutation::ReplaceReferences,
+        change_reference_width::mutation::ChangeReferenceWidth, create_building_model::mutation::CreateBuildingModel, create_drawing::mutation::CreateDrawing, create_energy_model::mutation::CreateEnergyModel, create_node::mutation::CreateNode,
+        create_shape_model::mutation::CreateShapeModel, create_structure_classic_model::mutation::CreateStructureClassicModel, delete_building_model::mutation::DeleteBuildingModel, delete_drawing::mutation::DeleteDrawing,
+        delete_energy_model::mutation::DeleteEnergyModel, delete_node::mutation::DeleteNode, delete_shape_model::mutation::DeleteShapeModel, delete_structure_classic_model::mutation::DeleteStructureClassicModel,
+        move_reference::mutation::MoveReference, rename_node::mutation::RenameNode, replace_reference_media::mutation::ReplaceReferenceMedia, replace_references::mutation::ReplaceReferences,
     };
     use crate::artifacts::cad::testkit::{sample_model_child, sample_reference, sample_scene};
     use protocol::Mutation;
@@ -138,7 +137,15 @@ pub mod tests {
             CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_locked: false }),
             CadMutation::ChangeReferenceWidth(ChangeReferenceWidth { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_width_world: 12.0 }),
             CadMutation::MoveReference(MoveReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_origin: [1.0, 1.0, 1.0] }),
-            CadMutation::ReplaceReferenceMedia(ReplaceReferenceMedia { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_source_url: "https://example.test/other.png".into(), new_media_kind: "image".into(), new_orientation: None, new_scale: Some(2.0), new_opacity: Some(0.5) }),
+            CadMutation::ReplaceReferenceMedia(ReplaceReferenceMedia {
+                model_definition_id: "spatial.shape".into(),
+                reference_id: "ref-1".into(),
+                new_source_url: "https://example.test/other.png".into(),
+                new_media_kind: "image".into(),
+                new_orientation: None,
+                new_scale: Some(2.0),
+                new_opacity: Some(0.5),
+            }),
             CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
             CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }),
         ]
@@ -148,12 +155,10 @@ pub mod tests {
     async fn inverse_inverts_every_variant_against_a_populated_scene() {
         let base = sample_scene();
         for op in every_mutation() {
-            let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base)
-                .expect("valid mutation diff");
+            let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base).expect("valid mutation diff");
             let mut restored = forward.clone();
             for inverse in op.inverse(&base) {
-                restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored)
-                    .expect("valid inverse mutation diff");
+                restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
             }
             assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
         }
@@ -246,8 +251,7 @@ pub mod tests {
     async fn create_drawing_duplicate_id_never_applies() {
         let sample = sample_model_child("dup-drawing-1");
         let mut base = sample_scene();
-        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base)
-            .expect("valid mutation diff");
+        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base).expect("valid mutation diff");
         let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }

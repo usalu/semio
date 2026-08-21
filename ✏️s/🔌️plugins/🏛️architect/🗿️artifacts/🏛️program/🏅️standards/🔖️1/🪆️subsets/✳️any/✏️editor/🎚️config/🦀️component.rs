@@ -104,9 +104,7 @@ impl store::ConfigRecord for ArchitectConfig {}
 
 impl MutationDiff<ArchitectConfig> for ArchitectConfig {
     async fn apply(&self, _base: &ArchitectConfig) -> protocol::MutationApplyResult<ArchitectConfig> {
-        Ok({
-            self.clone()
-        })
+        Ok({ self.clone() })
     }
     async fn absorb(&mut self, other: Self) {
         *self = other;

@@ -2,13 +2,13 @@
 //! `canvasPointerDown`/`canvasPointerMove`/`paintStrokeEnd`), single-shot fill (`paintFill`/
 //! `fillBucket`), sampling (`paintSample`) and paint-layer creation (`addPaintLayer`).
 
+use crate::artifacts::lowpoly::op::LowpolyMutation;
+use crate::artifacts::lowpoly::schema::{composite_layer_pixels, sample_pixel_from};
+use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::resolve_active_object_id;
-use crate::artifacts::lowpoly::schema::{composite_layer_pixels, sample_pixel_from};
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🎯️ Extracts UV (0..1) from a paint command's fields — either direct `u`/`v` (world 3d picks) or
@@ -22,7 +22,16 @@ async fn paint_uv(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>
 /// Bare `Emit` (no `Result`): every one of its 3 call sites is a handler's tail expression, wrapped in
 /// `Ok(...)` there to satisfy `app_commands!`'s `Result<Emit<_, _>, Fault>` handler signature.
 #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for the 3 identically-shaped paint-tick commands' fields (object_id + u/v/x/y); a params struct would only move the same fields around for this one shared body")]
-async fn paint_tick_command(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch, object_id: Option<String>, u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
+async fn paint_tick_command(
+    doc: &ArtifactView<'_, LowpolySnapshot>,
+    cfg: &ConfigView<'_, LowpolyConfig>,
+    ctx: &mut LowpolyScratch,
+    object_id: Option<String>,
+    u: Option<f32>,
+    v: Option<f32>,
+    x: Option<f32>,
+    y: Option<f32>,
+) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
     let Some((uu, vv)) = paint_uv(u, v, x, y) else { return Emit::default() };
     let object_id = object_id.unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
     ctx.paint_tick(doc.snapshot, cfg.snapshot, &object_id, uu, vv)

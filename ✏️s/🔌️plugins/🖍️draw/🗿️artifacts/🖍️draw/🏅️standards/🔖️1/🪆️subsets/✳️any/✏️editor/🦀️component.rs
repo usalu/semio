@@ -7,31 +7,30 @@
 //! This file is a routing table: `handle` → `DrawCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
+use crate::artifacts::draw::op::DrawMutation;
+use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::commands::{
-    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean,
-    commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, move_layer, patch_layer, patch_layers, set_active_example,
-    set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
+    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::editor::draw::presence::{DrawPresence, DrawPresenceMutation};
 use crate::editor::draw::modes::edit;
 use crate::editor::draw::modes::edit::windows::canvas as canvas_window;
 use crate::editor::draw::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
+use crate::editor::draw::presence::{DrawPresence, DrawPresenceMutation};
 use crate::editor::draw::terminology::DrawPlayLabels;
-use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionDescriptor, ActionKind, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass,
+    MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
+};
 use serde_json::Value;
 use store::ArtifactPack;
+use store::EngineHandles;
 
-pub use catalogue_panel::DRAW_PLAY_BODY_CATALOGUE;
 pub use canvas_window::{DRAW_PLAY_BODY_COMPOSITE, DRAW_PLAY_WINDOW_CANVAS};
+pub use catalogue_panel::DRAW_PLAY_BODY_CATALOGUE;
 pub use layers_panel::{DRAW_LAYER_KIND_DRAG_MIME, DRAW_PLAY_BODY_LAYERS};
 pub use properties_panel::DRAW_PLAY_BODY_PROPERTIES;
 
@@ -167,7 +166,14 @@ impl ArtifactEditor for DrawPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &DrawCommand, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &DrawCommand,
+        doc: &ArtifactView<'_, DrawSnapshot>,
+        cfg: &ConfigView<'_, DrawConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
         thread_local! {
             static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
         }
@@ -237,10 +243,7 @@ pub async fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
 /// export-svg shell path uses), so there is exactly one SVG renderer.
 pub async fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
     let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
-    Ok(Media {
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
-    })
+    Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
 }
 //#endregion 🔖️Io
 
@@ -593,9 +596,7 @@ mod tests {
         set_utility(&mut app, "shapeRect");
         app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &fw_testkit::meta("local")).expect("move");
-        let result = app
-            .dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local"))
-            .expect("up");
+        let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
         let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));

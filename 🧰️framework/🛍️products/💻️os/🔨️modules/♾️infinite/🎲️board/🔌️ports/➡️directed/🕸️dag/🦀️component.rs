@@ -10,12 +10,12 @@ use serde::{Deserialize, Serialize};
 use ::graph::manifest::PropertyValue;
 use ::graph::manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
-use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use crate::infinite::board::ports::directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
     handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, CanvasPalette, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 };
-pub use crate::infinite::canvas as canvas;
+pub use crate::infinite::canvas;
+use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 
 /// 🌳️ DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
@@ -710,7 +710,7 @@ fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError
     let manifest = flow_dag_manifest();
     let validator = ManifestValidator::new(&manifest);
     for node in nodes {
-        validator.await.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
+        validator.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
     }
     Ok(())
 }
@@ -1129,7 +1129,7 @@ pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: u
         y - hh + t * height
     };
     let port_x = if left { x - hw } else { x + hw };
-    rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y)).await
+    rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y))
 }
 
 fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left: bool) -> f64 {
@@ -1139,7 +1139,7 @@ fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left:
     let count = if left { node.inputs().len() } else { node.outputs().len() };
     let port_y = port_center_y(node, port_index, count);
     let port_x = if left { node.x - hw } else { node.x + hw };
-    rectangle_handle_angle_toward(Point::new(node.x, node.y), node.width, node.height, Point::new(port_x, port_y)).await
+    rectangle_handle_angle_toward(Point::new(node.x, node.y), node.width, node.height, Point::new(port_x, port_y))
 }
 // #endregion 🔖️IoNode
 
@@ -2165,7 +2165,8 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio")).expect("bundled dag demo DSL is valid DagSnapshot text");
+        let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"))
+            .expect("bundled dag demo DSL is valid DagSnapshot text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -2194,7 +2195,7 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
             WireEdge { from, from_port, to, to_port, directed: true, properties: edge.properties.clone() }
         })
         .collect::<Vec<_>>();
-    wire_literal_from_dag(&nodes, &edges).await
+    wire_literal_from_dag(&nodes, &edges)
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
@@ -2604,15 +2605,7 @@ impl DagHost {
     /// (see `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`).
     fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
         let cam = &self.fixture.camera;
-        ui_wgpu::wgpu::minimap::content_fully_visible(
-            &ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
-            viewport_w,
-            viewport_h,
-            cam.x,
-            cam.y,
-            cam.zoom,
-            12.0,
-        )
+        ui_wgpu::wgpu::minimap::content_fully_visible(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, 12.0)
     }
 
     /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::layout` — see `minimap_camera_fully_shows_content` above.
@@ -2629,18 +2622,8 @@ impl DagHost {
         let margin = ui_styling::metrics::dag::MINIMAP_WIDGET_MARGIN;
         let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO;
         let cam = &self.fixture.camera;
-        let layout = ui_wgpu::wgpu::minimap::layout(
-            &ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y },
-            viewport_w,
-            viewport_h,
-            cam.x,
-            cam.y,
-            cam.zoom,
-            w,
-            h,
-            margin,
-            ratio,
-        );
+        let layout =
+            ui_wgpu::wgpu::minimap::layout(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, w, h, margin, ratio);
         Some(MinimapWidgetLayout { panel: layout.panel, world_min_x: layout.world_min_x, world_min_y: layout.world_min_y, scale: layout.scale, map_origin_x: layout.map_origin_x, map_origin_y: layout.map_origin_y, viewport: layout.viewport })
     }
 
@@ -3399,14 +3382,14 @@ impl DagHost {
         let mut path = canvas::BezPath::new();
         let mut x = x_off;
         while x <= w {
-            path.await.move_to(Point::new(x, 0.0));
-            path.await.line_to(Point::new(x, h));
+            path.move_to(Point::new(x, 0.0));
+            path.line_to(Point::new(x, h));
             x += step;
         }
         let mut y = y_off;
         while y <= h {
-            path.await.move_to(Point::new(0.0, y));
-            path.await.line_to(Point::new(w, y));
+            path.move_to(Point::new(0.0, y));
+            path.line_to(Point::new(w, y));
             y += step;
         }
         scene.stroke(&stroke, Affine::IDENTITY, color, None, &path);
@@ -3814,7 +3797,7 @@ impl DagHost {
         use canvas::Point;
         use graph::pick_merge_mode_for_modifiers;
 
-        let point = Point::new(world_x, world_y).await;
+        let point = Point::new(world_x, world_y);
         self.engine.pointer_down_on_draggable_node_at(node_id, point, shift, ctrl_or_meta);
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             if let Some(hid) = self.channel_row_handle_hit(world_x, world_y) {
@@ -4333,21 +4316,21 @@ impl DagHost {
 
     fn handle_cap_peak(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::Point {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius).await,
+            PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_peak(center, outward, radius),
         }
     }
 
     fn handle_cap_fill_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius).await,
+            PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_fill_path(center, outward, radius),
         }
     }
 
     fn handle_cap_stroke_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius).await,
+            PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_stroke_path(center, outward, radius),
         }
     }
@@ -4360,13 +4343,13 @@ impl DagHost {
         let target_node = self.engine.nodes.get(&target_handle.node_id)?;
         let source_position = handle_position(source_node, source_handle);
         let target_position = handle_position(target_node, target_handle);
-        let source_out = handle_outward_at_node_rim(source_position, source_node.center, source_node.shape, source_node.radius, source_node.width, source_node.height).await?;
-        let target_out = handle_outward_at_node_rim(target_position, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height).await?;
+        let source_out = handle_outward_at_node_rim(source_position, source_node.center, source_node.shape, source_node.radius, source_node.width, source_node.height)?;
+        let target_out = handle_outward_at_node_rim(target_position, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height)?;
         let source_shape = self.handle_port_shape.get(&edge.source).copied().unwrap_or_default();
         let target_shape = self.handle_port_shape.get(&edge.target).copied().unwrap_or_default();
         let source_wire = self.handle_cap_peak(source_position, source_out, source_handle.radius, source_shape);
         let target_wire = self.handle_cap_peak(target_position, target_out, target_handle.radius, target_shape);
-        Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out).await)
+        Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out))
     }
 
     fn paint_node_handles_for_spec(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
@@ -4418,15 +4401,7 @@ impl DagHost {
         Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost, engine_nid, &self.unresolved_input_ports)
     }
 
-    fn label_overlay_rows_for_node(
-        node: &DagNodeSpec,
-        lod: DagDrawLod,
-        zoom: f64,
-        lod_index: usize,
-        ghost: bool,
-        engine_nid: Option<NodeId>,
-        unresolved_input_ports: &HashSet<(NodeId, String)>,
-    ) -> Vec<Value> {
+    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool, engine_nid: Option<NodeId>, unresolved_input_ports: &HashSet<(NodeId, String)>) -> Vec<Value> {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
@@ -4462,14 +4437,7 @@ impl DagHost {
         labels
     }
 
-    fn port_label_overlay_rows(
-        node: &DagNodeSpec,
-        lod: DagDrawLod,
-        zoom: f64,
-        lod_index: usize,
-        engine_nid: Option<NodeId>,
-        unresolved_input_ports: &HashSet<(NodeId, String)>,
-    ) -> Vec<Value> {
+    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, engine_nid: Option<NodeId>, unresolved_input_ports: &HashSet<(NodeId, String)>) -> Vec<Value> {
         use canvas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
@@ -4907,9 +4875,9 @@ impl DagHost {
             let t = (start_t + local * ARC_FRACTION).fract();
             let p = Self::rect_perimeter_point(rect, t);
             if i == 0 {
-                path.await.move_to(p);
+                path.move_to(p);
             } else {
-                path.await.line_to(p);
+                path.line_to(p);
             }
         }
         let stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX * 1.75, cam_zoom);
@@ -5245,7 +5213,7 @@ impl DagHost {
             let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
             let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
             let chrome = is_dimmed || is_selected || is_highlighted || is_hovered;
-            let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height).await));
+            let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)));
             if let Some(out) = outward {
                 if chrome {
                     scene.fill(FillRule::NonZero, aff, fill, None, &self.handle_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
@@ -7006,8 +6974,8 @@ mod tests {
 
     #[test]
     fn io_node_rect_port_angles_on_edges() {
-        use canvas::Point;
         use super::graph::handle_position_on_rectangle;
+        use canvas::Point;
         let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() }, IoPortSpec { id: "b".into(), label: "b".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
         let width = computation_node_width("node", &inputs, &outputs);
@@ -7025,8 +6993,8 @@ mod tests {
 
     #[test]
     fn computation_port_handle_caps_bulge_outward() {
-        use canvas::Point;
         use super::graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
+        use canvas::Point;
         let inputs = vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }, IoPortSpec { id: "1".into(), label: "1".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into(), ..Default::default() }];
         let width = computation_node_width("Merge", &inputs, &outputs);
@@ -7036,14 +7004,14 @@ mod tests {
         let right_angle = io_node_rect_port_angle(center.x, center.y, width, height, 0, 1, false);
         let left_pos = handle_position_on_rectangle(center, width, height, left_angle);
         let right_pos = handle_position_on_rectangle(center, width, height, right_angle);
-        let left_out = handle_outward_at_node_rim(left_pos, center, NodeShape::Rectangle, 0.0, width, height).await.expect("left outward");
-        let right_out = handle_outward_at_node_rim(right_pos, center, NodeShape::Rectangle, 0.0, width, height).await.expect("right outward");
+        let left_out = handle_outward_at_node_rim(left_pos, center, NodeShape::Rectangle, 0.0, width, height).expect("left outward");
+        let right_out = handle_outward_at_node_rim(right_pos, center, NodeShape::Rectangle, 0.0, width, height).expect("right outward");
         assert!((left_out.x + 1.0).abs() < 1e-9 && left_out.y.abs() < 1e-9);
         assert!((right_out.x - 1.0).abs() < 1e-9 && right_out.y.abs() < 1e-9);
         let left_cap = handle_exterior_cap_fill_path(left_pos, left_out, DAG_HANDLE_WORLD_RADIUS);
         let right_cap = handle_exterior_cap_fill_path(right_pos, right_out, DAG_HANDLE_WORLD_RADIUS);
-        assert!(left_cap.await.bounding_box().x0() < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
-        assert!(right_cap.await.bounding_box().x1() > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
+        assert!(left_cap.bounding_box().x0() < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
+        assert!(right_cap.bounding_box().x1() > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
     }
 
     #[test]
@@ -7529,9 +7497,9 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
+use crate::os_spr::{Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
 #[cfg(any(test, target_arch = "wasm32"))]
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
@@ -7831,14 +7799,14 @@ impl MutationDiff<DagSnapshot> for DagDiff {
     fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
         let mut next = snapshot.clone();
         if self.created_node.is_some() != self.created_node_at.is_some() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").await.at(["createdNode"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").at(["createdNode"]));
         }
         if let (Some(node), Some(at)) = (&self.created_node, self.created_node_at) {
             if next.nodes.iter().any(|entry| entry.id == node.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").await.at(["nodes", node.id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").at(["nodes", node.id.as_str()]));
             }
             if at > next.nodes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("created node final index {at} is out of range for length {}", next.nodes.len())).await.at(["createdNodeAt"]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("created node final index {at} is out of range for length {}", next.nodes.len())).at(["createdNodeAt"]));
             }
             next.nodes.insert(at, node.clone());
         }
@@ -7846,83 +7814,83 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for id in ids {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").await.at(["nodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").at(["nodes", id.as_str()]));
                 }
                 if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").await.at(["nodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").at(["nodes", id.as_str()]));
                 }
             }
             next.nodes.retain(|node| !ids.contains(&node.id));
         }
         if let Some(renamed) = &self.renamed_node {
             if next.nodes.iter().any(|node| node.id == renamed.new_id && node.id != renamed.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").await.at(["nodes", renamed.new_id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").at(["nodes", renamed.new_id.as_str()]));
             }
-            let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").await.at(["nodes", renamed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").at(["nodes", renamed.id.as_str()]))?;
             node.id = renamed.new_id.clone();
         }
         if let Some(moved) = &self.moved_node {
-            let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").await.at(["nodes", moved.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").at(["nodes", moved.id.as_str()]))?;
             node.x = moved.x;
             node.y = moved.y;
         }
         if let Some(resized) = &self.resized_node {
-            let node = next.nodes.iter_mut().find(|node| node.id == resized.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "resized node does not exist").await.at(["nodes", resized.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == resized.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "resized node does not exist").at(["nodes", resized.id.as_str()]))?;
             node.width = resized.width;
             node.height = resized.height;
         }
         if let Some(changed) = &self.changed_node_name {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
             node.name = changed.new_name.clone();
         }
         if let Some(changed) = &self.changed_node_icon {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
             node.icon = changed.new_icon.clone();
         }
         if let Some(changed) = &self.changed_node_abbreviation {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
             node.abbreviation = changed.new_abbreviation.clone();
         }
         if let Some(changed) = &self.changed_node_operator_kind {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
             node.operator_kind = changed.new_operator_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_kind {
-            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").await.at(["nodes", replaced.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
             node.kind = replaced.new_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_properties {
-            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").await.at(["nodes", replaced.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
             node.properties = replaced.new_properties.clone();
         }
         if let Some(order) = &self.reordered_nodes {
             if order.len() != next.nodes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).await.at(["reorderedNodes"]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).at(["reorderedNodes"]));
             }
             let mut seen = HashSet::new();
             for id in order {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").await.at(["reorderedNodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").at(["reorderedNodes", id.as_str()]));
                 }
                 if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").await.at(["reorderedNodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]));
                 }
             }
             let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
             for id in order {
-                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").await.at(["reorderedNodes", id.as_str()]))?;
+                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]))?;
                 reordered.push(next.nodes.remove(at));
             }
             next.nodes = reordered;
         }
         if let Some(edge) = &self.connected_edge {
             if next.edges.iter().any(|entry| entry.id == edge.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").await.at(["edges", edge.id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").at(["edges", edge.id.as_str()]));
             }
             for endpoint in [&edge.source, &edge.target] {
                 let node_id = split_dag_endpoint(endpoint).0;
                 if !next.nodes.iter().any(|node| node.id == node_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").await.at(["edges", edge.id.as_str(), node_id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").at(["edges", edge.id.as_str(), node_id.as_str()]));
                 }
             }
             next.edges.push(edge.clone());
@@ -7931,10 +7899,10 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for id in ids {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge is disconnected more than once").await.at(["edges", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge is disconnected more than once").at(["edges", id.as_str()]));
                 }
                 if !next.edges.iter().any(|edge| edge.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "disconnected edge does not exist").await.at(["edges", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "disconnected edge does not exist").at(["edges", id.as_str()]));
                 }
             }
             next.edges.retain(|edge| !ids.contains(&edge.id));
@@ -7943,18 +7911,18 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for rewrite in rewrites {
                 if !seen.insert(&rewrite.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").await.at(["edges", rewrite.id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").at(["edges", rewrite.id.as_str()]));
                 }
                 if rewrite.new_source.is_none() && rewrite.new_target.is_none() {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").await.at(["edges", rewrite.id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").at(["edges", rewrite.id.as_str()]));
                 }
                 for endpoint in [rewrite.new_source.as_ref(), rewrite.new_target.as_ref()].into_iter().flatten() {
                     let node_id = split_dag_endpoint(endpoint).0;
                     if !next.nodes.iter().any(|node| node.id == node_id) {
-                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").await.at(["edges", rewrite.id.as_str(), node_id.as_str()]));
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").at(["edges", rewrite.id.as_str(), node_id.as_str()]));
                     }
                 }
-                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").await.at(["edges", rewrite.id.as_str()]))?;
+                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").at(["edges", rewrite.id.as_str()]))?;
                 if let Some(source) = &rewrite.new_source {
                     edge.source = source.clone();
                 }
@@ -8051,11 +8019,7 @@ impl Mutation<DagSnapshot> for DagMutation {
                             if !touches_source && !touches_target {
                                 return None;
                             }
-                            Some(RewrittenEdgeEndpoint {
-                                id: edge.id.clone(),
-                                new_source: touches_source.then(|| format!("{new_id}@{source_port}")),
-                                new_target: touches_target.then(|| format!("{new_id}@{target_port}")),
-                            })
+                            Some(RewrittenEdgeEndpoint { id: edge.id.clone(), new_source: touches_source.then(|| format!("{new_id}@{source_port}")), new_target: touches_target.then(|| format!("{new_id}@{target_port}")) })
                         })
                         .collect();
                     if !rewrites.is_empty() {
@@ -8138,27 +8102,15 @@ impl Mutation<DagSnapshot> for DagMutation {
                 }
             }
             DagMutation::MoveNode { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::MoveNode { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
-            DagMutation::ResizeNode { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ResizeNode { id: id.clone(), width: node.width, height: node.height }]).unwrap_or_default()
-            }
-            DagMutation::ChangeNodeName { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeName { id: id.clone(), new_name: node.name.clone() }]).unwrap_or_default()
-            }
-            DagMutation::ChangeNodeIcon { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeIcon { id: id.clone(), new_icon: node.icon.clone() }]).unwrap_or_default()
-            }
-            DagMutation::ChangeNodeAbbreviation { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: node.abbreviation.clone() }]).unwrap_or_default()
-            }
+            DagMutation::ResizeNode { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ResizeNode { id: id.clone(), width: node.width, height: node.height }]).unwrap_or_default(),
+            DagMutation::ChangeNodeName { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeName { id: id.clone(), new_name: node.name.clone() }]).unwrap_or_default(),
+            DagMutation::ChangeNodeIcon { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeIcon { id: id.clone(), new_icon: node.icon.clone() }]).unwrap_or_default(),
+            DagMutation::ChangeNodeAbbreviation { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: node.abbreviation.clone() }]).unwrap_or_default(),
             DagMutation::ChangeNodeOperatorKind { id, .. } => {
                 snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeOperatorKind { id: id.clone(), new_operator_kind: node.operator_kind.clone() }]).unwrap_or_default()
             }
-            DagMutation::ReplaceNodeKind { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeKind { id: id.clone(), new_kind: node.kind.clone() }]).unwrap_or_default()
-            }
-            DagMutation::ReplaceNodeProperties { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeProperties { id: id.clone(), new_properties: node.properties.clone() }]).unwrap_or_default()
-            }
+            DagMutation::ReplaceNodeKind { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeKind { id: id.clone(), new_kind: node.kind.clone() }]).unwrap_or_default(),
+            DagMutation::ReplaceNodeProperties { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeProperties { id: id.clone(), new_properties: node.properties.clone() }]).unwrap_or_default(),
             DagMutation::ReorderNodes { .. } => vec![DagMutation::ReorderNodes { order: snapshot.nodes.iter().map(|node| node.id.clone()).collect() }],
             DagMutation::ConnectNodes { id, .. } => vec![DagMutation::DisconnectNodes { id: id.clone() }],
             DagMutation::DisconnectNodes { id } => snapshot
@@ -8367,7 +8319,6 @@ fn dag_snapshot_from_dsl(mirror: DagSnapshotDsl) -> DagSnapshot {
     DagSnapshot { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
 }
 
-
 /// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
 impl crate::os_store::ArtifactDsl for DagSnapshotDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -8379,21 +8330,12 @@ impl crate::os_store::ArtifactDsl for DagSnapshotDsl {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-            crate::os_store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -8402,22 +8344,14 @@ impl crate::os_store::ArtifactDsl for DagSnapshotDsl {
 impl crate::os_store::ArtifactPack for DagSnapshotDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-            crate::os_store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let envelope =
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
-            return Err(crate::os_store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -8539,9 +8473,7 @@ fn dag_mutation_to_dsl(operation: &DagMutation) -> DagMutationDsl {
         DagMutation::ReplaceNodeKind { id, new_kind } => DagMutationDsl::ReplaceNodeKind { id: id.clone(), new_kind: Box::new(dag_node_kind_to_dsl(new_kind)) },
         DagMutation::ReplaceNodeProperties { id, new_properties } => DagMutationDsl::ReplaceNodeProperties { id: id.clone(), new_properties: new_properties.clone() },
         DagMutation::ReorderNodes { order } => DagMutationDsl::ReorderNodes { order: order.clone() },
-        DagMutation::ConnectNodes { id, source, target, route_style, properties } => {
-            DagMutationDsl::ConnectNodes { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() }
-        }
+        DagMutation::ConnectNodes { id, source, target, route_style, properties } => DagMutationDsl::ConnectNodes { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() },
         DagMutation::DisconnectNodes { id } => DagMutationDsl::DisconnectNodes { id: id.clone() },
     }
 }
@@ -8565,7 +8497,6 @@ fn dag_mutation_from_dsl(mirror: DagMutationDsl) -> DagMutation {
     }
 }
 
-
 /// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
 impl crate::os_spr::OpText for DagMutationDsl {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
@@ -8573,11 +8504,7 @@ impl crate::os_spr::OpText for DagMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -8962,10 +8889,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_replace_node_kind() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind {
-            id: "n1".into(),
-            new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") },
-        });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind { id: "n1".into(), new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") } });
     }
 
     #[test]

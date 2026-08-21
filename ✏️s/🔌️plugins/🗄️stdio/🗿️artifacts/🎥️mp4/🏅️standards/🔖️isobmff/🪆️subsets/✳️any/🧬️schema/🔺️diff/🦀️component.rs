@@ -50,7 +50,7 @@ pub struct IndexedAdded<T> {
 /// ▶️ Apply semantics (normative, schema-design.md): `removed`/`modified` index BASE state;
 /// `added` indices are FINAL positions, inserted ascending at `min(index, len)`. Out-of-range
 /// keys are graceful no-ops.
-pub async fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
     let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
     for m in &diff.modified {
         if let Some(entry) = kept.iter_mut().find(|(i, _)| *i == m.index) {
@@ -67,26 +67,26 @@ pub async fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, ap
     result
 }
 
-async fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await);
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await);
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
         }
         validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
@@ -94,10 +94,10 @@ async fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_i
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await);
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
         }
         if !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await);
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
         }
     }
     Ok(())
@@ -296,19 +296,19 @@ struct Mp4SamplesDiffRecord {
 }
 
 impl dsl::DslField for Mp4SamplesDiff {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         <Mp4SamplesDiffRecord as dsl::DslField>::shape()
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         Mp4SamplesDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4SampleModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
             added: self.added.iter().map(|entry| Mp4SampleAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
         }
-        .to_value().await
+        .to_value()
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value).await?;
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4SamplesDiffRecord as dsl::DslField>::from_value(value)?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -423,19 +423,19 @@ struct Mp4TracksDiffRecord {
 }
 
 impl dsl::DslField for Mp4TracksDiff {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         <Mp4TracksDiffRecord as dsl::DslField>::shape()
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         Mp4TracksDiffRecord {
             removed: self.removed.clone(),
             modified: self.modified.iter().map(|entry| Mp4TrackModifiedRecord { index: entry.index, diff: entry.diff.clone() }).collect(),
             added: self.added.iter().map(|entry| Mp4TrackAddedRecord { index: entry.index, item: entry.item.clone() }).collect(),
         }
-        .to_value().await
+        .to_value()
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
-        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value).await?;
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let record = <Mp4TracksDiffRecord as dsl::DslField>::from_value(value)?;
         Ok(Self {
             removed: record.removed,
             modified: record.modified.into_iter().map(|entry| IndexedModified { index: entry.index, diff: entry.diff }).collect(),
@@ -455,9 +455,9 @@ pub struct Mp4Diff {
 }
 
 impl MutationDiff<Mp4Snapshot> for Mp4Diff {
-    async fn apply(&self, base: &Mp4Snapshot) -> MutationApplyResult<Mp4Snapshot> {
+    fn apply(&self, base: &Mp4Snapshot) -> MutationApplyResult<Mp4Snapshot> {
         if let Some(diff) = &self.tracks {
-            validate_indexed(&base.tracks, diff, validate_track_diff).await?;
+            validate_indexed(&base.tracks, diff, validate_track_diff)?;
         }
         Ok(Mp4Snapshot {
             schema: base.schema.clone(),
@@ -467,7 +467,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
         })
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.ftyp.is_some() {
             self.ftyp = other.ftyp;
         }
@@ -475,7 +475,7 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
             self.movie = other.movie;
         }
         match (&mut self.tracks, other.tracks) {
-            (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_diff, apply_track_diff_mut).await,
+            (Some(existing), Some(other_tracks)) => absorb_indexed(existing, other_tracks, absorb_track_diff, apply_track_diff_mut),
             (slot @ None, Some(other_tracks)) => *slot = Some(other_tracks),
             _ => {}
         }
@@ -484,17 +484,17 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
 
 async fn validate_track_diff(base: &Mp4Track, diff: &Mp4TrackDiff) -> MutationApplyResult<()> {
     if let Some(samples) = &diff.samples {
-        validate_indexed(&base.samples, samples, |_, _| Ok(())).await?;
+        validate_indexed(&base.samples, samples, |_, _| Ok(()))?;
     }
     Ok(())
 }
 
 impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
-    async fn between(base: &Mp4Snapshot, other: &Mp4Snapshot) -> Self {
-        let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty).await;
-        Self { ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()), movie: (base.movie != other.movie).then(|| other.movie.clone()), tracks: (!tracks_diff.is_empty().await).then_some(tracks_diff) }
+    fn between(base: &Mp4Snapshot, other: &Mp4Snapshot) -> Self {
+        let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty);
+        Self { ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()), movie: (base.movie != other.movie).then(|| other.movie.clone()), tracks: (!tracks_diff.is_empty()).then_some(tracks_diff) }
     }
-    async fn inverse(&self, base: &Mp4Snapshot) -> Self {
+    fn inverse(&self, base: &Mp4Snapshot) -> Self {
         // 🔁️ Correct-by-construction: `between(after, base)` trivially satisfies the inverse law
         // `d.inverse(base).apply(&d.apply(base)) == base` because `between` itself satisfies
         // `between(a,b).apply(a) == b` (tested directly below) — applying `between(after, base)`
@@ -507,19 +507,19 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
             after.movie = v.clone();
         }
         if let Some(v) = &self.tracks {
-            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff).await;
+            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff);
         }
-        Self::between(&after, base).await
+        Self::between(&after, base)
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.ftyp.is_none() && self.movie.is_none() && self.tracks.is_none()
     }
 }
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub async fn diff_set_snapshot(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> Mp4Diff {
-    <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(base, snapshot).await
+    <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(base, snapshot)
 }
 //#endregion 🔖️Diff
 

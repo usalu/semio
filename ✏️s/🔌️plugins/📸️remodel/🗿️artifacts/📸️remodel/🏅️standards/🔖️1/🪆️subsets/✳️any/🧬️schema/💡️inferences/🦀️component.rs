@@ -63,10 +63,7 @@ impl protocol::InferenceSpec<RemodelSnapshot> for RemodelInference {
         1
     }
     async fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[
-            protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.bounds", reads: &["results"] },
-            protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.relative_camera_pose", reads: &["results"] },
-        ]
+        &[protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.bounds", reads: &["results"] }, protocol::InferenceFieldSpec { id: "s.remodel.remodel.inference.relative_camera_pose", reads: &["results"] }]
     }
 }
 //#endregion 🔖️Inference

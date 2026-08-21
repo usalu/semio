@@ -31,13 +31,11 @@
 //! line format instead, mirroring `dag`'s `DagSnapshot` codec exactly). Follow-up work, flagged in
 //! this ticket's report.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::jack::{Edge, JackSnapshot, Node, Port, PortDirection, PropertyBag};
 use store::{ArtifactDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
@@ -211,7 +209,9 @@ async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, Strin
 //#region 🔖️HandcraftedArtifactCodecs
 impl ArtifactDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
-    async fn envelope_id() -> &'static str { "trinity.jack" }
+    async fn envelope_id() -> &'static str {
+        "trinity.jack"
+    }
 
     async fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -223,11 +223,7 @@ impl ArtifactDsl for JackSnapshot {
 
     async fn print_dsl(&self) -> String {
         let body = print_jack_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        ).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -248,23 +244,14 @@ impl store::ArtifactPack for JackSnapshot {
         write_str_lp(&mut out, &serde_json::to_string(&scene.edges).unwrap_or_default());
         write_str_lp(&mut out, self.root_node_id.as_deref().unwrap_or(""));
         write_str_lp(&mut out, &self.root_node_id.is_some().to_string());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        ).map_err(|e| PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &out))
     }
 
     async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| PackError::Schema(e.to_string()))?;
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         let mut reader = store::ByteReader::new(&inner);
@@ -307,7 +294,6 @@ pub async fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
 pub async fn print_dsl(document: &JackSnapshot) -> String {
     ArtifactDsl::print_dsl(document)
 }
-
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -10,9 +10,9 @@
 //! `measure_text_width`); `crate::wgpu::chrome`/`crate::wgpu::input` are the other top-level engine mods
 //! `widgets` itself also depends on.
 
-use crate::wgpu::widgets::{draw_text, measure_text_width, WidgetContext};
 use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::input::{HitKind, HitTarget};
+use crate::wgpu::widgets::{draw_text, measure_text_width, WidgetContext};
 
 pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let focused = ctx.input.focused_id.as_deref() == Some(id);

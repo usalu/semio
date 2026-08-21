@@ -1,10 +1,10 @@
 //! 🖼️ Note play app — the composite (editable) canvas window: the full infinite-canvas surface.
 
+use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::NOTE_PLAY_CONTROLLER_ID;
-use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use semio_framework_plugin::{build_ink_canvas_scene, InkCanvasScene, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -39,7 +39,14 @@ pub async fn definition() -> WindowKindDefinition {
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
 pub async fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
-    vec![options::camera::measure(camera, labels), options::grid::measure(document, labels), options::snap::measure(document, labels), options::pencil::measure(document, labels), options::eraser_stroke::measure(document, labels), options::eraser_point::measure(document, labels)]
+    vec![
+        options::camera::measure(camera, labels),
+        options::grid::measure(document, labels),
+        options::snap::measure(document, labels),
+        options::pencil::measure(document, labels),
+        options::eraser_stroke::measure(document, labels),
+        options::eraser_point::measure(document, labels),
+    ]
 }
 
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::window_engagements` is
@@ -67,10 +74,7 @@ pub async fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement
         }),
         control: None,
         controls: None,
-        status: Some(vec![
-            WindowEngagementStatus { id: "note-status.counts".into(), text: format!("{block_count} blocks · zoom {zoom:.2}") },
-            WindowEngagementStatus { id: "note-status.grid".into(), text: format!("{grid_status} · {snap_status}") },
-        ]),
+        status: Some(vec![WindowEngagementStatus { id: "note-status.counts".into(), text: format!("{block_count} blocks · zoom {zoom:.2}") }, WindowEngagementStatus { id: "note-status.grid".into(), text: format!("{grid_status} · {snap_status}") }]),
         possible_engagements: None,
     }
 }

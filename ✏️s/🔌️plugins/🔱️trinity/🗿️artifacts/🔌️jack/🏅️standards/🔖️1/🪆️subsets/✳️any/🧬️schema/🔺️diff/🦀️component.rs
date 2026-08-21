@@ -20,24 +20,43 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackDiff {
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub name: Option<String>,
-    #[state(artifact)] pub manifest_id: Option<Option<String>>,
-    #[state(artifact)] pub manifest: Option<crate::artifacts::jack::Manifest>,
-    #[state(artifact)] pub camera: Option<Camera>,
-    #[state(artifact)] pub content: Option<JackContentChild>,
-    #[state(artifact)] pub root_node_id: Option<Option<String>>,
-    #[state(presence)] pub active_fixture_id: Option<String>,
-    #[state(presence)] pub jack_query: Option<String>,
-    #[state(presence)] pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
-    #[state(config)] pub viewport_camera: Option<Camera>,
-    #[state(config)] pub jack_result_json: Option<String>,
-    #[state(config)] pub editor_engagement_input: Option<String>,
-    #[state(config)] pub graph_engagement_input: Option<String>,
-    #[state(config)] pub results_engagement_input: Option<String>,
-    #[state(config)] pub reorganize_epoch: Option<u64>,
-    #[state(config)] pub editor_selection: Option<Option<JackEditorSelection>>,
-    #[state(config)] pub revision: Option<u64>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub name: Option<String>,
+    #[state(artifact)]
+    pub manifest_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub manifest: Option<crate::artifacts::jack::Manifest>,
+    #[state(artifact)]
+    pub camera: Option<Camera>,
+    #[state(artifact)]
+    pub content: Option<JackContentChild>,
+    #[state(artifact)]
+    pub root_node_id: Option<Option<String>>,
+    #[state(presence)]
+    pub active_fixture_id: Option<String>,
+    #[state(presence)]
+    pub jack_query: Option<String>,
+    #[state(presence)]
+    pub lod_mode_by_window: Option<BTreeMap<String, Option<String>>>,
+    #[state(config)]
+    pub viewport_camera: Option<Camera>,
+    #[state(config)]
+    pub jack_result_json: Option<String>,
+    #[state(config)]
+    pub editor_engagement_input: Option<String>,
+    #[state(config)]
+    pub graph_engagement_input: Option<String>,
+    #[state(config)]
+    pub results_engagement_input: Option<String>,
+    #[state(config)]
+    pub reorganize_epoch: Option<u64>,
+    #[state(config)]
+    pub editor_selection: Option<Option<JackEditorSelection>>,
+    #[state(config)]
+    pub revision: Option<u64>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

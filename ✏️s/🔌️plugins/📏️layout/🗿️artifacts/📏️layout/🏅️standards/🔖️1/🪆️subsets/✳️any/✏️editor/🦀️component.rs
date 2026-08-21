@@ -14,36 +14,36 @@
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 📦️glue.rs.)
 
-use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
-use crate::editor::layout::modes::edit::windows::{blueprint, preview};
-use crate::editor::layout::modes::edit;
-use crate::editor::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
-use crate::editor::layout::terminology::{layout_labels, LayoutLabels};
 use crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields;
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
-    INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, CLEAR_SELECTION_ACTION_ID,
-};
-use semio_framework_plugin::app::InteractionView;
+use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
+use crate::editor::layout::modes::edit;
+use crate::editor::layout::modes::edit::windows::{blueprint, preview};
+use crate::editor::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
+use crate::editor::layout::terminology::{layout_labels, LayoutLabels};
 use semio_framework::kernel::Effect;
 use semio_framework::Dialect;
-use store::EngineHandles;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 use crate::editor::layout::engine::scene::LayoutEngine;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_APP_ID: &str = "layout-play";
 pub use blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
-pub use preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
 pub use catalogue_panel::LAYOUT_PLAY_BODY_CATALOGUE;
 pub use document_panel::LAYOUT_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::LAYOUT_PLAY_BODY_INSPECTION;
 pub use preflight_panel::{LAYOUT_PLAY_BODY_PREFLIGHT, LAYOUT_PLAY_PREFLIGHT_TAB_ID};
+pub use preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -80,17 +80,17 @@ pub async fn layout_hover_action_args(id: Option<&str>) -> Value {
 /// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub async fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
-    Effect::DispatchAction {req: semio_framework_plugin::RequestId(115),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
 }
 
 /// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
 pub async fn layout_hover_effect(id: Option<&str>) -> Effect {
-    Effect::DispatchAction {req: semio_framework_plugin::RequestId(114),  action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(114), action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
 }
 
 /// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
 pub async fn layout_clear_selection_effect() -> Effect {
-    Effect::DispatchAction {req: semio_framework_plugin::RequestId(113),  action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(113), action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 
@@ -135,8 +135,8 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
-    add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input,
-    engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue, patch_frame, patch_page, set_active_page, set_camera, set_locale,
+    add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
+    patch_frame, patch_page, set_active_page, set_camera, set_locale,
 };
 //#endregion 🔖️Commands
 
@@ -206,7 +206,14 @@ impl ArtifactEditor for LayoutPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &LayoutCommand, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &LayoutCommand,
+        doc: &ArtifactView<'_, LayoutSnapshot>,
+        cfg: &ConfigView<'_, LayoutConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -221,7 +228,10 @@ impl ArtifactEditor for LayoutPlayApp {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(Media {
+                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                    payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
             "layout:out" => {
                 let document = doc.snapshot;
@@ -514,10 +524,7 @@ mod tests {
         let cases: [(LayoutCommand, &str); 3] = [
             (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600"),
             (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
-            (
-                LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
-                "camera camera { x=1 y=2 zoom=1.5 }",
-            ),
+            (LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }), "camera camera { x=1 y=2 zoom=1.5 }"),
         ];
         for (command, text) in cases {
             assert_eq!(protocol::OpText::print_op(&command), text);

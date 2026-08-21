@@ -1,11 +1,11 @@
 //! 📥️ 📥️ Remodel play app commands command — `add-stream`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::mutations::create_stream;
-use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
+use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::{MediaKind, MediaStream, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

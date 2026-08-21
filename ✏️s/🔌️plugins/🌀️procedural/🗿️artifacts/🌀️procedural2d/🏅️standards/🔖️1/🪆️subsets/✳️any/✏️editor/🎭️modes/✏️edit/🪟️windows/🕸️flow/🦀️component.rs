@@ -1,9 +1,9 @@
 //! 🕸️ Procedural2d play app — the main node-graph window: the editable flow canvas.
 
-use crate::editor::procedural2d::config::Procedural2dConfig;
-use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use crate::artifacts::procedural2d::schema::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::editor::procedural2d::config::Procedural2dConfig;
+use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -29,7 +29,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

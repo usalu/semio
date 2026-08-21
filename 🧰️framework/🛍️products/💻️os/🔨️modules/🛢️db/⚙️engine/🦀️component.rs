@@ -42,16 +42,15 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+use crate::db_ids::{ActorId, ArtifactId, DbError};
 use crate::*;
-use crate::db_ids::{DbError, ArtifactId, ActorId};
 use db_storage::CatalogStorage as _;
 use db_storage::PayloadStorage as _;
 use semio_framework_async::{Lane, WorkerPool};
 
-
 //#region 🔖️Reexports
-pub use crate::db_policy::{DbCapabilities, DbConfig, Profile};
 pub use crate::db_durability::DurabilityClass;
+pub use crate::db_policy::{DbCapabilities, DbConfig, Profile};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Ids
@@ -925,20 +924,22 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     async fn spawn_authority_create(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
+        let pool = self.pool.clone().ok_or_else(|| DbError::Unavailable("document authority requires the process WorkerPool".to_string()))?;
         let storage = self.storage.clone();
         let config = self.document_engine_config().await;
         let created_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::create(document, storage, config, created_at_ms), mailbox_capacities).await?;
+        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || db_artifact::ArtifactEngine::create(document, storage, config, created_at_ms), mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 
     async fn spawn_authority_open(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
+        let pool = self.pool.clone().ok_or_else(|| DbError::Unavailable("document authority requires the process WorkerPool".to_string()))?;
         let storage = self.storage.clone();
         let config = self.document_engine_config().await;
         let opened_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities).await?;
+        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || db_artifact::ArtifactEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 

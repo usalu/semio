@@ -34,10 +34,13 @@ mod tests {
     use block::artifacts::block5d::Block5dDefinition;
     use cad_document::artifacts::cad::CadSnapshot;
     use dag_app::DagSnapshot;
+    use draw::artifacts::draw::DrawDocument;
+    use fem2d::Fem2dDocument;
+    use fem3d::Fem3dDocument;
+    use flow_app::FlowFixture;
     use norm::artifacts::din16798::Document as Din16798Document;
     use norm::artifacts::din18599::Document as Din18599Document;
     use norm::artifacts::din4108::Document as Din4108Document;
-    use draw::artifacts::draw::DrawDocument;
     use norm::artifacts::en1990::Document as En1990Document;
     use norm::artifacts::en1991::Document as En1991Document;
     use norm::artifacts::en1992::Document as En1992Document;
@@ -48,23 +51,21 @@ mod tests {
     use norm::artifacts::en1997::Document as En1997Document;
     use norm::artifacts::en1998::Document as En1998Document;
     use norm::artifacts::en1999::Document as En1999Document;
-    use fem2d::Fem2dDocument;
-    use fem3d::Fem3dDocument;
-    use flow_app::FlowFixture;
     // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
     // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
     // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
     // at the real owner of the type — no `lib.rs` ripple beyond this import line (see TEMPLATE.md §8.2).
-    use playbook::PlaybookSpec as FormSpec;
     use gis::artifacts::gismap::GisMapDocument;
     use gis::artifacts::gisterrain::Gis3dTerrainDocument;
     use home::artifacts::home::SHomeDocument;
     use imperative::artifacts::imperative::ImperativeDocument;
-    use norm::artifacts::iso16757::Document as Iso16757Document;
     use layout::artifacts::layout::LayoutDocument;
     use lowpoly::artifacts::lowpoly::LowpolySnapshot;
     use mathematical::artifacts::mathematical::MathematicalSnapshot;
+    use norm::artifacts::iso16757::Document as Iso16757Document;
+    use norm::artifacts::vdi3805::Document as Vdi3805Document;
     use note_app::artifacts::note::NoteDocument;
+    use playbook::PlaybookSpec as FormSpec;
     use playbook::PlaybookSpec;
     use present::artifacts::present::PresentDeck;
     use procedural::artifacts::procedural2d::Procedural2dDocument;
@@ -76,15 +77,14 @@ mod tests {
     use raster::artifacts::raster::RasterSnapshot;
     use reasoning_mindmap_plugin::artifacts::wires::MindmapWiresDocument;
     use remodel::artifacts::remodel::RemodelSnapshot;
-    use trinity::artifacts::rewrite::RewriteRuleModel;
     use semio_framework_os::WorkflowSnapshot;
     use sequence::artifacts::sequence::SequenceFixture;
     use shooting::artifacts::shooting::ShootingFixture;
     use sourcing::artifacts::curate::CurateDocument;
     use space::{CollectionSnapshot, SpaceSnapshot};
     use trinity::artifacts::jack::GraphFixture;
+    use trinity::artifacts::rewrite::RewriteRuleModel;
     use vcs_app::artifacts::vcs::VcsSnapshot;
-    use norm::artifacts::vdi3805::Document as Vdi3805Document;
     use writer::artifacts::writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
 
@@ -364,29 +364,17 @@ mod tests {
                         }
                     } else {
                         soft_skipped += 1;
-                        let legacy_hint = if slug_has_legacy_kind_dirs(&slug) {
-                            "legacy plural kind dirs still present"
-                        } else {
-                            "no legacy kind dirs either"
-                        };
-                        eprintln!(
-                            "[DEBUG] soft-skip example coverage {}: missing {}/ with ≥1 .semio — mid-migration ({})",
-                            slug.display(),
-                            ASSETS_DIR_NAME,
-                            legacy_hint
-                        );
+                        let legacy_hint = if slug_has_legacy_kind_dirs(&slug) { "legacy plural kind dirs still present" } else { "no legacy kind dirs either" };
+                        eprintln!("[DEBUG] soft-skip example coverage {}: missing {}/ with ≥1 .semio — mid-migration ({})", slug.display(), ASSETS_DIR_NAME, legacy_hint);
                     }
                 }
             }
         }
-        eprintln!(
-            "[dsl-fixture-sweep] example asset coverage: {migrated} slug(s) on new 🖼️assets layout, {soft_skipped} soft-skipped mid-migration"
-        );
+        eprintln!("[dsl-fixture-sweep] example asset coverage: {migrated} slug(s) on new 🖼️assets layout, {soft_skipped} soft-skipped mid-migration");
         assert!(gaps.is_empty(), "semio example asset gaps:\n{}", gaps.join("\n"));
     }
     //#endregion 🔖️Sweep
 }
-
 
 //#region 🔖️ExampleAssetDiscovery
 /// @emoji 🖼️ Path-agnostic example-asset discovery for M5 pilots: prefers
@@ -450,11 +438,7 @@ mod example_asset_discovery {
                 collect_files(&slug, &mut candidates).await;
             }
         }
-        candidates.retain(|path| {
-            path.file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|name| name.ends_with(suffix))
-        });
+        candidates.retain(|path| path.file_name().and_then(|n| n.to_str()).is_some_and(|name| name.ends_with(suffix)));
         // Prefer the largest match so handcrafted fixtures win over 64-byte / preamble-only stubs
         // that still sit beside them under legacy placeholder slug dirs during migration.
         candidates.sort_by(|a, b| {
@@ -482,7 +466,6 @@ mod example_asset_discovery {
     }
 }
 //#endregion 🔖️ExampleAssetDiscovery
-
 
 //#region 🧭️PilotResolve
 /// 🧭️ Path-agnostic example-asset resolution for M5 pilots.
@@ -896,7 +879,6 @@ mod m5_auto_discovery {
         ("📐️step", "🔖️ap214", ConformanceFacet::ProtocolPack),
         ("🏗️ifc", "🔖️4", ConformanceFacet::Grammar),
         ("🏗️ifc", "🔖️4", ConformanceFacet::ProtocolPack),
-
         // 🎓️ P2-FG2 (gif×2, jpg, bmp, tiff, deflate, las, dwg×2 — 9 standards) closer graduation.
         // All 9 land a real, dialect-conformant snapshot grammar + `.dsl.semio` fixture (Grammar)
         // and a real snapshot protocol + `.pack.semio` fixture (ProtocolPack); none shipped a real
@@ -946,7 +928,6 @@ mod m5_auto_discovery {
         ("🖊️dwg", "🔖️ac1018", ConformanceFacet::ProtocolPack),
         ("🖊️dwg", "🔖️ac1024", ConformanceFacet::Grammar),
         ("🖊️dwg", "🔖️ac1024", ConformanceFacet::ProtocolPack),
-
         // 🎓️ P2-FG3 (gltf, pdf×2, ply, svg — 5 standards) closer graduation. gltf/2.0, ply/1.0, and
         // svg/1.1 each land a real, dialect-conformant snapshot grammar + `.dsl.semio` fixture
         // (Grammar) and a real snapshot protocol + `.pack.semio` fixture (ProtocolPack); none shipped
@@ -983,7 +964,6 @@ mod m5_auto_discovery {
         ("☁️ply", "🔖️1.0", ConformanceFacet::ProtocolPack),
         ("🎨️svg", "🔖️1.1", ConformanceFacet::Grammar),
         ("🎨️svg", "🔖️1.1", ConformanceFacet::ProtocolPack),
-
         // 🎓️ P2-FG4 (docx, xlsx, pptx, bcf, ifc/2x3 — the FINAL fan-out wave, completing all 32
         // official stdio standards) closer graduation. docx/ecma-376, xlsx/ecma-376, pptx/ecma-376,
         // and bcf/2.1 each land a real, dialect-conformant snapshot protocol + `.pack.semio` fixture
@@ -1049,7 +1029,6 @@ mod m5_auto_discovery {
         ("📕️xlsx", "🔖️ecma-376", ConformanceFacet::ProtocolPack),
         ("🎞️pptx", "🔖️ecma-376", ConformanceFacet::ProtocolPack),
         ("💬️bcf", "🔖️2.1", ConformanceFacet::ProtocolPack),
-
         // `ifc/2x3` is STILL deliberately NOT graduated here, but the ROOT CAUSE below is now fixed
         // (P2-PW) — this entry is left ungraduated as an explicit scope decision, not a remaining
         // mechanism gap. Original root cause: ifc/4 (already graduated above, since P2-PC/FG1) and
@@ -1179,10 +1158,7 @@ mod m5_handcrafted_grammar_conformance {
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets().await;
-        assert!(
-            !facets.is_empty(),
-            "auto-discovery found zero 🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken"
-        );
+        assert!(!facets.is_empty(), "auto-discovery found zero 🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken");
 
         let mut hard_failures: Vec<String> = Vec::new();
         let mut soft_failures: Vec<String> = Vec::new();
@@ -1190,8 +1166,7 @@ mod m5_handcrafted_grammar_conformance {
         let mut soft_skipped = 0usize;
 
         for facet in &facets {
-            let grammar_text =
-                std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
+            let grammar_text = std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
             if soft_skip_missing(&format!("{}.grammar", facet.label), &grammar_text).await {
                 soft_skipped += 1;
                 continue;
@@ -1216,25 +1191,11 @@ mod m5_handcrafted_grammar_conformance {
             }
         }
 
-        eprintln!(
-            "[dsl-fixture-sweep] m5 grammar auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.len(),
-            checked,
-            soft_skipped,
-            soft_failures.len(),
-            hard_failures.len()
-        );
-        assert!(
-            hard_failures.is_empty(),
-            "m5 grammar conformance failed for {} artifact(s):\n\n{}",
-            hard_failures.len(),
-            hard_failures.join("\n\n")
-        );
+        eprintln!("[dsl-fixture-sweep] m5 grammar auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt soft failure(s), {} hard failure(s)", facets.len(), checked, soft_skipped, soft_failures.len(), hard_failures.len());
+        assert!(hard_failures.is_empty(), "m5 grammar conformance failed for {} artifact(s):\n\n{}", hard_failures.len(), hard_failures.join("\n\n"));
     }
 }
 //#endregion 🔖️M5HandcraftedGrammar
-
-
 
 //#region 🔖️M5HandcraftedProtocol
 /// @emoji 📡️ P2-M3: m5 protocol conformance over EVERY auto-discovered pack/spr protocol facet
@@ -1271,10 +1232,7 @@ mod m5_handcrafted_protocol_conformance {
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_protocol_facets().await;
-        assert!(
-            !facets.is_empty(),
-            "auto-discovery found zero 🧬️schema/{{📸️snapshot,🧬️mutations}}/💾️binary/📡️component.protocol.semio files under ✏️s/🔌️plugins — discovery walk is broken"
-        );
+        assert!(!facets.is_empty(), "auto-discovery found zero 🧬️schema/{{📸️snapshot,🧬️mutations}}/💾️binary/📡️component.protocol.semio files under ✏️s/🔌️plugins — discovery walk is broken");
 
         let mut hard_failures: Vec<String> = Vec::new();
         let mut soft_failures: Vec<String> = Vec::new();
@@ -1282,8 +1240,7 @@ mod m5_handcrafted_protocol_conformance {
         let mut soft_skipped = 0usize;
 
         for facet in &facets {
-            let protocol_text =
-                std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
+            let protocol_text = std::fs::read_to_string(&facet.file_path).unwrap_or_else(|error| panic!("{}: read {}: {error}", facet.label, facet.file_path.display()));
             if soft_skip_missing(&format!("{}.protocol", facet.label), &protocol_text).await {
                 soft_skipped += 1;
                 continue;
@@ -1312,8 +1269,7 @@ mod m5_handcrafted_protocol_conformance {
             };
             if let Err(detail) = check_protocol_conformance(&protocol_text, &bytes).await {
                 let stdio_exempt = facet.is_stdio && m5_auto_discovery::stdio_is_exempt(conformance_facet, &facet.artifact, facet.standard.as_deref()).await;
-                let known_gap =
-                    !facet.is_stdio && m5_auto_discovery::non_stdio_is_known_gap(conformance_facet, &facet.plugin, &facet.artifact, facet.standard.as_deref()).await;
+                let known_gap = !facet.is_stdio && m5_auto_discovery::non_stdio_is_known_gap(conformance_facet, &facet.plugin, &facet.artifact, facet.standard.as_deref()).await;
                 if stdio_exempt || known_gap {
                     eprintln!("[DEBUG] soft (stdio-exempt or known pre-existing gap) protocol conformance failure for {}: {detail}", facet.label);
                     soft_failures.push(facet.label.clone());
@@ -1331,16 +1287,10 @@ mod m5_handcrafted_protocol_conformance {
             soft_failures.len(),
             hard_failures.len()
         );
-        assert!(
-            hard_failures.is_empty(),
-            "m5 protocol conformance failed for {} artifact(s):\n\n{}",
-            hard_failures.len(),
-            hard_failures.join("\n\n")
-        );
+        assert!(hard_failures.is_empty(), "m5 protocol conformance failed for {} artifact(s):\n\n{}", hard_failures.len(), hard_failures.join("\n\n"));
     }
 }
 //#endregion 🔖️M5HandcraftedProtocol
-
 
 //#region 🔖️M5CrossArtifactRejection
 /// @emoji ⚔️ P2-M3: cross-artifact anti-genericness generalized over EVERY auto-discovered non-stdio
@@ -1409,16 +1359,10 @@ mod m5_cross_artifact_rejection {
                 }
             }
         }
-        assert!(
-            failures.is_empty(),
-            "m5 cross-artifact rejection failed for {} pair(s):\n\n{}",
-            failures.len(),
-            failures.join("\n\n")
-        );
+        assert!(failures.is_empty(), "m5 cross-artifact rejection failed for {} pair(s):\n\n{}", failures.len(), failures.join("\n\n"));
     }
 }
 //#endregion 🔖️M5CrossArtifactRejection
-
 
 //#region 🔖️M5ProductionCoverage
 /// @emoji 📊️ P2-M3: production coverage ([`Recognizer::uncovered_productions`]) over EVERY
@@ -1488,19 +1432,8 @@ mod m5_production_coverage {
             }
         }
 
-        eprintln!(
-            "[dsl-fixture-sweep] m5 production coverage auto-discovery: {} facet(s) found, {} checked, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.len(),
-            checked,
-            soft_failures.len(),
-            hard_failures.len()
-        );
-        assert!(
-            hard_failures.is_empty(),
-            "m5 production coverage failed for {} artifact(s):\n\n{}",
-            hard_failures.len(),
-            hard_failures.join("\n\n")
-        );
+        eprintln!("[dsl-fixture-sweep] m5 production coverage auto-discovery: {} facet(s) found, {} checked, {} stdio-exempt soft failure(s), {} hard failure(s)", facets.len(), checked, soft_failures.len(), hard_failures.len());
+        assert!(hard_failures.is_empty(), "m5 production coverage failed for {} artifact(s):\n\n{}", hard_failures.len(), hard_failures.join("\n\n"));
     }
 }
 //#endregion 🔖️M5ProductionCoverage

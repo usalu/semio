@@ -34,17 +34,7 @@ impl Platform {
     pub async fn new(spec: Option<PlatformSpec>) -> Self {
         let spec = spec.unwrap_or_default();
         let panel_visibility = spec.initial_panel_visibility.clone().unwrap_or_default();
-        Self {
-            action_bus: ActionBus::new(),
-            apps: Vec::new(),
-            active_app_id: spec.default_active_app_id.clone().unwrap_or_default(),
-            generation: 0,
-            chrome_generation: 0,
-            uri: "/".into(),
-            panel_visibility,
-            id: spec.id,
-            name: spec.name,
-        }
+        Self { action_bus: ActionBus::new(), apps: Vec::new(), active_app_id: spec.default_active_app_id.clone().unwrap_or_default(), generation: 0, chrome_generation: 0, uri: "/".into(), panel_visibility, id: spec.id, name: spec.name }
     }
 
     pub async fn add_app(&mut self, app: AppDefinition) {
@@ -56,10 +46,7 @@ impl Platform {
     }
 
     pub async fn get_active_app(&self) -> Option<&AppDefinition> {
-        self.apps
-            .iter()
-            .find(|app| app.id == self.active_app_id)
-            .or_else(|| self.apps.first())
+        self.apps.iter().find(|app| app.id == self.active_app_id).or_else(|| self.apps.first())
     }
 
     pub async fn set_active_app_id(&mut self, id: String) {
@@ -96,59 +83,54 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn adds_first_app_as_active() {
         let mut platform = Platform::new(None).await;
-        platform.add_app(AppDefinition {
-            id: "draw-play".into(),
-            role: crate::ui::AppRole::Editor,
-            dialect: crate::ArtifactDialect { artifact_kind: "s.test.draw-play".into(), standard: "1".into(), subset: "*".into() },
-            label: LocalizedLabel::data("Draw"),
-            breadcrumb: vec!["semio".into(), "draw".into()],
-            icon_id: None,
-            controller_id: "draw-play".into(),
-            modes: crate::ui::Modes::one(ModeDefinition {
-                id: "edit".into(),
-                label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                tools: Vec::new(),
-                layout_id: None,
-                commands: Vec::new(),
-            }),
-            default_mode_id: "edit".into(),
-            window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
-                id: "composite".into(),
-                label: LocalizedLabel::data("Canvas"),
-                body_key: "composite".into(),
-                surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
-                icon_id: "pen-tool".into(),
-                options: ui_wgpu::wgpu::WindowOptions::default(),
-                actions: Vec::new(),
-                utilities: Vec::new(),
+        platform
+            .add_app(AppDefinition {
+                id: "draw-play".into(),
+                role: crate::ui::AppRole::Editor,
+                dialect: crate::ArtifactDialect { artifact_kind: "s.test.draw-play".into(), standard: "1".into(), subset: "*".into() },
+                label: LocalizedLabel::data("Draw"),
+                breadcrumb: vec!["semio".into(), "draw".into()],
+                icon_id: None,
+                controller_id: "draw-play".into(),
+                modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                default_mode_id: "edit".into(),
+                window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+                    id: "composite".into(),
+                    label: LocalizedLabel::data("Canvas"),
+                    body_key: "composite".into(),
+                    surface_kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
+                    icon_id: "pen-tool".into(),
+                    options: ui_wgpu::wgpu::WindowOptions::default(),
+                    actions: Vec::new(),
+                    utilities: Vec::new(),
+                    interactions: Vec::new(),
+                    params_schema: None,
+                    artifact_snapshot_schema: None,
+                    input_event_schema: None,
+                    output_schema: None,
+                    capabilities: Vec::new(),
+                }),
+                panel_tabs: vec![],
+                keybindings: vec![],
+                utilities: vec![],
+                tools: vec![],
+                commands: vec![],
                 interactions: Vec::new(),
-                params_schema: None,
-                artifact_snapshot_schema: None,
-                input_event_schema: None,
-                output_schema: None,
-                capabilities: Vec::new(),
-            }),
-            panel_tabs: vec![],
-            keybindings: vec![],
-            utilities: vec![],
-            tools: vec![],
-            commands: vec![],
-            interactions: Vec::new(),
-            named_layouts: Vec::new(),
-            default_layout: None,
-            terminologies: Vec::new(),
-            terminology_breadcrumbs: std::collections::HashMap::new(),
-            introduction: None,
-            tutorials: Vec::new(),
-            dialogs: Vec::new(),
-            media_inputs: Vec::new(),
-            media_outputs: Vec::new(),
-            artifact_kinds: Vec::new(),
-            config: crate::ConfigSpec::empty().await,
-            command_grammar: crate::CommandGrammar::empty().await,
-            io: crate::AppIo::default(),
-        }).await;
+                named_layouts: Vec::new(),
+                default_layout: None,
+                terminologies: Vec::new(),
+                terminology_breadcrumbs: std::collections::HashMap::new(),
+                introduction: None,
+                tutorials: Vec::new(),
+                dialogs: Vec::new(),
+                media_inputs: Vec::new(),
+                media_outputs: Vec::new(),
+                artifact_kinds: Vec::new(),
+                config: crate::ConfigSpec::empty().await,
+                command_grammar: crate::CommandGrammar::empty().await,
+                io: crate::AppIo::default(),
+            })
+            .await;
         assert_eq!(platform.active_app_id, "draw-play");
     }
 
@@ -161,14 +143,7 @@ mod tests {
             breadcrumb: vec!["semio".into(), id.into()],
             icon_id: None,
             controller_id: id.into(),
-            modes: crate::ui::Modes::one(ModeDefinition {
-                id: "edit".into(),
-                label: LocalizedLabel::data("Edit"),
-                icon_id: "pencil".into(),
-                tools: Vec::new(),
-                layout_id: None,
-                commands: Vec::new(),
-            }),
+            modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
                 id: "main".into(),

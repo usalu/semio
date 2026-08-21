@@ -4,12 +4,12 @@
 //! cross-node from `crate::fem2d_engine` (the top-level `build_model`/`fem2d_solve_all` entry points)
 //! and from `crate::fem2d_engine::modal_buckling`/`crate::fem2d_engine::mesh_preview`.
 
-use crate::fem2d_engine::Fem2dError;
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
+use crate::fem2d_engine::Fem2dError;
 use crate::model::{Bar2, BeamEb2, Dof, Element, Elements, NodalLoad, Node};
-use std::collections::HashMap;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use std::collections::HashMap;
 
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight
 /// translation (`self_weight_nodal_loads`, feeding the frozen `fem2d_solve`) and as the `gravity`
@@ -92,15 +92,9 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(crate::elements2d::Tri3Cst {
-                id: format!("{}_t{}", region.id, tri_index),
-                nodes: tri_nodes,
-                e: material.e,
-                nu: material.nu,
-                thickness: region.thickness,
-                kind: crate::elements2d::PlaneKind::Stress,
-                density: material.rho,
-            }.into());
+            elements.push(
+                crate::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: crate::elements2d::PlaneKind::Stress, density: material.rho }.into(),
+            );
         }
 
         meshed_regions.push(MeshedRegion { region_id: region.id.clone(), material_id: region.material_id.clone(), thickness: region.thickness, node_ids, points: tri_mesh.points, tris: tri_mesh.tris });
@@ -187,10 +181,7 @@ pub(crate) async fn build_semio_mesh_snapshot(doc: &Fem2dSnapshot) -> SemioMeshS
         let faces = crate::mesh::boundary_faces(&tets);
         let positions: Vec<SemioPoint3> = tets.points.iter().map(|p| SemioPoint3 { x: p[0], y: p[1], z: p[2] }).collect();
         let indices: Vec<u32> = faces.iter().flat_map(|f| f.iter().copied()).collect();
-        meshes.push(SemioMesh {
-            id: region.id.clone(),
-            primitives: vec![SemioPrimitive { id: format!("{}-surface", region.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }],
-        });
+        meshes.push(SemioMesh { id: region.id.clone(), primitives: vec![SemioPrimitive { id: format!("{}-surface", region.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }] });
     }
     SemioMeshSnapshot { meshes, ..Default::default() }
 }

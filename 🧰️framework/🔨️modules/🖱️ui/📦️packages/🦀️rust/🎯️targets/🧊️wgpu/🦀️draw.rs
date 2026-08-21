@@ -286,7 +286,7 @@ impl ClipRegion {
 
 //#endregion SilhouetteClip
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
     pub clip: Option<ClipRegion>,
@@ -298,6 +298,7 @@ pub struct DrawLayer {
     pub overlay_vector_vertices: Vec<VectorVertex>,
 }
 
+#[derive(Clone)]
 pub struct DrawList {
     pub scene_passes: Vec<ScenePass3d>,
     pub layers: Vec<DrawLayer>,

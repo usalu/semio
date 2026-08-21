@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-residential-ventilation-m3-h applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.residential_ventilation_m3_h, 110.0, "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: residentialVentilationM3H did not land on 110.0");
-    assert_eq!(snapshot.occupants, before().occupants, "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: occupants must stay exactly as the before-snapshot had it — change-residential-ventilation-m3-h owns residentialVentilationM3H and nothing else");
+    assert_eq!(
+        snapshot.occupants,
+        before().occupants,
+        "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: occupants must stay exactly as the before-snapshot had it — change-residential-ventilation-m3-h owns residentialVentilationM3H and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-residential-ventilation-m3-h` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().residential_ventilation_m3_h, Some(110.0), "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: the sparse delta must carry residentialVentilationM3H = 110.0");
-    assert!(raised.diff().occupants.is_none(), "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: the sparse delta must leave occupants unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().occupants.is_none(),
+        "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: the sparse delta must leave occupants unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
@@ -132,7 +132,10 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert!(decoded.selected_check_index.is_none(), "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: change-residential-ventilation-m3-h is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex");
+    assert!(
+        decoded.selected_check_index.is_none(),
+        "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: change-residential-ventilation-m3-h is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex"
+    );
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: committed diff JSON is not canonical");
@@ -143,7 +146,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-residential-ventilation-m3-h/raises-the-residential-airflow-to-110-m3-per-hour: committed diff did not carry before to after");
 }

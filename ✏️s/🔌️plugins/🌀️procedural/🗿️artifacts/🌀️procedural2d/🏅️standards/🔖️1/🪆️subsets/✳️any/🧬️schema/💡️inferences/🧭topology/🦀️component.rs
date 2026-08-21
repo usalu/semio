@@ -76,12 +76,6 @@ pub async fn compute_procedural2d_topology(snapshot: &Procedural2dSnapshot) -> P
 
     let cycle_free = order.len() == widget_ids.len();
     let depth = depth_of.values().copied().max().unwrap_or(0);
-    Procedural2dTopology {
-        node_count: widget_ids.len() as u32,
-        edge_count: snapshot.fixture.synapses.len() as u32,
-        topo_order: if cycle_free { order } else { Vec::new() },
-        depth: if cycle_free { depth } else { 0 },
-        cycle_free,
-    }
+    Procedural2dTopology { node_count: widget_ids.len() as u32, edge_count: snapshot.fixture.synapses.len() as u32, topo_order: if cycle_free { order } else { Vec::new() }, depth: if cycle_free { depth } else { 0 }, cycle_free }
 }
 //#endregion 🔖️Topology

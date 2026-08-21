@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceHumanFactorRequirement, base: &ProgramSnapsho
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This human factor requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.human_factor_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { human_factors: Some(ProgramHumanFactorsDelta { patched: vec![ProgramHumanFactorsPatchEntry { id: payload.human_factor_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        human_factors: Some(ProgramHumanFactorsDelta { patched: vec![ProgramHumanFactorsPatchEntry { id: payload.human_factor_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

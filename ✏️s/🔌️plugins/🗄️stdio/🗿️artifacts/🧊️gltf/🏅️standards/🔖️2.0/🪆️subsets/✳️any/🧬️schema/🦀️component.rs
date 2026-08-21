@@ -115,17 +115,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = protocol::Mutation::diff(&mutation, &self.snapshot).await;
-            if outcome.worst_level().await.is_some_and(|level| level >= dsl::Severity::Error) {
-                self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages().await)));
+            let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
+            if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
+                self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }
-            match outcome.diff().await.try_apply(&self.snapshot) {
+            match outcome.diff().try_apply(&self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
                 }
@@ -136,7 +136,7 @@ pub mod derived_construction {
             (self, outcome)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -426,7 +426,7 @@ pub mod derived_analysis {
                         // A genuine `.gltf` JSON document parses directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
                         // this crate's own internal store round-trips) when the text isn't bare JSON.
-                        let result = if looks_like_gltf_json(text) { crate::artifacts::gltf::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| e.to_string()) };
+                        let result = if looks_like_gltf_json(text) { crate::artifacts::gltf::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
@@ -439,7 +439,7 @@ pub mod derived_analysis {
                         // A genuine raw `.glb` container decodes directly through the real codec; only
                         // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
                         // internal store round-trip encoding) when the bytes aren't a `.glb` container.
-                        let result = if looks_like_glb(bytes) { crate::artifacts::gltf::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).await.map_err(|e| e.to_string()) };
+                        let result = if looks_like_glb(bytes) { crate::artifacts::gltf::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {

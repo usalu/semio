@@ -139,7 +139,7 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
 impl Mutation<JsonSnapshot> for JsonMutation {
     type Diff = JsonDiff;
 
-    async fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             JsonMutation::NoMutation => JsonDiff::default(),
             JsonMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -176,13 +176,13 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 Some(old) if old != value => diff_at_path(path, Some(JsonValueDiff::Replace { value: value.clone() })),
                 _ => JsonDiff::default(),
             },
-        }).await
+        })
     }
 
     /// ↩️ Handcrafted mutation-level inverse, key/index-aware — reads the pre-mutation `base`
     /// state to recover the exact undo (e.g. `SetMember` on an existing key inverts to a
     /// `SetMember` restoring the OLD value; on a fresh key it inverts to `RemoveMember`).
-    async fn inverse(&self, base: &JsonSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &JsonSnapshot) -> Vec<Self> {
         match self {
             JsonMutation::NoMutation => vec![JsonMutation::NoMutation],
             JsonMutation::SetSnapshot { .. } => vec![JsonMutation::SetSnapshot { snapshot: base.clone() }],
@@ -316,10 +316,10 @@ fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
 }
 
 impl OpText for JsonMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_json_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_json_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -378,7 +378,7 @@ fn dec_json_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonSnaps
 /// impls were still on that shortcut per the P2-W0 census). `tag` is the `JsonMutation` variant
 /// ordinal, in the same 0-6 order `print_json_mutation`'s own keyword match uses.
 impl protocol::OpBinary for JsonMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             JsonMutation::NoMutation => 0,
             JsonMutation::SetSnapshot { .. } => 1,
@@ -418,11 +418,11 @@ impl protocol::OpBinary for JsonMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(JsonMutation::NoMutation),
             1 => {
@@ -442,13 +442,13 @@ impl protocol::OpBinary for JsonMutation {
             }
             4 => {
                 let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(JsonMutation::InsertArrayElement { path, index, value })
             }
             5 => {
                 let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(JsonMutation::RemoveArrayElement { path, index })
             }
             6 => {

@@ -17,13 +17,7 @@ pub const BODY_KEY: &str = "puzzle.3d.play.settings";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition {
-        kind: PanelTabKind::App(PANEL_TAB_ID.into()),
-        label: LocalizedLabel::native("Settings", "Einstellungen"),
-        group: PanelGroup::Settings,
-        body_key: Some(BODY_KEY.into()),
-        children: Vec::new(),
-    }
+    PanelTabDefinition { kind: PanelTabKind::App(PANEL_TAB_ID.into()), label: LocalizedLabel::native("Settings", "Einstellungen"), group: PanelGroup::Settings, body_key: Some(BODY_KEY.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 

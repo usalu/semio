@@ -18,8 +18,7 @@ pub use crate::artifacts::present::snapshot::schema::{default_snapshot, PresentS
 /// `definition()`'s own `s.present.schema.artifact` capability descriptor (`s.animate.present`) and this
 /// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id `s.animate.present@1/*#editor`
 /// / `s.animate.present@1/*#viewer`.
-pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect =
-    semio_framework_plugin::Dialect { artifact_kind: "s.animate.present", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.animate.present", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see

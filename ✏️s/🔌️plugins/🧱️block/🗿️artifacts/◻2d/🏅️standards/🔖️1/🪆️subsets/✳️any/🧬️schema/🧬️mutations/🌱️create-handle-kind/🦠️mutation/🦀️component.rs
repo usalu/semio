@@ -1,8 +1,8 @@
 //! 🌱️ Block2d mutation — `CreateHandleKind`: a new handle-kind catalog row.
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::artifacts::block2d::Block2dHandleKind;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::{Block2dHandleKind};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

@@ -7,21 +7,21 @@
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
+use crate::artifacts::gisterrain::op::GisTerrainMutation;
+use crate::artifacts::gisterrain::schema::default_terrain_document;
+use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use crate::editor::gis3d::commands::{exaggeration, locale, view};
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
-use crate::artifacts::gisterrain::schema::default_terrain_document;
-use crate::artifacts::gisterrain::op::GisTerrainMutation;
-use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ui_text, AppIo, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ui_text, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+};
 use serde_json::Value;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
@@ -198,13 +198,9 @@ impl ArtifactEditor for Gis3dPlayApp {
         let args = args.cloned().unwrap_or(Value::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         match action {
-            "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration {
-                exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0),
-            })),
+            "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0) })),
             "setCamera" => {
-                let camera_json = str_arg(&["cameraJson", "camera_json"])
-                    .or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() }))
-                    .unwrap_or_else(|| "{}".into());
+                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
             "setLocale" => Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
@@ -215,7 +211,14 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    async fn handle(command: &Gis3dCommand, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Gis3dCommand,
+        doc: &ArtifactView<'_, GisTerrainSnapshot>,
+        cfg: &ConfigView<'_, Gis3dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 

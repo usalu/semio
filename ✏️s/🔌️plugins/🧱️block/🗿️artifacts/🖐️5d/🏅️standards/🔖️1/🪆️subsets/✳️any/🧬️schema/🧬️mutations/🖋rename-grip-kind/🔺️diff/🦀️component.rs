@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `RenameGripKind` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::diff::{Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
+use crate::artifacts::block5d::Block5dGripKind;
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dGripKind};
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::RenameGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
@@ -13,6 +13,9 @@ pub async fn diff(payload: &super::mutation::RenameGripKind, base: &Block5dSnaps
     if replacement == *existing {
         return protocol::MutationOutcome::new(Block5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.id.clone()])]);
     }
-    protocol::MutationOutcome::new(Block5dDiff { grip_kinds: Some(Block5dGripKindsDelta { patched: vec![Block5dGripKindsPatchEntry { id: payload.id.clone(), patch: Block5dGripKindsPatch { replacement: Some(replacement) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Block5dDiff {
+        grip_kinds: Some(Block5dGripKindsDelta { patched: vec![Block5dGripKindsPatchEntry { id: payload.id.clone(), patch: Block5dGripKindsPatch { replacement: Some(replacement) } }], ..Default::default() }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

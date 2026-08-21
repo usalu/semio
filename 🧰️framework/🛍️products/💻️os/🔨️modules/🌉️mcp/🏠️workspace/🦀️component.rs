@@ -13,15 +13,26 @@
 //! backbone propagation pipeline end to end (§`🔖️ProbeDocument` below), it uses a generic
 //! JSON-valued document of its own — never a note-specific type this crate has no business knowing.
 
-use crate::{CapabilityOwner, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, NullBackend, Resource, ResourceContent, SearchFilters};
-use crate::actions::MockArtifactChannel;
 use crate::__semio_dispatch_ArtifactChannel;
 use crate::__semio_dispatch_GatewayBackend;
+use crate::actions::MockArtifactChannel;
+use crate::{CapabilityOwner, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, NullBackend, Resource, ResourceContent, SearchFilters};
 use semio_framework_dispatch_macros::dyn_enum_close;
 use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+
+fn workspace_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
+    static POOL: std::sync::OnceLock<semio_framework_async::WorkerPool> = std::sync::OnceLock::new();
+    Arc::new(
+        POOL.get_or_init(|| {
+            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+            semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores))
+        })
+        .clone(),
+    )
+}
 
 //#region 🔖️PluginPaths
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: this
@@ -78,7 +89,8 @@ pub fn find_repo_root() -> Result<PathBuf, GatewayError> {
 /// this packet's own invention), parsed narrowly for the two fields this crate needs.
 pub fn load_plugin_registry(repo_root: &Path) -> Result<Vec<PluginRegistryEntry>, GatewayError> {
     let registry_path = repo_root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
-    let text = std::fs::read_to_string(&registry_path).map_err(|error| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin registry not generated (looked at {}): {error} — run `bun nx run @semio-tech/plugin-registry:generate`", registry_path.display())))?;
+    let text = std::fs::read_to_string(&registry_path)
+        .map_err(|error| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin registry not generated (looked at {}): {error} — run `bun nx run @semio-tech/plugin-registry:generate`", registry_path.display())))?;
     let raw: Vec<serde_json::Value> = serde_json::from_str(&text).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry {} is not valid JSON: {error}", registry_path.display())))?;
     let mut entries = Vec::with_capacity(raw.len());
     for row in raw {
@@ -87,7 +99,8 @@ pub fn load_plugin_registry(repo_root: &Path) -> Result<Vec<PluginRegistryEntry>
         let wasm_out = row.get("wasmOut").and_then(serde_json::Value::as_str).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` missing wasmOut")))?.to_string();
         // 🎯️ `cratePath` = `<owner root>/📦️packages/🦀️rust` — two components back to the owner root,
         // the sibling directory `🔣️descriptor.json` actually lives in (see this fn's own doc).
-        let owner_root = repo_root.join(crate_path).parent().and_then(Path::parent).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` has an implausibly shallow cratePath `{crate_path}`")))?.to_path_buf();
+        let owner_root =
+            repo_root.join(crate_path).parent().and_then(Path::parent).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` has an implausibly shallow cratePath `{crate_path}`")))?.to_path_buf();
         entries.push(PluginRegistryEntry { plugin_id, owner_root, wasm_out });
     }
     Ok(entries)
@@ -315,7 +328,8 @@ pub fn activate_plugin_instance(
     // principal is even allowed to request before an instance is ever opened; this is the narrowest
     // grant shape that lets `Event::InstanceOpen` proceed for a first activation proof, not a policy
     // decision this packet is authorized to make for real (§2 of the brief: `🛡️policy` is P6's).
-    let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> = descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
+    let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
+        descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
     let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
     let mut instance = runtime.instantiate(&compiled, actor, &caps, &budget).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
 
@@ -367,7 +381,9 @@ pub struct PluginArtifactChannel {
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
-        let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?));
+        let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(
+            semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?,
+        ));
         Ok(Self { runtime, repo_root, entry, descriptor, app_ref, actor_label, instances: HashMap::new(), next_seq: 1 })
     }
 
@@ -427,11 +443,17 @@ impl crate::actions::ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::HistorySnapshot { history_patch, .. } => {
                         let value = store::pack_rt::decode_wire_value(&history_patch).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
                         let patch: semio_framework::kernel::HistoryPatch = store::from_dsl_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
-                        crate::actions::AppFrame::HistorySnapshot(crate::schema::RevisionStamp { artifact_id: self.entry.plugin_id.clone(), head_edit_id: patch.upserts.first().map(|entry| entry.action_id.clone()).unwrap_or_default(), cursor: patch.cursor.to_string() })
+                        crate::actions::AppFrame::HistorySnapshot(crate::schema::RevisionStamp {
+                            artifact_id: self.entry.plugin_id.clone(),
+                            head_edit_id: patch.upserts.first().map(|entry| entry.action_id.clone()).unwrap_or_default(),
+                            cursor: patch.cursor.to_string(),
+                        })
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                crate::actions::AppCommand::PureCommand { capability_id, .. } => return Err(Self::not_wired("PureCommand", format!("`{capability_id}` needs a headless ActionAddress convention this packet does not invent — see this region's own doc"))),
+                crate::actions::AppCommand::PureCommand { capability_id, .. } => {
+                    return Err(Self::not_wired("PureCommand", format!("`{capability_id}` needs a headless ActionAddress convention this packet does not invent — see this region's own doc")))
+                }
                 crate::actions::AppCommand::TransactionPrepare { .. } => return Err(Self::not_wired("TransactionPrepare", "same ActionAddress gap as PureCommand")),
                 crate::actions::AppCommand::TransactionCommit { .. } => return Err(Self::not_wired("TransactionCommit", "no prior real TransactionPrepare to commit")),
                 crate::actions::AppCommand::TransactionRollback { .. } => return Err(Self::not_wired("TransactionRollback", "no prior real TransactionPrepare to roll back")),
@@ -477,7 +499,7 @@ impl HeadlessWorkspace {
     fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Self {
         ensure_probe_codec_registered();
         let session_id = crate::mint_session_id(&principal, 0);
-        Self { artifact_host: store::sync::ArtifactHost::new(), origin, principal, session_id, scopes, repo_root: find_repo_root().ok(), catalog, open_probes: Mutex::new(HashMap::new()) }
+        Self { artifact_host: store::sync::ArtifactHost::new(workspace_worker_pool()), origin, principal, session_id, scopes, repo_root: find_repo_root().ok(), catalog, open_probes: Mutex::new(HashMap::new()) }
     }
 
     pub fn open_folder(path: PathBuf, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Result<Self, GatewayError> {
@@ -553,13 +575,21 @@ impl HeadlessWorkspace {
         if !guard.contains_key(artifact_id) {
             let envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
             let mut probe_store = ProbeStore::new(envelope).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
-            let channels = self.artifact_host.open(store::sync::ArtifactActorConfig { document_id: artifact_id.to_string(), schema: PROBE_SCHEMA.to_string(), bindings: vec![self.origin.persistence_binding()], watch_external: self.origin.watch_external(), actor: self.actor_label() });
+            let channels = self.artifact_host.open(store::sync::ArtifactActorConfig {
+                document_id: artifact_id.to_string(),
+                schema: PROBE_SCHEMA.to_string(),
+                bindings: vec![self.origin.persistence_binding()],
+                watch_external: self.origin.watch_external(),
+                actor: self.actor_label(),
+            });
             probe_store.attach_backbone(Box::new(channels.channel_backbone)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
             guard.insert(artifact_id.to_string(), probe_store);
         }
         let probe_store = guard.get_mut(artifact_id).expect("just inserted or already present");
         if probe_store.applied_edit_ids().is_empty() {
-            probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
+            probe_store
+                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) })
+                .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         }
         let head_edit_id = probe_store.applied_edit_ids().last().cloned().unwrap_or_default();
@@ -574,14 +604,11 @@ impl HeadlessWorkspace {
         let registry = load_plugin_registry(&repo_root)?;
         let entry = find_plugin_entry(&registry, plugin_id)?;
         let descriptor = load_package_descriptor(&entry.owner_root)?;
-        let editor_app = descriptor
-            .manifest
-            .apps
-            .iter()
-            .find(|app| app.role == semio_framework::AppRole::Editor)
-            .ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
+        let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
         let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-        let runtime = GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?);
+        let runtime = GuestRuntimes::Wasmtime(
+            semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?,
+        );
         let (guest, outcome) = activate_plugin_instance(&runtime, &repo_root, entry, &descriptor, &app_ref, &self.actor_label(), 1)?;
         runtime.drop_instance(guest);
         Ok(outcome)
@@ -597,12 +624,7 @@ impl HeadlessWorkspace {
         let registry = load_plugin_registry(&repo_root)?;
         let entry = find_plugin_entry(&registry, plugin_id)?.clone();
         let descriptor = load_package_descriptor(&entry.owner_root)?;
-        let editor_app = descriptor
-            .manifest
-            .apps
-            .iter()
-            .find(|app| app.role == semio_framework::AppRole::Editor)
-            .ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
+        let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
         let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
         PluginArtifactChannel::new(repo_root, entry, descriptor, app_ref, self.actor_label())
     }
@@ -617,7 +639,22 @@ impl GatewayBackend for HeadlessWorkspace {
     fn search_capabilities(&self, query: &str) -> Result<Vec<crate::SearchHit>, GatewayError> {
         let filters = SearchFilters { kind: Vec::new(), owner: None, artifact_kind: None, requires_scope: None };
         let hits = crate::search(&self.catalog, query, &filters);
-        Ok(hits.into_iter().filter_map(|hit| self.catalog.get(&hit.capability_id).map(|capability| crate::SearchHit { capability_id: capability.id.to_string(), title: capability.title.clone(), description: capability.description.clone(), score: hit.score, plugin_id: match &capability.owner { CapabilityOwner::Plugin { plugin_id, .. } => plugin_id.clone(), _ => String::new() }, app_id: String::new() })).collect())
+        Ok(hits
+            .into_iter()
+            .filter_map(|hit| {
+                self.catalog.get(&hit.capability_id).map(|capability| crate::SearchHit {
+                    capability_id: capability.id.to_string(),
+                    title: capability.title.clone(),
+                    description: capability.description.clone(),
+                    score: hit.score,
+                    plugin_id: match &capability.owner {
+                        CapabilityOwner::Plugin { plugin_id, .. } => plugin_id.clone(),
+                        _ => String::new(),
+                    },
+                    app_id: String::new(),
+                })
+            })
+            .collect())
     }
 
     fn describe_capabilities(&self, capability_id: &str) -> Result<serde_json::Value, GatewayError> {
@@ -658,9 +695,23 @@ impl GatewayBackend for HeadlessWorkspace {
     }
 
     fn list_resources(&self) -> Result<Vec<Resource>, GatewayError> {
-        let mut resources = vec![Resource { uri: "semio://workspace".to_string(), name: "Workspace".to_string(), title: Some("Active workspace".to_string()), description: Some("Active space and its artifacts".to_string()), mime_type: Some("application/json".to_string()), size: None }];
+        let mut resources = vec![Resource {
+            uri: "semio://workspace".to_string(),
+            name: "Workspace".to_string(),
+            title: Some("Active workspace".to_string()),
+            description: Some("Active space and its artifacts".to_string()),
+            mime_type: Some("application/json".to_string()),
+            size: None,
+        }];
         for artifact_id in self.workspace_artifact_ids().unwrap_or_default() {
-            resources.push(Resource { uri: format!("semio://artifact/{artifact_id}"), name: artifact_id.clone(), title: None, description: Some("Real artifact bytes from the open workspace".to_string()), mime_type: Some("application/octet-stream".to_string()), size: None });
+            resources.push(Resource {
+                uri: format!("semio://artifact/{artifact_id}"),
+                name: artifact_id.clone(),
+                title: None,
+                description: Some("Real artifact bytes from the open workspace".to_string()),
+                mime_type: Some("application/octet-stream".to_string()),
+                size: None,
+            });
         }
         Ok(resources)
     }
@@ -722,7 +773,9 @@ impl HeadlessWorkspace {
                 }
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
             },
-            Some("schema") => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact schema resolution needs a live plugin instance's `describe()`/manifest, not yet reachable from this workspace for an arbitrary artifact kind").retryable()),
+            Some("schema") => {
+                Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact schema resolution needs a live plugin instance's `describe()`/manifest, not yet reachable from this workspace for an arbitrary artifact kind").retryable())
+            }
             Some("history") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
                 Some(probe_store) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "appliedEditIds": probe_store.applied_edit_ids() }).to_string()), blob: None }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
@@ -856,7 +909,7 @@ mod long {
     async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         let dir = tempfile::tempdir().expect("tempdir");
         let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
-        let shell_host = store::sync::ArtifactHost::new();
+        let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
         // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
         // MUST come after `open`, never before. `ArtifactHost::subscribe`'s own doc says exactly why
         // ("If the document is not open the receiver's sender is dropped, so it simply reports
@@ -866,7 +919,13 @@ mod long {
         // it. This was this test's own bug, not a gap in `ArtifactHost` or in headless propagation —
         // `Ok(Err(Closed))` (not a timeout) was the tell: the channel was closed from the first poll,
         // never merely slow.
-        let shell_channels = shell_host.open(store::sync::ArtifactActorConfig { document_id: "shared-doc".to_string(), schema: PROBE_SCHEMA.to_string(), bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "shell".to_string() });
+        let shell_channels = shell_host.open(store::sync::ArtifactActorConfig {
+            document_id: "shared-doc".to_string(),
+            schema: PROBE_SCHEMA.to_string(),
+            bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }],
+            watch_external: true,
+            actor: "shell".to_string(),
+        });
         let mut shell_events = shell_host.subscribe("shared-doc");
         // 🎧️ A second `ProbeStore` (the "live shell") attaches its own backbone end so the store
         // machinery ingests what `subscribe` reports, mirroring how a real shell would.

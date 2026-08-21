@@ -1,6 +1,6 @@
 //! ✏️ Writer mutation — `EditText` payload: replaces the document's authored text body.
-use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
+use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

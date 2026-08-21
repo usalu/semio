@@ -1,13 +1,11 @@
 //! 📡️ `trinity.graph` artifact — state-patch wire codec for the raw document operation
 //! (constitutional: spr, renamed from the old `📡️protocol` — no `📡️protocol` segment survives).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node};
@@ -111,11 +109,7 @@ impl OpText for TrinityGraphOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -138,9 +132,6 @@ impl OpBinary for TrinityGraphOperationDsl {
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
-
-
-
 
 async fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
     match operation {
@@ -315,8 +306,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use protocol::{ArtifactId, Edit, SchemaId};
         use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;
+        use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = TrinityGraphStore::new(create_document_envelope_for_test());
         crate::artifacts::jack::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).unwrap_or(());

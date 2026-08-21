@@ -1,13 +1,11 @@
 //! 🗣️ Puzzle 2d artifact — the textual `.puzzle2d` document grammar surface and its laws, plus the
 //! two handcrafted example fixtures the play app's example picker loads.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
@@ -86,7 +84,17 @@ mod tests {
             anchor: Default::default(),
             handles: Vec::new(),
         });
-        with_content.edges.push(Puzzle2dEdge { id: "e1".into(), source: "n1:v0".into(), target: "n2".into(), edge_kind: Some("edge.link".into()), source_tip: None, target_tip: Some("arrow".into()), visible: None, locked: None, ..Default::default() });
+        with_content.edges.push(Puzzle2dEdge {
+            id: "e1".into(),
+            source: "n1:v0".into(),
+            target: "n2".into(),
+            edge_kind: Some("edge.link".into()),
+            source_tip: None,
+            target_tip: Some("arrow".into()),
+            visible: None,
+            locked: None,
+            ..Default::default()
+        });
         with_content.meta = Puzzle2dMeta {
             manifest_id: Some("concrete-forest".into()),
             kind_compatibility: vec![Puzzle2dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Puzzle2dCompatSpecificity::Vortex }],
@@ -121,24 +129,8 @@ mod tests {
     async fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
         use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
         let snapshot = Puzzle2dSnapshot {
-            nodes: vec![
-                Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() },
-                Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() },
-            ],
-            edges: vec![Puzzle2dEdge {
-                id: "e1".into(),
-                source: "n1".into(),
-                target: "n2".into(),
-                gap: 1.0,
-                shift: 2.0,
-                rise: 3.0,
-                rotation: 10.0,
-                turn: 20.0,
-                tilt: 30.0,
-                x: 4.0,
-                y: 5.0,
-                ..Puzzle2dEdge::default()
-            }],
+            nodes: vec![Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() }, Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() }],
+            edges: vec![Puzzle2dEdge { id: "e1".into(), source: "n1".into(), target: "n2".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Puzzle2dEdge::default() }],
             ..Puzzle2dSnapshot::default()
         };
         let text = print_dsl(&snapshot);

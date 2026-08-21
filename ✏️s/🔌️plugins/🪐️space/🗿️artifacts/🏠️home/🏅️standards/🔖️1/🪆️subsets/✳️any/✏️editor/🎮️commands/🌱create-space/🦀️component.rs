@@ -8,7 +8,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -25,7 +25,7 @@ pub struct CreateSpace {
 //#region 🔖️Handle
 pub async fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
-        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(123),  dialog_id: "createSpace".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(123), dialog_id: "createSpace".into(), args: None }));
     }
     let kind = if payload.kind.trim().is_empty() { "atelier".to_string() } else { payload.kind.clone() };
     let visibility = if payload.visibility.trim().is_empty() { "private".to_string() } else { payload.visibility.clone() };

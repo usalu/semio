@@ -2654,7 +2654,7 @@ pub mod artifacts {
             pub use crate::artifacts::program::standards::v1::subsets::any::schema::mutations::binary::*;
         }
         pub mod diff {
-            
+
             pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::*;
             pub mod schema {
                 pub use crate::artifacts::program::standards::v1::subsets::any::schema::diff::*;

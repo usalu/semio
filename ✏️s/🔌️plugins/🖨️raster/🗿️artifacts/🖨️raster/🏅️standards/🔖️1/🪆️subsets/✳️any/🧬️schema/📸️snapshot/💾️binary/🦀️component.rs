@@ -1,12 +1,10 @@
 //! 📦️ Raster artifact — binary document surface + laws (constitutional: pack).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::raster::RasterSnapshot;
 use store::PackError;
@@ -25,9 +23,9 @@ pub async fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-    use crate::artifacts::raster::op::RasterMutation;
     use crate::artifacts::raster::mutations::create_layer;
+    use crate::artifacts::raster::op::RasterMutation;
+    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
     #[semio_framework_async_macros::async_test]

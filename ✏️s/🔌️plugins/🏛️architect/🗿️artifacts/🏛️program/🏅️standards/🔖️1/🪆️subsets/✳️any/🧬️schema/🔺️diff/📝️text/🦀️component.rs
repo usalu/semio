@@ -183,7 +183,8 @@ impl ProgramDiff {
                 apply_collection_delta(&mut next.constraints, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["constraints"]))?;
             }
             if let Some(delta) = &self.compliance_records {
-                apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["complianceRecords"]))?;
+                apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered)
+                    .map_err(|error| error.under(["complianceRecords"]))?;
             }
             if let Some(delta) = &self.approvals {
                 apply_collection_delta(&mut next.approvals, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["approvals"]))?;
@@ -273,9 +274,7 @@ impl ProgramDiff {
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     async fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
-        self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone()))
-            .map(|artifact| artifact.to_snapshot())
-            .map_err(|error| error.under(["artifact"]))
+        self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone())).map(|artifact| artifact.to_snapshot()).map_err(|error| error.under(["artifact"]))
     }
     async fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
@@ -1146,13 +1145,7 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     }
 }
 
-async fn apply_collection_delta<T, P>(
-    items: &mut Vec<T>,
-    added: &[T],
-    removed: &[String],
-    patched: &[(String, P)],
-    reordered: &Option<Vec<String>>,
-) -> protocol::MutationApplyResult<()>
+async fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>) -> protocol::MutationApplyResult<()>
 where
     T: Identified<EntityId> + Clone + Patchable<P>,
     P: Clone,
@@ -1160,55 +1153,27 @@ where
     for (index, id) in removed.iter().enumerate() {
         let eid = EntityId(id.clone());
         if !items.iter().any(|item| item.id() == &eid) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed entity does not exist",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed entity does not exist").at(["removed".to_string(), index.to_string()]));
         }
         if removed[..index].contains(id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "entity is removed more than once",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "entity is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
     }
     for (index, item) in added.iter().enumerate() {
-        if items.iter().any(|existing| existing.id() == item.id())
-            || added[..index]
-                .iter()
-                .any(|existing| existing.id() == item.id())
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "added entity identity already exists",
-            )
-            .at(["added".to_string(), index.to_string()]));
+        if items.iter().any(|existing| existing.id() == item.id()) || added[..index].iter().any(|existing| existing.id() == item.id()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added entity identity already exists").at(["added".to_string(), index.to_string()]));
         }
     }
     for (index, (id, _)) in patched.iter().enumerate() {
         let eid = EntityId(id.clone());
         if !items.iter().any(|item| item.id() == &eid) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched entity does not exist",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), index.to_string()]));
         }
         if removed.contains(id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.conflicting-target",
-                "entity cannot be removed and patched",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "entity cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
         }
         if patched[..index].iter().any(|(prior, _)| prior == id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "entity is patched more than once",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "entity is patched more than once").at(["patched".to_string(), index.to_string()]));
         }
     }
     let mut candidate = items.clone();
@@ -1218,56 +1183,24 @@ where
     }
     for (id, patch) in patched {
         let eid = EntityId(id.clone());
-        candidate
-            .iter_mut()
-            .find(|item| item.id() == &eid)
-            .ok_or_else(|| {
-                protocol::MutationApplyError::new(
-                    "mutation.apply.missing-target",
-                    "patched entity does not exist",
-                )
-                .at(["patched".to_string(), id.clone()])
-            })?
-            .apply_patch(patch);
+        candidate.iter_mut().find(|item| item.id() == &eid).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), id.clone()]))?.apply_patch(patch);
     }
     candidate.extend(added.iter().cloned());
     for (index, item) in candidate.iter().enumerate() {
-        if candidate[..index]
-            .iter()
-            .any(|prior| prior.id() == item.id())
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "patch produced a duplicate entity identity",
-            )
-            .at(["patched"]));
+        if candidate[..index].iter().any(|prior| prior.id() == item.id()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patch produced a duplicate entity identity").at(["patched"]));
         }
     }
     if let Some(order) = reordered {
-        if order.len() != candidate.len()
-            || order.iter().enumerate().any(|(index, id)| {
-                order[..index].contains(id)
-                    || !candidate.iter().any(|item| item.id().0 == *id)
-            })
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-order",
-                "entity reorder must be a complete unique permutation",
-            )
-            .at(["reordered"]));
+        if order.len() != candidate.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !candidate.iter().any(|item| item.id().0 == *id)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "entity reorder must be a complete unique permutation").at(["reordered"]));
         }
         let mut map: std::collections::BTreeMap<String, T> = std::collections::BTreeMap::new();
         for item in candidate.drain(..) {
             map.insert(item.id().0.clone(), item);
         }
         for id in order {
-            candidate.push(map.remove(id).ok_or_else(|| {
-                protocol::MutationApplyError::new(
-                    "mutation.apply.missing-target",
-                    "reordered entity does not exist",
-                )
-                .at(["reordered".to_string(), id.clone()])
-            })?);
+            candidate.push(map.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered entity does not exist").at(["reordered".to_string(), id.clone()]))?);
         }
     }
     *items = candidate;
@@ -1292,9 +1225,7 @@ mod tests {
         let mut renamed_meta = artifact.meta.clone();
         renamed_meta.title = "Renamed".into();
         let diff = ProgramDiff { meta: Some(renamed_meta.clone()), ..Default::default() };
-        let next = diff
-            .apply_to_artifact(&artifact)
-            .expect("valid artifact diff");
+        let next = diff.apply_to_artifact(&artifact).expect("valid artifact diff");
         assert_eq!(next.meta.title, "Renamed");
     }
 
@@ -1304,9 +1235,7 @@ mod tests {
         let mut replacement = artifact.clone();
         replacement.schema = "s.architect.program@2".into();
         let diff = ProgramDiff { artifact: Some(Box::new(replacement.clone())), schema: Some("ignored".into()), ..Default::default() };
-        let next = diff
-            .apply_to_artifact(&artifact)
-            .expect("valid artifact diff");
+        let next = diff.apply_to_artifact(&artifact).expect("valid artifact diff");
         assert_eq!(next, replacement);
     }
 }

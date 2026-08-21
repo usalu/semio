@@ -728,11 +728,7 @@ impl ReconstructionEngine {
         }
         if !self.fusion_finalized {
             let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
-            let views: Vec<(remodel_camera::CameraPose, remodel_camera::Intrinsics)> = self
-                .dense_camera_indices
-                .iter()
-                .map(|&ci| (recon.cameras[ci].1, recon.intrinsics))
-                .collect();
+            let views: Vec<(remodel_camera::CameraPose, remodel_camera::Intrinsics)> = self.dense_camera_indices.iter().map(|&ci| (recon.cameras[ci].1, recon.intrinsics)).collect();
             let depth_maps: Vec<remodel_dense::DepthMap> = self.depth_maps.iter().map(|d| d.clone().unwrap_or_else(|| remodel_dense::DepthMap::new(1, 1))).collect();
             self.dense_cloud = Some(remodel_dense::fuse_depth_maps(&views, &depth_maps, &remodel_dense::FusionConfig::default()));
             self.fusion_finalized = true;
@@ -1477,10 +1473,7 @@ mod tests {
             // recovered camera centers (correspondence keyed by frame index) before any bbox comparison.
             let recon_cameras = engine.reconstruction.as_ref().expect("Done status must retain the finalized Reconstruction").cameras.clone();
             assert!(recon_cameras.len() >= 3, "need >= 3 registered cameras to fit a Sim3 gauge alignment, got {}", recon_cameras.len());
-            let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras
-                .iter()
-                .map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx]))
-                .unzip();
+            let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx])).unzip();
             let gauge = crate::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
             println!("[long] gauge-fixing Sim3 from {} registered camera(s): scale={:.4}", recovered_centers.len(), gauge.s);
 

@@ -5,10 +5,6 @@ use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &DeleteLoadCase, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
-    base.load_cases
-        .iter()
-        .find(|item| item.id == payload.id)
-        .map(|item| vec![Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: item.clone() })])
-        .unwrap_or_default()
+    base.load_cases.iter().find(|item| item.id == payload.id).map(|item| vec![Fem3dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: item.clone() })]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

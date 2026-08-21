@@ -20,8 +20,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = SOURCING_CURATE_SCHEMA;
-    let out: CurateSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("curate<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let out: CurateSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("curate<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 

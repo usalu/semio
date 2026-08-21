@@ -22,23 +22,13 @@ pub struct RemodelPresence {
 
 impl Default for RemodelPresence {
     fn default() -> Self {
-        Self {
-            world_camera_position: [4.0, -4.0, 3.0],
-            world_camera_target: [0.0, 0.0, 0.0],
-            world_camera_fov: 45.0,
-            frame_stream_id: None,
-            frame_index: 0,
-            active_utility_id: "select".into(),
-            report_table: "frames".into(),
-        }
+        Self { world_camera_position: [4.0, -4.0, 3.0], world_camera_target: [0.0, 0.0, 0.0], world_camera_fov: 45.0, frame_stream_id: None, frame_index: 0, active_utility_id: "select".into(), report_table: "frames".into() }
     }
 }
 
 impl protocol::MutationDiff<RemodelPresence> for RemodelPresence {
     async fn apply(&self, _base: &RemodelPresence) -> protocol::MutationApplyResult<RemodelPresence> {
-        Ok({
-            self.clone()
-        })
+        Ok({ self.clone() })
     }
     async fn absorb(&mut self, other: Self) {
         *self = other;
@@ -58,21 +48,12 @@ impl store::ArtifactDsl for RemodelPresence {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     async fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -80,12 +61,7 @@ impl store::ArtifactDsl for RemodelPresence {
 impl ArtifactPack for RemodelPresence {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -94,11 +70,7 @@ impl ArtifactPack for RemodelPresence {
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -140,19 +112,8 @@ impl protocol::OpText for RemodelPresenceMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() {
-                    line[keyword.len()..].trim_start()
-                } else {
-                    ""
-                };
-                let record = dsl::parse(
-                    body,
-                    &spec_fn(),
-                    &dsl::ParseOptions {
-                        limits: dsl::Limits::default(),
-                        mode: dsl::SourceMode::Inline,
-                    },
-                )?;
+                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
+                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -161,11 +122,7 @@ impl protocol::OpText for RemodelPresenceMutation {
     async fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants
-            .iter()
-            .find(|(k, _)| k == &keyword)
-            .map(|(_, s)| *s)
-            .expect("variant spec must exist for its own keyword");
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
         let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
         if body.is_empty() {
             keyword

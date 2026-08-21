@@ -2,8 +2,8 @@
 //! asset, Warning `no-op` when already active.
 
 use super::mutation::SetActiveAsset;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &SetActiveAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let next = payload.asset_id.clone().unwrap_or_default();

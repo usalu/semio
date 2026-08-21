@@ -1,7 +1,7 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
-use base64::Engine as _;
 use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use base64::Engine as _;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -12,21 +12,36 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] pub title: Option<String>,
-    #[state(artifact)] pub layers: Vec<RasterLayerNode>,
-    #[state(artifact)] pub assets: BTreeMap<String, RasterAssetChild>,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub brush_size: f64,
-    #[state(config)] pub brush_opacity: f64,
-    #[state(config)] pub composite_viewport: Option<RasterViewportSize>,
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub locale: String,
-    #[state(artifact)] pub hovered_id: Option<String>,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    pub title: Option<String>,
+    #[state(artifact)]
+    pub layers: Vec<RasterLayerNode>,
+    #[state(artifact)]
+    pub assets: BTreeMap<String, RasterAssetChild>,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub brush_size: f64,
+    #[state(config)]
+    pub brush_opacity: f64,
+    #[state(config)]
+    pub composite_viewport: Option<RasterViewportSize>,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub locale: String,
+    #[state(artifact)]
+    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -56,25 +71,12 @@ impl Default for RasterArtifact {
 impl RasterArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> RasterSnapshot {
-        RasterSnapshot {
-            schema: self.schema.clone(),
-            id: self.id.clone(),
-            title: self.title.clone(),
-            layers: self.layers.clone(),
-            assets: self.assets.clone(),
-        }
+        RasterSnapshot { schema: self.schema.clone(), id: self.id.clone(), title: self.title.clone(), layers: self.layers.clone(), assets: self.assets.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: RasterSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            id: snapshot.id,
-            title: snapshot.title,
-            layers: snapshot.layers,
-            assets: snapshot.assets,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -126,8 +128,8 @@ pub async fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::raster::{RasterDiff, RasterMutation, RasterSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct RasterBuilderConstruction {
@@ -139,8 +141,12 @@ pub mod derived_construction {
         type Snapshot = RasterSnapshot;
         type Mutation = RasterMutation;
         type Diff = RasterDiff;
-        async fn empty() -> Self { Self { snapshot: RasterSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: RasterSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -151,24 +157,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -177,8 +180,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::raster::RasterSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RasterParts {
@@ -387,12 +390,7 @@ pub async fn semio_fixture_snapshot() -> RasterSnapshot {
     // through the real `s.stdio.semio/v1/image` png codec (`mint_and_stash_asset`), so the fixture
     // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
     // real embedded pixels survive, not a decode-failure fallback.
-    let emblem = RasterImageAsset {
-        mime: "image/png".into(),
-        data: base64::engine::general_purpose::STANDARD
-            .decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC")
-            .unwrap_or_default(),
-    };
+    let emblem = RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_and_stash_asset("semio-emblem", &emblem));
     let mut params = BTreeMap::new();
     params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
@@ -414,16 +412,7 @@ pub async fn semio_fixture_snapshot() -> RasterSnapshot {
                 height: Some(1024),
                 image_key: Some("semio-emblem".into()),
             },
-            RasterLayerNode::Adjustment {
-                id: "brighten".into(),
-                name: "Brighten".into(),
-                visible: true,
-                opacity: 1.0,
-                blend_mode: "normal".into(),
-                transform: RasterTransform::default(),
-                adjustment_kind: "brightnessContrast".into(),
-                params,
-            },
+            RasterLayerNode::Adjustment { id: "brighten".into(), name: "Brighten".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params },
         ],
         assets,
     }

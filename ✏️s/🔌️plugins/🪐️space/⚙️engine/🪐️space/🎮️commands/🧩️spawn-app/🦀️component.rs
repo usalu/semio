@@ -26,9 +26,9 @@ pub async fn handle(payload: &SpawnApp, _doc: &ArtifactView<'_, WorkflowSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::demo_space_projection;
     use crate::engine::space::testkit::{apply_mutations, seed_draw_plugin, seed_multi_port_plugins, studio_emit, test_surface_id};
     use crate::engine::space::SpaceCommand;
-    use crate::demo_space_projection;
     use std::collections::HashSet;
 
     #[semio_framework_async_macros::async_test]

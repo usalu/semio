@@ -34,7 +34,11 @@ async fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("change-solar-absorptance applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-solar-absorptance/lightens-the-facade-to-absorptance-0-point-25: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.solar_absorptance, 0.25, "change-solar-absorptance/lightens-the-facade-to-absorptance-0-point-25: solarAbsorptance did not land on 0.25");
-    assert_eq!(snapshot.irradiance_w_m2, before().irradiance_w_m2, "change-solar-absorptance/lightens-the-facade-to-absorptance-0-point-25: irradianceWM2 must stay exactly as the before-snapshot had it — change-solar-absorptance owns solarAbsorptance and nothing else");
+    assert_eq!(
+        snapshot.irradiance_w_m2,
+        before().irradiance_w_m2,
+        "change-solar-absorptance/lightens-the-facade-to-absorptance-0-point-25: irradianceWM2 must stay exactly as the before-snapshot had it — change-solar-absorptance owns solarAbsorptance and nothing else"
+    );
 }
 
 /// ↩️ Applying `change-solar-absorptance` and then its own inverse restores `before` exactly.
@@ -73,15 +77,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -143,7 +140,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din4108Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-solar-absorptance/lightens-the-facade-to-absorptance-0-point-25: committed diff did not carry before to after");
 }

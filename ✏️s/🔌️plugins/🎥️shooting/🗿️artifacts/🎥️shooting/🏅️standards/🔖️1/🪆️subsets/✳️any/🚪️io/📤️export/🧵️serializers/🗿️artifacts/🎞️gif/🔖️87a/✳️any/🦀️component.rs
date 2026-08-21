@@ -7,8 +7,7 @@ pub async fn register() {}
 pub async fn serialize(snapshot: &ShootingSnapshot) -> Result<GifSnapshot, store::TextError> {
     let _ = STDIO_GIF_DOCUMENT_SCHEMA;
     let bytes = <ShootingSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <GifSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <GifSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &ShootingSnapshot) -> Result<Vec<u8>, store::TextError> {

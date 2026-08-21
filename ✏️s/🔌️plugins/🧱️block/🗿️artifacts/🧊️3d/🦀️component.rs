@@ -264,8 +264,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// `definition()` above; `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
 /// `s.block.block3d@1/*#editor` / `s.block.block3d@1/*#viewer`, exactly the contract §1 grammar.
-pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const BLOCK3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 //#endregion 🔖️ArtifactKind
 
 //#region 🧪️Tests

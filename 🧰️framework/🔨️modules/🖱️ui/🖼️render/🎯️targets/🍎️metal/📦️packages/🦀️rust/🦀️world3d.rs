@@ -29,7 +29,7 @@
 use crate::frame_buffers::FrameBuffers;
 use crate::pipelines::Pipelines;
 use crate::resources::GpuResources;
-use crate::types::{WorldGlobalsGpu, World3dGpuInstance, WorldLineGpuVertex, WORLD_GLOBALS_SLOT_SIZE};
+use crate::types::{World3dGpuInstance, WorldGlobalsGpu, WorldLineGpuVertex, WORLD_GLOBALS_SLOT_SIZE};
 use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2_metal::{MTLBuffer, MTLDevice, MTLIndexType, MTLPrimitiveType, MTLRenderCommandEncoder, MTLResourceOptions};
@@ -208,14 +208,7 @@ fn draw_mesh(encoder: &Encoder, resources: &GpuResources, mesh: ui_render::MeshI
     unsafe {
         encoder.setVertexBuffer_offset_atIndex(Some(&mesh_buffers.vertex_buffer), 0, 0);
         encoder.setVertexBuffer_offset_atIndex(Some(instance_buffer), byte_offset, 1);
-        encoder.drawIndexedPrimitives_indexCount_indexType_indexBuffer_indexBufferOffset_instanceCount(
-            MTLPrimitiveType::Triangle,
-            mesh_buffers.index_count as usize,
-            MTLIndexType::UInt32,
-            &mesh_buffers.index_buffer,
-            0,
-            instance_count,
-        );
+        encoder.drawIndexedPrimitives_indexCount_indexType_indexBuffer_indexBufferOffset_instanceCount(MTLPrimitiveType::Triangle, mesh_buffers.index_count as usize, MTLIndexType::UInt32, &mesh_buffers.index_buffer, 0, instance_count);
     }
     next_cursor
 }

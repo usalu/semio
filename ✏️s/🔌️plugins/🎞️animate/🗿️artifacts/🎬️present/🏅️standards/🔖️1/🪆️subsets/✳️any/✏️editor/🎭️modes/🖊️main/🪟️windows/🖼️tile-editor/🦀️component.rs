@@ -1,8 +1,8 @@
 //! 🖼️ Animate present app — the tile-editor window: the canvas 2d surface rendering the source figure
 //! backdrop plus its crop tiles.
 
-use crate::editor::animate::PRESENT_PLAY_APP_ID;
 use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
+use crate::editor::animate::PRESENT_PLAY_APP_ID;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -65,16 +65,7 @@ async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&source.frame, SCALE);
     let has_image_src = !source.src.trim().is_empty() && source.kind != "pdf";
-    layers.push(TileCanvasLayer {
-        id: "source-frame".into(),
-        kind: if has_image_src { "image".into() } else { "source".into() },
-        name: source.src.clone(),
-        x: sx,
-        y: sy,
-        width: sw,
-        height: sh,
-        data_url: has_image_src.then(|| source.src.clone()),
-    });
+    layers.push(TileCanvasLayer { id: "source-frame".into(), kind: if has_image_src { "image".into() } else { "source".into() }, name: source.src.clone(), x: sx, y: sy, width: sw, height: sh, data_url: has_image_src.then(|| source.src.clone()) });
     for tile in &tiles {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         layers.push(TileCanvasLayer { id: tile.id.clone(), kind: "tile".into(), name: tile.name.clone(), x, y, width, height, data_url: None });

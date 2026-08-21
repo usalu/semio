@@ -209,7 +209,11 @@ mod tests {
         fn try_send(&self, _command: Command) -> Result<(), SinkFull> {
             let seen = self.calls.get();
             self.calls.set(seen + 1);
-            if seen < self.accepts { Ok(()) } else { Err(SinkFull) }
+            if seen < self.accepts {
+                Ok(())
+            } else {
+                Err(SinkFull)
+            }
         }
     }
 

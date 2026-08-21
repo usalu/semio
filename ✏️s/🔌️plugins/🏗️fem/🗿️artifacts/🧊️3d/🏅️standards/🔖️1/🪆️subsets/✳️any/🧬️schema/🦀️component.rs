@@ -10,24 +10,38 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dArtifact {
-    #[state(artifact)] pub nodes: Vec<FemNode>,
-    #[state(artifact)] pub elements: Vec<FemElement>,
-    #[state(artifact)] pub materials: Vec<FemMaterial>,
-    #[state(artifact)] pub sections: Vec<FemSection>,
-    #[state(artifact)] pub solids: Vec<FemSolid>,
-    #[state(artifact)] pub supports: Vec<FemSupport>,
-    #[state(artifact)] pub load_cases: Vec<FemLoadCase>,
-    #[state(artifact)] pub combinations: Vec<FemCombination>,
-    #[state(artifact)] pub analysis: FemAnalysisSettings,
-    #[state(presence)] pub result_source_id: Option<String>,
-    #[state(presence)] pub result_mode: String,
-    #[state(presence)] pub result_mode_index: u32,
-    #[state(config)] pub camera: FemCamera,
-    #[state(artifact)] pub solver_results_json: String,
-    #[state(artifact)] pub mesh_preview_json: String,
+    #[state(artifact)]
+    pub nodes: Vec<FemNode>,
+    #[state(artifact)]
+    pub elements: Vec<FemElement>,
+    #[state(artifact)]
+    pub materials: Vec<FemMaterial>,
+    #[state(artifact)]
+    pub sections: Vec<FemSection>,
+    #[state(artifact)]
+    pub solids: Vec<FemSolid>,
+    #[state(artifact)]
+    pub supports: Vec<FemSupport>,
+    #[state(artifact)]
+    pub load_cases: Vec<FemLoadCase>,
+    #[state(artifact)]
+    pub combinations: Vec<FemCombination>,
+    #[state(artifact)]
+    pub analysis: FemAnalysisSettings,
+    #[state(presence)]
+    pub result_source_id: Option<String>,
+    #[state(presence)]
+    pub result_mode: String,
+    #[state(presence)]
+    pub result_mode_index: u32,
+    #[state(config)]
+    pub camera: FemCamera,
+    #[state(artifact)]
+    pub solver_results_json: String,
+    #[state(artifact)]
+    pub mesh_preview_json: String,
 }
 //#endregion 🔖️Artifact
-
 
 //#region 🔖️Conversions
 impl Default for Fem3dArtifact {
@@ -56,14 +70,30 @@ impl Fem3dArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::fem3d::Fem3dSnapshot {
         crate::artifacts::fem3d::Fem3dSnapshot {
-            nodes: self.nodes.clone(), elements: self.elements.clone(), materials: self.materials.clone(), sections: self.sections.clone(), solids: self.solids.clone(), supports: self.supports.clone(), load_cases: self.load_cases.clone(), combinations: self.combinations.clone(), analysis: self.analysis.clone(),
+            nodes: self.nodes.clone(),
+            elements: self.elements.clone(),
+            materials: self.materials.clone(),
+            sections: self.sections.clone(),
+            solids: self.solids.clone(),
+            supports: self.supports.clone(),
+            load_cases: self.load_cases.clone(),
+            combinations: self.combinations.clone(),
+            analysis: self.analysis.clone(),
         }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::fem3d::Fem3dSnapshot) -> Self {
         Self {
-            nodes: snapshot.nodes, elements: snapshot.elements, materials: snapshot.materials, sections: snapshot.sections, solids: snapshot.solids, supports: snapshot.supports, load_cases: snapshot.load_cases, combinations: snapshot.combinations, analysis: snapshot.analysis,
+            nodes: snapshot.nodes,
+            elements: snapshot.elements,
+            materials: snapshot.materials,
+            sections: snapshot.sections,
+            solids: snapshot.solids,
+            supports: snapshot.supports,
+            load_cases: snapshot.load_cases,
+            combinations: snapshot.combinations,
+            analysis: snapshot.analysis,
             ..Self::default()
         }
     }
@@ -121,8 +151,8 @@ pub async fn fem3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::fem3d::{Fem3dDiff, Fem3dMutation, Fem3dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem3dBuilderConstruction {
@@ -134,8 +164,12 @@ pub mod derived_construction {
         type Snapshot = Fem3dSnapshot;
         type Mutation = Fem3dMutation;
         type Diff = Fem3dDiff;
-        async fn empty() -> Self { Self { snapshot: Fem3dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Fem3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -146,24 +180,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -179,8 +210,8 @@ pub async fn empty_fem3d_snapshot() -> crate::artifacts::fem3d::Fem3dSnapshot {
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::fem3d::Fem3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem3dParts {

@@ -1,8 +1,8 @@
 //! 🔺️ Diff fragment yielded by `CreateAsset`. Fatal `duplicate-id` on an existing key.
 use super::mutation::CreateAsset;
+use crate::artifacts::note::schema::diff::note_asset_upsert_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_asset_upsert_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateAsset, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

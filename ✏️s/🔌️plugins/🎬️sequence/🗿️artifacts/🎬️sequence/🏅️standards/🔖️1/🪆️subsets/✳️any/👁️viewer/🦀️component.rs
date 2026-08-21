@@ -7,9 +7,7 @@
 use crate::artifacts::sequence::{default_snapshot, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::viewer::sequence::modes::view;
 use crate::viewer::sequence::modes::view::windows::main;
-use semio_framework_plugin::{
-    app::InteractionView, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer,
-};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

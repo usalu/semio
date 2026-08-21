@@ -33,6 +33,20 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
+    "test-wgpu-engine": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-wgpu-engine"
+      }
+    },
+    "check-wgpu-engine-wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-wgpu-engine-wasm"
+      }
+    },
     "check-wasm": {
       "executor": "nx:run-commands",
       "options": {

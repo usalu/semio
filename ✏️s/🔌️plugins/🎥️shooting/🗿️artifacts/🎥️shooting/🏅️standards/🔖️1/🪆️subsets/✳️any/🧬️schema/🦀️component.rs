@@ -1,13 +1,9 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::shooting::{
-    ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot,
-};
+use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{
-    DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
-};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 use serde::{Deserialize, Serialize};
@@ -408,10 +404,10 @@ pub async fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::shooting::schema::diff::ShootingDiff;
     use crate::artifacts::shooting::schema::mutations::ShootingMutation;
     use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct ShootingBuilderConstruction {
@@ -423,8 +419,12 @@ pub mod derived_construction {
         type Snapshot = ShootingSnapshot;
         type Mutation = ShootingMutation;
         type Diff = ShootingDiff;
-        async fn empty() -> Self { Self { snapshot: ShootingSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: ShootingSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -435,24 +435,21 @@ pub mod derived_construction {
             let outcome = <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <ShootingDiff as protocol::MutationDiff<ShootingSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -461,8 +458,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::shooting::ShootingSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct ShootingParts {

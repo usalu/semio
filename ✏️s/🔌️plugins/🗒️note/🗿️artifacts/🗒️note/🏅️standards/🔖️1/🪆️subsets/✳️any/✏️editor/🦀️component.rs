@@ -7,44 +7,45 @@
 //! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
+use crate::artifacts::note::op::NoteMutation;
+use crate::artifacts::note::schema::empty_note_snapshot;
+use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::editor::note::commands::ink_apply_events;
+use crate::editor::note::commands::set_active_utility;
+use crate::editor::note::commands::set_locale;
 use crate::editor::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
-use crate::editor::note::commands::{set_camera, set_camera_zoom};
-use crate::editor::note::commands::{set_eraser_radius, set_pencil_width};
 use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
 use crate::editor::note::commands::{load_request, save_download};
-use crate::editor::note::commands::{set_active_example, set_fixture_json};
-use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
-use crate::editor::note::commands::ink_apply_events;
-use crate::editor::note::commands::set_locale;
 use crate::editor::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
+use crate::editor::note::commands::{set_active_example, set_fixture_json};
+use crate::editor::note::commands::{set_camera, set_camera_zoom};
+use crate::editor::note::commands::{set_eraser_radius, set_pencil_width};
+use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
 use crate::editor::note::commands::{set_snap_enabled, set_snap_grid_spacing};
-use crate::editor::note::commands::set_active_utility;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
-use crate::editor::note::presence::{NotePresence, NotePresenceMutation};
 use crate::editor::note::modes::edit;
 use crate::editor::note::modes::edit::windows::{composite, navigator};
 use crate::editor::note::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::editor::note::presence::{NotePresence, NotePresenceMutation};
 use crate::editor::note::terminology::note_play_labels;
-use crate::artifacts::note::schema::empty_note_snapshot;
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement,
+    WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 /// 👁️✏️ C2 §2.1: the hand-written app id is retired — the canonical surface id
 /// (`s.note.note@1/*#editor`) is now derived from `NotePlayApp::DIALECT`/`ROLE` via `surface_app_id`.
 pub const NOTE_PLAY_CONTROLLER_ID: &str = "note-play";
-pub use composite::{NOTE_PLAY_BODY_COMPOSITE, NOTE_PLAY_WINDOW_COMPOSITE};
-pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 pub use catalogue_panel::NOTE_PLAY_BODY_CATALOGUE;
+pub use composite::{NOTE_PLAY_BODY_COMPOSITE, NOTE_PLAY_WINDOW_COMPOSITE};
 pub use document_panel::NOTE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::NOTE_PLAY_BODY_PROPERTIES;
+pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 //#endregion 🔖️Constants
 
 //#region 🔖️ResetDocument
@@ -206,7 +207,14 @@ impl ArtifactEditor for NotePlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &NoteCommand, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &NoteCommand,
+        doc: &ArtifactView<'_, NoteSnapshot>,
+        cfg: &ConfigView<'_, NoteConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
         let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id)).collect();
         let mut ctx = NoteDispatchCtx { selected_block_ids };
         command.dispatch(doc, cfg, &mut ctx)
@@ -236,10 +244,7 @@ impl ArtifactEditor for NotePlayApp {
 
     async fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
-        HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id)),
-        ])
+        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id))])
     }
 
     async fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -256,8 +261,7 @@ impl ArtifactEditor for NotePlayApp {
 /// out inline.
 pub async fn create_note_app() -> AppDefinition {
     let document = empty_note_snapshot();
-    let mut app =
-        Editor::builder(crate::artifacts::note::NOTE_DIALECT)
+    let mut app = Editor::builder(crate::artifacts::note::NOTE_DIALECT)
             .document(["semio", "note"])
             .artifact_kind(crate::artifacts::note::artifact_kind())
             .icon_id("note")

@@ -12,8 +12,8 @@
 //! grammar is a `Shape::Wire` successor still pending migration, `Shape::Expr` has no such pending
 //! migration to avoid colliding with: reusing it directly is exactly right.
 
-use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 use crate::os_dsl::schema::{parse_expr_text, print_expr, ExprOp, ExprValue};
+use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
 use std::collections::HashMap;
 
 //#region 🔖️Evaluate
@@ -110,9 +110,8 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let expr_end = tokens[arrow_index].byte_range.0 as usize;
     let expr = parse_expr_text(text[expr_start..expr_end].trim())?;
 
-    let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| {
-        TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1)))
-    })?;
+    let value_token =
+        tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))))?;
     let value: f64 = value_token.text.as_str().parse().map_err(|_| TextError::new(format!("not a valid number: {}", value_token.text.as_str()), value_token.span))?;
 
     if tokens.len() > arrow_index + 2 {

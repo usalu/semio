@@ -17,24 +17,24 @@
 //! The sibling read-only surface (`👁️viewer/🦀️component.rs`) never imports from this module — see
 //! that file's own doc header.
 
-use crate::editor::mathematical::commands::set_artifact;
-use crate::editor::mathematical::commands::set_points;
-use crate::editor::mathematical::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
-use crate::editor::mathematical::commands::set_locale;
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
-use crate::editor::mathematical::presence::{MathematicalPresence, MathematicalPresenceMutation};
-use crate::editor::mathematical::modes::edit;
-use crate::editor::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot, MATHEMATICAL_DIALECT, MATH_DOCUMENT_SCHEMA};
+use crate::editor::mathematical::commands::set_artifact;
+use crate::editor::mathematical::commands::set_locale;
+use crate::editor::mathematical::commands::set_points;
+use crate::editor::mathematical::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use crate::editor::mathematical::modes::edit;
+use crate::editor::mathematical::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
+use crate::editor::mathematical::presence::{MathematicalPresence, MathematicalPresenceMutation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, Dialect, Editor, NoDraft, NoDraftMutation, DraftView, SurfaceKind, UiComponentSceneNode, UiPresence,
-    ui_text, ActionArgDef, ActionArgOption, ConfigView, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    ui_text, ActionArgDef, ActionArgOption, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
+    SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
 use serde_json::{json, Value};
-use store::EngineHandles;
 use store::ArtifactPack;
+use store::EngineHandles;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
 
 //#region 🔖️Constants
@@ -258,7 +258,14 @@ impl ArtifactEditor for MathematicalPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &MathematicalCommand, doc: &ArtifactView<'_, MathematicalSnapshot>, cfg: &ConfigView<'_, MathematicalConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &MathematicalCommand,
+        doc: &ArtifactView<'_, MathematicalSnapshot>,
+        cfg: &ConfigView<'_, MathematicalConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<MathematicalMutation, MathematicalConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -441,7 +448,10 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) async fn every_command() -> Vec<MathematicalCommand> {
         vec![
-            MathematicalCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()), geometry: crate::artifacts::mathematical::MathematicalGeometry::default() }),
+            MathematicalCommand::SetArtifact(set_artifact::SetArtifact {
+                graph: crate::artifacts::mathematical::dsl::math_graph_to_dsl(&crate::artifacts::mathematical::MathematicalGraph::default()),
+                geometry: crate::artifacts::mathematical::MathematicalGeometry::default(),
+            }),
             MathematicalCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
             MathematicalCommand::SetDirected(set_directed::SetDirected { directed: true }),
             MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),

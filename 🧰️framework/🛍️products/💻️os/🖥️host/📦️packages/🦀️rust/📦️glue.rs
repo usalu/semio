@@ -1,10 +1,10 @@
 //! 🖥️ Semio framework OS host — Shape V2 glue.
 
-extern crate semio_framework_os_kernel as store;
-#[cfg(feature = "os-host-full")]
-extern crate semio_framework_os_kernel as protocol;
 #[cfg(feature = "os-host-full")]
 extern crate semio_framework_os_kernel as dsl;
+#[cfg(feature = "os-host-full")]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
 //#region 🔖️OsHostFull

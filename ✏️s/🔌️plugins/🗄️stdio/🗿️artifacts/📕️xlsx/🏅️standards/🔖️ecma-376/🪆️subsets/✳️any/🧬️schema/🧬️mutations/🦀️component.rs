@@ -122,7 +122,7 @@ fn cell_value_at(base: &XlsxSnapshot, sheet_name: &str, row: u32, col: u32) -> O
 impl Mutation<XlsxSnapshot> for XlsxMutation {
     type Diff = XlsxDiff;
 
-    async fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             XlsxMutation::NoMutation => XlsxDiff::default(),
             XlsxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -143,7 +143,7 @@ impl Mutation<XlsxSnapshot> for XlsxMutation {
         })
     }
 
-    async fn inverse(&self, base: &XlsxSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &XlsxSnapshot) -> Vec<Self> {
         match self {
             XlsxMutation::NoMutation => vec![XlsxMutation::NoMutation],
             XlsxMutation::SetSnapshot { .. } => vec![XlsxMutation::SetSnapshot { snapshot: base.clone() }],
@@ -295,10 +295,10 @@ fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
 }
 
 impl OpText for XlsxMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_xlsx_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_xlsx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -429,7 +429,7 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 /// `XlsxMutation` variant ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword
 /// match uses.
 impl OpBinary for XlsxMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             XlsxMutation::NoMutation => 0,
             XlsxMutation::SetSnapshot { .. } => 1,
@@ -464,7 +464,7 @@ impl OpBinary for XlsxMutation {
                 store::pack_rt::write_varint_u64(&mut out, *col as u64);
             }
             XlsxMutation::InsertSharedString { value } => write_str_lp(&mut out, value),
-            XlsxMutation::RemoveSharedString { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64).await,
+            XlsxMutation::RemoveSharedString { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
             XlsxMutation::SetSharedString { index, value } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 write_str_lp(&mut out, value);
@@ -473,11 +473,11 @@ impl OpBinary for XlsxMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(XlsxMutation::NoMutation),
             1 => {
@@ -499,15 +499,15 @@ impl OpBinary for XlsxMutation {
             }
             5 => {
                 let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-                let col = reader.read_varint_u64().await.map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+                let row = reader.read_varint_u64().map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+                let col = reader.read_varint_u64().map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
                 let value = dec_cell_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::SetCell { sheet_name, row, col, value })
             }
             6 => {
                 let sheet_name = read_str_lp(&mut reader).map_err(|e| malformed("op sheet_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-                let col = reader.read_varint_u64().await.map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+                let row = reader.read_varint_u64().map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+                let col = reader.read_varint_u64().map_err(|e| malformed("op col", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
                 Ok(XlsxMutation::RemoveCell { sheet_name, row, col })
             }
             7 => {
@@ -515,11 +515,11 @@ impl OpBinary for XlsxMutation {
                 Ok(XlsxMutation::InsertSharedString { value })
             }
             8 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(XlsxMutation::RemoveSharedString { index })
             }
             9 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(XlsxMutation::SetSharedString { index, value })
             }

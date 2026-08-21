@@ -30,20 +30,14 @@ pub(super) fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Ve
     Box::pin(async move {
         let decode_input = input.clone();
         let execute_input = input;
-        run_two_phase(
-            ctx,
-            restored,
-            move || async move { decode(&decode_input).await },
-            move || async move { crate::plugin_runtime::wire_artifact_mutation_plan(&execute_input).await },
-        )
-        .await
+        run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { crate::plugin_runtime::wire_artifact_mutation_plan(&execute_input).await }).await
     })
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactMutationPlanRequest` and reports its
 /// `(artifact_kind, mutation_id)` identity as the first slice's progress bytes.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let value = store::pack_rt::decode_wire_value(input).await.map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
+    let value = store::pack_rt::decode_wire_value(input).map_err(|error| super::fault("job.mutation-plan.decode", format!("invalid {} input: {error}", super::JOB_KIND_MUTATION_PLAN)))?;
     let request: crate::app::WireArtifactMutationPlanRequest = dsl::from_dsl_value(value).map_err(|error| super::fault("job.mutation-plan.decode", error))?;
     serde_json::to_vec(&(request.artifact_kind, request.mutation_id)).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))
 }
@@ -130,7 +124,8 @@ mod tests {
     }
 
     async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
-        let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack().await, payload };
+        let request =
+            crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack().await, payload };
         store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue")).await
     }
 

@@ -1,7 +1,7 @@
 //! 🎚️ Mailbox priority, capabilities, and open profiles.
 
-use crate::*;
 use crate::db_durability::DurabilityClass;
+use crate::*;
 
 //#region 🔖️Priority
 /// @emoji 🚦️ The six bounded mailbox lanes every document actor's inbox is split into

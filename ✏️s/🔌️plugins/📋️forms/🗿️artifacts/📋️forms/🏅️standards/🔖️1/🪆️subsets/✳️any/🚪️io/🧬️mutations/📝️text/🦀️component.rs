@@ -7,8 +7,8 @@
 pub use crate::artifacts::forms::mutations::FormMutation;
 
 use crate::artifacts::forms::mutations::{
-    create_block::mutation::CreateBlock, create_step::mutation::CreateStep, move_block_to_step::mutation::MoveBlockToStep, reorder_step::mutation::ReorderStep, delete_block::mutation::DeleteBlock,
-    delete_step::mutation::DeleteStep, replace_block::mutation::ReplaceBlock, change_form_title::mutation::ChangeFormTitle, rename_step::mutation::RenameStep, change_step_description::mutation::ChangeStepDescription,
+    change_form_title::mutation::ChangeFormTitle, change_step_description::mutation::ChangeStepDescription, create_block::mutation::CreateBlock, create_step::mutation::CreateStep, delete_block::mutation::DeleteBlock,
+    delete_step::mutation::DeleteStep, move_block_to_step::mutation::MoveBlockToStep, rename_step::mutation::RenameStep, reorder_step::mutation::ReorderStep, replace_block::mutation::ReplaceBlock,
 };
 use crate::artifacts::forms::{FormQuestion, FormStep};
 
@@ -48,7 +48,11 @@ async fn enc_opt_str(s: &Option<String>) -> String {
     }
 }
 async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_str(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_str(s)?))
+    }
 }
 async fn enc_usize(v: usize) -> String {
     v.to_string()
@@ -63,7 +67,11 @@ async fn enc_opt_usize(v: &Option<usize>) -> String {
     }
 }
 async fn dec_opt_usize(s: &str) -> Result<Option<usize>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_usize(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_usize(s)?))
+    }
 }
 //#endregion 🔖️ScalarCodec
 
@@ -101,10 +109,7 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     tokens
 }
 async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest)
-        .into_iter()
-        .map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}")))
-        .collect()
+    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
@@ -154,12 +159,7 @@ async fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
         "change-step-description" => Ok(FormMutation::ChangeStepDescription(ChangeStepDescription { id: dec_str(&arg("id")?)?, new_description: dec_opt_str(&arg("new-description")?)? })),
         "create-block" => Ok(FormMutation::CreateBlock(CreateBlock { step_id: dec_str(&arg("step-id")?)?, block: dec_block(&arg("block")?)?, index: dec_opt_usize(&arg("index")?)? })),
         "delete-block" => Ok(FormMutation::DeleteBlock(DeleteBlock { step_id: dec_str(&arg("step-id")?)?, id: dec_str(&arg("id")?)? })),
-        "move-block-to-step" => Ok(FormMutation::MoveBlockToStep(MoveBlockToStep {
-            step_id: dec_str(&arg("step-id")?)?,
-            block_id: dec_str(&arg("block-id")?)?,
-            to_step_id: dec_str(&arg("to-step-id")?)?,
-            index: dec_usize(&arg("index")?)?,
-        })),
+        "move-block-to-step" => Ok(FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: dec_str(&arg("step-id")?)?, block_id: dec_str(&arg("block-id")?)?, to_step_id: dec_str(&arg("to-step-id")?)?, index: dec_usize(&arg("index")?)? })),
         "replace-block" => Ok(FormMutation::ReplaceBlock(ReplaceBlock { step_id: dec_str(&arg("step-id")?)?, block: dec_block(&arg("block")?)? })),
         "change-form-title" => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: dec_opt_str(&arg("new-title")?)? })),
         other => Err(format!("forms mutation: unknown keyword {other:?}")),

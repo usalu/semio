@@ -1,16 +1,16 @@
 //! ⚖️ Procedural2d artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`; no `📡️protocol` path segment may survive under plugins).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 use crate::artifacts::procedural2d::dsl::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl};
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
+    WidgetLayoutDsl,
+};
 use crate::artifacts::procedural2d::schema::mutations::text::Procedural2dMutation;
 use protocol::OpBinary;
 
@@ -25,44 +25,59 @@ enum Procedural2dOperationDsl {
     CreateWidget {
         index: usize,
         #[dsl(statements)]
-        widget: Box<WidgetDsl>},
+        widget: Box<WidgetDsl>,
+    },
     ReplaceWidget {
         #[dsl(statements)]
-        widget: Box<WidgetDsl>},
+        widget: Box<WidgetDsl>,
+    },
     DeleteWidget {
-        id: String},
+        id: String,
+    },
     ConnectSynapse {
         index: usize,
         #[dsl(block)]
-        synapse: SynapseSpecDsl},
+        synapse: SynapseSpecDsl,
+    },
     ReplaceSynapse {
         #[dsl(block)]
-        synapse: SynapseSpecDsl},
+        synapse: SynapseSpecDsl,
+    },
     DisconnectSynapse {
-        id: String},
+        id: String,
+    },
     MoveWidget {
         id: String,
         #[dsl(block)]
-        layout: WidgetLayoutDsl},
+        layout: WidgetLayoutDsl,
+    },
     ClearWidgetLayout {
-        id: String},
+        id: String,
+    },
     UpdateCamera {
         #[dsl(block)]
-        camera: CameraJsonDsl},
+        camera: CameraJsonDsl,
+    },
     ChangeSchema {
-        schema: String},
+        schema: String,
+    },
     CreateGeneration {
         #[dsl(block)]
-        generation: FormGenerationDsl},
+        generation: FormGenerationDsl,
+    },
     DeleteGeneration {
-        id: String},
+        id: String,
+    },
     RenameGeneration {
         id: String,
-        name: String},
+        name: String,
+    },
     ChangeGenerationValue {
         id: String,
         question_id: String,
-        value: dsl::DslValue}}
+        value: dsl::DslValue,
+    },
+}
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Procedural2dOperationDsl {
@@ -71,11 +86,7 @@ impl protocol::OpText for Procedural2dOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -98,9 +109,6 @@ impl OpBinary for Procedural2dOperationDsl {
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
-
-
-
 
 async fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Procedural2dOperationDsl {
     match operation {
@@ -125,8 +133,9 @@ async fn procedural2d_operation_to_dsl(operation: &Procedural2dMutation) -> Proc
 
 async fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dMutation, store::TextError> {
     use crate::artifacts::procedural2d::mutations::{
-        change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget,
-        rename_generation, replace_synapse, replace_widget, update_camera};
+        change_generation_value, change_schema, clear_widget_layout, connect_synapse, create_generation, create_widget, delete_generation, delete_widget, disconnect_synapse, move_widget, rename_generation, replace_synapse, replace_widget,
+        update_camera,
+    };
     Ok(match operation {
         Procedural2dOperationDsl::CreateWidget { index, widget } => create_widget(index, widget_from_dsl(*widget)?),
         Procedural2dOperationDsl::ReplaceWidget { widget } => replace_widget(widget_from_dsl(*widget)?),
@@ -141,7 +150,8 @@ async fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) ->
         Procedural2dOperationDsl::CreateGeneration { generation } => create_generation(form_generation_from_dsl(generation)),
         Procedural2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Procedural2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
-        Procedural2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null))})
+        Procedural2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null)),
+    })
 }
 
 /// ⚡️ `Procedural2dMutation`'s compact single-line op encoding — derive-engine grammar via
@@ -166,10 +176,7 @@ impl OpBinary for Procedural2dMutation {
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let parsed = Procedural2dOperationDsl::decode_op(bytes)?;
-        procedural2d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "procedural2d mutation",
-            offset: 0,
-            detail: error.to_string()})
+        procedural2d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed { what: "procedural2d mutation", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpTextMirror

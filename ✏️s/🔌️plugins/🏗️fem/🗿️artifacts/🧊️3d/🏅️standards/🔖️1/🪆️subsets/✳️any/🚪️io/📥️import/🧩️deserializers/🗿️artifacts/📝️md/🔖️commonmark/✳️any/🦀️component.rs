@@ -3,17 +3,21 @@
 //! UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a): reads the DSL text back out of the
 //! first `CodeBlock` (mirror of the sibling exporter's encoding).
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
+use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 
 pub async fn deserialize(from: &MdSnapshot) -> Result<Fem3dSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    let literal = from.blocks.iter().find_map(|b| match b {
-        MdBlock::CodeBlock { literal, .. } => Some(literal.as_str()),
-        _ => None,
-    }).ok_or_else(|| store::TextError::new("fem3d <- md: no code block found", dsl::TextSpan::at(1, 1)))?;
+    let literal = from
+        .blocks
+        .iter()
+        .find_map(|b| match b {
+            MdBlock::CodeBlock { literal, .. } => Some(literal.as_str()),
+            _ => None,
+        })
+        .ok_or_else(|| store::TextError::new("fem3d <- md: no code block found", dsl::TextSpan::at(1, 1)))?;
     <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(literal)
 }
 

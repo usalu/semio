@@ -6,11 +6,11 @@
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
-use crate::editor::puzzle3d::precompute::geometry::{compute_brush_placement_pose, normalize_vec3, quat_rotate_vec, vec3_add};
 use crate::artifacts::puzzle3d::schema::{
     puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
+use crate::editor::puzzle3d::precompute::geometry::{compute_brush_placement_pose, normalize_vec3, quat_rotate_vec, vec3_add};
 
 const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
 
@@ -532,12 +532,16 @@ mod tests {
                 representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/placed.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
                 scale: None,
                 vortices: vec![
-                    ObjectKindVortexTemplate { vortex_kind: Some("c-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) , ..Default::default() },
-                    ObjectKindVortexTemplate { vortex_kind: Some("b-s".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) , ..Default::default() },
+                    ObjectKindVortexTemplate { vortex_kind: Some("c-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]), ..Default::default() },
+                    ObjectKindVortexTemplate { vortex_kind: Some("b-s".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]), ..Default::default() },
                 ],
             }],
-            vortices: vec![VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None , ..Default::default() }],
-            cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None , ..Default::default() }],
+            vortices: vec![
+                VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None, ..Default::default() },
+                VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None, ..Default::default() },
+                VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None, ..Default::default() },
+            ],
+            cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None, ..Default::default() }],
         };
         let candidates = vec![BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 0 }, BrushCompatibleCandidate { object_kind_id: "Placed".to_string(), source_vortex_index: 1 }];
         let mut weights = BrushKindWeights::default();
@@ -566,9 +570,9 @@ mod tests {
                 id: "Placed".to_string(),
                 representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/placed.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
                 scale: None,
-                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) , ..Default::default() }],
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }],
             }],
-            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None , ..Default::default() }],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
             cables: vec![],
         };
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
@@ -590,9 +594,9 @@ mod tests {
                 id: "Placed".to_string(),
                 representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/test/placed.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
                 scale: None,
-                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) , ..Default::default() }],
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }],
             }],
-            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None , ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None , ..Default::default() }],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
             cables: vec![],
         };
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
@@ -633,8 +637,8 @@ mod tests {
     async fn resolve_cable_and_attraction_kind_defaults_and_lookup() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
-            vortices: vec![VortexKindCatalog { id: "vk".into(), default_cable_kind: Some("  cable.custom  ".into()) , ..Default::default() }, VortexKindCatalog { id: "vk-empty".into(), default_cable_kind: Some("   ".into()) , ..Default::default() }],
-            cables: vec![CableKindCatalog { id: "cable.custom".into(), default_attraction_kind: Some("attraction.custom".into()) , ..Default::default() }],
+            vortices: vec![VortexKindCatalog { id: "vk".into(), default_cable_kind: Some("  cable.custom  ".into()), ..Default::default() }, VortexKindCatalog { id: "vk-empty".into(), default_cable_kind: Some("   ".into()), ..Default::default() }],
+            cables: vec![CableKindCatalog { id: "cable.custom".into(), default_attraction_kind: Some("attraction.custom".into()), ..Default::default() }],
         };
         assert_eq!(resolve_cable_kind_for_vortex("vk", &catalogs), "cable.custom");
         assert_eq!(resolve_cable_kind_for_vortex("vk-empty", &catalogs), DEFAULT_CABLE_KIND_ID);
@@ -663,8 +667,11 @@ mod tests {
     async fn attraction_gesture_rule_applies_specificity_branches() {
         let catalogs = KindCatalogBundle {
             objects: vec![],
-            vortices: vec![VortexKindCatalog { id: "sv".into(), default_cable_kind: Some("cable.a".into()) , ..Default::default() }, VortexKindCatalog { id: "tv".into(), default_cable_kind: Some("cable.b".into()) , ..Default::default() }],
-            cables: vec![CableKindCatalog { id: "cable.a".into(), default_attraction_kind: Some("attr.a".into()) , ..Default::default() }, CableKindCatalog { id: "cable.b".into(), default_attraction_kind: Some("attr.b".into()) , ..Default::default() }],
+            vortices: vec![VortexKindCatalog { id: "sv".into(), default_cable_kind: Some("cable.a".into()), ..Default::default() }, VortexKindCatalog { id: "tv".into(), default_cable_kind: Some("cable.b".into()), ..Default::default() }],
+            cables: vec![
+                CableKindCatalog { id: "cable.a".into(), default_attraction_kind: Some("attr.a".into()), ..Default::default() },
+                CableKindCatalog { id: "cable.b".into(), default_attraction_kind: Some("attr.b".into()), ..Default::default() },
+            ],
         };
         let attracting = AttractionVortexContext { object_kind: Some("ObjA".into()), vortex_kind: Some("sv".into()) };
         let attracted = AttractionVortexContext { object_kind: Some("ObjB".into()), vortex_kind: Some("tv".into()) };
@@ -719,13 +726,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn brush_candidate_rank_scores_kind_match_and_stack_and_tambour_rules() {
         let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
-        let template = ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() };
+        let template = ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() };
         let same_kind = BrushCompatibleCandidate { object_kind_id: "Host".into(), source_vortex_index: 0 };
         let score = brush_candidate_rank(&same_kind, &template, &target);
         assert_eq!(score, 15_000, "matching object kind (+10000) plus a stack mate pair (+5000)");
 
         let target_tambour = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
-        let capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door tambour circular".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() };
+        let capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door tambour circular".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() };
         let capital = BrushCompatibleCandidate { object_kind_id: "Capital".into(), source_vortex_index: 0 };
         assert!(brush_candidate_rank(&capital, &capsule_template, &target_tambour) < 0, "capital on tambour must be penalized");
 
@@ -737,7 +744,7 @@ mod tests {
     async fn host_accepts_candidate_rule_branches() {
         let rules = BrushHostRules::default();
         let target = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
-        let door_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), point: [1.0, 0.0, 0.0], direction: None , ..Default::default() };
+        let door_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), point: [1.0, 0.0, 0.0], direction: None, ..Default::default() };
 
         let capital = BrushCompatibleCandidate { object_kind_id: "Capital".into(), source_vortex_index: 0 };
         assert!(!host_accepts_candidate(&rules, &target, &capital, &door_capsule_template), "reject_capital_on_tambour must reject Capital");
@@ -748,10 +755,10 @@ mod tests {
         let door_ok = BrushCompatibleCandidate { object_kind_id: "Door".into(), source_vortex_index: 0 };
         assert!(host_accepts_candidate(&rules, &target, &door_ok, &door_capsule_template), "a door capsule far enough on x and close enough on y must be accepted");
 
-        let non_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("not a capsule".into()), point: [1.0, 0.0, 0.0], direction: None , ..Default::default() };
+        let non_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("not a capsule".into()), point: [1.0, 0.0, 0.0], direction: None, ..Default::default() };
         assert!(!host_accepts_candidate(&rules, &target, &door_ok, &non_capsule_template), "a door tambour target requires a door-capsule source vortex");
 
-        let close_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), point: [0.1, 0.0, 0.0], direction: None , ..Default::default() };
+        let close_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), point: [0.1, 0.0, 0.0], direction: None, ..Default::default() };
         assert!(!host_accepts_candidate(&rules, &target, &door_ok, &close_template), "the door capsule position must satisfy the minimum absolute x");
 
         let door_rule_off = BrushHostRules { door_tambour_requires_door_capsule: false, ..BrushHostRules::default() };
@@ -769,15 +776,43 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
-        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/catalog.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Kind".into(),
+                representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/catalog.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![],
+            }],
+            vortices: vec![],
+            cables: vec![],
+        };
         let fixture = Fixture { attractions: vec![], target_volumes: vec![], objects: vec![] };
         assert_eq!(resolve_object_kind_mesh_url("Kind", &catalogs, &fixture), Some("/catalog.glb".to_string()));
 
-        let empty_catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
+        let empty_catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Kind".into(),
+                representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![],
+            }],
+            vortices: vec![],
+            cables: vec![],
+        };
         let fixture_with_object = Fixture {
             attractions: vec![],
             target_volumes: vec![],
-            objects: vec![FixtureObject { id: "o1".into(), object_kind: Some("Kind".into()), anchor: Default::default(), mesh_url: Some("/fixture.glb".into()), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![], reveal_index: None }],
+            objects: vec![FixtureObject {
+                id: "o1".into(),
+                object_kind: Some("Kind".into()),
+                anchor: Default::default(),
+                mesh_url: Some("/fixture.glb".into()),
+                origin: [0.0, 0.0, 0.0],
+                orientation: None,
+                scale: None,
+                vortices: vec![],
+                reveal_index: None,
+            }],
         };
         assert_eq!(resolve_object_kind_mesh_url("Kind", &empty_catalogs, &fixture_with_object), Some("/fixture.glb".to_string()));
         assert_eq!(resolve_object_kind_mesh_url("Missing", &empty_catalogs, &fixture_with_object), None);
@@ -787,9 +822,19 @@ mod tests {
     async fn brush_compatible_candidates_filters_and_sorts() {
         let catalogs = KindCatalogBundle {
             objects: vec![
-                ObjectKind { id: "NoMesh".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
-                ObjectKind { id: "NoVortices".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/a.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![] },
-                ObjectKind { id: "Match".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/b.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
+                ObjectKind { id: "NoMesh".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }] },
+                ObjectKind {
+                    id: "NoVortices".into(),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/a.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                    scale: None,
+                    vortices: vec![],
+                },
+                ObjectKind {
+                    id: "Match".into(),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/b.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                    scale: None,
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }],
+                },
             ],
             vortices: vec![],
             cables: vec![],
@@ -804,8 +849,18 @@ mod tests {
     async fn brush_compatible_candidates_stack_target_only_matches_mates() {
         let catalogs = KindCatalogBundle {
             objects: vec![
-                ObjectKind { id: "Mate".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/a.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
-                ObjectKind { id: "NotMate".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/b.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("beam".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] },
+                ObjectKind {
+                    id: "Mate".into(),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/a.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                    scale: None,
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }],
+                },
+                ObjectKind {
+                    id: "NotMate".into(),
+                    representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/b.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                    scale: None,
+                    vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("beam".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }],
+                },
             ],
             vortices: vec![],
             cables: vec![],
@@ -818,7 +873,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
-        let attractions = vec![AttractionProps { id: "a1".into(), attracting: "host:v0".into(), attracted: "guest:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0}];
+        let attractions = vec![AttractionProps { id: "a1".into(), attracting: "host:v0".into(), attracted: "guest:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }];
         let blocked = blocked_vortex_full_ids(&attractions);
         assert!(blocked.contains("host:v0") && blocked.contains("guest:v0"));
 
@@ -911,7 +966,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn brush_preview_from_candidate_none_branches() {
         let catalogs = KindCatalogBundle {
-            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
+            objects: vec![ObjectKind {
+                id: "Kind".into(),
+                representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }],
+            }],
             vortices: vec![],
             cables: vec![],
         };
@@ -926,7 +986,7 @@ mod tests {
         assert!(brush_preview_from_candidate("t", &bad_index, &target_ctx, world, &catalogs, &fixture).is_none());
 
         let empty_mesh_catalogs = KindCatalogBundle {
-            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
+            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }] }],
             vortices: vec![],
             cables: vec![],
         };
@@ -942,7 +1002,7 @@ mod tests {
     async fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle {
-            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
+            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }] }],
             vortices: vec![],
             cables: vec![],
         };
@@ -960,13 +1020,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
         let catalogs = KindCatalogBundle {
-            objects: vec![ObjectKind { id: "Kind".into(), representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None , ..Default::default() }] }],
+            objects: vec![ObjectKind {
+                id: "Kind".into(),
+                representations: vec![ObjectKindRepresentation { id: "r0".into(), name: String::new(), url: "/mesh.glb".into(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }],
+            }],
             vortices: vec![],
             cables: vec![],
         };
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-        let fixture =
-            Fixture { attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 , x: 0.0, y: 0.0}], objects: vec![], target_volumes: vec![] };
+        let fixture = Fixture {
+            attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }],
+            objects: vec![],
+            target_volumes: vec![],
+        };
         let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
         assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
     }

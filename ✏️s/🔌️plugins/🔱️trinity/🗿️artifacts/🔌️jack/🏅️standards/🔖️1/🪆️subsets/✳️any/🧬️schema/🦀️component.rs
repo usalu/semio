@@ -14,27 +14,45 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub name: String,
-    #[state(artifact)] pub manifest_id: Option<String>,
-    #[state(artifact)] pub manifest: Manifest,
-    #[state(artifact)] pub camera: Camera,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub name: String,
+    #[state(artifact)]
+    pub manifest_id: Option<String>,
+    #[state(artifact)]
+    pub manifest: Manifest,
+    #[state(artifact)]
+    pub camera: Camera,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
     pub content: JackContentChild,
-    #[state(artifact)] pub root_node_id: Option<String>,
-    #[state(presence)] pub active_fixture_id: String,
-    #[state(presence)] pub jack_query: String,
-    #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(config)] pub viewport_camera: Camera,
-    #[state(config)] pub jack_result_json: String,
-    #[state(config)] pub editor_engagement_input: String,
-    #[state(config)] pub graph_engagement_input: String,
-    #[state(config)] pub results_engagement_input: String,
-    #[state(config)] pub reorganize_epoch: u64,
-    #[state(config)] pub editor_selection: Option<JackEditorSelection>,
-    #[state(config)] pub revision: u64,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub root_node_id: Option<String>,
+    #[state(presence)]
+    pub active_fixture_id: String,
+    #[state(presence)]
+    pub jack_query: String,
+    #[state(presence)]
+    pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)]
+    pub viewport_camera: Camera,
+    #[state(config)]
+    pub jack_result_json: String,
+    #[state(config)]
+    pub editor_engagement_input: String,
+    #[state(config)]
+    pub graph_engagement_input: String,
+    #[state(config)]
+    pub results_engagement_input: String,
+    #[state(config)]
+    pub reorganize_epoch: u64,
+    #[state(config)]
+    pub editor_selection: Option<JackEditorSelection>,
+    #[state(config)]
+    pub revision: u64,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -92,17 +110,7 @@ impl JackArtifact {
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::jack::JackSnapshot) -> Self {
         let viewport_camera = snapshot.camera.clone();
-        Self {
-            schema: snapshot.schema,
-            name: snapshot.name,
-            manifest_id: snapshot.manifest_id,
-            manifest: snapshot.manifest,
-            camera: snapshot.camera,
-            content: snapshot.content,
-            root_node_id: snapshot.root_node_id,
-            viewport_camera,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, viewport_camera, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -188,8 +196,8 @@ mod empty_document_tests {
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
+    use crate::artifacts::jack::{JackDiff, JackSnapshot, TrinityGraphMutation};
     use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::jack::{JackDiff, TrinityGraphMutation, JackSnapshot};
 
     #[derive(Clone, Debug, Default)]
     pub struct JackBuilderConstruction {
@@ -201,8 +209,12 @@ pub mod derived_construction {
         type Snapshot = JackSnapshot;
         type Mutation = TrinityGraphMutation;
         type Diff = JackDiff;
-        async fn empty() -> Self { Self { snapshot: JackSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: JackSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<JackSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -213,24 +225,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <JackDiff as protocol::MutationDiff<JackSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -239,8 +248,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::jack::JackSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct JackParts {

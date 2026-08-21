@@ -118,7 +118,7 @@ pub struct SemioValueTreeDiff {
 }
 
 impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
-    async fn apply(&self, base: &SemioValueSnapshot) -> protocol::MutationApplyResult<SemioValueSnapshot> {
+    fn apply(&self, base: &SemioValueSnapshot) -> protocol::MutationApplyResult<SemioValueSnapshot> {
         let mut next = base.clone();
         if let Some(diff) = &self.root {
             validate_value_diff(diff, &base.root, vec!["root".to_string()])?;
@@ -139,7 +139,7 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
     /// ➕️ Structural, total, base-free, sequential-coalesce absorb — same shape `json`'s `JsonDiff`
     /// uses: a composed diff that ends up structurally empty (e.g. an insert immediately cancelled
     /// by a matching remove) collapses back to `None` rather than surviving as a no-op wrapper.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.root = match (self.root.take(), other.root) {
             (None, None) => None,
             (Some(d1), None) => Some(d1),
@@ -172,19 +172,19 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
 impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
     /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
     /// `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
-    async fn inverse(&self, base: &SemioValueSnapshot) -> Self {
-        let mid = self.apply(base).await.unwrap();
-        Self::between(&mid, base).await
+    fn inverse(&self, base: &SemioValueSnapshot) -> Self {
+        let mid = self.apply(base).unwrap();
+        Self::between(&mid, base)
     }
 
-    async fn between(base: &SemioValueSnapshot, other: &SemioValueSnapshot) -> Self {
+    fn between(base: &SemioValueSnapshot, other: &SemioValueSnapshot) -> Self {
         let root = value_diff_between(&base.root, &other.root);
         let nodes_diff = nodes_diff_between(&base.nodes, &other.nodes);
         let nodes = if is_named_empty(&nodes_diff) { None } else { Some(nodes_diff) };
         SemioValueTreeDiff { root, nodes }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.root.is_none() && self.nodes.is_none()
     }
 }
@@ -1223,10 +1223,10 @@ fn parse_value_tree_diff(line: &str) -> Result<SemioValueTreeDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioValueTreeDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_value_tree_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_value_tree_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ Real binary frame (`format u8 | presence u8 | root? | nodes?`), matching
@@ -1238,7 +1238,7 @@ impl protocol::DiffCodec for SemioValueTreeDiff {
     /// above), honestly opaque only at the PROTOCOL-DESCRIPTION layer (`Prim::Ref` can't recurse —
     /// recipe §5's `protocol-prim-ref-recursion` gap), genuinely structured and round-trip tested
     /// at the Rust layer — same treatment json's own `JsonDiff::encode_diff` uses.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let presence: u8 = (if self.root.is_some() { 1 } else { 0 }) | (if self.nodes.is_some() { 2 } else { 0 });
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, presence];
         if let Some(root) = &self.root {
@@ -1249,11 +1249,11 @@ impl protocol::DiffCodec for SemioValueTreeDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let presence = reader.read_u8().await.map_err(|e| malformed("diff presence", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let presence = reader.read_u8().map_err(|e| malformed("diff presence", 1, e.to_string()))?;
         let root = if presence & 1 != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let nodes = if presence & 2 != 0 { Some(dec_nodes_diff_bin(&mut reader).map_err(|e| malformed("diff nodes", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(SemioValueTreeDiff { root, nodes })

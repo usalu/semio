@@ -26,7 +26,6 @@ pub async fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapsho
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    
 
     #[semio_framework_async_macros::async_test]
     async fn invite_member_relays_upsert_member() {

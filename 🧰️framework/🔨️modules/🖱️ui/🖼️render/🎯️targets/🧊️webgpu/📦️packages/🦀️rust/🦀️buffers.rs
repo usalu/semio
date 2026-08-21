@@ -87,10 +87,7 @@ impl WorldGlobalsRing {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("world3d_bind_group"),
             layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding { buffer, offset: 0, size: std::num::NonZeroU64::new(std::mem::size_of::<World3dGlobals>() as u64) }),
-            }],
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding { buffer, offset: 0, size: std::num::NonZeroU64::new(std::mem::size_of::<World3dGlobals>() as u64) }) }],
         })
     }
 

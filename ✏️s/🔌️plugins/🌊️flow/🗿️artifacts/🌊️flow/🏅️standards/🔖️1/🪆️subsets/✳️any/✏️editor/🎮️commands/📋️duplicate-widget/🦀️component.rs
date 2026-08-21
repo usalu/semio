@@ -24,13 +24,7 @@ pub async fn handle(payload: &DuplicateWidget, doc: &ArtifactView<'_, FlowSnapsh
     }
     let new_id = unique_widget_id(&scene, &payload.widget_id);
     let synapse_id = unique_synapse_id(&scene, &payload.widget_id, &new_id);
-    Ok(Emit::mutations(vec![FlowMutation::DuplicateWidget(DuplicateWidgetMutation {
-        source_id: payload.widget_id.clone(),
-        new_id,
-        synapse_id,
-        from_port: String::new(),
-        to_port: String::new(),
-    })]))
+    Ok(Emit::mutations(vec![FlowMutation::DuplicateWidget(DuplicateWidgetMutation { source_id: payload.widget_id.clone(), new_id, synapse_id, from_port: String::new(), to_port: String::new() })]))
 }
 
 /// 🏷️ Mints `"{source_id}-copy"`, bumping a numeric suffix until the id is free.

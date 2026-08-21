@@ -29,9 +29,9 @@
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
 
-use crate::*;
-use crate::db_ids::{check_len, DbError};
 use crate::db_durability::Frontier;
+use crate::db_ids::{check_len, DbError};
+use crate::*;
 use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
 use db_projection::ProjectionState;
 use db_state::PVec;
@@ -317,12 +317,14 @@ pub struct IndexConsistencyResolver<'a, S: db_storage::IndexStorage> {
 }
 
 impl<'resolver, S: db_storage::IndexStorage> ConsistencyResolver for IndexConsistencyResolver<'resolver, S> {
-    async fn current_frontier(&self) -> Result<Frontier, DbError> { self.frontiers.latest().await?.ok_or_else(|| DbError::NotFound("no frontier has been recorded for this document yet".to_string())) }
+    async fn current_frontier(&self) -> Result<Frontier, DbError> {
+        self.frontiers.latest().await?.ok_or_else(|| DbError::NotFound("no frontier has been recorded for this document yet".to_string()))
+    }
 
     async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {
-            let command_seq = self.commits.lookup(commit_id).await?.ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
-            self.frontiers.lookup(command_seq).await?.ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
-        }
+        let command_seq = self.commits.lookup(commit_id).await?.ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
+        self.frontiers.lookup(command_seq).await?.ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
+    }
 }
 //#endregion 🔖️Consistency
 
@@ -584,7 +586,9 @@ impl FullTextLookup for NoFullTextLookup {
 }
 
 impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'index, S> {
-    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> { Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect()) }
+    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {
+        Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect())
+    }
 }
 //#endregion 🔖️QuerySource
 
@@ -1336,7 +1340,9 @@ mod tests {
         /// real `db_storage::IndexStorage` (not a dependency of this crate; see module doc).
         pub(super) struct FakeFullText(pub std::collections::HashMap<String, Vec<RowId>>);
         impl FullTextLookup for FakeFullText {
-            async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {Ok(self.0.get(term).cloned().unwrap_or_default())}
+            async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {
+                Ok(self.0.get(term).cloned().unwrap_or_default())
+            }
         }
 
         #[semio_framework_async_macros::async_test]
@@ -1407,8 +1413,12 @@ mod tests {
         }
 
         impl ConsistencyResolver for FakeResolver {
-            async fn current_frontier(&self) -> Result<Frontier, DbError> {Ok(self.current.clone())}
-            async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {self.commits.get(commit_id).cloned().ok_or_else(|| DbError::NotFound(commit_id.to_string()))}
+            async fn current_frontier(&self) -> Result<Frontier, DbError> {
+                Ok(self.current.clone())
+            }
+            async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {
+                self.commits.get(commit_id).cloned().ok_or_else(|| DbError::NotFound(commit_id.to_string()))
+            }
         }
 
         async fn frontier_at(seq: u64) -> Frontier {

@@ -7,8 +7,8 @@
 //!
 //! The only fem2d mutation whose diff payload is a scalar facet rather than a collection delta — settings move as one indivisible record.
 
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::artifacts::fem2d::mutations::Fem2dMutation;
+use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
 use crate::artifacts::fem2d::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -90,7 +90,10 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     assert!(outcome.diff().analysis.is_some(), "update-analysis-settings/doubles-the-modal-count-and-halves-the-deformation-scale: the settings record must surface in the analysis field");
-    assert!(outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().load_cases.is_none(), "update-analysis-settings/doubles-the-modal-count-and-halves-the-deformation-scale: no collection delta may be opened by a settings edit");
+    assert!(
+        outcome.diff().nodes.is_none() && outcome.diff().elements.is_none() && outcome.diff().load_cases.is_none(),
+        "update-analysis-settings/doubles-the-modal-count-and-halves-the-deformation-scale: no collection delta may be opened by a settings edit"
+    );
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "update-analysis-settings/doubles-the-modal-count-and-halves-the-deformation-scale: produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -109,7 +112,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-analysis-settings/doubles-the-modal-count-and-halves-the-deformation-scale: committed diff did not carry before to after");
 }

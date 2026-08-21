@@ -10,6 +10,9 @@
 //! taxonomy node (commands, windows, panels, the wasm bridge) — a helper with exactly one consumer
 //! lives in that consumer's own component file instead.
 
+use crate::artifacts::sequence::mutations::SequenceMutation;
+use crate::artifacts::sequence::op::sequence_snapshot_mutations;
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::locale::set_locale;
@@ -22,14 +25,10 @@ use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
 use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::sequence::presence::{SequencePresence, SequencePresenceMutation};
 use crate::editor::sequence::terminology::sequence_play_labels;
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::op::sequence_snapshot_mutations;
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use graph::manifest::PropertyBag;
 use imperative_engine::{
-    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult,
-    Step,
+    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
 };
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};

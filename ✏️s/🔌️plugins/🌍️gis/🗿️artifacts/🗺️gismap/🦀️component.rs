@@ -283,6 +283,5 @@ mod tests {
         assert!(document.routes.is_empty());
         assert!(document.regions.is_empty());
     }
-
 }
 //#endregion 🔹Tests

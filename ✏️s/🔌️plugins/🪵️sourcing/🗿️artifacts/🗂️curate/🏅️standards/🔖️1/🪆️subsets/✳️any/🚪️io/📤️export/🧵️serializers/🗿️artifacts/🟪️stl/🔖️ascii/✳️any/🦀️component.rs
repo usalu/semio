@@ -13,8 +13,7 @@ pub const STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standar
 pub async fn serialize(snapshot: &CurateSnapshot) -> Result<StlSnapshot, store::TextError> {
     let _ = STDIO_STL_DOCUMENT_SCHEMA;
     let bytes = <CurateSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <StlSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <StlSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &CurateSnapshot) -> Result<Vec<u8>, store::TextError> {

@@ -1,8 +1,8 @@
 //! 🖼️ Remodel play app — the Frames window: a Canvas2d view of the currently cursored frame, with any
 //! ground control point observations planted on it.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelFrameCursor};
 use crate::artifacts::remodel::RemodelSnapshot;
+use crate::editor::remodel::config::{RemodelConfig, RemodelFrameCursor};
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -77,8 +77,8 @@ pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::remodel::testkit::{app, render as render_body};
     use crate::artifacts::remodel::default_remodel_scene;
+    use crate::editor::remodel::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]
     async fn an_unset_frame_cursor_renders_no_layers() {

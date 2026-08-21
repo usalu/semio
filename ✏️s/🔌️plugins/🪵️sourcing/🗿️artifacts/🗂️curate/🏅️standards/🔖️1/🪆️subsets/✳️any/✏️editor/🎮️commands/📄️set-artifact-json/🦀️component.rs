@@ -1,10 +1,10 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `set-artifact-json`.
 
-use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::editor::sourcing::reset_document_effect;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use crate::editor::sourcing::reset_document_effect;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -25,11 +25,11 @@ pub async fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSna
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::curate::schema::empty_document;
     use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
     use crate::editor::sourcing::testkit::new_app;
     use crate::editor::sourcing::SourcingCurateCommand;
     use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
-    use crate::artifacts::curate::schema::empty_document;
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::{HistoryView, PluginApp};
 
@@ -54,18 +54,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn curate_and_example_actions_survive_registry_enforcement() {
         let mut app = crate::editor::sourcing::testkit::new_app_with_registry();
-        let result = app
-            .dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("set example");
+        let result = app.dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local")).expect("set example");
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <CurateSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert!(!loaded.stock_extra.is_empty(), "demo-stock default materialized from the registry");
         let object_id = loaded.stock_extra[0].id.clone();
-        let result = app
-            .dispatch_typed(SourcingCurateCommand::CurateAdd(crate::editor::sourcing::commands::curate_add::CurateAdd { object_id }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("curate");
+        let result = app.dispatch_typed(SourcingCurateCommand::CurateAdd(crate::editor::sourcing::commands::curate_add::CurateAdd { object_id }), &semio_framework_plugin::testkit::meta("local")).expect("curate");
         assert_eq!(result.mutations.len(), 1, "curateAdd is a document operation");
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
     }

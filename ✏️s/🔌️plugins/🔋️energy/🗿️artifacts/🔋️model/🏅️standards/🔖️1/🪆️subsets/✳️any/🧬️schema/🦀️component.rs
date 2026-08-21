@@ -64,23 +64,12 @@ impl Default for EnergyModelArtifact {
 impl EnergyModelArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> EnergyModelSnapshot {
-        EnergyModelSnapshot {
-            schema: self.schema.clone(),
-            structure: self.structure.clone(),
-            zones: self.zones.clone(),
-            referenced_model: self.referenced_model.clone(),
-        }
+        EnergyModelSnapshot { schema: self.schema.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving preview empty.
     pub async fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            structure: snapshot.structure,
-            zones: snapshot.zones,
-            referenced_model: snapshot.referenced_model,
-            results_json: String::new(),
-        }
+        Self { schema: snapshot.schema, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, results_json: String::new() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -131,8 +120,8 @@ pub async fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchema
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::model::{EnergyModelDiff, EnergyModelMutation, EnergyModelSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct ModelBuilderConstruction {
@@ -144,8 +133,12 @@ pub mod derived_construction {
         type Snapshot = EnergyModelSnapshot;
         type Mutation = EnergyModelMutation;
         type Diff = EnergyModelDiff;
-        async fn empty() -> Self { Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -156,24 +149,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <EnergyModelDiff as protocol::MutationDiff<EnergyModelSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -182,8 +172,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::model::EnergyModelSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct EnergyModelParts {
@@ -259,10 +249,7 @@ mod tests {
     /// `structure`/`zones` child handles are real (non-empty ids) instead.
     #[semio_framework_async_macros::async_test]
     async fn example_fixture_parses() {
-        let document = crate::artifacts::model::dsl::parse_dsl(
-            crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT,
-        )
-        .expect("parse");
+        let document = crate::artifacts::model::dsl::parse_dsl(crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT).expect("parse");
         assert_eq!(document.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
         assert!(!document.structure.child_id.is_empty());
         assert!(!document.zones.child_id.is_empty());

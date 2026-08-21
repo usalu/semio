@@ -127,7 +127,7 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
     type Diff = SemioPresentationDiff;
 
-    async fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioPresentationMutation::NoMutation => SemioPresentationDiff::default(),
             SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -147,7 +147,7 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
         })
     }
 
-    async fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<Self> {
         match self {
             SemioPresentationMutation::NoMutation => vec![SemioPresentationMutation::NoMutation],
             SemioPresentationMutation::SetSnapshot { .. } => vec![SemioPresentationMutation::SetSnapshot { snapshot: base.clone() }],
@@ -255,10 +255,10 @@ fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, 
 }
 
 impl OpText for SemioPresentationMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_presentation_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_presentation_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -324,13 +324,13 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 /// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
 /// 📡️component.protocol.semio` uses).
 impl OpBinary for SemioPresentationMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -342,7 +342,7 @@ impl OpBinary for SemioPresentationMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

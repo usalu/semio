@@ -7,9 +7,7 @@
 use crate::artifacts::block2d::{schema, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
 use crate::viewer::block2d::modes::view;
 use crate::viewer::block2d::modes::view::windows::board;
-use semio_framework_plugin::{
-    ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer,
-};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -59,7 +57,13 @@ impl ArtifactViewer for Block2dViewer {
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is a pure
     /// addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    async fn handle(
+        _command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 

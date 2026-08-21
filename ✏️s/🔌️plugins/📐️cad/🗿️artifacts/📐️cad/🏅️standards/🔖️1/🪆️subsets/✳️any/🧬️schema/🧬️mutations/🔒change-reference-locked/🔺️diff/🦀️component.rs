@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeReferenceLocked`.
 use super::mutation::ChangeReferenceLocked;
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::diff::apply_reference_patch;
+use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadReferencePatch;
 use crate::artifacts::cad::CadSnapshot;
 use std::collections::BTreeMap;

@@ -7,8 +7,8 @@
 use crate::artifacts::dag::{default_snapshot, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
 use crate::viewer::dag::modes::view;
 use crate::viewer::dag::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

@@ -11,18 +11,30 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub node_kind: BlockKindIdentity,
-    #[state(artifact)] pub presentation: Block2dPresentation,
-    #[state(artifact)] pub handle_kinds: Vec<Block2dHandleKind>,
-    #[state(artifact)] pub handles: Vec<Block2dHandleTemplate>,
-    #[state(artifact)] pub compatibility: Vec<BlockCompatibilityRule>,
-    #[state(artifact)] pub attributes: Vec<BlockAttribute>,
-    #[state(artifact)] pub authors: Vec<BlockAuthor>,
-    #[state(artifact)] pub camera2d: BlockCamera2d,
-    #[state(artifact)] pub meta: BlockMeta,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub node_kind: BlockKindIdentity,
+    #[state(artifact)]
+    pub presentation: Block2dPresentation,
+    #[state(artifact)]
+    pub handle_kinds: Vec<Block2dHandleKind>,
+    #[state(artifact)]
+    pub handles: Vec<Block2dHandleTemplate>,
+    #[state(artifact)]
+    pub compatibility: Vec<BlockCompatibilityRule>,
+    #[state(artifact)]
+    pub attributes: Vec<BlockAttribute>,
+    #[state(artifact)]
+    pub authors: Vec<BlockAuthor>,
+    #[state(artifact)]
+    pub camera2d: BlockCamera2d,
+    #[state(artifact)]
+    pub meta: BlockMeta,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -122,8 +134,8 @@ pub async fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescr
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::block2d::{Block2dDiff, Block2dMutation, Block2dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Block2dBuilderConstruction {
@@ -135,8 +147,12 @@ pub mod derived_construction {
         type Snapshot = Block2dSnapshot;
         type Mutation = Block2dMutation;
         type Diff = Block2dDiff;
-        async fn empty() -> Self { Self { snapshot: Block2dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Block2dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -147,24 +163,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Block2dDiff as protocol::MutationDiff<Block2dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -173,8 +186,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::block2d::Block2dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Block2dParts {

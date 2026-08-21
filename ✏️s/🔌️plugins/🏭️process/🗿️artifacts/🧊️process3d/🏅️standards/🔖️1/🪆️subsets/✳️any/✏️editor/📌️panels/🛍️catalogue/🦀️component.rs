@@ -1,11 +1,11 @@
 //! 🛍️ Process 3d play app panel — the workshop capability catalogue plus quick-swap stock kinds.
 
-use crate::editor::process3d::iconed_tree_item_with_action;
-use crate::editor::process3d::process3d_action;
-use crate::editor::process3d::terminology::Process3dLabels;
-use crate::editor::process3d::installed_catalogs;
 use crate::artifacts::process3d::schema::inferences::{validate_capability, validation_reason, ValidationContext};
 use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
+use crate::editor::process3d::iconed_tree_item_with_action;
+use crate::editor::process3d::installed_catalogs;
+use crate::editor::process3d::process3d_action;
+use crate::editor::process3d::terminology::Process3dLabels;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 

@@ -8,7 +8,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL.
 pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
@@ -151,4 +150,3 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
-

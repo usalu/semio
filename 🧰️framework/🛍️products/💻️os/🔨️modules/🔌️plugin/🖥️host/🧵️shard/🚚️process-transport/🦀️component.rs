@@ -8,11 +8,11 @@
 //! `Envelope`/`ShardOutcome` bytes, opposite ends of the same pipe.
 //!
 //! **Framing**: length-prefixed (`[tag:u8][len:u32 LE][payload]`), never newline/text-delimited —
-//! `Envelope`/`ShardOutcome` bytes are arbitrary binary (pack-encoded / JSON containing arbitrary
+//! `Envelope`/`ShardOutcome` bytes are arbitrary owned pack-encoded binary containing arbitrary
 //! bytes in string fields) and could contain any byte value including `\n`, so a delimiter would
 //! need escaping the design doc's own "stdio, length-prefixed" note (`📓️design-runtime.md` §
 //! "ShardTransport") already rules out. `tag` distinguishes a real `Data` frame (envelope bytes one
-//! way, `ShardOutcome` JSON the other) from a `Heartbeat` frame (empty payload) so a periodic
+//! way, `ShardOutcome` pack bytes the other) from a `Heartbeat` frame (empty payload) so a periodic
 //! liveness signal can interleave on the SAME pipe without the reader ever mis-decoding a heartbeat
 //! as `Envelope::pack_decode` input or vice versa.
 
@@ -644,16 +644,8 @@ mod tests {
     /// `ShardFrame`, not raw `Envelope` bytes (`ShardLoop::pump`'s own change), so this fixture's
     /// hand-rolled encoder must wrap here too, even though its one caller is `#[ignore]`d.
     async fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::Payload) -> Vec<u8> {
-        let envelope = semio_framework_actor::Envelope {
-            to: semio_framework_actor::ActorId(actor),
-            from: semio_framework_actor::Origin::Kernel,
-            lane: semio_framework_actor::Lane::Interactive,
-            seq,
-            deadline_ms: None,
-            coalesce: None,
-            cancel_of: None,
-            payload,
-        };
+        let envelope =
+            semio_framework_actor::Envelope { to: semio_framework_actor::ActorId(actor), from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
         let mut bytes = Vec::new();
         crate::shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
         bytes
@@ -682,7 +674,8 @@ mod tests {
     async fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<crate::shard::ShardOutcome> {
         for _ in 0..attempts {
             if let Some(bytes) = semio_framework_async::block_on(transport.recv()) {
-                return serde_json::from_slice(&bytes).ok();
+                let mut pos = 0usize;
+                return semio_framework_async::block_on(crate::shard::ShardOutcome::pack_decode(&bytes, &mut pos)).ok();
             }
             thread::sleep(Duration::from_millis(50));
         }

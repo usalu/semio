@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceAccessibilityRequirement, base: &ProgramSnaps
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This accessibility requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.accessibility_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { accessibility: Some(ProgramAccessibilityDelta { patched: vec![ProgramAccessibilityPatchEntry { id: payload.accessibility_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        accessibility: Some(ProgramAccessibilityDelta { patched: vec![ProgramAccessibilityPatchEntry { id: payload.accessibility_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

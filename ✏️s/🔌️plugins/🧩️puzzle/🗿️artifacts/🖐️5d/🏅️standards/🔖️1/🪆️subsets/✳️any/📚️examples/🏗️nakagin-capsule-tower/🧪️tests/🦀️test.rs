@@ -20,10 +20,7 @@ async fn op_pack_and_spr_assets_are_nonempty() {
 async fn inference_default_law() {
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
-    assert_eq!(
-        Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()),
-        Puzzle5dInference::default()
-    );
+    assert_eq!(Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()), Puzzle5dInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

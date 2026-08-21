@@ -81,8 +81,7 @@ impl SceneColorTarget {
                 })
             })
             .collect();
-        let sampler =
-            device.create_sampler(&wgpu::SamplerDescriptor { label: Some("scene_color_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, mipmap_filter: wgpu::FilterMode::Linear, ..Default::default() });
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("scene_color_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, mipmap_filter: wgpu::FilterMode::Linear, ..Default::default() });
         Self { texture, blur_scratch, blur_scratch_mip_views, sample_view, mip_views, sampler, width, height }
     }
 

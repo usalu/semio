@@ -21,8 +21,7 @@ pub async fn change_catalog_generation(new_catalog_generation: u64) -> SHomeMuta
 }
 
 impl protocol::MutationKind<SHomeSnapshot, SHomeMutation> for ChangeCatalogGeneration {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "change", entity: "catalog-generation", kind: "change-catalog-generation", record: "ChangedCatalogGeneration" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "catalog-generation", kind: "change-catalog-generation", record: "ChangedCatalogGeneration" };
 
     async fn diff(&self, base: &SHomeSnapshot) -> protocol::MutationOutcome<SHomeDiff> {
         super::diff::diff(self, base)

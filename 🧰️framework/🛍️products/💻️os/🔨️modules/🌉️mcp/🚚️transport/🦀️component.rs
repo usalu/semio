@@ -370,7 +370,12 @@ async fn handle_get(State(state): State<HttpState>, headers: HeaderMap) -> Respo
         let data = serde_json::to_string(&notification).unwrap_or_default();
         body.push_str(&format!("id: {id}\nevent: message\ndata: {data}\n\n"));
     }
-    Response::builder().status(StatusCode::OK).header(axum::http::header::CONTENT_TYPE, "text/event-stream").header(axum::http::header::CACHE_CONTROL, "no-cache").body(Body::from(body)).unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(axum::http::header::CONTENT_TYPE, "text/event-stream")
+        .header(axum::http::header::CACHE_CONTROL, "no-cache")
+        .body(Body::from(body))
+        .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
 }
 //#endregion 🔖️HttpTransport
 
@@ -585,7 +590,8 @@ mod long {
     async fn an_evil_origin_is_rejected_with_403() {
         let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
-        let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "https://evil.example").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
+        let request =
+            Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "https://evil.example").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
     }
@@ -594,7 +600,8 @@ mod long {
     async fn a_loopback_origin_is_accepted() {
         let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
-        let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "http://127.0.0.1:6300").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
+        let request =
+            Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "http://127.0.0.1:6300").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
     }

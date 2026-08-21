@@ -56,9 +56,9 @@ pub async fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSna
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::demo_space_projection;
     use crate::engine::space::engine::parameter_entity_id;
     use crate::engine::space::testkit::apply_mutations;
-    use crate::demo_space_projection;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

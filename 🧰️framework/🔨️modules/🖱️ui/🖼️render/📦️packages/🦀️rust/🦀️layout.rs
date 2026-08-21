@@ -189,12 +189,7 @@ fn style_from_spec(spec: &LayoutSpec) -> taffy::Style {
         LayoutSpec::Leaf(leaf) => taffy::Style { size: taffy::geometry::Size { width: sizing_to_dimension(leaf.width), height: sizing_to_dimension(leaf.height) }, ..Default::default() },
         LayoutSpec::Stack(stack) => style_from_stack(stack),
         LayoutSpec::Grid(grid) => style_from_grid(grid),
-        LayoutSpec::Overlay(overlay) => taffy::Style {
-            display: taffy::style::Display::Flex,
-            position: taffy::style::Position::Relative,
-            padding: edge_space_to_rect(overlay.inset),
-            ..Default::default()
-        },
+        LayoutSpec::Overlay(overlay) => taffy::Style { display: taffy::style::Display::Flex, position: taffy::style::Position::Relative, padding: edge_space_to_rect(overlay.inset), ..Default::default() },
         LayoutSpec::Scroll(scroll) => style_from_scroll(scroll),
         LayoutSpec::Absolute(absolute) => style_from_absolute(absolute),
     }
@@ -222,10 +217,7 @@ fn style_from_grid(grid: &GridLayout) -> taffy::Style {
         display: taffy::style::Display::Grid,
         grid_template_columns: grid.columns.iter().map(grid_track_to_taffy).collect(),
         grid_template_rows: grid.rows.iter().map(grid_track_to_taffy).collect(),
-        gap: taffy::geometry::Size {
-            width: taffy::style::LengthPercentage::length(space_token_px(grid.column_gap)),
-            height: taffy::style::LengthPercentage::length(space_token_px(grid.row_gap)),
-        },
+        gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(space_token_px(grid.column_gap)), height: taffy::style::LengthPercentage::length(space_token_px(grid.row_gap)) },
         padding: edge_space_to_rect(grid.padding),
         align_items: Some(align_to_taffy(grid.align)),
         justify_content: Some(justify_to_taffy(grid.justify)),
@@ -253,11 +245,7 @@ fn style_from_scroll(scroll: &ScrollLayout) -> taffy::Style {
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn style_from_absolute(absolute: &AbsoluteLayout) -> taffy::Style {
-    taffy::Style {
-        position: taffy::style::Position::Absolute,
-        size: taffy::geometry::Size { width: sizing_to_dimension(absolute.sizing_width), height: sizing_to_dimension(absolute.sizing_height) },
-        ..Default::default()
-    }
+    taffy::Style { position: taffy::style::Position::Absolute, size: taffy::geometry::Size { width: sizing_to_dimension(absolute.sizing_width), height: sizing_to_dimension(absolute.sizing_height) }, ..Default::default() }
 }
 
 //#endregion 🎨️StyleMapping

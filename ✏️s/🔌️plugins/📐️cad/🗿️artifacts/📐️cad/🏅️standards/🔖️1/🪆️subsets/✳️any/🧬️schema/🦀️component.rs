@@ -1,8 +1,6 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::cad::{
-    CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot,
-};
+use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -60,52 +58,103 @@ impl Default for CadDislocateOptions {
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.model")] pub shape_model: Option<CadModelChild>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.model")] pub building_model: Option<CadModelChild>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.model")] pub energy_model: Option<CadModelChild>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.model")] pub structure_classic_model: Option<CadModelChild>,
-    #[state(artifact)] #[child(kind = "s.stdio.semio.drawing")] pub drawings: Vec<CadDrawingChild>,
-    #[state(artifact)] pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
-    #[state(artifact)] pub nodes: Vec<CadNode>,
-    #[state(artifact)] pub active_model_definition_id: String,
-    #[state(presence)] pub selected_object_ids: Vec<String>,
-    #[state(presence)] pub selected_node_ids: Vec<String>,
-    #[state(presence)] pub active_object_id: Option<String>,
-    #[state(presence)] pub component_selection: CadComponentSelection,
-    #[state(presence)] pub selected_reference_model_definition_id: Option<String>,
-    #[state(presence)] pub selected_reference_id: Option<String>,
-    #[state(presence)] pub selected_primitive_id: Option<String>,
-    #[state(presence)] pub selected_primitive_kind: Option<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(presence)] pub active_example_id: Option<String>,
-    #[state(config)] pub selection_method: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub engagement_step: String,
-    #[state(config)] pub engagement_pane: Option<String>,
-    #[state(config)] pub engagement_session_json: Option<String>,
-    #[state(config)] pub last_finalized_interaction_id: Option<String>,
-    #[state(config)] pub sun_enabled: bool,
-    #[state(config)] pub sun_azimuth: f64,
-    #[state(config)] pub sun_elevation: f64,
-    #[state(config)] pub sun_intensity: f64,
-    #[state(config)] pub sun_color: String,
-    #[state(config)] pub camera: CadCamera,
-    #[state(config)] pub camera_building: CadCamera,
-    #[state(config)] pub camera_energy: CadCamera,
-    #[state(config)] pub camera_structure_classic: CadCamera,
-    #[state(config)] pub dislocate_shape: CadDislocateOptions,
-    #[state(config)] pub dislocate_building: CadDislocateOptions,
-    #[state(config)] pub dislocate_energy: CadDislocateOptions,
-    #[state(config)] pub dislocate_structure_classic: CadDislocateOptions,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub terminology: String,
-    #[state(config)] pub contributions_json: String,
-    #[state(artifact)] pub hovered_object_id: Option<String>,
-    #[state(artifact)] pub hovered_target_object_id: Option<String>,
-    #[state(artifact)] pub hovered_target_mode: Option<String>,
-    #[state(artifact)] pub hovered_target_id: Option<u32>,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.model")]
+    pub shape_model: Option<CadModelChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.model")]
+    pub building_model: Option<CadModelChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.model")]
+    pub energy_model: Option<CadModelChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.model")]
+    pub structure_classic_model: Option<CadModelChild>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio.drawing")]
+    pub drawings: Vec<CadDrawingChild>,
+    #[state(artifact)]
+    pub references_by_model_definition_id: BTreeMap<String, CadReferenceList>,
+    #[state(artifact)]
+    pub nodes: Vec<CadNode>,
+    #[state(artifact)]
+    pub active_model_definition_id: String,
+    #[state(presence)]
+    pub selected_object_ids: Vec<String>,
+    #[state(presence)]
+    pub selected_node_ids: Vec<String>,
+    #[state(presence)]
+    pub active_object_id: Option<String>,
+    #[state(presence)]
+    pub component_selection: CadComponentSelection,
+    #[state(presence)]
+    pub selected_reference_model_definition_id: Option<String>,
+    #[state(presence)]
+    pub selected_reference_id: Option<String>,
+    #[state(presence)]
+    pub selected_primitive_id: Option<String>,
+    #[state(presence)]
+    pub selected_primitive_kind: Option<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(presence)]
+    pub active_example_id: Option<String>,
+    #[state(config)]
+    pub selection_method: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub engagement_step: String,
+    #[state(config)]
+    pub engagement_pane: Option<String>,
+    #[state(config)]
+    pub engagement_session_json: Option<String>,
+    #[state(config)]
+    pub last_finalized_interaction_id: Option<String>,
+    #[state(config)]
+    pub sun_enabled: bool,
+    #[state(config)]
+    pub sun_azimuth: f64,
+    #[state(config)]
+    pub sun_elevation: f64,
+    #[state(config)]
+    pub sun_intensity: f64,
+    #[state(config)]
+    pub sun_color: String,
+    #[state(config)]
+    pub camera: CadCamera,
+    #[state(config)]
+    pub camera_building: CadCamera,
+    #[state(config)]
+    pub camera_energy: CadCamera,
+    #[state(config)]
+    pub camera_structure_classic: CadCamera,
+    #[state(config)]
+    pub dislocate_shape: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_building: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_energy: CadDislocateOptions,
+    #[state(config)]
+    pub dislocate_structure_classic: CadDislocateOptions,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub terminology: String,
+    #[state(config)]
+    pub contributions_json: String,
+    #[state(artifact)]
+    pub hovered_object_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_object_id: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_mode: Option<String>,
+    #[state(artifact)]
+    pub hovered_target_id: Option<u32>,
 }
 //#endregion 🔖️Artifact
 
@@ -239,10 +288,10 @@ pub async fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::cad::diff::schema::CadDiff;
     use crate::artifacts::cad::mutations::CadMutation;
     use crate::artifacts::cad::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::ArtifactBuilder;
     use std::collections::BTreeMap;
 
     //#region Builder
@@ -293,26 +342,23 @@ pub mod derived_construction {
             let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
 
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
 
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
     //#endregion Builder
@@ -322,8 +368,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::cad::CadSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct CadParts {

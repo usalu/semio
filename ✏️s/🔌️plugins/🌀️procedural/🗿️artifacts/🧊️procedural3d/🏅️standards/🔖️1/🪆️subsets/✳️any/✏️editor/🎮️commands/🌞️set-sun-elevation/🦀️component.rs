@@ -1,17 +1,18 @@
 //! 🌞️ 🌞️ Procedural3d play app commands command — `set-sun-elevation`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{apply_world3d_sun_action, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{apply_world3d_sun_action, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "sun-elevation")]
 pub struct SetSunElevation {
-    pub value: f64}
+    pub value: f64,
+}
 
 pub async fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let mut sun = cfg.snapshot.sun();

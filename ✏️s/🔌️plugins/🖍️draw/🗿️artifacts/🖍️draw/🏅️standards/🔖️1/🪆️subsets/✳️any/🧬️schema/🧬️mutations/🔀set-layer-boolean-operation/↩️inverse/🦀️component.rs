@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `SetLayerBooleanOperation` — the OLD operation captured from BASE. Missing target
 //! or a non-boolean layer ⇒ `Vec::new()`.
-use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::mutations::DrawMutation;
+use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 
 //#region 🔖️Inverse

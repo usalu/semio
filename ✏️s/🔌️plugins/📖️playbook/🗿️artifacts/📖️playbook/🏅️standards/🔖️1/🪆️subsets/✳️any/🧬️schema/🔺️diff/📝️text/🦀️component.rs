@@ -1,8 +1,8 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::playbook::schema::diff::PlaybookDiff;
-use crate::artifacts::playbook::schema::PlaybookArtifact;
 use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
+use crate::artifacts::playbook::schema::PlaybookArtifact;
 use crate::playbook::PlaybookStep;
 use protocol::MutationDiff;
 
@@ -11,7 +11,6 @@ use protocol::MutationDiff;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 //#region 🔖️Apply
 impl PlaybookDiff {
@@ -110,10 +109,7 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
 //#region 🔖️Builders
 /// 📸️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
-    PlaybookDiff {
-        artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    PlaybookDiff { artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints new content-addressed `document`+`flow` handles for the whole-scene replacement

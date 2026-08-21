@@ -39,14 +39,14 @@ pub enum Ifc2x3Mutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
-pub async fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
+    let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -55,10 +55,10 @@ pub async fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc
 impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
     type Diff = Ifc2x3Diff;
 
-    async fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         let mut next = base.clone();
         match self {
-            Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()).await,
+            Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()),
             Ifc2x3Mutation::SetSnapshot { snapshot } => {
                 crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
                 return protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot));
@@ -73,7 +73,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
         protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next))
     }
 
-    async fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Self> {
+    fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Self> {
         match self {
             Ifc2x3Mutation::NoMutation => vec![Ifc2x3Mutation::NoMutation],
             _ => vec![Ifc2x3Mutation::SetSnapshot { snapshot: base.clone() }],
@@ -114,7 +114,7 @@ async fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
     Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances: dec_instance_list(instances)? }, edm_preamble: dec_optional_edm_preamble(edm_preamble)? })
 }
 
-async fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
+fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
     match m {
         Ifc2x3Mutation::NoMutation => "no-mutation".to_string(),
         Ifc2x3Mutation::SetSnapshot { snapshot } => {
@@ -144,11 +144,11 @@ async fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
 }
 
 impl protocol::OpText for Ifc2x3Mutation {
-    async fn print_op(&self) -> String {
-        print_ifc2x3_mutation(self).await
+    fn print_op(&self) -> String {
+        print_ifc2x3_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc2x3_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_ifc2x3_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -173,15 +173,15 @@ async fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
+fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
     let schema = read_str_bin(reader)?;
     let header = dec_part21_header_bin(reader)?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut instances = Vec::with_capacity(count as usize);
     for _ in 0..count {
         instances.push(dec_part21_instance_bin(reader)?);
     }
-    let edm_preamble = match reader.read_u8().await.map_err(|e| e.to_string())? {
+    let edm_preamble = match reader.read_u8().map_err(|e| e.to_string())? {
         0 => None,
         1 => Some(dec_edm_preamble_bin(reader)?),
         tag => return Err(format!("ifc2x3 snapshot: invalid EDM preamble presence {tag}")),
@@ -198,7 +198,7 @@ async fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<I
 /// primitives) — the only place the recursion bottoms out through a fully spec-expressible
 /// per-variant tag (`enc_part21_value_bin`), never an opaque byte-chain fallback.
 impl protocol::OpBinary for Ifc2x3Mutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Ifc2x3Mutation::NoMutation => 0,
             Ifc2x3Mutation::SetSnapshot { .. } => 1,
@@ -209,26 +209,26 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             Ifc2x3Mutation::NoMutation => {}
-            Ifc2x3Mutation::SetSnapshot { snapshot } => enc_ifc2x3_snapshot_bin(snapshot, &mut out).await,
+            Ifc2x3Mutation::SetSnapshot { snapshot } => enc_ifc2x3_snapshot_bin(snapshot, &mut out),
             Ifc2x3Mutation::UpsertInstance { instance } => enc_part21_instance_bin(instance, &mut out),
-            Ifc2x3Mutation::RemoveInstance { id } => store::pack_rt::write_varint_u64(&mut out, *id).await,
+            Ifc2x3Mutation::RemoveInstance { id } => store::pack_rt::write_varint_u64(&mut out, *id),
             Ifc2x3Mutation::SetHeader { header } => enc_part21_header_bin(header, &mut out),
         }
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("op format", 0, format!("unsupported format {format}")));
         }
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
             0 => Ifc2x3Mutation::NoMutation,
             1 => {
-                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::SetSnapshot { snapshot }
             }
             2 => {
@@ -236,7 +236,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
                 Ifc2x3Mutation::UpsertInstance { instance }
             }
             3 => {
-                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 Ifc2x3Mutation::RemoveInstance { id }
             }
             4 => {
@@ -246,7 +246,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
             other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         };
         if reader.remaining() != 0 {
-            return Err(malformed("op trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining())));
+            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
         Ok(mutation)
     }
@@ -259,7 +259,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 /// the recursive `List`/`Typed` cases) and `UpsertInstance`'s bare `Part21Instance` payload (incl. a
 /// real COMPLEX 2-entity instance) are exercised at least once.
 #[cfg(test)]
-pub(crate) async async fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
+pub(crate) async fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
         Ifc2x3Mutation::NoMutation,
         Ifc2x3Mutation::SetSnapshot { snapshot: crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot() },

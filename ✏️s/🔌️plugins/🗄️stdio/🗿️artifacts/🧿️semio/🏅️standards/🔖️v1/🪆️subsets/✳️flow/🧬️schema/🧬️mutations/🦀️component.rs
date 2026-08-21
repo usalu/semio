@@ -116,7 +116,7 @@ fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Optio
 impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
     type Diff = SemioFlowDiff;
 
-    async fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioFlowMutation::NoMutation => SemioFlowDiff::default(),
             SemioFlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -134,7 +134,7 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
         })
     }
 
-    async fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
         match self {
             SemioFlowMutation::NoMutation => vec![SemioFlowMutation::NoMutation],
             SemioFlowMutation::SetSnapshot { .. } => vec![SemioFlowMutation::SetSnapshot { snapshot: base.clone() }],
@@ -245,10 +245,10 @@ fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
 }
 
 impl OpText for SemioFlowMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_flow_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_flow_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -293,13 +293,13 @@ fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 /// `print_flow_mutation`/`parse_flow_mutation` text codec rather than re-deriving a second
 /// independent encoding.
 impl OpBinary for SemioFlowMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_flow_mutation_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -311,7 +311,7 @@ impl OpBinary for SemioFlowMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

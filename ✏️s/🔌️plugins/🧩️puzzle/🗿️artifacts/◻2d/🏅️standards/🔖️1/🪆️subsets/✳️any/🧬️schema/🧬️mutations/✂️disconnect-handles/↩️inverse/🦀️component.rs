@@ -9,9 +9,20 @@ pub async fn inverse(payload: &super::mutation::DisconnectHandles, base: &Puzzle
         return Vec::new();
     };
     vec![crate::artifacts::puzzle2d::mutations::connect_handles::mutation::connect_handles(
-        edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(),
-        edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y,
-        edge.source_tip.clone(), edge.target_tip.clone(),
+        edge.id.clone(),
+        edge.source.clone(),
+        edge.target.clone(),
+        edge.edge_kind.clone(),
+        edge.gap,
+        edge.shift,
+        edge.rise,
+        edge.rotation,
+        edge.turn,
+        edge.tilt,
+        edge.x,
+        edge.y,
+        edge.source_tip.clone(),
+        edge.target_tip.clone(),
     )]
 }
 //#endregion 🔖️Inverse

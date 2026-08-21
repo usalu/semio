@@ -42,8 +42,8 @@ pub async fn apply(_payload: &DeleteSelection, _doc: &ArtifactView<'_, WorkflowS
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engine::space::testkit::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
     use crate::engine::space::commands::spawn_app;
+    use crate::engine::space::testkit::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
     use crate::engine::space::SpaceCommand;
     use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
     use serde_json::json;

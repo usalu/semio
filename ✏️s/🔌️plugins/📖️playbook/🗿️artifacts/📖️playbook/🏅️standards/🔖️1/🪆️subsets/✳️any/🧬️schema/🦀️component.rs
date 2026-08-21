@@ -37,44 +37,19 @@ pub struct PlaybookArtifact {
 impl Default for PlaybookArtifact {
     fn default() -> Self {
         let snapshot = crate::artifacts::playbook::PlaybookSnapshot::default();
-        Self {
-            schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
-            id: "playbook".into(),
-            version: "1".into(),
-            title: None,
-            document: snapshot.document,
-            flow: snapshot.flow,
-            selected_ids: Vec::new(),
-            locale: "en-US".into(),
-            contributions_json: "[]".into(),
-        }
+        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow, selected_ids: Vec::new(), locale: "en-US".into(), contributions_json: "[]".into() }
     }
 }
 
 impl PlaybookArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::playbook::PlaybookSnapshot {
-        crate::artifacts::playbook::PlaybookSnapshot {
-            schema: self.schema.clone(),
-            id: self.id.clone(),
-            version: self.version.clone(),
-            title: self.title.clone(),
-            document: self.document.clone(),
-            flow: self.flow.clone(),
-        }
+        crate::artifacts::playbook::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), document: self.document.clone(), flow: self.flow.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::playbook::PlaybookSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            id: snapshot.id,
-            version: snapshot.version,
-            title: snapshot.title,
-            document: snapshot.document,
-            flow: snapshot.flow,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -127,8 +102,8 @@ pub async fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDesc
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::playbook::{PlaybookDiff, PlaybookMutation, PlaybookSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct PlaybookBuilderConstruction {
@@ -140,8 +115,12 @@ pub mod derived_construction {
         type Snapshot = PlaybookSnapshot;
         type Mutation = PlaybookMutation;
         type Diff = PlaybookDiff;
-        async fn empty() -> Self { Self { snapshot: PlaybookSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: PlaybookSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -152,24 +131,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <PlaybookDiff as protocol::MutationDiff<PlaybookSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -178,8 +154,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::playbook::PlaybookSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct PlaybookParts {

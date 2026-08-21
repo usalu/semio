@@ -16,7 +16,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCamera {
-    pub camera: CameraJson}
+    pub camera: CameraJson,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for UpdateCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };

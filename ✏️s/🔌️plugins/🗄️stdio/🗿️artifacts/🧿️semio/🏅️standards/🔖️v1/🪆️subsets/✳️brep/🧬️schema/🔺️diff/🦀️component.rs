@@ -435,7 +435,7 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
-    async fn apply(&self, base: &SemioBrepSnapshot) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
+    fn apply(&self, base: &SemioBrepSnapshot) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.vertices {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |item| item.id.clone(), ["vertices"])?;
@@ -464,7 +464,7 @@ impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.vertices = match (self.vertices.take(), other.vertices) {
             (None, b) => b,
             (a, None) => a,
@@ -501,7 +501,7 @@ impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
-    async fn inverse(&self, base: &SemioBrepSnapshot) -> Self {
+    fn inverse(&self, base: &SemioBrepSnapshot) -> Self {
         Self {
             vertices: self.vertices.as_ref().map(|d| inverse_named(&base.vertices, d, |v: &BrepVertex| v.id.clone(), inverse_vertex)),
             edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e: &BrepEdge| e.id.clone(), inverse_edge)),
@@ -512,7 +512,7 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
         }
     }
 
-    async fn between(base: &SemioBrepSnapshot, other: &SemioBrepSnapshot) -> Self {
+    fn between(base: &SemioBrepSnapshot, other: &SemioBrepSnapshot) -> Self {
         Self {
             vertices: between_named(&base.vertices, &other.vertices, |v: &BrepVertex| v.id.clone(), between_vertex),
             edges: between_named(&base.edges, &other.edges, |e: &BrepEdge| e.id.clone(), between_edge),
@@ -523,7 +523,7 @@ impl DiffAlgebra<SemioBrepSnapshot> for SemioBrepDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.vertices.is_none() && self.edges.is_none() && self.loops.is_none() && self.faces.is_none() && self.shells.is_none() && self.solids.is_none()
     }
 }
@@ -964,10 +964,10 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioBrepDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_brep_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_brep_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -978,7 +978,7 @@ impl protocol::DiffCodec for SemioBrepDiff {
     /// delimited segments rather than one bare trailing `bytes` because there can be 0-6 of them
     /// (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second
     /// `if`-guard on a field that was itself only conditionally decoded hard-errors `eval_cond`).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.vertices.is_some() {
@@ -1020,7 +1020,7 @@ impl protocol::DiffCodec for SemioBrepDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

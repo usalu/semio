@@ -9,21 +9,21 @@
 //! this surface's own typed media I/O surface (below — constitutional: general, an artifact must never
 //! depend on a surface, so it lives here rather than under `🗿️artifacts`).
 
-use crate::editor::block3d::commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
-use crate::editor::block3d::commands::set_camera;
-use crate::editor::block3d::commands::{edit, set_active_example};
+use crate::artifacts::block3d::op::Block3dMutation;
+use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::editor::block3d::commands::patch_object_kind;
+use crate::editor::block3d::commands::set_camera;
 use crate::editor::block3d::commands::{add_representation, patch_representation, remove_representation};
 use crate::editor::block3d::commands::{add_vortex, remove_vortex};
 use crate::editor::block3d::commands::{add_vortex_kind, remove_vortex_kind};
+use crate::editor::block3d::commands::{edit, set_active_example};
+use crate::editor::block3d::commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
 use crate::editor::block3d::commands::{set_active_representation, set_active_utility, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use crate::editor::block3d::modes::edit as edit_mode;
 use crate::editor::block3d::modes::edit::windows::world;
 use crate::editor::block3d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block3d::terminology::block3d_labels;
-use crate::artifacts::block3d::op::Block3dMutation;
-use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::BlockCamera3d;
 use semio_framework_plugin::{
     ActionDescriptor, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft,
@@ -32,11 +32,11 @@ use semio_framework_plugin::{
 // 🚧️ SDK GAP: `Dialect`/`InteractionView` are still only reachable through the `app` submodule they're
 // declared in — not (yet) in `semio_framework_plugin`'s curated crate-root re-export list, unlike
 // `ArtifactEditor`/`Editor` above (closed by W0-F). Mirrors the sibling `👁️viewer`'s own gap note.
-use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
-use store::EngineHandles;
+use semio_framework_plugin::app::{Dialect, InteractionView};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 /// 👁️✏️ Plain string tag (NOT the authoring trait's `APP_ID` — that const is removed, contract §2.1) —
@@ -83,9 +83,7 @@ async fn f64_vec3_field(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
 }
 
 async fn window_id_from_args(args: Option<&Value>) -> String {
-    args.and_then(|value| value.get("windowId").or_else(|| value.get("pane")).or_else(|| value.get("surfaceId")))
-        .and_then(Value::as_str)
-        .map_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into(), str::to_string)
+    args.and_then(|value| value.get("windowId").or_else(|| value.get("pane")).or_else(|| value.get("surfaceId"))).and_then(Value::as_str).map_or_else(|| BLOCK3D_DEFAULT_WINDOW_ID.into(), str::to_string)
 }
 //#endregion 🔖️Constants
 
@@ -208,14 +206,8 @@ impl ArtifactEditor for Block3dPlayApp {
                 visible: args.and_then(|value| value.get("visible")).and_then(Value::as_bool).unwrap_or(true),
             })),
             "setWindowArrangement" => Ok(Block3dCommand::SetWindowArrangement(set_window_arrangement::SetWindowArrangement { window_id: window_id_from_args(args), arrangement: str_field("value").unwrap_or_else(|| "overlap".into()) })),
-            "setWindowSpacing" => Ok(Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing {
-                window_id: window_id_from_args(args),
-                spacing: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(8.0),
-            })),
-            "setActiveUtility" => Ok(Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility {
-                window_id: window_id_from_args(args),
-                utility_id: str_field("utilityId").unwrap_or_else(|| BLOCK3D_UTILITY_SELECT.into()),
-            })),
+            "setWindowSpacing" => Ok(Block3dCommand::SetWindowSpacing(set_window_spacing::SetWindowSpacing { window_id: window_id_from_args(args), spacing: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(8.0) })),
+            "setActiveUtility" => Ok(Block3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { window_id: window_id_from_args(args), utility_id: str_field("utilityId").unwrap_or_else(|| BLOCK3D_UTILITY_SELECT.into()) })),
             "setBrushVortexKind" => Ok(Block3dCommand::SetBrushVortexKind(set_brush_vortex_kind::SetBrushVortexKind { vortex_kind_id: str_field("value").or_else(|| str_field("vortexKindId")) })),
             "setBrushRadius" => Ok(Block3dCommand::SetBrushRadius(set_brush_radius::SetBrushRadius { radius: args.and_then(|value| value.get("value")).and_then(Value::as_f64).unwrap_or(0.3) })),
             "setBrushFlip" => Ok(Block3dCommand::SetBrushFlip(set_brush_flip::SetBrushFlip { flip: args.and_then(|value| value.get("flip")).and_then(Value::as_bool).unwrap_or(false) })),
@@ -232,7 +224,9 @@ impl ArtifactEditor for Block3dPlayApp {
                 position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
                 normal: f64_vec3_field(args, "normal").unwrap_or([0.0, 0.0, 1.0]),
             })),
-            "patchRepresentation" => Ok(Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() })),
+            "patchRepresentation" => {
+                Ok(Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() }))
+            }
             // 🩹️ Forward-fix, not a preserved behavior: pre-migration `command_from_action` had NO arm
             // for the manifest-declared `setCamera` view action at all (fell through to the reserved-
             // action error) — a real gap, the `Block3dCommand::SetCamera` variant was only reachable via
@@ -246,15 +240,18 @@ impl ArtifactEditor for Block3dPlayApp {
                     zoom: args.and_then(|value| value.get("zoom")).and_then(Value::as_f64).unwrap_or(1.0),
                 },
             })),
-            other => Err(Fault::new(
-                FaultOrigin::App,
-                FaultCode::new("block3d.unhandled-action"),
-                format!("action '{other}' is not a framework-reserved action — surface actions are dispatched exclusively through the typed command channel"),
-            )),
+            other => Err(Fault::new(FaultOrigin::App, FaultCode::new("block3d.unhandled-action"), format!("action '{other}' is not a framework-reserved action — surface actions are dispatched exclusively through the typed command channel"))),
         }
     }
 
-    async fn handle(command: &Block3dCommand, doc: &ArtifactView<'_, Block3dSnapshot>, cfg: &ConfigView<'_, Block3dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Block3dCommand,
+        doc: &ArtifactView<'_, Block3dSnapshot>,
+        cfg: &ConfigView<'_, Block3dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Block3dMutation, Block3dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -448,9 +445,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use testkit::{new_app, Block3dApp};
     use semio_framework_plugin::PluginApp;
-
+    use testkit::{new_app, Block3dApp};
 
     //#region 🔖️CommandSurface
     async fn every_command() -> Vec<Block3dCommand> {
@@ -643,9 +639,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_representation_writes_config_not_document() {
         let mut app: Block3dApp = new_app();
-        let result = app
-            .dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::testkit::meta("local"))
-            .expect("set active representation");
+        let result =
+            app.dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::testkit::meta("local")).expect("set active representation");
         assert!(result.mutations.is_empty(), "setActiveRepresentation is config-only and must emit no document operations");
     }
 
@@ -669,10 +664,7 @@ mod tests {
     async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
         let mut app: Block3dApp = new_app();
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
-        testkit::dispatch(
-            &mut app,
-            Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),
-        );
+        testkit::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }));
         let projection = app.snapshot().expect("snapshot");
         assert!(!crate::artifacts::block3d::vortex_kinds_of(&projection).is_empty());
         assert_eq!(projection.vortices.len(), 2);
@@ -680,7 +672,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_set_active_example() {
-        assert!(matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule"));
+        assert!(
+            matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
+        );
     }
     //#endregion 🔖️Behavior
 

@@ -71,11 +71,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn populated_snapshot_pack_and_dsl_round_trip() {
         let source = crate::artifacts::present::default_figure_tile_source();
-        let tiles = vec![crate::artifacts::present::FigureTileDraft {
-            id: "t1".into(),
-            name: "Tile One".into(),
-            crop: crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
-        }];
+        let tiles = vec![crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "Tile One".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
         let snap = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);
         let bytes = <PresentSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <PresentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

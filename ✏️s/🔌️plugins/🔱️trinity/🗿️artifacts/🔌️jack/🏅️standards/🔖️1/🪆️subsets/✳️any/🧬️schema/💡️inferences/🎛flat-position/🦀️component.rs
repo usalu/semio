@@ -114,8 +114,28 @@ mod tests {
             Manifest::nakagin_default(),
             Camera::default(),
             vec![
-                Node { id: "root".into(), kind: "Piece".into(), name: "core".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
-                Node { id: "child".into(), kind: "Piece".into(), name: "capsule".into(), x: 120.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }] },
+                Node {
+                    id: "root".into(),
+                    kind: "Piece".into(),
+                    name: "core".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out-a".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child".into(),
+                    kind: "Piece".into(),
+                    name: "capsule".into(),
+                    x: 120.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in-a".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
             ],
             vec![Edge {
                 id: "e1".into(),
@@ -151,14 +171,76 @@ mod tests {
             Manifest::nakagin_default(),
             Camera::default(),
             vec![
-                Node { id: "root-a".into(), kind: "Piece".into(), name: "a".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
-                Node { id: "child-a".into(), kind: "Piece".into(), name: "a-child".into(), x: 100.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }] },
-                Node { id: "root-b".into(), kind: "Piece".into(), name: "b".into(), x: 300.0, y: 200.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
-                Node { id: "child-b".into(), kind: "Piece".into(), name: "b-child".into(), x: 400.0, y: 200.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }] },
+                Node {
+                    id: "root-a".into(),
+                    kind: "Piece".into(),
+                    name: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child-a".into(),
+                    kind: "Piece".into(),
+                    name: "a-child".into(),
+                    x: 100.0,
+                    y: 0.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "root-b".into(),
+                    kind: "Piece".into(),
+                    name: "b".into(),
+                    x: 300.0,
+                    y: 200.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "child-b".into(),
+                    kind: "Piece".into(),
+                    name: "b-child".into(),
+                    x: 400.0,
+                    y: 200.0,
+                    width: 80.0,
+                    height: 40.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+                },
             ],
             vec![
-                Edge { id: "e-a".into(), kind: "Connection".into(), source: "root-a@out".into(), target: "child-a@in".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(2.0)); p.insert("v".into(), PropertyValue::Number(1.0)); p } },
-                Edge { id: "e-b".into(), kind: "Connection".into(), source: "root-b@out".into(), target: "child-b@in".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(3.0)); p.insert("v".into(), PropertyValue::Number(-1.0)); p } },
+                Edge {
+                    id: "e-a".into(),
+                    kind: "Connection".into(),
+                    source: "root-a@out".into(),
+                    target: "child-a@in".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(2.0));
+                        p.insert("v".into(), PropertyValue::Number(1.0));
+                        p
+                    },
+                },
+                Edge {
+                    id: "e-b".into(),
+                    kind: "Connection".into(),
+                    source: "root-b@out".into(),
+                    target: "child-b@in".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(3.0));
+                        p.insert("v".into(), PropertyValue::Number(-1.0));
+                        p
+                    },
+                },
             ],
             Some("root-a".into()),
         );
@@ -176,11 +258,42 @@ mod tests {
             Manifest::nakagin_default(),
             Camera::default(),
             vec![
-                Node { id: "a".into(), kind: "Piece".into(), name: "a".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
-                Node { id: "b".into(), kind: "Piece".into(), name: "b".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
+                Node {
+                    id: "a".into(),
+                    kind: "Piece".into(),
+                    name: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 10.0,
+                    height: 10.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "b".into(),
+                    kind: "Piece".into(),
+                    name: "b".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 10.0,
+                    height: 10.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
             ],
             vec![
-                Edge { id: "ab".into(), kind: "Connection".into(), source: "a@out".into(), target: "b@out".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(1.0)); p.insert("v".into(), PropertyValue::Number(0.0)); p } },
+                Edge {
+                    id: "ab".into(),
+                    kind: "Connection".into(),
+                    source: "a@out".into(),
+                    target: "b@out".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(1.0));
+                        p.insert("v".into(), PropertyValue::Number(0.0));
+                        p
+                    },
+                },
                 Edge { id: "ba".into(), kind: "Connection".into(), source: "b@out".into(), target: "a@out".into(), properties: PropertyBag::new() },
             ],
             Some("a".into()),

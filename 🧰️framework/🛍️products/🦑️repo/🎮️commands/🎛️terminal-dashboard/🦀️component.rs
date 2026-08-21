@@ -6,15 +6,12 @@ use ui_tui::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, Nav
 use ui_tui::tui::engine::Tui;
 use ui_tui::tui::event::{mods, Event, Key, KeyEvent};
 use ui_tui::tui::geometry::Size;
-use ui_tui::tui::layout::{
-    activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, zoom_window, WindowLayout,
-    WindowLayoutWindowNode,
-};
+use ui_tui::tui::layout::{activate_stack_tab, create_default_layout, push_window_to_stack, remove_window, split_window, zoom_window, WindowLayout, WindowLayoutWindowNode};
+use ui_tui::tui::layout::{Constraint, Dimension, Direction};
 use ui_tui::tui::pty::{Pty, PtySize};
 use ui_tui::tui::scene::{Node, NodeContent, NodeId};
 use ui_tui::tui::theme::Theme;
 use ui_tui::tui::widget::{TerminalState, WidgetSignal, WidgetState, WizardState};
-use ui_tui::tui::layout::{Constraint, Dimension, Direction};
 
 // #region 🔖️Session
 struct PtySession {
@@ -146,19 +143,9 @@ impl Dashboard {
             tui.scene.remove(*widget);
         }
         let inner = tui.scene.rect(win.chrome);
-        let term_size = Size {
-            width: inner.width.saturating_sub(4),
-            height: inner.height.saturating_sub(4),
-        };
-        let term_id = tui.scene.add(
-            win.chrome,
-            Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(term_size, 8000)))),
-        );
-        tui.scene.node_mut(term_id).set_constraint(Constraint {
-            width: Dimension::Weight(1),
-            height: Dimension::Weight(1),
-            ..Default::default()
-        });
+        let term_size = Size { width: inner.width.saturating_sub(4), height: inner.height.saturating_sub(4) };
+        let term_id = tui.scene.add(win.chrome, Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(term_size, 8000)))));
+        tui.scene.node_mut(term_id).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
         let args: Vec<&str> = spec.args.iter().map(String::as_str).collect();
         let env_refs: Vec<(&str, &str)> = spec.env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
         let pty_size = PtySize { cols: term_size.width.max(1), rows: term_size.height.max(1) };
@@ -203,31 +190,13 @@ impl Dashboard {
         let node = current_node(&self.tree, &[]);
         let options: Vec<String> = node.children.iter().map(|c| c.label.clone()).collect();
         let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(options)))));
-        tui.scene.node_mut(widget).set_constraint(Constraint {
-            width: Dimension::Weight(1),
-            height: Dimension::Weight(1),
-            ..Default::default()
-        });
-        DashboardWindow {
-            id: id.to_string(),
-            chrome,
-            body: WindowBody::Wizard { widget, cursor: Vec::new() },
-            focus: widget,
-        }
+        tui.scene.node_mut(widget).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
+        DashboardWindow { id: id.to_string(), chrome, body: WindowBody::Wizard { widget, cursor: Vec::new() }, focus: widget }
     }
 
     fn add_wizard_window(&mut self, tui: &mut Tui, id: String, title: &str) -> DashboardWindow {
-        let chrome = tui.scene.add(
-            self.shell.canvas,
-            Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(title).with_stack_tabs(vec![id.clone()], 0)))),
-        );
-        tui.scene.node_mut(chrome).set_constraint(Constraint {
-            width: Dimension::Weight(1),
-            direction: Direction::Column,
-            padding: [2, 1, 1, 1],
-            gap: 1,
-            ..Default::default()
-        });
+        let chrome = tui.scene.add(self.shell.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(title).with_stack_tabs(vec![id.clone()], 0)))));
+        tui.scene.node_mut(chrome).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
         self.attach_wizard(tui, chrome, &id)
     }
 
@@ -330,24 +299,11 @@ impl Dashboard {
     fn footer_hints(&self) -> Vec<KeyHint> {
         let output = self.focused_window().map(|w| matches!(w.body, WindowBody::Output { .. })).unwrap_or(false);
         if output && self.terminal_input {
-            vec![
-                KeyHint { key: "Esc".into(), label: "pane".into() },
-                KeyHint { key: "C-Space".into(), label: "leader".into() },
-                KeyHint { key: "q".into(), label: "quit".into() },
-            ]
+            vec![KeyHint { key: "Esc".into(), label: "pane".into() }, KeyHint { key: "C-Space".into(), label: "leader".into() }, KeyHint { key: "q".into(), label: "quit".into() }]
         } else if output {
-            vec![
-                KeyHint { key: "C-Space t".into(), label: "term".into() },
-                KeyHint { key: "C-w".into(), label: "close".into() },
-                KeyHint { key: "q".into(), label: "quit".into() },
-            ]
+            vec![KeyHint { key: "C-Space t".into(), label: "term".into() }, KeyHint { key: "C-w".into(), label: "close".into() }, KeyHint { key: "q".into(), label: "quit".into() }]
         } else {
-            vec![
-                KeyHint { key: "jk/arrows".into(), label: "move".into() },
-                KeyHint { key: "\u{21b5}".into(), label: "select".into() },
-                KeyHint { key: "Tab".into(), label: "window".into() },
-                KeyHint { key: "q".into(), label: "quit".into() },
-            ]
+            vec![KeyHint { key: "jk/arrows".into(), label: "move".into() }, KeyHint { key: "\u{21b5}".into(), label: "select".into() }, KeyHint { key: "Tab".into(), label: "window".into() }, KeyHint { key: "q".into(), label: "quit".into() }]
         }
     }
 
@@ -403,25 +359,12 @@ pub fn run(root: &Path) -> i32 {
     let size = term.size().unwrap_or(Size { width: 100, height: 32 });
     let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
 
-    let navbar = NavbarState {
-        left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }],
-        center: vec![NavItem { id: "mode".into(), label: "dashboard".into(), active: false }],
-        right: vec![],
-    };
+    let navbar = NavbarState { left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }], center: vec![NavItem { id: "mode".into(), label: "dashboard".into(), active: false }], right: vec![] };
     let footer = FooterState { hints: vec![], status: "wizard".into() };
     let layout = create_default_layout(&["w1".into()], "row", None, Some(&["wizard".into()]));
     let shell = shell(&mut tui.scene, navbar, footer, &layout);
 
-    let mut dash = Dashboard {
-        tree,
-        layout,
-        shell,
-        windows: Vec::new(),
-        next_serial: 2,
-        focused: "w1".into(),
-        leader: LeaderMode::Idle,
-        terminal_input: false,
-    };
+    let mut dash = Dashboard { tree, layout, shell, windows: Vec::new(), next_serial: 2, focused: "w1".into(), leader: LeaderMode::Idle, terminal_input: false };
     let (w1_id, w1_chrome) = dash.shell.windows[0].clone();
     let w1 = dash.attach_wizard(&mut tui, w1_chrome, &w1_id);
     dash.windows.push(w1);
@@ -465,11 +408,7 @@ pub fn run(root: &Path) -> i32 {
                                 WidgetSignal::WindowNewTab => {
                                     let new_id = format!("w{}", dash.next_serial);
                                     dash.next_serial += 1;
-                                    push_window_to_stack(
-                                        &mut dash.layout,
-                                        &win_id,
-                                        WindowLayoutWindowNode { window_kind_id: new_id.clone(), title: Some("wizard".into()), corner: None },
-                                    );
+                                    push_window_to_stack(&mut dash.layout, &win_id, WindowLayoutWindowNode { window_kind_id: new_id.clone(), title: Some("wizard".into()), corner: None });
                                     let w = dash.add_wizard_window(&mut tui, new_id.clone(), "wizard");
                                     dash.windows.push(w);
                                     dash.focused = new_id;
@@ -544,13 +483,7 @@ pub fn run(root: &Path) -> i32 {
                                 true
                             }
                             Key::Char('t') => {
-                                let toggle = dash.focused_window().and_then(|w| {
-                                    if matches!(w.body, WindowBody::Output { .. }) {
-                                        Some(w.focus)
-                                    } else {
-                                        None
-                                    }
-                                });
+                                let toggle = dash.focused_window().and_then(|w| if matches!(w.body, WindowBody::Output { .. }) { Some(w.focus) } else { None });
                                 if let Some(focus) = toggle {
                                     dash.terminal_input = !dash.terminal_input;
                                     if dash.terminal_input {
@@ -563,11 +496,7 @@ pub fn run(root: &Path) -> i32 {
                             Key::Char('n') => {
                                 let new_id = format!("w{}", dash.next_serial);
                                 dash.next_serial += 1;
-                                push_window_to_stack(
-                                    &mut dash.layout,
-                                    &dash.focused,
-                                    WindowLayoutWindowNode { window_kind_id: new_id.clone(), title: Some("wizard".into()), corner: None },
-                                );
+                                push_window_to_stack(&mut dash.layout, &dash.focused, WindowLayoutWindowNode { window_kind_id: new_id.clone(), title: Some("wizard".into()), corner: None });
                                 let w = dash.add_wizard_window(&mut tui, new_id.clone(), "wizard");
                                 dash.windows.push(w);
                                 dash.focused = new_id;
@@ -607,11 +536,7 @@ pub fn run(root: &Path) -> i32 {
                     if k.key == Key::Tab || k.key == Key::BackTab {
                         let order = dash.window_order();
                         let idx = order.iter().position(|w| *w == dash.focused).unwrap_or(0);
-                        let next = if k.key == Key::Tab {
-                            (idx + 1) % order.len()
-                        } else {
-                            (idx + order.len() - 1) % order.len()
-                        };
+                        let next = if k.key == Key::Tab { (idx + 1) % order.len() } else { (idx + order.len() - 1) % order.len() };
                         dash.focused = order[next].clone();
                         if let Some(w) = dash.windows.iter().find(|w| w.id == dash.focused) {
                             dash.terminal_input = matches!(w.body, WindowBody::Output { .. });

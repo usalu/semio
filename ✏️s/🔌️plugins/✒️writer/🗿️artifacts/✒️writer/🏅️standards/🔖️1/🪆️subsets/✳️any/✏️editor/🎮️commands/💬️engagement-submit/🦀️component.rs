@@ -1,9 +1,9 @@
 //! 💬️ 💬️ Writer play app commands command — `engagement-submit`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::artifacts::writer::op::{EditText, WriterMutation};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
-use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️EngagementInput
@@ -84,7 +84,7 @@ pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, WriterSna
 #[cfg(test)]
 mod tests {
     use super::EngagementSubmit;
-        use crate::editor::writer::testkit::new_app;
+    use crate::editor::writer::testkit::new_app;
     use crate::editor::writer::{WriterCommand, WRITER_PLAY_WINDOW_KIND};
     use semio_framework_plugin::{PluginApp, WindowMeasure};
 

@@ -12,9 +12,5 @@ use semio_framework_plugin::StandardId;
 /// shortfall as `🎬️sequence`'s own standard root, see `📓️w4-reasoning-report.md` `## openQuestions`).
 /// `extensions: ["wires"]` is the real, carried-over value.
 pub async fn standard() -> StandardDeclaration {
-    StandardDeclaration {
-        id: StandardId("1"),
-        media: MediaDeclaration { mimes: &["application/vnd.semio.wires+json"], extensions: &["wires"] },
-        subsets: vec![subsets::any::subset()],
-    }
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.wires+json"], extensions: &["wires"] }, subsets: vec![subsets::any::subset()] }
 }

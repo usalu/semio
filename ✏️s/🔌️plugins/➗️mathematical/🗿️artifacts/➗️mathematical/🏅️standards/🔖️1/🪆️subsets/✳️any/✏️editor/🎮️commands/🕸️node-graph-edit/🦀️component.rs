@@ -1,10 +1,10 @@
 //! 🕸️ 🕸️ Mathematical play app commands command — `node-graph-edit`.
 
-use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalNode, MathematicalSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🎨️ `nodeGraphActions.edit` (`"nodeGraphEdit"`) is the shared renderer-wide action id the generic

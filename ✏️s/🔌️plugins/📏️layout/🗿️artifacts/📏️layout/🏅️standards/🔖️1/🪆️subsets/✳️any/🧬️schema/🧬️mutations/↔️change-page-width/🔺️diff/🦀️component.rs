@@ -13,10 +13,7 @@ pub async fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnap
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has width {}.", payload.id, payload.new_width));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { width: Some(payload.new_width), ..Default::default() } }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { width: Some(payload.new_width), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

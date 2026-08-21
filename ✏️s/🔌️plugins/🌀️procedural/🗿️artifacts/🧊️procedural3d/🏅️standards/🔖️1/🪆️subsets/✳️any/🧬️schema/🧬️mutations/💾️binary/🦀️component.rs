@@ -1,28 +1,28 @@
 //! ⚖️ Procedural3d artifact — state-patch-representation wire codec + laws (was: constitutional
 //! `protocol`; no `📡️protocol` path segment may survive under plugins).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 use crate::artifacts::procedural3d::dsl::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl};
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
+    WidgetLayoutDsl,
+};
 use crate::artifacts::procedural3d::mutations::change_generation_value::mutation::ChangeGenerationValue;
+use crate::artifacts::procedural3d::mutations::change_schema::mutation::ChangeSchema;
 use crate::artifacts::procedural3d::mutations::connect_synapse::mutation::ConnectSynapse;
 use crate::artifacts::procedural3d::mutations::create_generation::mutation::CreateGeneration;
 use crate::artifacts::procedural3d::mutations::create_widget::mutation::CreateWidget;
 use crate::artifacts::procedural3d::mutations::delete_generation::mutation::DeleteGeneration;
+use crate::artifacts::procedural3d::mutations::delete_widget::mutation::DeleteWidget;
 use crate::artifacts::procedural3d::mutations::delete_widget_position::mutation::DeleteWidgetPosition;
 use crate::artifacts::procedural3d::mutations::disconnect_synapse::mutation::DisconnectSynapse;
-use crate::artifacts::procedural3d::mutations::delete_widget::mutation::DeleteWidget;
+use crate::artifacts::procedural3d::mutations::move_widget::mutation::MoveWidget;
 use crate::artifacts::procedural3d::mutations::rename_generation::mutation::RenameGeneration;
 use crate::artifacts::procedural3d::mutations::update_camera::mutation::UpdateCamera;
-use crate::artifacts::procedural3d::mutations::move_widget::mutation::MoveWidget;
-use crate::artifacts::procedural3d::mutations::change_schema::mutation::ChangeSchema;
 use crate::artifacts::procedural3d::mutations::update_synapse::mutation::UpdateSynapse;
 use crate::artifacts::procedural3d::mutations::update_widget::mutation::UpdateWidget;
 use crate::artifacts::procedural3d::schema::mutations::text::Procedural3dMutation;
@@ -34,44 +34,59 @@ enum Procedural3dOperationDsl {
     CreateWidget {
         index: usize,
         #[dsl(statements)]
-        widget: Box<WidgetDsl>},
+        widget: Box<WidgetDsl>,
+    },
     UpdateWidget {
         #[dsl(statements)]
-        widget: Box<WidgetDsl>},
+        widget: Box<WidgetDsl>,
+    },
     DeleteWidget {
-        id: String},
+        id: String,
+    },
     ConnectSynapse {
         index: usize,
         #[dsl(block)]
-        synapse: SynapseSpecDsl},
+        synapse: SynapseSpecDsl,
+    },
     UpdateSynapse {
         #[dsl(block)]
-        synapse: SynapseSpecDsl},
+        synapse: SynapseSpecDsl,
+    },
     DisconnectSynapse {
-        id: String},
+        id: String,
+    },
     MoveWidget {
         id: String,
         #[dsl(block)]
-        layout: WidgetLayoutDsl},
+        layout: WidgetLayoutDsl,
+    },
     DeleteWidgetPosition {
-        id: String},
+        id: String,
+    },
     UpdateCamera {
         #[dsl(block)]
-        camera: CameraJsonDsl},
+        camera: CameraJsonDsl,
+    },
     ChangeSchema {
-        new_schema: String},
+        new_schema: String,
+    },
     CreateGeneration {
         #[dsl(block)]
-        generation: FormGenerationDsl},
+        generation: FormGenerationDsl,
+    },
     DeleteGeneration {
-        id: String},
+        id: String,
+    },
     RenameGeneration {
         id: String,
-        new_name: String},
+        new_name: String,
+    },
     ChangeGenerationValue {
         id: String,
         question_id: String,
-        new_value: dsl::DslValue}}
+        new_value: dsl::DslValue,
+    },
+}
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Procedural3dOperationDsl {
@@ -80,11 +95,7 @@ impl protocol::OpText for Procedural3dOperationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -107,9 +118,6 @@ impl OpBinary for Procedural3dOperationDsl {
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
-
-
-
 
 async fn procedural3d_operation_to_dsl(operation: &Procedural3dMutation) -> Procedural3dOperationDsl {
     match operation {
@@ -147,7 +155,10 @@ async fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) ->
         Procedural3dOperationDsl::CreateGeneration { generation } => Procedural3dMutation::CreateGeneration(CreateGeneration { generation: form_generation_from_dsl(generation) }),
         Procedural3dOperationDsl::DeleteGeneration { id } => Procedural3dMutation::DeleteGeneration(DeleteGeneration { id }),
         Procedural3dOperationDsl::RenameGeneration { id, new_name } => Procedural3dMutation::RenameGeneration(RenameGeneration { id, new_name }),
-        Procedural3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value: dsl::from_dsl_value(new_value).unwrap_or(serde_json::Value::Null) })})
+        Procedural3dOperationDsl::ChangeGenerationValue { id, question_id, new_value } => {
+            Procedural3dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, new_value: dsl::from_dsl_value(new_value).unwrap_or(serde_json::Value::Null) })
+        }
+    })
 }
 
 /// ⚡️ `Procedural3dMutation`'s compact single-line op encoding — derive-engine grammar via
@@ -171,10 +182,7 @@ impl OpBinary for Procedural3dMutation {
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let parsed = Procedural3dOperationDsl::decode_op(bytes)?;
-        procedural3d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "procedural3d mutation",
-            offset: 0,
-            detail: error.to_string()})
+        procedural3d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed { what: "procedural3d mutation", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpTextMirror
@@ -210,7 +218,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_connect_synapse() {
-        test_support::assert_op_line_round_trip(&Procedural3dMutation::ConnectSynapse(ConnectSynapse { index: 1, synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() } }));
+        test_support::assert_op_line_round_trip(&Procedural3dMutation::ConnectSynapse(ConnectSynapse {
+            index: 1,
+            synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() },
+        }));
     }
 
     #[semio_framework_async_macros::async_test]

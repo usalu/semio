@@ -5,15 +5,14 @@
 //! reverse structural converter and stdio's own real `parse_json_text` for `deserialize_bytes`.
 use crate::artifacts::remodel::RemodelSnapshot;
 use crate::artifacts::remodel::REMODEL_DOCUMENT_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
 pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<RemodelSnapshot, store::TextError> {
     let _ = REMODEL_DOCUMENT_SCHEMA;
-    let mut out: RemodelSnapshot = serde_json::from_value(from.to_serde_value())
-        .map_err(|e| store::TextError::new(format!("remodel<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: RemodelSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("remodel<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = REMODEL_DOCUMENT_SCHEMA.into();
     }

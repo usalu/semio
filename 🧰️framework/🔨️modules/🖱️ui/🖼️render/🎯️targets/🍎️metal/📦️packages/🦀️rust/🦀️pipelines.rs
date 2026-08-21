@@ -23,8 +23,8 @@ use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2_foundation::ns_string;
 use objc2_metal::{
-    MTLBlendFactor, MTLBlendOperation, MTLCompareFunction, MTLDevice, MTLLibrary, MTLPixelFormat, MTLRenderPipelineDescriptor, MTLRenderPipelineState, MTLSamplerAddressMode, MTLSamplerDescriptor, MTLSamplerMinMagFilter, MTLSamplerMipFilter,
-    MTLSamplerState, MTLStencilDescriptor, MTLStencilOperation, MTLVertexDescriptor, MTLVertexFormat, MTLVertexStepFunction, MTLColorWriteMask, MTLDepthStencilDescriptor, MTLDepthStencilState,
+    MTLBlendFactor, MTLBlendOperation, MTLColorWriteMask, MTLCompareFunction, MTLDepthStencilDescriptor, MTLDepthStencilState, MTLDevice, MTLLibrary, MTLPixelFormat, MTLRenderPipelineDescriptor, MTLRenderPipelineState, MTLSamplerAddressMode,
+    MTLSamplerDescriptor, MTLSamplerMinMagFilter, MTLSamplerMipFilter, MTLSamplerState, MTLStencilDescriptor, MTLStencilOperation, MTLVertexDescriptor, MTLVertexFormat, MTLVertexStepFunction,
 };
 use ui_render::{GlassInstance, QuadInstance, VectorVertex};
 

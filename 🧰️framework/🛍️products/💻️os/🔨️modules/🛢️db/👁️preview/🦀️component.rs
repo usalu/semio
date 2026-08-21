@@ -27,10 +27,10 @@
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use crate::*;
 use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, ActorId, DbError, DbLimits, ArtifactId};
+use crate::db_ids::{check_len, ActorId, ArtifactId, DbError, DbLimits};
 use crate::db_state::TouchedSet;
+use crate::*;
 use protocol::MutationEnvelope;
 use std::collections::HashMap;
 

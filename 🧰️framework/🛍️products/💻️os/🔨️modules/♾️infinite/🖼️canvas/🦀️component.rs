@@ -391,39 +391,39 @@ pub mod svg_icon {
     }
 
     fn to_bez_path(path: &usvg::Path) -> BezPath {
-        let mut local_path = BezPath::new().await;
+        let mut local_path = BezPath::new();
         let mut just_closed = false;
         let mut most_recent_initial = (0_f64, 0_f64);
         for elt in path.data().segments() {
             match elt {
                 usvg::tiny_skia_path::PathSegment::MoveTo(p) => {
                     if std::mem::take(&mut just_closed) {
-                        local_path.await.move_to(most_recent_initial);
+                        local_path.move_to(most_recent_initial);
                     }
                     most_recent_initial = (p.x.into(), p.y.into());
-                    local_path.await.move_to(most_recent_initial);
+                    local_path.move_to(most_recent_initial);
                 }
                 usvg::tiny_skia_path::PathSegment::LineTo(p) => {
                     if std::mem::take(&mut just_closed) {
-                        local_path.await.move_to(most_recent_initial);
+                        local_path.move_to(most_recent_initial);
                     }
-                    local_path.await.line_to(Point::new(p.x as f64, p.y as f64));
+                    local_path.line_to(Point::new(p.x as f64, p.y as f64));
                 }
                 usvg::tiny_skia_path::PathSegment::QuadTo(p1, p2) => {
                     if std::mem::take(&mut just_closed) {
-                        local_path.await.move_to(most_recent_initial);
+                        local_path.move_to(most_recent_initial);
                     }
-                    local_path.await.quad_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64));
+                    local_path.quad_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64));
                 }
                 usvg::tiny_skia_path::PathSegment::CubicTo(p1, p2, p3) => {
                     if std::mem::take(&mut just_closed) {
-                        local_path.await.move_to(most_recent_initial);
+                        local_path.move_to(most_recent_initial);
                     }
-                    local_path.await.curve_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64), Point::new(p3.x as f64, p3.y as f64));
+                    local_path.curve_to(Point::new(p1.x as f64, p1.y as f64), Point::new(p2.x as f64, p2.y as f64), Point::new(p3.x as f64, p3.y as f64));
                 }
                 usvg::tiny_skia_path::PathSegment::Close => {
                     just_closed = true;
-                    local_path.await.close_path();
+                    local_path.close_path();
                 }
             }
         }
@@ -875,7 +875,7 @@ pub mod text {
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).await.scale(scale);
+        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 
@@ -922,7 +922,7 @@ pub mod text {
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).await.scale(scale);
+        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 }
@@ -995,7 +995,7 @@ pub mod camera {
     pub fn wheel_screen(camera: &mut Camera, viewport: &Viewport, sx: f64, sy: f64, delta_y: f64) {
         let zoom_factor = if delta_y < 0.0 { ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR } else { ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR };
         let next_zoom = clamp_zoom(camera.zoom * zoom_factor);
-        let screen = Point::new(sx, sy).await;
+        let screen = Point::new(sx, sy);
         let world_before = screen_to_world(camera, viewport, screen);
         camera.x = world_before.x - (sx - viewport.width as f64 / 2.0) / next_zoom;
         camera.y = world_before.y - (sy - viewport.height as f64 / 2.0) / next_zoom;

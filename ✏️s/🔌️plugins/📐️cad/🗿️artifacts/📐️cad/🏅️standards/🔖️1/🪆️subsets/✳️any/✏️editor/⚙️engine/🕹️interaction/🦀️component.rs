@@ -5,8 +5,8 @@
 //! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
 //! identical to the pre-engine behavior.
 
-use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
+use crate::artifacts::cad::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
 use serde::{Deserialize, Serialize};
@@ -106,13 +106,31 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructHull.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructRoof.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🎬️interactions/🔣️constructWindows.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json")),
+    (
+        "aec.building.structure.classic",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructOneWayReinforcedConcreteSlab.json"),
+    ),
+    (
+        "aec.building.structure.classic",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteColumn.json"),
+    ),
+    (
+        "aec.building.structure.classic",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteExternalWall.json"),
+    ),
+    (
+        "aec.building.structure.classic",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure.classic/🎬️interactions/🔣️constructReinforcedConcreteInternalWall.json"),
+    ),
     ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️interactions/🔣️constructLineElement.json")),
-    ("aec.building.structure.fem.solid", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️interactions/🔣️constructSolidElement.json")),
-    ("aec.building.structure.fem.surface", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️interactions/🔣️constructSurfaceElement.json")),
+    (
+        "aec.building.structure.fem.solid",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️interactions/🔣️constructSolidElement.json"),
+    ),
+    (
+        "aec.building.structure.fem.surface",
+        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️interactions/🔣️constructSurfaceElement.json"),
+    ),
 ];
 
 const LEGACY_BUILDING_INTERACTION_IDS: &[&str] = &["building.building.constructWall", "building.building.constructBeam", "building.building.constructColumn", "building.building.constructSlab"];

@@ -22,9 +22,6 @@ async fn inference_default_law() {
     use crate::artifacts::block5d::Block5dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(
-        crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&Block5dSnapshot::default()),
-        crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::default()
-    );
+    assert_eq!(crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&Block5dSnapshot::default()), crate::artifacts::block5d::standards::v1::subsets::any::schema::inferences::Block5dInference::default());
 }
 //#endregion 🧪️InferenceLaws

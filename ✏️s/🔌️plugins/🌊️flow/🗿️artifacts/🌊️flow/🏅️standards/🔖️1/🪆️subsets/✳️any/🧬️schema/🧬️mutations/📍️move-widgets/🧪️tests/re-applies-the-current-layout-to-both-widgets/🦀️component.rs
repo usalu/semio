@@ -167,15 +167,7 @@ async fn the_plural_guard_needs_every_entry_to_already_match() {
         assert_eq!(scene.layout.get(&entry.id), entry.layout.as_ref(), "every entry's requested layout must already equal the scene's — that is the whole guard");
     }
     assert_eq!(scene.widgets.len(), 2, "both addressed widgets must exist, or a target-missing Error would fire first");
-    assert_eq!(
-        <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::target(&mutation()),
-        vec!["note-alpha".to_string(), "note-beta".to_string()],
-        "move-widgets addresses a LIST of ids — the plural target every other flow verb reduces to one"
-    );
+    assert_eq!(<FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::target(&mutation()), vec!["note-alpha".to_string(), "note-beta".to_string()], "move-widgets addresses a LIST of ids — the plural target every other flow verb reduces to one");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("move", "widgets", "move-widgets", "MovedWidgets"),
-        "the fixture must be bound to move-widgets' own descriptor — the one entity in this vocabulary spelled PLURAL"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("move", "widgets", "move-widgets", "MovedWidgets"), "the fixture must be bound to move-widgets' own descriptor — the one entity in this vocabulary spelled PLURAL");
 }

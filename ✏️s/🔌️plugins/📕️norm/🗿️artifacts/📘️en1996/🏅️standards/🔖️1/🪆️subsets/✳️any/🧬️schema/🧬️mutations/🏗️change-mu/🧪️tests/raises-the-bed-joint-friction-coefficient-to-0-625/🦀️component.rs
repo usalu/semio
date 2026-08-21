@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 0.625 differs from the committed 0.5, so the `mutation.no-op` warning guard stays shut too");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 0.625 differs from the committed 0.5, so the `mutation.no-op` warning guard stays shut too"
+    );
     assert!(produced.messages().is_empty(), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: an accepted change-mu emits no diagnostics at all");
 }
 

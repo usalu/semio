@@ -3,7 +3,10 @@
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[allow(clippy::approx_constant, reason = "3.14159 is verbatim fixture data (a handle angle in a scene JSON literal), carried over unchanged from the pre-consolidation engine crate; swapping in std::f64::consts::PI would alter the recorded test input.")]
+#[allow(
+    clippy::approx_constant,
+    reason = "3.14159 is verbatim fixture data (a handle angle in a scene JSON literal), carried over unchanged from the pre-consolidation engine crate; swapping in std::f64::consts::PI would alter the recorded test input."
+)]
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
@@ -482,11 +485,8 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
-        
-        let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
-        )
-        .unwrap();
+
+        let fixture: serde_json::Value = serde_json::to_value(<crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
@@ -566,22 +566,20 @@ mod tests {
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        
-        let fixture: serde_json::Value = serde_json::to_value(
-            <crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap(),
-        )
-        .unwrap();
+
+        let fixture: serde_json::Value = serde_json::to_value(<crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
-        let catalogs_str = fixture
-            .get("meta")
-            .and_then(|m| m.get("kindCatalogs")).map_or_else(|| "{}".to_string(), |kc| {
+        let catalogs_str = fixture.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
+            || "{}".to_string(),
+            |kc| {
                 serde_json::json!({
                     "handleKinds": kc.get("handles"),
                     "nodeKinds": kc.get("nodes"),
                 })
                 .to_string()
-            });
+            },
+        );
         h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
         let desc = SceneDescriptorJson {
             nodes: vec![NodeDescJson {

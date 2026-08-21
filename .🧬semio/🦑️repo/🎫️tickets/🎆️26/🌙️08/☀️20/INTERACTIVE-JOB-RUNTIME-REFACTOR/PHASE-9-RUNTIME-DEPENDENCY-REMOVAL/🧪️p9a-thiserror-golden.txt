@@ -1,0 +1,12 @@
+PackError::Truncated(7, "header")	pack: truncated at offset 7 reading header	source=None
+PackError::InvalidTag { what: "Lane", tag: 9, offset: 12 }	pack: invalid tag 9 for Lane at offset 12	source=None
+PackError::InvalidUtf8("PackageId", 23)	pack: invalid utf8 in PackageId at offset 23	source=None
+PackError::OverlongVarint(31)	pack: overlong varint at offset 31	source=None
+JobPublicationError::OperationMismatch { active: 5, published: 8 }	job bridge operation mismatch: active=5, published=8	source=None
+JobPublicationError::Stale { live_revision: 13, live_generation: 21 }	job bridge stale revision/generation: live revision=13, generation=21	source=None
+JobPublicationError::StepSequence { expected: 34, published: 55 }	job bridge step sequence mismatch: expected=34, published=55	source=None
+JobPublicationError::PreviewSequence { before: 89, after: 144 }	job bridge preview cursor mismatch: before=89, after=144	source=None
+JobPublicationError::Terminal	job bridge received a turn after a terminal publication	source=None
+KernelError::UnknownActor	unknown actor	source=None
+KernelError::NoExclusiveShard	no exclusive shard available	source=None
+KernelError::InvalidTransition	invalid status transition	source=None

@@ -66,11 +66,7 @@ async fn declared_applied_outcome_reports_one_cascaded_observation() {
     let codes: Vec<&str> = produced.messages().iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.cascade"], "a GCP carrying observations reports exactly one cascade note");
     assert_eq!(produced.messages()[0].level, protocol::Severity::Info, "the cascade note is informational");
-    assert!(
-        produced.messages()[0].message.contains("1 observation(s)"),
-        "the cascade note counts the observations that went with the record, got {:?}",
-        produced.messages()[0].message
-    );
+    assert!(produced.messages()[0].message.contains("1 observation(s)"), "the cascade note counts the observations that went with the record, got {:?}", produced.messages()[0].message);
     assert!(produced.diff().gcps.is_some() && produced.diff().streams.is_none(), "delete-gcp writes gcps alone");
 }
 

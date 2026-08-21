@@ -1,9 +1,9 @@
 //! 👁️ Procedural2d play app — the generation output-preview window (generate mode).
 
+use crate::artifacts::procedural2d::schema::generation_preview_layers;
 use crate::editor::procedural2d::config::Procedural2dConfig;
 use crate::editor::procedural2d::terminology::Procedural2dLabels;
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use crate::artifacts::procedural2d::schema::generation_preview_layers;
 use flow::playbook::render_generation_preview_text;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
@@ -29,7 +29,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

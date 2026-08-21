@@ -4,9 +4,9 @@
 // `🔁️workflow` and architecturally can't — see that crate's glue.rs comment); `🔁️workflow` is
 // mounted in `semio-framework` (the full framework crate, already a direct dependency below) instead.
 extern crate semio_framework as workflow;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 #[path = "../../🦀️component.rs"]
 mod run_lib;
 pub use run_lib::*;

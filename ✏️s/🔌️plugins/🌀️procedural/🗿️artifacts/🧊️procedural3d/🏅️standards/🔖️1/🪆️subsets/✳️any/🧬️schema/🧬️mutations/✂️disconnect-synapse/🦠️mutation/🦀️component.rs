@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisconnectSynapse {
-    pub id: String}
+    pub id: String,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DisconnectSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-synapse", record: "DisconnectedSynapse" };

@@ -270,7 +270,6 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-
 // #region 🔖️Manifest
 /// 📦️ Flow extension manifest JSON contributed to host catalogues.
 pub fn extension_manifest_json() -> String {
@@ -440,9 +439,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-            })?;
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
         }))
     }
@@ -450,4 +447,3 @@ mod extension_guest {
     semio_framework_plugin::extension_exports!(bundle);
 }
 // #endregion 🔖️ExtensionGuest
-

@@ -10,25 +10,40 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dArtifact {
-    #[state(artifact)] pub nodes: Vec<FemNode>,
-    #[state(artifact)] pub elements: Vec<FemElement>,
-    #[state(artifact)] pub regions: Vec<FemRegion>,
-    #[state(artifact)] pub materials: Vec<FemMaterial>,
-    #[state(artifact)] pub sections: Vec<FemSection>,
-    #[state(artifact)] pub supports: Vec<FemSupport>,
-    #[state(artifact)] pub load_cases: Vec<FemLoadCase>,
-    #[state(artifact)] pub combinations: Vec<FemCombination>,
-    #[state(artifact)] pub analysis: FemAnalysisSettings,
-    #[state(presence)] pub result_source_id: Option<String>,
-    #[state(presence)] pub result_mode: String,
-    #[state(presence)] pub result_mode_index: u32,
-    #[state(config)] pub camera: FemCamera,
-    #[state(config)] pub locale: String,
-    #[state(artifact)] pub solver_results_json: String,
-    #[state(artifact)] pub mesh_preview_json: String,
+    #[state(artifact)]
+    pub nodes: Vec<FemNode>,
+    #[state(artifact)]
+    pub elements: Vec<FemElement>,
+    #[state(artifact)]
+    pub regions: Vec<FemRegion>,
+    #[state(artifact)]
+    pub materials: Vec<FemMaterial>,
+    #[state(artifact)]
+    pub sections: Vec<FemSection>,
+    #[state(artifact)]
+    pub supports: Vec<FemSupport>,
+    #[state(artifact)]
+    pub load_cases: Vec<FemLoadCase>,
+    #[state(artifact)]
+    pub combinations: Vec<FemCombination>,
+    #[state(artifact)]
+    pub analysis: FemAnalysisSettings,
+    #[state(presence)]
+    pub result_source_id: Option<String>,
+    #[state(presence)]
+    pub result_mode: String,
+    #[state(presence)]
+    pub result_mode_index: u32,
+    #[state(config)]
+    pub camera: FemCamera,
+    #[state(config)]
+    pub locale: String,
+    #[state(artifact)]
+    pub solver_results_json: String,
+    #[state(artifact)]
+    pub mesh_preview_json: String,
 }
 //#endregion 🔖️Artifact
-
 
 //#region 🔖️Conversions
 impl Default for Fem2dArtifact {
@@ -58,14 +73,30 @@ impl Fem2dArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
         crate::artifacts::fem2d::Fem2dSnapshot {
-            nodes: self.nodes.clone(), elements: self.elements.clone(), regions: self.regions.clone(), materials: self.materials.clone(), sections: self.sections.clone(), supports: self.supports.clone(), load_cases: self.load_cases.clone(), combinations: self.combinations.clone(), analysis: self.analysis.clone(),
+            nodes: self.nodes.clone(),
+            elements: self.elements.clone(),
+            regions: self.regions.clone(),
+            materials: self.materials.clone(),
+            sections: self.sections.clone(),
+            supports: self.supports.clone(),
+            load_cases: self.load_cases.clone(),
+            combinations: self.combinations.clone(),
+            analysis: self.analysis.clone(),
         }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
         Self {
-            nodes: snapshot.nodes, elements: snapshot.elements, regions: snapshot.regions, materials: snapshot.materials, sections: snapshot.sections, supports: snapshot.supports, load_cases: snapshot.load_cases, combinations: snapshot.combinations, analysis: snapshot.analysis,
+            nodes: snapshot.nodes,
+            elements: snapshot.elements,
+            regions: snapshot.regions,
+            materials: snapshot.materials,
+            sections: snapshot.sections,
+            supports: snapshot.supports,
+            load_cases: snapshot.load_cases,
+            combinations: snapshot.combinations,
+            analysis: snapshot.analysis,
             ..Self::default()
         }
     }
@@ -123,8 +154,8 @@ pub async fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::fem2d::{Fem2dDiff, Fem2dMutation, Fem2dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem2dBuilderConstruction {
@@ -136,8 +167,12 @@ pub mod derived_construction {
         type Snapshot = Fem2dSnapshot;
         type Mutation = Fem2dMutation;
         type Diff = Fem2dDiff;
-        async fn empty() -> Self { Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -148,24 +183,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -181,8 +213,8 @@ pub async fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::fem2d::Fem2dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem2dParts {

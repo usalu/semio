@@ -1,8 +1,8 @@
 //! 🖌️ `suggestions-tick` command.
 
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::drive_precompute;
 use crate::editor::puzzle3d::puzzle3d_suggestions_tick_scope;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 
 /// ⏱️ The host's 120ms suggestion tick — advances the brush lane by one small chunk and refreshes
 /// only the world body's suggestion-menu interaction JSON.

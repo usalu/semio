@@ -74,8 +74,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
-                IoPayload::Text(text) => <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
+                IoPayload::Binary(bytes) => <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             let Some(snapshot) = decoded else {
                 return vec![dsl::Diagnostic::error("stdio.semio_kit.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioKitValidator: payload did not decode as a SemioKitSnapshot".to_string())];

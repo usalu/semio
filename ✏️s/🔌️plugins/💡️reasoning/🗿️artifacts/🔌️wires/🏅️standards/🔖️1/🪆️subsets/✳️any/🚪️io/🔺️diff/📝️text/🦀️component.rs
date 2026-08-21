@@ -1,8 +1,8 @@
 //! 🔺️ Wires artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::wires::schema::diff::WiresDiff;
-use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::schema::WiresArtifact;
+use crate::artifacts::wires::schema::{array_mut, entity_id};
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use protocol::MutationDiff;
@@ -14,10 +14,16 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
-
 //#region 🔖️BoardOps
-pub async fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Option<&DslValue>, remove_node_id: Option<&str>, patch_node: Option<(&str, &BTreeMap<String, DslValue>)>, add_edge: Option<(&DslValue, &DslValue)>, remove_edge_id: Option<&str>) {
+pub async fn apply_board_step(
+    wires: &mut DslValue,
+    board: &mut DslValue,
+    add_node: Option<&DslValue>,
+    remove_node_id: Option<&str>,
+    patch_node: Option<(&str, &BTreeMap<String, DslValue>)>,
+    add_edge: Option<(&DslValue, &DslValue)>,
+    remove_edge_id: Option<&str>,
+) {
     if let Some(node) = add_node {
         array_mut(board, "nodes").push(node.clone());
     }
@@ -135,10 +141,7 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
 //#region 🔖️Builders
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
 pub async fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
-    WiresDiff {
-        artifact: Some(Box::new(WiresArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    WiresDiff { artifact: Some(Box::new(WiresArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints+caches a fresh content-addressed handle from `board`'s `nodes`/`edges` and wraps it as a
@@ -150,17 +153,11 @@ pub async fn diff_set_snapshot(snapshot: &WiresSnapshot) -> WiresDiff {
 pub async fn diff_board_fixture(board: DslValue) -> WiresDiff {
     let nodes = crate::artifacts::wires::schema::fixture_nodes(&board).to_vec();
     let edges = crate::artifacts::wires::schema::fixture_edges(&board).to_vec();
-    WiresDiff {
-        content: Some(crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges)),
-        ..Default::default()
-    }
+    WiresDiff { content: Some(crate::artifacts::wires::wires_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
 }
 
 pub async fn diff_wires_fixture(wires: DslValue) -> WiresDiff {
-    WiresDiff {
-        wires_fixture: Some(wires),
-        ..Default::default()
-    }
+    WiresDiff { wires_fixture: Some(wires), ..Default::default() }
 }
 
 pub async fn diff_wires_and_board(wires: DslValue, board: DslValue) -> WiresDiff {

@@ -56,12 +56,12 @@ pub struct HybridLogicalTimestamp {
 }
 
 impl HybridLogicalTimestamp {
-    pub async fn new(actor: u64, physical_ms: u64) -> Self {
+    pub fn new(actor: u64, physical_ms: u64) -> Self {
         Self { actor, physical_ms, logical: 0 }
     }
 
     /// @emoji ⏩️ Advances to `physical_ms` if it's newer, else bumps the logical counter.
-    pub async fn tick(&mut self, physical_ms: u64) {
+    pub fn tick(&mut self, physical_ms: u64) {
         if physical_ms > self.physical_ms {
             self.physical_ms = physical_ms;
             self.logical = 0;
@@ -71,7 +71,7 @@ impl HybridLogicalTimestamp {
     }
 
     /// @emoji 🔀️ Merges in a remote tick: adopts the greater `(physical_ms, logical)`, then bumps.
-    pub async fn merge(&mut self, other: &Self) {
+    pub fn merge(&mut self, other: &Self) {
         if other.physical_ms > self.physical_ms {
             self.physical_ms = other.physical_ms;
             self.logical = other.logical;
@@ -81,7 +81,7 @@ impl HybridLogicalTimestamp {
         self.logical = self.logical.saturating_add(1);
     }
 
-    pub async fn cmp_key(&self) -> (u64, u64, u64) {
+    pub fn cmp_key(&self) -> (u64, u64, u64) {
         (self.physical_ms, self.logical, self.actor)
     }
 }
@@ -99,4 +99,3 @@ impl PartialOrd for HybridLogicalTimestamp {
     }
 }
 //#endregion 🔖️HybridLogicalTimestamp
-

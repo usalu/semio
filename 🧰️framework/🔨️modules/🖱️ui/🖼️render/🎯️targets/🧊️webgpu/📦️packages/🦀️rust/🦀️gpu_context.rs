@@ -139,16 +139,7 @@ pub(crate) fn configure_surface(device: &wgpu::Device, surface: &wgpu::Surface<'
     {
         usage |= wgpu::TextureUsages::COPY_SRC;
     }
-    let config = wgpu::SurfaceConfiguration {
-        usage,
-        format: surface_format,
-        width: width.max(1),
-        height: height.max(1),
-        present_mode: wgpu::PresentMode::AutoVsync,
-        alpha_mode,
-        view_formats: vec![view_format],
-        desired_maximum_frame_latency: 2,
-    };
+    let config = wgpu::SurfaceConfiguration { usage, format: surface_format, width: width.max(1), height: height.max(1), present_mode: wgpu::PresentMode::AutoVsync, alpha_mode, view_formats: vec![view_format], desired_maximum_frame_latency: 2 };
     surface.configure(device, &config);
 }
 

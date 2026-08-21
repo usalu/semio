@@ -14,35 +14,35 @@
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #![allow(clippy::result_large_err)]
 
-use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
+use crate::artifacts::dag::op::DagMutation;
+use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use crate::editor::dag::commands::set_locale;
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
+use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
 use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport};
 use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::editor::dag::modes::edit;
 use crate::editor::dag::modes::edit::windows::{compiled, main};
 use crate::editor::dag::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView, DomainTopology, Editor, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, Editor, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
-use store::EngineHandles;
 use serde_json::Value;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_APP_ID: &str = "dag-play";
 /// 🕹️ The `graph` interaction domain id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// node/edge selection + transitive hover over the DAG's own edge-derived parent links.
 pub const DAG_PLAY_INTERACTION_DOMAIN: &str = "graph";
-pub use main::{DAG_PLAY_BODY_MAIN, DAG_PLAY_WINDOW_MAIN};
+pub use catalogue_panel::DAG_PLAY_BODY_CATALOGUE;
 pub use compiled::{DAG_PLAY_BODY_COMPILED, DAG_PLAY_WINDOW_COMPILED};
 pub use document_panel::DAG_PLAY_BODY_DOCUMENT;
-pub use catalogue_panel::DAG_PLAY_BODY_CATALOGUE;
 pub use inspection_panel::DAG_PLAY_BODY_INSPECTOR;
+pub use main::{DAG_PLAY_BODY_MAIN, DAG_PLAY_WINDOW_MAIN};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -152,7 +152,14 @@ impl ArtifactEditor for DagPlayApp {
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)` signature
     /// is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(command: &DagCommand, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &DagCommand,
+        doc: &ArtifactView<'_, DagSnapshot>,
+        cfg: &ConfigView<'_, DagConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             DagCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction),
             DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction),
@@ -566,7 +573,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_dag() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| {
+            app.snapshot().expect("projection").nodes().len()
+        });
     }
     //#endregion 🔖️CrossCutting
 }

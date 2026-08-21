@@ -54,7 +54,7 @@ pub use super::delete_curated_item::mutation::{delete_curated_item, DeleteCurate
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use crate::artifacts::curate::CuratedItem;
     use protocol::Mutation;
 
@@ -62,10 +62,7 @@ mod tests {
     /// mutations have a real target, and `beam-kvh-c24` left uncurated so `create` has a real
     /// not-yet-existing target — mirrors `din16798`'s `sample_snapshot()` fixture shape.
     async fn sample_snapshot() -> CurateSnapshot {
-        crate::artifacts::curate::curate_snapshot_from_stock(
-            crate::artifacts::curate::schema::demo_stock(),
-            vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }],
-        )
+        crate::artifacts::curate::curate_snapshot_from_stock(crate::artifacts::curate::schema::demo_stock(), vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }])
     }
 
     /// ⚖️ One value per `SourcingMutation` variant — the closed set the semantics/round-trip tests
@@ -79,12 +76,10 @@ mod tests {
     }
 
     async fn round_trip(base: &CurateSnapshot, mutation: &SourcingMutation) -> CurateSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(base, mutation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
@@ -97,11 +92,7 @@ mod tests {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
         }
-        assert_eq!(
-            <SourcingMutation as protocol::SemanticMutation<CurateSnapshot>>::kinds().len(),
-            every_mutation().len(),
-            "kinds() must register exactly one descriptor per dispatch variant"
-        );
+        assert_eq!(<SourcingMutation as protocol::SemanticMutation<CurateSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
     #[semio_framework_async_macros::async_test]

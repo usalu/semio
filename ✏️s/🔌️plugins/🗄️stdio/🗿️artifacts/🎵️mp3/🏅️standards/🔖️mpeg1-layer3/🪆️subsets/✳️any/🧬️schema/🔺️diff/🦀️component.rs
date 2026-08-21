@@ -25,7 +25,7 @@ pub struct Mp3Diff {
 }
 
 impl MutationDiff<Mp3Snapshot> for Mp3Diff {
-    async fn apply(&self, base: &Mp3Snapshot) -> protocol::MutationApplyResult<Mp3Snapshot> {
+    fn apply(&self, base: &Mp3Snapshot) -> protocol::MutationApplyResult<Mp3Snapshot> {
         let mut next = base.clone();
         if let Some(v) = &self.id3v2 {
             next.id3v2 = v.clone();
@@ -38,7 +38,7 @@ impl MutationDiff<Mp3Snapshot> for Mp3Diff {
         }
         Ok(next)
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.id3v2.is_some() {
             self.id3v2 = other.id3v2;
         }
@@ -52,13 +52,13 @@ impl MutationDiff<Mp3Snapshot> for Mp3Diff {
 }
 
 impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
-    async fn between(base: &Mp3Snapshot, other: &Mp3Snapshot) -> Self {
+    fn between(base: &Mp3Snapshot, other: &Mp3Snapshot) -> Self {
         Mp3Diff { id3v2: (base.id3v2 != other.id3v2).then(|| other.id3v2.clone()), frames: (base.frames != other.frames).then(|| other.frames.clone()), id3v1: (base.id3v1 != other.id3v1).then(|| other.id3v1.clone()) }
     }
-    async fn inverse(&self, base: &Mp3Snapshot) -> Self {
+    fn inverse(&self, base: &Mp3Snapshot) -> Self {
         Mp3Diff { id3v2: self.id3v2.as_ref().map(|_| base.id3v2.clone()), frames: self.frames.as_ref().map(|_| base.frames.clone()), id3v1: self.id3v1.as_ref().map(|_| base.id3v1.clone()) }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.id3v2.is_none() && self.frames.is_none() && self.id3v1.is_none()
     }
 }
@@ -331,20 +331,20 @@ fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
 }
 
 impl protocol::DiffCodec for Mp3Diff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_mp3_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_mp3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().await.into_bytes())
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(self.print_diff().into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

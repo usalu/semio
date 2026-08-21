@@ -2,9 +2,9 @@
 //! already at that label.
 
 use super::mutation::RenameShot;
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::{ShootingShotPatchEntry, ShootingShotsDelta, ShootingDiff};
+use crate::artifacts::shooting::diff::{ShootingDiff, ShootingShotPatchEntry, ShootingShotsDelta};
 use crate::artifacts::shooting::ShootingShotPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &RenameShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.shots.iter().find(|shot| shot.id == payload.id) else {

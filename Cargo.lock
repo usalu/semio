@@ -6687,6 +6687,7 @@ version = "0.1.0"
 dependencies = [
  "gltf",
  "pretty_assertions",
+ "semio-framework-actor",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-mesh-engine",
@@ -6729,9 +6730,9 @@ name = "semio-framework-actor"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
+ "semio-framework-job",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
  "ts-rs",
  "wasm-bindgen",
 ]
@@ -7053,6 +7054,7 @@ dependencies = [
  "schemars 0.8.22",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-os-kernel",
@@ -7170,7 +7172,6 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-replication",
- "serde",
  "serde_json",
  "thiserror 2.0.18",
  "ureq",
@@ -7262,13 +7263,11 @@ name = "semio-framework-schema"
 version = "0.1.0"
 dependencies = [
  "jsonschema",
- "schemars 0.8.22",
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-schema-derive",
- "serde",
  "serde_json",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -7331,6 +7330,7 @@ dependencies = [
  "pollster",
  "semio-framework-async-macros",
  "semio-framework-geometry",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-ui-scene",
  "semio-framework-ui-styling",
@@ -9564,8 +9564,12 @@ checksum = "7a9daff607c6d2bf6c16fd681ccb7eecc83e4e2cdc1ca067ffaadfca5de7f084"
 dependencies = [
  "futures-util",
  "log",
+ "rustls",
+ "rustls-pki-types",
  "tokio",
+ "tokio-rustls",
  "tungstenite 0.26.2",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]
@@ -9877,6 +9881,8 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.9.5",
+ "rustls",
+ "rustls-pki-types",
  "sha1",
  "thiserror 2.0.18",
  "utf-8",

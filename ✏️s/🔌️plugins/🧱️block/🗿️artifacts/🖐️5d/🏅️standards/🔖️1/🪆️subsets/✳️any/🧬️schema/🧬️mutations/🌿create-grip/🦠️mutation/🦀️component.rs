@@ -1,8 +1,8 @@
 //! 🌿 Block5d mutation — `CreateGrip`: a new rim-grip template.
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::artifacts::block5d::Block5dGripTemplate;
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dGripTemplate};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

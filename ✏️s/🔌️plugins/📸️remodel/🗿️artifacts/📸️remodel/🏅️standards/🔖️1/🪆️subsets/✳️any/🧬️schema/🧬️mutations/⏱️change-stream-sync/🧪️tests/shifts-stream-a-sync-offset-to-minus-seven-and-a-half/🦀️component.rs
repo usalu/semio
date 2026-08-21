@@ -43,10 +43,7 @@ async fn writes_the_final_sync_offset_onto_stream_a_only() {
 async fn inverse_is_the_same_verb_carrying_the_base_offset() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::ChangeStreamSync(payload)] if payload.id == "stream-a" && payload.new_sync_offset_ms == 12.5),
-        "change-stream-sync inverts to itself with the base offset 12.5, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::ChangeStreamSync(payload)] if payload.id == "stream-a" && payload.new_sync_offset_ms == 12.5), "change-stream-sync inverts to itself with the base offset 12.5, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

@@ -8,6 +8,7 @@
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
+use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use crate::editor::vcs::commands::edit as edit_command;
 use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
@@ -16,11 +17,10 @@ use crate::editor::vcs::modes::edit::windows::{editor, history};
 use crate::editor::vcs::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::vcs::presence::{VcsDemoPresence, VcsDemoPresenceMutation};
 use crate::editor::vcs::terminology::vcs_play_labels;
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode,
-    NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft,
+    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
 use store::EngineHandles;

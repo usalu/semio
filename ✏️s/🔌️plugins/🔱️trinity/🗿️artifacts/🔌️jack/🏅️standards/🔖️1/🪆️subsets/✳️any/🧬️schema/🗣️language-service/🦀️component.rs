@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
-use crate::lexer::{lex, lex_spanned, Token, SpannedToken};
+use crate::lexer::{lex, lex_spanned, SpannedToken, Token};
 use graph::dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;
 
@@ -114,9 +114,9 @@ pub mod queryable {
     }
 }
 
-pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, ReturnItem};
 use graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
+pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 
 // #region 🔖️Language
 async fn completion_prefix(source: &str, cursor: usize) -> String {

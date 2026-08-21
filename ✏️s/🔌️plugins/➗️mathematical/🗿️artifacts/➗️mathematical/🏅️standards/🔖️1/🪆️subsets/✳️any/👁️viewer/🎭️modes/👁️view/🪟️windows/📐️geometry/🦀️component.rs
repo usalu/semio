@@ -9,8 +9,8 @@
 //! construction (`ViewEmit`).
 
 use crate::artifacts::mathematical::{mathematical_geometry, MathematicalSnapshot};
-use semio_framework_plugin::UiNode;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::UiNode;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = <TableWindowKit as WindowKit>::KIND_ID;
@@ -32,10 +32,7 @@ pub async fn definition() -> semio_framework_plugin::WindowKindDefinition {
 /// function lives at the ARTIFACT level (outside both surfaces), not behind the editor module.
 pub async fn render(document: &MathematicalSnapshot) -> UiNode {
     let geometry = mathematical_geometry(document);
-    let view = TableView {
-        columns: vec!["#".into(), "x".into(), "y".into()],
-        rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect(),
-    };
+    let view = TableView { columns: vec!["#".into(), "x".into(), "y".into()], rows: geometry.points.iter().enumerate().map(|(index, point)| vec![index.to_string(), format!("{}", point.x), format!("{}", point.y)]).collect() };
     TableWindowKit::render(&view)
 }
 //#endregion 🔖️Render

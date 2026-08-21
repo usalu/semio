@@ -474,17 +474,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
@@ -580,7 +580,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
-                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
+                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
                             Ok(snapshot) => {
                                 match svg_document_to_typed(&snapshot.doc) {
                                     Ok(typed) => parts.typed = Some(typed),
@@ -597,7 +597,7 @@ pub mod derived_analysis {
                             }
                         }
                     }
-                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
+                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => {
                             if let Ok(typed) = svg_document_to_typed(&snapshot.doc) {
                                 parts.typed = Some(typed);

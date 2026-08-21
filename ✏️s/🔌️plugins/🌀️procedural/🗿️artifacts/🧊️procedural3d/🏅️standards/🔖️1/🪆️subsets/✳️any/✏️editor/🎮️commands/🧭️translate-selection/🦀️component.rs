@@ -1,14 +1,13 @@
 //! 🧭️ 🧭️ Procedural3d play app commands command — `translate-selection`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::{FlowEvalSession, FlowFixture, FlowHost};
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
-use crate::artifacts::procedural3d::schema::{
-    commit_fixture, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, host_from_fixture};
+use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, host_from_fixture};
 
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
@@ -59,7 +58,8 @@ pub struct TranslateSelection {
     pub node_ids: Vec<String>,
     pub dx: f64,
     pub dy: f64,
-    pub dz: f64}
+    pub dz: f64,
+}
 
 async fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, dz: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     match gumball_transform(fixture, ids, "translate", move |host, transform_id| {
@@ -68,7 +68,8 @@ async fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, 
         host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
     }) {
         Some((operations, _new_selection)) => Emit { artifact_mutations: operations, coalesce_key: Some("gumball-translate".into()), ..Default::default() },
-        None => Emit::default()}
+        None => Emit::default(),
+    }
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
@@ -84,7 +85,13 @@ pub async fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedu
 /// command carries no explicit ids. The created gumball transform widget is no longer auto-reselected
 /// — the framework, not this app, owns `graph`'s selection now, and no `Emit` channel can write it
 /// directly.
-pub async fn apply(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, interaction: &InteractionView<'_>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub async fn apply(
+    payload: &TranslateSelection,
+    doc: &ArtifactView<'_, Procedural3dSnapshot>,
+    _cfg: &ConfigView<'_, Procedural3dConfig>,
+    interaction: &InteractionView<'_>,
+    _session: &mut FlowEvalSession,
+) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
     Ok(translate_ids(&doc.snapshot.fixture, &ids, payload.dx, payload.dy, payload.dz))
 }
@@ -93,10 +100,10 @@ pub async fn apply(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedur
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::procedural3d::widget_id;
+    use crate::editor::procedural3d::commands::{rotate_selection, scale_selection};
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
-    use crate::editor::procedural3d::commands::{rotate_selection, scale_selection};
-    use crate::artifacts::procedural3d::widget_id;
     use flow::Widget;
 
     #[semio_framework_async_macros::async_test]

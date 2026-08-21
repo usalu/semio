@@ -143,7 +143,7 @@ fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifact
 impl Mutation<DocxSnapshot> for DocxMutation {
     type Diff = DocxDiff;
 
-    async fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DocxMutation::NoMutation => DocxDiff::default(),
             DocxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -164,7 +164,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
         })
     }
 
-    async fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
         match self {
             DocxMutation::NoMutation => vec![DocxMutation::NoMutation],
             DocxMutation::SetSnapshot { .. } => vec![DocxMutation::SetSnapshot { snapshot: base.clone() }],
@@ -368,10 +368,10 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
 }
 
 impl OpText for DocxMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_docx_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_docx_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -535,7 +535,7 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 /// `DocxMutation` variant ordinal, in the same 0-12 order `print_docx_mutation`'s own keyword
 /// match uses.
 impl OpBinary for DocxMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DocxMutation::NoMutation => 0,
             DocxMutation::SetSnapshot { .. } => 1,
@@ -599,11 +599,11 @@ impl OpBinary for DocxMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(DocxMutation::NoMutation),
             1 => {
@@ -626,16 +626,16 @@ impl OpBinary for DocxMutation {
             }
             5 => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let run_index = reader.read_varint_u64().await.map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DocxMutation::SetRunText { path, run_index, text })
             }
             6 => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let run_index = reader.read_varint_u64().await.map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let bold = reader.read_u8().await.map_err(|e| malformed("op bold", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
-                let italic = reader.read_u8().await.map_err(|e| malformed("op italic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
-                let underline = reader.read_u8().await.map_err(|e| malformed("op underline", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let bold = reader.read_u8().map_err(|e| malformed("op bold", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
+                let italic = reader.read_u8().map_err(|e| malformed("op italic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
+                let underline = reader.read_u8().map_err(|e| malformed("op underline", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
                 Ok(DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline })
             }
             7 => {
@@ -653,7 +653,7 @@ impl OpBinary for DocxMutation {
             }
             10 => {
                 let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().await.map_err(|e| malformed("op based_on presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let has = reader.read_u8().map_err(|e| malformed("op based_on presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
                 Ok(DocxMutation::SetStyleBasedOn { id, based_on })
             }

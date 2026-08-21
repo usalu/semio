@@ -43,11 +43,7 @@ async fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] 
     let (sin_a, cos_a) = angle.sin_cos();
     let dot = p[0] * a[0] + p[1] * a[1] + p[2] * a[2];
     let cross = [a[1] * p[2] - a[2] * p[1], a[2] * p[0] - a[0] * p[2], a[0] * p[1] - a[1] * p[0]];
-    [
-        p[0] * cos_a + cross[0] * sin_a + a[0] * dot * (1.0 - cos_a),
-        p[1] * cos_a + cross[1] * sin_a + a[1] * dot * (1.0 - cos_a),
-        p[2] * cos_a + cross[2] * sin_a + a[2] * dot * (1.0 - cos_a),
-    ]
+    [p[0] * cos_a + cross[0] * sin_a + a[0] * dot * (1.0 - cos_a), p[1] * cos_a + cross[1] * sin_a + a[1] * dot * (1.0 - cos_a), p[2] * cos_a + cross[2] * sin_a + a[2] * dot * (1.0 - cos_a)]
 }
 
 /// 📦️ World-space AABB of `solid` (a resolved `SemioBrepSnapshot`) at `pose` — the AABB of the

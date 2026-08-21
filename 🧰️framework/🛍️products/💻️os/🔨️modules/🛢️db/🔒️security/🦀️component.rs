@@ -547,12 +547,7 @@ pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &Au
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
 pub async fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
-    emit.emit(
-        EmitEvent::new("security.replay_rejected")
-            .with_document(ArtifactId::from(document.0.clone()))
-            .field("actor", EmitField::Text(actor.0.clone()))
-            .field("mutation_id", EmitField::Text(mutation_id.0.clone())),
-    ).await;
+    emit.emit(EmitEvent::new("security.replay_rejected").with_document(ArtifactId::from(document.0.clone())).field("actor", EmitField::Text(actor.0.clone())).field("mutation_id", EmitField::Text(mutation_id.0.clone()))).await;
 }
 
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
@@ -607,16 +602,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
     /// id, which may differ from `principal.actor` under delegated/service submission — this
     /// crate does not assume they're always the same identity).
     #[allow(clippy::too_many_arguments)]
-    pub async fn admit_command(
-        &self,
-        principal: &Principal,
-        resource_tenant: &TenantId,
-        document: &protocol::ArtifactId,
-        kind: &str,
-        envelope_actor: &protocol::ActorId,
-        mutation_id: &protocol::MutationId,
-        physical_ms: u64,
-    ) -> Result<(), DbError> {
+    pub async fn admit_command(&self, principal: &Principal, resource_tenant: &TenantId, document: &protocol::ArtifactId, kind: &str, envelope_actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         check_tenant(principal, resource_tenant)?;
         self.authorize(principal, &AuthzScope::CommandKind { document: document.clone(), kind: kind.to_string() }, Action::Write).await?;
         if lock(&self.budgets).try_consume(&principal.actor.0, 1, physical_ms).is_err() {

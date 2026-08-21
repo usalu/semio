@@ -7,8 +7,12 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.layout.layout.presence")]
 pub struct LayoutPresence {
-    #[state(presence)] pub active_page_id: String,
-    #[state(presence)] pub drop_preview: LayoutDropPreviewState,
-    #[state(presence)] pub camera: LayoutCamera,
-    #[state(presence)] pub preview_camera: LayoutCamera,
+    #[state(presence)]
+    pub active_page_id: String,
+    #[state(presence)]
+    pub drop_preview: LayoutDropPreviewState,
+    #[state(presence)]
+    pub camera: LayoutCamera,
+    #[state(presence)]
+    pub preview_camera: LayoutCamera,
 }

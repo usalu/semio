@@ -15,13 +15,7 @@ pub async fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> 
     }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
-                id: payload.page_id.clone(),
-                patch: PagePatch {
-                    frame_added: Some(PageFrameAdded { frame: payload.frame.clone(), index: payload.index, layer_id: payload.layer_id.clone() }),
-                    ..Default::default()
-                },
-            }],
+            patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_added: Some(PageFrameAdded { frame: payload.frame.clone(), index: payload.index, layer_id: payload.layer_id.clone() }), ..Default::default() } }],
             ..Default::default()
         }),
         ..Default::default()

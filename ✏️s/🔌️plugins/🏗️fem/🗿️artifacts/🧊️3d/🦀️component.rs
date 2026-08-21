@@ -1,6 +1,5 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
-
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -13,8 +12,7 @@ pub const FEM_3D_SCHEMA: &str = "fem.3d";
 /// `FEM3D_DIALECT` in this subset's own `🚪️io/🦀️component.rs` (an older, unrelated 2-part io/composer
 /// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
 /// file can read it without ever importing through the sibling editor module.
-pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 // #region 🔖️Document
 /// 🔁️ fem_3d's own DSL-printable mirror of `crate::model::Dof` — `crate::model::Dof` can't derive

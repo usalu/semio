@@ -1,10 +1,10 @@
 //! 🗂️ 🗂️ Draw play app commands command — `patch-layers`.
 
-use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
-use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::artifacts::draw::op::{draw_op_for_layer_field, DrawMutation};
 use crate::artifacts::draw::DrawSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
+use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -17,16 +17,6 @@ async fn patch_value_json(value: &str) -> Value {
     serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️DocumentHelpers
-
-
-
-
-
-
-
-
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "patch-layers")]

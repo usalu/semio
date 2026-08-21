@@ -365,11 +365,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         } else if let Some(kind) = refs {
             Some(quote! { ::dsl::Shape::Ref(#kind) })
         } else if let Some(from) = lang_from {
-            let embed_lang_key = plans
-                .iter()
-                .find(|p| p.ident.to_string() == *from)
-                .map(|p| p.key.clone())
-                .unwrap_or_else(|| to_kebab(from));
+            let embed_lang_key = plans.iter().find(|p| p.ident.to_string() == *from).map(|p| p.key.clone()).unwrap_or_else(|| to_kebab(from));
             Some(quote! { ::dsl::Shape::EmbedFrom(#embed_lang_key) })
         } else if let Some(l) = lang {
             Some(quote! { ::dsl::Shape::Embed(#l) })
@@ -710,12 +706,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let envelope_id = match container.id.or(container.extension) {
         Some(id) => id,
         None => {
-            return syn::Error::new_spanned(
-                &input,
-                "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]",
-            )
-            .to_compile_error()
-            .into();
+            return syn::Error::new_spanned(&input, "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]").to_compile_error().into();
         }
     };
     let extension_suffix = envelope_id.rsplit('.').next().unwrap_or(&envelope_id);
@@ -814,31 +805,31 @@ pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
             pub fn __dsl_diff_spec() -> ::dsl::RecordSpec {
                 ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
-            pub async fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
+            pub fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
                 let mut record = ::dsl::RecordValue::default();
                 #(#to_value_stmts)*
                 record
             }
-            pub async fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+            pub fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
         }
 
         impl ::semio_framework_os_kernel::DiffCodec for #name {
-            async fn print_diff(&self) -> String {
-                ::dsl::print(&self.__dsl_diff_to_record().await, &Self::__dsl_diff_spec(), ::dsl::JoinMode::Inline).await
+            fn print_diff(&self) -> String {
+                ::dsl::print(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec(), ::dsl::JoinMode::Inline)
             }
-            async fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
-                let record = ::dsl::parse(line, &Self::__dsl_diff_spec(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline }).await?;
-                Self::__dsl_diff_from_record(&record).await
+            fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
+                let record = ::dsl::parse(line, &Self::__dsl_diff_spec(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
+                Self::__dsl_diff_from_record(&record)
             }
-            async fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
-                ::store::pack_rt::encode_document(&Self::__dsl_diff_spec(), &self.__dsl_diff_to_record().await, &::store::PackEncodeOptions::default()).await.map_err(::semio_framework_os_kernel::ProtocolError::from)
+            fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
+                ::store::pack_rt::encode_document(&Self::__dsl_diff_spec(), &self.__dsl_diff_to_record(), &::store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
             }
-            async fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
-                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_diff_spec(), &::store::PackDecodeOptions::default()).await.map_err(::semio_framework_os_kernel::ProtocolError::from)?;
-                Self::__dsl_diff_from_record(&record).await.map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
+            fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
+                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_diff_spec(), &::store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
+                Self::__dsl_diff_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
         }
     };
@@ -1074,12 +1065,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     };
     let attrs = parse_mutations_attrs(&input);
     let (Some(snapshot_ty), Some(diff_ty), Some(schema)) = (attrs.snapshot, attrs.diff, attrs.schema) else {
-        return syn::Error::new_spanned(
-            &input,
-            "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]",
-        )
-        .to_compile_error()
-        .into();
+        return syn::Error::new_spanned(&input, "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]").to_compile_error().into();
     };
 
     let mut diff_arms = Vec::new();
@@ -1095,12 +1081,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     for variant in &data.variants {
         let variant_ident = &variant.ident;
         let Fields::Unnamed(unnamed) = &variant.fields else {
-            return syn::Error::new_spanned(
-                variant,
-                "#[derive(Mutations)] requires every variant to be a single-field tuple wrapping a MutationKind payload struct, e.g. RenameWidget(rename_widget::RenameWidget)",
-            )
-            .to_compile_error()
-            .into();
+            return syn::Error::new_spanned(variant, "#[derive(Mutations)] requires every variant to be a single-field tuple wrapping a MutationKind payload struct, e.g. RenameWidget(rename_widget::RenameWidget)").to_compile_error().into();
         };
         if unnamed.unnamed.len() != 1 {
             return syn::Error::new_spanned(variant, "#[derive(Mutations)] requires every variant to wrap exactly one MutationKind payload struct").to_compile_error().into();
@@ -1111,22 +1092,22 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
         let assert_verb_message = format!("#[derive(Mutations)]: {}::{}'s MutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name, variant_ident);
 
         diff_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::diff(payload, base).await
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::diff(payload, base)
         });
         inverse_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::inverse(payload, base).await
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::inverse(payload, base)
         });
         semantics_arms.push(quote! {
             #name::#variant_ident(_) => &<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS
         });
         label_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::label(payload).await
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::label(payload)
         });
         target_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload).await
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload)
         });
         foreign_steps_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base).await
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base)
         });
         kind_consts.push(quote! {
             <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS
@@ -1142,11 +1123,11 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
                     ::semio_framework_os_kernel::SchemaVersion(1),
                     ::semio_framework_os_kernel::StateClass::Artifact,
                 )
-                .await
+                
                 .with_semantics(&<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS)
-                .await,
+                ,
             )
-            .await;
+            ;
         });
     }
 
@@ -1157,36 +1138,36 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
 
         impl ::semio_framework_os_kernel::Mutation<#snapshot_ty> for #name {
             type Diff = #diff_ty;
-            async fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::Diff> {
+            fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::Diff> {
                 match self { #(#diff_arms),* }
             }
-            async fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
+            fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
                 match self { #(#inverse_arms),* }
             }
-            async fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
+            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 match self { #(#foreign_steps_arms),* }
             }
         }
 
         impl ::semio_framework_os_kernel::SemanticMutation<#snapshot_ty> for #name {
-            async fn kinds() -> &'static [::semio_framework_os_kernel::SemanticDescriptor] {
+            fn kinds() -> &'static [::semio_framework_os_kernel::SemanticDescriptor] {
                 const KINDS: &[::semio_framework_os_kernel::SemanticDescriptor] = &[ #(#kind_consts),* ];
                 KINDS
             }
-            async fn semantics(&self) -> &'static ::semio_framework_os_kernel::SemanticDescriptor {
+            fn semantics(&self) -> &'static ::semio_framework_os_kernel::SemanticDescriptor {
                 match self { #(#semantics_arms),* }
             }
-            async fn label(&self) -> String {
+            fn label(&self) -> String {
                 match self { #(#label_arms),* }
             }
-            async fn target(&self) -> Vec<String> {
+            fn target(&self) -> Vec<String> {
                 match self { #(#target_arms),* }
             }
         }
 
         /// 🪪️ Registers every variant's `::semio_framework_os_kernel::MutationDescriptor` — idempotent, safe to call
         /// repeatedly; call once during host/plugin startup.
-        pub async fn #register_fn_ident() {
+        pub fn #register_fn_ident() {
             #(#register_calls)*
         }
     };
@@ -1253,20 +1234,20 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
 
         impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
-            async fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
-                ::semio_framework_os_kernel::fold_plan_diff(self, base).await
+            fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
+                ::semio_framework_os_kernel::fold_plan_diff(self, base)
             }
-            async fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
-                ::semio_framework_os_kernel::fold_plan_inverse(self, base).await
+            fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
+                ::semio_framework_os_kernel::fold_plan_inverse(self, base)
             }
-            async fn label(&self) -> String {
-                ::semio_framework_os_kernel::CompositeMutationKind::label(self).await
+            fn label(&self) -> String {
+                ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
-            async fn target(&self) -> Vec<String> {
-                ::semio_framework_os_kernel::CompositeMutationKind::target(self).await
+            fn target(&self) -> Vec<String> {
+                ::semio_framework_os_kernel::CompositeMutationKind::target(self)
             }
-            async fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
-                ::semio_framework_os_kernel::plan_foreign_steps(self, base).await
+            fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
+                ::semio_framework_os_kernel::plan_foreign_steps(self, base)
             }
         }
     };

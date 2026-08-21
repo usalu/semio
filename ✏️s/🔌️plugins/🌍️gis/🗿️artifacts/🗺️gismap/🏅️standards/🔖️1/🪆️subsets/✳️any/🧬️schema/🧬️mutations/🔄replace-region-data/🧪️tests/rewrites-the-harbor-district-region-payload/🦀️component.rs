@@ -141,7 +141,11 @@ async fn patches_only_the_harbor_district_payload_and_inverts_to_the_base_payloa
     assert_eq!(delta.patched.len(), 1, "replace-region-data/rewrites-the-harbor-district-region-payload: exactly one feature is patched, got {delta:?}");
     assert_eq!(delta.patched[0].id, "region-harbor-district", "replace-region-data/rewrites-the-harbor-district-region-payload: the patch is addressed by the payload's own id");
     assert_eq!(delta.patched[0].patch.data.as_ref(), Some(&after.regions[0].data), "replace-region-data/rewrites-the-harbor-district-region-payload: the patch carries the committed replacement payload verbatim");
-    assert_eq!(delta.patched[0].patch.data.as_ref().and_then(|data| data.get("kind")).and_then(|kind| kind.as_str()), Some("district"), "replace-region-data/rewrites-the-harbor-district-region-payload: an unchanged key is still carried — the patch is a whole payload, not a per-key delta");
+    assert_eq!(
+        delta.patched[0].patch.data.as_ref().and_then(|data| data.get("kind")).and_then(|kind| kind.as_str()),
+        Some("district"),
+        "replace-region-data/rewrites-the-harbor-district-region-payload: an unchanged key is still carried — the patch is a whole payload, not a per-key delta"
+    );
     assert!(delta.added.is_empty() && delta.removed.is_empty() && delta.reordered.is_none(), "replace-region-data/rewrites-the-harbor-district-region-payload: a payload swap must not add, remove or reorder anything, got {delta:?}");
     assert!(produced.diff().positions.is_none() && produced.diff().routes.is_none(), "replace-region-data/rewrites-the-harbor-district-region-payload: replace-region-data must never touch the positions or routes collections");
     let inverse = inverse_gis_map_mutation(&base, &mutation());
@@ -152,5 +156,9 @@ async fn patches_only_the_harbor_district_payload_and_inverts_to_the_base_payloa
     assert_eq!(undo.id, "region-harbor-district", "replace-region-data/rewrites-the-harbor-district-region-payload: the inverse addresses the same region");
     assert_eq!(undo.new_data, base.regions[0].data, "replace-region-data/rewrites-the-harbor-district-region-payload: the inverse restores BASE's payload, not the diff's");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("replace", "region-data", "replace-region-data", "ReplacedRegionData"), "replace-region-data/rewrites-the-harbor-district-region-payload: the fixture must be bound to replace-region-data's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("replace", "region-data", "replace-region-data", "ReplacedRegionData"),
+        "replace-region-data/rewrites-the-harbor-district-region-payload: the fixture must be bound to replace-region-data's own descriptor"
+    );
 }

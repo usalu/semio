@@ -20,30 +20,30 @@
 //! `FrameSnapshot` carries the scene, hitboxes, dispatch tree, focus, IME and accessibility together,
 //! and is swapped in atomically.
 
-#[path = "🦀️scene.rs"]
-mod scene;
-#[path = "🦀️tessellate.rs"]
-mod tessellate;
-#[path = "🦀️resource.rs"]
-mod resource;
 #[path = "🦀️backend.rs"]
 mod backend;
-#[path = "🦀️shader_contract.rs"]
-mod shader_contract;
-#[path = "🦀️element.rs"]
-mod element;
-#[path = "🦀️layout.rs"]
-mod layout;
-#[path = "🦀️frame.rs"]
-mod frame;
-#[path = "🦀️schedule.rs"]
-mod schedule;
 #[path = "🦀️dispatch.rs"]
 mod dispatch;
-#[path = "🦀️text.rs"]
-mod text;
+#[path = "🦀️element.rs"]
+mod element;
+#[path = "🦀️frame.rs"]
+mod frame;
+#[path = "🦀️layout.rs"]
+mod layout;
+#[path = "🦀️resource.rs"]
+mod resource;
+#[path = "🦀️scene.rs"]
+mod scene;
+#[path = "🦀️schedule.rs"]
+mod schedule;
+#[path = "🦀️shader_contract.rs"]
+mod shader_contract;
 #[path = "🦀️surface.rs"]
 mod surface;
+#[path = "🦀️tessellate.rs"]
+mod tessellate;
+#[path = "🦀️text.rs"]
+mod text;
 
 pub use backend::*;
 pub use dispatch::*;

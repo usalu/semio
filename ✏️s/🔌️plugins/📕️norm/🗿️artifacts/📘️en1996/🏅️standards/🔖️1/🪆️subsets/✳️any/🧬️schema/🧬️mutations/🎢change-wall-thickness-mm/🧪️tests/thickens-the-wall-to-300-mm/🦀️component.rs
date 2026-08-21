@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 300.0 differs from the committed 240.0, so the `mutation.no-op` warning guard stays shut too");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the payload is a finite number, so the `is_finite` fatal guard stays shut, and 300.0 differs from the committed 240.0, so the `mutation.no-op` warning guard stays shut too"
+    );
     assert!(produced.messages().is_empty(), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: an accepted change-wall-thickness-mm emits no diagnostics at all");
 }
 

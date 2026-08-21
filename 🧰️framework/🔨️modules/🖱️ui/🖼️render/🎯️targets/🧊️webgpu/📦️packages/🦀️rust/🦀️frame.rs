@@ -217,13 +217,7 @@ fn gather_world_passes(surface_passes: &[SurfacePass], width: f32, height: f32) 
         let line_range = (line_start, lines.len() as u32 - line_start);
         mask_quads.push(QuadInstance::solid(full_screen, white));
         mask_quads.push(QuadInstance::solid(pass.viewport, white));
-        prepared.push(PreparedWorldPass {
-            globals: World3dGlobals { view_proj: pass.view_proj, light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0] },
-            viewport: pass.viewport,
-            opaque,
-            translucent,
-            line_range,
-        });
+        prepared.push(PreparedWorldPass { globals: World3dGlobals { view_proj: pass.view_proj, light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0] }, viewport: pass.viewport, opaque, translucent, line_range });
     }
     (prepared, instances, lines, mask_quads)
 }
@@ -337,7 +331,12 @@ fn run_blur_chain(device: &wgpu::Device, queue: &wgpu::Queue, pipelines: &Pipeli
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("blur_downsample_encoder") });
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("blur_downsample_pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(mip), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT), store: wgpu::StoreOp::Store }, depth_slice: None })],
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: scene.mip_view(mip),
+                resolve_target: None,
+                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT), store: wgpu::StoreOp::Store },
+                depth_slice: None,
+            })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,

@@ -1,8 +1,8 @@
 //! 📝️ VCS play app — the editor window: counter/commit/branch/undo/redo actions plus a projection summary.
 
+use crate::artifacts::vcs::VcsSnapshot;
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::vcs_action;
-use crate::artifacts::vcs::VcsSnapshot;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiButtonNode, UiNode, UiPresence, UiStackNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

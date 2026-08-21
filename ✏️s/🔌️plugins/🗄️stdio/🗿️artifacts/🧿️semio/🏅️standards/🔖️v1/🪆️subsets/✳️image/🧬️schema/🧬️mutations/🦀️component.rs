@@ -75,7 +75,7 @@ impl Default for SemioImageMutation {
 impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     type Diff = SemioImageDiff;
 
-    async fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
             SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -104,10 +104,10 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
                 SemioImageDiff { metadata: Some(metadata), ..Default::default() }
             }
             SemioImageMutation::RemoveMetadataEntry { key } => SemioImageDiff { metadata: Some(SemioImageMetadataDiff { removed: vec![key.clone()], ..Default::default() }), ..Default::default() },
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
         match self {
             SemioImageMutation::NoMutation => vec![SemioImageMutation::NoMutation],
             SemioImageMutation::SetSnapshot { .. } => vec![SemioImageMutation::SetSnapshot { snapshot: base.clone() }],
@@ -269,10 +269,10 @@ fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
 }
 
 impl OpText for SemioImageMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_image_mutation(self)
     }
 }
@@ -317,13 +317,13 @@ fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_image_mutation`/
 /// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
 impl protocol::OpBinary for SemioImageMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
         out.extend_from_slice(print_image_mutation_args(self).as_bytes());
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
@@ -335,7 +335,7 @@ impl protocol::OpBinary for SemioImageMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
-        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpCodecs

@@ -104,7 +104,7 @@ fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) 
 impl Mutation<PptxSnapshot> for PptxMutation {
     type Diff = PptxDiff;
 
-    async fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PptxMutation::NoMutation => PptxDiff::default(),
             PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -118,7 +118,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
         })
     }
 
-    async fn inverse(&self, base: &PptxSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &PptxSnapshot) -> Vec<Self> {
         match self {
             PptxMutation::NoMutation => vec![PptxMutation::NoMutation],
             PptxMutation::SetSnapshot { .. } => vec![PptxMutation::SetSnapshot { snapshot: base.clone() }],
@@ -191,16 +191,16 @@ struct PptxMutationRecord {
 }
 
 impl OpText for PptxMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let record = match self {
             PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
             mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
         };
-        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline).await
+        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
-        let model = PptxMutationRecord::__dsl_from_record(&record).await?;
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+        let model = PptxMutationRecord::__dsl_from_record(&record)?;
         match (model.kind.as_str(), model.snapshot) {
             ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
             ("mutation", None) => dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
@@ -230,13 +230,13 @@ impl OpText for PptxMutation {
 /// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
 /// match uses.
 impl OpBinary for PptxMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
-        Ok(store::pack_rt::encode_wire_value(&value).await)
+        Ok(store::pack_rt::encode_wire_value(&value))
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })
     }
 }

@@ -148,9 +148,9 @@ pub mod camera {
 pub mod matrix {
     //! 🔢️ Matrix types as gridded Sobject groups.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::rectangle;
     use crate::editor::animate::engine::scene::sobject::{arrange, Group, Sobject, Sobjects};
+    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::text::text::{MathText, Text};
     use geometry::{Point, Vec2};
 

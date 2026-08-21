@@ -152,10 +152,7 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
 
 //#region 🔖️Builders
 pub async fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
-    WriterDiff {
-        artifact: Some(Box::new(WriterArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    WriterDiff { artifact: Some(Box::new(WriterArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints a new content-addressed `document` handle for the whole-body replacement `text` and
@@ -181,16 +178,8 @@ impl protocol::DiffCodec for WriterDiff {
     }
 
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "diff utf8",
-            offset: 0,
-            detail: error.to_string(),
-        })?;
-        Self::parse_diff(line).map_err(|error| protocol::ProtocolError::Malformed {
-            what: "diff json",
-            offset: 0,
-            detail: error.to_string(),
-        })
+        let line = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: error.to_string() })?;
+        Self::parse_diff(line).map_err(|error| protocol::ProtocolError::Malformed { what: "diff json", offset: 0, detail: error.to_string() })
     }
 }
 
@@ -201,22 +190,12 @@ mod tests {
     use protocol::DiffCodec;
 
     async fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text(
-            "writer.document",
-            "jack",
-            "jack",
-            "writer://jack",
-            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
-        )
+        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_diff_print_parse_round_trips() {
-        let diffs = vec![
-            diff_set_text("hello", "jack", "jack"),
-            diff_set_snapshot(&jack_snapshot()),
-            WriterDiff::default(),
-        ];
+        let diffs = vec![diff_set_text("hello", "jack", "jack"), diff_set_snapshot(&jack_snapshot()), WriterDiff::default()];
         for diff in diffs {
             let printed = diff.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line: {printed:?}");
@@ -227,11 +206,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_diff_encode_decode_round_trips_and_matches_text() {
-        let diffs = vec![
-            diff_set_text("hello", "jack", "jack"),
-            diff_set_snapshot(&jack_snapshot()),
-            WriterDiff::default(),
-        ];
+        let diffs = vec![diff_set_text("hello", "jack", "jack"), diff_set_snapshot(&jack_snapshot()), WriterDiff::default()];
         for diff in diffs {
             let bytes = diff.encode_diff().expect("encode_diff");
             let decoded = WriterDiff::decode_diff(&bytes).expect("decode_diff");

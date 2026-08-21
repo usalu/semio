@@ -18,8 +18,8 @@
 //! with hash-chaining required), so it takes direct `protocol_format`/`protocol_core` path
 //! dependencies alongside `protocol` rather than duplicating their logic. Every other
 //! protocol-family type this crate touches comes from the `protocol` facade, per the contract.
-use crate::*;
 use crate::db_durability::Frontier;
+use crate::*;
 /// @emoji 📍️ First record marker in a fresh segment: document identity, segment index, and the
 /// previous segment's final commit `chain_hash` (the WAL's cross-segment hash chain — protocol's
 /// own commit chain resets to `chain_0 = blake3(header)` at every segment boundary, since
@@ -745,8 +745,8 @@ impl ArtifactWal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {ArtifactId, DurabilityClass, Frontier};
     use db_storage::{MemoryStorage, WalStorage};
+    use {ArtifactId, DurabilityClass, Frontier};
 
     async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)

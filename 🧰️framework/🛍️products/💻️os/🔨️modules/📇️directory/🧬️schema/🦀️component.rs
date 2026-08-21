@@ -244,11 +244,22 @@ pub struct DirectoryPresenceActor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum DirectoryStreamMessage {
-    Event { event: DirectoryEvent },
-    Connection { phase: DirectoryConnectionPhase, connection: ConnectionView },
+    Event {
+        event: DirectoryEvent,
+    },
+    Connection {
+        phase: DirectoryConnectionPhase,
+        connection: ConnectionView,
+    },
     /// 👥️ Amendment 3 to C1: the document-wide roster, published on every roster change.
-    Presence { space_id: String, document_id: String, actors: Vec<DirectoryPresenceActor> },
-    Heartbeat { head_seq: u64 },
+    Presence {
+        space_id: String,
+        document_id: String,
+        actors: Vec<DirectoryPresenceActor>,
+    },
+    Heartbeat {
+        head_seq: u64,
+    },
 }
 //#endregion 🔖️Stream
 
@@ -259,13 +270,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn event_body_kind_is_the_dotted_wire_string() {
-        let body = DirectoryEventBody::SpaceCreated {
-            space_id: "sp-1".into(),
-            name: "Studio".into(),
-            space_kind: DirectorySpaceKind::Studio,
-            visibility: DirectorySpaceVisibility::Private,
-            owner_user_id: "u-1".into(),
-        };
+        let body = DirectoryEventBody::SpaceCreated { space_id: "sp-1".into(), name: "Studio".into(), space_kind: DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private, owner_user_id: "u-1".into() };
         let json = serde_json::to_value(&body).expect("serialize");
         assert_eq!(json["kind"], "space.created");
         assert_eq!(json["spaceKind"], "studio");

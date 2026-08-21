@@ -46,11 +46,7 @@ async fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
 /// whose endpoints already share a root closes a cycle; `component_count` is the final number of
 /// distinct roots among every counted node.
 pub async fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
-    let ids: BTreeSet<String> = board_fixture
-        .get("nodes")
-        .and_then(DslValue::as_array)
-        .map(|items| items.iter().filter_map(|item| item.get("id").and_then(DslValue::as_str)).map(str::to_string).collect())
-        .unwrap_or_default();
+    let ids: BTreeSet<String> = board_fixture.get("nodes").and_then(DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
 
     let edges: Vec<(String, String)> = board_fixture
         .get("edges")

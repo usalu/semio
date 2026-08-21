@@ -73,15 +73,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| {
-            rows.iter()
-                .map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +115,10 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert_eq!(raised.diff().humidification_provided_kg_h, Some(1.25), "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: the sparse delta must carry humidificationProvidedKgH = 1.25");
-    assert!(raised.diff().humidification_required_kg_h.is_none(), "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: the sparse delta must leave humidificationRequiredKgH unset — a delta that rewrote it would be a bug this assertion exists to catch");
+    assert!(
+        raised.diff().humidification_required_kg_h.is_none(),
+        "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: the sparse delta must leave humidificationRequiredKgH unset — a delta that rewrote it would be a bug this assertion exists to catch"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `Din16798Diff`. Its
@@ -132,7 +128,10 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert!(decoded.selected_check_index.is_none(), "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: change-humidification-provided-kg-h is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex");
+    assert!(
+        decoded.selected_check_index.is_none(),
+        "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: change-humidification-provided-kg-h is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex"
+    );
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: committed diff JSON is not canonical");
@@ -143,7 +142,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: Din16798Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-humidification-provided-kg-h/drops-the-provided-humidification-to-1-point-25-kg-per-hour: committed diff did not carry before to after");
 }

@@ -7,10 +7,11 @@
 //! → `Procedural2dCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls
 //! one passthrough per node.
 
+use crate::artifacts::procedural2d::op::Procedural2dMutation;
+use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL2D_DIALECT, PROCEDURAL_2D_SCHEMA};
 use crate::editor::procedural2d::commands::{
-    add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node,
-    node_graph_edit, node_graph_viewport, remove_generation, remove_widget, rename_generation, reorganize, select_generation, set_eval_outputs, set_locale, set_show_mode,
-    update_generation_values,
+    add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node, node_graph_edit, node_graph_viewport, remove_generation, remove_widget,
+    rename_generation, reorganize, select_generation, set_eval_outputs, set_locale, set_show_mode, update_generation_values,
 };
 use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
 use crate::editor::procedural2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -18,16 +19,14 @@ use crate::editor::procedural2d::modes::generate::windows::{form, generations, p
 use crate::editor::procedural2d::modes::{edit, generate};
 use crate::editor::procedural2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
-use crate::artifacts::procedural2d::op::Procedural2dMutation;
-use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCEDURAL2D_DIALECT, PROCEDURAL_2D_SCHEMA};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, Dialect, ArtifactView,
-    DomainTopology, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
-    MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    SelectionSpec, TopologyNode, UiNode,
 };
-use store::EngineHandles;
 use serde_json::Value;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 /// 🏷️ Plain string tag (NOT a trait const — `ArtifactEditor::DIALECT`+`ROLE` derive the real surface
@@ -60,7 +59,8 @@ pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::One},
+            multiplicity: semio_framework::PortMultiplicity::One,
+        },
         semio_framework_plugin::MediaPortSpec {
             id: "drawing:out".into(),
             label: "Drawing".into(),
@@ -68,7 +68,8 @@ pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
             media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),
             required: false,
-            multiplicity: semio_framework::PortMultiplicity::Many},
+            multiplicity: semio_framework::PortMultiplicity::Many,
+        },
     ])
 }
 //#endregion 🔖️ArtifactIo
@@ -157,22 +158,17 @@ impl ArtifactEditor for Procedural2dPlayApp {
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
             "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into())})),
-            "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode {
-                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
-                x: f64_arg(&["x"]).unwrap_or(0.0),
-                y: f64_arg(&["y"]).unwrap_or(0.0)})),
-            "addWidget" => Ok(Procedural2dCommand::AddWidget(add_widget::AddWidget {
-                kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()),
-                neuron_kind: str_arg(&["neuronKind", "neuron_kind"]),
-                x: f64_arg(&["x"]),
-                y: f64_arg(&["y"])})),
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            })),
+            "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
+            "addWidget" => Ok(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "removeWidget" => Ok(Procedural2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "connectMediaPorts" => Ok(Procedural2dCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
                 source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
                 source_port_id: str_arg(&["sourcePortId", "source_port_id"]).unwrap_or_default(),
                 target_node_id: str_arg(&["targetNodeId", "target_node_id"]).unwrap_or_default(),
-                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default()})),
+                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default(),
+            })),
             "reorganize" => Ok(Procedural2dCommand::Reorganize(reorganize::Reorganize {})),
             "addGeneration" => Ok(Procedural2dCommand::AddGeneration(add_generation::AddGeneration {})),
             "removeGeneration" => Ok(Procedural2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
@@ -182,18 +178,16 @@ impl ArtifactEditor for Procedural2dPlayApp {
                 Ok(Procedural2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
-                    value}))
+                    value,
+                }))
             }
             "nodeGraphViewport" => {
-                let viewport_json = str_arg(&["viewportJson", "viewport_json"])
-                    .or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() }))
-                    .unwrap_or_else(|| "{}".into());
+                let viewport_json = str_arg(&["viewportJson", "viewport_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
                 Ok(Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json }))
             }
             "setShowMode" => Ok(Procedural2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
             "generate" => Ok(Procedural2dCommand::Generate(enter_generate::Generate {})),
-            "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs {
-                outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into())})),
+            "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()) })),
             "canvasPointerDown" => Ok(Procedural2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
             "canvasPointerMove" => Ok(Procedural2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
             "canvasPointerUp" => Ok(Procedural2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
@@ -204,14 +198,22 @@ impl ArtifactEditor for Procedural2dPlayApp {
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            )))}
+            ))),
+        }
     }
 
     /// 🕹️ `nodeGraphEdit` reads the `graph` interaction domain directly (bypassing the
     /// `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg, ctx)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM.
-    async fn handle(command: &Procedural2dCommand, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Procedural2dCommand,
+        doc: &ArtifactView<'_, Procedural2dSnapshot>,
+        cfg: &ConfigView<'_, Procedural2dConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>, Fault> {
         with_process_flow_eval_session(|session| match command {
             Procedural2dCommand::NodeGraphEdit(payload) => node_graph_edit::apply(payload, doc, cfg, interaction, session),
             _ => command.dispatch(doc, cfg, session),
@@ -258,7 +260,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
         with_process_flow_eval_session(|session| {
             let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
-                vec![Effect::DispatchAction {req: semio_framework_plugin::RequestId(101),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+                vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(101), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
                 Vec::new()
             }
@@ -278,7 +280,8 @@ impl ArtifactEditor for Procedural2dPlayApp {
             document_panel::PROCEDURAL2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}")))})
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
@@ -288,7 +291,12 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
     /// 26/08/14's w3b-summary.md), so the selection-dependent delete row below always takes the
     /// "nothing selected" branch rather than reading a stale/wrong selection.
-    async fn context_menu(request: &semio_framework_plugin::ContextMenuRequest, _doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    async fn context_menu(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &ArtifactView<'_, Procedural2dSnapshot>,
+        cfg: &ConfigView<'_, Procedural2dConfig>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let config = cfg.snapshot;
@@ -316,9 +324,11 @@ impl ArtifactEditor for Procedural2dPlayApp {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
-                    payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) }})
+                    payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
-            _ => Err(semio_framework_plugin::MediaError::NotImplemented)}
+            _ => Err(semio_framework_plugin::MediaError::NotImplemented),
+        }
     }
 
     /// 🎞️ `"params:in"`: a generic Data×Value JSON object `{widgetId: number}` — patches matching
@@ -575,7 +585,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_procedural2d_app()).expect("app definition json");
-        for id in [flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN, edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW, generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW] {
+        for id in [
+            flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN,
+            edit_preview::PROCEDURAL2D_PLAY_WINDOW_PREVIEW,
+            generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS,
+            form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM,
+            generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW,
+        ] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
         for id in [edit::PROCEDURAL2D_PLAY_MODE_EDIT, generate::PROCEDURAL2D_PLAY_MODE_GENERATE] {
@@ -678,15 +694,18 @@ mod tests {
             .iter()
             .find_map(|widget| match widget {
                 Widget::InputSlider { id, .. } => Some(id.clone()),
-                _ => None})
+                _ => None,
+            })
             .expect("just-added input slider");
         let media = semio_framework_plugin::Media {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() }};
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
+        };
         app.import_media("params:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import params");
         let value = app.snapshot().expect("snapshot").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
-            _ => None});
+            _ => None,
+        });
         assert_eq!(value, Some(42.0));
     }
 

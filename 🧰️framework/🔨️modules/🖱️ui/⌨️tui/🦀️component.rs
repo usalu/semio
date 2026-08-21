@@ -858,19 +858,7 @@ pub mod vt {
 
     impl VtParser {
         pub fn new() -> Self {
-            Self {
-                state: ParserState::Ground,
-                params: Vec::new(),
-                current: 0,
-                has_current: false,
-                intermediate: 0,
-                private: false,
-                osc: Vec::new(),
-                utf8_buf: [0; 4],
-                utf8_len: 0,
-                utf8_need: 0,
-                ignore_esc: false,
-            }
+            Self { state: ParserState::Ground, params: Vec::new(), current: 0, has_current: false, intermediate: 0, private: false, osc: Vec::new(), utf8_buf: [0; 4], utf8_len: 0, utf8_need: 0, ignore_esc: false }
         }
 
         fn reset_seq(&mut self) {
@@ -1186,11 +1174,7 @@ pub mod vt {
 
         fn clamp_cursor(&mut self) {
             let max_x = self.size.width.saturating_sub(1);
-            let (min_y, max_y) = if self.origin_mode {
-                (self.scroll_top, self.scroll_bottom)
-            } else {
-                (0, self.size.height.saturating_sub(1))
-            };
+            let (min_y, max_y) = if self.origin_mode { (self.scroll_top, self.scroll_bottom) } else { (0, self.size.height.saturating_sub(1)) };
             self.cursor.x = self.cursor.x.min(max_x);
             self.cursor.y = self.cursor.y.clamp(min_y, max_y);
             self.wrap_pending = false;
@@ -1270,11 +1254,7 @@ pub mod vt {
                 } else {
                     let vy = (abs_u - sb) as u16;
                     if vy < self.size.height {
-                        Some(
-                            (0..self.size.width)
-                                .map(|x| buf.get(x, vy).copied().unwrap_or_else(|| Cell::blank(DEFAULT_FG, DEFAULT_BG)))
-                                .collect::<Vec<_>>(),
-                        )
+                        Some((0..self.size.width).map(|x| buf.get(x, vy).copied().unwrap_or_else(|| Cell::blank(DEFAULT_FG, DEFAULT_BG))).collect::<Vec<_>>())
                     } else {
                         None
                     }
@@ -1420,11 +1400,7 @@ pub mod vt {
             self.wrap_pending = false;
             let row = row.max(1) as u16;
             let col = col.max(1) as u16;
-            let (y_base, y_max) = if self.origin_mode {
-                (self.scroll_top, self.scroll_bottom)
-            } else {
-                (0, self.size.height.saturating_sub(1))
-            };
+            let (y_base, y_max) = if self.origin_mode { (self.scroll_top, self.scroll_bottom) } else { (0, self.size.height.saturating_sub(1)) };
             let y = y_base.saturating_add(row.saturating_sub(1)).min(y_max);
             let x = col.saturating_sub(1).min(self.size.width.saturating_sub(1));
             self.cursor = Pos { x, y };
@@ -2307,7 +2283,7 @@ pub mod layout {
                 WindowLayoutChild::Stack(WindowLayoutStackNode {
                     size: sizes.and_then(|s| s.get(i)).copied(),
                     active_window_kind_id: Some(id.clone()),
-                    children: vec![WindowLayoutWindowNode {  window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned(), corner: None }],
+                    children: vec![WindowLayoutWindowNode { window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned(), corner: None }],
                 })
             })
             .collect();
@@ -2399,11 +2375,7 @@ pub mod layout {
             if s.children.is_empty() {
                 return false;
             }
-            let cur = s
-                .active_window_kind_id
-                .as_ref()
-                .and_then(|id| s.children.iter().position(|c| &c.window_kind_id == id))
-                .unwrap_or(0);
+            let cur = s.active_window_kind_id.as_ref().and_then(|id| s.children.iter().position(|c| &c.window_kind_id == id)).unwrap_or(0);
             let len = s.children.len() as i32;
             let next = ((cur as i32 + delta).rem_euclid(len)) as usize;
             s.active_window_kind_id = Some(s.children[next].window_kind_id.clone());
@@ -2414,11 +2386,8 @@ pub mod layout {
     /// ?? Splits the stack containing `window_kind_id` into an axis of two equal stacks.
     pub fn split_window(layout: &mut WindowLayout, window_kind_id: &str, direction: &str, new_id: &str, new_title: Option<String>) -> bool {
         let direction = if direction == "column" { "column" } else { "row" };
-        let new_stack = WindowLayoutChild::Stack(WindowLayoutStackNode {
-            size: Some(1.0),
-            active_window_kind_id: Some(new_id.to_string()),
-            children: vec![WindowLayoutWindowNode {  window_kind_id: new_id.to_string(), title: new_title, corner: None }],
-        });
+        let new_stack =
+            WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(1.0), active_window_kind_id: Some(new_id.to_string()), children: vec![WindowLayoutWindowNode { window_kind_id: new_id.to_string(), title: new_title, corner: None }] });
         fn split_in_axis(axis: &mut WindowLayoutAxisNode, window_kind_id: &str, direction: &str, new_stack: &WindowLayoutChild) -> bool {
             for i in 0..axis.children.len() {
                 match &axis.children[i] {
@@ -2432,11 +2401,7 @@ pub mod layout {
                             other => other,
                         };
                         let parent_size = axis_child_size(&old);
-                        axis.children[i] = WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                            kind: direction.to_string(),
-                            size: Some(parent_size),
-                            children: vec![old, new_stack.clone()],
-                        });
+                        axis.children[i] = WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: Some(parent_size), children: vec![old, new_stack.clone()] });
                         return true;
                     }
                     WindowLayoutChild::Axis(_) => {
@@ -2455,11 +2420,7 @@ pub mod layout {
             WindowLayoutRoot::Stack(s) if stack_contains(s, window_kind_id) => {
                 let mut old = s.clone();
                 old.size = Some(1.0);
-                layout.root = WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                    kind: direction.to_string(),
-                    size: None,
-                    children: vec![WindowLayoutChild::Stack(old), new_stack],
-                });
+                layout.root = WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children: vec![WindowLayoutChild::Stack(old), new_stack] });
                 true
             }
             WindowLayoutRoot::Axis(a) => split_in_axis(a, window_kind_id, direction, &new_stack),
@@ -2480,7 +2441,13 @@ pub mod layout {
                 // Prefer a direct sibling slot; if nested deeper, still nudge this level when the child is an immediate match stack.
                 let direct = matches!(&axis.children[i], WindowLayoutChild::Stack(s) if stack_contains(s, window_kind_id));
                 if direct {
-                    let j = if i + 1 < axis.children.len() { i + 1 } else if i > 0 { i - 1 } else { return false };
+                    let j = if i + 1 < axis.children.len() {
+                        i + 1
+                    } else if i > 0 {
+                        i - 1
+                    } else {
+                        return false;
+                    };
                     let set_size = |child: &mut WindowLayoutChild, size: f64| match child {
                         WindowLayoutChild::Stack(s) => s.size = Some(size.max(0.05)),
                         WindowLayoutChild::Axis(a) => a.size = Some(size.max(0.05)),
@@ -2526,11 +2493,7 @@ pub mod layout {
         }
         match &mut layout.root {
             WindowLayoutRoot::Axis(a) => {
-                a.children.push(WindowLayoutChild::Stack(WindowLayoutStackNode {
-                    size: Some(1.0),
-                    active_window_kind_id: Some(node.window_kind_id.clone()),
-                    children: vec![node],
-                }));
+                a.children.push(WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(1.0), active_window_kind_id: Some(node.window_kind_id.clone()), children: vec![node] }));
                 true
             }
             WindowLayoutRoot::Stack(s) => {
@@ -2801,15 +2764,7 @@ pub mod widget {
     impl TerminalState {
         /// ?? Blank terminal pane of `size` with `scrollback_cap` (0 ? VT default).
         pub fn new(size: Size, scrollback_cap: usize) -> Self {
-            Self {
-                screen: crate::tui::vt::VtScreen::new(size, scrollback_cap),
-                scrollback_offset: 0,
-                follow: true,
-                pinned: false,
-                search: String::new(),
-                search_active: false,
-                selection: None,
-            }
+            Self { screen: crate::tui::vt::VtScreen::new(size, scrollback_cap), scrollback_offset: 0, follow: true, pinned: false, search: String::new(), search_active: false, selection: None }
         }
 
         /// ??? Feeds PTY bytes; keeps the viewport glued when following and not pinned.
@@ -2839,11 +2794,7 @@ pub mod widget {
         /// ?? Extracts selected text from the active buffer (simple row-major slice).
         pub fn selected_text(&self) -> Option<String> {
             let sel = self.selection?;
-            let (a, b) = if (sel.start.y, sel.start.x) <= (sel.end.y, sel.end.x) {
-                (sel.start, sel.end)
-            } else {
-                (sel.end, sel.start)
-            };
+            let (a, b) = if (sel.start.y, sel.start.x) <= (sel.end.y, sel.end.x) { (sel.start, sel.end) } else { (sel.end, sel.start) };
             let mut out = String::new();
             for y in a.y..=b.y {
                 let x0 = if y == a.y { a.x } else { 0 };
@@ -2928,11 +2879,7 @@ pub mod widget {
         if rect.width == 0 || rect.height == 0 {
             return;
         }
-        let (body, search_row) = if term.search_active && rect.height > 1 {
-            (Rect::new(rect.x, rect.y, rect.width, rect.height - 1), Some(rect.y + rect.height - 1))
-        } else {
-            (rect, None)
-        };
+        let (body, search_row) = if term.search_active && rect.height > 1 { (Rect::new(rect.x, rect.y, rect.width, rect.height - 1), Some(rect.y + rect.height - 1)) } else { (rect, None) };
         term.screen.blit_to(buf, body, term.scrollback_offset);
         if let Some(y) = search_row {
             let label = format!("/{}", term.search);
@@ -3078,15 +3025,7 @@ pub mod chrome {
 
     impl WindowState {
         pub fn new(title: impl Into<String>) -> Self {
-            Self {
-                title: title.into(),
-                number: None,
-                focused: false,
-                closable: true,
-                maximizable: true,
-                stack_tabs: Vec::new(),
-                active_stack_tab: 0,
-            }
+            Self { title: title.into(), number: None, focused: false, closable: true, maximizable: true, stack_tabs: Vec::new(), active_stack_tab: 0 }
         }
 
         /// 📑 Attaches per-stack tab labels (defaulting each to top-left); `active` is clamped into range.
@@ -3143,9 +3082,7 @@ pub mod chrome {
             for group in &layout.groups {
                 let text_y = match group.corner {
                     crate::tui::layout::WindowStackCorner::TopLeft | crate::tui::layout::WindowStackCorner::TopRight => rect.y + 1,
-                    crate::tui::layout::WindowStackCorner::BottomLeft | crate::tui::layout::WindowStackCorner::BottomRight => {
-                        rect.y + rect.height.saturating_sub(2)
-                    }
+                    crate::tui::layout::WindowStackCorner::BottomLeft | crate::tui::layout::WindowStackCorner::BottomRight => rect.y + rect.height.saturating_sub(2),
                 };
                 if pos.y != text_y {
                     continue;
@@ -3230,11 +3167,7 @@ pub mod chrome {
             let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
             return vec![(0, format!("{number_prefix}{}", w.title), crate::tui::layout::WindowStackCorner::TopLeft)];
         }
-        w.stack_tabs
-            .iter()
-            .enumerate()
-            .map(|(i, t)| (i, t.label.clone(), t.corner))
-            .collect()
+        w.stack_tabs.iter().enumerate().map(|(i, t)| (i, t.label.clone(), t.corner)).collect()
     }
 
     fn build_corner_tab_interior(label: &str, w: &WindowState, room: u16) -> (String, u16, Option<u16>, Option<u16>, Option<u16>) {
@@ -3289,13 +3222,7 @@ pub mod chrome {
         }
     }
 
-    fn layout_corner_tabs(
-        entries: &[(usize, String)],
-        w: &WindowState,
-        start_x: u16,
-        end_x: u16,
-        from_left: bool,
-    ) -> Vec<WindowCornerTab> {
+    fn layout_corner_tabs(entries: &[(usize, String)], w: &WindowState, start_x: u16, end_x: u16, from_left: bool) -> Vec<WindowCornerTab> {
         if entries.is_empty() || end_x <= start_x + 2 {
             return Vec::new();
         }
@@ -3316,15 +3243,7 @@ pub mod chrome {
                 if x + width > end_x {
                     break;
                 }
-                tabs.push(WindowCornerTab {
-                    x,
-                    interior,
-                    interior_width,
-                    index: *index,
-                    maximize_x: max_off.map(|o| x + 1 + o),
-                    new_x: new_off.map(|o| x + 1 + o),
-                    close_x: close_off.map(|o| x + 1 + o),
-                });
+                tabs.push(WindowCornerTab { x, interior, interior_width, index: *index, maximize_x: max_off.map(|o| x + 1 + o), new_x: new_off.map(|o| x + 1 + o), close_x: close_off.map(|o| x + 1 + o) });
                 x = x.saturating_add(width);
             }
         } else {
@@ -3347,15 +3266,7 @@ pub mod chrome {
                 if x < start_x {
                     break;
                 }
-                rev.push(WindowCornerTab {
-                    x,
-                    interior,
-                    interior_width,
-                    index: *index,
-                    maximize_x: max_off.map(|o| x + 1 + o),
-                    new_x: new_off.map(|o| x + 1 + o),
-                    close_x: close_off.map(|o| x + 1 + o),
-                });
+                rev.push(WindowCornerTab { x, interior, interior_width, index: *index, maximize_x: max_off.map(|o| x + 1 + o), new_x: new_off.map(|o| x + 1 + o), close_x: close_off.map(|o| x + 1 + o) });
                 right = x;
             }
             rev.reverse();
@@ -3522,12 +3433,7 @@ pub mod chrome {
             *mount_root = None;
         }
         let mount = scene.add(canvas, Node::new(NodeContent::Box));
-        scene.node_mut(mount).set_constraint(crate::tui::layout::Constraint {
-            direction: Direction::Stack,
-            width: Dimension::Weight(1),
-            height: Dimension::Weight(1),
-            ..Default::default()
-        });
+        scene.node_mut(mount).set_constraint(crate::tui::layout::Constraint { direction: Direction::Stack, width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
         *mount_root = Some(mount);
 
         fn weight(size: Option<f64>) -> u16 {
@@ -3540,35 +3446,16 @@ pub mod chrome {
 
         fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &crate::tui::layout::WindowLayoutStackNode, windows: &[(String, NodeId)], w: u16) {
             let box_id = scene.add(parent, Node::new(NodeContent::Box));
-            scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint {
-                direction: Direction::Stack,
-                width: Dimension::Weight(w),
-                height: Dimension::Weight(w),
-                ..Default::default()
-            });
+            scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint { direction: Direction::Stack, width: Dimension::Weight(w), height: Dimension::Weight(w), ..Default::default() });
             let active = stack.active_window_kind_id.as_deref().unwrap_or_else(|| stack.children.first().map(|c| c.window_kind_id.as_str()).unwrap_or(""));
-            let tabs: Vec<WindowStackTabState> = stack
-                .children
-                .iter()
-                .map(|c| WindowStackTabState {
-                    label: c.window_kind_id.clone(),
-                    corner: c.corner.unwrap_or_default(),
-                })
-                .collect();
+            let tabs: Vec<WindowStackTabState> = stack.children.iter().map(|c| WindowStackTabState { label: c.window_kind_id.clone(), corner: c.corner.unwrap_or_default() }).collect();
             let active_idx = tabs.iter().position(|t| t.label == active).unwrap_or(0);
             for child in &stack.children {
                 if let Some(win_id) = find_window(windows, &child.window_kind_id) {
                     scene.reparent(win_id, box_id);
                     let visible = child.window_kind_id == active;
                     scene.node_mut(win_id).set_visible(visible);
-                    scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint {
-                        width: Dimension::Weight(1),
-                        height: Dimension::Weight(1),
-                        direction: Direction::Column,
-                        padding: [2, 1, 1, 1],
-                        gap: 1,
-                        ..Default::default()
-                    });
+                    scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
                     if let Some(chrome) = scene.node_mut(win_id).chrome() {
                         if let ChromeState::Window(ref mut ws) = chrome {
                             ws.stack_tabs = tabs.clone();
@@ -3603,14 +3490,7 @@ pub mod chrome {
             if let Some(win_id) = find_window(windows, zid) {
                 scene.reparent(win_id, mount);
                 scene.node_mut(win_id).set_visible(true);
-                scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint {
-                    width: Dimension::Weight(1),
-                    height: Dimension::Weight(1),
-                    direction: Direction::Column,
-                    padding: [2, 1, 1, 1],
-                    gap: 1,
-                    ..Default::default()
-                });
+                scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
             }
             return;
         }
@@ -3905,11 +3785,7 @@ pub mod backend {
         {
             use std::io::Write;
             use std::process::{Command, Stdio};
-            let candidates: &[&[&str]] = if cfg!(target_os = "macos") {
-                &[&["pbcopy"]]
-            } else {
-                &[&["wl-copy"], &["xclip", "-selection", "clipboard"], &["xsel", "--clipboard", "--input"]]
-            };
+            let candidates: &[&[&str]] = if cfg!(target_os = "macos") { &[&["pbcopy"]] } else { &[&["wl-copy"], &["xclip", "-selection", "clipboard"], &["xsel", "--clipboard", "--input"]] };
             for argv in candidates {
                 let mut child = match Command::new(argv[0]).args(&argv[1..]).stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn() {
                     Ok(c) => c,
@@ -3950,11 +3826,7 @@ pub mod backend {
         #[cfg(all(unix, not(target_arch = "wasm32")))]
         {
             use std::process::Command;
-            let candidates: &[&[&str]] = if cfg!(target_os = "macos") {
-                &[&["pbpaste"]]
-            } else {
-                &[&["wl-paste", "--no-newline"], &["xclip", "-selection", "clipboard", "-o"], &["xsel", "--clipboard", "--output"]]
-            };
+            let candidates: &[&[&str]] = if cfg!(target_os = "macos") { &[&["pbpaste"]] } else { &[&["wl-paste", "--no-newline"], &["xclip", "-selection", "clipboard", "-o"], &["xsel", "--clipboard", "--output"]] };
             for argv in candidates {
                 if let Ok(out) = Command::new(argv[0]).args(&argv[1..]).output() {
                     if out.status.success() {
@@ -3967,10 +3839,7 @@ pub mod backend {
         #[cfg(all(windows, not(target_arch = "wasm32")))]
         {
             use std::process::Command;
-            let out = Command::new("powershell")
-                .args(["-NoProfile", "-Command", "Get-Clipboard"])
-                .output()
-                .map_err(|e| clip_err(e.to_string()))?;
+            let out = Command::new("powershell").args(["-NoProfile", "-Command", "Get-Clipboard"]).output().map_err(|e| clip_err(e.to_string()))?;
             if out.status.success() {
                 Ok(String::from_utf8_lossy(&out.stdout).trim_end_matches(&['\r', '\n'][..]).to_string())
             } else {
@@ -4304,9 +4173,7 @@ pub mod pty {
     impl std::error::Error for PtyError {}
 
     fn err(message: impl Into<String>) -> PtyError {
-        PtyError {
-            message: message.into(),
-        }
+        PtyError { message: message.into() }
     }
 
     #[cfg(all(unix, not(target_arch = "wasm32")))]
@@ -4324,38 +4191,20 @@ pub mod pty {
         }
 
         impl Pty {
-            pub fn spawn(
-                cmd: &str,
-                args: &[&str],
-                env: &[(&str, &str)],
-                cwd: Option<&Path>,
-                size: PtySize,
-            ) -> Result<Self, PtyError> {
+            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
                 let mut master: RawFd = -1;
                 let mut slave: RawFd = -1;
                 let mut ws: libc::winsize = unsafe { std::mem::zeroed() };
                 ws.ws_col = size.cols;
                 ws.ws_row = size.rows;
                 unsafe {
-                    if libc::openpty(
-                        &mut master,
-                        &mut slave,
-                        std::ptr::null_mut(),
-                        std::ptr::null_mut(),
-                        &mut ws,
-                    ) != 0
-                    {
-                        return Err(err(format!(
-                            "openpty failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                    if libc::openpty(&mut master, &mut slave, std::ptr::null_mut(), std::ptr::null_mut(), &mut ws) != 0 {
+                        return Err(err(format!("openpty failed: {}", std::io::Error::last_os_error())));
                     }
                 }
 
                 let flags = unsafe { libc::fcntl(master, libc::F_GETFL) };
-                if flags < 0
-                    || unsafe { libc::fcntl(master, libc::F_SETFL, flags | libc::O_NONBLOCK) } != 0
-                {
+                if flags < 0 || unsafe { libc::fcntl(master, libc::F_SETFL, flags | libc::O_NONBLOCK) } != 0 {
                     unsafe {
                         libc::close(master);
                         libc::close(slave);
@@ -4382,10 +4231,7 @@ pub mod pty {
                         if libc::ioctl(slave, libc::TIOCSCTTY as _, 0) < 0 {
                             return Err(std::io::Error::last_os_error());
                         }
-                        if libc::dup2(slave, libc::STDIN_FILENO) < 0
-                            || libc::dup2(slave, libc::STDOUT_FILENO) < 0
-                            || libc::dup2(slave, libc::STDERR_FILENO) < 0
-                        {
+                        if libc::dup2(slave, libc::STDIN_FILENO) < 0 || libc::dup2(slave, libc::STDOUT_FILENO) < 0 || libc::dup2(slave, libc::STDERR_FILENO) < 0 {
                             return Err(std::io::Error::last_os_error());
                         }
                         if slave > libc::STDERR_FILENO {
@@ -4421,10 +4267,7 @@ pub mod pty {
                 ws.ws_row = size.rows;
                 unsafe {
                     if libc::ioctl(self.master.as_raw_fd(), libc::TIOCSWINSZ, &ws) != 0 {
-                        return Err(err(format!(
-                            "TIOCSWINSZ failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                        return Err(err(format!("TIOCSWINSZ failed: {}", std::io::Error::last_os_error())));
                     }
                 }
                 Ok(())
@@ -4435,13 +4278,7 @@ pub mod pty {
             }
 
             pub fn try_read(&mut self, buf: &mut [u8]) -> Result<usize, PtyError> {
-                let n = unsafe {
-                    libc::read(
-                        self.master.as_raw_fd(),
-                        buf.as_mut_ptr() as *mut _,
-                        buf.len(),
-                    )
-                };
+                let n = unsafe { libc::read(self.master.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) };
                 if n < 0 {
                     let e = std::io::Error::last_os_error();
                     if e.kind() == std::io::ErrorKind::WouldBlock {
@@ -4491,13 +4328,7 @@ pub mod pty {
 
         impl Write for Pty {
             fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-                let n = unsafe {
-                    libc::write(
-                        self.master.as_raw_fd(),
-                        buf.as_ptr() as *const _,
-                        buf.len(),
-                    )
-                };
+                let n = unsafe { libc::write(self.master.as_raw_fd(), buf.as_ptr() as *const _, buf.len()) };
                 if n < 0 {
                     Err(std::io::Error::last_os_error())
                 } else {
@@ -4524,23 +4355,16 @@ pub mod pty {
     #[cfg(windows)]
     mod windows_impl {
         use super::*;
-        use std::os::windows::ffi::OsStrExt;
         use std::ffi::OsStr;
-        use windows_sys::Win32::Foundation::{
-            CloseHandle, SetHandleInformation, HANDLE, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE,
-            STILL_ACTIVE, WAIT_OBJECT_0, WAIT_TIMEOUT,
-        };
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::Foundation::{CloseHandle, SetHandleInformation, HANDLE, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE, STILL_ACTIVE, WAIT_OBJECT_0, WAIT_TIMEOUT};
         use windows_sys::Win32::Security::SECURITY_ATTRIBUTES;
         use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
-        use windows_sys::Win32::System::Console::{
-            ClosePseudoConsole, CreatePseudoConsole, ResizePseudoConsole, COORD, HPCON,
-        };
+        use windows_sys::Win32::System::Console::{ClosePseudoConsole, CreatePseudoConsole, ResizePseudoConsole, COORD, HPCON};
         use windows_sys::Win32::System::Pipes::{CreatePipe, PeekNamedPipe};
         use windows_sys::Win32::System::Threading::{
-            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess, GetProcessId,
-            InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute,
-            WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT,
-            PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, PROCESS_INFORMATION, STARTUPINFOEXW,
+            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess, GetProcessId, InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute, WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT,
+            EXTENDED_STARTUPINFO_PRESENT, PROCESS_INFORMATION, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, STARTUPINFOEXW,
         };
 
         /// ?? Windows ConPTY master pipes plus child process.
@@ -4599,13 +4423,7 @@ pub mod pty {
         }
 
         impl Pty {
-            pub fn spawn(
-                cmd: &str,
-                args: &[&str],
-                env: &[(&str, &str)],
-                cwd: Option<&Path>,
-                size: PtySize,
-            ) -> Result<Self, PtyError> {
+            pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
                 unsafe {
                     let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
                     sa.nLength = std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32;
@@ -4626,10 +4444,7 @@ pub mod pty {
                     SetHandleInformation(input_write, HANDLE_FLAG_INHERIT, 0);
                     SetHandleInformation(output_read, HANDLE_FLAG_INHERIT, 0);
 
-                    let coord = COORD {
-                        X: size.cols as i16,
-                        Y: size.rows as i16,
-                    };
+                    let coord = COORD { X: size.cols as i16, Y: size.rows as i16 };
                     let mut hpcon: HPCON = 0;
                     let hr = CreatePseudoConsole(coord, input_read, output_write, 0, &mut hpcon);
                     close_handle(input_read);
@@ -4650,16 +4465,7 @@ pub mod pty {
                         close_handle(output_read);
                         return Err(err("InitializeProcThreadAttributeList failed"));
                     }
-                    if UpdateProcThreadAttribute(
-                        attr_list,
-                        0,
-                        PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE as usize,
-                        &hpcon as *const _ as *const _,
-                        std::mem::size_of::<HPCON>(),
-                        std::ptr::null_mut(),
-                        std::ptr::null(),
-                    ) == 0
-                    {
+                    if UpdateProcThreadAttribute(attr_list, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE as usize, &hpcon as *const _ as *const _, std::mem::size_of::<HPCON>(), std::ptr::null_mut(), std::ptr::null()) == 0 {
                         DeleteProcThreadAttributeList(attr_list);
                         ClosePseudoConsole(hpcon);
                         close_handle(input_write);
@@ -4686,14 +4492,8 @@ pub mod pty {
                         std::ptr::null(),
                         0,
                         flags,
-                        env_block
-                            .as_ref()
-                            .map(|b| b.as_ptr() as *const _)
-                            .unwrap_or(std::ptr::null()),
-                        cwd_wide
-                            .as_ref()
-                            .map(|b| b.as_ptr())
-                            .unwrap_or(std::ptr::null()),
+                        env_block.as_ref().map(|b| b.as_ptr() as *const _).unwrap_or(std::ptr::null()),
+                        cwd_wide.as_ref().map(|b| b.as_ptr()).unwrap_or(std::ptr::null()),
                         &si.StartupInfo,
                         &mut pi,
                     );
@@ -4702,28 +4502,15 @@ pub mod pty {
                         ClosePseudoConsole(hpcon);
                         close_handle(input_write);
                         close_handle(output_read);
-                        return Err(err(format!(
-                            "CreateProcessW failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                        return Err(err(format!("CreateProcessW failed: {}", std::io::Error::last_os_error())));
                     }
 
-                    Ok(Self {
-                        hpcon,
-                        input_write,
-                        output_read,
-                        process: pi.hProcess,
-                        thread: pi.hThread,
-                        closed: false,
-                    })
+                    Ok(Self { hpcon, input_write, output_read, process: pi.hProcess, thread: pi.hThread, closed: false })
                 }
             }
 
             pub fn resize(&mut self, size: PtySize) -> Result<(), PtyError> {
-                let coord = COORD {
-                    X: size.cols as i16,
-                    Y: size.rows as i16,
-                };
+                let coord = COORD { X: size.cols as i16, Y: size.rows as i16 };
                 let hr = unsafe { ResizePseudoConsole(self.hpcon, coord) };
                 if hr < 0 {
                     return Err(err(format!("ResizePseudoConsole failed: HRESULT {hr}")));
@@ -4738,37 +4525,16 @@ pub mod pty {
             pub fn try_read(&mut self, buf: &mut [u8]) -> Result<usize, PtyError> {
                 unsafe {
                     let mut available = 0u32;
-                    if PeekNamedPipe(
-                        self.output_read,
-                        std::ptr::null_mut(),
-                        0,
-                        std::ptr::null_mut(),
-                        &mut available,
-                        std::ptr::null_mut(),
-                    ) == 0
-                    {
-                        return Err(err(format!(
-                            "PeekNamedPipe failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                    if PeekNamedPipe(self.output_read, std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut()) == 0 {
+                        return Err(err(format!("PeekNamedPipe failed: {}", std::io::Error::last_os_error())));
                     }
                     if available == 0 {
                         return Ok(0);
                     }
                     let to_read = (buf.len() as u32).min(available);
                     let mut read = 0u32;
-                    if ReadFile(
-                        self.output_read,
-                        buf.as_mut_ptr(),
-                        to_read,
-                        &mut read,
-                        std::ptr::null_mut(),
-                    ) == 0
-                    {
-                        return Err(err(format!(
-                            "ReadFile failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                    if ReadFile(self.output_read, buf.as_mut_ptr(), to_read, &mut read, std::ptr::null_mut()) == 0 {
+                        return Err(err(format!("ReadFile failed: {}", std::io::Error::last_os_error())));
                     }
                     Ok(read as usize)
                 }
@@ -4805,10 +4571,7 @@ pub mod pty {
             pub fn kill(&mut self) -> Result<(), PtyError> {
                 unsafe {
                     if TerminateProcess(self.process, 1) == 0 {
-                        return Err(err(format!(
-                            "TerminateProcess failed: {}",
-                            std::io::Error::last_os_error()
-                        )));
+                        return Err(err(format!("TerminateProcess failed: {}", std::io::Error::last_os_error())));
                     }
                     WaitForSingleObject(self.process, 1500);
                 }
@@ -4833,15 +4596,7 @@ pub mod pty {
         impl Write for Pty {
             fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
                 let mut written = 0u32;
-                let ok = unsafe {
-                    WriteFile(
-                        self.input_write,
-                        buf.as_ptr(),
-                        buf.len() as u32,
-                        &mut written,
-                        std::ptr::null_mut(),
-                    )
-                };
+                let ok = unsafe { WriteFile(self.input_write, buf.as_ptr(), buf.len() as u32, &mut written, std::ptr::null_mut()) };
                 if ok == 0 {
                     Err(std::io::Error::last_os_error())
                 } else {
@@ -5031,7 +4786,7 @@ mod tests {
             root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
                 size: None,
                 active_window_kind_id: Some("b".into()),
-                children: vec![WindowLayoutWindowNode {  window_kind_id: "a".into(), title: None, corner: None }, WindowLayoutWindowNode {  window_kind_id: "b".into(), title: None, corner: None }],
+                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None, corner: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None, corner: None }],
             }),
             zoomed: None,
         };
@@ -5142,15 +4897,8 @@ mod tests {
         let layout = create_default_layout(&["w1".into()], "row", None, Some(&["wizard".into()]));
         let mut built = shell(&mut tui.scene, navbar, footer, &layout);
         let (_id, chrome) = built.windows[0].clone();
-        let widget = tui.scene.add(
-            chrome,
-            Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["dev".into(), "build".into(), "test".into()])))),
-        );
-        tui.scene.node_mut(widget).set_constraint(Constraint {
-            width: Dimension::Weight(1),
-            height: Dimension::Weight(1),
-            ..Default::default()
-        });
+        let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["dev".into(), "build".into(), "test".into()])))));
+        tui.scene.node_mut(widget).set_constraint(Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
         built.remount(&mut tui.scene, &layout);
         tui.set_focus(Some(widget));
         let _ = tui.render_full();
@@ -5171,10 +4919,7 @@ mod tests {
         let root = scene.root();
         let canvas = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
         let w1_chrome = scene.add(canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("w1")))));
-        let term = scene.add(
-            w1_chrome,
-            Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(Size { width: 10, height: 5 }, 100)))),
-        );
+        let term = scene.add(w1_chrome, Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(Size { width: 10, height: 5 }, 100)))));
         if let Some(WidgetState::Terminal(t)) = scene.node_mut(term).widget() {
             t.feed(b"hello");
         }
@@ -5184,9 +4929,7 @@ mod tests {
         assert!(mount_root.is_some());
         assert_ne!(scene.node(w1_chrome).parent, Some(canvas), "window chrome must leave the canvas direct-child list");
         if let Some(WidgetState::Terminal(t)) = scene.node_mut(term).widget() {
-            let has_h = (0..t.screen.size.height).any(|y| {
-                (0..t.screen.size.width).any(|x| t.screen.cell_at(x, y).map(|c| c.ch) == Some('h'))
-            });
+            let has_h = (0..t.screen.size.height).any(|y| (0..t.screen.size.width).any(|x| t.screen.cell_at(x, y).map(|c| c.ch) == Some('h')));
             assert!(has_h);
         }
     }
@@ -5680,11 +5423,7 @@ mod tests {
     }
 
     fn vt_row(screen: &crate::tui::vt::VtScreen, y: u16) -> String {
-        (0..screen.size.width)
-            .filter_map(|x| screen.cell_at(x, y))
-            .map(|c| c.ch)
-            .filter(|&c| c != '\0')
-            .collect()
+        (0..screen.size.width).filter_map(|x| screen.cell_at(x, y)).map(|c| c.ch).filter(|&c| c != '\0').collect()
     }
 
     #[test]
@@ -5712,8 +5451,10 @@ mod tests {
         s.feed(b"[1;1HAAAAA[2;1HBBBBB[3;1HCCCCC[4;1HDDDDD[5;1HEEEEE");
         s.feed(b"[2;4r");
         assert_eq!((s.scroll_top, s.scroll_bottom), (1, 3));
-        s.feed(b"[4;1H
-");
+        s.feed(
+            b"[4;1H
+",
+        );
         assert_eq!(&vt_row(&s, 0)[..5], "AAAAA");
         assert_eq!(&vt_row(&s, 1)[..5], "CCCCC");
         assert_eq!(&vt_row(&s, 2)[..5], "DDDDD");
@@ -5849,18 +5590,9 @@ mod tests {
 
     #[test]
     fn window_layout_split_resize_move_zoom_and_tabs() {
-        use crate::tui::layout::{
-            activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window,
-            WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
-        };
-        let mut layout = WindowLayout {
-            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-                size: None,
-                active_window_kind_id: Some("a".into()),
-                children: vec![WindowLayoutWindowNode {  window_kind_id: "a".into(), title: None, corner: None }],
-            }),
-            zoomed: None,
-        };
+        use crate::tui::layout::{activate_stack_tab, cycle_stack_tab, move_window_to_stack, resize_window, solve_window_layout, split_window, zoom_window, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+        let mut layout =
+            WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { size: None, active_window_kind_id: Some("a".into()), children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None, corner: None }] }), zoomed: None };
         assert!(split_window(&mut layout, "a", "row", "b", None));
         let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
         assert_eq!(measures.len(), 2);
@@ -6135,13 +5867,7 @@ mod tests {
         let theme = Theme::new(AppearanceName::Dark);
         let rect = Rect::new(0, 0, 50, 8);
         let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-        let w = WindowState::new("Main").with_stack_tab_states(
-            vec![
-                WindowStackTabState::new("top", WindowStackCorner::TopLeft),
-                WindowStackTabState::new("bot", WindowStackCorner::BottomRight),
-            ],
-            1,
-        );
+        let w = WindowState::new("Main").with_stack_tab_states(vec![WindowStackTabState::new("top", WindowStackCorner::TopLeft), WindowStackTabState::new("bot", WindowStackCorner::BottomRight)], 1);
         ChromeState::Window(w).paint(&theme, rect, &mut buf);
         let top = row_text(&buf, 1);
         let bottom = row_text(&buf, 6);
@@ -6336,8 +6062,6 @@ mod tests {
     }
     //#endregion ???WasmHost
 
-
-
     //#region ???Clipboard
     #[test]
     fn osc52_copy_sequence_is_base64_payload() {
@@ -6358,14 +6082,7 @@ mod tests {
         use crate::tui::pty::{Pty, PtySize};
         use std::time::{Duration, Instant};
 
-        let mut pty = Pty::spawn(
-            "/bin/echo",
-            &["hello"],
-            &[],
-            None,
-            PtySize { cols: 80, rows: 24 },
-        )
-        .expect("spawn echo");
+        let mut pty = Pty::spawn("/bin/echo", &["hello"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn echo");
         let mut out = Vec::new();
         let mut buf = [0u8; 1024];
         let deadline = Instant::now() + Duration::from_secs(2);
@@ -6395,14 +6112,7 @@ mod tests {
         use std::process::Command;
         use std::time::{Duration, Instant};
 
-        let mut pty = Pty::spawn(
-            "bash",
-            &["-c", "sleep 300 & sleep 300; wait"],
-            &[],
-            None,
-            PtySize { cols: 80, rows: 24 },
-        )
-        .expect("spawn bash sleep group");
+        let mut pty = Pty::spawn("bash", &["-c", "sleep 300 & sleep 300; wait"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn bash sleep group");
         let pid = pty.pid();
         let deadline = Instant::now() + Duration::from_secs(2);
         let mut saw_child = false;
@@ -6428,16 +6138,8 @@ mod tests {
     fn pty_resize_ok() {
         use crate::tui::pty::{Pty, PtySize};
 
-        let mut pty = Pty::spawn(
-            "/bin/sleep",
-            &["1"],
-            &[],
-            None,
-            PtySize { cols: 80, rows: 24 },
-        )
-        .expect("spawn sleep");
-        pty.resize(PtySize { cols: 100, rows: 40 })
-            .expect("resize");
+        let mut pty = Pty::spawn("/bin/sleep", &["1"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn sleep");
+        pty.resize(PtySize { cols: 100, rows: 40 }).expect("resize");
         pty.kill().expect("kill");
     }
     //#endregion ???Pty

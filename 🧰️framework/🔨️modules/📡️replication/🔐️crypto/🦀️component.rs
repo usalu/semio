@@ -24,4 +24,3 @@ pub trait SignatureVerifier {
     async fn verify(&self, scheme: &str, key_id: &str, message: &[u8; 32], signature: &[u8]) -> Result<bool, ProtocolError>;
 }
 //#endregion 🔖️Crypto
-

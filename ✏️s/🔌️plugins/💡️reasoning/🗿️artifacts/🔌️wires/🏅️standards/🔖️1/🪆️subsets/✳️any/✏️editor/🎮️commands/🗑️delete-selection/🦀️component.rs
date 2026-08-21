@@ -1,11 +1,11 @@
 //! 🗑️ 🗑️ Wires play app commands command — `delete-selection`.
 
-use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::schema::fixture_edges;
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -45,10 +45,10 @@ pub async fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnaps
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::wires::schema::fixture_nodes;
     use crate::editor::wires::commands::add_node;
     use crate::editor::wires::testkit::{app_with_registry, dispatch, new_app};
     use crate::editor::wires::WiresCommand;
-    use crate::artifacts::wires::schema::fixture_nodes;
     use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
     use serde_json::json;
 

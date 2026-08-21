@@ -43,7 +43,7 @@ pub struct MeshData {
 }
 
 impl MeshData {
-    pub async fn vertex_count(&self) -> usize {
+    pub fn vertex_count(&self) -> usize {
         self.positions.len() / 3
     }
 
@@ -51,8 +51,8 @@ impl MeshData {
         self.indices.len() / 3
     }
 
-    pub async fn compute_normals(&mut self) {
-        let count = self.vertex_count().await;
+    pub fn compute_normals(&mut self) {
+        let count = self.vertex_count();
         self.normals = vec![0.0; count * 3];
         for tri in self.indices.chunks_exact(3) {
             let i0 = tri[0] as usize;
@@ -63,11 +63,7 @@ impl MeshData {
             let p2 = [self.positions[i2 * 3], self.positions[i2 * 3 + 1], self.positions[i2 * 3 + 2]];
             let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
             let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-            let n = [
-                e0[1] * e1[2] - e0[2] * e1[1],
-                e0[2] * e1[0] - e0[0] * e1[2],
-                e0[0] * e1[1] - e0[1] * e1[0],
-            ];
+            let n = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
             for &idx in tri {
                 let i = idx as usize * 3;
                 self.normals[i] += n[0];
@@ -98,19 +94,18 @@ impl MeshData {
     }
 
     pub async fn merge(&mut self, other: &MeshData) {
-        let base = self.vertex_count().await as u32;
+        let base = self.vertex_count() as u32;
         self.positions.extend_from_slice(&other.positions);
         self.normals.extend_from_slice(&other.normals);
         self.colors.extend_from_slice(&other.colors);
-        self.indices
-            .extend(other.indices.iter().map(|index| index + base));
+        self.indices.extend(other.indices.iter().map(|index| index + base));
     }
 }
 //#endregion MeshData
 
 //#region Primitives
 async fn push_triangle(mesh: &mut MeshData, a: [f32; 3], b: [f32; 3], c: [f32; 3]) {
-    let base = mesh.vertex_count().await as u32;
+    let base = mesh.vertex_count() as u32;
     mesh.positions.extend_from_slice(&[a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]]);
     mesh.indices.extend_from_slice(&[base, base + 1, base + 2]);
 }
@@ -132,7 +127,7 @@ pub async fn mesh_box(width: f32, height: f32, depth: f32) -> MeshData {
         push_triangle(&mut mesh, a, b, c).await;
         push_triangle(&mut mesh, a, c, d).await;
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -142,7 +137,7 @@ pub async fn mesh_plane(width: f32, depth: f32) -> MeshData {
     let mut mesh = MeshData::default();
     push_triangle(&mut mesh, [-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd]).await;
     push_triangle(&mut mesh, [-hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]).await;
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -170,17 +165,13 @@ pub async fn mesh_uv_sphere(radius: f32, segments: u32, rings: u32) -> MeshData 
             }
         }
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
 async fn sphere_point(radius: f32, phi: f32, theta: f32) -> [f32; 3] {
     let sin_phi = phi.sin();
-    [
-        radius * sin_phi * theta.cos(),
-        radius * phi.cos(),
-        radius * sin_phi * theta.sin(),
-    ]
+    [radius * sin_phi * theta.cos(), radius * phi.cos(), radius * sin_phi * theta.sin()]
 }
 
 pub async fn mesh_ico_sphere(radius: f32, subdivisions: u32) -> MeshData {
@@ -199,28 +190,8 @@ pub async fn mesh_ico_sphere(radius: f32, subdivisions: u32) -> MeshData {
         normalize3([-t, 0.0, -1.0]).await,
         normalize3([-t, 0.0, 1.0]).await,
     ];
-    let mut faces = vec![
-        [0, 11, 5],
-        [0, 5, 1],
-        [0, 1, 7],
-        [0, 7, 10],
-        [0, 10, 11],
-        [1, 5, 9],
-        [5, 11, 4],
-        [11, 10, 2],
-        [10, 7, 6],
-        [7, 1, 8],
-        [3, 9, 4],
-        [3, 4, 2],
-        [3, 2, 6],
-        [3, 6, 8],
-        [3, 8, 9],
-        [4, 9, 5],
-        [2, 4, 11],
-        [6, 2, 10],
-        [8, 6, 7],
-        [9, 8, 1],
-    ];
+    let mut faces =
+        vec![[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
     for _ in 0..subdivisions {
         let mut next = Vec::new();
         let mut midpoint_cache = std::collections::HashMap::new();
@@ -228,12 +199,7 @@ pub async fn mesh_ico_sphere(radius: f32, subdivisions: u32) -> MeshData {
             let a = midpoint(&mut verts, &mut midpoint_cache, face[0], face[1]).await;
             let b = midpoint(&mut verts, &mut midpoint_cache, face[1], face[2]).await;
             let c = midpoint(&mut verts, &mut midpoint_cache, face[2], face[0]).await;
-            next.extend_from_slice(&[
-                [face[0], a, c],
-                [face[1], b, a],
-                [face[2], c, b],
-                [a, b, c],
-            ]);
+            next.extend_from_slice(&[[face[0], a, c], [face[1], b, a], [face[2], c, b], [a, b, c]]);
         }
         faces = next;
     }
@@ -244,7 +210,7 @@ pub async fn mesh_ico_sphere(radius: f32, subdivisions: u32) -> MeshData {
         let c = scale3(verts[face[2] as usize], radius).await;
         push_triangle(&mut mesh, a, b, c).await;
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -257,21 +223,12 @@ async fn scale3(v: [f32; 3], s: f32) -> [f32; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
-async fn midpoint(
-    verts: &mut Vec<[f32; 3]>,
-    cache: &mut std::collections::HashMap<(u32, u32), u32>,
-    a: u32,
-    b: u32,
-) -> u32 {
+async fn midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut std::collections::HashMap<(u32, u32), u32>, a: u32, b: u32) -> u32 {
     let key = if a < b { (a, b) } else { (b, a) };
     if let Some(index) = cache.get(&key) {
         return *index;
     }
-    let mid = normalize3([
-        (verts[a as usize][0] + verts[b as usize][0]) * 0.5,
-        (verts[a as usize][1] + verts[b as usize][1]) * 0.5,
-        (verts[a as usize][2] + verts[b as usize][2]) * 0.5,
-    ]);
+    let mid = normalize3([(verts[a as usize][0] + verts[b as usize][0]) * 0.5, (verts[a as usize][1] + verts[b as usize][1]) * 0.5, (verts[a as usize][2] + verts[b as usize][2]) * 0.5]);
     let index = verts.len() as u32;
     verts.push(mid.await);
     cache.insert(key, index);
@@ -295,7 +252,7 @@ pub async fn mesh_cylinder(radius: f32, height: f32, segments: u32) -> MeshData 
         push_triangle(&mut mesh, [0.0, -half, 0.0], p01, p00).await;
         push_triangle(&mut mesh, [0.0, half, 0.0], p10, p11).await;
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -312,7 +269,7 @@ pub async fn mesh_cone(radius: f32, height: f32, segments: u32) -> MeshData {
         push_triangle(&mut mesh, apex, p1, p0).await;
         push_triangle(&mut mesh, [0.0, 0.0, 0.0], p0, p1).await;
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -336,7 +293,7 @@ pub async fn mesh_torus(major_radius: f32, minor_radius: f32, segments: u32, rin
             push_triangle(&mut mesh, p00, p11, p01).await;
         }
     }
-    mesh.compute_normals().await;
+    mesh.compute_normals();
     mesh
 }
 
@@ -361,14 +318,9 @@ pub async fn mesh_from_kind(kind: &str) -> MeshData {
 
 /** @emoji 🔩️ Builds mesh data from indexed brep tessellation buffers. */
 pub async fn mesh_from_indexed(positions: &[f32], normals: &[f32], indices: &[u32]) -> MeshData {
-    let mut mesh = MeshData {
-        positions: positions.to_vec(),
-        normals: normals.to_vec(),
-        indices: indices.to_vec(),
-        ..MeshData::default()
-    };
+    let mut mesh = MeshData { positions: positions.to_vec(), normals: normals.to_vec(), indices: indices.to_vec(), ..MeshData::default() };
     if mesh.normals.is_empty() && !mesh.positions.is_empty() {
-        mesh.compute_normals().await;
+        mesh.compute_normals();
     }
     mesh
 }
@@ -395,7 +347,7 @@ pub async fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f3
 //#endregion Primitives
 
 //#region Obj
-pub async fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
+pub fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
     let mut out = format!("o {object_name}\n");
     for chunk in mesh.positions.chunks_exact(3) {
         out.push_str(&format!("v {} {} {}\n", chunk[0], chunk[1], chunk[2]));
@@ -471,15 +423,11 @@ pub async fn mesh_from_obj(text: &str) -> Result<MeshData, String> {
             _ => {}
         }
     }
-    let mut mesh = MeshData {
-        positions,
-        indices,
-        ..MeshData::default()
-    };
+    let mut mesh = MeshData { positions, indices, ..MeshData::default() };
     if normal_count == vertex_count && normal_count > 0 {
         mesh.normals = normals;
     } else {
-        mesh.compute_normals().await;
+        mesh.compute_normals();
     }
     Ok(mesh)
 }
@@ -507,7 +455,7 @@ pub async fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
         f32_slice_to_bytes(&mesh.normals).await
     } else {
         let mut copy = mesh.clone();
-        copy.compute_normals().await;
+        copy.compute_normals();
         f32_slice_to_bytes(&copy.normals).await
     };
     let indices = u32_slice_to_bytes(&mesh.indices).await;
@@ -544,10 +492,10 @@ pub async fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
   ],
   "buffers": [{{"byteLength": {}}}]
 }}"#,
-        mesh.vertex_count().await,
+        mesh.vertex_count(),
         json_vec3_min(&mesh.positions).await,
         json_vec3_max(&mesh.positions).await,
-        mesh.vertex_count().await,
+        mesh.vertex_count(),
         mesh.indices.len(),
         positions_offset,
         positions_len,
@@ -577,11 +525,11 @@ pub async fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
 
 type GlbMatrix = [[f32; 4]; 4];
 
-async fn glb_identity() -> GlbMatrix {
+fn glb_identity() -> GlbMatrix {
     [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
 }
 
-async fn glb_matrix_mul(left: GlbMatrix, right: GlbMatrix) -> GlbMatrix {
+fn glb_matrix_mul(left: GlbMatrix, right: GlbMatrix) -> GlbMatrix {
     let mut result = [[0.0; 4]; 4];
     for column in 0..4 {
         for row in 0..4 {
@@ -591,7 +539,7 @@ async fn glb_matrix_mul(left: GlbMatrix, right: GlbMatrix) -> GlbMatrix {
     result
 }
 
-async fn glb_transform_point(matrix: GlbMatrix, point: [f32; 3]) -> [f32; 3] {
+fn glb_transform_point(matrix: GlbMatrix, point: [f32; 3]) -> [f32; 3] {
     [
         matrix[0][0] * point[0] + matrix[1][0] * point[1] + matrix[2][0] * point[2] + matrix[3][0],
         matrix[0][1] * point[0] + matrix[1][1] * point[1] + matrix[2][1] * point[2] + matrix[3][1],
@@ -599,7 +547,7 @@ async fn glb_transform_point(matrix: GlbMatrix, point: [f32; 3]) -> [f32; 3] {
     ]
 }
 
-async fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
+fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
     let (a00, a01, a02) = (matrix[0][0], matrix[1][0], matrix[2][0]);
     let (a10, a11, a12) = (matrix[0][1], matrix[1][1], matrix[2][1]);
     let (a20, a21, a22) = (matrix[0][2], matrix[1][2], matrix[2][2]);
@@ -621,7 +569,7 @@ async fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
     }
 }
 
-async fn glb_triangle_indices(mode: gltf::mesh::Mode, source: Vec<u32>) -> Vec<u32> {
+fn glb_triangle_indices(mode: gltf::mesh::Mode, source: Vec<u32>) -> Vec<u32> {
     match mode {
         gltf::mesh::Mode::Triangles => source,
         gltf::mesh::Mode::TriangleStrip => source.windows(3).enumerate().flat_map(|(index, tri)| if index % 2 == 0 { [tri[0], tri[1], tri[2]] } else { [tri[1], tri[0], tri[2]] }).collect(),
@@ -630,72 +578,68 @@ async fn glb_triangle_indices(mode: gltf::mesh::Mode, source: Vec<u32>) -> Vec<u
     }
 }
 
-async fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
     if !matches!(primitive.mode(), gltf::mesh::Mode::Triangles | gltf::mesh::Mode::TriangleStrip | gltf::mesh::Mode::TriangleFan) {
         return Ok(());
     }
     let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(bin));
     let positions: Vec<[f32; 3]> = reader.read_positions().ok_or_else(|| "glb triangle primitive missing POSITION".to_string())?.collect();
     let source_indices: Vec<u32> = reader.read_indices().map(|indices| indices.into_u32().collect()).unwrap_or_else(|| (0..positions.len() as u32).collect());
-    let indices = glb_triangle_indices(primitive.mode(), source_indices).await;
+    let indices = glb_triangle_indices(primitive.mode(), source_indices);
     if indices.iter().any(|index| *index as usize >= positions.len()) {
         return Err("glb triangle index outside POSITION accessor".into());
     }
     let normals: Vec<[f32; 3]> = if let Some(normals) = reader.read_normals() {
         normals.collect()
     } else {
-        let mut local = MeshData {
-            positions: positions.iter().flatten().copied().collect(),
-            indices: indices.clone(),
-            ..Default::default()
-        };
-        local.compute_normals().await;
+        let mut local = MeshData { positions: positions.iter().flatten().copied().collect(), indices: indices.clone(), ..Default::default() };
+        local.compute_normals();
         local.normals.as_chunks::<3>().0.to_vec()
     };
     if normals.len() != positions.len() {
         return Err("glb NORMAL and POSITION accessor counts differ".into());
     }
-    let vertex_offset = mesh.vertex_count().await as u32;
+    let vertex_offset = mesh.vertex_count() as u32;
     for position in positions {
-        mesh.positions.extend(glb_transform_point(matrix, position).await);
+        mesh.positions.extend(glb_transform_point(matrix, position));
     }
     for normal in normals {
-        mesh.normals.extend(glb_transform_normal(matrix, normal).await);
+        mesh.normals.extend(glb_transform_normal(matrix, normal));
     }
     mesh.indices.extend(indices.into_iter().map(|index| vertex_offset + index));
     Ok(())
 }
 
-async fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
     for primitive in source.primitives() {
-        append_glb_primitive(mesh, primitive, matrix, bin).await?;
+        append_glb_primitive(mesh, primitive, matrix, bin)?;
     }
     Ok(())
 }
 
-async fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
-    let matrix = glb_matrix_mul(parent, node.transform().matrix()).await;
+fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    let matrix = glb_matrix_mul(parent, node.transform().matrix());
     if let Some(source) = node.mesh() {
-        append_glb_mesh(mesh, source, matrix, bin).await?;
+        append_glb_mesh(mesh, source, matrix, bin)?;
     }
     for child in node.children() {
-        Box::pin(append_glb_node(mesh, child, matrix, bin)).await?;
+        append_glb_node(mesh, child, matrix, bin)?;
     }
     Ok(())
 }
 
 /// 🧊️ Decodes every triangle primitive in the active GLB scene into one renderer-neutral mesh.
-pub async fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
+pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
     let gltf = gltf::Gltf::from_slice(bytes).map_err(|error| error.to_string())?;
     let bin = gltf.blob.as_deref().ok_or_else(|| "glb missing BIN chunk".to_string())?;
     let mut mesh = MeshData::default();
     if let Some(scene) = gltf.default_scene().or_else(|| gltf.scenes().next()) {
         for node in scene.nodes() {
-            append_glb_node(&mut mesh, node, glb_identity().await, bin).await?;
+            append_glb_node(&mut mesh, node, glb_identity(), bin)?;
         }
     } else {
         for source in gltf.meshes() {
-            append_glb_mesh(&mut mesh, source, glb_identity().await, bin).await?;
+            append_glb_mesh(&mut mesh, source, glb_identity(), bin)?;
         }
     }
     if mesh.indices.is_empty() {
@@ -720,20 +664,12 @@ async fn pad_to_4(mut data: Vec<u8>) -> Vec<u8> {
 }
 
 async fn json_vec3_min(positions: &[f32]) -> String {
-    let (min, _) = MeshData {
-        positions: positions.to_vec(),
-        ..Default::default()
-    }
-    .aabb().await;
+    let (min, _) = MeshData { positions: positions.to_vec(), ..Default::default() }.aabb().await;
     format!("[{}, {}, {}]", min[0], min[1], min[2])
 }
 
 async fn json_vec3_max(positions: &[f32]) -> String {
-    let (_, max) = MeshData {
-        positions: positions.to_vec(),
-        ..Default::default()
-    }
-    .aabb().await;
+    let (_, max) = MeshData { positions: positions.to_vec(), ..Default::default() }.aabb().await;
     format!("[{}, {}, {}]", max[0], max[1], max[2])
 }
 //#endregion Glb
@@ -763,7 +699,7 @@ pub async fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
     out
 }
 
-pub async fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
+pub fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
     if bytes.len() < 84 {
         return Err("stl: truncated header".into());
     }
@@ -803,11 +739,7 @@ async fn stl_vertex(positions: &[f32], index: u32) -> [f32; 3] {
 async fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
     let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     let e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-    let n = [
-        e0[1] * e1[2] - e0[2] * e1[1],
-        e0[2] * e1[0] - e0[0] * e1[2],
-        e0[0] * e1[1] - e0[1] * e1[0],
-    ];
+    let n = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
     let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
     if len > 1e-8 {
         [n[0] / len, n[1] / len, n[2] / len]
@@ -841,7 +773,7 @@ impl MeshExporter for ObjExporter {
         "obj"
     }
     async fn export(&self, mesh: &MeshData) -> Result<Vec<u8>, String> {
-        Ok(mesh_to_obj(mesh, "mesh").await.into_bytes())
+        Ok(mesh_to_obj(mesh, "mesh").into_bytes())
     }
 }
 
@@ -872,7 +804,7 @@ impl MeshImporter for GlbImporter {
         "glb"
     }
     async fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
-        mesh_from_glb(bytes).await
+        mesh_from_glb(bytes)
     }
 }
 
@@ -892,7 +824,7 @@ impl MeshImporter for StlImporter {
         "stl"
     }
     async fn import(&self, bytes: &[u8]) -> Result<MeshData, String> {
-        mesh_from_stl(bytes).await
+        mesh_from_stl(bytes)
     }
 }
 //#endregion MeshCodec

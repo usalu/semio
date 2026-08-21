@@ -34,9 +34,7 @@ async fn applies_to_committed_after() {
     let produced = apply_raster_mutation(&before(), &mutation()).expect("reorder-layers applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: applied state differs from committed after-snapshot");
     assert_eq!(locate_layer(&produced.layers, "caption"), Some((None, 0)), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the layer must land at the payload's tree address");
-    let Some(RasterLayerNode::Group { children, .. }) = find_layer(&produced.layers, "frame") else {
-        panic!("reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the emptied group must survive the move")
-    };
+    let Some(RasterLayerNode::Group { children, .. }) = find_layer(&produced.layers, "frame") else { panic!("reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the emptied group must survive the move") };
     assert!(children.is_empty(), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the former parent must lose the child, not keep a copy of it");
     let transform = layer_transform(find_layer(&produced.layers, "caption").expect("caption is present"));
     assert_eq!((transform.x, transform.y), (0.0, 0.0), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: a LIST reposition must never touch the layer's spatial transform");
@@ -49,9 +47,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::ReorderLayers(restore)] = inverse.as_slice() else {
-        panic!("reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the inverse must be exactly one reorder-layers step, got {inverse:?}")
-    };
+    let [RasterMutation::ReorderLayers(restore)] = inverse.as_slice() else { panic!("reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the inverse must be exactly one reorder-layers step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "caption", "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the inverse must re-address the same layer");
     assert_eq!((restore.parent_id.as_deref(), restore.index), (Some("frame"), 0), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: the inverse must carry the base's own pre-move address, back inside the group");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -118,7 +114,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-layers/lifts-the-caption-layer-out-of-the-frame-group: committed diff did not carry before to after");
 }

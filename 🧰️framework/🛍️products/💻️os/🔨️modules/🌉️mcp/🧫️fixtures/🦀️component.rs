@@ -20,7 +20,8 @@
 use crate::catalog::CatalogSource;
 use crate::conformance::EvalCase;
 use semio_framework::manifest::{
-    self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArgSchema, AppDefinition, AppRole, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageHashes, PackageRole, UtilityDefinition, WindowKindDefinition, WindowKinds,
+    self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppRole, ArgSchema, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageHashes, PackageRole, UtilityDefinition, WindowKindDefinition,
+    WindowKinds,
 };
 use semio_framework::{ArtifactDialect, IconName};
 use semio_framework_ui::wgpu::{LocalizedLabel, SurfaceKind};
@@ -31,7 +32,15 @@ fn action(id: &str, en: &str, de: &str, kind: ActionKind) -> ActionDefinition {
 }
 
 fn string_array_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
-    ActionArgDef { id: id.to_string(), label: LocalizedLabel::native(en, de), schema: ArgSchema::Array { items: Box::new(ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format: None }), min_items: None, max_items: None }, presentation: None, required: false, default: None, description: None }
+    ActionArgDef {
+        id: id.to_string(),
+        label: LocalizedLabel::native(en, de),
+        schema: ArgSchema::Array { items: Box::new(ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format: None }), min_items: None, max_items: None },
+        presentation: None,
+        required: false,
+        default: None,
+        description: None,
+    }
 }
 
 fn number_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
@@ -76,22 +85,35 @@ fn cad_actions() -> Vec<ActionDefinition> {
         action("translateSelection", "Translate Selection", "Auswahl verschieben", ActionKind::Mutation)
             .use_when(["move the selection", "translate the selected objects", "shift the selection", "die auswahl verschieben", "die ausgewählten objekte verschieben"])
             .with_args([string_array_arg("objectIds", "Object IDs", "Objekt-IDs"), number_arg("dx", "Delta X", "Delta X"), number_arg("dy", "Delta Y", "Delta Y"), number_arg("dz", "Delta Z", "Delta Z")]),
-        action("rotateSelection", "Rotate Selection", "Auswahl drehen", ActionKind::Mutation)
-            .use_when(["rotate the selection", "turn the selected objects", "die auswahl drehen"])
-            .with_args([string_array_arg("objectIds", "Object IDs", "Objekt-IDs"), number_arg("ax", "Axis X", "Achse X"), number_arg("ay", "Axis Y", "Achse Y"), number_arg("az", "Axis Z", "Achse Z"), number_arg("angle", "Angle", "Winkel")]),
-        action("scaleSelection", "Scale Selection", "Auswahl skalieren", ActionKind::Mutation)
-            .use_when(["scale the selection", "resize the selected objects", "die auswahl skalieren"])
-            .with_args([string_array_arg("objectIds", "Object IDs", "Objekt-IDs"), number_arg("sx", "Scale X", "Skalierung X"), number_arg("sy", "Scale Y", "Skalierung Y"), number_arg("sz", "Scale Z", "Skalierung Z")]),
+        action("rotateSelection", "Rotate Selection", "Auswahl drehen", ActionKind::Mutation).use_when(["rotate the selection", "turn the selected objects", "die auswahl drehen"]).with_args([
+            string_array_arg("objectIds", "Object IDs", "Objekt-IDs"),
+            number_arg("ax", "Axis X", "Achse X"),
+            number_arg("ay", "Axis Y", "Achse Y"),
+            number_arg("az", "Axis Z", "Achse Z"),
+            number_arg("angle", "Angle", "Winkel"),
+        ]),
+        action("scaleSelection", "Scale Selection", "Auswahl skalieren", ActionKind::Mutation).use_when(["scale the selection", "resize the selected objects", "die auswahl skalieren"]).with_args([
+            string_array_arg("objectIds", "Object IDs", "Objekt-IDs"),
+            number_arg("sx", "Scale X", "Skalierung X"),
+            number_arg("sy", "Scale Y", "Skalierung Y"),
+            number_arg("sz", "Scale Z", "Skalierung Z"),
+        ]),
         action("applyTransformation", "Apply Transformation", "Transformation anwenden", ActionKind::Mutation).use_when(["apply a transformation", "eine transformation anwenden"]),
         action("importCadFile", "Import CAD File", "CAD-Datei importieren", ActionKind::Mutation).use_when(["import a cad file", "eine cad-datei importieren"]),
         action("patchCadPlayReference", "Patch Play Reference", "Play-Referenz anpassen", ActionKind::Mutation),
         action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation),
-        action("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren", ActionKind::Mutation)
-            .use_when(["focus a model definition", "eine modelldefinition fokussieren"])
-            .with_args([ActionArgDef::select("modelDefinitionId", LocalizedLabel::native("Model Definition", "Modelldefinition"), vec![ActionArgOption::new("primary", LocalizedLabel::native("Primary", "Primär")), ActionArgOption::new("secondary", LocalizedLabel::native("Secondary", "Sekundär"))]).required()]),
-        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation)
-            .use_when(["load an example", "open a demo model", "ein beispiel laden"])
-            .with_args([ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("empty", LocalizedLabel::native("Empty", "Leer")), ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo")), ActionArgOption::new("capsule", LocalizedLabel::native("Capsule", "Kapsel"))]).required()]),
+        action("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren", ActionKind::Mutation).use_when(["focus a model definition", "eine modelldefinition fokussieren"]).with_args([ActionArgDef::select(
+            "modelDefinitionId",
+            LocalizedLabel::native("Model Definition", "Modelldefinition"),
+            vec![ActionArgOption::new("primary", LocalizedLabel::native("Primary", "Primär")), ActionArgOption::new("secondary", LocalizedLabel::native("Secondary", "Sekundär"))],
+        )
+        .required()]),
+        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).use_when(["load an example", "open a demo model", "ein beispiel laden"]).with_args([ActionArgDef::select(
+            "exampleId",
+            LocalizedLabel::native("Example", "Beispiel"),
+            vec![ActionArgOption::new("empty", LocalizedLabel::native("Empty", "Leer")), ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo")), ActionArgOption::new("capsule", LocalizedLabel::native("Capsule", "Kapsel"))],
+        )
+        .required()]),
         action("worldPointerDown", "World Pointer Down", "Zeiger gedrückt", ActionKind::View).in_palette(false),
         action("setCamera", "Set Camera", "Kamera festlegen", ActionKind::View).use_when(["change the camera view", "die kameraansicht ändern"]),
         action("setProjection", "Set Projection", "Projektion festlegen", ActionKind::View).use_when(["switch the projection", "die projektion wechseln"]),
@@ -114,9 +136,12 @@ fn cad_actions() -> Vec<ActionDefinition> {
         action("setContributions", "Set Contributions", "Beiträge festlegen", ActionKind::View).in_palette(false),
         action("saveSelected", "Save Selected", "Auswahl speichern", ActionKind::Shell).use_when(["save the selected objects", "die ausgewählten objekte speichern"]),
         action("saveInPlay", "Save In Play", "Im Play speichern", ActionKind::Shell),
-        action("saveCurrent", "Save Current", "Aktuelles speichern", ActionKind::Shell)
-            .use_when(["export the model", "save the current model", "das modell exportieren"])
-            .with_args([ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")), ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")), ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL"))]).required()]),
+        action("saveCurrent", "Save Current", "Aktuelles speichern", ActionKind::Shell).use_when(["export the model", "save the current model", "das modell exportieren"]).with_args([ActionArgDef::select(
+            "format",
+            LocalizedLabel::native("Format", "Format"),
+            vec![ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")), ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")), ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL"))],
+        )
+        .required()]),
         action("loadRawRequest", "Load Raw Request", "Rohdaten laden", ActionKind::Shell),
     ]
 }
@@ -133,7 +158,22 @@ pub fn cad_app() -> AppDefinition {
         controller_id: "cad".to_string(),
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
-        window_kinds: WindowKinds::one(WindowKindDefinition { id: "viewport".to_string(), label: LocalizedLabel::native("Viewport", "Ansicht"), body_key: "viewport".to_string(), surface_kind: SurfaceKind::World3d, icon_id: IconName::from("box"), options: Default::default(), actions: cad_actions(), utilities: Vec::new(), interactions: Vec::new(), params_schema: None, artifact_snapshot_schema: None, input_event_schema: None, output_schema: None, capabilities: Vec::new() }),
+        window_kinds: WindowKinds::one(WindowKindDefinition {
+            id: "viewport".to_string(),
+            label: LocalizedLabel::native("Viewport", "Ansicht"),
+            body_key: "viewport".to_string(),
+            surface_kind: SurfaceKind::World3d,
+            icon_id: IconName::from("box"),
+            options: Default::default(),
+            actions: cad_actions(),
+            utilities: Vec::new(),
+            interactions: Vec::new(),
+            params_schema: None,
+            artifact_snapshot_schema: None,
+            input_event_schema: None,
+            output_schema: None,
+            capabilities: Vec::new(),
+        }),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         utilities: vec![UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), IconName::from("mouse-pointer"))],
@@ -157,7 +197,19 @@ pub fn cad_app() -> AppDefinition {
 }
 
 pub fn cad_descriptor() -> PackageDescriptor {
-    wrap_descriptor(manifest::PluginManifest { plugin_id: "cad".to_string(), label: "CAD".to_string(), version: "0.1.0".to_string(), apps: vec![cad_app()], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() })
+    wrap_descriptor(manifest::PluginManifest {
+        plugin_id: "cad".to_string(),
+        label: "CAD".to_string(),
+        version: "0.1.0".to_string(),
+        apps: vec![cad_app()],
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    })
 }
 //#endregion 🔖️CadFixture
 
@@ -217,7 +269,22 @@ pub fn note_app() -> AppDefinition {
         controller_id: "note".to_string(),
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
-        window_kinds: WindowKinds::one(WindowKindDefinition { id: "canvas".to_string(), label: LocalizedLabel::native("Canvas", "Leinwand"), body_key: "canvas".to_string(), surface_kind: SurfaceKind::Canvas2d, icon_id: IconName::from("file"), options: Default::default(), actions: note_actions(), utilities: Vec::new(), interactions: Vec::new(), params_schema: None, artifact_snapshot_schema: None, input_event_schema: None, output_schema: None, capabilities: Vec::new() }),
+        window_kinds: WindowKinds::one(WindowKindDefinition {
+            id: "canvas".to_string(),
+            label: LocalizedLabel::native("Canvas", "Leinwand"),
+            body_key: "canvas".to_string(),
+            surface_kind: SurfaceKind::Canvas2d,
+            icon_id: IconName::from("file"),
+            options: Default::default(),
+            actions: note_actions(),
+            utilities: Vec::new(),
+            interactions: Vec::new(),
+            params_schema: None,
+            artifact_snapshot_schema: None,
+            input_event_schema: None,
+            output_schema: None,
+            capabilities: Vec::new(),
+        }),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         utilities: vec![UtilityDefinition::new("pencil", LocalizedLabel::native("Pencil", "Stift"), IconName::from("pencil"))],
@@ -241,7 +308,19 @@ pub fn note_app() -> AppDefinition {
 }
 
 pub fn note_descriptor() -> PackageDescriptor {
-    wrap_descriptor(manifest::PluginManifest { plugin_id: "note".to_string(), label: "Note".to_string(), version: "0.1.0".to_string(), apps: vec![note_app()], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() })
+    wrap_descriptor(manifest::PluginManifest {
+        plugin_id: "note".to_string(),
+        label: "Note".to_string(),
+        version: "0.1.0".to_string(),
+        apps: vec![note_app()],
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    })
 }
 //#endregion 🔖️NoteFixture
 
@@ -300,8 +379,32 @@ fn colliding_app(controller_id: &str) -> AppDefinition {
 }
 
 pub fn colliding_action_id_source() -> CatalogSource {
-    let a = wrap_descriptor(manifest::PluginManifest { plugin_id: "plugin-a".to_string(), label: "Plugin A".to_string(), version: "0.1.0".to_string(), apps: vec![colliding_app("plugin-a")], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() });
-    let b = wrap_descriptor(manifest::PluginManifest { plugin_id: "plugin-b".to_string(), label: "Plugin B".to_string(), version: "0.1.0".to_string(), apps: vec![colliding_app("plugin-b")], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() });
+    let a = wrap_descriptor(manifest::PluginManifest {
+        plugin_id: "plugin-a".to_string(),
+        label: "Plugin A".to_string(),
+        version: "0.1.0".to_string(),
+        apps: vec![colliding_app("plugin-a")],
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    });
+    let b = wrap_descriptor(manifest::PluginManifest {
+        plugin_id: "plugin-b".to_string(),
+        label: "Plugin B".to_string(),
+        version: "0.1.0".to_string(),
+        apps: vec![colliding_app("plugin-b")],
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    });
     CatalogSource { descriptors: vec![a, b], os_commands: Vec::new(), shell: Vec::new(), gateway: Vec::new() }
 }
 //#endregion 🔖️CollisionFixture

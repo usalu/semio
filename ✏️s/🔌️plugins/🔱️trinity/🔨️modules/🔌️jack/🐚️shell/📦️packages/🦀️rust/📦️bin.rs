@@ -6,7 +6,8 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 use store::ArtifactDsl;
 use trinity::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
-use trinity::executor::run; use trinity::ast::QueryResult;
+use trinity::ast::QueryResult;
+use trinity::executor::run;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.

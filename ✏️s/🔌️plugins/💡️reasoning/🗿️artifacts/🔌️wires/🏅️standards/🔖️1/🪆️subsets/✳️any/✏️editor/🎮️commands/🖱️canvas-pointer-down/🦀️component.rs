@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-down`.
 
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -36,12 +36,12 @@ pub async fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSna
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use crate::editor::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
     use crate::editor::wires::testkit::{dispatch, new_app};
     use crate::editor::wires::WiresCommand;
-    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-    use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
     use semio_framework::kernel::Effect;
+    use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
 
     #[semio_framework_async_macros::async_test]
     async fn pointer_drag_translates_node_by_screen_delta() {

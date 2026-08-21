@@ -116,28 +116,16 @@ pub struct ExtensionPackage {
 
 /// 📨 Canonical semio binary envelope for an `.sxt` package.
 pub async fn extension_package_envelope() -> SemioEnvelope {
-    SemioEnvelope {
-        plugin: EXTENSION_PACKAGE_PLUGIN.into(),
-        artifact: EXTENSION_PACKAGE_ARTIFACT.into(),
-        component: Component::Pack,
-        version: EXTENSION_PACKAGE_FORMAT,
-    }
+    SemioEnvelope { plugin: EXTENSION_PACKAGE_PLUGIN.into(), artifact: EXTENSION_PACKAGE_ARTIFACT.into(), component: Component::Pack, version: EXTENSION_PACKAGE_FORMAT }
 }
 //#endregion 🔖️Package
 
 //#region 🔖️Zip
 async fn zip_file_options() -> zip::write::SimpleFileOptions {
-    zip::write::SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated)
-        .last_modified_time(zip::DateTime::default())
+    zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated).last_modified_time(zip::DateTime::default())
 }
 
-async fn write_zip_file<W: Write + Seek>(
-    writer: &mut zip::ZipWriter<W>,
-    name: &str,
-    bytes: &[u8],
-    options: zip::write::SimpleFileOptions,
-) -> Result<(), ExtensionPackageError> {
+async fn write_zip_file<W: Write + Seek>(writer: &mut zip::ZipWriter<W>, name: &str, bytes: &[u8], options: zip::write::SimpleFileOptions) -> Result<(), ExtensionPackageError> {
     writer.start_file(name, options)?;
     writer.write_all(bytes)?;
     Ok(())
@@ -150,11 +138,7 @@ async fn read_zip_entry<R: Read + Seek>(archive: &mut zip::ZipArchive<R>, name: 
     Ok(bytes)
 }
 
-async fn build_zip_payload(
-    manifest: &ExtensionPackageManifest,
-    component_wasm: &[u8],
-    assets: &[(String, Vec<u8>)],
-) -> Result<Vec<u8>, ExtensionPackageError> {
+async fn build_zip_payload(manifest: &ExtensionPackageManifest, component_wasm: &[u8], assets: &[(String, Vec<u8>)]) -> Result<Vec<u8>, ExtensionPackageError> {
     if component_wasm.is_empty() {
         return Err(ExtensionPackageError::EmptyComponent);
     }
@@ -173,11 +157,7 @@ async fn build_zip_payload(
     let mut sorted_assets: Vec<&(String, Vec<u8>)> = assets.iter().collect();
     sorted_assets.sort_by(|a, b| a.0.cmp(&b.0));
     for (name, bytes) in sorted_assets {
-        let entry = if name.starts_with(ASSETS_PREFIX) {
-            name.clone()
-        } else {
-            format!("{ASSETS_PREFIX}{name}")
-        };
+        let entry = if name.starts_with(ASSETS_PREFIX) { name.clone() } else { format!("{ASSETS_PREFIX}{name}") };
         write_zip_file(&mut writer, &entry, bytes, options).await?;
     }
 
@@ -213,11 +193,7 @@ async fn parse_zip_payload(payload: &[u8]) -> Result<ExtensionPackage, Extension
         }
     }
 
-    Ok(ExtensionPackage {
-        manifest,
-        component_wasm,
-        assets,
-    })
+    Ok(ExtensionPackage { manifest, component_wasm, assets })
 }
 
 async fn expect_extension_envelope(envelope: &SemioEnvelope) -> Result<(), ExtensionPackageError> {
@@ -231,11 +207,7 @@ async fn expect_extension_envelope(envelope: &SemioEnvelope) -> Result<(), Exten
 
 //#region 🔖️Api
 /// 📦️ Packs an extension into a `.sxt` byte stream (semio binary envelope + deterministic zip).
-pub async fn pack(
-    manifest: &ExtensionPackageManifest,
-    component_wasm: &[u8],
-    assets: &[(String, Vec<u8>)],
-) -> Result<Vec<u8>, ExtensionPackageError> {
+pub async fn pack(manifest: &ExtensionPackageManifest, component_wasm: &[u8], assets: &[(String, Vec<u8>)]) -> Result<Vec<u8>, ExtensionPackageError> {
     let payload = build_zip_payload(manifest, component_wasm, assets).await?;
     Ok(wrap_binary(&extension_package_envelope().await, &payload))
 }
@@ -324,10 +296,7 @@ mod tests {
     async fn pack_unpack_verify_round_trip() {
         let manifest = sample_manifest().await;
         let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
-        let assets = vec![
-            ("readme.txt".into(), b"hello".to_vec()),
-            ("nested/icon.svg".into(), b"<svg/>".to_vec()),
-        ];
+        let assets = vec![("readme.txt".into(), b"hello".to_vec()), ("nested/icon.svg".into(), b"<svg/>".to_vec())];
 
         let packed = pack(&manifest, &component, &assets).await.expect("pack");
         assert!(packed.starts_with(&crate::os_semio::BINARY_MAGIC));
@@ -354,23 +323,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_rejects_wrong_envelope() {
-        let foreign = wrap_binary(
-            &SemioEnvelope {
-                plugin: "os".into(),
-                artifact: "collection".into(),
-                component: Component::Pack,
-                version: 1,
-            },
-            b"not-an-sxt",
-        );
+        let foreign = wrap_binary(&SemioEnvelope { plugin: "os".into(), artifact: "collection".into(), component: Component::Pack, version: 1 }, b"not-an-sxt");
         assert!(matches!(verify(&foreign).await, Err(ExtensionPackageError::UnexpectedEnvelope(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn pack_rejects_empty_component() {
-        assert!(matches!(
-            pack(&sample_manifest().await, b"", &[]).await,
-            Err(ExtensionPackageError::EmptyComponent)
-        ));
+        assert!(matches!(pack(&sample_manifest().await, b"", &[]).await, Err(ExtensionPackageError::EmptyComponent)));
     }
 }

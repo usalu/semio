@@ -1,6 +1,6 @@
 //! 🌐️ Writer mutation — `ChangeLanguage` payload: sets the document's language mode.
-use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::schema::mutations::WriterMutation;
+use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};

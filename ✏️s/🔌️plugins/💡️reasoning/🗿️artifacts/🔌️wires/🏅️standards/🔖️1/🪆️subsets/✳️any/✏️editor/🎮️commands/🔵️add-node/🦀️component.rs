@@ -1,11 +1,11 @@
 //! 🔵️ 🔵️ Wires play app commands command — `add-node`.
 
+use crate::artifacts::wires::op::WiresMutation;
+use crate::artifacts::wires::schema::fixture_nodes;
+use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
-use crate::artifacts::wires::schema::fixture_nodes;
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -40,9 +40,9 @@ pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _c
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use crate::editor::wires::testkit::{dispatch, new_app};
     use crate::editor::wires::WiresCommand;
-    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 
     #[semio_framework_async_macros::async_test]
     async fn add_node_appends_and_selects() {

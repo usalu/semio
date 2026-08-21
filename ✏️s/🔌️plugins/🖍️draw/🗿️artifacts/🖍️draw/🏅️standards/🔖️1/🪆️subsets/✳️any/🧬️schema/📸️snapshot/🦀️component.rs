@@ -37,14 +37,7 @@ pub struct DrawSnapshot {
 
 impl Default for DrawSnapshot {
     fn default() -> Self {
-        Self {
-            schema: DRAW_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            title: None,
-            layers: Vec::new(),
-            assets: BTreeMap::new(),
-            artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
-        }
+        Self { schema: DRAW_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: BTreeMap::new(), artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }) }
     }
 }
 //#endregion 🔖️Snapshot

@@ -1,7 +1,7 @@
 //! ➡️ Trinity Rewrite app — RHS window (editable semantic node-graph over the rule's right-hand side).
 
-use crate::editor::rewrite::config::RewriteConfig;
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfig;
 use semio_framework_plugin::UiNode;
 
 pub(crate) async fn render(state: &RewriteSnapshot, cfg: &RewriteConfig) -> UiNode {

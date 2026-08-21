@@ -87,10 +87,7 @@ pub async fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &Rewrit
 //#endregion 🔖️SnapshotDiffHelper
 
 //#region 🔖️BatchHelpers
-pub async fn apply_rewrite_rule_mutation(
-    snapshot: &mut RewriteSnapshot,
-    mutation: &RewriteRuleMutation,
-) -> protocol::MutationApplyResult<()> {
+pub async fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
     let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
     *snapshot = next;
@@ -115,12 +112,12 @@ pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutat
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
-    use std::collections::BTreeMap;
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::SemanticMutation;
+    use std::collections::BTreeMap;
 
     async fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();

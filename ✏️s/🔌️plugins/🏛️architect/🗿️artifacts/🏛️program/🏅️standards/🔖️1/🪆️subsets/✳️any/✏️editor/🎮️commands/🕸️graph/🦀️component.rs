@@ -1,12 +1,12 @@
 //! 🕸️ Architect play app commands — the node-graph surface's edit and viewport wires.
 
 pub mod node_graph_edit {
-    use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
-    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::registers::AdjacencyKind;
     use crate::artifacts::program::schema::mutations as leaves;
     use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
+    use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -55,10 +55,10 @@ pub mod node_graph_edit {
 }
 
 pub mod node_graph_viewport {
-    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::editor::architect::modes::edit::windows::graph::GraphCamera;
     use crate::artifacts::program::op::ProgramMutation;
     use crate::artifacts::program::ProgramSnapshot;
+    use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
+    use crate::editor::architect::modes::edit::windows::graph::GraphCamera;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use serde::{Deserialize, Serialize};
 

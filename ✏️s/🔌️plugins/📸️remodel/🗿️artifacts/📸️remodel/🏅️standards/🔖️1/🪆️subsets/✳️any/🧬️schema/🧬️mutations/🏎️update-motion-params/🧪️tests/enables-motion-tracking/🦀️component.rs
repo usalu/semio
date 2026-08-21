@@ -45,10 +45,7 @@ async fn enables_tracking_without_touching_the_existing_track() {
 async fn inverse_restores_the_disabled_base_facet() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::UpdateMotionParams(payload)] if !payload.params.enabled && payload.params.max_tracks == 64),
-        "update-motion-params inverts to itself with the base disabled facet, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::UpdateMotionParams(payload)] if !payload.params.enabled && payload.params.max_tracks == 64), "update-motion-params inverts to itself with the base disabled facet, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

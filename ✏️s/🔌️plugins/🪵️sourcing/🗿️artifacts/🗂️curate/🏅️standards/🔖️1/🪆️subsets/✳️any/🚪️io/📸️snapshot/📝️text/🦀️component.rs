@@ -1,12 +1,10 @@
 //! 📜️ Sourcing curate artifact — textual document grammar surface + laws (constitutional: dsl).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::curate::CurateSnapshot;
 
@@ -68,10 +66,7 @@ mod tests {
             availability: 5,
             geometry: Box::new(GeometryRecipe::Mesh { positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0], normals: vec![0.0, 1.0, 0.0, 0.0, 1.0, 0.0], indices: vec![0, 1, 2] }),
         }];
-        let document = crate::artifacts::curate::curate_snapshot_from_stock(
-            stock,
-            vec![crate::artifacts::curate::CuratedItem { object_id: "beam-mesh-custom".into(), count: 2 }],
-        );
+        let document = crate::artifacts::curate::curate_snapshot_from_stock(stock, vec![crate::artifacts::curate::CuratedItem { object_id: "beam-mesh-custom".into(), count: 2 }]);
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }

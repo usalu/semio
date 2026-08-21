@@ -1155,14 +1155,7 @@ fn sync_map_host(host: &mut MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache
         let hover_kind = hover.get("kind").and_then(Value::as_str);
         let granularity = hover_kind.unwrap_or_else(|| if selection.get("routes").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()) { "route" } else { "position" });
         let selection_key = if granularity == "route" { "routes" } else { "positions" };
-        let selected_ids = selection
-            .get(selection_key)
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .map(str::to_string)
-            .collect::<Vec<_>>();
+        let selected_ids = selection.get(selection_key).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>();
         let hovered_id = hover.get("id").and_then(Value::as_str);
         host.sync_interaction(granularity, &selected_ids, hovered_id);
     }

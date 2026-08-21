@@ -7,8 +7,8 @@
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::gismap::schema::empty_gis_map_snapshot;
     use crate::artifacts::gismap::mutations::{GisMapEnvelope, GisMapStore};
+    use crate::artifacts::gismap::schema::empty_gis_map_snapshot;
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;

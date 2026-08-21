@@ -202,7 +202,7 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 impl Mutation<DxfSnapshot> for DxfMutation {
     type Diff = DxfDiff;
 
-    async fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             DxfMutation::NoMutation => DxfDiff::default(),
             DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -250,7 +250,7 @@ impl Mutation<DxfSnapshot> for DxfMutation {
         })
     }
 
-    async fn inverse(&self, base: &DxfSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &DxfSnapshot) -> Vec<Self> {
         match self {
             DxfMutation::NoMutation => vec![DxfMutation::NoMutation],
             DxfMutation::SetSnapshot { .. } => vec![DxfMutation::SetSnapshot { snapshot: base.clone() }],
@@ -396,10 +396,10 @@ fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
 }
 
 impl OpText for DxfMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_dxf_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_dxf_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -412,7 +412,7 @@ impl OpText for DxfMutation {
 /// codecs (`enc_dxf_snapshot_bin`/`enc_dxf_entity_bin`/`enc_block_bin`/…) — genuinely structured,
 /// varint/length-prefixed binary, never text-as-bytes.
 impl OpBinary for DxfMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DxfMutation::NoMutation => 0,
             DxfMutation::SetSnapshot { .. } => 1,
@@ -474,7 +474,7 @@ impl OpBinary for DxfMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_dxf_entity_bin(entity, &mut out);
             }
-            DxfMutation::RemoveEntity { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64).await,
+            DxfMutation::RemoveEntity { index } => store::pack_rt::write_varint_u64(&mut out, *index as u64),
             DxfMutation::SetEntity { index, entity } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_dxf_entity_bin(entity, &mut out);
@@ -492,11 +492,11 @@ impl OpBinary for DxfMutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(DxfMutation::NoMutation),
             1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
@@ -507,7 +507,7 @@ impl OpBinary for DxfMutation {
             }
             3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
             4 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertLayer { index, layer })
             }
@@ -518,7 +518,7 @@ impl OpBinary for DxfMutation {
                 Ok(DxfMutation::SetLayer { name, layer })
             }
             7 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertStyle { index, style })
             }
@@ -529,7 +529,7 @@ impl OpBinary for DxfMutation {
                 Ok(DxfMutation::SetStyle { name, style })
             }
             10 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertLinetype { index, linetype })
             }
@@ -540,24 +540,24 @@ impl OpBinary for DxfMutation {
                 Ok(DxfMutation::SetLinetype { name, linetype })
             }
             13 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertEntity { index, entity })
             }
-            14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             15 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetEntity { index, entity })
             }
             16 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::InsertBlock { index, block })
             }
-            17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
             18 => {
-                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(DxfMutation::SetBlock { index, block })
             }

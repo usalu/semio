@@ -16,6 +16,10 @@
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
+use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
+use crate::artifacts::present::op::PresentMutation;
+use crate::artifacts::present::schema::build_tile_morph_prompt;
+use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
     set_frame, set_locale, set_source,
@@ -25,17 +29,13 @@ use crate::editor::animate::modes::main;
 use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::editor::animate::panels::{artifact, catalogue, inspection};
 use crate::editor::animate::terminology::animate_present_labels;
-use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
-use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::schema::build_tile_morph_prompt;
-use crate::artifacts::present::{default_present_snapshot, FigureTileDraft, PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionRef, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
 use std::collections::HashSet;

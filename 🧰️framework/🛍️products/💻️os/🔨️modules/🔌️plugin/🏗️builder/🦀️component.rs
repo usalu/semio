@@ -1,9 +1,6 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{
-    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
-    PluginCommandHandler,
-};
+use crate::app::{resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
 use semio_framework::{
     kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
     AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
@@ -236,7 +233,10 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// 🎲️ Declares local backbone read+write at plugin scope.
     pub async fn local_backbone_storage(self) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin }).await.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin }).await
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Read, scope: Scope::Plugin })
+            .await
+            .capability(CapabilityRequirement { artifact: ArtifactKind::Backbone, rights: Rights::Write, scope: Scope::Plugin })
+            .await
     }
 
     /// 🎮️ Declares a plugin-owned command and its program-level handler.
@@ -764,11 +764,16 @@ mod plugin_builder_dependency_tests {
     #[semio_framework_async_macros::async_test]
     async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
         let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-contributor-missing-dep")
-            .await.label("Builder Test Contributor Missing Dep")
-            .await.version("0.1.0")
-            .await.contributes(contribution("s.builder-test-dep-target.thing").await)
-            .await.try_build()
-            .await.err()
+            .await
+            .label("Builder Test Contributor Missing Dep")
+            .await
+            .version("0.1.0")
+            .await
+            .contributes(contribution("s.builder-test-dep-target.thing").await)
+            .await
+            .try_build()
+            .await
+            .err()
             .expect("a contribution with no matching declared dependency must be rejected");
         assert_eq!(error.code, "plugin-assembly.contribution-gate");
         assert!(error.message.contains("not a direct dependency"), "unexpected message: {}", error.message);
@@ -777,12 +782,18 @@ mod plugin_builder_dependency_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
         let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-contributor-ok")
-            .await.label("Builder Test Contributor Ok")
-            .await.version("0.1.0")
-            .await.depends_on("builder-test-dep-target-ok", semio_framework::VersionReq::Any)
-            .await.contributes(contribution("s.builder-test-dep-target-ok.thing").await)
-            .await.try_build()
-            .await.expect("a contribution onto a direct dependency must be accepted");
+            .await
+            .label("Builder Test Contributor Ok")
+            .await
+            .version("0.1.0")
+            .await
+            .depends_on("builder-test-dep-target-ok", semio_framework::VersionReq::Any)
+            .await
+            .contributes(contribution("s.builder-test-dep-target-ok.thing").await)
+            .await
+            .try_build()
+            .await
+            .expect("a contribution onto a direct dependency must be accepted");
         assert_eq!(plugin.manifest.dependencies.len(), 1);
         assert_eq!(plugin.manifest.dependencies[0].plugin_id, "builder-test-dep-target-ok");
         assert_eq!(plugin.manifest.contributions.len(), 1);
@@ -797,13 +808,20 @@ mod plugin_builder_dependency_tests {
         let kind = host_media_kind();
         let bridge = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.mesh-dwg", kind.await.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("typed bridge declaration");
         let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media")
-            .await.label("Builder Test Media")
-            .await.version("0.1.0")
-            .await.artifact_kind(kind.await.clone())
-            .await.host_media_handler(bridge.clone())
-            .await.host_media_handler(bridge)
-            .await.try_build()
-            .await.expect("identical frozen host-media declarations are idempotent");
+            .await
+            .label("Builder Test Media")
+            .await
+            .version("0.1.0")
+            .await
+            .artifact_kind(kind.await.clone())
+            .await
+            .host_media_handler(bridge.clone())
+            .await
+            .host_media_handler(bridge)
+            .await
+            .try_build()
+            .await
+            .expect("identical frozen host-media declarations are idempotent");
         assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
         assert_eq!(plugin.host_media_handlers().await.len(), 1);
         let result = plugin.import_mesh_dwg(crate::MeshDwgBridgeRequest { artifact_kind: kind.await.id.clone(), document_schema: kind.await.schema.clone(), mesh: semio_framework::MeshData::default() }).await.expect("runtime bridge execution");
@@ -819,13 +837,20 @@ mod plugin_builder_dependency_tests {
         let first = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.first", kind.await.clone(), kind.await.schema.clone(), counting_mesh_dwg_importer).await.expect("first bridge");
         let second = HostMediaHandlerDeclaration::mesh_dwg_bridge("builder-test.media.second", kind.await.clone(), kind.await.schema.clone(), alternate_mesh_dwg_importer).await.expect("second bridge");
         let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media-conflict")
-            .await.label("Builder Test Media Conflict")
-            .await.version("0.1.0")
-            .await.artifact_kind(kind.await)
-            .await.host_media_handler(first)
-            .await.host_media_handler(second)
-            .await.try_build()
-            .await.err()
+            .await
+            .label("Builder Test Media Conflict")
+            .await
+            .version("0.1.0")
+            .await
+            .artifact_kind(kind.await)
+            .await
+            .host_media_handler(first)
+            .await
+            .host_media_handler(second)
+            .await
+            .try_build()
+            .await
+            .err()
             .expect("two executable identities may not own one host-media target");
         assert_eq!(error.code, "plugin-assembly.host-media-target");
         assert_eq!(MESH_DWG_EXECUTIONS.load(Ordering::SeqCst), 0, "a rejected aggregate must have no runtime side effect");
@@ -836,24 +861,44 @@ mod plugin_builder_dependency_tests {
         let manifest = FlowExtensionManifest::new("builder-test-flow", "Builder Test Flow", "0.1.0").await.expect("typed manifest");
         let executable = FlowExtensionExecutableIdentity::native("semio.builder-test.flow", "semio.builder-test.flow.module", "activate").await.expect("typed executable identity");
         let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).await.expect("flow declaration");
-        let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-flow").await.label("Builder Test Flow").await.version("0.1.0").await.flow_extension(declaration.clone()).await.flow_extension(declaration).await.try_build().await.expect("identical frozen flow declarations are idempotent");
+        let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-flow")
+            .await
+            .label("Builder Test Flow")
+            .await
+            .version("0.1.0")
+            .await
+            .flow_extension(declaration.clone())
+            .await
+            .flow_extension(declaration)
+            .await
+            .try_build()
+            .await
+            .expect("identical frozen flow declarations are idempotent");
         assert_eq!(plugin.flow_extensions().await.len(), 1);
         let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).await.expect("conflicting target descriptor");
         let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-flow-conflict")
-            .await.label("Builder Test Flow Conflict")
-            .await.version("0.1.0")
-            .await.flow_extension(
+            .await
+            .label("Builder Test Flow Conflict")
+            .await
+            .version("0.1.0")
+            .await
+            .flow_extension(
                 plugin
                     .flow_extensions()
-                    .await.into_iter()
+                    .await
+                    .into_iter()
                     .next()
                     .map(|descriptor| FlowExtensionDeclaration::new(descriptor.id, descriptor.manifest, descriptor.executable_identity))
                     .expect("a flow extension to rebuild from")
-                    .await.expect("the rebuilt descriptor to be valid"),
+                    .await
+                    .expect("the rebuilt descriptor to be valid"),
             )
-            .await.flow_extension(conflict)
-            .await.try_build()
-            .await.err()
+            .await
+            .flow_extension(conflict)
+            .await
+            .try_build()
+            .await
+            .err()
             .expect("one flow extension id may have exactly one contribution owner");
         assert_eq!(error.code, "plugin-assembly.flow-extension-target");
     }
@@ -867,12 +912,11 @@ mod plugin_builder_dependency_tests {
 mod schema_stamping_tests {
     use super::*;
     use crate::app::{
-        ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit,
-        Viewer,
+        ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer,
     };
     use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
-    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
     use store::EngineHandles;
+    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
 
     const EDITOR_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-editor", standard: StandardId("1"), subset: SubsetId::ANY };
     const VIEWER_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-viewer", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -899,18 +943,21 @@ mod schema_stamping_tests {
             NoConfig::default()
         }
 
-        async fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
+        async fn handle(
+            _command: &NoConfigMutation,
+            _doc: &ArtifactView<'_, NoConfig>,
+            _cfg: &ConfigView<'_, NoConfig>,
+            _interaction: &InteractionView<'_>,
+            _draft: &DraftView<'_, NoDraft>,
+            _engines: &EngineHandles,
+        ) -> Result<Emit<NoConfigMutation>, Fault> {
             Ok(Emit::default())
         }
 
         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
                 "text",
-                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps {
-                    value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()),
-                    emphasize: None,
-                    data_attributes: None,
-                }),
+                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
             ))
         }
     }
@@ -942,11 +989,7 @@ mod schema_stamping_tests {
         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
                 "text",
-                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps {
-                    value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()),
-                    emphasize: None,
-                    data_attributes: None,
-                }),
+                semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
             ))
         }
     }
@@ -967,8 +1010,12 @@ mod schema_stamping_tests {
     async fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
         let label = LocalizedLabel::data("Surface");
         match role {
-            AppRole::Editor => Editor::builder(dialect).await.document(["semio", "schema-stamp-editor"]).await.mode("edit", label.clone(), "pencil").await.window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).await.build_definition().await,
-            AppRole::Viewer => Viewer::builder(dialect).await.document(["semio", "schema-stamp-viewer"]).await.mode("edit", label.clone(), "pencil").await.window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).await.build_definition().await,
+            AppRole::Editor => {
+                Editor::builder(dialect).await.document(["semio", "schema-stamp-editor"]).await.mode("edit", label.clone(), "pencil").await.window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).await.build_definition().await
+            }
+            AppRole::Viewer => {
+                Viewer::builder(dialect).await.document(["semio", "schema-stamp-viewer"]).await.mode("edit", label.clone(), "pencil").await.window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).await.build_definition().await
+            }
         }
     }
 
@@ -976,12 +1023,8 @@ mod schema_stamping_tests {
     async fn editor_stamps_document_schema_from_the_type_when_left_empty() {
         let def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
         assert!(def.await.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
-        let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor")
-            .label("Builder Test Schema Stamp Editor")
-            .version("0.1.0")
-            .editor::<SchemaStampEditorFixture>(def)
-            .try_build()
-            .expect("a minimal editor surface must assemble");
+        let plugin =
+            Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor").label("Builder Test Schema Stamp Editor").version("0.1.0").editor::<SchemaStampEditorFixture>(def).try_build().expect("a minimal editor surface must assemble");
         let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Editor).expect("the registered editor app definition");
         assert_eq!(app.io.document_schema, SchemaStampEditorFixture::DOCUMENT_SCHEMA);
     }
@@ -1004,12 +1047,8 @@ mod schema_stamping_tests {
     async fn viewer_stamps_document_schema_from_the_type_when_left_empty() {
         let def = minimal_surface_def(VIEWER_STAMP_DIALECT, AppRole::Viewer);
         assert!(def.await.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
-        let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-viewer")
-            .label("Builder Test Schema Stamp Viewer")
-            .version("0.1.0")
-            .viewer::<SchemaStampViewerFixture>(def)
-            .try_build()
-            .expect("a minimal viewer surface must assemble");
+        let plugin =
+            Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-viewer").label("Builder Test Schema Stamp Viewer").version("0.1.0").viewer::<SchemaStampViewerFixture>(def).try_build().expect("a minimal viewer surface must assemble");
         let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Viewer).expect("the registered viewer app definition");
         assert_eq!(app.io.document_schema, SchemaStampViewerFixture::DOCUMENT_SCHEMA);
     }

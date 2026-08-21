@@ -2,7 +2,7 @@
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::mutations::RemodelMutation;
-use crate::artifacts::remodel::{RemodelSnapshot, CameraTrajectory};
+use crate::artifacts::remodel::{CameraTrajectory, RemodelSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

@@ -63,7 +63,7 @@ impl Header {
         buf[10..12].copy_from_slice(&self.version_minor.to_le_bytes());
         buf[12..16].copy_from_slice(&self.required_flags.to_le_bytes());
         buf[16..20].copy_from_slice(&self.optional_flags.to_le_bytes());
-        let crc = crc32c(&buf[0..20]).await;
+        let crc = crc32c(&buf[0..20]);
         buf[20..24].copy_from_slice(&crc.to_le_bytes());
         buf
     }
@@ -82,7 +82,7 @@ impl Header {
         let required_flags = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
         let optional_flags = u32::from_le_bytes(bytes[16..20].try_into().unwrap());
         let stored_crc = u32::from_le_bytes(bytes[20..24].try_into().unwrap());
-        let computed_crc = crc32c(&bytes[0..20]).await;
+        let computed_crc = crc32c(&bytes[0..20]);
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "header", offset: 20 });
         }
@@ -136,7 +136,7 @@ impl Footer {
         buf.extend_from_slice(&self.file_len.to_le_bytes());
         buf.extend_from_slice(&self.content_hash.0);
         buf.extend_from_slice(&self.prev_footer_offset.to_le_bytes());
-        let crc = crc32c(&buf).await;
+        let crc = crc32c(&buf);
         buf.extend_from_slice(&crc.to_le_bytes());
         buf
     }
@@ -161,7 +161,7 @@ impl Footer {
         hash.copy_from_slice(&bytes[40..72]);
         let prev_footer_offset = u64::from_le_bytes(bytes[72..80].try_into().unwrap());
         let stored_crc = u32::from_le_bytes(bytes[80..84].try_into().unwrap());
-        let computed_crc = crc32c(&bytes[0..80]).await;
+        let computed_crc = crc32c(&bytes[0..80]);
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "footer", offset: 80 });
         }
@@ -183,7 +183,7 @@ struct EncodedSegment {
 async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => Ok(raw.to_vec()),
-        1 => crate::codec::deflate_compress(raw).await,
+        1 => crate::codec::deflate_compress(raw),
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
@@ -191,8 +191,8 @@ async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError
 /// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for decompression.
 async fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
     match codec.0 {
-        0 => NoCompression.decompress(stored, raw_len, limit).await,
-        1 => crate::codec::deflate_decompress(stored, raw_len, limit).await,
+        0 => NoCompression.decompress(stored, raw_len, limit),
+        1 => crate::codec::deflate_decompress(stored, raw_len, limit),
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
@@ -206,13 +206,13 @@ async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> Result<Enco
     let mut buf = Vec::with_capacity(stored.len() + 24);
     buf.push(kind);
     buf.push(flags);
-    write_varint_u64(&mut buf, stored.len() as u64).await;
+    write_varint_u64(&mut buf, stored.len() as u64);
     if compressed {
-        write_varint_u64(&mut buf, payload.len() as u64).await;
+        write_varint_u64(&mut buf, payload.len() as u64);
     }
     let header_len = buf.len();
     buf.extend_from_slice(&stored);
-    let crc = crc32c(&buf).await;
+    let crc = crc32c(&buf);
     buf.extend_from_slice(&crc.to_le_bytes());
     Ok(EncodedSegment { bytes: buf, header_len, stored_len: stored.len() })
 }
@@ -250,7 +250,7 @@ async fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u
         }
     }
     let mut pos = 0usize;
-    let value = read_varint_u64(&tmp, &mut pos).await?;
+    let value = read_varint_u64(&tmp, &mut pos)?;
     Ok((value, i))
 }
 
@@ -297,7 +297,7 @@ async fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &Pack
     source.read_exact_at(crc_offset, &mut crc_bytes).await?;
     if verify_crc {
         let stored_crc = u32::from_le_bytes(crc_bytes);
-        let computed_crc = crc32c(&frame).await;
+        let computed_crc = crc32c(&frame);
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "segment", offset: crc_offset });
         }
@@ -315,10 +315,10 @@ async fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &Pack
 /// `PackWriter::write_segment` without re-implementing this crate's wire format.
 pub async fn encode_symbols(symbols: &[String]) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, symbols.len() as u64).await;
+    write_varint_u64(&mut buf, symbols.len() as u64);
     for symbol in symbols {
         let bytes = symbol.as_bytes();
-        write_varint_u64(&mut buf, bytes.len() as u64).await;
+        write_varint_u64(&mut buf, bytes.len() as u64);
         buf.extend_from_slice(bytes);
     }
     buf
@@ -328,13 +328,13 @@ pub async fn encode_symbols(symbols: &[String]) -> Vec<u8> {
 /// allocating the output `Vec`.
 async fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, PackError> {
     let mut pos = 0usize;
-    let count = read_varint_u64(payload, &mut pos).await?;
+    let count = read_varint_u64(payload, &mut pos)?;
     if count > limits.max_symbols as u64 {
         return Err(PackError::LimitExceeded("symbol count exceeds max_symbols"));
     }
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let len = read_varint_u64(payload, &mut pos).await? as usize;
+        let len = read_varint_u64(payload, &mut pos)? as usize;
         if pos + len > payload.len() {
             return Err(PackError::Truncated(pos as u64));
         }
@@ -364,11 +364,11 @@ struct ChunkTableEntry {
 /// raw_len varints, crc32 u32 LE, blake3 [u8;32])`.
 async fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, entries.len() as u64).await;
+    write_varint_u64(&mut buf, entries.len() as u64);
     for entry in entries {
-        write_varint_u64(&mut buf, entry.offset).await;
-        write_varint_u64(&mut buf, entry.stored_len).await;
-        write_varint_u64(&mut buf, entry.raw_len).await;
+        write_varint_u64(&mut buf, entry.offset);
+        write_varint_u64(&mut buf, entry.stored_len);
+        write_varint_u64(&mut buf, entry.raw_len);
         buf.extend_from_slice(&entry.crc32.to_le_bytes());
         buf.extend_from_slice(&entry.blake3);
     }
@@ -379,15 +379,15 @@ async fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
 /// length over `limits.max_segment_len` before allocating.
 async fn decode_chunk_table(payload: &[u8], limits: &PackLimits) -> Result<Vec<ChunkTableEntry>, PackError> {
     let mut pos = 0usize;
-    let count = read_varint_u64(payload, &mut pos).await?;
+    let count = read_varint_u64(payload, &mut pos)?;
     if count > limits.max_items {
         return Err(PackError::LimitExceeded("chunk_table count exceeds max_items"));
     }
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let offset = read_varint_u64(payload, &mut pos).await?;
-        let stored_len = read_varint_u64(payload, &mut pos).await?;
-        let raw_len = read_varint_u64(payload, &mut pos).await?;
+        let offset = read_varint_u64(payload, &mut pos)?;
+        let stored_len = read_varint_u64(payload, &mut pos)?;
+        let raw_len = read_varint_u64(payload, &mut pos)?;
         if stored_len > limits.max_segment_len || raw_len > limits.max_segment_len {
             return Err(PackError::LimitExceeded("chunk table entry length exceeds max_segment_len"));
         }
@@ -445,30 +445,30 @@ struct RawManifest {
 }
 
 async fn write_span(buf: &mut Vec<u8>, span: ByteRange) {
-    write_varint_u64(buf, span.offset).await;
-    write_varint_u64(buf, span.len).await;
+    write_varint_u64(buf, span.offset);
+    write_varint_u64(buf, span.len);
 }
 
 async fn read_span(payload: &[u8], pos: &mut usize) -> Result<ByteRange, PackError> {
-    let offset = read_varint_u64(payload, pos).await?;
-    let len = read_varint_u64(payload, pos).await?;
+    let offset = read_varint_u64(payload, pos)?;
+    let len = read_varint_u64(payload, pos)?;
     Ok(ByteRange { offset, len })
 }
 
 /// @emoji ✍️ Serializes the manifest segment payload per the contract's field order.
 async fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u8> {
     let mut buf = Vec::new();
-    write_varint_u64(&mut buf, schema_symref).await;
+    write_varint_u64(&mut buf, schema_symref);
     buf.extend_from_slice(&manifest.schema_hash);
     write_span(&mut buf, manifest.doc_span).await;
-    write_varint_u64(&mut buf, manifest.doc_frame_count).await;
+    write_varint_u64(&mut buf, manifest.doc_frame_count);
     write_span(&mut buf, manifest.symbols_span).await;
     write_span(&mut buf, manifest.chunk_table_span).await;
     write_span(&mut buf, manifest.field_index_span).await;
-    write_varint_u64(&mut buf, manifest.uncompressed_body_len).await;
-    write_varint_u64(&mut buf, manifest.field_count).await;
-    write_varint_u64(&mut buf, manifest.chunk_count).await;
-    write_varint_u64(&mut buf, manifest.symbol_count).await;
+    write_varint_u64(&mut buf, manifest.uncompressed_body_len);
+    write_varint_u64(&mut buf, manifest.field_count);
+    write_varint_u64(&mut buf, manifest.chunk_count);
+    write_varint_u64(&mut buf, manifest.symbol_count);
     buf
 }
 
@@ -476,7 +476,7 @@ async fn encode_manifest_bytes(schema_symref: u64, manifest: &Manifest) -> Vec<u
 /// silently ignored (additive-evolution slot), never an error.
 async fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
     let mut pos = 0usize;
-    let schema_symref = read_varint_u64(payload, &mut pos).await?;
+    let schema_symref = read_varint_u64(payload, &mut pos)?;
     if pos + 32 > payload.len() {
         return Err(PackError::Truncated(pos as u64));
     }
@@ -484,14 +484,14 @@ async fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
     schema_hash.copy_from_slice(&payload[pos..pos + 32]);
     pos += 32;
     let doc_span = read_span(payload, &mut pos).await?;
-    let doc_frame_count = read_varint_u64(payload, &mut pos).await?;
+    let doc_frame_count = read_varint_u64(payload, &mut pos)?;
     let symbols_span = read_span(payload, &mut pos).await?;
     let chunk_table_span = read_span(payload, &mut pos).await?;
     let field_index_span = read_span(payload, &mut pos).await?;
-    let uncompressed_body_len = read_varint_u64(payload, &mut pos).await?;
-    let field_count = read_varint_u64(payload, &mut pos).await?;
-    let chunk_count = read_varint_u64(payload, &mut pos).await?;
-    let symbol_count = read_varint_u64(payload, &mut pos).await?;
+    let uncompressed_body_len = read_varint_u64(payload, &mut pos)?;
+    let field_count = read_varint_u64(payload, &mut pos)?;
+    let chunk_count = read_varint_u64(payload, &mut pos)?;
+    let symbol_count = read_varint_u64(payload, &mut pos)?;
     Ok(RawManifest { schema_symref, schema_hash, doc_span, doc_frame_count, symbols_span, chunk_table_span, field_index_span, uncompressed_body_len, field_count, chunk_count, symbol_count })
 }
 
@@ -617,7 +617,7 @@ impl<S: PackSink> PackWriter<S> {
         let encoded = encode_segment(crate::KIND_CHUNK, self.options.codec, payload).await?;
         let payload_offset = base + encoded.header_len as u64;
         let stored_bytes = &encoded.bytes[encoded.header_len..encoded.header_len + encoded.stored_len];
-        let stored_crc = crc32c(stored_bytes).await;
+        let stored_crc = crc32c(stored_bytes);
         let raw_hash = blake3::hash(payload);
         self.sink.write_all(&encoded.bytes).await?;
         let id = ChunkId(self.chunks.len() as u32);
@@ -799,7 +799,7 @@ impl<S: PackSource> PackFile<S> {
         let mut stored = vec![0u8; entry.stored_len as usize];
         self.source.read_exact_at(entry.offset, &mut stored).await?;
         if verification.checks_crc() {
-            let computed = crc32c(&stored).await;
+            let computed = crc32c(&stored);
             if computed != entry.crc32 {
                 return Err(PackError::ChecksumMismatch { segment: "chunk", offset: entry.offset });
             }
@@ -925,7 +925,6 @@ pub async fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<R
     Ok(RecoveryReport { segments_recovered, bytes_recovered, manifest })
 }
 //#endregion 🔖️Recover
-
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1293,6 +1292,5 @@ mod tests {
         assert!(matches!(result, Err(PackError::Malformed { what: "manifest", .. })));
     }
     //#endregion 🔖️Corruption
-
 }
 //#endregion 🧪️Tests

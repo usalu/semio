@@ -5,8 +5,8 @@
 //! that edit and emits no mutations by construction (`ViewEmit`). Uses the frozen `ImageWindowKit`
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
-use base64::Engine;
 use crate::artifacts::raster::RasterSnapshot;
+use base64::Engine;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
 use semio_framework_plugin::UiNode;
 

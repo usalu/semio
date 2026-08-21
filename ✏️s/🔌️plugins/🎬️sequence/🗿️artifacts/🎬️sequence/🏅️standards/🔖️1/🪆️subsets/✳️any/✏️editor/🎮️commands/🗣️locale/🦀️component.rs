@@ -1,9 +1,9 @@
 //! 🗣️ Sequence play app commands — host-pushed locale.
 
-use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::artifacts::sequence::mutations::SequenceMutation;
 use crate::artifacts::sequence::SequenceSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetLocale

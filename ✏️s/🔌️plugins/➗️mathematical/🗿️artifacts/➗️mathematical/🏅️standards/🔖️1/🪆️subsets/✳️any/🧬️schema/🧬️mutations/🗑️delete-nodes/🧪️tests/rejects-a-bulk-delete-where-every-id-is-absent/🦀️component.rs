@@ -58,7 +58,11 @@ async fn every_requested_id_travels_in_one_all_missing_diagnostic() {
     assert_eq!(messages[0].target, vec!["n-alpha".to_string(), "n-beta".to_string()], "the diagnostic carries the WHOLE requested id list, in payload order");
     assert!(messages.iter().all(|message| message.code.0 != "mutation.partial" && message.code.0 != "mutation.cascade"), "neither the partial warning nor the cascade notice is reachable when nothing existed, got {messages:?}");
     let semantics = <MathematicalMutation as protocol::SemanticMutation<MathematicalSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "nodes", "delete-nodes", "DeletedNodes"), "the fixture must be bound to delete-nodes' own PLURAL descriptor — the sibling singular verb is `delete-node`/`DeletedNode`");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("delete", "nodes", "delete-nodes", "DeletedNodes"),
+        "the fixture must be bound to delete-nodes' own PLURAL descriptor — the sibling singular verb is `delete-node`/`DeletedNode`"
+    );
 }
 
 /// ↩️ `delete-nodes` inverts by re-creating every deleted node then re-`connect`ing every severed
@@ -94,12 +98,6 @@ async fn declared_outcome_holds() {
     let emitted = produced();
     let message = emitted.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target — for the plural verb that is the whole id list");
 }

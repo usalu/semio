@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceCollaborationRecord, base: &ProgramSnapshot) 
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This collaboration record already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.collaboration_record).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { collaboration: Some(ProgramCollaborationDelta { patched: vec![ProgramCollaborationPatchEntry { id: payload.collaboration_record.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        collaboration: Some(ProgramCollaborationDelta { patched: vec![ProgramCollaborationPatchEntry { id: payload.collaboration_record.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

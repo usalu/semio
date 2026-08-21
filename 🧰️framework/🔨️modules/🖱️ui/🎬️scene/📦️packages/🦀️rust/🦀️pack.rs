@@ -617,13 +617,7 @@ mod tests {
 
     #[test]
     fn round_trips_struct_with_option_and_seq() {
-        let value = Sample {
-            name: "hello".into(),
-            count: 42,
-            active: true,
-            tag: Some("v1".into()),
-            items: vec![Nested { label: "a".into(), weight: 1.5 }, Nested { label: "b".into(), weight: -2.25 }],
-        };
+        let value = Sample { name: "hello".into(), count: 42, active: true, tag: Some("v1".into()), items: vec![Nested { label: "a".into(), weight: 1.5 }, Nested { label: "b".into(), weight: -2.25 }] };
         let bytes = to_bytes(&value).expect("encode");
         let back: Sample = from_bytes(&bytes).expect("decode");
         assert_eq!(value, back);

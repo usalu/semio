@@ -90,7 +90,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
     type Diff = PlyDiff;
 
     /// 🔺️ Every variant handcrafted directly — never apply-and-capture.
-    async fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PlyMutation::NoMutation => PlyDiff::default(),
             PlyMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -118,7 +118,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
 
     /// ↩️ Handcrafted per-variant undo, key/index-aware (resolves against `base` so e.g. a
     /// clamped insert position or a to-be-removed payload is recovered exactly).
-    async fn inverse(&self, base: &PlySnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &PlySnapshot) -> Vec<Self> {
         match self {
             PlyMutation::NoMutation => vec![PlyMutation::NoMutation],
             PlyMutation::SetSnapshot { .. } => vec![PlyMutation::SetSnapshot { snapshot: base.clone() }],
@@ -223,10 +223,10 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
 }
 
 impl OpText for PlyMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_ply_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_ply_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -261,10 +261,10 @@ fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 }
 
 impl OpBinary for PlyMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
-        w.write_u8(store::pack_rt::OP_BINARY_FORMAT).await;
-        w.write_u8(op_tag(self)).await;
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
+        w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
+        w.write_u8(op_tag(self));
         match self {
             PlyMutation::NoMutation => {}
             PlyMutation::SetSnapshot { snapshot } => write_bin_snapshot(&mut w, snapshot),
@@ -272,68 +272,68 @@ impl OpBinary for PlyMutation {
                 crate::artifacts::ply::schema::diff::write_bin_format(&mut w, *format);
             }
             PlyMutation::InsertComment { index, comment } => {
-                w.write_varint_u64(*index as u64).await;
+                w.write_varint_u64(*index as u64);
                 write_bin_str(&mut w, comment);
             }
-            PlyMutation::RemoveComment { index } => w.write_varint_u64(*index as u64).await,
+            PlyMutation::RemoveComment { index } => w.write_varint_u64(*index as u64),
             PlyMutation::AddElement { index, element } => {
-                w.write_varint_u64(*index as u64).await;
+                w.write_varint_u64(*index as u64);
                 write_bin_element(&mut w, element);
             }
             PlyMutation::RemoveElement { name } => write_bin_str(&mut w, name),
             PlyMutation::InsertRow { element_name, index, row } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64).await;
+                w.write_varint_u64(*index as u64);
                 write_bin_row(&mut w, row);
             }
             PlyMutation::RemoveRow { element_name, index } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64).await;
+                w.write_varint_u64(*index as u64);
             }
             PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*row_index as u64).await;
+                w.write_varint_u64(*row_index as u64);
                 write_bin_str(&mut w, property_name);
                 write_bin_value(&mut w, value);
             }
         }
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes).await;
-        let _format = r.read_u8().await.map_err(op_pack_err)?;
-        let tag = r.read_u8().await.map_err(op_pack_err)?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let _format = r.read_u8().map_err(op_pack_err)?;
+        let tag = r.read_u8().map_err(op_pack_err)?;
         match tag {
             0 => Ok(PlyMutation::NoMutation),
             1 => Ok(PlyMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? }),
             2 => Ok(PlyMutation::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(op_pack_err)? }),
             3 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let comment = read_bin_str(&mut r).map_err(op_pack_err)?;
                 Ok(PlyMutation::InsertComment { index, comment })
             }
-            4 => Ok(PlyMutation::RemoveComment { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize }),
+            4 => Ok(PlyMutation::RemoveComment { index: r.read_varint_u64().map_err(op_pack_err)? as usize }),
             5 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let element = read_bin_element(&mut r).map_err(op_pack_err)?;
                 Ok(PlyMutation::AddElement { index, element })
             }
             6 => Ok(PlyMutation::RemoveElement { name: read_bin_str(&mut r).map_err(op_pack_err)? }),
             7 => {
                 let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let row = read_bin_row(&mut r).map_err(op_pack_err)?;
                 Ok(PlyMutation::InsertRow { element_name, index, row })
             }
             8 => {
                 let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 Ok(PlyMutation::RemoveRow { element_name, index })
             }
             9 => {
                 let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let row_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let row_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let property_name = read_bin_str(&mut r).map_err(op_pack_err)?;
                 let value = read_bin_value(&mut r).map_err(op_pack_err)?;
                 Ok(PlyMutation::SetRowProperty { element_name, row_index, property_name, value })

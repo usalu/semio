@@ -1,11 +1,11 @@
 //! ✒️ Writer play app — the main window: the jack/text editor surface (writer's only window kind).
 
+use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
+use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::modes::edit::windows::main::options;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
-use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 
@@ -58,12 +58,7 @@ pub async fn render(document: &WriterSnapshot, config: &WriterConfig) -> UiNode 
     let grammar_tokens = tokenize_language(&text, &document.language_id);
     let lsp_tokens = language_tokens_json(document);
     let tokens_json = lsp_tokens.clone().or_else(|| serde_json::to_string(&grammar_tokens).ok());
-    eprintln!(
-        "[DEBUG] writer.main tokens path language_id={} lsp_tokens={} grammar_fallback={}",
-        document.language_id,
-        lsp_tokens.is_some(),
-        tokens_json.is_some()
-    );
+    eprintln!("[DEBUG] writer.main tokens path language_id={} lsp_tokens={} grammar_fallback={}", document.language_id, lsp_tokens.is_some(), tokens_json.is_some());
     eprintln!("[DEBUG] writer.main tokens_json={}", tokens_json.as_deref().unwrap_or("none"));
 
     let diagnostics_json = language_diagnostics_json(document, config.lint_signal);

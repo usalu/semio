@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdatePart2d` — real handcrafted delta, never apply-then-capture.
 use crate::artifacts::block5d::diff::Block5dDiff;
+use crate::artifacts::block5d::Block5dPart2d;
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dPart2d};
 
 //#region 🔖️Diff
 pub async fn diff(payload: &super::mutation::UpdatePart2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

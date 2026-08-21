@@ -75,7 +75,7 @@ pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) ->
 impl Mutation<CsvSnapshot> for CsvMutation {
     type Diff = CsvDiff;
 
-    async fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             CsvMutation::NoMutation => CsvDiff::default(),
             CsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -87,10 +87,10 @@ impl Mutation<CsvSnapshot> for CsvMutation {
                 fields[*field_index] = Some(CsvFieldDiff { value: Some(value.clone()), quoted: Some(*quoted) });
                 CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: vec![CsvRecordModified { index: *record_index, diff: CsvRecordDiff { fields: Some(fields) } }], added: Vec::new() }) }
             }
-        }).await
+        })
     }
 
-    async fn inverse(&self, base: &CsvSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &CsvSnapshot) -> Vec<Self> {
         match self {
             CsvMutation::NoMutation => vec![CsvMutation::NoMutation],
             CsvMutation::SetSnapshot { .. } => {
@@ -167,10 +167,10 @@ fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
 }
 
 impl OpText for CsvMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_csv_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_csv_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
@@ -251,56 +251,56 @@ fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 }
 
 impl OpBinary for CsvMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         match self {
             CsvMutation::NoMutation => {
-                w.write_u8(0).await;
+                w.write_u8(0);
             }
             CsvMutation::SetSnapshot { snapshot } => {
-                w.write_u8(1).await;
+                w.write_u8(1);
                 write_bin_snapshot(&mut w, snapshot);
             }
             CsvMutation::SetHasHeader { has_header } => {
-                w.write_u8(2).await;
-                w.write_u8(if *has_header { 1 } else { 0 }).await;
+                w.write_u8(2);
+                w.write_u8(if *has_header { 1 } else { 0 });
             }
             CsvMutation::InsertRecord { index, record } => {
-                w.write_u8(3).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(3);
+                w.write_varint_u64(*index as u64);
                 write_bin_record(&mut w, record);
             }
             CsvMutation::RemoveRecord { index } => {
-                w.write_u8(4).await;
-                w.write_varint_u64(*index as u64).await;
+                w.write_u8(4);
+                w.write_varint_u64(*index as u64);
             }
             CsvMutation::SetField { record_index, field_index, value, quoted } => {
-                w.write_u8(5).await;
-                w.write_varint_u64(*record_index as u64).await;
-                w.write_varint_u64(*field_index as u64).await;
-                w.write_u8(if *quoted { 1 } else { 0 }).await;
+                w.write_u8(5);
+                w.write_varint_u64(*record_index as u64);
+                w.write_varint_u64(*field_index as u64);
+                w.write_u8(if *quoted { 1 } else { 0 });
                 write_bin_str(&mut w, value);
             }
         }
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes).await;
-        let ordinal = r.read_u8().await.map_err(op_pack_err)?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut r = dsl::ByteReader::new(bytes);
+        let ordinal = r.read_u8().map_err(op_pack_err)?;
         let mutation = match ordinal {
             0 => CsvMutation::NoMutation,
             1 => CsvMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? },
-            2 => CsvMutation::SetHasHeader { has_header: r.read_u8().await.map_err(op_pack_err)? != 0 },
+            2 => CsvMutation::SetHasHeader { has_header: r.read_u8().map_err(op_pack_err)? != 0 },
             3 => {
-                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
                 let record = read_bin_record(&mut r).map_err(op_pack_err)?;
                 CsvMutation::InsertRecord { index, record }
             }
-            4 => CsvMutation::RemoveRecord { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize },
+            4 => CsvMutation::RemoveRecord { index: r.read_varint_u64().map_err(op_pack_err)? as usize },
             5 => {
-                let record_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let field_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
-                let quoted = r.read_u8().await.map_err(op_pack_err)? != 0;
+                let record_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let field_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let quoted = r.read_u8().map_err(op_pack_err)? != 0;
                 let value = read_bin_str(&mut r).map_err(op_pack_err)?;
                 CsvMutation::SetField { record_index, field_index, value, quoted }
             }

@@ -149,5 +149,9 @@ async fn adds_exactly_one_region_and_inverts_to_a_delete_of_that_id() {
     };
     assert_eq!(undo.id, "region-old-town", "create-region/adds-the-old-town-region-after-the-harbor-district: the inverse deletes exactly the id the payload carried");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "region", "create-region", "CreatedRegion"), "create-region/adds-the-old-town-region-after-the-harbor-district: the fixture must be bound to create-region's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("create", "region", "create-region", "CreatedRegion"),
+        "create-region/adds-the-old-town-region-after-the-harbor-district: the fixture must be bound to create-region's own descriptor"
+    );
 }

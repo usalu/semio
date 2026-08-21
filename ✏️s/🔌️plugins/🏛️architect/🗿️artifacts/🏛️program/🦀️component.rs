@@ -4,7 +4,6 @@
 //! Domain row types live under `🧬️schema/🗄️registers`; shared entity primitives under
 //! `🧬️schema/🧱️kernel`. The persisted snapshot type is `ProgramSnapshot`.
 
-
 pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;
 pub use crate::artifacts::program::schema::snapshot::ProgramSnapshot;

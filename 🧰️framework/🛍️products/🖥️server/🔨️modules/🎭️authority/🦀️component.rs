@@ -20,10 +20,7 @@ use std::collections::HashMap;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use thiserror::Error;
 
-use crate::contract::{
-    ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock,
-    IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope,
-};
+use crate::contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
 use crate::storage::{AuthorityStore, Lease, OutboxEntry};
 
 //#region 🔖️Error
@@ -134,20 +131,8 @@ impl Decider for CounterDecider {
 
     async fn decide(&self, state: &ActorState, command: &CommandEnvelope, _context: &DecisionContext) -> Decision {
         match command.kind.as_str() {
-            "counter.increment" => Decision::Emit {
-                events: vec![EventRecord {
-                    stream: command.target.clone(),
-                    seq: 0,
-                    hlc: HybridLogicalClock::default(),
-                    kind: "counter.incremented".into(),
-                    payload: command.payload.clone(),
-                }],
-                effects: vec![],
-            },
-            "counter.audit" => Decision::Emit {
-                events: vec![],
-                effects: vec![Effect { kind: "counter.audited".into(), payload: state.bytes.clone() }],
-            },
+            "counter.increment" => Decision::Emit { events: vec![EventRecord { stream: command.target.clone(), seq: 0, hlc: HybridLogicalClock::default(), kind: "counter.incremented".into(), payload: command.payload.clone() }], effects: vec![] },
+            "counter.audit" => Decision::Emit { events: vec![], effects: vec![Effect { kind: "counter.audited".into(), payload: state.bytes.clone() }] },
             "counter.forbid" => Decision::Reject(Rejection::Invalid { detail: "counter refuses".into() }),
             "counter.rebuild" => Decision::Defer(ProcessId("rebuild-1".into())),
             other => Decision::Reject(Rejection::UnknownCommandKind { command_kind: other.into() }),
@@ -222,12 +207,7 @@ impl AuthorityDirectory {
             let epoch = self.next_epoch;
             self.next_epoch += 1;
             let lease = Lease { epoch, holder: holder.to_string() };
-            let activation = Activation {
-                lease,
-                state: ActorState::default(),
-                mailbox_seq: 0,
-                snapshot_version: 0,
-            };
+            let activation = Activation { lease, state: ActorState::default(), mailbox_seq: 0, snapshot_version: 0 };
             self.activations.insert(key.clone(), activation);
         }
         self.activations.get_mut(&key).ok_or(AuthorityError::LeaseLost)
@@ -367,11 +347,7 @@ impl<S: AuthorityStore> CommandBus<S> {
         //#endregion 🔖️Fence
 
         //#region 🔖️Decide
-        let context = DecisionContext {
-            now,
-            principal: envelope.principal.clone(),
-            scope: envelope.scope.clone(),
-        };
+        let context = DecisionContext { now, principal: envelope.principal.clone(), scope: envelope.scope.clone() };
         let (events, effects) = match registration.decider.decide(&activation.state, &envelope, &context).await {
             Decision::Emit { events, effects } => (events, effects),
             Decision::Reject(reason) => return refuse(&envelope, activation.state.revision, now, reason),
@@ -402,12 +378,7 @@ impl<S: AuthorityStore> CommandBus<S> {
         //#endregion 🔖️Evolve
 
         //#region 🔖️Receipt
-        let receipt = CommandReceipt {
-            command_id: envelope.command_id.clone(),
-            actor: envelope.target.clone(),
-            revision,
-            accepted_at: now,
-        };
+        let receipt = CommandReceipt { command_id: envelope.command_id.clone(), actor: envelope.target.clone(), revision, accepted_at: now };
         if let Some(key) = &envelope.idempotency_key {
             if let Err(error) = self.store.record_receipt(key, &receipt).await {
                 return unavailable(&envelope, revision, now, &error.to_string());
@@ -426,12 +397,7 @@ const HOLDER: &str = "authority";
 
 /// 🧾️ The receipt describing where this command left the actor.
 fn acknowledge(envelope: &CommandEnvelope, revision: Revision, now: HybridLogicalClock) -> CommandReceipt {
-    CommandReceipt {
-        command_id: envelope.command_id.clone(),
-        actor: envelope.target.clone(),
-        revision,
-        accepted_at: now,
-    }
+    CommandReceipt { command_id: envelope.command_id.clone(), actor: envelope.target.clone(), revision, accepted_at: now }
 }
 
 /// 🚫️ A refusal carrying the receipt the caller still needs to correlate the answer.
@@ -449,38 +415,14 @@ fn unavailable(envelope: &CommandEnvelope, revision: Revision, now: HybridLogica
 /// 🔏️ Re-stamp decided events with authority-assigned stream, sequence and clock, keeping only the
 /// domain-owned `kind` and `payload`, so nothing a client proposed can reach the log unverified.
 fn seal(actor: &ActorKey, from_seq: u64, now: HybridLogicalClock, events: Vec<EventRecord>) -> Vec<EventRecord> {
-    events
-        .into_iter()
-        .enumerate()
-        .map(|(offset, event)| EventRecord {
-            stream: actor.clone(),
-            seq: from_seq + offset as u64 + 1,
-            hlc: now,
-            kind: event.kind,
-            payload: event.payload,
-        })
-        .collect()
+    events.into_iter().enumerate().map(|(offset, event)| EventRecord { stream: actor.clone(), seq: from_seq + offset as u64 + 1, hlc: now, kind: event.kind, payload: event.payload }).collect()
 }
 
 /// 📤️ The outbox rows for one turn: one per committed event for saga fan-out, one per requested
 /// effect for the dispatcher. Ids are assigned by the store at append time.
 fn dispatchable(actor: &ActorKey, events: &[EventRecord], effects: Vec<Effect>) -> Vec<OutboxEntry> {
-    let from_events = events.iter().map(|event| OutboxEntry {
-        id: 0,
-        actor: actor.clone(),
-        kind: event.kind.clone(),
-        payload: event.payload.clone(),
-        event: Some(event.clone()),
-        delivered: false,
-    });
-    let from_effects = effects.into_iter().map(|effect| OutboxEntry {
-        id: 0,
-        actor: actor.clone(),
-        kind: effect.kind,
-        payload: effect.payload,
-        event: None,
-        delivered: false,
-    });
+    let from_events = events.iter().map(|event| OutboxEntry { id: 0, actor: actor.clone(), kind: event.kind.clone(), payload: event.payload.clone(), event: Some(event.clone()), delivered: false });
+    let from_effects = effects.into_iter().map(|effect| OutboxEntry { id: 0, actor: actor.clone(), kind: effect.kind, payload: effect.payload, event: None, delivered: false });
     from_events.chain(from_effects).collect()
 }
 //#endregion 🔖️Bus

@@ -52,9 +52,7 @@ impl<H: ActionHandler> ActionBus<H> {
     // 🚫️async: E1 `Default::default` (external trait) is the only non-test consumer and cannot be
     // async; `new` itself does no I/O, so R9 keeps it sync rather than making `Default` a dead end.
     pub fn new() -> Self {
-        Self {
-            controllers: HashMap::new(),
-        }
+        Self { controllers: HashMap::new() }
     }
 
     pub async fn register(&mut self, handler: H) {

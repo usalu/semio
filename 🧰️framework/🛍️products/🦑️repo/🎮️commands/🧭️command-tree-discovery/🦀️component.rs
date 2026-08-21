@@ -25,17 +25,7 @@ pub struct CommandNode {
 // #region 🔖️Discover
 const PROJECT_MANIFESTS: &[&str] = &["📋️project.json", "project.json"];
 const WALK_SKIP_DIRS: &[&str] = &["node_modules", "target", ".git", "dist", "build", "generated", "cache"];
-const TAXONOMY_SKIP_KEYS: &[&str] = &[
-    "packages",
-    "modules",
-    "products",
-    "plugins",
-    "artifacts",
-    "standards",
-    "subsets",
-    "extensions",
-    "targets",
-];
+const TAXONOMY_SKIP_KEYS: &[&str] = &["packages", "modules", "products", "plugins", "artifacts", "standards", "subsets", "extensions", "targets"];
 
 const VERB_ORDER: &[&str] = &["dev", "build", "test", "verify", "gate", "lint", "format", "generate", "publish"];
 
@@ -119,12 +109,7 @@ fn collect_project_targets(root: &Path, dir: &Path, trie: &mut TrieNode) {
         let manifest_dir = path.parent().unwrap_or(dir);
         let segments = taxonomy_segments(root, manifest_dir);
         for (target, _) in targets.unwrap() {
-            let spec = CommandSpec {
-                cmd: "bun".into(),
-                args: vec!["nx".into(), "run".into(), format!("{project_name}:{target}")],
-                cwd: root.to_path_buf(),
-                env: Vec::new(),
-            };
+            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), format!("{project_name}:{target}")], cwd: root.to_path_buf(), env: Vec::new() };
             let mut path_segments = vec![Segment { key: target.clone(), label: target.clone() }];
             path_segments.extend(segments.clone());
             trie.insert_path(&path_segments, spec);
@@ -144,13 +129,7 @@ fn should_skip_taxonomy_segment(name: &str) -> bool {
 
 fn taxonomy_segments(root: &Path, manifest_dir: &Path) -> Vec<Segment> {
     let rel = manifest_dir.strip_prefix(root).unwrap_or(manifest_dir);
-    rel.components()
-        .filter_map(|c| c.as_os_str().to_str())
-        .filter(|c| !c.is_empty())
-        .filter(|c| !should_skip_taxonomy_segment(c))
-        .map(|c| Segment { key: segment_key(c), label: c.to_string() })
-        .filter(|s| !s.key.is_empty())
-        .collect()
+    rel.components().filter_map(|c| c.as_os_str().to_str()).filter(|c| !c.is_empty()).filter(|c| !should_skip_taxonomy_segment(c)).map(|c| Segment { key: segment_key(c), label: c.to_string() }).filter(|s| !s.key.is_empty()).collect()
 }
 
 fn segment_key(component: &str) -> String {
@@ -163,17 +142,8 @@ fn inject_playground_dev(root: &Path, trie: &mut TrieNode) {
     let catalog = crate::catalog::load_playground_catalog(root);
     for row in catalog {
         for renderer in ["react", "wgpu-wasm", "wgpu-native"] {
-            let env = crate::env_contract::build_dev_env(
-                &row.variant,
-                Some(&row),
-                &crate::env_contract::DevOptions { renderer: renderer.into(), ..Default::default() },
-            );
-            let spec = CommandSpec {
-                cmd: "bun".into(),
-                args: vec!["nx".into(), "run".into(), "@semio-tech/framework-os-dev:dev".into()],
-                cwd: root.to_path_buf(),
-                env,
-            };
+            let env = crate::env_contract::build_dev_env(&row.variant, Some(&row), &crate::env_contract::DevOptions { renderer: renderer.into(), ..Default::default() });
+            let spec = CommandSpec { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), "@semio-tech/framework-os-dev:dev".into()], cwd: root.to_path_buf(), env };
             let path = vec![
                 Segment { key: "dev".into(), label: "dev".into() },
                 Segment { key: segment_key(&row.plugin_id), label: row.plugin_id.clone() },
@@ -220,11 +190,7 @@ mod tests {
         fs::create_dir_all(&tmp).unwrap();
         let pkg = tmp.join("✏️s/🔌️plugins/demo/📦️packages/🦀️rust");
         fs::create_dir_all(&pkg).unwrap();
-        fs::write(
-            pkg.join("📋️project.json"),
-            r#"{"name":"@semio-tech/demo","targets":{"test":{"executor":"nx:run-commands"}}}"#,
-        )
-        .unwrap();
+        fs::write(pkg.join("📋️project.json"), r#"{"name":"@semio-tech/demo","targets":{"test":{"executor":"nx:run-commands"}}}"#).unwrap();
         let tree = discover(&tmp);
         let verbs: Vec<&str> = tree.children.iter().map(|c| c.key.as_str()).collect();
         assert!(verbs.contains(&"test"));

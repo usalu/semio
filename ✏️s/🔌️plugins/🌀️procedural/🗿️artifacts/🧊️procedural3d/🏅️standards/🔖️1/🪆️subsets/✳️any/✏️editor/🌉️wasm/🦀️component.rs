@@ -2,8 +2,8 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
 use crate::artifacts::procedural3d::mutations::{Procedural3dEnvelope, Procedural3dStore};
+use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
 use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;
@@ -11,7 +11,8 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Procedural3dSnapshotVcs {
-    store: RefCell<Procedural3dStore>}
+    store: RefCell<Procedural3dStore>,
+}
 
 #[wasm_bindgen]
 impl Procedural3dSnapshotVcs {
@@ -22,7 +23,8 @@ impl Procedural3dSnapshotVcs {
                 let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Procedural3dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
             }
-            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?};
+            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+        };
         Ok(Self { store: RefCell::new(store) })
     }
 

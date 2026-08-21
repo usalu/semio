@@ -17,7 +17,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 /// 📦️ Encodes a `DagMutation` to its binary command form.
 pub async fn encode_op(operation: &DagMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -63,4 +62,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");
     }
 }
-

@@ -7,8 +7,8 @@
 //! `🛂️descriptor.semio` (pack bytes) + `🔣️descriptor.json` (readable mirror) to `--out <dir>`.
 //! Never instantiated or invoked by the OS at runtime — see `🧬️schema/📜️component.wit`'s
 //! `describe` interface doc.
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as store;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -96,11 +96,7 @@ impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
 /// together, and an unresolved import fails instantiation outright), which is exactly why these
 /// exist as refusals rather than as omissions.
 fn describe_must_be_pure(name: &str) -> Vec<u8> {
-    dsl::encode_fault_bytes(&dsl::Fault::new(
-        dsl::FaultOrigin::Os,
-        dsl::FaultCode::new("describe.impure"),
-        format!("host-async {name} is not available during describe() — the descriptor contract requires describe() to be pure"),
-    ))
+    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("describe.impure"), format!("host-async {name} is not available during describe() — the descriptor contract requires describe() to be pure")))
 }
 
 /// 🚪️ `emit`/`emit-patch`, the fire-and-forget doors. Dropped with a loud stderr line rather than
@@ -380,14 +376,7 @@ async fn run_describe(args: Vec<String>) -> i32 {
     };
     match describe_component(&wasm_path, &out_dir).await {
         Ok(descriptor) => {
-            println!(
-                "described {} ({:?}, role={:?}) -> {}/🛂️descriptor.semio + 🔣️descriptor.json (wasm_sha256={})",
-                wasm_path.display(),
-                descriptor.manifest.plugin_id,
-                descriptor.role,
-                out_dir.display(),
-                descriptor.hashes.wasm_sha256
-            );
+            println!("described {} ({:?}, role={:?}) -> {}/🛂️descriptor.semio + 🔣️descriptor.json (wasm_sha256={})", wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), descriptor.hashes.wasm_sha256);
             0
         }
         Err(error) => {

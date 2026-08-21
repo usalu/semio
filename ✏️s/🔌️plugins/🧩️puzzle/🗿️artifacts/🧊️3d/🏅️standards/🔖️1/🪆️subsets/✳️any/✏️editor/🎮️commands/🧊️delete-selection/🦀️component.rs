@@ -1,7 +1,7 @@
 //! 🧊️ `delete-selection` command.
 
-use std::collections::HashSet;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
+use std::collections::HashSet;
 
 pub async fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let object_ids: Vec<String> = ctx.selected_object_ids();

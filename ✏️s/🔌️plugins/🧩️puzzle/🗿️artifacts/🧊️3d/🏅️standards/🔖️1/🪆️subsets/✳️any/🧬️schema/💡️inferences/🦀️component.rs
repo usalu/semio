@@ -109,7 +109,15 @@ mod tests {
         let leaf = object("leaf", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
         let attraction_a = Puzzle3dAttraction { id: "a1".into(), attracting: "root:top".into(), attracted: "mid:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.0, y: 0.0 };
         let attraction_b = Puzzle3dAttraction { id: "a2".into(), attracting: "mid:top".into(), attracted: "leaf:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 1.0 };
-        Puzzle3dSnapshot { schema: crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".into(), meta: Default::default(), objects: vec![root, mid, leaf], attractions: vec![attraction_a, attraction_b], target_volumes: Vec::new(), references: Vec::new() }
+        Puzzle3dSnapshot {
+            schema: crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA.to_string(),
+            domain: "architecture".into(),
+            meta: Default::default(),
+            objects: vec![root, mid, leaf],
+            attractions: vec![attraction_a, attraction_b],
+            target_volumes: Vec::new(),
+            references: Vec::new(),
+        }
     }
     //#endregion 🧸️Fixtures
 

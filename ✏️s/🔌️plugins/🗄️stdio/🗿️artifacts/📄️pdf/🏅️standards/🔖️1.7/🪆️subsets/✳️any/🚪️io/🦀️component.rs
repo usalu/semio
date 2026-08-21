@@ -87,10 +87,10 @@ async fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
 //#endregion 🔖️Error
 
 //#region 🔖️Lexer
-async fn is_ws(b: u8) -> bool {
+fn is_ws(b: u8) -> bool {
     matches!(b, b' ' | b'\t' | b'\r' | b'\n' | 0x0C | 0x00)
 }
-async fn is_delim(b: u8) -> bool {
+fn is_delim(b: u8) -> bool {
     matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
 }
 
@@ -119,7 +119,7 @@ impl<'a> Lexer<'a> {
     pub async fn skip_ws(&mut self) {
         loop {
             match self.peek().await {
-                Some(b) if is_ws(b).await => {
+                Some(b) if is_ws(b) => {
                     self.pos += 1;
                 }
                 Some(b'%') => {
@@ -138,7 +138,7 @@ impl<'a> Lexer<'a> {
     async fn read_regular_run(&mut self) -> &'a [u8] {
         let start = self.pos;
         while let Some(b) = self.peek().await {
-            if is_ws(b).await || is_delim(b).await {
+            if is_ws(b) || is_delim(b) {
                 break;
             }
             self.pos += 1;
@@ -197,7 +197,7 @@ impl<'a> Lexer<'a> {
         self.pos += 1; // consume '/'
         let mut out = String::new();
         while let Some(b) = self.peek().await {
-            if is_ws(b).await || is_delim(b).await {
+            if is_ws(b) || is_delim(b) {
                 break;
             }
             if b == b'#' && self.peek_at(1).await.is_some() && self.peek_at(2).await.is_some() {
@@ -316,7 +316,7 @@ impl<'a> Lexer<'a> {
                     nibbles.push(hex_val(b));
                     self.pos += 1;
                 }
-                Some(b) if is_ws(b).await => {
+                Some(b) if is_ws(b) => {
                     self.pos += 1;
                 }
                 None => return malformed("unterminated hex string").await,
@@ -506,7 +506,7 @@ async fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
     let mut found: HashMap<u32, (ObjRef, usize)> = HashMap::new();
     let mut i = 0usize;
     while i < data.len() {
-        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]).await || is_delim(data[i - 1]).await) {
+        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]) || is_delim(data[i - 1])) {
             let start = i;
             let mut lex = Lexer::new(data).await.at(start);
             if let Ok(PdfObject::Int(num)) = lex.await.parse_number().await {
@@ -541,7 +541,7 @@ pub async fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
         if b == b'>' {
             break;
         }
-        if is_ws(b).await {
+        if is_ws(b) {
             continue;
         }
         if b.is_ascii_hexdigit() {
@@ -564,7 +564,7 @@ pub async fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
     while i < s.len() {
         let b = s[i];
         i += 1;
-        if is_ws(b).await {
+        if is_ws(b) {
             continue;
         }
         if b == b'~' {
@@ -1383,7 +1383,7 @@ async fn extract_block<'a>(s: &'a str, start: &str, end: &str) -> Option<&'a str
     let j = s[i..].find(end)? + i;
     Some(&s[i..j])
 }
-async fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
+fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
     let mut out = Vec::new();
     let mut from = 0usize;
     while let Some(rel) = s[from..].find(start) {
@@ -2101,7 +2101,7 @@ async fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b')');
 }
 
-async fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
+fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
     let row_bytes = (predictor.columns as usize * predictor.colors as usize * predictor.bits_per_component as usize).div_ceil(8);
     if predictor.predictor >= 10 {
         let mut out = Vec::with_capacity(data.len() + data.len().div_ceil(row_bytes.max(1)));
@@ -2124,7 +2124,7 @@ async fn encode_predictor(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
     data.to_vec()
 }
 
-async fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
+fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
     dict.iter().any(|entry| entry.key == "PieceInfo" && matches!(&entry.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Illustrator")))
 }
 
@@ -2167,7 +2167,7 @@ async fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFi
     if !names.is_empty() {
         let root_piece_info = has_illustrator_piece_info(dict);
         let font_program = dict.iter().any(|entry| entry.key == "Length1") || dict.iter().any(|entry| entry.key == "Subtype" && matches!(&entry.value, PdfObject::Name(name) if matches!(name.as_str(), "Type1C" | "CIDFontType0C" | "OpenType")));
-        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info.await || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
+        let filter = PdfDictEntry { key: "Filter".into(), value: if names.len() == 1 && (!illustrator || root_piece_info || font_program) { names[0].clone() } else { PdfObject::Array(names) } };
         if illustrator && !root_piece_info {
             let index = entries.iter().position(|entry| entry.key == "Length").unwrap_or(entries.len());
             entries.insert(index, filter);

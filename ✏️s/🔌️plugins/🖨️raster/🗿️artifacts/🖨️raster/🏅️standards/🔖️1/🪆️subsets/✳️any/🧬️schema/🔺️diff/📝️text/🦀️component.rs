@@ -1,10 +1,8 @@
 //! 🔺️ Raster artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::raster::schema::diff::{
-    RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta,
-};
-use crate::artifacts::raster::schema::{find_layer, layer_node_id};
+use crate::artifacts::raster::schema::diff::{RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta};
 use crate::artifacts::raster::schema::RasterArtifact;
+use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 use protocol::MutationDiff;
 
@@ -61,23 +59,17 @@ pub async fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&
 }
 
 async fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
-    layer_node_id(node) == target_id
-        || matches!(node, RasterLayerNode::Group { children, .. } if children.iter().any(|child| contains_layer(child, target_id)))
+    layer_node_id(node) == target_id || matches!(node, RasterLayerNode::Group { children, .. } if children.iter().any(|child| contains_layer(child, target_id)))
 }
 
 async fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
     let invalid = match node {
         RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
         RasterLayerNode::Group { .. } => patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
-        RasterLayerNode::Adjustment { .. } => {
-            patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some()
-        }
+        RasterLayerNode::Adjustment { .. } => patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
     };
     if invalid {
-        return Err(protocol::MutationApplyError::new(
-            "mutation.apply.invalid-target",
-            "layer patch contains fields unsupported by the target layer kind",
-        ));
+        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch contains fields unsupported by the target layer kind"));
     }
     Ok(())
 }
@@ -255,188 +247,83 @@ impl RasterDiff {
     }
 }
 
-pub async fn apply_layers_delta(
-    layers: &[RasterLayerNode],
-    delta: &RasterLayersDelta,
-) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
+pub async fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "layer is removed more than once",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
         if find_layer(layers, id).is_none() {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed layer does not exist",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist").at(["removed".to_string(), index.to_string()]));
         }
     }
     let mut patched = std::collections::BTreeSet::new();
     for (index, entry) in delta.patched.iter().enumerate() {
         if !patched.insert(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "layer is patched more than once",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is patched more than once").at(["patched".to_string(), index.to_string()]));
         }
         if removed.contains(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.conflicting-target",
-                "layer cannot be removed and patched",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
         }
-        let node = find_layer(layers, &entry.id).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched layer does not exist",
-            )
-            .at(["patched".to_string(), index.to_string()])
-        })?;
-        validate_layer_patch(node, &entry.patch)
-            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+        let node = find_layer(layers, &entry.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist").at(["patched".to_string(), index.to_string()]))?;
+        validate_layer_patch(node, &entry.patch).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
     let mut moved = std::collections::BTreeSet::new();
     for (index, entry) in delta.moved.iter().enumerate() {
         if !moved.insert(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "layer is moved more than once",
-            )
-            .at(["moved".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is moved more than once").at(["moved".to_string(), index.to_string()]));
         }
         if removed.contains(entry.id.as_str()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.conflicting-target",
-                "layer cannot be removed and moved",
-            )
-            .at(["moved".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and moved").at(["moved".to_string(), index.to_string()]));
         }
-        let node = find_layer(layers, &entry.id).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "moved layer does not exist",
-            )
-            .at(["moved".to_string(), index.to_string()])
-        })?;
+        let node = find_layer(layers, &entry.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist").at(["moved".to_string(), index.to_string()]))?;
         if entry.parent_id.as_deref().is_some_and(|parent_id| contains_layer(node, parent_id)) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-target",
-                "layer cannot be moved beneath itself",
-            )
-            .at(["moved".to_string(), index.to_string(), "parentId".to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer cannot be moved beneath itself").at(["moved".to_string(), index.to_string(), "parentId".to_string()]));
         }
     }
-    let mut identities: std::collections::BTreeSet<String> = crate::artifacts::raster::schema::flatten_raster_layers(layers)
-        .into_iter()
-        .map(|node| layer_node_id(node).to_string())
-        .collect();
+    let mut identities: std::collections::BTreeSet<String> = crate::artifacts::raster::schema::flatten_raster_layers(layers).into_iter().map(|node| layer_node_id(node).to_string()).collect();
     for id in &delta.removed {
         identities.remove(id);
     }
     for (index, insertion) in delta.added.iter().enumerate() {
         let id = layer_node_id(&insertion.layer);
         if !identities.insert(id.to_string()) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "added layer identity already exists",
-            )
-            .at(["added".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added layer identity already exists").at(["added".to_string(), index.to_string()]));
         }
     }
     let mut next = layers.to_vec();
     for id in &delta.removed {
-        remove_layer_from_tree(&mut next, id).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed layer does not exist after structural edits",
-            )
-            .at(["removed", id.as_str()])
-        })?;
+        remove_layer_from_tree(&mut next, id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist after structural edits").at(["removed", id.as_str()]))?;
     }
     for (index, entry) in delta.patched.iter().enumerate() {
-        apply_layer_patch_entry(&mut next, entry)
-            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+        apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
     for (index, mv) in delta.moved.iter().enumerate() {
-        let node = remove_layer_from_tree(&mut next, &mv.id).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "moved layer does not exist after structural edits",
-            )
-            .at(["moved".to_string(), index.to_string()])
-        })?;
+        let node = remove_layer_from_tree(&mut next, &mv.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist after structural edits").at(["moved".to_string(), index.to_string()]))?;
         if !insert_layer(&mut next, mv.parent_id.as_deref(), mv.index, node) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-index",
-                "moved layer parent or index is invalid",
-            )
-            .at(["moved".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "moved layer parent or index is invalid").at(["moved".to_string(), index.to_string()]));
         }
     }
     for (index, insertion) in delta.added.iter().enumerate() {
-        if !insert_layer(
-            &mut next,
-            insertion.parent_id.as_deref(),
-            insertion.index,
-            insertion.layer.clone(),
-        ) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-index",
-                "added layer parent or index is invalid",
-            )
-            .at(["added".to_string(), index.to_string()]));
+        if !insert_layer(&mut next, insertion.parent_id.as_deref(), insertion.index, insertion.layer.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "added layer parent or index is invalid").at(["added".to_string(), index.to_string()]));
         }
     }
-    let next_ids: Vec<_> = crate::artifacts::raster::schema::flatten_raster_layers(&next)
-        .into_iter()
-        .map(layer_node_id)
-        .collect();
-    if next_ids
-        .iter()
-        .enumerate()
-        .any(|(index, id)| next_ids[..index].contains(id))
-    {
-        return Err(protocol::MutationApplyError::new(
-            "mutation.apply.duplicate-target",
-            "resulting layer tree contains duplicate identities",
-        )
-        .at(["identities"]));
+    let next_ids: Vec<_> = crate::artifacts::raster::schema::flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
+    if next_ids.iter().enumerate().any(|(index, id)| next_ids[..index].contains(id)) {
+        return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
     Ok(next)
 }
 
-async fn apply_layer_patch_entry(
-    layers: &mut [RasterLayerNode],
-    entry: &RasterLayerPatchEntry,
-) -> protocol::MutationApplyResult<()> {
-    patch_layer_in_tree(layers, &entry.id, &entry.patch)
-        .map(|_| ())
-        .ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched layer does not exist",
-            )
-        })
+async fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerPatchEntry) -> protocol::MutationApplyResult<()> {
+    patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist"))
 }
 
-async fn validate_assets_delta<T>(
-    assets: &std::collections::BTreeMap<String, T>,
-    delta: &RasterAssetsDelta,
-) -> protocol::MutationApplyResult<()> {
+async fn validate_assets_delta<T>(assets: &std::collections::BTreeMap<String, T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed asset does not exist",
-            )
-            .at([key.as_str()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
         }
     }
     Ok(())
@@ -525,10 +412,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
 
 //#region 🔖️Builders
 pub async fn diff_set_snapshot(snapshot: &RasterSnapshot) -> RasterDiff {
-    RasterDiff {
-        artifact: Some(Box::new(RasterArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    RasterDiff { artifact: Some(Box::new(RasterArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 pub async fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
@@ -538,48 +422,21 @@ pub async fn diff_from_snapshot(snapshot: RasterSnapshot) -> RasterDiff {
 /// ➕ Sparse insertion diff — tree-aware (`parent_id: None` = document root), so `create-layer` never
 /// needs to fall back to whole-snapshot capture even when inserting into a nested `Group`.
 pub async fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLayerNode) -> RasterDiff {
-    RasterDiff {
-        layers: Some(RasterLayersDelta {
-            added: vec![RasterLayerInsertion { parent_id, index, layer }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    RasterDiff { layers: Some(RasterLayersDelta { added: vec![RasterLayerInsertion { parent_id, index, layer }], ..Default::default() }), ..Default::default() }
 }
 
 pub async fn diff_remove_layer(layer_id: &str) -> RasterDiff {
-    RasterDiff {
-        layers: Some(RasterLayersDelta {
-            removed: vec![layer_id.to_string()],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    RasterDiff { layers: Some(RasterLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
 }
 
 pub async fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
-    RasterDiff {
-        layers: Some(RasterLayersDelta {
-            patched: vec![RasterLayerPatchEntry {
-                id: layer_id.to_string(),
-                patch,
-            }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    RasterDiff { layers: Some(RasterLayersDelta { patched: vec![RasterLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔀 Sparse reposition diff (`reorder-layers`) — remove-then-insert at a tree address, built
 /// directly from the payload; never clones/mutates/re-diffs the whole snapshot.
 pub async fn diff_move_layer(layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
-    RasterDiff {
-        layers: Some(RasterLayersDelta {
-            moved: vec![RasterLayerMove { id: layer_id.to_string(), parent_id, index }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    RasterDiff { layers: Some(RasterLayersDelta { moved: vec![RasterLayerMove { id: layer_id.to_string(), parent_id, index }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).

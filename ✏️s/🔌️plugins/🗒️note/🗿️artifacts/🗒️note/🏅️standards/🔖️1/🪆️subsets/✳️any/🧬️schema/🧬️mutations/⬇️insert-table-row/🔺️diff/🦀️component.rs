@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `InsertTableRow`. Error `target-missing` when the block is absent
 //! or not a table.
 use super::mutation::InsertTableRow;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &InsertTableRow, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -14,7 +14,10 @@ pub async fn diff(payload: &InsertTableRow, base: &NoteSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not a table.", payload.id), [payload.id.clone()]);
     }
     let mut updated = block.clone();
-    if let crate::artifacts::note::NoteBlockNode::Table { columns, rows, .. } = &mut updated { let width = columns.len(); rows.push((0..width).map(|_| crate::artifacts::note::NoteTableCell { content: String::new() }).collect()); }
+    if let crate::artifacts::note::NoteBlockNode::Table { columns, rows, .. } = &mut updated {
+        let width = columns.len();
+        rows.push((0..width).map(|_| crate::artifacts::note::NoteTableCell { content: String::new() }).collect());
+    }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }
 //#endregion 🔖️Diff

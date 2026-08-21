@@ -12,12 +12,6 @@ pub async fn diff(payload: &super::mutation::ChangeCuratedItemCount, base: &Cura
     if existing.count == payload.new_count {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" count is already {}.", payload.object_id, payload.new_count));
     }
-    protocol::MutationOutcome::new(CurateDiff {
-        curated: Some(CurateCuratedDelta {
-            patched: vec![CurateCuratedPatchEntry { object_id: payload.object_id.clone(), count: Some(payload.new_count) }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(CurateDiff { curated: Some(CurateCuratedDelta { patched: vec![CurateCuratedPatchEntry { object_id: payload.object_id.clone(), count: Some(payload.new_count) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

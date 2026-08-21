@@ -101,11 +101,7 @@ mod tests {
     }
 
     async fn sample_snapshot() -> SequenceSnapshot {
-        SequenceSnapshot::from_fixture(SequenceFixture {
-            schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(),
-            steps: vec![step("a"), step("b")],
-            edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }],
-        })
+        SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
     }
     //#endregion 🧸️Fixtures
 

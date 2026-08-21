@@ -75,11 +75,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -105,7 +102,11 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.edition_profile.as_ref().and_then(|map| map.get("8")), Some(&crate::artifacts::vdi3805::EditionProfileChoice::Current), "change-edition-profile/switches-sheet-8-from-legacy-to-current: the diff must publish editionProfile with sheet 8 = Current");
+    assert_eq!(
+        raised_diff.edition_profile.as_ref().and_then(|map| map.get("8")),
+        Some(&crate::artifacts::vdi3805::EditionProfileChoice::Current),
+        "change-edition-profile/switches-sheet-8-from-legacy-to-current: the diff must publish editionProfile with sheet 8 = Current"
+    );
     assert!(raised_diff.correction_as_of.is_none(), "change-edition-profile/switches-sheet-8-from-legacy-to-current: a per-sheet override must not move the document-wide correction cut-off");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");

@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `ChangeBlockVisible`. Error `target-missing` when absent, Warning
 //! `no-op` when already at that visibility.
 use super::mutation::ChangeBlockVisible;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &ChangeBlockVisible, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -14,7 +14,14 @@ pub async fn diff(payload: &ChangeBlockVisible, base: &NoteSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" visible is already {}.", payload.id, payload.new_visible));
     }
     let mut updated = block.clone();
-    match &mut updated { crate::artifacts::note::NoteBlockNode::Text { visible, .. } | crate::artifacts::note::NoteBlockNode::Image { visible, .. } | crate::artifacts::note::NoteBlockNode::Table { visible, .. } | crate::artifacts::note::NoteBlockNode::Math { visible, .. } | crate::artifacts::note::NoteBlockNode::Ink { visible, .. } | crate::artifacts::note::NoteBlockNode::Group { visible, .. } => *visible = payload.new_visible, }
+    match &mut updated {
+        crate::artifacts::note::NoteBlockNode::Text { visible, .. }
+        | crate::artifacts::note::NoteBlockNode::Image { visible, .. }
+        | crate::artifacts::note::NoteBlockNode::Table { visible, .. }
+        | crate::artifacts::note::NoteBlockNode::Math { visible, .. }
+        | crate::artifacts::note::NoteBlockNode::Ink { visible, .. }
+        | crate::artifacts::note::NoteBlockNode::Group { visible, .. } => *visible = payload.new_visible,
+    }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }
 //#endregion 🔖️Diff

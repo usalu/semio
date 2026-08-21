@@ -1,9 +1,9 @@
 //! 🔍️ Layout play app panel — the inspector: a document summary (was field editors for the current
 //! selection; see `render`'s doc comment for why that's gone).
 
+use crate::artifacts::layout::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
-use crate::artifacts::layout::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants

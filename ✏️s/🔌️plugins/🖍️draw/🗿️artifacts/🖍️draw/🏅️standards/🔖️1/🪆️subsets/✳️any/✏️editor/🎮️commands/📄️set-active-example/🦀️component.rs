@@ -1,10 +1,10 @@
 //! 📄️ 📄️ Draw play app commands command — `set-active-example`.
 
+use crate::artifacts::draw::op::DrawMutation;
+use crate::artifacts::draw::schema::{default_draw_document, semio_draw_example_document};
+use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::editor::draw::DRAW_PLAY_EXAMPLE_DEFAULT_ID;
-use crate::artifacts::draw::schema::{default_draw_document, semio_draw_example_document};
-use crate::artifacts::draw::op::DrawMutation;
-use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -38,17 +38,18 @@ async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, Draw
 }
 //#endregion 🔖️WholeDocumentReset
 
-
-
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]
 pub struct SetActiveExample {
     pub example_id: String,
 }
 
-pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(
+    payload: &SetActiveExample,
+    _doc: &ArtifactView<'_, DrawSnapshot>,
+    _cfg: &ConfigView<'_, DrawConfig>,
+    _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession,
+) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() {
         Some(default_draw_document("empty", None))
     } else if payload.example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {

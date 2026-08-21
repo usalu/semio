@@ -24,7 +24,7 @@ fn incident_edges<G: GraphView>(graph: &G, node: NodeId) -> Vec<EdgeRef> {
 
 // #region 🔖️Bfs
 /// 🧭️ Generic breadth-first edge traversal driven by a caller-supplied neighbor-ordering hook (NetworkX `generic_bfs_edges`); every other BFS function in this crate is built on top of this one.
-pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(graph: &G, source: NodeId, neighbor_fn: F) -> Vec<EdgeRef> {
+pub fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(graph: &G, source: NodeId, neighbor_fn: F) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -495,7 +495,7 @@ mod tests {
         });
         assert_eq!(edges.len(), 5);
         assert_eq!(edges[0].v, n[2]);
-        as.awaitsert_eq!(edges[1].v, n[1]);
+        assert_eq!(edges[1].v, n[1]);
     }
 
     #[semio_framework_async_macros::async_test]

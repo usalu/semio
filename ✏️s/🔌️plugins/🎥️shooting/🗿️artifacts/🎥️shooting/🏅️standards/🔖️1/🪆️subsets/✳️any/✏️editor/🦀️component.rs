@@ -8,23 +8,24 @@
 //! This file is a routing table: `handle` → `ShootingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
+use crate::artifacts::shooting::op::ShootingMutation;
+use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use crate::editor::shooting::commands::{asset, camera, export, fixture, gumball, locale, scene, selection, shot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::presence::{ShootingPresence, ShootingPresenceMutation};
 use crate::editor::shooting::modes::edit;
 use crate::editor::shooting::modes::edit::windows::icon as icon_window;
 use crate::editor::shooting::modes::edit::windows::scene as scene_window;
 use crate::editor::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::editor::shooting::presence::{ShootingPresence, ShootingPresenceMutation};
 use crate::editor::shooting::terminology::shooting_play_labels;
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ConfigView, ArtifactEditor, ArtifactView, Dialect, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
+    UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
@@ -34,14 +35,14 @@ const SHOOTING_PLAY_CONTROLLER_ID: &str = "shooting-play";
 /// only, `HierarchyProvider::Flat`. Shot selection is NOT part of this domain — see
 /// `ShootingConfig::selected_shot_ids`'s doc comment.
 pub const SHOOTING_INTERACTION_DOMAIN: &str = "assets";
-pub use icon_window::SHOOTING_PLAY_BODY_ICON;
-pub use icon_window::SHOOTING_PLAY_WINDOW_ICON;
-pub use scene_window::SHOOTING_PLAY_BODY_SCENE;
-pub use scene_window::SHOOTING_PLAY_WINDOW_SCENE;
+pub use crate::editor::shooting::commands::fixture::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
 pub use catalogue_panel::SHOOTING_PLAY_BODY_CATALOGUE;
 pub use document_panel::SHOOTING_PLAY_BODY_DOCUMENT;
+pub use icon_window::SHOOTING_PLAY_BODY_ICON;
+pub use icon_window::SHOOTING_PLAY_WINDOW_ICON;
 pub use inspection_panel::SHOOTING_PLAY_BODY_INSPECTION;
-pub use crate::editor::shooting::commands::fixture::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
+pub use scene_window::SHOOTING_PLAY_BODY_SCENE;
+pub use scene_window::SHOOTING_PLAY_WINDOW_SCENE;
 //#endregion 🔖️Constants
 
 //#region 🔖️Utilities
@@ -108,10 +109,7 @@ pub async fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec
 pub async fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
     let (svg, width, height) = crate::artifacts::shooting::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
-    Ok(Media {
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
-    })
+    Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 //#endregion 🔖️Io
 
@@ -183,7 +181,7 @@ semio_framework_plugin::app_commands! {
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
 use export::export_shots;
-use fixture::{load_request, reset_snapshot, save_download, set_active_example, import_snapshot_json};
+use fixture::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use locale::set_locale;
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -278,7 +276,14 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    async fn handle(command: &ShootingCommand, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &ShootingCommand,
+        doc: &ArtifactView<'_, ShootingSnapshot>,
+        cfg: &ConfigView<'_, ShootingConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
         let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection(SHOOTING_INTERACTION_DOMAIN).ids.clone() };
         command.dispatch(doc, cfg, &mut ctx)
     }

@@ -74,10 +74,7 @@ async fn parse_sequence_snapshot_body(body: &str) -> Result<SequenceSnapshot, St
             return Err(format!("sequence snapshot: unknown line {line:?}"));
         }
     }
-    Ok(SequenceSnapshot {
-        schema: schema.ok_or_else(|| "sequence snapshot: missing schema line".to_string())?,
-        content: content.ok_or_else(|| "sequence snapshot: missing content line".to_string())?,
-    })
+    Ok(SequenceSnapshot { schema: schema.ok_or_else(|| "sequence snapshot: missing schema line".to_string())?, content: content.ok_or_else(|| "sequence snapshot: missing content line".to_string())? })
 }
 //#endregion 🔖️TextPrimitives
 //#region 🔖️ArtifactDslCodec
@@ -95,17 +92,11 @@ impl store::ArtifactDsl for SequenceSnapshot {
     }
     async fn print_dsl(&self) -> String {
         let body = print_sequence_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 //#endregion 🔖️ArtifactDslCodec
-
 
 //#region 🔖️Example
 /// 📄️ The handcrafted `.sequence` DSL-text fixture (regenerated from `default_snapshot()`'s canonical
@@ -145,15 +136,7 @@ mod tests {
     async fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
         use neural_engine::{Atom, Dictionary, Value};
         let mut fixture = default_snapshot().to_fixture();
-        fixture.steps.push(SequenceStep {
-            id: "step-3".into(),
-            kind: "control.if".into(),
-            params: StepParams::new().insert("flag", Value::Atom(Atom::Boolean(true))),
-            x: 560.0,
-            y: 0.0,
-            slot: None,
-            collapsed: true,
-        });
+        fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new().insert("flag", Value::Atom(Atom::Boolean(true))), x: 560.0, y: 0.0, slot: None, collapsed: true });
         fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),

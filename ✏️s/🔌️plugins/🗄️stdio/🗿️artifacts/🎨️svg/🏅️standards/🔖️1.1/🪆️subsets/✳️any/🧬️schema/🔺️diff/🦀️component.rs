@@ -155,7 +155,7 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SvgSnapshot> for SvgDiff {
-    async fn apply(&self, base: &SvgSnapshot) -> MutationApplyResult<SvgSnapshot> {
+    fn apply(&self, base: &SvgSnapshot) -> MutationApplyResult<SvgSnapshot> {
         if let Some(root) = &self.root {
             validate_svg_node(base.doc.root.as_ref(), root)?;
         }
@@ -175,7 +175,7 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.prolog.is_some() {
             self.prolog = other.prolog;
         }
@@ -366,7 +366,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &SvgChildrenDiff) -> Vec<XmlN
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SvgSnapshot> for SvgDiff {
-    async fn inverse(&self, base: &SvgSnapshot) -> Self {
+    fn inverse(&self, base: &SvgSnapshot) -> Self {
         SvgDiff {
             prolog: self.prolog.as_ref().map(|_| base.doc.prolog.clone()),
             declaration: self.declaration.as_ref().map(|_| base.doc.declaration.clone()),
@@ -375,7 +375,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
         }
     }
 
-    async fn between(base: &SvgSnapshot, other: &SvgSnapshot) -> Self {
+    fn between(base: &SvgSnapshot, other: &SvgSnapshot) -> Self {
         SvgDiff {
             prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
@@ -384,7 +384,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.prolog.is_none() && self.declaration.is_none() && self.doctype.is_none() && self.root.is_none()
     }
 }
@@ -1421,10 +1421,10 @@ fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
 }
 
 impl protocol::DiffCodec for SvgDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_svg_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_svg_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declaration][doctype][root]`),
@@ -1433,7 +1433,7 @@ impl protocol::DiffCodec for SvgDiff {
     /// of stdio's `DiffCodec` impls were still on that shortcut per the P2-W0 census). `flags` bits
     /// 0/1/2/3 mark `declaration`/`doctype`/`root`/`prolog` presence; each present field's own tri-state/
     /// recursive payload follows in that fixed order.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.declaration.is_some() {
             flags |= 0b001;
@@ -1468,20 +1468,20 @@ impl protocol::DiffCodec for SvgDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let declaration = if flags & 0b001 != 0 {
-            let has = reader.read_u8().await.map_err(|e| malformed("diff declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None
         };
         let doctype = if flags & 0b010 != 0 {
-            let has = reader.read_u8().await.map_err(|e| malformed("diff doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None

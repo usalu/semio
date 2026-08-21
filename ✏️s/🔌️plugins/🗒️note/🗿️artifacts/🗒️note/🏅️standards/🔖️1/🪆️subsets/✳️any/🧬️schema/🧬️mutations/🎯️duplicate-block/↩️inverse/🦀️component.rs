@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DuplicateBlock`.
 use super::mutation::DuplicateBlock;
-use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::schema::mutations::DeleteBlock;
+use crate::artifacts::note::schema::mutations::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
 
 //#region 🔖️Inverse

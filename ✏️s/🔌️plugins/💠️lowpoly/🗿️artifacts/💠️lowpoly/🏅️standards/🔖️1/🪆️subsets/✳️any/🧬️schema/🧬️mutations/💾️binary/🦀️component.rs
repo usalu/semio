@@ -28,8 +28,8 @@ pub async fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::Protoc
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::artifacts::lowpoly::mutations::rename_object;
+    use crate::artifacts::lowpoly::schema::default_snapshot;
     use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]

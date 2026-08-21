@@ -10,7 +10,13 @@ pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(SHOOTING_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        group: PanelGroup::Workbench,
+        body_key: Some(SHOOTING_PLAY_BODY_CATALOGUE.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

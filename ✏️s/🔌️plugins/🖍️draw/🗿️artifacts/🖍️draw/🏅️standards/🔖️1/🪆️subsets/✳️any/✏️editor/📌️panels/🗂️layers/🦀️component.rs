@@ -1,9 +1,9 @@
 //! 🗂️ Draw play app panel — the layer tree (constitutional: was `ui`'s `Panels` region, layers half).
 
+use crate::artifacts::draw::schema::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
+use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 use crate::editor::draw::terminology::DrawPlayLabels;
 use crate::editor::draw::{draw_play_action, DRAW_INTERACTION_DOMAIN};
-use crate::artifacts::draw::schema::{draw_play_boolean_child_row_id, draw_play_layers_tree_row_id, find_draw_layer, layer_base};
-use crate::artifacts::draw::{DrawSnapshot, DrawLayerNode};
 use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::json;
 use std::collections::HashMap;
@@ -13,7 +13,13 @@ pub const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(DRAW_PLAY_BODY_LAYERS.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(DRAW_PLAY_BODY_LAYERS.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -87,9 +93,6 @@ pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode 
     // 🕹️ `.interaction_domain(...)` replaces the deleted `.selected()`/`.highlighted()`/
     // `.selection_change(...)` calls — the framework stamps presence from `InteractionState` and
     // would overwrite them anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    PanelTreeBuilder::new("draw-play-layers")
-        .section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())
-        .interaction_domain(DRAW_INTERACTION_DOMAIN)
-        .build()
+    PanelTreeBuilder::new("draw-play-layers").section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, action_items.into_iter().chain(layer_items).collect()).interaction_domain(DRAW_INTERACTION_DOMAIN).build()
 }
 //#endregion 🔖️Render

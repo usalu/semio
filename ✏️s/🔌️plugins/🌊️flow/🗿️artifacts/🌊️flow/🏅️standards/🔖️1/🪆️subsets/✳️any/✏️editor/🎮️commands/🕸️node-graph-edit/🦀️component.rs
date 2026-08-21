@@ -4,7 +4,7 @@ use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection, FLOW_INTERACTION_GRAPH};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️FlowNodeGraphEditOp
@@ -93,8 +93,7 @@ mod tests {
     async fn batched_delete_selection_clears_the_node_selection_on_the_scene() {
         let mut app = flow_app_with_registry();
         select_graph(&mut app, &["slider"], &[]);
-        dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit {
-                operations: vec![FlowNodeGraphEditOp::DeleteSelection] }));
+        dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] }));
         assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::artifacts::flow::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
         let _ = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN);
     }
@@ -103,8 +102,12 @@ mod tests {
     async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
         use crate::editor::flow::commands::spotlight_commit;
         let mut app = flow_app_with_registry();
-        let result = dispatch(&mut app, FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
-                operations: vec![spotlight_commit::FlowNodeGraphEditOp::Connect { source_node_id: "nope".into(), source_port_id: "out".into(), target_node_id: "gone".into(), target_port_id: "in".into() }] }));
+        let result = dispatch(
+            &mut app,
+            FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
+                operations: vec![spotlight_commit::FlowNodeGraphEditOp::Connect { source_node_id: "nope".into(), source_port_id: "out".into(), target_node_id: "gone".into(), target_port_id: "in".into() }],
+            }),
+        );
         assert!(result.mutations.is_empty(), "connecting missing nodes is a no-operation");
     }
 }

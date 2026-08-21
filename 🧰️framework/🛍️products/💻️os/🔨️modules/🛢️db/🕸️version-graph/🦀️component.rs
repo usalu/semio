@@ -1,6 +1,6 @@
 //! 🕸️ Version graph seam and Emit observability.
 
-use crate::db_ids::{ActorId, DbError, ArtifactId};
+use crate::db_ids::{ActorId, ArtifactId, DbError};
 use semio_framework_dispatch_macros::dyn_enum;
 
 //#region 🔖️VersionGraph

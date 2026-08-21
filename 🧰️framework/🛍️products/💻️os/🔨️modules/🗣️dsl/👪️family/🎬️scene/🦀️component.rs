@@ -22,13 +22,7 @@ pub async fn parse_layer_anchor_text(text: &str) -> Result<(String, f64, f64, Op
     }
     let xf: f64 = x.text.as_str().parse().map_err(|_| TextError::new("bad x", x.span.clone()))?;
     let yf: f64 = y.text.as_str().parse().map_err(|_| TextError::new("bad y", y.span.clone()))?;
-    let z = tokens.get(4).and_then(|t| {
-        if matches!(t.kind, TokenKind::Float | TokenKind::Int) {
-            t.text.as_str().parse().ok()
-        } else {
-            None
-        }
-    });
+    let z = tokens.get(4).and_then(|t| if matches!(t.kind, TokenKind::Float | TokenKind::Int) { t.text.as_str().parse().ok() } else { None });
     Ok((id.text.as_str().to_string(), xf, yf, z))
 }
 

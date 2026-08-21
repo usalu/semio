@@ -7,8 +7,8 @@ async fn primary_asset_is_nonempty() {
 //#region 💡️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::PlaybookInference;
+    use crate::artifacts::playbook::PlaybookSnapshot;
     use protocol::Inference;
 
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");
@@ -23,8 +23,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::PlaybookInference;
+    use crate::artifacts::playbook::PlaybookSnapshot;
     use protocol::Inference;
 
     assert_eq!(PlaybookInference::infer(&PlaybookSnapshot::default()), PlaybookInference::default());

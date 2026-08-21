@@ -6,8 +6,8 @@
 pub mod geometry {
     //! 📐️ Two-dimensional shape catalog as VSobjects.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects, VSobject};
+    use crate::editor::animate::engine::text::color::Color;
     use geometry::{append_shape_to_path, Arc, BezPath, Circle, Line, Point, Rect, RoundedRect, RoundedRectRadii, Vec2};
     use std::f64::consts::PI;
 
@@ -464,10 +464,10 @@ pub mod geometry {
 pub mod three_d {
     //! 🧊️ Three-dimensional Sobjects projected into the scene plane.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{circle, line, polygon, rectangle};
-    use crate::editor::animate::engine::scene::sobject::{Bounds, Group, Sobject, Sobjects, Style, VSobject};
     use crate::editor::animate::engine::rate::updater::Updater;
+    use crate::editor::animate::engine::scene::sobject::{Bounds, Group, Sobject, Sobjects, Style, VSobject};
+    use crate::editor::animate::engine::text::color::Color;
     use geometry::{Affine, BezPath, Point};
 
     /// 📦️ Base 3D Sobject with yaw/pitch and projection scale.
@@ -730,9 +730,9 @@ pub mod three_d {
 pub mod axes {
     //! 📊️ Coordinate axes, number planes, and complex planes.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::geometry::geometry::{arrow, dot, line};
     use crate::editor::animate::engine::scene::sobject::{Group, Sobject, Sobjects, VSobject};
+    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::text::text::Text;
     use geometry::{BezPath, Point};
 

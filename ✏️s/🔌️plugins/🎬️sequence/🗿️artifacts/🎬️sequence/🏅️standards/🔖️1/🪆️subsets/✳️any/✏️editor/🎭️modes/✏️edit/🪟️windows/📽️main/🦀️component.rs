@@ -1,9 +1,9 @@
 //! 📽️ Sequence play app — the main node-graph window: the editable step/flow canvas.
 
-use crate::editor::sequence::config::SequenceConfig;
-use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
-use crate::editor::sequence::host_from_snapshot;
 use crate::artifacts::sequence::SequenceSnapshot;
+use crate::editor::sequence::config::SequenceConfig;
+use crate::editor::sequence::host_from_snapshot;
+use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

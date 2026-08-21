@@ -4,9 +4,7 @@
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, puzzle2d_action};
-use semio_framework_plugin::{
-    tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-};
+use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 

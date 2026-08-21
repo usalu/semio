@@ -9,8 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 /// 📄️ The bundled demo document.
-pub const SEMIO_ENERGY_MODEL_EXAMPLE_TEXT: &str =
-    include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+pub const SEMIO_ENERGY_MODEL_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.energy` DSL text into an `EnergyModelSnapshot`.
 pub async fn parse_dsl(text: &str) -> Result<EnergyModelSnapshot, store::TextError> {

@@ -27,15 +27,7 @@ impl Serializer<FormsSnapshot> for FormsIntoCsv {
         let mut records = vec![CsvRecord { fields: ["id", "stepId", "label", "kind", "required"].into_iter().map(|header| field(header.to_string())).collect() }];
         for step in forms_steps(from) {
             for block in step.blocks {
-                records.push(CsvRecord {
-                    fields: vec![
-                        field(block.id),
-                        field(step.id.clone()),
-                        field(block.label),
-                        field(block.kind),
-                        field(block.required.map(|value| value.to_string()).unwrap_or_default()),
-                    ],
-                });
+                records.push(CsvRecord { fields: vec![field(block.id), field(step.id.clone()), field(block.label), field(block.kind), field(block.required.map(|value| value.to_string()).unwrap_or_default())] });
             }
         }
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records };

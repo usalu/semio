@@ -47,10 +47,7 @@ pub use super::update_step::mutation::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
-pub async fn apply_playbook_mutation(
-    snapshot: &PlaybookSnapshot,
-    mutation: &PlaybookMutation,
-) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+pub async fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationApplyResult<PlaybookSnapshot> {
     protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
@@ -64,8 +61,8 @@ pub async fn inverse_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &P
 mod tests {
     use super::*;
     use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
-    use protocol::MutationKind;
     use protocol::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::MutationKind;
     use protocol::SemanticMutation;
 
     async fn sample_block(id: &str, kind: &str, label: &str) -> PlaybookBlock {

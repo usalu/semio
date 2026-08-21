@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceNodeProperties`.
-use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::diff::text::diff_replace_content;
+use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff

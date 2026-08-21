@@ -1,10 +1,10 @@
 //! 🗣️ Shooting play app command — the host-pushed locale switch. Config-only.
 
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetLocale

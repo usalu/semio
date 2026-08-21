@@ -1,8 +1,8 @@
 //! 📝️ Trinity Jack app — Jack Query editor window (text editor render with tokens/diagnostics/completions).
 
-use crate::editor::jack::config::JackConfig;
 use crate::artifacts::jack::JackSnapshot;
 use crate::core;
+use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{build_text_editor_scene, text_identifier_occurrences_json, TextEditorScene, UiNode};
 use serde_json::json;
 

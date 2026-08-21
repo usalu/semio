@@ -11,10 +11,10 @@
 //! it has no other caller anywhere in the crate.
 //! Not to be confused with the `Ring` element (a circular value control) — `Slider` is a linear track.
 
-use crate::wgpu::widgets::{SliderMeta, WidgetContext};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 use crate::wgpu::theme::Rgba;
+use crate::wgpu::widgets::{SliderMeta, WidgetContext};
 
 fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
     if step <= 0.0 {

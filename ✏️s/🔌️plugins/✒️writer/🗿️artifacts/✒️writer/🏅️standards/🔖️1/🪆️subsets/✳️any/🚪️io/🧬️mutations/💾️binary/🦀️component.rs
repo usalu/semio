@@ -16,7 +16,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 /// 📦️ Encodes a `WriterMutation` to its binary state-patch form.
 pub async fn encode_op(operation: &WriterMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
@@ -43,13 +42,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     async fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text(
-            "writer.document",
-            "jack",
-            "jack",
-            "writer://jack",
-            "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
-        )
+        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     /// 🧬️ Reaches `jack_snapshot()` from `empty_writer_snapshot()` via the semantic vocabulary —
@@ -115,4 +108,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");
     }
 }
-

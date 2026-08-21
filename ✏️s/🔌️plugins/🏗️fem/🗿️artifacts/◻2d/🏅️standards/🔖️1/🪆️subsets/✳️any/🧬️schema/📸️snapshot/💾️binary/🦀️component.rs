@@ -9,7 +9,6 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protoc
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-
 /// 📦️ Encodes a `Fem2dSnapshot` to its binary pack form.
 pub async fn encode(document: &Fem2dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
@@ -123,4 +122,3 @@ mod semio_protocol_conformance {
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
     }
 }
-

@@ -1,11 +1,11 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `stock-from-catalogue`.
 
+use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::available_modules;
+use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::editor::sourcing::reset_document_effect;
-use crate::artifacts::curate::schema::available_modules;
-use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 

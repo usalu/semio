@@ -223,12 +223,7 @@ async fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
     } else {
         0.0
     };
-    let samples: Vec<SampleInfo> = stream
-        .chunks
-        .iter()
-        .enumerate()
-        .map(|(i, chunk)| SampleInfo { data: chunk.data.clone(), timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 } })
-        .collect();
+    let samples: Vec<SampleInfo> = stream.chunks.iter().enumerate().map(|(i, chunk)| SampleInfo { data: chunk.data.clone(), timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 } }).collect();
     Ok(AviInfo { width: snapshot.main_header.width, height: snapshot.main_header.height, fps, frame_count: samples.len() as u32, codec, samples })
 }
 // #endregion 🔖️Container
@@ -2914,12 +2909,7 @@ pub async fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples: Vec<_> = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
     let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::default(), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
-    let snapshot = Mp4Snapshot {
-        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
-        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] },
-        movie: Default::default(),
-        tracks: vec![track],
-    };
+    let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] }, movie: Default::default(), tracks: vec![track] };
     mp4_engine::encode_mp4(&snapshot)
 }
 
@@ -2937,13 +2927,18 @@ pub async fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u
     let (width, height) = sps_nal_dimensions(sps_nal);
     let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
     let samples: Vec<_> = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4, extension: None }, width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
-    let snapshot = Mp4Snapshot {
-        schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
-        ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] },
-        movie: Default::default(),
-        tracks: vec![track],
+    let track = Mp4Track {
+        track_id: 1,
+        timescale: 1000,
+        codec: Mp4Codec { sps: vec![sps_nal.to_vec()], pps: vec![pps_nal.to_vec()], nal_length_size: 4, extension: None },
+        width,
+        height,
+        metadata: Default::default(),
+        chunk_sample_counts: vec![samples.len() as u32],
+        samples,
     };
+    let snapshot =
+        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] }, movie: Default::default(), tracks: vec![track] };
     mp4_engine::encode_mp4(&snapshot)
 }
 
@@ -2979,7 +2974,19 @@ pub async fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     };
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-        main_header: AviMainHeader { micro_sec_per_frame, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: frames.len() as u32, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width, height, reserved: vec![0, 0, 0, 0] },
+        main_header: AviMainHeader {
+            micro_sec_per_frame,
+            max_bytes_per_sec: 0,
+            padding_granularity: 0,
+            flags: 0x10,
+            total_frames: frames.len() as u32,
+            initial_frames: 0,
+            streams: 1,
+            suggested_buffer_size: 0,
+            width,
+            height,
+            reserved: vec![0, 0, 0, 0],
+        },
         streams: vec![stream],
         idx1_present: true,
         unknown_chunks: Vec::new(),
@@ -3308,7 +3315,25 @@ mod tests {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
             main_header: AviMainHeader { micro_sec_per_frame: 0, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 0, height: 0, reserved: vec![0, 0, 0, 0] },
             streams: vec![AviStream {
-                strh: AviStreamHeader { fcc_type: "auds".into(), fcc_handler: "NONE".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1, rate: 44100, start: 0, length: 0, suggested_buffer_size: 0, quality: 0, sample_size: 2, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 0, rc_frame_bottom: 0 },
+                strh: AviStreamHeader {
+                    fcc_type: "auds".into(),
+                    fcc_handler: "NONE".into(),
+                    flags: 0,
+                    priority: 0,
+                    language: 0,
+                    initial_frames: 0,
+                    scale: 1,
+                    rate: 44100,
+                    start: 0,
+                    length: 0,
+                    suggested_buffer_size: 0,
+                    quality: 0,
+                    sample_size: 2,
+                    rc_frame_left: 0,
+                    rc_frame_top: 0,
+                    rc_frame_right: 0,
+                    rc_frame_bottom: 0,
+                },
                 strf: AviStreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 44100, avg_bytes_per_sec: 88200, block_align: 2, bits_per_sample: 16, extra: vec![] },
                 chunks: vec![],
             }],
@@ -3410,9 +3435,39 @@ mod tests {
     async fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
         let snapshot = AviSnapshot {
             schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-            main_header: AviMainHeader { micro_sec_per_frame: 166_667, max_bytes_per_sec: 0, padding_granularity: 0, flags: 0x10, total_frames: 0, initial_frames: 0, streams: 1, suggested_buffer_size: 0, width: 8, height: 8, reserved: vec![0, 0, 0, 0] },
+            main_header: AviMainHeader {
+                micro_sec_per_frame: 166_667,
+                max_bytes_per_sec: 0,
+                padding_granularity: 0,
+                flags: 0x10,
+                total_frames: 0,
+                initial_frames: 0,
+                streams: 1,
+                suggested_buffer_size: 0,
+                width: 8,
+                height: 8,
+                reserved: vec![0, 0, 0, 0],
+            },
             streams: vec![AviStream {
-                strh: AviStreamHeader { fcc_type: "vids".into(), fcc_handler: "XVID".into(), flags: 0, priority: 0, language: 0, initial_frames: 0, scale: 1000, rate: 6000, start: 0, length: 0, suggested_buffer_size: 0, quality: 0, sample_size: 0, rc_frame_left: 0, rc_frame_top: 0, rc_frame_right: 8, rc_frame_bottom: 8 },
+                strh: AviStreamHeader {
+                    fcc_type: "vids".into(),
+                    fcc_handler: "XVID".into(),
+                    flags: 0,
+                    priority: 0,
+                    language: 0,
+                    initial_frames: 0,
+                    scale: 1000,
+                    rate: 6000,
+                    start: 0,
+                    length: 0,
+                    suggested_buffer_size: 0,
+                    quality: 0,
+                    sample_size: 0,
+                    rc_frame_left: 0,
+                    rc_frame_top: 0,
+                    rc_frame_right: 8,
+                    rc_frame_bottom: 8,
+                },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 8, height: 8, planes: 1, bit_count: 24, compression: "XVID".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![],
             }],

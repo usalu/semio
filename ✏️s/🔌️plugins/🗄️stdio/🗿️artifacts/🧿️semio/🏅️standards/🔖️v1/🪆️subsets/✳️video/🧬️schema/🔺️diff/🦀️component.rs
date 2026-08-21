@@ -404,7 +404,7 @@ fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff) -> S
 
 //#region 🔖️Apply
 impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
-    async fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
+    fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
@@ -413,7 +413,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
             (x, None) => x,
@@ -425,15 +425,15 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
-    async fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
+    fn inverse(&self, base: &SemioVideoSnapshot) -> Self {
         SemioVideoDiff { streams: self.streams.as_ref().map(|d| inverse_indexed(&base.streams, d, inverse_stream)) }
     }
 
-    async fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
+    fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
         diff_video(base, other)
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.streams.is_none()
     }
 }
@@ -749,10 +749,10 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl protocol::DiffCodec for SemioVideoDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_semio_video_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_video_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -763,7 +763,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
     /// `bytes` chain so the shape stays uniform with flow's/mesh's multi-field diff frames
     /// (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's itself only
     /// conditionally decoded hard-errors `eval_cond` — see this wave's report).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let presence: u8 = if self.streams.is_some() { 0b01 } else { 0b00 };
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
@@ -772,7 +772,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

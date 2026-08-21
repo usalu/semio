@@ -1,12 +1,10 @@
 //! 📦️ `trinity.rewrite.rule` artifact — binary document surface + laws (constitutional: pack).
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::rewrite::RewriteSnapshot;
 use store::PackError;
@@ -27,8 +25,8 @@ mod tests {
     use super::*;
     use crate::artifacts::jack::PropertyValue;
     use crate::artifacts::rewrite::LayoutPoint;
-    use std::collections::BTreeMap;
     use ::store::os_store::test_support::assert_dsl_pack_equivalence;
+    use std::collections::BTreeMap;
 
     async fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();

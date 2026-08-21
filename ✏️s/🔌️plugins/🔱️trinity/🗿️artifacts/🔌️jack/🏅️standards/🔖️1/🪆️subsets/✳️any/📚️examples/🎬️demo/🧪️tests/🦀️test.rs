@@ -8,10 +8,7 @@ async fn primary_asset_is_nonempty() {
 async fn inference_default_law() {
     use crate::artifacts::jack::standards::v1::subsets::any::schema::inferences::JackInference;
     use protocol::Inference;
-    assert_eq!(
-        JackInference::infer(&crate::artifacts::jack::JackSnapshot::default()),
-        JackInference::default()
-    );
+    assert_eq!(JackInference::infer(&crate::artifacts::jack::JackSnapshot::default()), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

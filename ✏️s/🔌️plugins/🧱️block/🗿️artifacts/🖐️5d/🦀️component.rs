@@ -4,7 +4,6 @@
 //! fields — see `s/plugin/puzzle/app/5d/dsl/rs/lib.rs:62` for the known pack table-column bug this
 //! dodges).
 
-
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 

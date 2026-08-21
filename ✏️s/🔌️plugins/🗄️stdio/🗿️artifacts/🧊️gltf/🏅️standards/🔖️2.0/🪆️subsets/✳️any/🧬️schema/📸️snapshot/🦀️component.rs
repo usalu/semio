@@ -975,21 +975,21 @@ impl Default for GltfSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for GltfSnapshot {
     const EXTENSION: &'static str = "gltf";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "stdio.gltf"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         crate::artifacts::gltf::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body_bytes = crate::artifacts::gltf::engine::serialize_gltf_document(self);
         let body = String::from_utf8(body_bytes).unwrap_or_else(|_| "{}".into());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -1003,13 +1003,13 @@ impl store::ArtifactPack for GltfSnapshot {
     /// actually produces). A raw `.glb` file byte-for-byte (unwrapped) still decodes directly via
     /// `crate::artifacts::gltf::engine::decode_glb` (🧐️analyzer's own fast path) — this impl only
     /// adds the SEMIO envelope around the SAME real container, it does not invent a second shape.
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = crate::artifacts::gltf::engine::encode_glb(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));

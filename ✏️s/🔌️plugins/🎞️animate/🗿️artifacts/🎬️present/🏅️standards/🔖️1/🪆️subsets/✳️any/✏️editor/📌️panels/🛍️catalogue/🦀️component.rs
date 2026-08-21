@@ -1,10 +1,11 @@
 //! 🛍️ Animate present app panel — the catalogue: tile-seeding templates and the active figure source.
 
+use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::animate_present_action;
 use crate::editor::animate::terminology::AnimatePresentLabels;
-use crate::artifacts::present::PresentSnapshot;
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
 
@@ -14,7 +15,13 @@ pub const PRESENT_PLAY_BODY_CATALOGUE: &str = "animate.present.play.catalogue";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), group: PanelGroup::Workbench, body_key: Some(PRESENT_PLAY_BODY_CATALOGUE.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        group: PanelGroup::Workbench,
+        body_key: Some(PRESENT_PLAY_BODY_CATALOGUE.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

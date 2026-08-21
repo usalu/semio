@@ -1,8 +1,8 @@
 //! 🔺️ Diff fragment yielded by `DeleteBlock`. Error `target-missing` when the block is absent.
 use super::mutation::DeleteBlock;
+use crate::artifacts::note::schema::diff::note_block_removed_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_removed_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

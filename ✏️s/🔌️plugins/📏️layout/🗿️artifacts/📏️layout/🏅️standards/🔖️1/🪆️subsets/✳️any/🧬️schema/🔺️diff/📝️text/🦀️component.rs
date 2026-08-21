@@ -1,11 +1,8 @@
 //! 🔺️ Layout artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::layout::schema::diff::{
-    LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta,
-    LayoutStoryPatchEntry,
-};
+use crate::artifacts::layout::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
 use crate::artifacts::layout::schema::LayoutArtifact;
-use crate::artifacts::layout::{ImageLink, Page, TextStory, LayoutSnapshot};
+use crate::artifacts::layout::{ImageLink, LayoutSnapshot, Page, TextStory};
 use protocol::{Identified, MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
@@ -14,16 +11,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 //#region 🔖️Apply
-async fn apply_identified_delta<T, P, E, F>(
-    items: &[T],
-    removed: &[String],
-    added: &[T],
-    patched: &[E],
-    reordered: Option<&Vec<String>>,
-    entry_parts: F,
-) -> protocol::MutationApplyResult<Vec<T>>
+async fn apply_identified_delta<T, P, E, F>(items: &[T], removed: &[String], added: &[T], patched: &[E], reordered: Option<&Vec<String>>, entry_parts: F) -> protocol::MutationApplyResult<Vec<T>>
 where
     T: Clone + protocol::Identified<String> + Patchable<P>,
     P: Clone,
@@ -35,9 +24,7 @@ where
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
         }
-        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
-        })?;
+        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()]))?;
         next.remove(position);
     }
     seen.clear();
@@ -54,9 +41,7 @@ where
         if !seen.insert(id.clone()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
-        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| {
-            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
-        })?;
+        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()]))?;
         item.apply_patch(patch);
     }
     if let Some(order) = reordered {
@@ -74,9 +59,7 @@ where
         }
         let mut ordered = Vec::with_capacity(next.len());
         for id in order {
-            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
-                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
-            })?;
+            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]))?;
             ordered.push(next.remove(position));
         }
         next = ordered;
@@ -85,21 +68,15 @@ where
 }
 
 pub async fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutPagePatchEntry| {
-        (&entry.id, &entry.patch)
-    })
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutPagePatchEntry| (&entry.id, &entry.patch))
 }
 
 pub async fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutStoryPatchEntry| {
-        (&entry.id, &entry.patch)
-    })
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutStoryPatchEntry| (&entry.id, &entry.patch))
 }
 
 pub async fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
-    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| {
-        (&entry.id, &entry.patch)
-    })
+    apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| (&entry.id, &entry.patch))
 }
 
 impl LayoutDiff {
@@ -301,10 +278,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
-    LayoutDiff {
-        artifact: Some(Box::new(LayoutArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    LayoutDiff { artifact: Some(Box::new(LayoutArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 
@@ -332,9 +306,7 @@ mod tests {
             background_drawing: None,
             referenced_model: None,
         };
-        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(
-            crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) },
-        );
+        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) });
         let diff: LayoutDiff = operation.diff(&base).into_parts().0;
         let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));

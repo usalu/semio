@@ -1,8 +1,8 @@
 //! 📄️ Block 5D play app panel — the document tree: grip-kind catalog + rim-grip templates, selectable.
 
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
 use crate::editor::block5d::BLOCK5D_INTERACTION_GRIP;
-use crate::artifacts::block5d::Block5dSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
@@ -28,16 +28,10 @@ pub async fn definition() -> PanelTabDefinition {
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
 pub async fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("block5d-play-document");
-    let grip_kind_items: Vec<UiTreeItemNode> = definition
-        .grip_kinds
-        .iter()
-        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None, ..tree_item_desc(format!("gripKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone())) })
-        .collect();
-    let grip_items: Vec<UiTreeItemNode> = definition
-        .grips
-        .iter()
-        .map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None, ..tree_item_desc(format!("grip:{}", grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle))) })
-        .collect();
+    let grip_kind_items: Vec<UiTreeItemNode> =
+        definition.grip_kinds.iter().map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None, ..tree_item_desc(format!("gripKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone())) }).collect();
+    let grip_items: Vec<UiTreeItemNode> =
+        definition.grips.iter().map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None, ..tree_item_desc(format!("grip:{}", grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle))) }).collect();
     builder
         .section_or_placeholder("block5d-play-document.grip-kinds", Some(labels.grip_kinds.into()), true, grip_kind_items, labels.no_grip_kinds)
         .section_or_placeholder("block5d-play-document.grips", Some(labels.grips.into()), true, grip_items, labels.no_grips)

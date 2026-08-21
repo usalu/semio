@@ -1,12 +1,13 @@
 //! 🔍️ Procedural3d play app panel — the selection inspector.
 
+use crate::artifacts::procedural3d::widget_id;
 use crate::editor::procedural3d::procedural3d_action;
 use crate::editor::procedural3d::terminology::Procedural3dLabels;
-use crate::artifacts::procedural3d::widget_id;
 use flow::{FlowFixture, Widget};
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence,
-    UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode,
+    UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";
@@ -19,7 +20,8 @@ pub async fn definition() -> PanelTabDefinition {
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
         group: PanelGroup::Details,
         body_key: Some(PROCEDURAL_3D_PLAY_BODY_INSPECTION.into()),
-        children: Vec::new()}
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 
@@ -32,7 +34,8 @@ pub async fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels:
             default_open: Some(true),
             children: vec![ui_text(Label::data(format!("{} {}", labels.schema_prefix.as_str(), fixture.schema))), ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len())))],
             presence: UiPresence::default(),
-            menu: None}]);
+            menu: None,
+        }]);
     };
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
@@ -41,7 +44,8 @@ pub async fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels:
             default_open: Some(true),
             children: vec![ui_text(labels.no_selection)],
             presence: UiPresence::default(),
-            menu: None}]);
+            menu: None,
+        }]);
     };
     let mut fields = vec![ui_inspector_readonly_field("procedural-play-inspector.id", labels.id_field, widget_id(widget))];
     if let Widget::InputSlider { value, min, max, .. } = widget {
@@ -62,11 +66,13 @@ pub async fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels:
                 max: None,
                 step: None,
                 accept: None,
-                menu: None})),
+                menu: None,
+            })),
             description: None,
             required: None,
             error: None,
-            menu: None}));
+            menu: None,
+        }));
         fields.push(ui_inspector_readonly_field("procedural-play-inspector.range", labels.range_field, format!("{min}..{max}")));
     }
     if let Widget::InputNote { text, .. } = widget {

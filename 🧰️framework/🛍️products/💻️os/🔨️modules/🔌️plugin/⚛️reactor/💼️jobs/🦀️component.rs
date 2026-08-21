@@ -66,10 +66,10 @@ use std::task::{Context, Poll};
 // `builtin_registry()` below, exactly like `job_io_run`/`job_io_sniff` already are.
 #[path = "💡️infer/🦀️component.rs"]
 mod infer;
-#[path = "🧬️mutation-plan/🦀️component.rs"]
-mod mutation_plan;
 #[path = "🔀️migrate/🦀️component.rs"]
 mod migrate;
+#[path = "🧬️mutation-plan/🦀️component.rs"]
+mod mutation_plan;
 
 //#region 🔖️PublicTypes
 
@@ -267,7 +267,10 @@ impl Future for JobTick {
 //#region 🔖️Slots
 
 enum JobBody {
-    Running { task: super::executor::TaskId, state: Rc<RefCell<JobState>> },
+    Running {
+        task: super::executor::TaskId,
+        state: Rc<RefCell<JobState>>,
+    },
     /// 🧬️ `start_job` never rejects an unrecognised `kind` (matches the old hard-coded `match`'s own
     /// behaviour, and the existing `JobsGuest::start_job` lease contract: it always returns `Ok(())`
     /// — the failure surfaces on the first `step_job` instead, as `job.unknown-kind`).

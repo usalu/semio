@@ -10,5 +10,6 @@ pub async fn inverse(payload: &UpdateWidget, base: &Procedural3dSnapshot) -> Vec
     let id = widget_id(&payload.widget);
     match widget_index(&base.fixture, id) {
         Some(index) => vec![Procedural3dMutation::UpdateWidget(UpdateWidget { widget: base.fixture.widgets[index].clone() })],
-        None => Vec::new()}
+        None => Vec::new(),
+    }
 }

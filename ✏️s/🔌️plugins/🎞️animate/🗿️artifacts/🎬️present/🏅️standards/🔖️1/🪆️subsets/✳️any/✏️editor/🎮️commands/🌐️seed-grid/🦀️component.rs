@@ -1,12 +1,12 @@
 //! 🌐️ 🌐️ Animate present app commands command — `seed-grid`.
 
-use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
-use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
-use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
+use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
+use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -58,13 +58,7 @@ mod tests {
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
-        let emit = crate::editor::animate::commands::set_active_example::handle(
-            &crate::editor::animate::commands::set_active_example::SetActiveExample { example_id: "demo".into() },
-            &doc,
-            &cfg,
-            &mut ctx,
-        )
-        .expect("handle");
+        let emit = crate::editor::animate::commands::set_active_example::handle(&crate::editor::animate::commands::set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg, &mut ctx).expect("handle");
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };

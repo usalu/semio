@@ -1,8 +1,8 @@
 //! 🌿️ Block2d mutation — `CreateHandle`: a new rim-handle template.
 use crate::artifacts::block2d::diff::Block2dDiff;
 use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::artifacts::block2d::Block2dHandleTemplate;
 use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::{Block2dHandleTemplate};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

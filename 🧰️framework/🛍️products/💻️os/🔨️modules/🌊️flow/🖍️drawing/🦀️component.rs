@@ -25,8 +25,6 @@ use std::sync::{LazyLock, Mutex};
 use neural::EvalError;
 use serde::{Deserialize, Serialize};
 
-
-
 // #region 🔖️KernelTypes
 /// 🧭️ Drawing entity kind carried by a handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -568,8 +566,8 @@ fn scene_node_world_segments(node: &SceneNode) -> Option<Vec<semio_framework_2d:
 }
 
 fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment {
-    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     use semio_framework_2d::PathSegment;
+    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     match segment {
         PathSegment::Move { to } => DwgPathSegment::Move { to: *to },
         PathSegment::Line { to } => DwgPathSegment::Line { to: *to },
@@ -581,8 +579,8 @@ fn engine_segment_to_dwg(segment: &semio_framework_2d::PathSegment) -> semio_s_p
 }
 
 fn dwg_segment_to_engine(segment: &semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment) -> semio_framework_2d::PathSegment {
-    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     use semio_framework_2d::PathSegment;
+    use semio_s_plugin_stdio::artifacts::dwg::DwgPathSegment;
     match segment {
         DwgPathSegment::Move { to } => PathSegment::Move { to: *to },
         DwgPathSegment::Line { to } => PathSegment::Line { to: *to },
@@ -974,9 +972,9 @@ impl DrawingStore {
 // #endregion 🔖️KernelImpl
 
 // #region 🖍️DrawingKernel
+use semio_framework_2d::block_on as drawing_block_on;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
-use semio_framework_2d::block_on as drawing_block_on;
 
 static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
 

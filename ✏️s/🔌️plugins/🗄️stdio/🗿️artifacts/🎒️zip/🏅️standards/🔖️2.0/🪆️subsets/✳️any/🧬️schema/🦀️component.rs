@@ -140,17 +140,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot).await?;
+            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot)?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -241,7 +241,7 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
+                    AnalyzeSource::Text(text) => match <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -252,7 +252,7 @@ pub mod derived_analysis {
                         let result = if matches!(crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes).await, crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High) {
                             crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(bytes).await.map_err(|err| err.to_string())
                         } else {
-                            <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).await.map_err(|err| err.to_string())
+                            <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
                         };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),

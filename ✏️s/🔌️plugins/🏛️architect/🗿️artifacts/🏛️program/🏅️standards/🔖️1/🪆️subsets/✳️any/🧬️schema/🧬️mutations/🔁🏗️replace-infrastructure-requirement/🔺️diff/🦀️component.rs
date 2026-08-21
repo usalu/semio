@@ -16,5 +16,8 @@ pub async fn diff(payload: &ReplaceInfrastructureRequirement, base: &ProgramSnap
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This infrastructure requirement already matches the requested value.").at([existing.header.id.0.clone()])]);
     }
     let patch = existing.diff_patch(&payload.infrastructure_requirement).expect("diff_patch always produces a full patch");
-    protocol::MutationOutcome::new(ProgramDiff { infrastructure: Some(ProgramInfrastructureDelta { patched: vec![ProgramInfrastructurePatchEntry { id: payload.infrastructure_requirement.header.id.0.clone(), patch }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff {
+        infrastructure: Some(ProgramInfrastructureDelta { patched: vec![ProgramInfrastructurePatchEntry { id: payload.infrastructure_requirement.header.id.0.clone(), patch }], ..Default::default() }),
+        ..Default::default()
+    })
 }

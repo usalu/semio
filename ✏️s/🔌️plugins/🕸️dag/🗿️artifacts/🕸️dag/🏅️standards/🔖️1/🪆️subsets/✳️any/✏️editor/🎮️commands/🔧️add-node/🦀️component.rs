@@ -4,7 +4,7 @@ use crate::artifacts::dag::mutations::create_node;
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -28,8 +28,8 @@ pub async fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::dag::testkit;
     use crate::editor::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
+    use crate::editor::dag::testkit;
     use crate::editor::dag::DagCommand;
     use infinite_board_port_directed_dag::DagNodeKind;
     use semio_framework_plugin::PluginApp;

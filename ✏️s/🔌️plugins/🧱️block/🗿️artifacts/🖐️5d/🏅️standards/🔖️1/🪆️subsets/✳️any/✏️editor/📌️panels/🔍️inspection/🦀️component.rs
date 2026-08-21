@@ -1,8 +1,8 @@
 //! 🔍️ Block 5D play app panel — the inspector: the part kind's identity fields plus a grip count.
 
+use crate::artifacts::block5d::Block5dSnapshot;
 use crate::editor::block5d::block5d_action;
 use crate::editor::block5d::terminology::Block5dLabels;
-use crate::artifacts::block5d::Block5dSnapshot;
 use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,

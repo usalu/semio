@@ -6,20 +6,21 @@
 //! compute in the artifact's `🧬️schema`. This file is a routing table: `handle` → `SourcingCurateCommand::
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::editor::sourcing::presence::{SourcingCuratePresence, SourcingCuratePresenceMutation};
-use crate::editor::sourcing::modes::edit;
-use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
-use crate::editor::sourcing::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, CommandDefinition, ConfigView, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
-};
+use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use crate::editor::sourcing::modes::edit;
+use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
+use crate::editor::sourcing::presence::{SourcingCuratePresence, SourcingCuratePresenceMutation};
+use crate::editor::sourcing::terminology::sourcing_curate_labels;
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod,
+    SelectionMode, SelectionSpec, UiNode,
+};
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports (keyed off
@@ -92,11 +93,11 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::editor::sourcing::commands::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
 use crate::editor::sourcing::commands::set_contributions;
+use crate::editor::sourcing::commands::set_locale;
+use crate::editor::sourcing::commands::{curate_add, curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
 use crate::editor::sourcing::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
 use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
-use crate::editor::sourcing::commands::set_locale;
 
 /// 🎯️ Host action id + JSON args → the closed `SourcingCurateCommand` vocabulary — the production
 /// bridge between the manifest's *declared* action surface (`🔖️Manifest`, camelCase arg names) and
@@ -145,13 +146,7 @@ async fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_j
         "sortTable" => SourcingCurateCommand::SortTable(sort_table::SortTable { column_id: str_field("columnId").unwrap_or_default(), direction: str_field("direction").unwrap_or_default() }),
         "setLocale" => SourcingCurateCommand::SetLocale(set_locale::SetLocale { value: text_of("value").unwrap_or_default() }),
         "setContributions" => SourcingCurateCommand::SetContributions(set_contributions::SetContributions { json: json_field("json") }),
-        other => {
-            return Err(Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("app.command.unsupported"),
-                format!("action '{other}' is not a sourcing curate command"),
-            ))
-        }
+        other => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not a sourcing curate command"))),
     })
 }
 //#endregion 🔖️Commands
@@ -241,7 +236,14 @@ impl ArtifactEditor for SourcingCurateApp {
         sourcing_curate_command_from_action(action, args)
     }
 
-    async fn handle(command: &SourcingCurateCommand, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &SourcingCurateCommand,
+        doc: &ArtifactView<'_, CurateSnapshot>,
+        cfg: &ConfigView<'_, SourcingCurateConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -485,8 +487,7 @@ mod tests {
     async fn the_production_action_bridge_admits_every_declared_command() {
         for command in every_command() {
             let action = command.command_id();
-            let built = <SourcingCurateApp as ArtifactEditor>::command_from_action(action, None)
-                .unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
+            let built = <SourcingCurateApp as ArtifactEditor>::command_from_action(action, None).unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
             assert_eq!(built.command_id(), action, "the bridge routed '{action}' to the wrong command");
         }
     }
@@ -506,11 +507,9 @@ mod tests {
     /// vocabularies are joined here and nowhere else.
     #[semio_framework_async_macros::async_test]
     async fn the_action_bridge_reads_the_declared_arg_names() {
-        let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))
-            .expect("setActiveExample must convert");
+        let built = <SourcingCurateApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID }))).expect("setActiveExample must convert");
         assert_eq!(built, SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
-        let filter = <SourcingCurateApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&serde_json::json!({ "moduleId": "walls", "enabled": true })))
-            .expect("setFilterModule must convert");
+        let filter = <SourcingCurateApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&serde_json::json!({ "moduleId": "walls", "enabled": true }))).expect("setFilterModule must convert");
         assert_eq!(filter, SourcingCurateCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
         assert!(<SourcingCurateApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
     }

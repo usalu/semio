@@ -16,21 +16,36 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawDiff {
-    #[state(artifact)] pub artifact: Option<Box<DrawArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub id: Option<String>,
-    #[state(artifact)] pub title: Option<Option<String>>,
-    #[state(artifact)] pub layers: Option<DrawLayersDelta>,
-    #[state(artifact)] pub assets: Option<DrawAssetsDelta>,
-    #[state(artifact)] pub artboard: Option<Option<DrawArtboard>>,
-    #[state(presence)] pub selected_ids: Option<DrawStringList>,
-    #[state(presence)] pub active_utility_id: Option<String>,
-    #[state(config)] pub engagement_input: Option<String>,
-    #[state(config)] pub camera_x: Option<f64>,
-    #[state(config)] pub camera_y: Option<f64>,
-    #[state(config)] pub camera_zoom: Option<f64>,
-    #[state(config)] pub locale: Option<String>,
-    #[state(artifact)] pub hovered_id: Option<Option<String>>,
+    #[state(artifact)]
+    pub artifact: Option<Box<DrawArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub id: Option<String>,
+    #[state(artifact)]
+    pub title: Option<Option<String>>,
+    #[state(artifact)]
+    pub layers: Option<DrawLayersDelta>,
+    #[state(artifact)]
+    pub assets: Option<DrawAssetsDelta>,
+    #[state(artifact)]
+    pub artboard: Option<Option<DrawArtboard>>,
+    #[state(presence)]
+    pub selected_ids: Option<DrawStringList>,
+    #[state(presence)]
+    pub active_utility_id: Option<String>,
+    #[state(config)]
+    pub engagement_input: Option<String>,
+    #[state(config)]
+    pub camera_x: Option<f64>,
+    #[state(config)]
+    pub camera_y: Option<f64>,
+    #[state(config)]
+    pub camera_zoom: Option<f64>,
+    #[state(config)]
+    pub locale: Option<String>,
+    #[state(artifact)]
+    pub hovered_id: Option<Option<String>>,
 }
 //#endregion 🔖️Diff
 
@@ -117,12 +132,10 @@ impl DrawDiff {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta)
-                    .map_err(|error| error.under(["layers"]))?;
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
             }
             if let Some(assets) = &self.assets {
-                apply_assets_delta(&mut next.assets, assets)
-                    .map_err(|error| error.under(["assets"]))?;
+                apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
             }
             if let Some(artboard) = &self.artboard {
                 next.artboard = artboard.clone();
@@ -157,50 +170,24 @@ impl DrawDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
-pub async fn apply_layers_delta(
-    layers: &[DrawLayerNode],
-    delta: &DrawLayersDelta,
-) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
+pub async fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
     for (index, id) in delta.removed.iter().enumerate() {
         if !contains_layer(layers, id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed layer does not exist",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist").at(["removed".to_string(), index.to_string()]));
         }
         if delta.removed[..index].contains(id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "layer is removed more than once",
-            )
-            .at(["removed".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
     }
     for (index, entry) in delta.patched.iter().enumerate() {
         if !contains_layer(layers, &entry.id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "patched layer does not exist",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist").at(["patched".to_string(), index.to_string()]));
         }
         if delta.removed.contains(&entry.id) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.conflicting-target",
-                "layer cannot be removed and patched",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.conflicting-target", "layer cannot be removed and patched").at(["patched".to_string(), index.to_string()]));
         }
-        if delta.patched[..index]
-            .iter()
-            .any(|prior| prior.id == entry.id)
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "layer is patched more than once",
-            )
-            .at(["patched".to_string(), index.to_string()]));
+        if delta.patched[..index].iter().any(|prior| prior.id == entry.id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "layer is patched more than once").at(["patched".to_string(), index.to_string()]));
         }
     }
     let mut next = layers.to_vec();
@@ -209,58 +196,26 @@ pub async fn apply_layers_delta(
     }
     for (position, item) in delta.added.iter().enumerate() {
         if contains_layer(&next, crate::artifacts::draw::schema::layer_id(&item.layer)) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.duplicate-target",
-                "added layer identity already exists",
-            )
-            .at(["added".to_string(), position.to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added layer identity already exists").at(["added".to_string(), position.to_string()]));
         }
-        let container_len = layer_container_len(&next, item.parent_id.as_deref()).ok_or_else(|| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "added layer parent group does not exist",
-            )
-            .at(["added".to_string(), position.to_string(), "parentId".to_string()])
-        })?;
+        let container_len = layer_container_len(&next, item.parent_id.as_deref())
+            .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "added layer parent group does not exist").at(["added".to_string(), position.to_string(), "parentId".to_string()]))?;
         if item.index > container_len {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-index",
-                format!("layer insertion index {} exceeds length {container_len}", item.index),
-            )
-            .at(["added".to_string(), position.to_string(), "index".to_string()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("layer insertion index {} exceeds length {container_len}", item.index)).at(["added".to_string(), position.to_string(), "index".to_string()]));
         }
         insert_layer(&mut next, item.parent_id.as_deref(), item.index, item.layer.clone());
     }
     for (index, entry) in delta.patched.iter().enumerate() {
-        apply_layer_patch_entry(&mut next, entry)
-            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+        apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
     if let Some(order) = &delta.reordered {
-        if order.len() != next.len()
-            || order.iter().enumerate().any(|(index, id)| {
-                order[..index].contains(id)
-                    || !next.iter().any(|layer| crate::artifacts::draw::schema::layer_id(layer) == id)
-            })
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-order",
-                "root layer reorder must be a complete unique permutation",
-            )
-            .at(["reordered"]));
+        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|layer| crate::artifacts::draw::schema::layer_id(layer) == id)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "root layer reorder must be a complete unique permutation").at(["reordered"]));
         }
-        let mut by_id: BTreeMap<_, _> = next
-            .into_iter()
-            .map(|layer| (crate::artifacts::draw::schema::layer_id(&layer).to_string(), layer))
-            .collect();
+        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|layer| (crate::artifacts::draw::schema::layer_id(&layer).to_string(), layer)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            ordered.push(by_id.remove(id).ok_or_else(|| {
-                protocol::MutationApplyError::new(
-                    "mutation.apply.missing-target",
-                    "reordered root layer does not exist",
-                )
-                .at(["reordered".to_string(), id.clone()])
-            })?);
+            ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered root layer does not exist").at(["reordered".to_string(), id.clone()]))?);
         }
         next = ordered;
     }
@@ -269,17 +224,11 @@ pub async fn apply_layers_delta(
 }
 
 async fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
-    layers.iter().any(|layer| {
-        crate::artifacts::draw::schema::layer_id(layer) == id
-            || matches!(layer, DrawLayerNode::Group(group) if contains_layer(&group.children, id))
-    })
+    layers.iter().any(|layer| crate::artifacts::draw::schema::layer_id(layer) == id || matches!(layer, DrawLayerNode::Group(group) if contains_layer(&group.children, id)))
 }
 
 async fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
-    async fn visit<'a>(
-        layers: &'a [DrawLayerNode],
-        ids: &mut std::collections::BTreeSet<&'a str>,
-    ) -> bool {
+    async fn visit<'a>(layers: &'a [DrawLayerNode], ids: &mut std::collections::BTreeSet<&'a str>) -> bool {
         for layer in layers {
             if !ids.insert(crate::artifacts::draw::schema::layer_id(layer)) {
                 return false;
@@ -293,11 +242,7 @@ async fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::Mutati
         true
     }
     if !visit(layers, &mut std::collections::BTreeSet::new()) {
-        return Err(protocol::MutationApplyError::new(
-            "mutation.apply.duplicate-target",
-            "resulting layer tree contains duplicate identities",
-        )
-        .at(["identities"]));
+        return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
     Ok(())
 }
@@ -313,43 +258,21 @@ async fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) 
     }
 }
 
-async fn apply_layer_patch_entry(
-    layers: &mut Vec<DrawLayerNode>,
-    entry: &DrawLayerPatchEntry,
-) -> protocol::MutationApplyResult<()> {
+async fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) -> protocol::MutationApplyResult<()> {
     let mut result = Ok(());
     if !update_layer_in_tree(layers, &entry.id, &mut |layer| {
         result = apply_layer_patch(layer, &entry.patch);
     }) {
-        return Err(protocol::MutationApplyError::new(
-            "mutation.apply.missing-target",
-            "patched layer does not exist after structural edits",
-        )
-        .at([&entry.id]));
+        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist after structural edits").at([&entry.id]));
     }
     result
 }
 
-async fn apply_layer_patch(
-    layer: &mut DrawLayerNode,
-    patch: &DrawLayerPatch,
-) -> protocol::MutationApplyResult<()> {
+async fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(layer_json) = &patch.layer_json {
-        let replacement = serde_json::from_str::<DrawLayerNode>(layer_json).map_err(|error| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.invalid-value",
-                format!("layer patch is not valid JSON: {error}"),
-            )
-            .at(["layerJson"])
-        })?;
-        if crate::artifacts::draw::schema::layer_id(&replacement)
-            != crate::artifacts::draw::schema::layer_id(layer)
-        {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-target",
-                "layer patch cannot change the target identity",
-            )
-            .at(["layerJson"]));
+        let replacement = serde_json::from_str::<DrawLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
+        if crate::artifacts::draw::schema::layer_id(&replacement) != crate::artifacts::draw::schema::layer_id(layer) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layerJson"]));
         }
         *layer = replacement;
         return Ok(());
@@ -371,57 +294,25 @@ async fn apply_layer_patch(
         base.blend_mode = blend_mode.clone();
     }
     if let Some(transform_json) = &patch.transform_json {
-        base.transform = serde_json::from_str(transform_json).map_err(|error| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.invalid-value",
-                format!("transform is not valid JSON: {error}"),
-            )
-            .at(["transformJson"])
-        })?;
+        base.transform = serde_json::from_str(transform_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
     }
     if let Some(fill_json) = &patch.fill_json {
-        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).map_err(|error| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.invalid-value",
-                format!("fill is not valid JSON: {error}"),
-            )
-            .at(["fillJson"])
-        })?;
+        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
     }
     if let Some(stroke_json) = &patch.stroke_json {
-        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.invalid-value",
-                format!("stroke is not valid JSON: {error}"),
-            )
-            .at(["strokeJson"])
-        })?;
+        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
     }
     if let Some(operation) = &patch.boolean_operation {
         let DrawLayerNode::Boolean(boolean) = layer else {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-target",
-                "boolean operation patch requires a boolean layer",
-            )
-            .at(["booleanOperation"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "boolean operation patch requires a boolean layer").at(["booleanOperation"]));
         };
         boolean.operation = operation.clone();
     }
     if let Some(params_json) = &patch.trace_params_json {
         let DrawLayerNode::Trace(trace) = layer else {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.invalid-target",
-                "trace parameters patch requires a trace layer",
-            )
-            .at(["traceParamsJson"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "trace parameters patch requires a trace layer").at(["traceParamsJson"]));
         };
-        trace.params = serde_json::from_str(params_json).map_err(|error| {
-            protocol::MutationApplyError::new(
-                "mutation.apply.invalid-value",
-                format!("trace parameters are not valid JSON: {error}"),
-            )
-            .at(["traceParamsJson"])
-        })?;
+        trace.params = serde_json::from_str(params_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
     }
     Ok(())
 }
@@ -449,17 +340,10 @@ async fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
     take!(layer_json);
 }
 
-async fn apply_assets_delta(
-    assets: &mut BTreeMap<String, DrawImageAsset>,
-    delta: &DrawAssetsDelta,
-) -> protocol::MutationApplyResult<()> {
+async fn apply_assets_delta(assets: &mut BTreeMap<String, DrawImageAsset>, delta: &DrawAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
-            return Err(protocol::MutationApplyError::new(
-                "mutation.apply.missing-target",
-                "removed asset does not exist",
-            )
-            .at([key.as_str()]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
         }
     }
     let mut candidate = assets.clone();
@@ -494,12 +378,10 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta)
-                    .map_err(|error| error.under(["layers"]))?;
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
             }
             if let Some(assets) = &self.assets {
-                apply_assets_delta(&mut next.assets, assets)
-                    .map_err(|error| error.under(["assets"]))?;
+                apply_assets_delta(&mut next.assets, assets).map_err(|error| error.under(["assets"]))?;
             }
             if let Some(artboard) = &self.artboard {
                 next.artboard = artboard.clone();
@@ -569,10 +451,7 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
 //#region 🔖️Builders
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
 pub async fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
-    DrawDiff {
-        artifact: Some(Box::new(DrawArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    DrawDiff { artifact: Some(Box::new(DrawArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🩹 Layer visibility patch.
@@ -602,115 +481,51 @@ pub async fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> Draw
 
 /// ↔️ Layer transform patch.
 pub async fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
-    layer_base_patch(
-        layer_id,
-        DrawLayerPatch {
-            transform_json: Some(serde_json::to_string(transform).unwrap_or_default()),
-            ..Default::default()
-        },
-    )
+    layer_base_patch(layer_id, DrawLayerPatch { transform_json: Some(serde_json::to_string(transform).unwrap_or_default()), ..Default::default() })
 }
 
 /// 🎨 Layer fill patch.
 pub async fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
-    layer_base_patch(
-        layer_id,
-        DrawLayerPatch {
-            fill_json: Some(serde_json::to_string(fill).unwrap_or_else(|_| "null".into())),
-            ..Default::default()
-        },
-    )
+    layer_base_patch(layer_id, DrawLayerPatch { fill_json: Some(serde_json::to_string(fill).unwrap_or_else(|_| "null".into())), ..Default::default() })
 }
 
 /// ✏️ Layer stroke patch.
 pub async fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
-    layer_base_patch(
-        layer_id,
-        DrawLayerPatch {
-            stroke_json: Some(serde_json::to_string(stroke).unwrap_or_else(|_| "null".into())),
-            ..Default::default()
-        },
-    )
+    layer_base_patch(layer_id, DrawLayerPatch { stroke_json: Some(serde_json::to_string(stroke).unwrap_or_else(|_| "null".into())), ..Default::default() })
 }
 
 /// 🔀 Boolean operation patch.
 pub async fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
-    layer_base_patch(
-        layer_id,
-        DrawLayerPatch {
-            boolean_operation: Some(boolean_operation.to_string()),
-            ..Default::default()
-        },
-    )
+    layer_base_patch(layer_id, DrawLayerPatch { boolean_operation: Some(boolean_operation.to_string()), ..Default::default() })
 }
 
 /// 🖼️ Trace params patch.
 pub async fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
-    layer_base_patch(
-        layer_id,
-        DrawLayerPatch {
-            trace_params_json: Some(serde_json::to_string(params).unwrap_or_default()),
-            ..Default::default()
-        },
-    )
+    layer_base_patch(layer_id, DrawLayerPatch { trace_params_json: Some(serde_json::to_string(params).unwrap_or_default()), ..Default::default() })
 }
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
 pub async fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
-    DrawDiff {
-        layers: Some(DrawLayersDelta {
-            added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    DrawDiff { layers: Some(DrawLayersDelta { added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔃 Move an existing layer to a new (parent, index) address — remove-then-insert, both sparse.
 pub async fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
-    DrawDiff {
-        layers: Some(DrawLayersDelta {
-            removed: vec![layer_id.to_string()],
-            added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    DrawDiff { layers: Some(DrawLayersDelta { removed: vec![layer_id.to_string()], added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }], ..Default::default() }), ..Default::default() }
 }
 
 /// ➖️ Layer remove.
 pub async fn diff_remove_layer(layer_id: &str) -> DrawDiff {
-    DrawDiff {
-        layers: Some(DrawLayersDelta {
-            removed: vec![layer_id.to_string()],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    DrawDiff { layers: Some(DrawLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔃 Root reorder by id list.
 pub async fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
-    DrawDiff {
-        layers: Some(DrawLayersDelta {
-            reordered: Some(order),
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    DrawDiff { layers: Some(DrawLayersDelta { reordered: Some(order), ..Default::default() }), ..Default::default() }
 }
 
 async fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
-    DrawDiff {
-        layers: Some(DrawLayersDelta {
-            patched: vec![DrawLayerPatchEntry {
-                id: layer_id.to_string(),
-                patch,
-            }],
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
+    DrawDiff { layers: Some(DrawLayersDelta { patched: vec![DrawLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
@@ -720,17 +535,11 @@ pub async fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
 
 /// 📋 Selected-ids UI delta helper.
 pub async fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
-    DrawDiff {
-        selected_ids: Some(DrawStringList { values: ids }),
-        ..Default::default()
-    }
+    DrawDiff { selected_ids: Some(DrawStringList { values: ids }), ..Default::default() }
 }
 
 /// 🗂️ Assets delta helper.
 pub async fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
-    DrawDiff {
-        assets: Some(entries),
-        ..Default::default()
-    }
+    DrawDiff { assets: Some(entries), ..Default::default() }
 }
 //#endregion 🔖️Builders

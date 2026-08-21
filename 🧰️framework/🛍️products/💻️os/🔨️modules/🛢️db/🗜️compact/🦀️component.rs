@@ -30,8 +30,8 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 
+use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::*;
-use crate::db_ids::{check_len, DbError, ArtifactId};
 use db_storage::SnapshotStorage as _;
 
 //#region 🔖️Budget
@@ -139,7 +139,8 @@ async fn group_records_by_segment(records: &[db_wal::WalRecord]) -> Vec<(u64, Ve
 /// @emoji 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
 pub async fn segment_horizons(records: &[db_wal::WalRecord]) -> Vec<SegmentHorizon> {
-    group_records_by_segment(records).await
+    group_records_by_segment(records)
+        .await
         .into_iter()
         .map(|(segment_index, group)| {
             let max_head_seq = group
@@ -255,7 +256,12 @@ pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, docume
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
-async fn collect_chain_pages<S: db_storage::SnapshotStorage>(manager: &db_snapshot::SnapshotManager<'_, S>, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
+async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
+    manager: &db_snapshot::SnapshotManager<'_, S>,
+    document: &ArtifactId,
+    through_generation: u64,
+    budget: &CompactionBudget,
+) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
     let combined = manager.materialize_chain(document, through_generation).await?;
     let mut handle = db_snapshot::open_latest(&combined).await?;
     let latest_descriptor = handle.descriptor.clone();
@@ -427,9 +433,9 @@ impl<'storage> Compactor<'storage> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {DurabilityClass, Frontier};
     use db_storage::{MemoryStorage, PayloadStorage as _, WalStorage as _};
     use db_wal::{WalPayloadRef, WalRecord};
+    use {DurabilityClass, Frontier};
 
     async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)

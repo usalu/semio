@@ -19,9 +19,6 @@ pub async fn diff(payload: &DeleteMesh, base: &LowpolySnapshot) -> protocol::Mut
     if object.mesh.is_none() {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Object \"{}\" has no mesh to delete.", payload.id));
     }
-    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch {
-        mesh: Some(None),
-        ..LowpolyObjectPatch::default()
-    }))
+    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { mesh: Some(None), ..LowpolyObjectPatch::default() }))
 }
 //#endregion 🔖️Diff

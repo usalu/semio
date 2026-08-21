@@ -1,11 +1,9 @@
 //! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 //! von-Mises stress contours, reaction labels and moment diagrams.
 
-use crate::editor::fem2d::modes::edit::windows::model::{
-    fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D,
-};
-use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
+use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
+use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
 use semio_framework_plugin::{build_canvas_2d_scene, ui_text, Canvas2dScene, Label, UiNode};
 use serde_json::{json, Value};

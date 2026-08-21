@@ -69,7 +69,8 @@ async fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
 pub async fn render(document: &SequenceSnapshot) -> UiNode {
     let fixture = document.to_fixture();
     let nodes: Vec<NodeGraphNodeRecord> = fixture.steps.iter().map(step_node).collect();
-    let edges: Vec<NodeGraphEdgeRecord> = fixture.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
+    let edges: Vec<NodeGraphEdgeRecord> =
+        fixture.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
     let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
     build_node_graph_scene(SEQUENCE_VIEW_SURFACE_MAIN, SEQUENCE_VIEW_CONTROLLER_ID, NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

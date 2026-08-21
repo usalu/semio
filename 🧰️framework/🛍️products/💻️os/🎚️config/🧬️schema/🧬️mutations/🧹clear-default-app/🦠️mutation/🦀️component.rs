@@ -26,7 +26,7 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
     async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
-        super::diff::diff(self, base).await
+        super::diff::diff(self, base)
     }
 
     async fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

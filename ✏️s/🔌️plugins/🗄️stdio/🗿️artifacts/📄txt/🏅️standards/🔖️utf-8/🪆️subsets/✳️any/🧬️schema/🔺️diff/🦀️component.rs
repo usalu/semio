@@ -242,7 +242,7 @@ pub struct TxtDiff {
 }
 
 impl MutationDiff<TxtSnapshot> for TxtDiff {
-    async fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
+    fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
         if let Some(lines) = &self.lines {
             validate_txt_lines(base.lines.len(), lines)?;
         }
@@ -259,7 +259,7 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
 
     /// ➕️ Sequential-coalesce only (see trait docs): `self` is base→mid, `other` is mid→after.
     /// Scalars are LWW; `lines` composes via [`absorb_pair`]'s structural index-transport.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if let Some(tn) = other.trailing_newline {
             self.trailing_newline = Some(tn);
         }
@@ -316,12 +316,12 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     /// 🔁️ `self`'s pre-image undo, expressed via `apply`+`between` (both already proven
     /// correct against `TxtSnapshot`): `next = self.apply(base)`, so `between(next, base)` is
     /// by definition the diff that restores `base` from `next`.
-    async fn inverse(&self, base: &TxtSnapshot) -> Self {
-        let next = self.apply(base).await.unwrap();
-        Self::between(&next, base).await
+    fn inverse(&self, base: &TxtSnapshot) -> Self {
+        let next = self.apply(base).unwrap();
+        Self::between(&next, base)
     }
 
-    async fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
+    fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
         let trailing_newline = if base.trailing_newline != other.trailing_newline { Some(other.trailing_newline) } else { None };
         let line_ending = if base.line_ending != other.line_ending { Some(other.line_ending) } else { None };
         let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines);
@@ -329,7 +329,7 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
         TxtDiff { trailing_newline, line_ending, lines }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.trailing_newline.is_none() && self.line_ending.is_none() && self.lines.as_ref().map_or(true, TxtLinesDiff::is_empty)
     }
 }

@@ -18,6 +18,9 @@ pub use protocol::source;
 #[path = "../../📐️format/🦀️component.rs"]
 pub mod format;
 
+#[path = "../../🔤️json/🦀️component.rs"]
+pub mod json;
+
 #[path = "../../⏳️async/🦀️component.rs"]
 pub mod async_;
 
@@ -35,6 +38,6 @@ pub mod testkit;
 mod component;
 pub use component::*;
 
-pub use protocol::codec::*;
 pub use protocol::codec::ids::*;
+pub use protocol::codec::*;
 pub use protocol::source::*;

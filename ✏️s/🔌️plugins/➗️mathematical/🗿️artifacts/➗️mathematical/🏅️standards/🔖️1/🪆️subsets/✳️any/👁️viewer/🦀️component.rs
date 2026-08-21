@@ -13,7 +13,7 @@ use crate::artifacts::mathematical::{MathematicalSnapshot, MATHEMATICAL_DIALECT,
 use crate::viewer::mathematical::modes::view;
 use crate::viewer::mathematical::modes::view::windows::geometry;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer, ui_text};
+use semio_framework_plugin::{ui_text, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

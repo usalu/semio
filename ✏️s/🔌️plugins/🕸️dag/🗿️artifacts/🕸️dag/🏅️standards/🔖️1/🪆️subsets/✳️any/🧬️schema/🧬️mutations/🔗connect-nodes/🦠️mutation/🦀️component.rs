@@ -2,8 +2,8 @@
 use crate::artifacts::dag::diff::DagDiff;
 use crate::artifacts::dag::mutations::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
-use infinite_board_port_directed_dag::EdgeRouteStyle;
 use graph::manifest::PropertyBag;
+use infinite_board_port_directed_dag::EdgeRouteStyle;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

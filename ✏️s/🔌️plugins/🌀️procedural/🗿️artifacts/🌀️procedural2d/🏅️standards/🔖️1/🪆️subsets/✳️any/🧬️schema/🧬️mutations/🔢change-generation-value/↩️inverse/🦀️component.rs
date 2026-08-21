@@ -1,14 +1,14 @@
 //! ↩️ Inverse for `ChangeGenerationValue`, reconstructed from BASE.
 use super::mutation::ChangeGenerationValue;
+use crate::artifacts::procedural2d::mutations::change_generation_value;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
-use crate::artifacts::procedural2d::mutations::change_generation_value;
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &ChangeGenerationValue, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
     match base.generation.generations.iter().find(|entry| entry.id == payload.id) {
-                Some(entry) => vec![change_generation_value(payload.id.clone(), payload.question_id.clone(), entry.values.get(&payload.question_id).cloned().unwrap_or(serde_json::Value::Null))],
-                None => Vec::new(),
-            }
+        Some(entry) => vec![change_generation_value(payload.id.clone(), payload.question_id.clone(), entry.values.get(&payload.question_id).cloned().unwrap_or(serde_json::Value::Null))],
+        None => Vec::new(),
+    }
 }
 //#endregion 🔖️Inverse

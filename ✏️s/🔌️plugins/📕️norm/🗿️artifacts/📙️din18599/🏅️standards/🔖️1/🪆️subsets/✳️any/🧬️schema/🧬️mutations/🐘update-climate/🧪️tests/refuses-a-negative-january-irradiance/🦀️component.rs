@@ -78,11 +78,8 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "rejected", "update-climate/refuses-a-negative-january-irradiance: this case exists to pin a rejection");
     let code = outcome.get("code").and_then(serde_json::Value::as_str).expect("a rejected outcome carries a machine-readable code");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

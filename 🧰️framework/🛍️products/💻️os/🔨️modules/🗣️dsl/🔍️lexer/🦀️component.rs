@@ -761,8 +761,8 @@ pub fn is_bare_ident(s: &str) -> bool {
 mod tests {
     use super::*;
     use crate::os_dsl::diagnostic::*;
-    use crate::os_dsl::token::*;
     use crate::os_dsl::span::TextSpan;
+    use crate::os_dsl::token::*;
 
     #[semio_framework_async_macros::async_test]
     async fn escape_round_trips_every_control_case() {
@@ -1239,15 +1239,7 @@ mod tests {
     async fn leading_dot_enum_literals_lex_as_dotenum_step_style() {
         let tokens = lex(".T. .F. .UNSPECIFIED. plain", &Limits::default(), false).expect("lex");
         let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
-        assert_eq!(
-            significant,
-            vec![
-                (TokenKind::DotEnum, ".T.".to_string()),
-                (TokenKind::DotEnum, ".F.".to_string()),
-                (TokenKind::DotEnum, ".UNSPECIFIED.".to_string()),
-                (TokenKind::Ident, "plain".to_string()),
-            ]
-        );
+        assert_eq!(significant, vec![(TokenKind::DotEnum, ".T.".to_string()), (TokenKind::DotEnum, ".F.".to_string()), (TokenKind::DotEnum, ".UNSPECIFIED.".to_string()), (TokenKind::Ident, "plain".to_string()),]);
     }
 
     #[semio_framework_async_macros::async_test]

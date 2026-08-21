@@ -103,10 +103,7 @@ fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = Strin
             }
         }
         let Some(path) = found else {
-            return Err(format!(
-                "plugin `{plugin_id}`'s compiled wasm is missing (tried: {}); build it: `bun nx run @semio-tech/framework-os-dev:build -- {plugin_id}` or `bun nx run @semio-tech/framework-os-dev:dev`",
-                tried.join(", ")
-            ));
+            return Err(format!("plugin `{plugin_id}`'s compiled wasm is missing (tried: {}); build it: `bun nx run @semio-tech/framework-os-dev:build -- {plugin_id}` or `bun nx run @semio-tech/framework-os-dev:dev`", tried.join(", ")));
         };
         resolved.insert(plugin_id, path);
     }

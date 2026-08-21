@@ -88,13 +88,7 @@ pub struct EngineCache {
 impl EngineCache {
     /// 🏗️ Empty cache with the given byte budget for stored outputs.
     pub fn new(budget_bytes: usize) -> Self {
-        Self {
-            engines: HashMap::new(),
-            entries: HashMap::new(),
-            lru: VecDeque::new(),
-            budget_bytes,
-            used_bytes: 0,
-        }
+        Self { engines: HashMap::new(), entries: HashMap::new(), lru: VecDeque::new(), budget_bytes, used_bytes: 0 }
     }
 
     /// 📎 Register a kernel under its `ENGINE_ID` (replaces any prior registration).
@@ -115,16 +109,10 @@ impl EngineCache {
         let key = Self::engine_key(engine_id, input);
         if self.entries.contains_key(&key) {
             self.touch(key);
-            return Ok(EngineHandle {
-                key,
-                engine_id: engine_id.to_string(),
-            });
+            return Ok(EngineHandle { key, engine_id: engine_id.to_string() });
         }
         let output = {
-            let engine = self
-                .engines
-                .get(engine_id)
-                .ok_or_else(|| EngineFault::UnknownEngine(engine_id.to_string()))?;
+            let engine = self.engines.get(engine_id).ok_or_else(|| EngineFault::UnknownEngine(engine_id.to_string()))?;
             engine.compute(input)?
         };
         let byte_len = output.len();
@@ -132,18 +120,12 @@ impl EngineCache {
         self.entries.insert(key, CacheEntry { output, byte_len });
         self.lru.push_back(key);
         self.used_bytes = self.used_bytes.saturating_add(byte_len);
-        Ok(EngineHandle {
-            key,
-            engine_id: engine_id.to_string(),
-        })
+        Ok(EngineHandle { key, engine_id: engine_id.to_string() })
     }
 
     /// 📖 Read a previously derived output; fails if the entry was LRU-evicted.
     pub fn read(&self, handle: &EngineHandle) -> Result<Vec<u8>, EngineFault> {
-        self.entries
-            .get(&handle.key)
-            .map(|entry| entry.output.clone())
-            .ok_or(EngineFault::Evicted)
+        self.entries.get(&handle.key).map(|entry| entry.output.clone()).ok_or(EngineFault::Evicted)
     }
 
     fn touch(&mut self, key: EngineKey) {
@@ -236,10 +218,7 @@ mod tests {
     #[test]
     fn unknown_engine_fault() {
         let mut cache = EngineCache::new(64);
-        assert_eq!(
-            cache.derive("missing", b"x"),
-            Err(EngineFault::UnknownEngine("missing".into()))
-        );
+        assert_eq!(cache.derive("missing", b"x"), Err(EngineFault::UnknownEngine("missing".into())));
     }
 
     #[test]
@@ -264,10 +243,7 @@ mod tests {
 
     impl EngineRep<CountSnapshot> for SumRep {
         fn build(snapshot: &CountSnapshot) -> Self {
-            Self {
-                total: snapshot.values.iter().copied().sum(),
-                len: snapshot.values.len(),
-            }
+            Self { total: snapshot.values.iter().copied().sum(), len: snapshot.values.len() }
         }
     }
 

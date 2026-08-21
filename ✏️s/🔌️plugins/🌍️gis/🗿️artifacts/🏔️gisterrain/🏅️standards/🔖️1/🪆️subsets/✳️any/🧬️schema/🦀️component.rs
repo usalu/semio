@@ -13,16 +13,20 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainArtifact {
-    #[state(artifact)] pub exaggeration: f64,
-    #[state(artifact)] pub imported_features_json: String,
+    #[state(artifact)]
+    pub exaggeration: f64,
+    #[state(artifact)]
+    pub imported_features_json: String,
     /// 🕸️ Mirrors `GisTerrainSnapshot.mesh` — see that field's own doc comment. Always re-derived
     /// from `(exaggeration, imported_features_json)` by `to_snapshot`, never independently set.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
-    #[state(config)] pub camera_json: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub camera_json: String,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -43,21 +47,12 @@ impl GisTerrainArtifact {
     /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
     /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
     pub async fn to_snapshot(&self) -> GisTerrainSnapshot {
-        GisTerrainSnapshot {
-            exaggeration: self.exaggeration,
-            imported_features_json: self.imported_features_json.clone(),
-            mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))),
-        }
+        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))) }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
-        Self {
-            exaggeration: snapshot.exaggeration,
-            imported_features_json: snapshot.imported_features_json,
-            mesh: snapshot.mesh,
-            ..Self::default()
-        }
+        Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -107,8 +102,8 @@ pub async fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDe
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::gisterrain::{GisTerrainDiff, GisTerrainMutation, GisTerrainSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct GisterrainBuilderConstruction {
@@ -120,8 +115,12 @@ pub mod derived_construction {
         type Snapshot = GisTerrainSnapshot;
         type Mutation = GisTerrainMutation;
         type Diff = GisTerrainDiff;
-        async fn empty() -> Self { Self { snapshot: GisTerrainSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: GisTerrainSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -132,24 +131,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <GisTerrainDiff as protocol::MutationDiff<GisTerrainSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -158,8 +154,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::gisterrain::GisTerrainSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct GisTerrainParts {

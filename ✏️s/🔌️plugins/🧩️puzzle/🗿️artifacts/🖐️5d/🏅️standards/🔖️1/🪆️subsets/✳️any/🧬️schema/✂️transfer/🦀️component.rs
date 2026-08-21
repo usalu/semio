@@ -165,7 +165,7 @@ pub async fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dGripTemplate, Puzzle5dCatalogPartKind, Puzzle5dGrip, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+    use crate::artifacts::puzzle5d::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
     async fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
         Puzzle5dPart {

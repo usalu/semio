@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneMaterialRoughness`.
 
 use super::mutation::ChangeSceneMaterialRoughness;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeSceneMaterialRoughness, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_roughness.is_finite() || !(0.0..=1.0).contains(&payload.new_roughness) {

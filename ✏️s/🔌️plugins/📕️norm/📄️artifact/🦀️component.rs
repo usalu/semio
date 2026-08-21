@@ -525,9 +525,7 @@ pub struct ArtifactDiff<D> {
 
 impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for ArtifactDiff<D> {
     async fn apply(&self, projection: &D) -> protocol::MutationApplyResult<D> {
-        Ok({
-            self.document.clone().unwrap_or_else(|| projection.clone())
-        })
+        Ok({ self.document.clone().unwrap_or_else(|| projection.clone()) })
     }
     async fn absorb(&mut self, other: Self) {
         if other.document.is_some() {

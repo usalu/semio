@@ -2,9 +2,9 @@
 //! Tri3/Tri6/Quad4/Quad8 plane-stress/plane-strain continuum family, and the `PlateDkt` Batoz
 //! Discrete Kirchhoff Triangle thin-plate bending element.
 
+use crate::algebra::{MatD, VecD};
 use crate::formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
 use crate::model::{Dof, Element, ElementContext, ElementResult, Elements, MemberUdl, PlaneStress, PlateMoments};
-use crate::algebra::{MatD, VecD};
 
 // #region 🔖️Geometry
 async fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {

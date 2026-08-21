@@ -9,8 +9,8 @@ use crate::artifacts::layout::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_S
 use crate::viewer::layout::modes::view;
 use crate::viewer::layout::modes::view::windows::preview;
 use semio_framework::Dialect;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -74,14 +74,7 @@ impl ArtifactViewer for LayoutViewer {
 
 //#region 🔖️Manifest
 pub async fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(LAYOUT_DIALECT)
-        .document(["semio", "layout"])
-        .icon_id("layout")
-        .mode_def(view::definition())
-        .default_mode_id(view::LAYOUT_VIEW_MODE_VIEW)
-        .window_kind_def(preview::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(LAYOUT_DIALECT).document(["semio", "layout"]).icon_id("layout").mode_def(view::definition()).default_mode_id(view::LAYOUT_VIEW_MODE_VIEW).window_kind_def(preview::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

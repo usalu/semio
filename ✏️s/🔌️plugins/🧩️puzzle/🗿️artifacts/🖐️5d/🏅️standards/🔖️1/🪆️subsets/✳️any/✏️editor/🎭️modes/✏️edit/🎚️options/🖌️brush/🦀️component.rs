@@ -6,12 +6,12 @@
 //! world window bind the `brush` utility and expose the identical group, so this measure is declared
 //! once here and each window's `window_measures()` collects from it.
 
+use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
     parse_brush_candidates_free, puzzle5d_action, puzzle5d_brush_target_grip, puzzle5d_kind_ids, puzzle5d_kind_weight_sum, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_SUGGESTION_OFFSET_MAX, PUZZLE5D_SUGGESTION_OFFSET_MIN,
     PUZZLE5D_SUGGESTION_OFFSET_STEP,
 };
-use crate::editor::puzzle5d::precompute::Puzzle5dPrecomputeSession;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::json;
 use std::collections::HashMap;

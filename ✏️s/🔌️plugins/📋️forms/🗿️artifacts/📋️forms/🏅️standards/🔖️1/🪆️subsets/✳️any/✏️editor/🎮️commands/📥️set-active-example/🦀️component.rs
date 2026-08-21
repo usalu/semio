@@ -1,11 +1,11 @@
 //! 📥️ 📥️ Forms play app commands command — `set-active-example`.
 
+use crate::artifacts::forms::dsl as forms_dsl;
+use crate::artifacts::forms::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
+use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
-use crate::artifacts::forms::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
-use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 // 🧷️ Aliased: the payload structs below derive the EXTERN `dsl` crate's `dsl::DslRecord` — importing the
@@ -29,8 +29,6 @@ async fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) 
     operations
 }
 //#endregion 🔖️Shell
-
-
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "active-example")]

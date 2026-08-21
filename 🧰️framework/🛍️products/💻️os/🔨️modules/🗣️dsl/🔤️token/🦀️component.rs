@@ -1,8 +1,8 @@
 //! 🔤 Symbol interning, token alphabet, escapes, numbers, and units.
 
+use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
-use crate::os_dsl::diagnostic::{Limits, TextError, TextSpan};
 
 //#region 🔖️Intern
 /// @emoji 🔖️ An interned string handle — cheap to copy/compare, the payload type for `Ident`

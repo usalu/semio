@@ -6,10 +6,14 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms.config")]
 pub struct FormsConfig {
-    #[state(config)] pub current_step_index: u32,
-    #[state(config)] pub try_values_json: String,
-    #[state(config)] pub locale: String,
-    #[state(config)] pub contributions_json: String,
+    #[state(config)]
+    pub current_step_index: u32,
+    #[state(config)]
+    pub try_values_json: String,
+    #[state(config)]
+    pub locale: String,
+    #[state(config)]
+    pub contributions_json: String,
 }
 
 //region 📎 App-schema descriptor
@@ -36,4 +40,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

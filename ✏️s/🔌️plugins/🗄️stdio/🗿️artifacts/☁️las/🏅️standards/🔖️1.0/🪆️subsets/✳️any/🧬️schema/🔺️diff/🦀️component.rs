@@ -738,7 +738,7 @@ fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 }
 
 impl MutationDiff<LasSnapshot> for LasDiff {
-    async fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
+    fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
         if let Some(diff) = &self.vlrs {
             validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
         }
@@ -760,7 +760,7 @@ impl MutationDiff<LasSnapshot> for LasDiff {
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Header
     /// scalars: LWW. `vlrs`/`points`: index-transport via [`absorb_indexed_triple`].
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.version_major.is_some() {
             self.version_major = other.version_major;
         }
@@ -844,7 +844,7 @@ impl MutationDiff<LasSnapshot> for LasDiff {
 impl DiffAlgebra<LasSnapshot> for LasDiff {
     /// 🔁️ Diff-level undo, derived generically: the state delta from `self.apply(base)` back to
     /// `base` — `between` is the single source of truth for turning a state pair into a diff.
-    async fn inverse(&self, base: &LasSnapshot) -> Self {
+    fn inverse(&self, base: &LasSnapshot) -> Self {
         let mutated = {
             let mut header = base.header.clone();
             apply_header_diff(&mut header, self);
@@ -855,13 +855,13 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
                 points: self.points.as_ref().map_or_else(|| base.points.clone(), |value| value.apply_unchecked(&base.points)),
             }
         };
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): header scalars compared field-by-field; `vlrs`/
     /// `points` index-keyed matching (pairwise `0..min(len)` = modified, base tail = removed,
     /// other tail = added — the recipe's "index keys pairwise by position" rule).
-    async fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
+    fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
         let bh = &base.header;
         let oh = &other.header;
         let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs);
@@ -897,7 +897,7 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self == &LasDiff::default()
     }
 }
@@ -2037,10 +2037,10 @@ const HDR_POINTS: u32 = 1 << 26;
 //#endregion 🔖️BinaryDiffCodec
 
 impl DiffCodec for LasDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_las_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_las_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ REAL binary frame (`format u8 | header_mask u32 | <present header fields> | <vlrs diff
@@ -2048,7 +2048,7 @@ impl DiffCodec for LasDiff {
     /// semio`'s `format`/`header_mask` leading fields exactly — upgraded from F6's
     /// `print_diff().into_bytes()` text-as-binary shortcut (see `#region 🔖️BinaryDiffCodec`'s doc
     /// comment for the full rationale).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut mask = 0u32;
         if self.version_major.is_some() {
             mask |= HDR_VERSION_MAJOR;
@@ -2219,20 +2219,20 @@ impl DiffCodec for LasDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         async fn go(bytes: &[u8]) -> Result<LasDiff, String> {
-            let mut reader = store::ByteReader::new(bytes).await;
-            let format = reader.read_u8().await.map_err(|e| e.to_string())?;
+            let mut reader = store::ByteReader::new(bytes);
+            let format = reader.read_u8().map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
                 return Err(format!("bad diff format byte {format}"));
             }
-            let mask = reader.read_u32_le().await.map_err(|e| e.to_string())?;
+            let mask = reader.read_u32_le().map_err(|e| e.to_string())?;
             let mut d = LasDiff::default();
             if mask & HDR_VERSION_MAJOR != 0 {
-                d.version_major = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+                d.version_major = Some(reader.read_u8().map_err(|e| e.to_string())?);
             }
             if mask & HDR_VERSION_MINOR != 0 {
-                d.version_minor = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+                d.version_minor = Some(reader.read_u8().map_err(|e| e.to_string())?);
             }
             if mask & HDR_SYSTEM_IDENTIFIER != 0 {
                 d.system_identifier = Some(read_str_lp(&mut reader)?);
@@ -2241,71 +2241,71 @@ impl DiffCodec for LasDiff {
                 d.generating_software = Some(read_str_lp(&mut reader)?);
             }
             if mask & HDR_CREATION_DAY_OF_YEAR != 0 {
-                d.creation_day_of_year = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+                d.creation_day_of_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_CREATION_YEAR != 0 {
-                d.creation_year = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+                d.creation_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_HEADER_SIZE != 0 {
-                d.header_size = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+                d.header_size = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_OFFSET_TO_POINT_DATA != 0 {
-                d.offset_to_point_data = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
+                d.offset_to_point_data = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_NUMBER_OF_VLRS != 0 {
-                d.number_of_vlrs = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
+                d.number_of_vlrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_POINT_DATA_FORMAT_ID != 0 {
-                d.point_data_format_id = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
+                d.point_data_format_id = Some(reader.read_u8().map_err(|e| e.to_string())?);
             }
             if mask & HDR_POINT_DATA_RECORD_LENGTH != 0 {
-                d.point_data_record_length = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
+                d.point_data_record_length = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_NUMBER_OF_POINT_RECORDS != 0 {
-                d.number_of_point_records = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
+                d.number_of_point_records = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_POINTS_BY_RETURN != 0 {
                 let mut a = [0u32; 5];
                 for slot in a.iter_mut() {
-                    *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+                    *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
                 }
                 d.points_by_return = Some(a);
             }
             if mask & HDR_X_SCALE != 0 {
-                d.x_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.x_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_Y_SCALE != 0 {
-                d.y_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.y_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_Z_SCALE != 0 {
-                d.z_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.z_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_X_OFFSET != 0 {
-                d.x_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.x_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_Y_OFFSET != 0 {
-                d.y_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.y_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_Z_OFFSET != 0 {
-                d.z_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.z_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_X != 0 {
-                d.max_x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.max_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_X != 0 {
-                d.min_x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.min_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_Y != 0 {
-                d.max_y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.max_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_Y != 0 {
-                d.min_y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.min_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_Z != 0 {
-                d.max_z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.max_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_Z != 0 {
-                d.min_z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
+                d.min_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
             }
             if mask & HDR_VLRS != 0 {
                 d.vlrs = Some(dec_vlrs_diff_bin(&mut reader)?);
@@ -2315,7 +2315,7 @@ impl DiffCodec for LasDiff {
             }
             Ok(d)
         }
-        go(bytes).await.map_err(|e| protocol::ProtocolError::Malformed { what: "las diff binary", offset: 0, detail: e })
+        go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las diff binary", offset: 0, detail: e })
     }
 }
 //#endregion 🔖️TopLevel

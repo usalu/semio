@@ -92,10 +92,20 @@ mod tests {
 
     //#region 🧸️Fixtures
     async fn node(id: &str) -> Node {
-        Node { id: id.into(), kind: "Piece".into(), name: id.into(), x: 0.0, y: 0.0, width: 0.0, height: 0.0, properties: PropertyBag::new(), ports: vec![
-            Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() },
-            Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() },
-        ] }
+        Node {
+            id: id.into(),
+            kind: "Piece".into(),
+            name: id.into(),
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+            properties: PropertyBag::new(),
+            ports: vec![
+                Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() },
+                Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() },
+            ],
+        }
     }
 
     async fn edge(id: &str, source: &str, target: &str) -> Edge {

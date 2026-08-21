@@ -1,15 +1,15 @@
 //! 🔄️ `world-relocate` command.
 
-use serde_json::Value;
-use std::sync::atomic::Ordering;
-use crate::editor::puzzle3d::PUZZLE3D_ID_COUNTER;
-use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::derive_attraction_params;
+use crate::editor::puzzle3d::puzzle3d_vortex_full_id;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::sync_precompute_session;
 use crate::editor::puzzle3d::world_vortex_position;
-use crate::editor::puzzle3d::puzzle3d_vortex_full_id;
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::Puzzle3dAttraction;
+use crate::editor::puzzle3d::PUZZLE3D_ID_COUNTER;
+use serde_json::Value;
+use std::sync::atomic::Ordering;
 
 /// 🚚️ Drops one unlocked, visible object at an absolute world position and attracts its first vortex
 /// onto every other vortex inside `proximity_radius` that is not already connected to it.
@@ -56,16 +56,8 @@ pub async fn world_relocate(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value
                     continue;
                 }
                 let attraction_id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-                let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
-                    other.origin,
-                    other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                    vortex.position,
-                    vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
-                    source_local_pos,
-                    source_local_dir,
-                    position,
-                    object_orientation,
-                );
+                let (gap, shift, rise, rotation, turn, tilt) =
+                    derive_attraction_params(other.origin, other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), vortex.position, vortex.direction.unwrap_or([0.0, 0.0, -1.0]), source_local_pos, source_local_dir, position, object_orientation);
                 created.push(Puzzle3dAttraction { id: attraction_id, attracting: target_id, attracted: source_id.clone(), gap, shift, rise, rotation, turn, tilt });
             }
         }

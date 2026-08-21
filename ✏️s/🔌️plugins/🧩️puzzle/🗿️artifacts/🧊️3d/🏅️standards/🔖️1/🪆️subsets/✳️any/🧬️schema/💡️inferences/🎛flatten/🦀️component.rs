@@ -79,12 +79,9 @@ async fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
     [x[0], x[1], x[2], 0.0, y[0], y[1], y[2], 0.0, z[0], z[1], z[2], 0.0, p.origin[0], p.origin[1], p.origin[2], 1.0]
 }
 
-
 async fn matrix_to_plane(m: [f64; 16]) -> FlattenPlane {
     FlattenPlane { origin: [m[12], m[13], m[14]], x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
-
-
 
 async fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
     let mut out = [0.0; 16];
@@ -100,35 +97,13 @@ async fn translation(x: f64, y: f64, z: f64) -> [f64; 16] {
     [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0]
 }
 
-
-
 async fn rotation_axis(axis: [f64; 3], angle: f64) -> [f64; 16] {
     let (x, y, z) = (axis[0], axis[1], axis[2]);
     let c = angle.cos();
     let s = angle.sin();
     let t = 1.0 - c;
-    [
-        t * x * x + c,
-        t * x * y + s * z,
-        t * x * z - s * y,
-        0.0,
-        t * x * y - s * z,
-        t * y * y + c,
-        t * y * z + s * x,
-        0.0,
-        t * x * z + s * y,
-        t * y * z - s * x,
-        t * z * z + c,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-    ]
+    [t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0.0, t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0.0, t * x * z + s * y, t * y * z - s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
-
-
-
 
 async fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
     [m[0] * v[0] + m[4] * v[1] + m[8] * v[2], m[1] * v[0] + m[5] * v[1] + m[9] * v[2], m[2] * v[0] + m[6] * v[1] + m[10] * v[2]]
@@ -156,24 +131,7 @@ async fn quaternion_to_matrix(q: [f64; 4]) -> [f64; 16] {
     let (xx, xy, xz) = (x * x2, x * y2, x * z2);
     let (yy, yz, zz) = (y * y2, y * z2, z * z2);
     let (wx, wy, wz) = (w * x2, w * y2, w * z2);
-    [
-        1.0 - (yy + zz),
-        xy + wz,
-        xz - wy,
-        0.0,
-        xy - wz,
-        1.0 - (xx + zz),
-        yz + wx,
-        0.0,
-        xz + wy,
-        yz - wx,
-        1.0 - (xx + yy),
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-    ]
+    [1.0 - (yy + zz), xy + wz, xz - wy, 0.0, xy - wz, 1.0 - (xx + zz), yz + wx, 0.0, xz + wy, yz - wx, 1.0 - (xx + yy), 0.0, 0.0, 0.0, 0.0, 1.0]
 }
 
 /// 🧭️ Plane axes → ijkw quaternion (matches sketchpad `sketchpadPlaneAxesToQuaternion`).
@@ -218,8 +176,6 @@ pub(crate) async fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]
     FlattenPlane { origin, x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
 
-
-
 pub(crate) async fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
@@ -235,14 +191,7 @@ pub(crate) async fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3],
     (point, direction, 0.0)
 }
 
-pub(crate) async fn compute_child_plane(
-    parent_plane: FlattenPlane,
-    parent_point: [f64; 3],
-    parent_dir: [f64; 3],
-    child_point: [f64; 3],
-    child_dir: [f64; 3],
-    attraction: &Puzzle3dAttraction,
-) -> FlattenPlane {
+pub(crate) async fn compute_child_plane(parent_plane: FlattenPlane, parent_point: [f64; 3], parent_dir: [f64; 3], child_point: [f64; 3], child_dir: [f64; 3], attraction: &Puzzle3dAttraction) -> FlattenPlane {
     let parent_matrix = plane_to_matrix(parent_plane);
     let mut parent_dir = parent_dir;
     let mut child_dir = child_dir;
@@ -333,11 +282,7 @@ pub async fn flatten_objects(objects: &[Puzzle3dObject], attractions: &[Puzzle3d
 /// 🌤️🕸️ Same BFS as [`flatten_objects`], additionally returning visitation order (topological —
 /// every parent appears before its children, the exact order a 💡️inference `plan()` needs) and each
 /// object's [`FlattenParent`] assignment. Single source of truth: `flatten_objects` delegates here.
-pub async fn flatten_objects_with_assignment(
-    objects: &[Puzzle3dObject],
-    attractions: &[Puzzle3dAttraction],
-    seed_centers: Option<&HashMap<String, [f64; 2]>>,
-) -> (HashMap<String, FlattenPose>, Vec<String>, HashMap<String, FlattenParent>) {
+pub async fn flatten_objects_with_assignment(objects: &[Puzzle3dObject], attractions: &[Puzzle3dAttraction], seed_centers: Option<&HashMap<String, [f64; 2]>>) -> (HashMap<String, FlattenPose>, Vec<String>, HashMap<String, FlattenParent>) {
     if objects.is_empty() {
         return (HashMap::new(), Vec::new(), HashMap::new());
     }
@@ -396,13 +341,8 @@ pub async fn flatten_objects_with_assignment(
                 visited.insert(neighbor_id.clone());
                 let neighbor_object = object_map.get(neighbor_id.as_str()).expect("neighbor present");
                 if matches!(neighbor_object.anchor, Puzzle3dObjectAnchor::Fixed) {
-                    let stored_plane = orientation_to_plane(
-                        neighbor_object.origin,
-                        neighbor_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
-                    );
-                    let stored_center = seed_centers
-                        .and_then(|centers| centers.get(&neighbor_id).copied())
-                        .unwrap_or([0.0, 0.0]);
+                    let stored_plane = orientation_to_plane(neighbor_object.origin, neighbor_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]));
+                    let stored_center = seed_centers.and_then(|centers| centers.get(&neighbor_id).copied()).unwrap_or([0.0, 0.0]);
                     piece_planes.insert(neighbor_id.clone(), stored_plane);
                     piece_centers.insert(neighbor_id.clone(), stored_center);
                     order.push(neighbor_id.clone());
@@ -427,11 +367,7 @@ pub async fn flatten_objects_with_assignment(
                     queue.push_back(neighbor_id);
                     continue;
                 };
-                let (current_vortex_id, neighbor_vortex_id) = if design_parent_id == current_id {
-                    (design_parent_vortex, design_child_vortex)
-                } else {
-                    (design_child_vortex, design_parent_vortex)
-                };
+                let (current_vortex_id, neighbor_vortex_id) = if design_parent_id == current_id { (design_parent_vortex, design_child_vortex) } else { (design_child_vortex, design_parent_vortex) };
                 let current_object = object_map.get(current_id.as_str()).expect("current present");
                 let (Some(parent_vortex), Some(child_vortex)) = (find_vortex(current_object, current_vortex_id), find_vortex(neighbor_object, neighbor_vortex_id)) else {
                     piece_planes.insert(neighbor_id.clone(), FlattenPlane::default());
@@ -447,15 +383,7 @@ pub async fn flatten_objects_with_assignment(
                 piece_planes.insert(neighbor_id.clone(), child_plane);
                 piece_centers.insert(neighbor_id.clone(), diagram_center(parent_center, parent_direction, parent_t, attraction));
                 order.push(neighbor_id.clone());
-                assignment.insert(
-                    neighbor_id.clone(),
-                    FlattenParent::Child {
-                        parent_id: current_id.clone(),
-                        attraction_index,
-                        parent_vortex_id: current_vortex_id.to_string(),
-                        child_vortex_id: neighbor_vortex_id.to_string(),
-                    },
-                );
+                assignment.insert(neighbor_id.clone(), FlattenParent::Child { parent_id: current_id.clone(), attraction_index, parent_vortex_id: current_vortex_id.to_string(), child_vortex_id: neighbor_vortex_id.to_string() });
                 queue.push_back(neighbor_id);
             }
         }
@@ -488,32 +416,11 @@ mod tests {
     use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
 
     async fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
-        Puzzle3dVortex {
-            id: id.into(),
-            vortex_kind: None,
-            label: None,
-            position,
-            direction: Some(direction),
-            radius: None,
-            hidden: false,
-            locked: false,
-        }
+        Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position, direction: Some(direction), radius: None, hidden: false, locked: false }
     }
 
     async fn object(id: &str, origin: [f64; 3], vortices: Vec<Puzzle3dVortex>) -> Puzzle3dObject {
-        Puzzle3dObject {
-            id: id.into(),
-            label: None,
-            object_kind: None,
-            anchor: Puzzle3dObjectAnchor::Fixed,
-            origin,
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            mesh_url: None,
-            vortices,
-            hidden: false,
-            locked: false,
-        }
+        Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor: Puzzle3dObjectAnchor::Fixed, origin, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, vortices, hidden: false, locked: false }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -538,19 +445,7 @@ mod tests {
         let parent = object("p", [0.0, 0.0, 0.0], vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
         let mut child = object("c", [0.0, 0.0, 0.0], vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
         child.anchor = Puzzle3dObjectAnchor::Derived;
-        let attraction = Puzzle3dAttraction {
-            id: "a1".into(),
-            attracting: "p:top".into(),
-            attracted: "c:bottom".into(),
-            gap: 0.0,
-            shift: 0.0,
-            rise: 0.0,
-            rotation: 270.0,
-            turn: 0.0,
-            tilt: 0.0,
-            x: 1.5,
-            y: 2.5,
-        };
+        let attraction = Puzzle3dAttraction { id: "a1".into(), attracting: "p:top".into(), attracted: "c:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 270.0, turn: 0.0, tilt: 0.0, x: 1.5, y: 2.5 };
         let poses = flatten_objects(&[parent, child], &[attraction], None);
         let child_pose = poses.get("c").expect("c");
         let parent_pose = poses.get("p").expect("p");
@@ -566,5 +461,4 @@ mod tests {
         assert!((q[0]).abs() < 1e-9 && (q[1]).abs() < 1e-9 && (q[2]).abs() < 1e-9);
         assert!((q[3] - 1.0).abs() < 1e-9);
     }
-
 }

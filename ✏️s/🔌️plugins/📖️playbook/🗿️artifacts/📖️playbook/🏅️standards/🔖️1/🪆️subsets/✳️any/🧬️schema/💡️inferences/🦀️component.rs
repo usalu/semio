@@ -113,10 +113,7 @@ mod tests {
             id: "s1".into(),
             title: "Step 1".into(),
             description: None,
-            blocks: vec![
-                block("material", "single", None),
-                block("finish", "text", Some(crate::artifacts::playbook::PlaybookExpr::Truthy { expr: Box::new(crate::artifacts::playbook::PlaybookExpr::Var { name: "material".into() }) })),
-            ],
+            blocks: vec![block("material", "single", None), block("finish", "text", Some(crate::artifacts::playbook::PlaybookExpr::Truthy { expr: Box::new(crate::artifacts::playbook::PlaybookExpr::Var { name: "material".into() }) }))],
         }];
         crate::artifacts::playbook::playbook_snapshot_with_steps("playbook.playbook", "playbook", "1", None, steps)
     }

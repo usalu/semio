@@ -11,7 +11,6 @@
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖️Reexports
-pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 pub use crate::os_spr::history::{
     decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
@@ -20,6 +19,7 @@ pub use crate::os_spr::history::{
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
 pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
+pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
 pub use crate::os_spr::causal::{
     decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff,
@@ -27,18 +27,18 @@ pub use crate::os_spr::causal::{
 };
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
-    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationMessage, MutationOutcome,
-    MutationUpcaster, Patchable,
-    SemanticDescriptor, SemanticMutation, APPROVED_VERBS,
-    DiffRegions, Inference, InferenceFieldSpec, InferenceSpec, TouchedPaths,
-    fold_plan_diff, fold_plan_inverse, plan_foreign_steps, plan_of, CompositeMutationKind, ForeignStep, ForeignTarget, MutationOrigin, PlanError, PlanStep, Planner, MAX_PLAN_DEPTH,
+    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
+    register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference,
+    InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationKind, MutationMessage, MutationMeta, MutationOrigin, MutationOutcome, MutationUpcaster,
+    NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor, SemanticMutation, TouchedPaths, APPROVED_VERBS, MAX_PLAN_DEPTH,
 };
-pub use crate::os_spr::wire::{ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64};
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{
-    decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, decode_presence_peer, encode_presence_peer, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView,
+    decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
+};
+pub use crate::os_spr::wire::{
+    read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64, ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy,
 };
 //#endregion 🔖️Reexports
 

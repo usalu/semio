@@ -367,10 +367,10 @@ mod fixture_tests {
     mod tests_create_property_definition_appends_a_selection_scoped_length_property;
     #[path = "🌵create-subject/🧪️tests/appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️component.rs"]
     mod tests_create_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
-    #[path = "🌸delete-product/🧪️tests/removes-the-pr600-product-from-the-catalogue/🦀️component.rs"]
-    mod tests_delete_product_removes_the_pr600_product_from_the_catalogue;
     #[path = "🌹delete-product-group/🧪️tests/removes-the-radiators-group-and-strands-its-class/🦀️component.rs"]
     mod tests_delete_product_group_removes_the_radiators_group_and_strands_its_class;
+    #[path = "🌸delete-product/🧪️tests/removes-the-pr600-product-from-the-catalogue/🦀️component.rs"]
+    mod tests_delete_product_removes_the_pr600_product_from_the_catalogue;
     #[path = "🌺delete-property-definition/🧪️tests/removes-the-height-property-definition/🦀️component.rs"]
     mod tests_delete_property_definition_removes_the_height_property_definition;
     #[path = "🌻delete-subject/🧪️tests/removes-the-radiator-subject-from-the-dictionary/🦀️component.rs"]
@@ -383,10 +383,10 @@ mod fixture_tests {
     mod tests_rename_catalogue_restamps_the_catalogue_as_the_2026_edition;
     #[path = "🌳rename-manufacturer/🧪️tests/adds-the-ag-suffix-to-the-manufacturer/🦀️component.rs"]
     mod tests_rename_manufacturer_adds_the_ag_suffix_to_the_manufacturer;
-    #[path = "🛏️rename-product/🧪️tests/renames-pr600-to-the-compact-variant-name/🦀️component.rs"]
-    mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
     #[path = "🚿rename-product-group/🧪️tests/renames-the-radiators-group-to-panel-radiators/🦀️component.rs"]
     mod tests_rename_product_group_renames_the_radiators_group_to_panel_radiators;
+    #[path = "🛏️rename-product/🧪️tests/renames-pr600-to-the-compact-variant-name/🦀️component.rs"]
+    mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
     #[path = "🍂replace-part-number-rule/🧪️tests/swaps-the-literal-rule-for-a-height-driven-script/🦀️component.rs"]
     mod tests_replace_part_number_rule_swaps_the_literal_rule_for_a_height_driven_script;
     #[path = "🌷update-script-limits/🧪️tests/doubles-the-step-budget-and-quintuples-the-timeout/🦀️component.rs"]

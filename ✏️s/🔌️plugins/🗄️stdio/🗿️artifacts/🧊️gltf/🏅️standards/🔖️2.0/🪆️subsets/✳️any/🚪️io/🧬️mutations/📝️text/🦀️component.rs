@@ -49,7 +49,7 @@ fn parse_field<'a>(field: &'a str, name: &str) -> Result<&'a str, store::TextErr
 }
 
 impl protocol::OpText for GltfMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let envelope = self.envelope();
         let phase = match envelope.phase {
             GltfMutationPhase::Mutation => "mutation",
@@ -60,7 +60,7 @@ impl protocol::OpText for GltfMutation {
         format!("gltf-mutation commandId={} version={} phase={phase} payload={payload}", encode_hex(envelope.command_id.as_bytes()), envelope.version)
     }
 
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let fields: Vec<_> = line.split_ascii_whitespace().collect();
         if fields.len() != 5 || fields[0] != "gltf-mutation" {
             return Err(text_error("expected canonical GLTF mutation envelope"));

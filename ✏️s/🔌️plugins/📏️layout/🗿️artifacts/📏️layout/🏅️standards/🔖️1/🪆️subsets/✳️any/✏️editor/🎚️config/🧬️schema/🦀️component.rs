@@ -7,12 +7,18 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout.config")]
 pub struct LayoutConfig {
-    #[state(config)] pub active_page_id: String,
-    #[state(config)] pub drop_preview: LayoutDropPreviewState,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera: LayoutCamera,
-    #[state(config)] pub preview_camera: LayoutCamera,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub active_page_id: String,
+    #[state(config)]
+    pub drop_preview: LayoutDropPreviewState,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera: LayoutCamera,
+    #[state(config)]
+    pub preview_camera: LayoutCamera,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -39,4 +45,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

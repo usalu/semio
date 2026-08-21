@@ -9,7 +9,6 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, to `✏️editor/⚙️engine` under this artifact's own
 //! `✏️editor` surface).
 
-
 use serde::{Deserialize, Serialize};
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";

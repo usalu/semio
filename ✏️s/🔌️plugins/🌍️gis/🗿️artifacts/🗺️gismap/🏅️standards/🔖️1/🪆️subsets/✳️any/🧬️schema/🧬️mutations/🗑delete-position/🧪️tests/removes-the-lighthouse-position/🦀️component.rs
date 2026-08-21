@@ -148,5 +148,9 @@ async fn removes_exactly_one_position_and_inverts_to_a_base_derived_create() {
     assert_eq!(undo.index, 1, "delete-position/removes-the-lighthouse-position: the inverse restores the feature at the index BASE held it at");
     assert_eq!(undo.item, base.positions[1], "delete-position/removes-the-lighthouse-position: the inverse re-creates the whole BASE feature, payload included");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
-    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "position", "delete-position", "DeletedPosition"), "delete-position/removes-the-lighthouse-position: the fixture must be bound to delete-position's own descriptor");
+    assert_eq!(
+        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
+        ("delete", "position", "delete-position", "DeletedPosition"),
+        "delete-position/removes-the-lighthouse-position: the fixture must be bound to delete-position's own descriptor"
+    );
 }

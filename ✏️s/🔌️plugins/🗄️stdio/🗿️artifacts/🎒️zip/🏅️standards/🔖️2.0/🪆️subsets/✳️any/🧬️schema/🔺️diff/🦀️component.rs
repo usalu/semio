@@ -133,7 +133,7 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
 
 //#region 🔖️Algebra
 impl MutationDiff<ZipSnapshot> for ZipDiff {
-    async fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
+    fn apply(&self, base: &ZipSnapshot) -> MutationApplyResult<ZipSnapshot> {
         if let Some(entries) = &self.entries {
             validate_zip_entries(&base.entries, entries)?;
         }
@@ -155,7 +155,7 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.comment.is_some() {
             self.comment = other.comment;
         }
@@ -199,11 +199,11 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
 }
 
 impl DiffAlgebra<ZipSnapshot> for ZipDiff {
-    async fn inverse(&self, base: &ZipSnapshot) -> Self {
-        Self::between(&self.apply(base).await.unwrap(), base).await
+    fn inverse(&self, base: &ZipSnapshot) -> Self {
+        Self::between(&self.apply(base).unwrap(), base)
     }
 
-    async fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
+    fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
         let comment = (base.comment != other.comment).then(|| other.comment.clone());
         let base_names: HashSet<&str> = base.entries.iter().map(|entry| entry.name.as_str()).collect();
         let other_names: HashSet<&str> = other.entries.iter().map(|entry| entry.name.as_str()).collect();
@@ -222,7 +222,7 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
         Self { comment, entries: (!entries.is_empty()).then_some(entries) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.comment.is_none() && self.entries.as_ref().map_or(true, ZipEntriesDiff::is_empty)
     }
 }
@@ -272,24 +272,24 @@ struct ZipDiffRecord {
 }
 
 impl protocol::DiffCodec for ZipDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         let model = ZipDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical ZIP diff") };
-        dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document).await
+        dsl::print(&model.__dsl_to_record(), &ZipDiffRecord::__dsl_spec(), dsl::JoinMode::Document)
     }
 
-    async fn parse_diff(text: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document }).await?;
-        let model = ZipDiffRecord::__dsl_from_record(&record).await?;
+    fn parse_diff(text: &str) -> Result<Self, store::TextError> {
+        let record = dsl::parse(text, &ZipDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        let model = ZipDiffRecord::__dsl_from_record(&record)?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })?;
-        Ok(store::pack_rt::encode_wire_value(&value).await)
+        Ok(store::pack_rt::encode_wire_value(&value))
     }
 
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })?;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "zip diff", offset: 0, detail })
     }
 }

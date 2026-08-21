@@ -751,10 +751,7 @@ mod tests {
         assert_eq!(installed.extends, "flow");
         assert_eq!(installed.topic_contributions.len(), 2);
         assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
-        let input = Dictionary::new()
-            .insert("length", Value::Dictionary(number_dictionary(4.0)))
-            .insert("height", Value::Dictionary(number_dictionary(2.8)))
-            .insert("thickness", Value::Dictionary(number_dictionary(0.2)));
+        let input = Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2)));
         let req = serde_json::json!({
             "operatorId": "bim.element.wall",
             "inputJson": serde_json::to_string(&input).unwrap(),
@@ -814,9 +811,7 @@ mod extension_guest {
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
         let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| {
-                Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string())
-            })?;
+            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
             Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
         }))
     }

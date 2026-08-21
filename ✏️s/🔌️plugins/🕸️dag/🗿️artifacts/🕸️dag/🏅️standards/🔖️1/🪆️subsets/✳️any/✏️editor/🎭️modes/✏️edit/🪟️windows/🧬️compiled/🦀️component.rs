@@ -4,8 +4,8 @@
 //! verbatim from the pre-migration manifest, matching the identical precedent in
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
-use crate::editor::dag::DAG_PLAY_APP_ID;
 use crate::artifacts::dag::DagSnapshot;
+use crate::editor::dag::DAG_PLAY_APP_ID;
 use infinite_board_port_directed_dag::{dag_fixture_from_document, dag_fixture_to_wire_literal, DagCamera};
 use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
 

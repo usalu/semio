@@ -658,7 +658,7 @@ impl SemioAnimationDiff {
 }
 
 impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
-    async fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
+    fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
@@ -667,7 +667,7 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         match (&mut self.timelines, other.timelines) {
             (Some(mine), Some(theirs)) => absorb_indexed(mine, theirs, |d, o| d.absorb(o), |d, item| d.apply(item)),
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
@@ -677,16 +677,16 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
 }
 
 impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
-    async fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
+    fn inverse(&self, base: &SemioAnimationSnapshot) -> Self {
         Self { timelines: self.timelines.as_ref().map(|d| inverse_indexed(d, &base.timelines, |d, item| d.inverse(item))) }
     }
 
-    async fn between(base: &SemioAnimationSnapshot, other: &SemioAnimationSnapshot) -> Self {
+    fn between(base: &SemioAnimationSnapshot, other: &SemioAnimationSnapshot) -> Self {
         let d = between_indexed(&base.timelines, &other.timelines, AnimTimelineDiff::between, AnimTimelineDiff::is_empty);
         Self { timelines: (!indexed_is_empty(&d)).then_some(d) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -732,13 +732,13 @@ fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> 
 const DIFF_BINARY_FORMAT: u8 = 1;
 
 impl DiffCodec for SemioAnimationDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_semio_animation_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_animation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![DIFF_BINARY_FORMAT];
         match &self.timelines {
             Some(v) => {
@@ -749,7 +749,7 @@ impl DiffCodec for SemioAnimationDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
         let [format, presence, rest @ ..] = bytes else { return Err(malformed("diff header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
         if *format != DIFF_BINARY_FORMAT {

@@ -196,13 +196,7 @@ pub async fn decode_jpeg(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
 /// `ImageRgba8` (its own invariants already guarantee `data.len() == width * height * 4`),
 /// matching this function's pre-extraction (non-`Result`) signature.
 pub async fn encode_jpeg(image: &ImageRgba8, quality: u8) -> Vec<u8> {
-    let snapshot = semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot {
-        width: image.width,
-        height: image.height,
-        pixels: image.data.clone(),
-        re_encode_quality: Some(quality),
-        ..Default::default()
-    };
+    let snapshot = semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot { width: image.width, height: image.height, pixels: image.data.clone(), re_encode_quality: Some(quality), ..Default::default() };
     semio_s_plugin_stdio::artifacts::jpg::engine::encode_jpg(&snapshot).expect("a valid ImageRgba8 always encodes")
 }
 // #endregion 🔖️JpegViaStdio

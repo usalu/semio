@@ -21,8 +21,7 @@ pub async fn change_curated_item_count(object_id: String, new_count: u32) -> Sou
 }
 
 impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for ChangeCuratedItemCount {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "change", entity: "curated-item", kind: "change-curated-item-count", record: "ChangedCuratedItemCount" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "curated-item", kind: "change-curated-item-count", record: "ChangedCuratedItemCount" };
 
     async fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)

@@ -688,7 +688,7 @@ fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
-    async fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
+    fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
         let mut next = base.clone();
         if let Some(cd) = &self.canvas {
             next.canvas = apply_canvas_diff(&next.canvas, cd);
@@ -704,7 +704,7 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.canvas = match (self.canvas.take(), other.canvas) {
             (None, x) => x,
             (x, None) => x,
@@ -726,7 +726,7 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
-    async fn inverse(&self, base: &SemioDrawingSnapshot) -> Self {
+    fn inverse(&self, base: &SemioDrawingSnapshot) -> Self {
         SemioDrawingDiff {
             canvas: self.canvas.as_ref().map(|cd| inverse_canvas_diff(&base.canvas, cd)),
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s: &DrawStyle| s.name.clone(), inverse_style_diff)),
@@ -734,7 +734,7 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
         }
     }
 
-    async fn between(base: &SemioDrawingSnapshot, other: &SemioDrawingSnapshot) -> Self {
+    fn between(base: &SemioDrawingSnapshot, other: &SemioDrawingSnapshot) -> Self {
         SemioDrawingDiff {
             canvas: between_canvas_diff(&base.canvas, &other.canvas),
             styles: between_named(&base.styles, &other.styles, |s: &DrawStyle| s.name.clone(), between_style_diff),
@@ -742,7 +742,7 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.canvas.is_none() && self.styles.is_none() && self.layers.is_none()
     }
 }
@@ -1058,13 +1058,13 @@ fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> 
 }
 
 impl protocol::DiffCodec for SemioDrawingDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_drawing_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_drawing_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.canvas.is_some() {
@@ -1088,14 +1088,14 @@ impl protocol::DiffCodec for SemioDrawingDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::ByteReader::new(bytes).await;
-        let format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let mut reader = store::ByteReader::new(bytes);
+        let format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         if format != DIFF_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {format}") });
         }
-        let presence = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
+        let presence = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
         let map_err = |what: &'static str| move |e: String| protocol::ProtocolError::Malformed { what, offset: 2, detail: e };
         let canvas = if presence & 1 != 0 {
             let blob = read_bytes_lp(&mut reader).map_err(map_err("diff canvas blob"))?;

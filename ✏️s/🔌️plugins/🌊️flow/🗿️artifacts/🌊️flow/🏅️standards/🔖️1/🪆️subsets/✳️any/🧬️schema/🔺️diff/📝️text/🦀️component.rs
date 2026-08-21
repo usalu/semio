@@ -132,10 +132,7 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
 //#region 🔹Helpers
 /// 📄 Whole-snapshot replacement diff.
 pub async fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
-    FlowDiff {
-        artifact: Some(Box::new(FlowArtifact::from_snapshot(snapshot.clone()))),
-        ..Default::default()
-    }
+    FlowDiff { artifact: Some(Box::new(FlowArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🔺️ Mints a new content-addressed `content` handle for the whole-scene replacement
@@ -159,9 +156,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_diff_touches_only_the_content_slot() {
         let base = FlowSnapshot::default();
-        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
-            entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }],
-        });
+        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }] });
         let diff: FlowDiff = operation.diff(&base);
         assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
         assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");

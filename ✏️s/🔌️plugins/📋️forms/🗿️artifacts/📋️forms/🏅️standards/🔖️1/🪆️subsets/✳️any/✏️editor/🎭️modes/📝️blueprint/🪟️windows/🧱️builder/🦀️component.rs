@@ -1,8 +1,8 @@
 //! 🧱️ Forms play app — the blueprint window: the drag/drop playbook builder authoring the form.
 
+use crate::artifacts::forms::FormsSnapshot;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
-use crate::artifacts::forms::FormsSnapshot;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -54,9 +54,9 @@ pub async fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLa
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::forms::forms_steps;
     use crate::editor::forms::testkit::{forms_app, render as render_body};
     use crate::editor::forms::FORMS_PLAY_BODY_BLUEPRINT as BODY_BLUEPRINT;
-    use crate::artifacts::forms::forms_steps;
 
     #[semio_framework_async_macros::async_test]
     async fn renders_blueprint_builder_cards() {

@@ -5,13 +5,11 @@
 //! unsplit. This component owns the real `parse_dsl`/`print_dsl` impl plus the thin artifact-facing
 //! wrappers and the canonical example fixtures and their round-trip laws.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
-
 
 use crate::artifacts::forms::FormsSnapshot;
 
@@ -41,7 +39,11 @@ async fn enc_opt_str(s: &Option<String>) -> String {
     }
 }
 async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
-    if s == "-" { Ok(None) } else { Ok(Some(dec_str(s)?)) }
+    if s == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(dec_str(s)?))
+    }
 }
 async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())

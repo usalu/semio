@@ -1,8 +1,8 @@
 //! 🖌️ `cycle-brush-candidate` command.
 
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::parse_brush_candidates_free;
 use crate::editor::puzzle5d::puzzle5d_brush_target_grip;
+use crate::editor::puzzle5d::Puzzle5dActionCtx;
 
 /// 🔁️ Advances the candidate index, wrapping around the engine's collision-free list for the current
 /// target grip (or just incrementing when there is no target yet).

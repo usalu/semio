@@ -68,7 +68,11 @@ pub fn choose_extent(capabilities: &vk::SurfaceCapabilitiesKHR, requested: Physi
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn choose_image_count(capabilities: &vk::SurfaceCapabilitiesKHR) -> u32 {
     let desired = capabilities.min_image_count + 1;
-    if capabilities.max_image_count > 0 { desired.min(capabilities.max_image_count) } else { desired }
+    if capabilities.max_image_count > 0 {
+        desired.min(capabilities.max_image_count)
+    } else {
+        desired
+    }
 }
 
 //#endregion 🔢️ImageCount
@@ -118,14 +122,16 @@ mod tests {
 
     #[test]
     fn extent_uses_the_surfaces_fixed_current_extent_when_not_the_sentinel() {
-        let capabilities = vk::SurfaceCapabilitiesKHR { current_extent: vk::Extent2D { width: 800, height: 600 }, min_image_extent: vk::Extent2D { width: 1, height: 1 }, max_image_extent: vk::Extent2D { width: 4096, height: 4096 }, ..Default::default() };
+        let capabilities =
+            vk::SurfaceCapabilitiesKHR { current_extent: vk::Extent2D { width: 800, height: 600 }, min_image_extent: vk::Extent2D { width: 1, height: 1 }, max_image_extent: vk::Extent2D { width: 4096, height: 4096 }, ..Default::default() };
         let extent = choose_extent(&capabilities, PhysicalSize::new(1920, 1080));
         assert_eq!(extent, vk::Extent2D { width: 800, height: 600 });
     }
 
     #[test]
     fn extent_clamps_the_requested_size_when_the_surface_defers_via_the_sentinel() {
-        let capabilities = vk::SurfaceCapabilitiesKHR { current_extent: vk::Extent2D { width: u32::MAX, height: u32::MAX }, min_image_extent: vk::Extent2D { width: 1, height: 1 }, max_image_extent: vk::Extent2D { width: 1024, height: 1024 }, ..Default::default() };
+        let capabilities =
+            vk::SurfaceCapabilitiesKHR { current_extent: vk::Extent2D { width: u32::MAX, height: u32::MAX }, min_image_extent: vk::Extent2D { width: 1, height: 1 }, max_image_extent: vk::Extent2D { width: 1024, height: 1024 }, ..Default::default() };
         let extent = choose_extent(&capabilities, PhysicalSize::new(2000, 10));
         assert_eq!(extent, vk::Extent2D { width: 1024, height: 10 });
     }

@@ -277,15 +277,8 @@ mod quick {
     fn every_kind_mints_with_its_frozen_prefix() {
         let table = HandleTable::new();
         let owner = session("sess_a");
-        let expectations = [
-            (HandleKind::Session, "sess_"),
-            (HandleKind::Prepared, "prep_"),
-            (HandleKind::Transaction, "txn_"),
-            (HandleKind::Undo, "undo_"),
-            (HandleKind::Job, "job_"),
-            (HandleKind::Approval, "appr_"),
-            (HandleKind::Continuation, "cont_"),
-        ];
+        let expectations =
+            [(HandleKind::Session, "sess_"), (HandleKind::Prepared, "prep_"), (HandleKind::Transaction, "txn_"), (HandleKind::Undo, "undo_"), (HandleKind::Job, "job_"), (HandleKind::Approval, "appr_"), (HandleKind::Continuation, "cont_")];
         for (kind, prefix) in expectations {
             let id = table.mint(kind, owner.clone(), Attachment::None, serde_json::Value::Null, 0);
             assert!(id.starts_with(prefix), "{kind:?} minted `{id}`, expected prefix `{prefix}`");

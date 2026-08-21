@@ -26,10 +26,7 @@ impl ChainValue {
     /// @emoji 📤️ Lowers a chain into the individual edges it's sugar for — `n-1` edges over `n`
     /// nodes — so the semantic model only ever needs to store plain edges, never chain structure.
     pub async fn expand(&self) -> Vec<EdgeValue> {
-        self.nodes
-            .windows(2)
-            .map(|pair| EdgeValue { from: pair[0].clone(), link: Some(EdgeLink { directed: self.directed, label: EdgeLabel::default(), to: pair[1].clone() }) })
-            .collect()
+        self.nodes.windows(2).map(|pair| EdgeValue { from: pair[0].clone(), link: Some(EdgeLink { directed: self.directed, label: EdgeLabel::default(), to: pair[1].clone() }) }).collect()
     }
 }
 

@@ -15,7 +15,8 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct ConnectSynapse {
     pub index: usize,
-    pub synapse: SynapseSpec}
+    pub synapse: SynapseSpec,
+}
 
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ConnectSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };

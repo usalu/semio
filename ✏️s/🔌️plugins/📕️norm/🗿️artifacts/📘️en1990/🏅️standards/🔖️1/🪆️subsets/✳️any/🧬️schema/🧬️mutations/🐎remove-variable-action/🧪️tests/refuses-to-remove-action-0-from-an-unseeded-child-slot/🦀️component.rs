@@ -36,7 +36,10 @@ fn applied() -> En1990Snapshot {
 async fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.q_k.child_id, before().q_k.child_id, "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: a refused removal must not re-mint the q_k handle");
-    assert!(crate::artifacts::en1990::en1990_qk(&before()).is_empty(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the unseeded working-scene cache must read back an empty entry list — the reason index 0 is missing");
+    assert!(
+        crate::artifacts::en1990::en1990_qk(&before()).is_empty(),
+        "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the unseeded working-scene cache must read back an empty entry list — the reason index 0 is missing"
+    );
     assert!(<En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(&mutation(), &before()).is_empty(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: removing an absent index has nothing to undo");
     assert_eq!(snapshot, expected_after(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: applied state differs from committed after-snapshot");
     assert_eq!(expected_after(), before(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: a rejected case's after-snapshot must be its before-snapshot verbatim");
@@ -78,11 +81,8 @@ async fn declared_outcome_holds() {
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "rejected", "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: this case exists to pin a rejection");
     let code = outcome.get("code").and_then(serde_json::Value::as_str).expect("a rejected outcome carries a machine-readable code");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -113,7 +113,10 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     assert_eq!(DIFF_ABSENT.len(), 0, "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the absence marker must carry no bytes at all");
     let produced = serde_json::to_value(En1990Diff::default()).expect("default diff encodes");
-    assert!(produced.as_object().is_some_and(|fields| fields.values().all(serde_json::Value::is_null)), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the default diff must serialize as an all-null object, never as an omitted-field one");
+    assert!(
+        produced.as_object().is_some_and(|fields| fields.values().all(serde_json::Value::is_null)),
+        "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the default diff must serialize as an all-null object, never as an omitted-field one"
+    );
 }
 
 /// 🩹 Applying the rejection's own (default) diff to `before` yields the committed `after`.

@@ -1,13 +1,13 @@
 //! 📄️ Writer play app panel — the document AST outline tree (nested Content/Outline sub-tabs sharing
 //! one render).
 
-use crate::editor::writer::config::WriterConfig;
-use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::artifacts::writer::schema::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::editor::writer::config::WriterConfig;
+use crate::editor::writer::terminology::WriterPlayLabels;
 use semio_framework_plugin::{
-    tree_item, ui_declarative_sections_to_tree, ui_text, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item, ui_declarative_sections_to_tree, ui_text, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
 //#region 🔖️Constants
@@ -25,8 +25,20 @@ pub async fn definition() -> PanelTabDefinition {
         group: PanelGroup::Workbench,
         body_key: None,
         children: vec![
-            PanelTabDefinition { kind: PanelTabKind::App(WRITER_PANEL_TAB_ARTIFACT_CONTENT_ID.into()), label: LocalizedLabel::native("Content", "Inhalt"), group: PanelGroup::Workbench, body_key: Some(WRITER_PLAY_BODY_ARTIFACT.into()), children: Vec::new() },
-            PanelTabDefinition { kind: PanelTabKind::App(WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID.into()), label: LocalizedLabel::native("Outline", "Gliederung"), group: PanelGroup::Workbench, body_key: Some(WRITER_PLAY_BODY_ARTIFACT.into()), children: Vec::new() },
+            PanelTabDefinition {
+                kind: PanelTabKind::App(WRITER_PANEL_TAB_ARTIFACT_CONTENT_ID.into()),
+                label: LocalizedLabel::native("Content", "Inhalt"),
+                group: PanelGroup::Workbench,
+                body_key: Some(WRITER_PLAY_BODY_ARTIFACT.into()),
+                children: Vec::new(),
+            },
+            PanelTabDefinition {
+                kind: PanelTabKind::App(WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID.into()),
+                label: LocalizedLabel::native("Outline", "Gliederung"),
+                group: PanelGroup::Workbench,
+                body_key: Some(WRITER_PLAY_BODY_ARTIFACT.into()),
+                children: Vec::new(),
+            },
         ],
     }
 }
@@ -77,10 +89,7 @@ pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &
     } else {
         vec![jack_ast_to_tree_item(&root)]
     };
-    PanelTreeBuilder::new("writer-play-document")
-        .section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)
-        .interaction_domain("ast")
-        .build()
+    PanelTreeBuilder::new("writer-play-document").section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query).interaction_domain("ast").build()
 }
 //#endregion 🔖️Render
 

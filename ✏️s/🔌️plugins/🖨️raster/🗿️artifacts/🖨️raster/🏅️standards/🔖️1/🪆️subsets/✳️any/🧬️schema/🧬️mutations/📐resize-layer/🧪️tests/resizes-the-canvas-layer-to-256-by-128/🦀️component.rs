@@ -33,9 +33,7 @@ fn mutation() -> RasterMutation {
 async fn applies_to_committed_after() {
     let produced = apply_raster_mutation(&before(), &mutation()).expect("resize-layer applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "resize-layer/resizes-the-canvas-layer-to-256-by-128: applied state differs from committed after-snapshot");
-    let Some(RasterLayerNode::Pixel { width, height, transform, .. }) = find_layer(&produced.layers, "canvas") else {
-        panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: canvas must still be a pixel layer")
-    };
+    let Some(RasterLayerNode::Pixel { width, height, transform, .. }) = find_layer(&produced.layers, "canvas") else { panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: canvas must still be a pixel layer") };
     assert_eq!((*width, *height), (Some(256), Some(128)), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the extent must be the payload's, width first");
     assert_eq!((transform.scale_x, transform.scale_y), (1.0, 1.0), "resize-layer/resizes-the-canvas-layer-to-256-by-128: resizing the PIXEL EXTENT must not touch the transform's scale");
 }
@@ -47,9 +45,7 @@ async fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let inverse = inverse_raster_mutation(&base, &forward);
-    let [RasterMutation::ResizeLayer(restore)] = inverse.as_slice() else {
-        panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must be exactly one resize-layer step, got {inverse:?}")
-    };
+    let [RasterMutation::ResizeLayer(restore)] = inverse.as_slice() else { panic!("resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must be exactly one resize-layer step, got {inverse:?}") };
     assert_eq!(restore.layer_id, "canvas", "resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must re-address the same layer");
     assert_eq!((restore.new_width, restore.new_height), (512, 512), "resize-layer/resizes-the-canvas-layer-to-256-by-128: the inverse must carry the base's own prior extent");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
@@ -114,7 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-layer/resizes-the-canvas-layer-to-256-by-128: committed diff did not carry before to after");
 }

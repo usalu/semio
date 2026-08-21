@@ -14,12 +14,7 @@ pub async fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3d
     let mut next = object.clone();
     next.vortices.retain(|vortex| vortex.id != payload.vortex_id);
     let full_id = format!("{}:{}", payload.object_id, payload.vortex_id);
-    let severed: Vec<String> = base
-        .attractions
-        .iter()
-        .filter(|attraction| attraction.attracting == full_id || attraction.attracted == full_id)
-        .map(|attraction| attraction.id.clone())
-        .collect();
+    let severed: Vec<String> = base.attractions.iter().filter(|attraction| attraction.attracting == full_id || attraction.attracted == full_id).map(|attraction| attraction.id.clone()).collect();
     protocol::MutationOutcome::new(Puzzle3dDiff {
         objects: Some(Puzzle3dObjectsDelta { patched: vec![Puzzle3dObjectPatchEntry { id: payload.object_id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next) } }], ..Default::default() }),
         attractions: if severed.is_empty() { None } else { Some(Puzzle3dAttractionsDelta { removed: severed, ..Default::default() }) },

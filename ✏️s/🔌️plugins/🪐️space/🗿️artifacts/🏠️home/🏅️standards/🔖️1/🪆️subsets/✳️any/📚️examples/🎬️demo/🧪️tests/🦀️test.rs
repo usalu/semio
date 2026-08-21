@@ -5,8 +5,8 @@ async fn primary_asset_is_nonempty() {
 }
 
 //#region 🧪️InferenceLaws
-use crate::artifacts::home::SHomeSnapshot;
 use crate::artifacts::home::standards::v1::subsets::any::schema::inferences::SHomeInference;
+use crate::artifacts::home::SHomeSnapshot;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

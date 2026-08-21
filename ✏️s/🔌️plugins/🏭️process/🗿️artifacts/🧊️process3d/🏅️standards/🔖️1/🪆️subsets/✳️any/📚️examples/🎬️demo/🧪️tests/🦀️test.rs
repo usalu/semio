@@ -5,8 +5,8 @@ async fn primary_asset_is_nonempty() {
 }
 
 //#region 🧪️InferenceLaws
-use crate::artifacts::process3d::Process3dSnapshot;
 use crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::Process3dInference;
+use crate::artifacts::process3d::Process3dSnapshot;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

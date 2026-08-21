@@ -15,15 +15,24 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteArtifact {
-    #[state(artifact)] pub before_fixture_json: String,
-    #[state(artifact)] pub lhs_json: String,
-    #[state(artifact)] pub rhs_json: String,
-    #[state(artifact)] pub parameter_bindings: BTreeMap<String, PropertyValue>,
-    #[state(artifact)] pub rule_layout: BTreeMap<String, LayoutPoint>,
-    #[state(presence)] pub lod_mode_by_window: BTreeMap<String, String>,
-    #[state(config)] pub before_pane_camera: Camera,
-    #[state(config)] pub reorganize_epoch: u64,
-    #[state(config)] pub locale: String,
+    #[state(artifact)]
+    pub before_fixture_json: String,
+    #[state(artifact)]
+    pub lhs_json: String,
+    #[state(artifact)]
+    pub rhs_json: String,
+    #[state(artifact)]
+    pub parameter_bindings: BTreeMap<String, PropertyValue>,
+    #[state(artifact)]
+    pub rule_layout: BTreeMap<String, LayoutPoint>,
+    #[state(presence)]
+    pub lod_mode_by_window: BTreeMap<String, String>,
+    #[state(config)]
+    pub before_pane_camera: Camera,
+    #[state(config)]
+    pub reorganize_epoch: u64,
+    #[state(config)]
+    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -58,14 +67,7 @@ impl RewriteArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::rewrite::RewriteSnapshot) -> Self {
-        Self {
-            before_fixture_json: snapshot.before_fixture_json,
-            lhs_json: snapshot.lhs_json,
-            rhs_json: snapshot.rhs_json,
-            parameter_bindings: snapshot.parameter_bindings,
-            rule_layout: snapshot.rule_layout,
-            ..Self::default()
-        }
+        Self { before_fixture_json: snapshot.before_fixture_json, lhs_json: snapshot.lhs_json, rhs_json: snapshot.rhs_json, parameter_bindings: snapshot.parameter_bindings, rule_layout: snapshot.rule_layout, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -528,8 +530,8 @@ mod rule_application_tests {
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::rewrite::{RewriteDiff, RewriteRuleMutation, RewriteSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct RewriteBuilderConstruction {
@@ -541,8 +543,12 @@ pub mod derived_construction {
         type Snapshot = RewriteSnapshot;
         type Mutation = RewriteRuleMutation;
         type Diff = RewriteDiff;
-        async fn empty() -> Self { Self { snapshot: RewriteSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: RewriteSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RewriteSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -553,24 +559,21 @@ pub mod derived_construction {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <RewriteDiff as protocol::MutationDiff<RewriteSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -579,8 +582,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::rewrite::RewriteSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RewriteParts {

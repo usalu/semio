@@ -1,9 +1,6 @@
 //! ⚡️ Puzzle2d artifact — OpText/OpBinary codecs + grammar for `Puzzle2dMutation`.
 
-pub use crate::artifacts::puzzle2d::schema::mutations::{
-    apply_puzzle2d_mutation, inverse_puzzle2d_mutation, puzzle2d_document_delta_operations, Puzzle2dMutation,
-    Puzzle2dPlaySnapshot,
-};
+pub use crate::artifacts::puzzle2d::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation, puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -18,11 +15,7 @@ impl protocol::OpText for Puzzle2dMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

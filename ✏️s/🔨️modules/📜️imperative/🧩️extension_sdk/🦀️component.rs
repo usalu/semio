@@ -36,10 +36,7 @@ pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Regis
         id: id.into(),
         name: name.into(),
         version: version.into(),
-        contributes: ImperativeExtensionContributes {
-            operators: registry.operator_catalogue(),
-            catalogue_json: catalogue_json.map(str::to_string),
-        },
+        contributes: ImperativeExtensionContributes { operators: registry.operator_catalogue(), catalogue_json: catalogue_json.map(str::to_string) },
     };
     serde_json::to_string(&manifest).unwrap_or_else(|_| "{}".into())
 }
@@ -90,21 +87,8 @@ pub const IMPERATIVE_MODULE_EVALUATE_CAPABILITY: &str = "imperative.module/evalu
 /// 🧩️ Builds one `ProgramContributionEntry` carrying the `"imperative.module"` topic contribution.
 // 🚫️async: E1 pure — struct literal over `imperative_module_topic_contribution` (sync); every one of
 // the 5 imperative-* extensions' own wrapper fns consumes this synchronously (unawaited) — see R9.
-pub fn imperative_module_contribution(
-    extension_id: &str,
-    module_id: &str,
-    label: &str,
-    icon_id: &str,
-    manifest_id: &str,
-    manifest_name: &str,
-    version: &str,
-    registry: &Registry,
-    catalogue_json: Option<&str>,
-) -> ProgramContributionEntry {
-    ProgramContributionEntry {
-        plugin_id: extension_id.into(),
-        topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)),
-    }
+pub fn imperative_module_contribution(extension_id: &str, module_id: &str, label: &str, icon_id: &str, manifest_id: &str, manifest_name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> ProgramContributionEntry {
+    ProgramContributionEntry { plugin_id: extension_id.into(), topic_contribution: Some(imperative_module_topic_contribution(module_id, label, icon_id, manifest_id, manifest_name, version, registry, catalogue_json)) }
 }
 // #endregion 🔖️Constants
 
@@ -122,16 +106,7 @@ pub fn imperative_module_contribution(
 // cross-packet lease. See `📓️terra-fleet-extensions-report.md` for the matching lease-request asking
 // the SDK owner to revert `TopicContribution::new` (and `ExtensionBundle::mode`/`.contributes_topic`)
 // to sync directly, which would let this bridge be removed.
-pub fn imperative_module_topic_contribution(
-    module_id: &str,
-    label: &str,
-    icon_id: &str,
-    manifest_id: &str,
-    manifest_name: &str,
-    version: &str,
-    registry: &Registry,
-    catalogue_json: Option<&str>,
-) -> TopicContribution {
+pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_id: &str, manifest_id: &str, manifest_name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> TopicContribution {
     let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
     semio_framework::io::resolve_ready(TopicContribution::new(
         "imperative.module",

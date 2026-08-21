@@ -44,10 +44,7 @@ impl protocol::InferenceSpec<CadSnapshot> for CadInference {
         &[
             protocol::InferenceFieldSpec { id: "s.cad.cad.inference.objectCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
             protocol::InferenceFieldSpec { id: "s.cad.cad.inference.vertexCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
-            protocol::InferenceFieldSpec {
-                id: "s.cad.cad.inference.bounds",
-                reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"],
-            },
+            protocol::InferenceFieldSpec { id: "s.cad.cad.inference.bounds", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
         ]
     }
 }
@@ -110,8 +107,8 @@ mod derive_transformation {
     #[cfg(test)]
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     use semio_framework_3d::engine::Vec3;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     #[cfg(test)]
     use std::collections::HashMap;
 
@@ -163,28 +160,12 @@ mod derive_transformation {
             let i0 = triangle[0] as usize;
             let i1 = triangle[1] as usize;
             let i2 = triangle[2] as usize;
-            let p0 = [
-                mesh.position[i0 * 3] as f64,
-                mesh.position[i0 * 3 + 1] as f64,
-                mesh.position[i0 * 3 + 2] as f64,
-            ];
-            let p1 = [
-                mesh.position[i1 * 3] as f64,
-                mesh.position[i1 * 3 + 1] as f64,
-                mesh.position[i1 * 3 + 2] as f64,
-            ];
-            let p2 = [
-                mesh.position[i2 * 3] as f64,
-                mesh.position[i2 * 3 + 1] as f64,
-                mesh.position[i2 * 3 + 2] as f64,
-            ];
+            let p0 = [mesh.position[i0 * 3] as f64, mesh.position[i0 * 3 + 1] as f64, mesh.position[i0 * 3 + 2] as f64];
+            let p1 = [mesh.position[i1 * 3] as f64, mesh.position[i1 * 3 + 1] as f64, mesh.position[i1 * 3 + 2] as f64];
+            let p2 = [mesh.position[i2 * 3] as f64, mesh.position[i2 * 3 + 1] as f64, mesh.position[i2 * 3 + 2] as f64];
             let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
             let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-            let cross = [
-                e0[1] * e1[2] - e0[2] * e1[1],
-                e0[2] * e1[0] - e0[0] * e1[2],
-                e0[0] * e1[1] - e0[1] * e1[0],
-            ];
+            let cross = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
             let area = (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt() * 0.5;
             if area <= 1e-12 {
                 continue;
@@ -202,10 +183,7 @@ mod derive_transformation {
         if len <= 1e-12 {
             return None;
         }
-        Some((
-            [centroid[0] / area_sum, centroid[1] / area_sum, centroid[2] / area_sum],
-            [normal[0] / len, normal[1] / len, normal[2] / len],
-        ))
+        Some(([centroid[0] / area_sum, centroid[1] / area_sum, centroid[2] / area_sum], [normal[0] / len, normal[1] / len, normal[2] / len]))
     }
 
     /// @emoji 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
@@ -306,7 +284,11 @@ mod derive_transformation {
         let [ex, ey, ez] = object.extent.unwrap_or([1.0, 1.0, 1.0]);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = object.typology.contains("column");
-        let handle = if is_cylindrical { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
+        let handle = if is_cylindrical {
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
+        } else {
+            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok()
+        }?;
         Some(handle)
     }
 
@@ -713,29 +695,9 @@ mod construct_query {
         async fn box_geometry() -> CadGeometry {
             let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
             let vertices: Vec<CadVertex> = corners.iter().enumerate().map(|(i, p)| CadVertex { id: format!("v{i}"), position: *p }).collect();
-            let edge_pairs: [(usize, usize); 12] = [
-                (0, 1),
-                (1, 2),
-                (2, 3),
-                (3, 0),
-                (4, 5),
-                (5, 6),
-                (6, 7),
-                (7, 4),
-                (0, 4),
-                (1, 5),
-                (2, 6),
-                (3, 7),
-            ];
+            let edge_pairs: [(usize, usize); 12] = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
             let edges: Vec<CadEdge> = edge_pairs.iter().enumerate().map(|(i, (a, b))| CadEdge { id: format!("e{i}"), vertex_ids: vec![format!("v{a}"), format!("v{b}")], curve: CadEdgeCurve { kind: "line".into() } }).collect();
-            let face_wire_edges: [[usize; 4]; 6] = [
-                [0, 1, 2, 3],
-                [4, 5, 6, 7],
-                [0, 9, 4, 8],
-                [2, 11, 6, 10],
-                [3, 8, 7, 11],
-                [1, 10, 5, 9],
-            ];
+            let face_wire_edges: [[usize; 4]; 6] = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 9, 4, 8], [2, 11, 6, 10], [3, 8, 7, 11], [1, 10, 5, 9]];
             let wires: Vec<CadWire> = face_wire_edges.iter().enumerate().map(|(i, es)| CadWire { id: format!("w{i}"), edge_ids: es.iter().map(|e| format!("e{e}")).collect() }).collect();
             let faces: Vec<CadFace> = (0..6).map(|i| CadFace { id: format!("f{i}"), wire_ids: vec![format!("w{i}")], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } }).collect();
             let shell = CadShell { id: "s0".into(), face_ids: (0..6).map(|i| format!("f{i}")).collect() };
@@ -806,13 +768,15 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️component.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{
+        centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot,
+    };
     use crate::artifacts::cad::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot};
+    use semio_framework::parse_contributions;
+    use semio_framework_3d::engine::MeshTransfer;
+    use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
-    use semio_framework_3d::engine::MeshTransfer;
-    use semio_framework::parse_contributions;
-    use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use serde_json::Value;
     use std::collections::HashSet;
     use std::sync::{Mutex, OnceLock};
@@ -829,7 +793,6 @@ mod scene_compute {
     const CAD_MODEL_INDEX_ENERGY: usize = 2;
 
     const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
-
 
     const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
 
@@ -854,7 +817,6 @@ mod scene_compute {
     pub const CAD_FOREST_REFERENCE_PLANE_Z: f64 = 0.01;
 
     pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
-
 
     /// 🌱 Fresh, doctrine-tier-(d) brep kernel: a `Brep::new()` local to the caller, never a
     /// process-global session (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS

@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneSunAzimuth`.
 
 use super::mutation::ChangeSceneSunAzimuth;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::ShootingDiff;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ChangeSceneSunAzimuth, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_azimuth.is_finite() {

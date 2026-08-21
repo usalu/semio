@@ -849,7 +849,7 @@ fn absorb_opc_diff(a: XlsxOpcDiff, b: XlsxOpcDiff) -> XlsxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<XlsxSnapshot> for XlsxDiff {
-    async fn apply(&self, base: &XlsxSnapshot) -> MutationApplyResult<XlsxSnapshot> {
+    fn apply(&self, base: &XlsxSnapshot) -> MutationApplyResult<XlsxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
             apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
@@ -860,7 +860,7 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
@@ -877,15 +877,15 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
-    async fn inverse(&self, base: &XlsxSnapshot) -> Self {
+    fn inverse(&self, base: &XlsxSnapshot) -> Self {
         XlsxDiff { opc: self.opc.as_ref().map(|d| inverse_opc_diff(&base.opc, d)), workbook: self.workbook.as_ref().map(|d| inverse_workbook_diff(&base.workbook, d)) }
     }
 
-    async fn between(base: &XlsxSnapshot, other: &XlsxSnapshot) -> Self {
+    fn between(base: &XlsxSnapshot, other: &XlsxSnapshot) -> Self {
         XlsxDiff { opc: diff_opc(&base.opc, &other.opc), workbook: diff_workbook(&base.workbook, &other.workbook) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.opc.is_none() && self.workbook.is_none()
     }
 }
@@ -1872,10 +1872,10 @@ fn parse_xlsx_diff(line: &str) -> Result<XlsxDiff, String> {
 }
 
 impl protocol::DiffCodec for XlsxDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_xlsx_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_xlsx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][workbook]`), matching
@@ -1885,7 +1885,7 @@ impl protocol::DiffCodec for XlsxDiff {
     /// shortcut before this pilot ladder; confirmed live by direct read of this file before this
     /// wave, not assumed). `flags` bits 0/1 mark `opc`/`workbook` presence; each present field's
     /// own recursive binary payload follows in that fixed order (see `🔖️BinaryCodecs` above).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut flags: u8 = 0;
         if self.opc.is_some() {
             flags |= 0b01;
@@ -1902,11 +1902,11 @@ impl protocol::DiffCodec for XlsxDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).map_err(|e| malformed("diff workbook", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(XlsxDiff { opc, workbook })

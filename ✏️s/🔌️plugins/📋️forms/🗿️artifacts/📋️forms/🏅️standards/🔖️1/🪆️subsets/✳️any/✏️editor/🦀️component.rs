@@ -12,37 +12,35 @@
 //! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
 //! artifact's `🧬️schema`.
 
+use crate::artifacts::forms::op::FormMutation;
+use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use crate::editor::forms::commands::{
-    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options,
-    patch_questions, patch_step, patch_vector_field, previous_step, remove_question, remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example,
-    set_contributions, set_locale, set_spec_json, set_try_value, set_try_values, submit, update_form,
+    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
+    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_locale, set_spec_json, set_try_value, set_try_values, submit, update_form,
 };
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::editor::forms::modes::blueprint;
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::editor::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use crate::editor::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
-use crate::artifacts::forms::op::FormMutation;
-use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactKindSpec, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Editor, Emit, Fault, IconName, Label, LocalizedLabel, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, OsMediaCapability, UiNode,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-    DomainTopology, InteractionTopology, TopologyNode,
-};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability,
+    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+};
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_APP_ID: &str = "forms-play";
 pub use builder::FORMS_PLAY_BODY_BLUEPRINT;
-pub use try_window::FORMS_PLAY_BODY_TRY;
 pub use catalogue_panel::FORMS_PLAY_BODY_CATALOGUE;
 pub use document_panel::FORMS_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::FORMS_PLAY_BODY_INSPECTION;
+pub use try_window::FORMS_PLAY_BODY_TRY;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🪟️windows/*`, `📌️panels/*`) builds its `on_change`/item actions with.
@@ -348,7 +346,14 @@ impl ArtifactEditor for FormsPlayApp {
         command.command_id()
     }
 
-    async fn handle(command: &FormsCommand, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &FormsCommand,
+        doc: &ArtifactView<'_, FormsSnapshot>,
+        cfg: &ConfigView<'_, FormsConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -371,7 +376,10 @@ impl ArtifactEditor for FormsPlayApp {
         match port {
             "document:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
-                Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+                Ok(semio_framework_plugin::Media {
+                    media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                    payload: MediaPayload::Structured { schema: FORMS_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
             "dictionary:out" => {
                 let values = crate::artifacts::forms::schema::initial_try_values(doc.snapshot, &Map::new());
@@ -587,8 +595,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
     use crate::artifacts::forms::forms_steps;
+    use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
     use semio_framework_plugin::testkit::meta;
 
     //#region 🔖️CommandSurface
@@ -830,11 +838,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_edits() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<FormsPlayApp>, (usize, usize)>("mem://forms-convergence", FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), FormsCommand::AddStep(add_step::AddStep {}), |app| {
-            let projection = app.snapshot().expect("materialize projection");
-            let steps = forms_steps(&projection);
-            (steps.len(), steps[0].blocks.len())
-        });
+        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<FormsPlayApp>, (usize, usize)>(
+            "mem://forms-convergence",
+            FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }),
+            FormsCommand::AddStep(add_step::AddStep {}),
+            |app| {
+                let projection = app.snapshot().expect("materialize projection");
+                let steps = forms_steps(&projection);
+                (steps.len(), steps[0].blocks.len())
+            },
+        );
     }
     //#endregion 🔖️CrossCutting
 

@@ -11,7 +11,5 @@ pub async fn deserialize(from: &BmpSnapshot) -> Result<ShootingSnapshot, store::
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<ShootingSnapshot, store::TextError> {
-    <ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
-        <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
-    })
+    <ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }

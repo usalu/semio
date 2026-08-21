@@ -3,8 +3,8 @@
 //! handcrafts the op wire forms.
 
 pub use crate::artifacts::playbook::mutations::{
-    add_block_operation, add_step_operation, apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, move_block_operation, move_step_operation, remove_block_operation,
-    remove_step_operation, replace_block_operation, update_step_operation, AddBlock, AddStep, ChangeTitle, MoveBlock, MoveStep, PlaybookMutation, RemoveBlock, RemoveStep, ReplaceBlock, UpdateStep,
+    add_block_operation, add_step_operation, apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation, replace_block_operation,
+    update_step_operation, AddBlock, AddStep, ChangeTitle, MoveBlock, MoveStep, PlaybookMutation, RemoveBlock, RemoveStep, ReplaceBlock, UpdateStep,
 };
 
 //#region 📖️SemioGrammar
@@ -23,11 +23,7 @@ impl protocol::OpText for PlaybookMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -68,8 +64,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
-        let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()))
-            .expect("valid mutation diff");
+        let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into())).expect("valid mutation diff");
         assert_eq!(next.steps().len(), 2);
     }
 

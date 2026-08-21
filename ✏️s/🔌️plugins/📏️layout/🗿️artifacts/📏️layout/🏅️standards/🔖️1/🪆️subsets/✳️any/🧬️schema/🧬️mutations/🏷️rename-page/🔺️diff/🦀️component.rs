@@ -13,10 +13,7 @@ pub async fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> pr
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Page \"{}\" already has that name.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { name: Some(payload.new_name.clone()), ..Default::default() } }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { name: Some(payload.new_name.clone()), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

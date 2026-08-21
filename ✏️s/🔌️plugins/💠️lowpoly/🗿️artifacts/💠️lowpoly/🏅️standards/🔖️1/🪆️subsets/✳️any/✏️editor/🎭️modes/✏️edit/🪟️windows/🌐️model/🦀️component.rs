@@ -2,15 +2,13 @@
 //! transform/UV-unwrap operation runs here; paint operations are scoped on BOTH this window and the UV
 //! window since the paint utilities apply to both).
 
+use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
 use crate::editor::lowpoly::config::LowpolyConfig;
+use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{euler_degrees_to_quaternion, resolve_active_object_id, LowpolyView};
 use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
-use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_json, world3d_scene, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
-};
+use semio_framework_plugin::{build_world_3d_scene, world3d_camera_json, world3d_scene, InteractionRef, SurfaceKind, UiNode, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -24,8 +22,32 @@ pub const LOWPOLY_TRANSFORM_UTILITY_DEFAULT: &str = "move";
 /// 📇️ Every action this window scopes — mesh-editing/transform/UV-unwrap operations plus the paint
 /// operations it shares with the UV window.
 pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
-    "addPrimitive", "patchObject", "extrude", "inset", "bevel", "loopCut", "subdivide", "triangulate", "mirror", "decimate", "flipFaces", "merge", "dissolve", "snap", "toggleSmooth", "unwrapActive", "markUvSeam", "clearSeam",
-    "translateSelection", "rotateSelection", "scaleSelection", "transformEnd", "addPaintLayer", "paintStrokeEnd", "paintFill", "fillBucket",
+    "addPrimitive",
+    "patchObject",
+    "extrude",
+    "inset",
+    "bevel",
+    "loopCut",
+    "subdivide",
+    "triangulate",
+    "mirror",
+    "decimate",
+    "flipFaces",
+    "merge",
+    "dissolve",
+    "snap",
+    "toggleSmooth",
+    "unwrapActive",
+    "markUvSeam",
+    "clearSeam",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "transformEnd",
+    "addPaintLayer",
+    "paintStrokeEnd",
+    "paintFill",
+    "fillBucket",
 ];
 //#endregion 🔖️Constants
 
@@ -141,7 +163,13 @@ pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, act
         Some(loaded) => build_world_3d_scene(
             LOWPOLY_PLAY_SURFACE_MAIN,
             crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID,
-            world3d_scene(world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov), world_meshes_json(loaded, texture_cache), world_instances_json(view), world_selection_json_for(view, active_utility), &crate::editor::lowpoly::config::lowpoly_sun_config(config)),
+            world3d_scene(
+                world3d_camera_json(config.world_camera_position, config.world_camera_target, config.world_camera_fov),
+                world_meshes_json(loaded, texture_cache),
+                world_instances_json(view),
+                world_selection_json_for(view, active_utility),
+                &crate::editor::lowpoly::config::lowpoly_sun_config(config),
+            ),
         ),
         None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load lowpoly document")),
     }

@@ -90,7 +90,8 @@ pub async fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
     for instance in &pack.instances {
         let new_id = plugin_runtime::plugin_create_app(&instance.app_id).await?;
         if !instance.document_pack.is_empty() {
-            let (doc_pack, spr) = store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
+            let (doc_pack, spr) =
+                store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
             let files = store::ArtifactPackFiles { pack: doc_pack, spr, ops: String::new() };
             plugin_runtime::plugin_load_document_pack(new_id, &files).await?;
         }

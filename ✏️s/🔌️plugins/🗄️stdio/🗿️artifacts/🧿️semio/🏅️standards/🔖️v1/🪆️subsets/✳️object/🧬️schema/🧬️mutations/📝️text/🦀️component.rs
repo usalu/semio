@@ -111,10 +111,10 @@ fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
 }
 
 impl protocol::OpText for SemioObjectMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_object_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_object_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }

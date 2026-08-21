@@ -1,12 +1,12 @@
 //! 🔍️ DAG play app panel — the per-node inspector (name/kind/id plus slider-specific fields).
 
-use crate::editor::dag::terminology::DagPlayLabels;
-use crate::editor::dag::dag_action;
 use crate::artifacts::dag::DagSnapshot;
+use crate::editor::dag::dag_action;
+use crate::editor::dag::terminology::DagPlayLabels;
 use infinite_board_port_directed_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::{
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
+    UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::json;
 
@@ -16,7 +16,13 @@ pub const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(DAG_PLAY_BODY_INSPECTOR.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(DAG_PLAY_BODY_INSPECTOR.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

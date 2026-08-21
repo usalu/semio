@@ -1,16 +1,16 @@
 //! 🛍️ `set-active-example` command.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use serde_json::Value;
+use crate::editor::puzzle5d::document_from_json;
+use crate::editor::puzzle5d::empty_document;
+use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::CAPSULE_DREAM_EXAMPLE_JSON;
 use crate::editor::puzzle5d::CONCRETE_FOREST_EXAMPLE_JSON;
 use crate::editor::puzzle5d::NAKAGIN_EXAMPLE_JSON;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_CAPSULE_DREAM;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_CONCRETE_FOREST;
 use crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN;
-use crate::editor::puzzle5d::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::document_from_json;
-use crate::editor::puzzle5d::empty_document;
+use serde_json::Value;
 
 /// 📚️ Loads one of the two shipped examples (or the empty document), resetting the runtime with it.
 pub async fn set_active_example(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

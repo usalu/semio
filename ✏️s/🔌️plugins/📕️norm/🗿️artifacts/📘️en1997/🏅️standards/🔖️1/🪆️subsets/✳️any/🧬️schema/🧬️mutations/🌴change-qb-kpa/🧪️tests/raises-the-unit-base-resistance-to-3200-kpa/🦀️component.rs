@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-qb-kpa/raises-the-unit-base-resistance-to-3200-kpa: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "change-qb-kpa/raises-the-unit-base-resistance-to-3200-kpa: the payload is finite, so `change-qb-kpa`'s `mutation.invariant` fatal cannot fire, and 3200.0 differs from the committed 2500.0, so its `mutation.no-op` warning cannot either");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "change-qb-kpa/raises-the-unit-base-resistance-to-3200-kpa: the payload is finite, so `change-qb-kpa`'s `mutation.invariant` fatal cannot fire, and 3200.0 differs from the committed 2500.0, so its `mutation.no-op` warning cannot either"
+    );
     assert!(produced.messages().is_empty(), "change-qb-kpa/raises-the-unit-base-resistance-to-3200-kpa: an accepted change-qb-kpa emits no diagnostics at all");
 }
 

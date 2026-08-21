@@ -13,13 +13,7 @@ pub async fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta {
-            patched: vec![LayoutPagePatchEntry {
-                id: payload.page_id.clone(),
-                patch: PagePatch { frame_removed: Some(payload.frame_id.clone()), ..Default::default() },
-            }],
-            ..Default::default()
-        }),
+        pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { frame_removed: Some(payload.frame_id.clone()), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
     })
 }

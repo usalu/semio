@@ -1,14 +1,13 @@
 //! 🌉️ Flow WASM session bindings.
 
 #[cfg(target_arch = "wasm32")]
-use crate::infinite::board::ports::directed_dag as dag;
-#[cfg(target_arch = "wasm32")]
-use crate::infinite::canvas;
+use crate::drawing::*;
 #[cfg(target_arch = "wasm32")]
 use crate::host::*;
 #[cfg(target_arch = "wasm32")]
-use crate::drawing::*;
-
+use crate::infinite::board::ports::directed_dag as dag;
+#[cfg(target_arch = "wasm32")]
+use crate::infinite::canvas;
 
 // #region 🔖️WasmSession
 #[cfg(target_arch = "wasm32")]

@@ -138,13 +138,33 @@ impl CatalogResourceRegistry {
 impl ResourceRegistry for CatalogResourceRegistry {
     fn list(&self) -> Vec<Resource> {
         vec![
-            Resource { uri: "semio://capability".to_string(), name: "capabilities".to_string(), title: Some("Capability catalog".to_string()), description: Some("Every compiled capability, token-budgeted".to_string()), mime_type: Some("application/json".to_string()), size: None },
-            Resource { uri: "semio://workspace".to_string(), name: "workspace".to_string(), title: Some("Workspace".to_string()), description: Some("Live workspace summary (no backend wired yet)".to_string()), mime_type: Some("application/json".to_string()), size: None },
+            Resource {
+                uri: "semio://capability".to_string(),
+                name: "capabilities".to_string(),
+                title: Some("Capability catalog".to_string()),
+                description: Some("Every compiled capability, token-budgeted".to_string()),
+                mime_type: Some("application/json".to_string()),
+                size: None,
+            },
+            Resource {
+                uri: "semio://workspace".to_string(),
+                name: "workspace".to_string(),
+                title: Some("Workspace".to_string()),
+                description: Some("Live workspace summary (no backend wired yet)".to_string()),
+                mime_type: Some("application/json".to_string()),
+                size: None,
+            },
         ]
     }
 
     fn templates(&self) -> Vec<ResourceTemplate> {
-        vec![ResourceTemplate { uri_template: "semio://capability/{id}".to_string(), name: "capability".to_string(), title: Some("One capability".to_string()), description: Some("Full CapabilityDefinition by id".to_string()), mime_type: Some("application/json".to_string()) }]
+        vec![ResourceTemplate {
+            uri_template: "semio://capability/{id}".to_string(),
+            name: "capability".to_string(),
+            title: Some("One capability".to_string()),
+            description: Some("Full CapabilityDefinition by id".to_string()),
+            mime_type: Some("application/json".to_string()),
+        }]
     }
 
     fn read(&self, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {

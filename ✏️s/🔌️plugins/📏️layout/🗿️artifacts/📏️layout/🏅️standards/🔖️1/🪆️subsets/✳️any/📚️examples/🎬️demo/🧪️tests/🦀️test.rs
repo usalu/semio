@@ -7,8 +7,8 @@ async fn primary_asset_is_nonempty() {
 //#region 💡️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifacts::layout::LayoutSnapshot;
     use crate::artifacts::layout::standards::v1::subsets::any::schema::inferences::LayoutInference;
+    use crate::artifacts::layout::LayoutSnapshot;
     use protocol::Inference;
 
     let text = include_str!("../🖼️assets/🗣️example.dsl.semio");

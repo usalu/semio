@@ -80,7 +80,11 @@ async fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-property-definition/removes-the-height-property-definition: this fixture declares an applied outcome");
     let produced = built_outcome();
-    assert_eq!(produced.worst_level(), None, "delete-property-definition/removes-the-height-property-definition: the addressed definition exists in the committed catalogue, so `delete-property-definition`'s `mutation.target-missing` error cannot fire");
+    assert_eq!(
+        produced.worst_level(),
+        None,
+        "delete-property-definition/removes-the-height-property-definition: the addressed definition exists in the committed catalogue, so `delete-property-definition`'s `mutation.target-missing` error cannot fire"
+    );
     assert!(produced.messages().is_empty(), "delete-property-definition/removes-the-height-property-definition: an accepted delete-property-definition emits no diagnostics at all");
 }
 

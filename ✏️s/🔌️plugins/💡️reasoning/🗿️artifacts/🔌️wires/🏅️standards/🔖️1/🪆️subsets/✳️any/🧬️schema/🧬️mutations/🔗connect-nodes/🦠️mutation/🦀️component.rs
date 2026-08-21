@@ -2,8 +2,8 @@
 //! wires-level semantic relationship (`relationship` is `DslValue::Null` when the edge carries no
 //! wires relationship — the pre-migration fixture's own convention, preserved as-is).
 use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::mutations::WiresMutation;
+use crate::artifacts::wires::schema::entity_id;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use serde::{Deserialize, Serialize};

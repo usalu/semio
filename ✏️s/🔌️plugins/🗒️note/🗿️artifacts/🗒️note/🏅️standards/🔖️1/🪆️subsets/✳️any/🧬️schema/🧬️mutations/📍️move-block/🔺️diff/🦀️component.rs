@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `MoveBlock`. Error `target-missing` when absent, Warning `no-op`
 //! when already at that position, Fatal `invariant` when the position is non-finite.
 use super::mutation::MoveBlock;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &MoveBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -18,7 +18,17 @@ pub async fn diff(payload: &MoveBlock, base: &NoteSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" is already at ({}, {}).", payload.id, payload.new_x, payload.new_y));
     }
     let mut updated = block.clone();
-    match &mut updated { crate::artifacts::note::NoteBlockNode::Text { x, y, .. } | crate::artifacts::note::NoteBlockNode::Image { x, y, .. } | crate::artifacts::note::NoteBlockNode::Table { x, y, .. } | crate::artifacts::note::NoteBlockNode::Math { x, y, .. } | crate::artifacts::note::NoteBlockNode::Ink { x, y, .. } | crate::artifacts::note::NoteBlockNode::Group { x, y, .. } => { *x = payload.new_x; *y = payload.new_y; } }
+    match &mut updated {
+        crate::artifacts::note::NoteBlockNode::Text { x, y, .. }
+        | crate::artifacts::note::NoteBlockNode::Image { x, y, .. }
+        | crate::artifacts::note::NoteBlockNode::Table { x, y, .. }
+        | crate::artifacts::note::NoteBlockNode::Math { x, y, .. }
+        | crate::artifacts::note::NoteBlockNode::Ink { x, y, .. }
+        | crate::artifacts::note::NoteBlockNode::Group { x, y, .. } => {
+            *x = payload.new_x;
+            *y = payload.new_y;
+        }
+    }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }
 //#endregion 🔖️Diff

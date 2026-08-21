@@ -28,12 +28,9 @@ pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️tower.pack.se
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️tower.spr.semio");
 
 async fn document_json() -> String {
-    let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(DSL_TEXT)
-        .unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
+    let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
     serde_json::to_string(&projection).expect("serialize example")
 }
 
 /// 📚️ Canonical example source for `App::example_source`.
-pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| {
-    ExampleSource::new(ID, label(), document_json(), ICON)
-});
+pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| ExampleSource::new(ID, label(), document_json(), ICON));

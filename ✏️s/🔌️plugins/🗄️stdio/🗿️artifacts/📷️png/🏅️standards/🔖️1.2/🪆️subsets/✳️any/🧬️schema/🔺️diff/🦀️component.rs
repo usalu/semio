@@ -862,7 +862,7 @@ pub struct PngDiff {
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
-    async fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
+    fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
         if let Some(Some(plte)) = &self.plte {
             validate_png_triple(base.plte.as_ref().map_or(0, Vec::len), &plte.removed, plte.modified.iter().map(|entry| entry.index), plte.added.iter().map(|entry| entry.index), ["plte"])?;
         }
@@ -934,7 +934,7 @@ impl MutationDiff<PngSnapshot> for PngDiff {
     /// (incl. every tri-state, `plte` excepted): LWW. Collections: index-transported merge —
     /// `plte`/`unknown_chunks`/`chunk_order` via the shared weak-value transport,
     /// `text_chunks` via its own field-aware variant.
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.width.is_some() {
             self.width = other.width;
         }
@@ -1016,14 +1016,14 @@ where
 impl DiffAlgebra<PngSnapshot> for PngDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's:
     /// the state delta from `self.apply(base)` back to `base`.
-    async fn inverse(&self, base: &PngSnapshot) -> Self {
-        let mutated = self.apply(base).await.unwrap();
-        Self::between(&mutated, base).await
+    fn inverse(&self, base: &PngSnapshot) -> Self {
+        let mutated = self.apply(base).unwrap();
+        Self::between(&mutated, base)
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
     /// every collection, tri-state comparison for every optional scalar/nested triple.
-    async fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
+    fn between(base: &PngSnapshot, other: &PngSnapshot) -> Self {
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
@@ -1045,7 +1045,7 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.width.is_none()
             && self.height.is_none()
             && self.bit_depth.is_none()
@@ -2181,10 +2181,10 @@ fn parse_png_diff(line: &str) -> Result<PngDiff, String> {
 }
 
 impl protocol::DiffCodec for PngDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_png_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_png_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -2192,8 +2192,8 @@ impl protocol::DiffCodec for PngDiff {
     /// text-as-binary shortcut. Matches `../💾️binary/📡️component.protocol.semio`'s real
     /// flag-per-field layout exactly, field for field, in struct order (see that file's own
     /// doc comment for the 2-way/3-way flag design).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new().await;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut w = dsl::ByteWriter::new();
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.bit_depth, |w, v| w.write_u8(*v));
@@ -2222,9 +2222,9 @@ impl protocol::DiffCodec for PngDiff {
         write_bin_option(&mut w, &self.chunk_order, |w, v| write_bin_blob(w, &enc_chunk_order_diff_bin(v)));
         write_bin_option(&mut w, &self.unknown_chunks, |w, v| write_bin_blob(w, &enc_unknown_chunks_diff_bin(v)));
 
-        Ok(w.into_bytes().await)
+        Ok(w.into_bytes())
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
         let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;

@@ -9,18 +9,16 @@
 //! No external `.mathematical` fixture file has ever shipped for this app, so these laws stay proven
 //! purely against inline-constructed fixtures (mirrors the original flattened `🔖️DslTests`).
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationSnapshot;
-use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
 #[cfg(test)]
 use crate::artifacts::mathematical::MathematicalGeometry;
+use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
@@ -70,7 +68,13 @@ pub struct MathematicalGraphDsl {
 }
 
 pub async fn math_graph_to_dsl(graph: &MathematicalGraph) -> MathematicalGraphDsl {
-    MathematicalGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
+    MathematicalGraphDsl {
+        directed: graph.directed,
+        nodes: graph.nodes.clone(),
+        edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(),
+        algorithm: graph.algorithm.clone(),
+        algorithm_seed: graph.algorithm_seed.clone(),
+    }
 }
 
 pub async fn math_graph_from_dsl(graph: MathematicalGraphDsl) -> Result<MathematicalGraph, String> {
@@ -213,7 +217,6 @@ impl store::ArtifactDsl for MathematicalSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactDsl
 
-
 //#region 🔖️DslText
 /// 📖️ Parses `.mathematical` DSL text into a `MathematicalSnapshot`.
 pub async fn parse_dsl(text: &str) -> Result<MathematicalSnapshot, store::TextError> {
@@ -245,11 +248,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
-        let mut graph = MathematicalGraph {
-            algorithm: "bfs".into(),
-            algorithm_seed: Some("a".into()),
-            ..MathematicalGraph::default()
-        };
+        let mut graph = MathematicalGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathematicalGraph::default() };
         graph.nodes.clear();
         graph.edges.clear();
         let projection = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry { points: Vec::new() });

@@ -71,11 +71,7 @@ async fn a_taken_new_id_folds_into_a_fatal_untargeted_invariant() {
     assert!(messages[0].target.is_empty(), "fold_plan_diff never addresses a PlanError to an entity, got {:?}", messages[0].target);
     assert_eq!(messages[0].message, "duplicate-widget: id \"note-beta\" already taken", "the refusal must come from duplicate-widget's own new_id-taken precondition");
     let semantics = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::semantics(&mutation());
-    assert_eq!(
-        (semantics.verb, semantics.entity, semantics.kind, semantics.record),
-        ("duplicate", "widget", "duplicate-widget", "DuplicatedWidget"),
-        "the fixture must be bound to duplicate-widget's own descriptor"
-    );
+    assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("duplicate", "widget", "duplicate-widget", "DuplicatedWidget"), "the fixture must be bound to duplicate-widget's own descriptor");
 }
 
 /// ↩️ A composite's inverse is the reversed per-step inverse of its PLAN, so a plan that never
@@ -112,12 +108,6 @@ async fn declared_outcome_holds() {
     let produced = <FlowMutation as protocol::Mutation<FlowSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(serde_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
-    let declared_path: Vec<String> = outcome
-        .get("path")
-        .and_then(serde_json::Value::as_array)
-        .expect("a rejected outcome declares a path")
-        .iter()
-        .map(|entry| entry.as_str().expect("path segments are strings").to_string())
-        .collect();
+    let declared_path: Vec<String> = outcome.get("path").and_then(serde_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target — both empty, because a composite refusal has no entity address");
 }

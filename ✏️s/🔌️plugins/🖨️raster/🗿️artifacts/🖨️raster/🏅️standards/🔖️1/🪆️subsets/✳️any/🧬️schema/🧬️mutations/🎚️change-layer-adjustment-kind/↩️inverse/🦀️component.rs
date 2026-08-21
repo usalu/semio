@@ -1,9 +1,9 @@
 //! ↩️ `change-layer-adjustment-kind` inverse — the old `adjustment_kind` from `base`. Not an
 //! `Adjustment`, or missing target ⇒ `Vec::new()`.
 
-use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::mutations::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind;
 use crate::artifacts::raster::mutations::RasterMutation;
+use crate::artifacts::raster::schema::find_layer;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Inverse

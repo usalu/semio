@@ -1,14 +1,14 @@
 //! 🪚️ Process 3d play app — the workpiece window: the 3D world view of the processed stock, plus the
 //! process-timeline engagement (cursor stepper + command-line input).
 
+use crate::artifacts::process3d::schema::inferences::processed_mesh;
+use crate::artifacts::process3d::Process3dSnapshot;
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
 use crate::editor::process3d::process3d_action;
-use crate::artifacts::process3d::schema::inferences::processed_mesh;
-use crate::artifacts::process3d::Process3dSnapshot;
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
-    WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
+    build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus,
+    WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
 use serde_json::json;
 
@@ -113,13 +113,7 @@ pub async fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> Ui
     build_world_3d_scene(
         PROCESS_3D_PLAY_SURFACE_MAIN,
         crate::editor::process3d::PROCESS_3D_PLAY_APP_ID,
-        world3d_scene(
-            world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
-            meshes_json,
-            instances_json,
-            process3d_selection_json(config.active_utility()),
-            &config_sun(config),
-        ),
+        world3d_scene(world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, process3d_selection_json(config.active_utility()), &config_sun(config)),
     )
 }
 //#endregion 🔖️Render

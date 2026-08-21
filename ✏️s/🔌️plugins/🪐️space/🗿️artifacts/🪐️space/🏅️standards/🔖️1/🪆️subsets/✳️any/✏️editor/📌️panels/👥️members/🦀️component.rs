@@ -13,13 +13,7 @@ pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition {
-        kind: PanelTabKind::App(SPACE_INDEX_PANEL_MEMBERS.into()),
-        label: LocalizedLabel::native("Members", "Mitglieder"),
-        group: PanelGroup::Details,
-        body_key: Some(SPACE_INDEX_BODY_MEMBERS.into()),
-        children: Vec::new(),
-    }
+    PanelTabDefinition { kind: PanelTabKind::App(SPACE_INDEX_PANEL_MEMBERS.into()), label: LocalizedLabel::native("Members", "Mitglieder"), group: PanelGroup::Details, body_key: Some(SPACE_INDEX_BODY_MEMBERS.into()), children: Vec::new() }
 }
 //#endregion 🔖️Definition
 
@@ -32,8 +26,7 @@ async fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_ind
     let row_id = format!("member:{}", member.user_id);
     let label = if member.display_name.is_empty() { member.email.clone() } else { format!("{} ({})", member.display_name, member.email) };
     let _ = config;
-    UiTreeItemNode { description: Some(member.role.clone()), icon_id: Some("user".into()), menu: None, ..tree_item_with_action(row_id, Label::data(label), None, space_index_action("removeMember", Some(json!({ "userId": member.user_id }))))
-    }
+    UiTreeItemNode { description: Some(member.role.clone()), icon_id: Some("user".into()), menu: None, ..tree_item_with_action(row_id, Label::data(label), None, space_index_action("removeMember", Some(json!({ "userId": member.user_id })))) }
 }
 
 /// 👥️ `#s-space-share` (contract §C0 id grammar) is the copy-invite-link action's element id; every
@@ -50,7 +43,11 @@ async fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_ind
 /// level. Every tree-content string below is English-only until that lands; every STATIC manifest
 /// string (panel tab, dialogs, action labels) is already en+de.
 pub async fn render(config: &SpaceIndexConfig) -> UiNode {
-    let visibility_action = if config.visibility == "public" { action_button("s-space-visibility", Label::data("Make Private"), "lock", "setVisibility", json!({ "visibility": "private" })) } else { action_button("s-space-visibility", Label::data("Make Public"), "globe", "setVisibility", json!({ "visibility": "public" })) };
+    let visibility_action = if config.visibility == "public" {
+        action_button("s-space-visibility", Label::data("Make Private"), "lock", "setVisibility", json!({ "visibility": "private" }))
+    } else {
+        action_button("s-space-visibility", Label::data("Make Public"), "globe", "setVisibility", json!({ "visibility": "public" }))
+    };
     let action_items = vec![
         action_button("s-space-invite", Label::data("Invite Member"), "user-plus", "requestInviteMember", json!({})),
         action_button("s-space-share", Label::data("Copy Invite Link"), "link", "copyInviteLink", json!({ "role": "spectator", "ttlSecs": 604800u64 })),
@@ -61,9 +58,7 @@ pub async fn render(config: &SpaceIndexConfig) -> UiNode {
     } else {
         config.members.iter().map(|member| member_row(config, member)).collect()
     };
-    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)
-        .section(SPACE_INDEX_PANEL_MEMBERS, Some(Label::data("Members")), true, action_items.into_iter().chain(member_items).collect())
-        .build()
+    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS).section(SPACE_INDEX_PANEL_MEMBERS, Some(Label::data("Members")), true, action_items.into_iter().chain(member_items).collect()).build()
 }
 //#endregion 🔖️Render
 

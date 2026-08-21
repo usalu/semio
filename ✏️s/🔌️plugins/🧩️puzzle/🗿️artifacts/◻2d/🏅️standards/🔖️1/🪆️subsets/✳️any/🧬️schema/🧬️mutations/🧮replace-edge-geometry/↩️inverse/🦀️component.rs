@@ -8,8 +8,6 @@ pub async fn inverse(payload: &super::mutation::ReplaceEdgeGeometry, base: &Puzz
     let Some(edge) = base.edges.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::artifacts::puzzle2d::mutations::replace_edge_geometry::mutation::replace_edge_geometry(
-        edge.id.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y,
-    )]
+    vec![crate::artifacts::puzzle2d::mutations::replace_edge_geometry::mutation::replace_edge_geometry(edge.id.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y)]
 }
 //#endregion 🔖️Inverse

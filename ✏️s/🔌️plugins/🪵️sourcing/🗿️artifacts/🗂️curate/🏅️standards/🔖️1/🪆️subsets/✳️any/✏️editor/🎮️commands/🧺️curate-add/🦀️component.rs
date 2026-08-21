@@ -1,10 +1,10 @@
 //! 🧺️ 🧺️ Sourcing curate app commands command — `curate-add`.
 
-use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::schema::{curation_decision_for_delta, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::{curation_decision_for_delta, CurationDecision};
 use crate::artifacts::curate::CurateSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 /// 🔀️ Turns a resolved curation decision into the real `SourcingMutation` it corresponds to — `None`
@@ -56,10 +56,10 @@ pub async fn handle(payload: &CurateAdd, doc: &ArtifactView<'_, CurateSnapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::curate::schema::curated_count;
     use crate::editor::sourcing::commands::{curate_remove, curate_set_count, drop_on_curated, drop_on_pool};
     use crate::editor::sourcing::testkit::{dispatch, new_app};
     use crate::editor::sourcing::SourcingCurateCommand;
-    use crate::artifacts::curate::schema::curated_count;
 
     #[semio_framework_async_macros::async_test]
     async fn curate_add_and_remove_round_trip_through_operations() {

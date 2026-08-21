@@ -80,11 +80,7 @@ async fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
 pub async fn render(fixture: &Process3dSnapshot) -> UiNode {
     let (meshes_json, instances_json) = view_preview_payload(fixture);
-    build_world_3d_scene(
-        PROCESS3D_VIEW_SURFACE_MAIN,
-        PROCESS3D_VIEW_CONTROLLER_ID,
-        world3d_scene(default_camera_json(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &default_sun()),
-    )
+    build_world_3d_scene(PROCESS3D_VIEW_SURFACE_MAIN, PROCESS3D_VIEW_CONTROLLER_ID, world3d_scene(default_camera_json(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &default_sun()))
 }
 //#endregion 🔖️Render
 

@@ -5,10 +5,6 @@ use crate::artifacts::fem3d::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &DeleteCombination, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
-    base.combinations
-        .iter()
-        .find(|item| item.id == payload.id)
-        .map(|item| vec![Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination: item.clone() })])
-        .unwrap_or_default()
+    base.combinations.iter().find(|item| item.id == payload.id).map(|item| vec![Fem3dMutation::CreateCombination(create_combination::mutation::CreateCombination { combination: item.clone() })]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

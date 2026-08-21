@@ -42,7 +42,7 @@ impl SemioObjectDiff {
 }
 
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
-    async fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
+    fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.transform {
             next.transform = t.clone();
@@ -59,7 +59,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.transform.is_some() {
             self.transform = other.transform;
         }
@@ -77,7 +77,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
 
 /// 🧮️ `object`'s own `DiffAlgebra` — required by the `✳️any` envelope's own dispatch.
 impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
-    async fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
+    fn between(base: &SemioObjectSnapshot, other: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: (base.transform != other.transform).then(|| other.transform.clone()),
             brep: (base.brep != other.brep).then(|| other.brep.clone()),
@@ -85,7 +85,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             properties: (base.properties != other.properties).then(|| other.properties.clone()),
         }
     }
-    async fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
+    fn inverse(&self, base: &SemioObjectSnapshot) -> Self {
         SemioObjectDiff {
             transform: self.transform.as_ref().map(|_| base.transform.clone()),
             brep: self.brep.as_ref().map(|_| base.brep.clone()),
@@ -93,7 +93,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
         }
     }
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -141,16 +141,16 @@ fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioObjectDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_object_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
     /// bit2=mesh, bit3=properties), then each present field's own real encoding in bit order.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{write_child_opt, write_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence: u8 = 0;
@@ -181,7 +181,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{read_child_opt, read_transform};
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {

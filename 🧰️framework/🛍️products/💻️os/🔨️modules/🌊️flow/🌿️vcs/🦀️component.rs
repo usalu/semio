@@ -4,14 +4,11 @@ use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use neural::{
-    Atom, Dictionary, Neuron, Synapse, Tree, Value as NeuralValue,
-};
+use neural::{Atom, Dictionary, Neuron, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
 use crate::host::*;
-
 
 // #region 🔖️ArtifactVcs
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
@@ -20,11 +17,11 @@ use crate::host::*;
 use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
+#[cfg(any(target_arch = "wasm32", test))]
+use crate::os_store::create_document_envelope;
 #[cfg(test)]
 use crate::os_store::ArtifactCommand;
 use crate::os_store::{ArtifactEnvelope, ArtifactStore};
-#[cfg(any(target_arch = "wasm32", test))]
-use crate::os_store::create_document_envelope;
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -248,7 +245,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     for (index, widget) in after.widgets.iter().enumerate() {
         let id = widget_id_for(widget);
         match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
-            None => operations.push(FlowMutation::Widgets(CollectionMutation::Add { index: index, item: widget.clone() })),
+            None => operations.push(FlowMutation::Widgets(CollectionMutation::Add { index, item: widget.clone() })),
             Some(prev) if prev != widget => operations.push(FlowMutation::Widgets(CollectionMutation::Patch { id: id.to_string(), patch: widget.clone() })),
             Some(_) => {}
         }
@@ -261,7 +258,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         match before.synapses.iter().find(|entry| entry.id == synapse.id) {
-            None => operations.push(FlowMutation::Synapses(CollectionMutation::Add { index: index, item: synapse.clone() })),
+            None => operations.push(FlowMutation::Synapses(CollectionMutation::Add { index, item: synapse.clone() })),
             Some(prev) if *prev != *synapse => operations.push(FlowMutation::Synapses(CollectionMutation::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
             Some(_) => {}
         }
@@ -611,21 +608,12 @@ impl crate::os_store::ArtifactDsl for FlowFixtureDsl {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = crate::os_dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document },
-        )?;
+        let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-            crate::os_store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         crate::os_store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -634,22 +622,14 @@ impl crate::os_store::ArtifactDsl for FlowFixtureDsl {
 impl crate::os_store::ArtifactPack for FlowFixtureDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-            crate::os_store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
+        let envelope =
+            crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
         let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|e| crate::os_store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as crate::os_store::ArtifactDsl>::envelope_id() {
-            return Err(crate::os_store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as crate::os_store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(crate::os_store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as crate::os_store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = crate::os_store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
@@ -766,14 +746,14 @@ fn flow_mutation_from_dsl(operation: FlowMutationDsl) -> Result<FlowMutation, St
     Ok(match operation {
         FlowMutationDsl::WidgetsAdd { index, item } => {
             let item = widget_dsl_to_widget(item)?;
-            FlowMutation::Widgets(CollectionMutation::Add { index: index, item })
+            FlowMutation::Widgets(CollectionMutation::Add { index, item })
         }
         FlowMutationDsl::WidgetsRemove { id } => FlowMutation::Widgets(CollectionMutation::Remove { id }),
         FlowMutationDsl::WidgetsMove { id, to_index } => FlowMutation::Widgets(CollectionMutation::Move { id, to_index }),
         FlowMutationDsl::WidgetsPatch { id, patch } => FlowMutation::Widgets(CollectionMutation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
         FlowMutationDsl::SynapsesAdd { index, item } => {
             let item = synapse_from_dsl(item)?;
-            FlowMutation::Synapses(CollectionMutation::Add { index: index, item })
+            FlowMutation::Synapses(CollectionMutation::Add { index, item })
         }
         FlowMutationDsl::SynapsesRemove { id } => FlowMutation::Synapses(CollectionMutation::Remove { id }),
         FlowMutationDsl::SynapsesMove { id, to_index } => FlowMutation::Synapses(CollectionMutation::Move { id, to_index }),
@@ -789,11 +769,7 @@ impl crate::os_spr::OpText for FlowMutationDsl {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                )?;
+                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
                 return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }

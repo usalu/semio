@@ -9,19 +9,19 @@
 //! (`policyViewerPurityBreaches`), so the shared code cannot live here anymore. Reach it as `crate::X`
 //! from any module in this crate.
 
+use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
-use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::commands::{copy_invite_link, create_space, delete_space, fold_directory_events, presence_heartbeat, rename_space, set_client, share_space};
+use crate::editor::home::commands::{delete_virtual_file_system_node, go_home, navigate_virtual_file_system_node};
 use crate::editor::home::config::HomeConfig;
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
-use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{app_commands, create_tab_stack_layout, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, UiNode};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use serde_json::Value;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const S_HOME_CONTROLLER_ID: &str = "s-home";
@@ -107,18 +107,10 @@ impl ArtifactEditor for HomeApp {
             "importSpace" => Ok(HomeCommand::ImportSpace(import_space::ImportSpace { dsl: str_field("dsl").or_else(|| str_field("payload")) })),
             "openSpace" => Ok(HomeCommand::OpenSpace(open_space::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
             "navigateVirtualFileSystemNode" => Ok(HomeCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode {
-                node_id: str_field("nodeId")
-                    .or_else(|| str_field("node_id"))
-                    .or_else(|| str_field("spaceId"))
-                    .or_else(|| str_field("space_id"))
-                    .unwrap_or_default(),
+                node_id: str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("spaceId")).or_else(|| str_field("space_id")).unwrap_or_default(),
             })),
             "deleteVirtualFileSystemNode" => Ok(HomeCommand::DeleteVirtualFileSystemNode(delete_virtual_file_system_node::DeleteVirtualFileSystemNode {
-                node_id: str_field("nodeId")
-                    .or_else(|| str_field("node_id"))
-                    .or_else(|| str_field("spaceId").map(|id| format!("studio:{id}")))
-                    .or_else(|| str_field("space_id").map(|id| format!("studio:{id}")))
-                    .unwrap_or_default(),
+                node_id: str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("spaceId").map(|id| format!("studio:{id}"))).or_else(|| str_field("space_id").map(|id| format!("studio:{id}"))).unwrap_or_default(),
             })),
             "goHome" => Ok(HomeCommand::GoHome(go_home::GoHome {})),
             "setActivePanelTab" => Ok(HomeCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
@@ -131,23 +123,18 @@ impl ArtifactEditor for HomeApp {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 confirmed: args.and_then(|value| value.get("confirmed")).and_then(Value::as_bool).unwrap_or(false),
             })),
-            "renameSpace" => Ok(HomeCommand::RenameSpace(rename_space::RenameSpace {
-                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
-                name: str_field("name").unwrap_or_default(),
-            })),
-            "shareSpace" => Ok(HomeCommand::ShareSpace(share_space::ShareSpace {
-                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
-                email: str_field("email").unwrap_or_default(),
-                role: str_field("role").unwrap_or_default(),
-            })),
+            "renameSpace" => Ok(HomeCommand::RenameSpace(rename_space::RenameSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(), name: str_field("name").unwrap_or_default() })),
+            "shareSpace" => {
+                Ok(HomeCommand::ShareSpace(share_space::ShareSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(), email: str_field("email").unwrap_or_default(), role: str_field("role").unwrap_or_default() }))
+            }
             "copyInviteLink" => Ok(HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
                 role: str_field("role").unwrap_or_default(),
                 ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(Value::as_u64).unwrap_or(0),
             })),
-            "foldDirectoryEvents" => Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents {
-                events_json: args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| "[]".into()),
-            })),
+            "foldDirectoryEvents" => {
+                Ok(HomeCommand::FoldDirectoryEvents(fold_directory_events::FoldDirectoryEvents { events_json: args.and_then(|value| value.get("eventsJson")).and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| "[]".into()) }))
+            }
             "presenceHeartbeat" => Ok(HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
             "setClient" => Ok(HomeCommand::SetClient(set_client::SetClient {
                 client_id: str_field("clientId").or_else(|| str_field("client_id")).unwrap_or_default(),
@@ -164,7 +151,14 @@ impl ArtifactEditor for HomeApp {
     /// `deleteVirtualFileSystemNode`) already takes an explicit `node_id` argument from the click event
     /// rather than reading a stored selection — there was no bespoke selection/hover config, mutation, or
     /// command here to delete. `_interaction` is accepted (trait-required) and unused.
-    async fn handle(command: &HomeCommand, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::editor::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &HomeCommand,
+        doc: &ArtifactView<'_, SHomeSnapshot>,
+        cfg: &ConfigView<'_, HomeConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, crate::editor::home::config::HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -299,11 +293,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_os::{create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty, LocalStorageBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
     use std::sync::Arc;
-    use semio_framework_os::{
-        create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty,
-        LocalStorageBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA,
-    };
 
     async fn empty_history() -> semio_framework_plugin::HistoryView {
         semio_framework_plugin::HistoryView::empty()

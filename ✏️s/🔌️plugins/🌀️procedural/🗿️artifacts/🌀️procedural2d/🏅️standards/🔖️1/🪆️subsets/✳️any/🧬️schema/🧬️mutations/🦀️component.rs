@@ -8,18 +8,16 @@
 //! `impl protocol::SemanticMutation<Procedural2dSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 
-
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use flow::FlowFixture;
 use flow::playbook::GenerationMutation;
+use flow::FlowFixture;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -80,20 +78,20 @@ pub async fn generation_mutation_to_procedural2d(operation: GenerationMutation) 
 //#endregion 🔖️GenerationBridge
 
 //#region 🔖️Builders
-pub use super::create_generation::mutation::create_generation;
-pub use super::delete_generation::mutation::delete_generation;
-pub use super::rename_generation::mutation::rename_generation;
 pub use super::change_generation_value::mutation::change_generation_value;
-pub use super::replace_widget::mutation::replace_widget;
-pub use super::replace_synapse::mutation::replace_synapse;
-pub use super::create_widget::mutation::create_widget;
-pub use super::delete_widget::mutation::delete_widget;
+pub use super::change_schema::mutation::change_schema;
+pub use super::clear_widget_layout::mutation::clear_widget_layout;
 pub use super::connect_synapse::mutation::connect_synapse;
+pub use super::create_generation::mutation::create_generation;
+pub use super::create_widget::mutation::create_widget;
+pub use super::delete_generation::mutation::delete_generation;
+pub use super::delete_widget::mutation::delete_widget;
 pub use super::disconnect_synapse::mutation::disconnect_synapse;
 pub use super::move_widget::mutation::move_widget;
-pub use super::clear_widget_layout::mutation::clear_widget_layout;
+pub use super::rename_generation::mutation::rename_generation;
+pub use super::replace_synapse::mutation::replace_synapse;
+pub use super::replace_widget::mutation::replace_widget;
 pub use super::set_camera::mutation::update_camera;
-pub use super::change_schema::mutation::change_schema;
 //#endregion 🔖️Builders
 
 //#region 🔖️FixtureOperations
@@ -175,9 +173,7 @@ mod tests {
         let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
-            restored = apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, projection, "inverse() must restore the pre-mutation document");
         forward

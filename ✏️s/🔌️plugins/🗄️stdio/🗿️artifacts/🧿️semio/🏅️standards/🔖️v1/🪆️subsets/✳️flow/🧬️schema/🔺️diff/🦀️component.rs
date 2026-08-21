@@ -358,7 +358,7 @@ fn diff_edges(old: &[FlowEdge], new: &[FlowEdge]) -> Option<FlowEdgesDiff> {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
-    async fn apply(&self, base: &SemioFlowSnapshot) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
+    fn apply(&self, base: &SemioFlowSnapshot) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
             crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"])?;
@@ -371,7 +371,7 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         self.nodes = match (self.nodes.take(), other.nodes) {
             (None, x) => x,
             (x, None) => x,
@@ -388,15 +388,15 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioFlowSnapshot> for SemioFlowDiff {
-    async fn inverse(&self, base: &SemioFlowSnapshot) -> Self {
+    fn inverse(&self, base: &SemioFlowSnapshot) -> Self {
         SemioFlowDiff { nodes: self.nodes.as_ref().map(|d| inverse_named(&base.nodes, d, |n| n.id.clone(), inverse_node)), edges: self.edges.as_ref().map(|d| inverse_named(&base.edges, d, |e| e.id.clone(), inverse_edge)) }
     }
 
-    async fn between(base: &SemioFlowSnapshot, other: &SemioFlowSnapshot) -> Self {
+    fn between(base: &SemioFlowSnapshot, other: &SemioFlowSnapshot) -> Self {
         SemioFlowDiff { nodes: diff_nodes(&base.nodes, &other.nodes), edges: diff_edges(&base.edges, &other.edges) }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.nodes.is_none() && self.edges.is_none()
     }
 }
@@ -698,10 +698,10 @@ fn parse_flow_diff(line: &str) -> Result<SemioFlowDiff, String> {
 }
 
 impl protocol::DiffCodec for SemioFlowDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_flow_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_flow_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot: real binary diff frame, replacing the old `print_diff().into_bytes()`
@@ -712,7 +712,7 @@ impl protocol::DiffCodec for SemioFlowDiff {
     /// rather than one bare trailing `bytes` because there can be 0, 1, or 2 of them (chaining a
     /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
     /// that was itself only conditionally decoded hard-errors `eval_cond` — see this wave's report).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.nodes.is_some() {
@@ -730,7 +730,7 @@ impl protocol::DiffCodec for SemioFlowDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

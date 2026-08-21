@@ -329,7 +329,7 @@ impl SemioAudioDiff {
 }
 
 impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
-    async fn apply(&self, base: &SemioAudioSnapshot) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
+    fn apply(&self, base: &SemioAudioSnapshot) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.sample_rate {
             next.sample_rate = v;
@@ -348,7 +348,7 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.sample_rate.is_some() {
             self.sample_rate = other.sample_rate;
         }
@@ -369,7 +369,7 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
 }
 
 impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
-    async fn inverse(&self, base: &SemioAudioSnapshot) -> Self {
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Self {
         Self {
             sample_rate: self.sample_rate.map(|_| base.sample_rate),
             format: self.format.map(|_| base.format),
@@ -378,7 +378,7 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
         }
     }
 
-    async fn between(base: &SemioAudioSnapshot, other: &SemioAudioSnapshot) -> Self {
+    fn between(base: &SemioAudioSnapshot, other: &SemioAudioSnapshot) -> Self {
         let channels_diff = channels_between(&base.channels, &other.channels);
         let tags_diff = tags_between(&base.tags, &other.tags);
         Self {
@@ -389,7 +389,7 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -612,10 +612,10 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 
 impl DiffCodec for SemioAudioDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_audio_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_audio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
@@ -627,7 +627,7 @@ impl DiffCodec for SemioAudioDiff {
     /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
     /// that was itself only conditionally decoded hard-errors `eval_cond` — see `✳️flow`'s/
     /// `✳️image`'s pilot reports).
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut presence = 0u8;
         if self.sample_rate.is_some() {
@@ -657,7 +657,7 @@ impl DiffCodec for SemioAudioDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

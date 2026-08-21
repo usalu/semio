@@ -1,14 +1,14 @@
 //! 🛠️ Process 3d play app commands — workshop machine lifecycle (add / remove / update).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::editor::process3d::catalog_machine;
 use crate::artifacts::process3d::mutations::change_machine_icon::mutation::ChangeMachineIcon;
 use crate::artifacts::process3d::mutations::create_machine::mutation::CreateMachine;
 use crate::artifacts::process3d::mutations::delete_machine::mutation::DeleteMachine;
 use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMachine;
 use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot, WorkshopMachine};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::process3d::catalog_machine;
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
@@ -36,7 +36,12 @@ pub mod add_workshop_machine {
         pub machine_id: String,
     }
 
-    pub async fn handle(payload: &AddWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &AddWorkshopMachine,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match catalog_machine(&payload.catalog_id, &payload.machine_id) {
             Some(machine) => match add_workshop_machine_operation(fixture, machine) {
@@ -59,7 +64,12 @@ pub mod remove_workshop_machine {
         pub id: String,
     }
 
-    pub async fn handle(payload: &RemoveWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &RemoveWorkshopMachine,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         match remove_workshop_machine_operation(fixture, &payload.id) {
             Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
@@ -84,7 +94,12 @@ pub mod update_workshop_machine {
     /// each carry their own semantic mutation now (`RenameMachine`/`ChangeMachineIcon`/
     /// `ReplaceMachineCapabilities`), so this diffs `payload.machine` against the current entity and
     /// emits one targeted mutation per field that actually changed.
-    pub async fn handle(payload: &UpdateWorkshopMachine, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &UpdateWorkshopMachine,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let Some(existing) = doc.snapshot.workshop.machines.iter().find(|existing| existing.id == payload.machine.id) else {
             return Ok(Emit::default());
         };

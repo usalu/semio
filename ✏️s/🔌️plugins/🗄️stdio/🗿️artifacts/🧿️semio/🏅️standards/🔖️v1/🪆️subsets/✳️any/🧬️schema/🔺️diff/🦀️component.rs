@@ -67,38 +67,38 @@ pub enum SemioDiff {
 }
 
 impl MutationDiff<SemioSnapshot> for SemioDiff {
-    async fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
+    fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
         use SemioSubsetSnapshot as S;
         let subset = match (self, &base.subset) {
             (SemioDiff::NoChange, s) => s.clone(),
             (SemioDiff::Rejected(error), _) => return Err(error.clone()),
             (SemioDiff::Replace(snapshot), _) => return Ok((**snapshot).clone()),
-            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(d.apply(b).await.map_err(|error| error.under(["subset", "brep"]))?),
-            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(d.apply(b).await.map_err(|error| error.under(["subset", "mesh"]))?),
-            (SemioDiff::Model(d), S::Model(b)) => S::Model(d.apply(b).await.map_err(|error| error.under(["subset", "model"]))?),
-            (SemioDiff::Value(d), S::Value(b)) => S::Value(d.apply(b).await.map_err(|error| error.under(["subset", "value"]))?),
-            (SemioDiff::Document(d), S::Document(b)) => S::Document(d.apply(b).await.map_err(|error| error.under(["subset", "document"]))?),
-            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(d.apply(b).await.map_err(|error| error.under(["subset", "cad"]))?),
-            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(d.apply(b).await.map_err(|error| error.under(["subset", "drawing"]))?),
-            (SemioDiff::Image(d), S::Image(b)) => S::Image(d.apply(b).await.map_err(|error| error.under(["subset", "image"]))?),
-            (SemioDiff::Video(d), S::Video(b)) => S::Video(d.apply(b).await.map_err(|error| error.under(["subset", "video"]))?),
-            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(d.apply(b).await.map_err(|error| error.under(["subset", "audio"]))?),
-            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(d.apply(b).await.map_err(|error| error.under(["subset", "animation"]))?),
-            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(d.apply(b).await.map_err(|error| error.under(["subset", "presentation"]))?),
-            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(d.apply(b).await.map_err(|error| error.under(["subset", "flow"]))?),
-            (SemioDiff::Text(d), S::Text(b)) => S::Text(d.apply(b).await.map_err(|error| error.under(["subset", "text"]))?),
-            (SemioDiff::Table(d), S::Table(b)) => S::Table(d.apply(b).await.map_err(|error| error.under(["subset", "table"]))?),
-            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(d.apply(b).await.map_err(|error| error.under(["subset", "graph"]))?),
-            (SemioDiff::Object(d), S::Object(b)) => S::Object(d.apply(b).await.map_err(|error| error.under(["subset", "object"]))?),
-            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(d.apply(b).await.map_err(|error| error.under(["subset", "kit"]))?),
+            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(d.apply(b).map_err(|error| error.under(["subset", "brep"]))?),
+            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(d.apply(b).map_err(|error| error.under(["subset", "mesh"]))?),
+            (SemioDiff::Model(d), S::Model(b)) => S::Model(d.apply(b).map_err(|error| error.under(["subset", "model"]))?),
+            (SemioDiff::Value(d), S::Value(b)) => S::Value(d.apply(b).map_err(|error| error.under(["subset", "value"]))?),
+            (SemioDiff::Document(d), S::Document(b)) => S::Document(d.apply(b).map_err(|error| error.under(["subset", "document"]))?),
+            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(d.apply(b).map_err(|error| error.under(["subset", "cad"]))?),
+            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(d.apply(b).map_err(|error| error.under(["subset", "drawing"]))?),
+            (SemioDiff::Image(d), S::Image(b)) => S::Image(d.apply(b).map_err(|error| error.under(["subset", "image"]))?),
+            (SemioDiff::Video(d), S::Video(b)) => S::Video(d.apply(b).map_err(|error| error.under(["subset", "video"]))?),
+            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(d.apply(b).map_err(|error| error.under(["subset", "audio"]))?),
+            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(d.apply(b).map_err(|error| error.under(["subset", "animation"]))?),
+            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(d.apply(b).map_err(|error| error.under(["subset", "presentation"]))?),
+            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(d.apply(b).map_err(|error| error.under(["subset", "flow"]))?),
+            (SemioDiff::Text(d), S::Text(b)) => S::Text(d.apply(b).map_err(|error| error.under(["subset", "text"]))?),
+            (SemioDiff::Table(d), S::Table(b)) => S::Table(d.apply(b).map_err(|error| error.under(["subset", "table"]))?),
+            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(d.apply(b).map_err(|error| error.under(["subset", "graph"]))?),
+            (SemioDiff::Object(d), S::Object(b)) => S::Object(d.apply(b).map_err(|error| error.under(["subset", "object"]))?),
+            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(d.apply(b).map_err(|error| error.under(["subset", "kit"]))?),
             _ => {
-                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").await.at(["subset"]).await);
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"]));
             }
         };
         Ok(SemioSnapshot { schema: base.schema.clone(), subset })
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         use SemioDiff::*;
         let combined = match (std::mem::take(self), other) {
             (Rejected(error), _) | (_, Rejected(error)) => Rejected(error),
@@ -111,7 +111,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             // 🪢 An earlier replace absorbing a LATER same/foreign-kind diff: fold the later diff
             // into the replacement snapshot by re-using this impl's own `apply` (self-consistent,
             // no duplicated dispatch logic) and keep the result as the new replacement.
-            (Replace(s1), o) => match o.apply(&s1).await {
+            (Replace(s1), o) => match o.apply(&s1) {
                 Ok(snapshot) => Replace(Box::new(snapshot)),
                 Err(error) => Rejected(error),
             },
@@ -187,34 +187,34 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
                 d1.absorb(d2);
                 Kit(d1)
             }
-            _ => Rejected(MutationApplyError::new("mutation.absorb.kind-mismatch", "Semio subset diffs of different kinds cannot be composed").await.at(["subset"]).await),
+            _ => Rejected(MutationApplyError::new("mutation.absorb.kind-mismatch", "Semio subset diffs of different kinds cannot be composed").at(["subset"])),
         };
         *self = combined;
     }
 }
 
 impl DiffAlgebra<SemioSnapshot> for SemioDiff {
-    async fn between(base: &SemioSnapshot, other: &SemioSnapshot) -> Self {
+    fn between(base: &SemioSnapshot, other: &SemioSnapshot) -> Self {
         use SemioSubsetSnapshot as S;
         match (&base.subset, &other.subset) {
-            (S::Brep(b), S::Brep(o)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(b, o).await),
-            (S::Mesh(b), S::Mesh(o)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(b, o).await),
-            (S::Model(b), S::Model(o)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(b, o).await),
-            (S::Value(b), S::Value(o)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::between(b, o).await),
-            (S::Document(b), S::Document(o)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(b, o).await),
-            (S::Cad(b), S::Cad(o)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(b, o).await),
-            (S::Drawing(b), S::Drawing(o)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(b, o).await),
-            (S::Image(b), S::Image(o)) => SemioDiff::Image(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(b, o).await),
-            (S::Video(b), S::Video(o)) => SemioDiff::Video(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(b, o).await),
-            (S::Audio(b), S::Audio(o)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(b, o).await),
-            (S::Animation(b), S::Animation(o)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(b, o).await),
-            (S::Presentation(b), S::Presentation(o)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(b, o).await),
-            (S::Flow(b), S::Flow(o)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(b, o).await),
-            (S::Text(b), S::Text(o)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::between(b, o).await),
-            (S::Table(b), S::Table(o)) => SemioDiff::Table(<SemioTableDiff as DiffAlgebra<SemioTableSnapshot>>::between(b, o).await),
-            (S::Graph(b), S::Graph(o)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::between(b, o).await),
-            (S::Object(b), S::Object(o)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(b, o).await),
-            (S::Kit(b), S::Kit(o)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::between(b, o).await),
+            (S::Brep(b), S::Brep(o)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::between(b, o)),
+            (S::Mesh(b), S::Mesh(o)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(b, o)),
+            (S::Model(b), S::Model(o)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(b, o)),
+            (S::Value(b), S::Value(o)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::between(b, o)),
+            (S::Document(b), S::Document(o)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(b, o)),
+            (S::Cad(b), S::Cad(o)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::between(b, o)),
+            (S::Drawing(b), S::Drawing(o)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(b, o)),
+            (S::Image(b), S::Image(o)) => SemioDiff::Image(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(b, o)),
+            (S::Video(b), S::Video(o)) => SemioDiff::Video(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(b, o)),
+            (S::Audio(b), S::Audio(o)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(b, o)),
+            (S::Animation(b), S::Animation(o)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(b, o)),
+            (S::Presentation(b), S::Presentation(o)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(b, o)),
+            (S::Flow(b), S::Flow(o)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(b, o)),
+            (S::Text(b), S::Text(o)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::between(b, o)),
+            (S::Table(b), S::Table(o)) => SemioDiff::Table(<SemioTableDiff as DiffAlgebra<SemioTableSnapshot>>::between(b, o)),
+            (S::Graph(b), S::Graph(o)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::between(b, o)),
+            (S::Object(b), S::Object(o)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::between(b, o)),
+            (S::Kit(b), S::Kit(o)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::between(b, o)),
             // 🧭 Different kinds (or, degenerately, the exact same value): a cross-kind change has
             // no sparse representation, so it's `Replace`; an identical pair collapses to `NoChange`
             // so `between(a, a).is_empty()` holds even when `a`/`b` happen to share a reference.
@@ -228,45 +228,45 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         }
     }
 
-    async fn inverse(&self, base: &SemioSnapshot) -> Self {
+    fn inverse(&self, base: &SemioSnapshot) -> Self {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
             (SemioDiff::NoChange, _) => SemioDiff::NoChange,
             (SemioDiff::Rejected(error), _) => SemioDiff::Rejected(error.clone()),
             (SemioDiff::Replace(_), _) => SemioDiff::Replace(Box::new(base.clone())),
-            (SemioDiff::Brep(d), S::Brep(b)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Mesh(d), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Model(d), S::Model(b)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Value(d), S::Value(b)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Document(d), S::Document(b)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Cad(d), S::Cad(b)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Drawing(d), S::Drawing(b)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Image(d), S::Image(b)) => SemioDiff::Image(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Video(d), S::Video(b)) => SemioDiff::Video(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Audio(d), S::Audio(b)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Animation(d), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Presentation(d), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Flow(d), S::Flow(b)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Text(d), S::Text(b)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Table(d), S::Table(b)) => SemioDiff::Table(<SemioTableDiff as DiffAlgebra<SemioTableSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Graph(d), S::Graph(b)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Object(d), S::Object(b)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::inverse(d, b).await),
-            (SemioDiff::Kit(d), S::Kit(b)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::inverse(d, b).await),
-            _ => SemioDiff::Rejected(MutationApplyError::new("mutation.inverse.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").await.at(["subset"]).await),
+            (SemioDiff::Brep(d), S::Brep(b)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::inverse(d, b)),
+            (SemioDiff::Mesh(d), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::inverse(d, b)),
+            (SemioDiff::Model(d), S::Model(b)) => SemioDiff::Model(<SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::inverse(d, b)),
+            (SemioDiff::Value(d), S::Value(b)) => SemioDiff::Value(<SemioValueTreeDiff as DiffAlgebra<SemioValueSnapshot>>::inverse(d, b)),
+            (SemioDiff::Document(d), S::Document(b)) => SemioDiff::Document(<SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::inverse(d, b)),
+            (SemioDiff::Cad(d), S::Cad(b)) => SemioDiff::Cad(<SemioCadDiff as DiffAlgebra<SemioCadSnapshot>>::inverse(d, b)),
+            (SemioDiff::Drawing(d), S::Drawing(b)) => SemioDiff::Drawing(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::inverse(d, b)),
+            (SemioDiff::Image(d), S::Image(b)) => SemioDiff::Image(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::inverse(d, b)),
+            (SemioDiff::Video(d), S::Video(b)) => SemioDiff::Video(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::inverse(d, b)),
+            (SemioDiff::Audio(d), S::Audio(b)) => SemioDiff::Audio(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::inverse(d, b)),
+            (SemioDiff::Animation(d), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::inverse(d, b)),
+            (SemioDiff::Presentation(d), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::inverse(d, b)),
+            (SemioDiff::Flow(d), S::Flow(b)) => SemioDiff::Flow(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::inverse(d, b)),
+            (SemioDiff::Text(d), S::Text(b)) => SemioDiff::Text(<SemioTextDiff as DiffAlgebra<SemioTextSnapshot>>::inverse(d, b)),
+            (SemioDiff::Table(d), S::Table(b)) => SemioDiff::Table(<SemioTableDiff as DiffAlgebra<SemioTableSnapshot>>::inverse(d, b)),
+            (SemioDiff::Graph(d), S::Graph(b)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::inverse(d, b)),
+            (SemioDiff::Object(d), S::Object(b)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::inverse(d, b)),
+            (SemioDiff::Kit(d), S::Kit(b)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::inverse(d, b)),
+            _ => SemioDiff::Rejected(MutationApplyError::new("mutation.inverse.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"])),
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         match self {
             SemioDiff::NoChange => true,
             SemioDiff::Rejected(_) => false,
             SemioDiff::Replace(_) => false,
-            SemioDiff::Brep(d) => d.is_empty().await,
-            SemioDiff::Mesh(d) => d.is_empty().await,
-            SemioDiff::Model(d) => d.is_empty().await,
-            SemioDiff::Value(d) => d.is_empty().await,
-            SemioDiff::Document(d) => d.is_empty().await,
-            SemioDiff::Cad(d) => d.is_empty().await,
+            SemioDiff::Brep(d) => d.is_empty(),
+            SemioDiff::Mesh(d) => d.is_empty(),
+            SemioDiff::Model(d) => d.is_empty(),
+            SemioDiff::Value(d) => d.is_empty(),
+            SemioDiff::Document(d) => d.is_empty(),
+            SemioDiff::Cad(d) => d.is_empty(),
             SemioDiff::Drawing(d) => d.is_empty(),
             SemioDiff::Image(d) => d.is_empty(),
             SemioDiff::Video(d) => d.is_empty(),
@@ -437,10 +437,10 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
 }
 
 impl DiffCodec for SemioDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_semio_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_semio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
@@ -450,37 +450,37 @@ impl DiffCodec for SemioDiff {
     /// `DiffCodec::encode_diff()` bytes (genuine reuse, never re-derived here); for `Replace`, the
     /// wrapped snapshot's own real `ArtifactPack::encode_pack()` bytes (📸️snapshot's real binary
     /// delegation, applied one level deeper); `NoChange` carries no payload at all.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
         let payload: Vec<u8> = match self {
             SemioDiff::NoChange => Vec::new(),
             SemioDiff::Rejected(error) => enc_rejection(error).into_bytes(),
-            SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s).await,
-            SemioDiff::Brep(d) => d.encode_diff().await?,
-            SemioDiff::Mesh(d) => d.encode_diff().await?,
-            SemioDiff::Model(d) => d.encode_diff().await?,
-            SemioDiff::Value(d) => d.encode_diff().await?,
-            SemioDiff::Document(d) => d.encode_diff().await?,
-            SemioDiff::Cad(d) => d.encode_diff().await?,
-            SemioDiff::Drawing(d) => d.encode_diff().await?,
-            SemioDiff::Image(d) => d.encode_diff().await?,
-            SemioDiff::Video(d) => d.encode_diff().await?,
-            SemioDiff::Audio(d) => d.encode_diff().await?,
-            SemioDiff::Animation(d) => d.encode_diff().await?,
-            SemioDiff::Presentation(d) => d.encode_diff().await?,
-            SemioDiff::Flow(d) => d.encode_diff().await?,
-            SemioDiff::Text(d) => d.encode_diff().await?,
-            SemioDiff::Table(d) => d.encode_diff().await?,
-            SemioDiff::Graph(d) => d.encode_diff().await?,
-            SemioDiff::Object(d) => d.encode_diff().await?,
-            SemioDiff::Kit(d) => d.encode_diff().await?,
+            SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s),
+            SemioDiff::Brep(d) => d.encode_diff()?,
+            SemioDiff::Mesh(d) => d.encode_diff()?,
+            SemioDiff::Model(d) => d.encode_diff()?,
+            SemioDiff::Value(d) => d.encode_diff()?,
+            SemioDiff::Document(d) => d.encode_diff()?,
+            SemioDiff::Cad(d) => d.encode_diff()?,
+            SemioDiff::Drawing(d) => d.encode_diff()?,
+            SemioDiff::Image(d) => d.encode_diff()?,
+            SemioDiff::Video(d) => d.encode_diff()?,
+            SemioDiff::Audio(d) => d.encode_diff()?,
+            SemioDiff::Animation(d) => d.encode_diff()?,
+            SemioDiff::Presentation(d) => d.encode_diff()?,
+            SemioDiff::Flow(d) => d.encode_diff()?,
+            SemioDiff::Text(d) => d.encode_diff()?,
+            SemioDiff::Table(d) => d.encode_diff()?,
+            SemioDiff::Graph(d) => d.encode_diff()?,
+            SemioDiff::Object(d) => d.encode_diff()?,
+            SemioDiff::Kit(d) => d.encode_diff()?,
         };
         out.extend_from_slice(&payload);
         Ok(out)
     }
 
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
         if bytes.len() < 2 {
             return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });
@@ -493,25 +493,25 @@ impl DiffCodec for SemioDiff {
         let payload = &bytes[2..];
         Ok(match tag {
             0 => SemioDiff::NoChange,
-            1 => SemioDiff::Brep(SemioBrepDiff::decode_diff(payload).await?),
-            2 => SemioDiff::Mesh(SemioMeshDiff::decode_diff(payload).await?),
-            3 => SemioDiff::Model(SemioModelDiff::decode_diff(payload).await?),
-            4 => SemioDiff::Value(SemioValueTreeDiff::decode_diff(payload).await?),
-            5 => SemioDiff::Document(SemioDocumentDiff::decode_diff(payload).await?),
-            6 => SemioDiff::Cad(SemioCadDiff::decode_diff(payload).await?),
-            7 => SemioDiff::Drawing(SemioDrawingDiff::decode_diff(payload).await?),
-            8 => SemioDiff::Image(SemioImageDiff::decode_diff(payload).await?),
-            9 => SemioDiff::Video(SemioVideoDiff::decode_diff(payload).await?),
-            10 => SemioDiff::Audio(SemioAudioDiff::decode_diff(payload).await?),
-            11 => SemioDiff::Animation(SemioAnimationDiff::decode_diff(payload).await?),
-            12 => SemioDiff::Presentation(SemioPresentationDiff::decode_diff(payload).await?),
-            13 => SemioDiff::Flow(SemioFlowDiff::decode_diff(payload).await?),
-            14 => SemioDiff::Text(SemioTextDiff::decode_diff(payload).await?),
-            15 => SemioDiff::Table(SemioTableDiff::decode_diff(payload).await?),
-            16 => SemioDiff::Graph(SemioGraphDiff::decode_diff(payload).await?),
-            17 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload).await?),
-            18 => SemioDiff::Kit(SemioKitDiff::decode_diff(payload).await?),
-            19 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload).await?)),
+            1 => SemioDiff::Brep(SemioBrepDiff::decode_diff(payload)?),
+            2 => SemioDiff::Mesh(SemioMeshDiff::decode_diff(payload)?),
+            3 => SemioDiff::Model(SemioModelDiff::decode_diff(payload)?),
+            4 => SemioDiff::Value(SemioValueTreeDiff::decode_diff(payload)?),
+            5 => SemioDiff::Document(SemioDocumentDiff::decode_diff(payload)?),
+            6 => SemioDiff::Cad(SemioCadDiff::decode_diff(payload)?),
+            7 => SemioDiff::Drawing(SemioDrawingDiff::decode_diff(payload)?),
+            8 => SemioDiff::Image(SemioImageDiff::decode_diff(payload)?),
+            9 => SemioDiff::Video(SemioVideoDiff::decode_diff(payload)?),
+            10 => SemioDiff::Audio(SemioAudioDiff::decode_diff(payload)?),
+            11 => SemioDiff::Animation(SemioAnimationDiff::decode_diff(payload)?),
+            12 => SemioDiff::Presentation(SemioPresentationDiff::decode_diff(payload)?),
+            13 => SemioDiff::Flow(SemioFlowDiff::decode_diff(payload)?),
+            14 => SemioDiff::Text(SemioTextDiff::decode_diff(payload)?),
+            15 => SemioDiff::Table(SemioTableDiff::decode_diff(payload)?),
+            16 => SemioDiff::Graph(SemioGraphDiff::decode_diff(payload)?),
+            17 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload)?),
+            18 => SemioDiff::Kit(SemioKitDiff::decode_diff(payload)?),
+            19 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
             20 => SemioDiff::Rejected(
                 dec_rejection(std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "rejected diff", offset: 2, detail: error.to_string() })?).map_err(|error| protocol::ProtocolError::Malformed {
                     what: "rejected diff",

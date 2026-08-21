@@ -100,10 +100,10 @@ fn parse_table_mutation(line: &str) -> Result<SemioTableMutation, String> {
 }
 
 impl protocol::OpText for SemioTableMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_table_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_table_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }

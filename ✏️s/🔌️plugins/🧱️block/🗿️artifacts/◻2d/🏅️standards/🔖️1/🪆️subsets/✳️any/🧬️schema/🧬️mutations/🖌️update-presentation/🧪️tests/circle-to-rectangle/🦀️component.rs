@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block2d::mutations::{apply_block2d_mutation, inverse_block2d_mutation};
 use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::artifacts::block2d::mutations::{apply_block2d_mutation, inverse_block2d_mutation};
 use crate::artifacts::block2d::Block2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -31,7 +31,11 @@ async fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_block2d_mutation(&mut snapshot, &mutation()).expect("update-presentation applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "update-presentation/circle-to-rectangle: applied state differs from committed after-snapshot");
-    assert_eq!((snapshot.presentation.shape.as_deref(), snapshot.presentation.radius, snapshot.presentation.icon_kind.as_deref()), (Some("rectangle"), None, None), "update-presentation replaces the whole facet, so the old radius and iconKind must be cleared");
+    assert_eq!(
+        (snapshot.presentation.shape.as_deref(), snapshot.presentation.radius, snapshot.presentation.icon_kind.as_deref()),
+        (Some("rectangle"), None, None),
+        "update-presentation replaces the whole facet, so the old radius and iconKind must be cleared"
+    );
 }
 
 /// ↩️ Applying the mutation then its inverse restores `before` exactly.
@@ -106,7 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::block2d::diff::Block2dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block2d::diff::Block2dDiff as protocol::MutationDiff<Block2dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::block2d::diff::Block2dDiff as protocol::MutationDiff<Block2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-presentation/circle-to-rectangle: committed diff did not carry before to after");
 }

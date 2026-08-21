@@ -20,8 +20,7 @@ pub async fn delete_curated_item(object_id: String) -> SourcingMutation {
 }
 
 impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for DeleteCuratedItem {
-    const SEMANTICS: protocol::SemanticDescriptor =
-        protocol::SemanticDescriptor { verb: "delete", entity: "curated-item", kind: "delete-curated-item", record: "DeletedCuratedItem" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "curated-item", kind: "delete-curated-item", record: "DeletedCuratedItem" };
 
     async fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)

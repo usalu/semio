@@ -7,8 +7,8 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 pub use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+pub use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 pub use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactDialect, SpaceArtifactRow};
 
 pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
@@ -18,8 +18,7 @@ pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
 /// placement doc — `artifact_kind` matches this subset's `#[artifact_schema(id = "s.space.space")]`,
 /// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical
 /// surface id: `s.space.space@1/*#editor` / `s.space.space@1/*#viewer` (contract §1 grammar).
-pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect =
-    semio_framework_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
@@ -51,8 +50,14 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.space")?)
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.space")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.space")?)?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.space.composer.native")?, ArtifactCapabilityKind::composer()).descriptor(b"s.space.space@1/*")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.space.space@1/*")?)?)?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.schema.artifact")?, ArtifactCapabilityKind::schema()).descriptor(b"s.space.space")?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), "s.space.space")?)?,
+        )?
+        .capability(
+            ArtifactCapability::new(ArtifactIdentity::parse("s.space.composer.native")?, ArtifactCapabilityKind::composer())
+                .descriptor(b"s.space.space@1/*")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), "s.space.space@1/*")?)?,
+        )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.space.codec.document")?, ArtifactCapabilityKind::codec())
                 .descriptor(b"s.space:sspace")?

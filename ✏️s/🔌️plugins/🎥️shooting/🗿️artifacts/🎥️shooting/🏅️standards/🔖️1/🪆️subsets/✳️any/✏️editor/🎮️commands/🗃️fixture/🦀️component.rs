@@ -1,10 +1,10 @@
 //! 🗃️ Shooting play app commands — whole-fixture load/reset/save/import shell effects.
 
-use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
-use crate::editor::shooting::ShootingDispatchCtx;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
+use crate::editor::shooting::ShootingDispatchCtx;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️ImportSnapshotJson
@@ -95,7 +95,7 @@ pub mod load_request {
     pub struct LoadRequest {}
 
     pub async fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(109),  accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(109), accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "importSnapshotJson".into(), multiple: false }))
     }
 }
 //#endregion 🔖️LoadRequest

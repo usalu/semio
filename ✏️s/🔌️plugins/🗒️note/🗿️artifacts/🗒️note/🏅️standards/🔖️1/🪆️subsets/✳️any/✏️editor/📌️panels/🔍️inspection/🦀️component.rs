@@ -1,9 +1,9 @@
 //! 🔍️ Note play app panel — the document-wide properties summary (schema, block count, active
 //! utility, snap status).
 
-use crate::editor::note::terminology::NotePlayLabels;
 use crate::artifacts::note::schema::flatten_blocks;
 use crate::artifacts::note::NoteSnapshot;
+use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -12,7 +12,13 @@ pub const NOTE_PLAY_BODY_PROPERTIES: &str = "note.play.properties";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(NOTE_PLAY_BODY_PROPERTIES.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(NOTE_PLAY_BODY_PROPERTIES.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

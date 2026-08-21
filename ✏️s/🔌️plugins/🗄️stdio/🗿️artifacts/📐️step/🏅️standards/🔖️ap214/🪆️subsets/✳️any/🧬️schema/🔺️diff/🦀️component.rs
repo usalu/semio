@@ -601,14 +601,14 @@ fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> StepSnapsh
 }
 
 impl MutationDiff<StepSnapshot> for StepDiff {
-    async fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
+    fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
         if let Some(diff) = &self.entities {
             validate_entities_diff(&base.entities, diff)?;
         }
         Ok(apply_step_diff_unchecked(self, base))
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.file_description.is_some() {
             self.file_description = other.file_description;
         }
@@ -626,12 +626,12 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
     /// `self.apply(base)` back to `base` — `between` is the single source of truth for turning a
     /// state pair into a diff.
-    async fn inverse(&self, base: &StepSnapshot) -> Self {
+    fn inverse(&self, base: &StepSnapshot) -> Self {
         let mutated = apply_step_diff_unchecked(self, base);
-        Self::between(&mutated, base).await
+        Self::between(&mutated, base)
     }
 
-    async fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
+    fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
         let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
@@ -641,7 +641,7 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
         }
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.is_empty_diff()
     }
 }
@@ -1357,10 +1357,10 @@ fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
 }
 
 impl protocol::DiffCodec for StepDiff {
-    async fn print_diff(&self) -> String {
+    fn print_diff(&self) -> String {
         print_step_diff(self)
     }
-    async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
+    fn parse_diff(line: &str) -> Result<Self, store::TextError> {
         parse_step_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | present-field payloads`), matching
@@ -1370,7 +1370,7 @@ impl protocol::DiffCodec for StepDiff {
     /// bit3=`entities`) — `StepDiff` has FOUR independently optional top-level fields, same shape
     /// dxf's own `DxfDiff` (also four) upgraded to this same wave, unlike md/json's single
     /// `has_value` byte.
-    async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let flags: u8 = (self.file_description.is_some() as u8) | ((self.file_name.is_some() as u8) << 1) | ((self.file_schema.is_some() as u8) << 2) | ((self.entities.is_some() as u8) << 3);
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
         if let Some(v) = &self.file_description {
@@ -1387,11 +1387,11 @@ impl protocol::DiffCodec for StepDiff {
         }
         Ok(out)
     }
-    async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };

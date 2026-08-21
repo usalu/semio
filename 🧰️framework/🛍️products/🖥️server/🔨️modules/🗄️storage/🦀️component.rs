@@ -348,12 +348,7 @@ impl ProjectionStore for MemoryProjectionStore {
     }
 
     async fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)> {
-        self.projections
-            .get(projection)
-            .into_iter()
-            .flat_map(|entries| entries.range(prefix.to_owned()..).take_while(|(key, _)| key.starts_with(prefix)))
-            .map(|(key, value)| (key.clone(), value.clone()))
-            .collect()
+        self.projections.get(projection).into_iter().flat_map(|entries| entries.range(prefix.to_owned()..).take_while(|(key, _)| key.starts_with(prefix))).map(|(key, value)| (key.clone(), value.clone())).collect()
     }
 
     async fn checkpoint(&self, projection: &str) -> u64 {

@@ -14,12 +14,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 use crate::artifacts::dag::mutations::{
-    change_node_abbreviation, change_node_icon, change_node_name, change_node_operator_kind, connect_nodes, create_node, delete_node, disconnect_nodes, move_node, rename_node, reorder_nodes,
-    replace_node_kind, replace_node_properties, resize_node,
+    change_node_abbreviation, change_node_icon, change_node_name, change_node_operator_kind, connect_nodes, create_node, delete_node, disconnect_nodes, move_node, rename_node, reorder_nodes, replace_node_kind, replace_node_properties, resize_node,
 };
 use crate::artifacts::dag::{DagNodeKind, DagNodeSpec};
-use infinite_board_port_directed_dag::EdgeRouteStyle;
 use graph::manifest::PropertyBag;
+use infinite_board_port_directed_dag::EdgeRouteStyle;
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -31,63 +30,20 @@ use protocol::OpText;
 /// opaque `serde_json`-encoded string field here — a documented deviation, not a silent one.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum DagMutationDsl {
-    CreateNode {
-        node_json: String,
-    },
-    DeleteNode {
-        id: String,
-    },
-    RenameNode {
-        id: String,
-        new_id: String,
-    },
-    ChangeNodeName {
-        id: String,
-        new_name: String,
-    },
-    MoveNode {
-        id: String,
-        x: f64,
-        y: f64,
-    },
-    ResizeNode {
-        id: String,
-        width: f64,
-        height: f64,
-    },
-    ChangeNodeIcon {
-        id: String,
-        new_icon: String,
-    },
-    ChangeNodeAbbreviation {
-        id: String,
-        new_abbreviation: String,
-    },
-    ChangeNodeOperatorKind {
-        id: String,
-        new_operator_kind: Option<String>,
-    },
-    ReplaceNodeKind {
-        id: String,
-        new_kind_json: String,
-    },
-    ReplaceNodeProperties {
-        id: String,
-        new_properties_json: String,
-    },
-    ReorderNodes {
-        order: Vec<String>,
-    },
-    ConnectNodes {
-        id: String,
-        source: String,
-        target: String,
-        route_style: EdgeRouteStyle,
-        properties_json: String,
-    },
-    DisconnectNodes {
-        id: String,
-    },
+    CreateNode { node_json: String },
+    DeleteNode { id: String },
+    RenameNode { id: String, new_id: String },
+    ChangeNodeName { id: String, new_name: String },
+    MoveNode { id: String, x: f64, y: f64 },
+    ResizeNode { id: String, width: f64, height: f64 },
+    ChangeNodeIcon { id: String, new_icon: String },
+    ChangeNodeAbbreviation { id: String, new_abbreviation: String },
+    ChangeNodeOperatorKind { id: String, new_operator_kind: Option<String> },
+    ReplaceNodeKind { id: String, new_kind_json: String },
+    ReplaceNodeProperties { id: String, new_properties_json: String },
+    ReorderNodes { order: Vec<String> },
+    ConnectNodes { id: String, source: String, target: String, route_style: EdgeRouteStyle, properties_json: String },
+    DisconnectNodes { id: String },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -140,9 +96,7 @@ async fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
         DagMutation::ReplaceNodeKind(payload) => DagMutationDsl::ReplaceNodeKind { id: payload.id.clone(), new_kind_json: json_of(&payload.new_kind) },
         DagMutation::ReplaceNodeProperties(payload) => DagMutationDsl::ReplaceNodeProperties { id: payload.id.clone(), new_properties_json: json_of(&payload.new_properties) },
         DagMutation::ReorderNodes(payload) => DagMutationDsl::ReorderNodes { order: payload.order.clone() },
-        DagMutation::ConnectNodes(payload) => {
-            DagMutationDsl::ConnectNodes { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties_json: json_of(&payload.properties) }
-        }
+        DagMutation::ConnectNodes(payload) => DagMutationDsl::ConnectNodes { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties_json: json_of(&payload.properties) },
         DagMutation::DisconnectNodes(payload) => DagMutationDsl::DisconnectNodes { id: payload.id.clone() },
     }
 }
@@ -159,9 +113,7 @@ async fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
         DagMutationDsl::ChangeNodeAbbreviation { id, new_abbreviation } => change_node_abbreviation(id, new_abbreviation),
         DagMutationDsl::ChangeNodeOperatorKind { id, new_operator_kind } => change_node_operator_kind(id, new_operator_kind),
         DagMutationDsl::ReplaceNodeKind { id, new_kind_json } => replace_node_kind(id, serde_json::from_str::<DagNodeKind>(&new_kind_json).expect("dag mutation dsl `new_kind_json` must decode")),
-        DagMutationDsl::ReplaceNodeProperties { id, new_properties_json } => {
-            replace_node_properties(id, serde_json::from_str::<PropertyBag>(&new_properties_json).expect("dag mutation dsl `new_properties_json` must decode"))
-        }
+        DagMutationDsl::ReplaceNodeProperties { id, new_properties_json } => replace_node_properties(id, serde_json::from_str::<PropertyBag>(&new_properties_json).expect("dag mutation dsl `new_properties_json` must decode")),
         DagMutationDsl::ReorderNodes { order } => reorder_nodes(order),
         DagMutationDsl::ConnectNodes { id, source, target, route_style, properties_json } => {
             connect_nodes(id, source, target, route_style, serde_json::from_str::<PropertyBag>(&properties_json).expect("dag mutation dsl `properties_json` must decode"))

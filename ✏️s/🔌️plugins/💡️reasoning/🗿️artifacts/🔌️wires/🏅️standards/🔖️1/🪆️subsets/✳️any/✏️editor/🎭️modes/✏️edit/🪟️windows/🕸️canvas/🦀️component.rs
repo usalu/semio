@@ -1,7 +1,7 @@
 //! 🕸️ Wires play app — the canvas window: the editable WIRES mindmap board.
 
-use crate::editor::wires::WIRES_PLAY_APP_ID;
 use crate::artifacts::wires::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
+use crate::editor::wires::WIRES_PLAY_APP_ID;
 use dsl::DslValue;
 use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};

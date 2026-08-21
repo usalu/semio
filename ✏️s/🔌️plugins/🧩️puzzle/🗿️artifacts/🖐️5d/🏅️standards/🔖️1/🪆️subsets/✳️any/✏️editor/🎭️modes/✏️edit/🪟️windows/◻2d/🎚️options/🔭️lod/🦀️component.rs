@@ -3,8 +3,8 @@
 //! surface has LOD tiers, so this stays under the 2D window rather than at mode level.
 
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
-use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_LOD_MODE_AUTOMATIC, PUZZLE5D_PLAY_CONTROLLER_ID};
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
+use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_LOD_MODE_AUTOMATIC, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::Value;
 

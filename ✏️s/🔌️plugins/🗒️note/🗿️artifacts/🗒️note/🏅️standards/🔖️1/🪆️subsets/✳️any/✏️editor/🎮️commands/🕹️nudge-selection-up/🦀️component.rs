@@ -1,10 +1,10 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection-up`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::op::NoteMutation;
+use crate::artifacts::note::schema::{block_id, flatten_blocks};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -43,8 +43,6 @@ async fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f6
 }
 //#endregion 🔖️Helpers
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "nudge-selection-up")]
 pub struct NudgeSelectionUp {}
@@ -57,9 +55,9 @@ pub async fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnap
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::note::schema::{block_bounds, block_id};
     use crate::editor::note::testkit::{dispatch, note_app_with_registry, select_blocks};
     use crate::editor::note::NoteCommand;
-    use crate::artifacts::note::schema::{block_bounds, block_id};
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `addBlock` no longer auto-selects
     /// the freshly added block (selection is framework-owned now) — `select_blocks` dispatches the

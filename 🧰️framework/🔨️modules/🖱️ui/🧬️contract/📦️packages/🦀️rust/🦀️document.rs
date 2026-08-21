@@ -143,19 +143,48 @@ pub struct UiSnapshot {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum UiPatchOp {
     Upsert(UiNodeRecord),
-    SetComponent { id: UiNodeId, component: crate::Component },
-    SetLayout { id: UiNodeId, layout: crate::LayoutSpec },
-    SetActivity { id: UiNodeId, activity: crate::Activity, disabled: bool },
-    SetChildren { id: UiNodeId, children: Vec<UiNodeId> },
-    SetStyle { id: UiNodeId, style: crate::StyleSpec },
-    SetAccessibility { id: UiNodeId, accessibility: crate::AccessibilitySpec },
-    SetBindings { id: UiNodeId, bindings: Vec<crate::ActionBinding> },
-    SetMenu { id: UiNodeId, menu: Option<crate::MenuRef> },
+    SetComponent {
+        id: UiNodeId,
+        component: crate::Component,
+    },
+    SetLayout {
+        id: UiNodeId,
+        layout: crate::LayoutSpec,
+    },
+    SetActivity {
+        id: UiNodeId,
+        activity: crate::Activity,
+        disabled: bool,
+    },
+    SetChildren {
+        id: UiNodeId,
+        children: Vec<UiNodeId>,
+    },
+    SetStyle {
+        id: UiNodeId,
+        style: crate::StyleSpec,
+    },
+    SetAccessibility {
+        id: UiNodeId,
+        accessibility: crate::AccessibilitySpec,
+    },
+    SetBindings {
+        id: UiNodeId,
+        bindings: Vec<crate::ActionBinding>,
+    },
+    SetMenu {
+        id: UiNodeId,
+        menu: Option<crate::MenuRef>,
+    },
     /// 🗑️ Removes the node and its whole orphaned subtree. A struct variant, not a newtype: an
     /// internally-tagged enum cannot serialize a newtype whose payload is not a map, and a bare
     /// `UiNodeId` is an integer — that shape compiles clean and fails only at runtime.
-    Remove { id: UiNodeId },
-    SetRoot { id: UiNodeId },
+    Remove {
+        id: UiNodeId,
+    },
+    SetRoot {
+        id: UiNodeId,
+    },
 }
 
 /// 🩹️ A revisioned batch of [`UiPatchOp`]s. Applies atomically: `base_revision` must equal the
@@ -223,12 +252,7 @@ impl UiSnapshotState {
 
 impl From<UiSnapshot> for UiSnapshotState {
     fn from(snapshot: UiSnapshot) -> Self {
-        Self {
-            surface: snapshot.surface,
-            revision: snapshot.revision,
-            root: Some(snapshot.root),
-            nodes: snapshot.nodes.into_iter().map(|record| (record.id, record)).collect(),
-        }
+        Self { surface: snapshot.surface, revision: snapshot.revision, root: Some(snapshot.root), nodes: snapshot.nodes.into_iter().map(|record| (record.id, record)).collect() }
     }
 }
 
@@ -304,26 +328,11 @@ mod tests {
     fn snapshot_three_levels_round_trips_byte_identically() {
         let grandchild = leaf_record(2, "grandchild");
         let mut child = leaf_record(1, "child");
-        child.component = crate::Component::Container(crate::ContainerProps {
-            role: crate::ContainerRole::Group,
-            label: Some(crate::Label::from("Group")),
-            description: None,
-            required: None,
-            error: None,
-            default_open: Some(true),
-            drop_overlay: None,
-        });
+        child.component =
+            crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Group, label: Some(crate::Label::from("Group")), description: None, required: None, error: None, default_open: Some(true), drop_overlay: None });
         child.children = vec![UiNodeId(2)];
         let mut root = leaf_record(0, "root");
-        root.component = crate::Component::Container(crate::ContainerProps {
-            role: crate::ContainerRole::Plain,
-            label: None,
-            description: None,
-            required: None,
-            error: None,
-            default_open: None,
-            drop_overlay: None,
-        });
+        root.component = crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None });
         root.children = vec![UiNodeId(1)];
 
         let snapshot = UiSnapshot { surface: SurfaceId::from("note.play.navigator"), revision: UiRevision(1), root: UiNodeId(0), nodes: vec![root, child, grandchild], layout_epoch: 0 };

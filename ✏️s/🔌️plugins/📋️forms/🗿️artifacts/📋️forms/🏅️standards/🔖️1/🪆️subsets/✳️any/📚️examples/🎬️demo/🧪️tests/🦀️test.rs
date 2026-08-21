@@ -28,8 +28,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifacts::forms::FormsSnapshot;
     use crate::artifacts::forms::standards::v1::subsets::any::schema::inferences::FormsInference;
+    use crate::artifacts::forms::FormsSnapshot;
     use protocol::Inference;
 
     assert_eq!(FormsInference::infer(&FormsSnapshot::default()), FormsInference::default());

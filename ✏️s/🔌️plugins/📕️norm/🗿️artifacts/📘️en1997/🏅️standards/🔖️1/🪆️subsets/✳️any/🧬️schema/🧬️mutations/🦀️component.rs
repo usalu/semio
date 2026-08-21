@@ -146,14 +146,10 @@ mod tests {
     }
 
     async fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
-        let forward = vcs::apply_mutation(base, mutation)
-            .expect("valid mutation")
-            .0;
+        let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back)
-                .expect("valid inverse mutation")
-                .0;
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -183,9 +179,7 @@ mod tests {
         let _ = &mut target;
         let mut projected = base.clone();
         for mutation in En1997Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation)
-                .expect("snapshot mutation applies")
-                .0;
+            projected = vcs::apply_mutation(&projected, &mutation).expect("snapshot mutation applies").0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }

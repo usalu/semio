@@ -20,11 +20,7 @@ impl protocol::OpText for PresentMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -53,17 +49,15 @@ impl protocol::OpBinary for PresentMutation {
 mod tests {
     use super::*;
     use crate::artifacts::present::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
-    use crate::artifacts::present::{default_figure_tile_source, default_present_snapshot, FigureTileDraft, FigureTileFrame, PresentSnapshot};
     use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+    use crate::artifacts::present::{default_figure_tile_source, default_present_snapshot, FigureTileDraft, FigureTileFrame, PresentSnapshot};
     use store::os_store::test_support;
 
     async fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
-        let (forward, _messages) =
-            vcs::apply_mutation(deck, operation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(deck, operation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in protocol::Mutation::inverse(operation, deck) {
-            let (next, _messages) =
-                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, deck, "inverse() must exactly restore the pre-operation deck");
@@ -89,10 +83,7 @@ mod tests {
         assert_eq!(crate::artifacts::present::present_working_scene(&added).1.len(), 1);
         let renamed = round_trip(&added, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
         assert_eq!(crate::artifacts::present::present_working_scene(&renamed).1[0].name, "Renamed");
-        let recropped = round_trip(
-            &renamed,
-            &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }),
-        );
+        let recropped = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }));
         assert_eq!(crate::artifacts::present::present_working_scene(&recropped).1[0].crop.width, 0.4);
         let removed = round_trip(&recropped, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
         assert!(crate::artifacts::present::present_working_scene(&removed).1.is_empty());

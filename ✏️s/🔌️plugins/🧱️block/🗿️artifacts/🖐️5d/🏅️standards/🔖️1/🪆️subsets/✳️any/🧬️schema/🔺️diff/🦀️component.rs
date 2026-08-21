@@ -11,22 +11,38 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::block5d::schema::Block5dArtifact>>,
-    #[state(artifact)] pub schema: Option<String>,
-    #[state(artifact)] pub part_kind: Option<BlockKindIdentity>,
-    #[state(artifact)] pub part_2d: Option<Block5dPart2d>,
-    #[state(artifact)] pub part_3d: Option<Block5dPart3d>,
-    #[state(artifact)] pub representations: Option<Block5dRepresentationsDelta>,
-    #[state(artifact)] pub grip_kinds: Option<Block5dGripKindsDelta>,
-    #[state(artifact)] pub grips: Option<Block5dGripsDelta>,
-    #[state(artifact)] pub compatibility: Option<Block5dCompatibilityDelta>,
-    #[state(artifact)] pub attributes: Option<Block5dAttributesDelta>,
-    #[state(artifact)] pub authors: Option<Block5dAuthorList>,
-    #[state(artifact)] pub camera2d: Option<BlockCamera2d>,
-    #[state(artifact)] pub camera3d: Option<BlockCamera3d>,
-    #[state(artifact)] pub meta: Option<BlockMeta>,
-    #[state(presence)] pub selected_ids: Option<Block5dStringList>,
-    #[state(config)] pub locale: Option<String>,
+    #[state(artifact)]
+    pub artifact: Option<Box<crate::artifacts::block5d::schema::Block5dArtifact>>,
+    #[state(artifact)]
+    pub schema: Option<String>,
+    #[state(artifact)]
+    pub part_kind: Option<BlockKindIdentity>,
+    #[state(artifact)]
+    pub part_2d: Option<Block5dPart2d>,
+    #[state(artifact)]
+    pub part_3d: Option<Block5dPart3d>,
+    #[state(artifact)]
+    pub representations: Option<Block5dRepresentationsDelta>,
+    #[state(artifact)]
+    pub grip_kinds: Option<Block5dGripKindsDelta>,
+    #[state(artifact)]
+    pub grips: Option<Block5dGripsDelta>,
+    #[state(artifact)]
+    pub compatibility: Option<Block5dCompatibilityDelta>,
+    #[state(artifact)]
+    pub attributes: Option<Block5dAttributesDelta>,
+    #[state(artifact)]
+    pub authors: Option<Block5dAuthorList>,
+    #[state(artifact)]
+    pub camera2d: Option<BlockCamera2d>,
+    #[state(artifact)]
+    pub camera3d: Option<BlockCamera3d>,
+    #[state(artifact)]
+    pub meta: Option<BlockMeta>,
+    #[state(presence)]
+    pub selected_ids: Option<Block5dStringList>,
+    #[state(config)]
+    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 
@@ -70,7 +86,6 @@ pub struct Block5dRepresentationsPatch {
     pub replacement: Option<BlockRepresentation>,
 }
 
-
 /// 📂 Identified-collection delta for GripKinds.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -95,7 +110,6 @@ pub struct Block5dGripKindsPatchEntry {
 pub struct Block5dGripKindsPatch {
     pub replacement: Option<Block5dGripKind>,
 }
-
 
 /// 📂 Identified-collection delta for Grips.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -122,7 +136,6 @@ pub struct Block5dGripsPatch {
     pub replacement: Option<Block5dGripTemplate>,
 }
 
-
 /// 📂 Identified-collection delta for Compatibility.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -147,7 +160,6 @@ pub struct Block5dCompatibilityPatchEntry {
 pub struct Block5dCompatibilityPatch {
     pub replacement: Option<BlockCompatibilityRule>,
 }
-
 
 /// 📂 Identified-collection delta for Attributes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

@@ -10,12 +10,12 @@ extern crate semio_framework_os_kernel as store;
 //#endregion 🔖️KernelCrateAliases
 
 //#region 🔖️KernelModuleAliases
+pub use semio_framework_os_kernel::os_dsl;
+pub use semio_framework_os_kernel::os_pack;
+pub use semio_framework_os_kernel::os_spr;
 /// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
 pub use semio_framework_os_kernel::os_store;
-pub use semio_framework_os_kernel::os_dsl;
-pub use semio_framework_os_kernel::os_spr;
 pub use semio_framework_os_kernel::os_vcs;
-pub use semio_framework_os_kernel::os_pack;
 //#endregion 🔖️KernelModuleAliases
 
 //#region 🔖️InfiniteAlias
@@ -25,7 +25,7 @@ pub use semio_framework_os_infinite as infinite;
 
 //#region 🔖️DagCanvasNeural
 pub use crate::infinite::board::ports::directed_dag as dag;
-pub use crate::infinite::canvas as canvas;
+pub use crate::infinite::canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
 
@@ -67,14 +67,12 @@ pub use vcs::*;
 
 #[path = "../../📐️brep-geometry/🦀️component.rs"]
 pub mod brep_geometry;
-pub use brep_geometry::{
-    dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry,
-};
+pub use brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
 
 #[path = "."]
 pub mod extensions {
-  #[path = "../../🧩️extensions/🕸️wasm/🦀️component.rs"]
-  pub mod wasm;
+    #[path = "../../🧩️extensions/🕸️wasm/🦀️component.rs"]
+    pub mod wasm;
 }
 
 pub use extensions::wasm::*;

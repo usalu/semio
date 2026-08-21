@@ -4,8 +4,8 @@ use crate::artifacts::flow::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::terminology::flow_play_labels;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
-use flow::forms_bridge::flow_fixture_to_form_spec;
 use crate::playbook::{render_generation_form_body, selected_generation};
+use flow::forms_bridge::flow_fixture_to_form_spec;
 use semio_framework_plugin::{ui_text, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

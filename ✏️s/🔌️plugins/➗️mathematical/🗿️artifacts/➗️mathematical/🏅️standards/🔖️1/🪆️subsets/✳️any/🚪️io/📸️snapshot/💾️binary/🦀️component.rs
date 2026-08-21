@@ -118,11 +118,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn mathematical_snapshot_dsl_pack_equivalence_with_seed_and_empty_collections() {
-        let mut graph = MathematicalGraph {
-            algorithm: "bfs".into(),
-            algorithm_seed: Some("a".into()),
-            ..MathematicalGraph::default()
-        };
+        let mut graph = MathematicalGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..MathematicalGraph::default() };
         graph.nodes.clear();
         graph.edges.clear();
         let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry { points: Vec::new() });
@@ -136,20 +132,10 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let mut store: ArtifactStore<MathematicalSnapshot, MathematicalMutation> =
-            ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None)).expect("valid artifact store fixture");
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None })],
-                description: None,
-            })
-            .expect("apply");
+        let mut store: ArtifactStore<MathematicalSnapshot, MathematicalMutation> = ArtifactStore::new(create_document_envelope("semio.mathematical/v1", "math-demo", MathematicalSnapshot::default(), None)).expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![MathematicalMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None })], description: None }).expect("apply");
         let edit: &Edit<MathematicalMutation> = store.envelope().vcs.edits.last().expect("edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<MathematicalSnapshot, MathematicalMutation>(
-            edit,
-            &ArtifactId(store.envelope().id.clone()),
-            &SchemaId(store.envelope().schema.clone()),
-        );
+        store::os_store::test_support::assert_command_envelope_round_trip::<MathematicalSnapshot, MathematicalMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 }
 //#endregion 🧪️Tests

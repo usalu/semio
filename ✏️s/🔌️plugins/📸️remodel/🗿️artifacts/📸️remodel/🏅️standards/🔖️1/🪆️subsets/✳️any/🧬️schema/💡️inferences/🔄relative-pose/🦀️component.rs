@@ -54,11 +54,7 @@ impl store::InferredField<RemodelSnapshot> for RemodelRelativeCameraPose {
     /// predecessor as its sole parent, so the chain is a real linear DAG, not independent roots.
     async fn plan(snapshot: &RemodelSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         let poses = trajectory_poses(snapshot);
-        poses
-            .iter()
-            .enumerate()
-            .map(|(index, pose)| store::InferenceStep { key: pose.camera_id.clone(), parents: if index == 0 { Vec::new() } else { vec![poses[index - 1].camera_id.clone()] } })
-            .collect()
+        poses.iter().enumerate().map(|(index, pose)| store::InferenceStep { key: pose.camera_id.clone(), parents: if index == 0 { Vec::new() } else { vec![poses[index - 1].camera_id.clone()] } }).collect()
     }
 
     /// 🔑 Only `key`'s OWN rotation/translation — the predecessor's raw pose is covered by the
@@ -106,10 +102,7 @@ mod tests {
     async fn two_pose_snapshot() -> RemodelSnapshot {
         let mut snapshot = RemodelSnapshot::default();
         snapshot.results.trajectory = Some(CameraTrajectory {
-            poses: vec![
-                CameraPosePreview { camera_id: "c0".into(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0, 0.0, 0.0] },
-                CameraPosePreview { camera_id: "c1".into(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [1.0, 0.0, 0.0] },
-            ],
+            poses: vec![CameraPosePreview { camera_id: "c0".into(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0, 0.0, 0.0] }, CameraPosePreview { camera_id: "c1".into(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [1.0, 0.0, 0.0] }],
         });
         snapshot
     }

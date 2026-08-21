@@ -84,20 +84,13 @@ impl store::ArtifactDsl for FlowSnapshot {
         };
         let trimmed = body.trim_start();
         if trimmed.starts_with('{') {
-            return serde_json::from_str(trimmed).map_err(|error| {
-                store::TextError::new(error.to_string(), store::TextSpan::at(1, 1))
-            });
+            return serde_json::from_str(trimmed).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)));
         }
         <flow::FlowFixture as store::ArtifactDsl>::parse_dsl(text).map(Self::from_fixture)
     }
     async fn print_dsl(&self) -> String {
         let body = serde_json::to_string_pretty(self).expect("FlowSnapshot serde");
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -106,22 +99,14 @@ impl store::ArtifactDsl for FlowSnapshot {
 impl store::ArtifactPack for FlowSnapshot {
     async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
         let our_id = <Self as store::ArtifactDsl>::envelope_id();
         if envelope.envelope_id() != our_id {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {our_id}, got {}",
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {our_id}, got {}", envelope.envelope_id())));
         }
         serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))
     }

@@ -44,10 +44,7 @@ pub enum FormMutation {
 //#region 🔖️CompatDelegates
 /// ⚖️ Whole-document apply — a thin delegation to the derive-generated `Mutation::diff`+`apply`
 /// (see file-level doc for why the free function itself stays, not its old hand-rolled match body).
-pub async fn apply_form_edit_mutation(
-    spec: &FormsSnapshot,
-    mutation: &FormMutation,
-) -> protocol::MutationApplyResult<FormsSnapshot> {
+pub async fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> protocol::MutationApplyResult<FormsSnapshot> {
     <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(mutation.diff(spec).diff(), spec)
 }
 
@@ -62,13 +59,7 @@ pub async fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation
 /// working-scene accessor (`crate::artifacts::forms::forms_steps`) now that `FormsSnapshot` no
 /// longer carries a bare `steps` field (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM).
 pub async fn as_playbook_spec(snapshot: &FormsSnapshot) -> flow::playbook::PlaybookSpec {
-    flow::playbook::PlaybookSpec {
-        schema: snapshot.schema.clone(),
-        id: snapshot.id.clone(),
-        version: snapshot.version.clone(),
-        title: snapshot.title.clone(),
-        steps: crate::artifacts::forms::forms_steps(snapshot),
-    }
+    flow::playbook::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::artifacts::forms::forms_steps(snapshot) }
 }
 //#endregion 🔖️PlaybookBridge
 
@@ -322,13 +313,7 @@ mod tests {
     async fn apply_form_edit_mutation_and_inverse_form_mutation_delegate_to_the_derive() {
         let base = base_snapshot();
         let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Delegated".into()) });
-        assert_eq!(
-            apply_form_edit_mutation(&base, &mutation)
-                .expect("valid mutation diff")
-                .title
-                .as_deref(),
-            Some("Delegated")
-        );
+        assert_eq!(apply_form_edit_mutation(&base, &mutation).expect("valid mutation diff").title.as_deref(), Some("Delegated"));
         assert_eq!(inverse_form_mutation(&base, &mutation), mutation.inverse(&base));
     }
 

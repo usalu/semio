@@ -1,11 +1,11 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `add-rule-clause-command`.
 
-use crate::editor::rewrite::config::RewriteConfigMutation;
 use crate::artifacts::jack::PropertyValue;
-use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
+use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
 use crate::artifacts::rewrite::RewriteSnapshot;
+use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 async fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {

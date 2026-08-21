@@ -16,14 +16,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_inverse_restores_base() {
         let base = FlowSnapshot::default();
-        let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets {
-            entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
-        });
+        let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }] });
         let forward = mutation.diff(&base).apply(&base).expect("valid mutation diff");
         assert_eq!(forward.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 10.0, y: 20.0 }));
-        let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| {
-            inverse.diff(&snapshot).apply(&snapshot).expect("valid mutation diff")
-        });
+        let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot).expect("valid mutation diff"));
         assert_eq!(restored, base);
     }
 

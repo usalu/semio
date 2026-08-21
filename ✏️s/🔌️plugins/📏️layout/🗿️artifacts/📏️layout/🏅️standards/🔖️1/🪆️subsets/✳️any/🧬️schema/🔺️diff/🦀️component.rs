@@ -1,9 +1,6 @@
 //! 🧬️ Layout diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::layout::{
-    CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage,
-    Spread, TextStory, TextStoryPatch,
-};
+use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

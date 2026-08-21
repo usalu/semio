@@ -49,11 +49,11 @@ fn resolve_node<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
 }
 
 impl protocol::OpText for XmlAnyEditorCommand {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let XmlAnyEditorCommand::SetNode { node_id, value } = self;
         format!("set-node node-id={} value={}", node_id.replace(' ', "%20"), value.replace(' ', "%20"))
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let rest = line.strip_prefix("set-node ").ok_or_else(|| store::TextError::new(format!("xml editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut node_id = None;
         let mut value = None;
@@ -72,12 +72,12 @@ impl protocol::OpText for XmlAnyEditorCommand {
 }
 
 impl protocol::OpBinary for XmlAnyEditorCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "xml editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "xml editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "xml editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -126,7 +126,7 @@ impl ArtifactEditor for XmlAnyEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

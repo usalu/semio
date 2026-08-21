@@ -7,8 +7,7 @@ pub async fn register() {}
 pub async fn serialize(snapshot: &RemodelSnapshot) -> Result<GltfSnapshot, store::TextError> {
     let _ = STDIO_GLTF_DOCUMENT_SCHEMA;
     let bytes = <RemodelSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &RemodelSnapshot) -> Result<Vec<u8>, store::TextError> {

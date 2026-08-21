@@ -1,8 +1,8 @@
 //! 📄️ 📄️ Draw play app commands command — `commit-document`.
 
-use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
+use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -36,10 +36,6 @@ async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, Draw
 }
 //#endregion 🔖️WholeDocumentReset
 
-
-
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "commit-document")]
 pub struct CommitDocument {
@@ -47,6 +43,11 @@ pub struct CommitDocument {
     pub snapshot: DrawSnapshot,
 }
 
-pub async fn handle(payload: &CommitDocument, _doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub async fn handle(
+    payload: &CommitDocument,
+    _doc: &ArtifactView<'_, DrawSnapshot>,
+    _cfg: &ConfigView<'_, DrawConfig>,
+    _session: &mut crate::editor::draw::commands::canvas_pointer_down::DrawSession,
+) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     Ok(load_document_effect(payload.snapshot.clone()))
 }

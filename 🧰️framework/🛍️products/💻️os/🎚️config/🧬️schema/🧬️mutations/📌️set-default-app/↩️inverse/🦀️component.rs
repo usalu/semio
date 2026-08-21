@@ -2,10 +2,10 @@
 //! prior pin restores to `SetDefaultApp`; no prior pin restores to `ClearDefaultApp` (the
 //! coordinate was unpinned before this mutation ran).
 
-use super::mutation::SetDefaultApp;
 use super::super::super::OpeningPreferences;
-use super::super::OpeningConfigMutation;
 use super::super::clear_default_app::mutation::ClearDefaultApp;
+use super::super::OpeningConfigMutation;
+use super::mutation::SetDefaultApp;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &SetDefaultApp, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

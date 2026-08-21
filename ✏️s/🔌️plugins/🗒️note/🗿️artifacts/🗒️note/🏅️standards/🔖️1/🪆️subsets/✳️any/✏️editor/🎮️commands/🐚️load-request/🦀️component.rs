@@ -1,9 +1,9 @@
 //! 🐚️ 🐚️ Note play app commands command — `load-request`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::artifacts::note::op::NoteMutation;
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -11,5 +11,5 @@ use serde::{Deserialize, Serialize};
 pub struct LoadRequest {}
 
 pub async fn handle(_payload: &LoadRequest, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(119),  accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
+    Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(119), accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }))
 }

@@ -286,7 +286,11 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
         }
         if let Some(collection_id) = &self.rename_collection_id {
             if let Some(name) = &self.rename_collection_name {
-                let collection = next.collections.iter_mut().find(|collection| &collection.id == collection_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("collection {collection_id} does not exist")).at(["collections", collection_id.as_str()]))?;
+                let collection = next
+                    .collections
+                    .iter_mut()
+                    .find(|collection| &collection.id == collection_id)
+                    .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("collection {collection_id} does not exist")).at(["collections", collection_id.as_str()]))?;
                 collection.name = name.clone();
             }
         }
@@ -314,7 +318,11 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
         }
         if let Some(extension_id) = &self.set_extension_enabled_id {
             if let Some(enabled) = self.set_extension_enabled {
-                let extension = next.extensions.iter_mut().find(|extension| &extension.extension_id == extension_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("extension {extension_id} is not installed")).at(["extensions", extension_id.as_str()]))?;
+                let extension = next
+                    .extensions
+                    .iter_mut()
+                    .find(|extension| &extension.extension_id == extension_id)
+                    .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("extension {extension_id} is not installed")).at(["extensions", extension_id.as_str()]))?;
                 extension.enabled = enabled;
             }
         }
@@ -894,11 +902,13 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
             next.folders.retain(|folder| !ids.contains(&folder.id));
         }
         if let Some(moved) = &self.moved_folder {
-            let folder = next.folders.iter_mut().find(|folder| folder.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", moved.id)).at(["folders", moved.id.as_str()]))?;
+            let folder =
+                next.folders.iter_mut().find(|folder| folder.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", moved.id)).at(["folders", moved.id.as_str()]))?;
             folder.parent_id = moved.new_parent.clone();
         }
         if let Some(renamed) = &self.renamed_folder {
-            let folder = next.folders.iter_mut().find(|folder| folder.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", renamed.id)).at(["folders", renamed.id.as_str()]))?;
+            let folder =
+                next.folders.iter_mut().find(|folder| folder.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", renamed.id)).at(["folders", renamed.id.as_str()]))?;
             folder.name = renamed.new_name.clone();
         }
         if let Some(entry) = &self.created_entry {
@@ -927,11 +937,16 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
             entry.folder_id = moved.new_parent.clone();
         }
         if let Some(renamed) = &self.renamed_entry {
-            let entry = next.entries.iter_mut().find(|entry| entry.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", renamed.id)).at(["entries", renamed.id.as_str()]))?;
+            let entry =
+                next.entries.iter_mut().find(|entry| entry.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", renamed.id)).at(["entries", renamed.id.as_str()]))?;
             entry.name = renamed.new_name.clone();
         }
         if let Some(replaced) = &self.replaced_entry_body {
-            let entry = next.entries.iter_mut().find(|entry| entry.id == replaced.entry_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", replaced.entry_id)).at(["entries", replaced.entry_id.as_str()]))?;
+            let entry = next
+                .entries
+                .iter_mut()
+                .find(|entry| entry.id == replaced.entry_id)
+                .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", replaced.entry_id)).at(["entries", replaced.entry_id.as_str()]))?;
             entry.body = replaced.new_body.clone();
         }
         Ok(next)

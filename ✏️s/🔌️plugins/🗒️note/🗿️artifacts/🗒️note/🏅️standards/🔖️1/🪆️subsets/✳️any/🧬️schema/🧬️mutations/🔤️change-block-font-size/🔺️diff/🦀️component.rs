@@ -1,9 +1,9 @@
 //! 🔺️ Diff fragment yielded by `ChangeBlockFontSize`. Error `target-missing` when the block is
 //! absent or not a text block, Warning `no-op` when already at that size.
 use super::mutation::ChangeBlockFontSize;
+use crate::artifacts::note::schema::diff::note_block_patch_diff;
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
-use crate::artifacts::note::schema::diff::note_block_patch_diff;
 
 //#region 🔖️Diff
 pub async fn diff(payload: &ChangeBlockFontSize, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -17,7 +17,9 @@ pub async fn diff(payload: &ChangeBlockFontSize, base: &NoteSnapshot) -> protoco
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Block \"{}\" font size is already {}.", payload.id, payload.new_font_size));
     }
     let mut updated = block.clone();
-    if let crate::artifacts::note::NoteBlockNode::Text { font_size, .. } = &mut updated { *font_size = payload.new_font_size; }
+    if let crate::artifacts::note::NoteBlockNode::Text { font_size, .. } = &mut updated {
+        *font_size = payload.new_font_size;
+    }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }
 //#endregion 🔖️Diff

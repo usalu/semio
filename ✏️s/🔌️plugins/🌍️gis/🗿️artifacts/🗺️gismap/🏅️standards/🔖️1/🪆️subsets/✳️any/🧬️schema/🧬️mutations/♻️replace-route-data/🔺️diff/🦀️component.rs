@@ -16,13 +16,7 @@ pub async fn diff(payload: &ReplaceRouteData, base: &GisMapSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Route \"{}\" data is already identical to the requested replacement.", payload.id));
     }
     protocol::MutationOutcome::new(GisMapDiff {
-        routes: Some(GisMapFeaturesDelta {
-            patched: vec![GisMapFeaturePatchEntry {
-                id: payload.id.clone(),
-                patch: MapFeaturePatch { data: Some(payload.new_data.clone()) },
-            }],
-            ..Default::default()
-        }),
+        routes: Some(GisMapFeaturesDelta { patched: vec![GisMapFeaturePatchEntry { id: payload.id.clone(), patch: MapFeaturePatch { data: Some(payload.new_data.clone()) } }], ..Default::default() }),
         ..Default::default()
     })
 }

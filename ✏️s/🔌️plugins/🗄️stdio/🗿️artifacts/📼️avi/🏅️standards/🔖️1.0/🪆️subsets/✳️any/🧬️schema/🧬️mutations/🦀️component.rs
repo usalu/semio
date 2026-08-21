@@ -73,10 +73,10 @@ fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDif
 impl Mutation<AviSnapshot> for AviMutation {
     type Diff = AviDiff;
 
-    async fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             AviMutation::NoMutation => AviDiff::default(),
-            AviMutation::SetSnapshot { snapshot } => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot).await,
+            AviMutation::SetSnapshot { snapshot } => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot),
             AviMutation::SetMainHeader { main_header } => AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() },
             AviMutation::SetIdx1Present { idx1_present } => AviDiff { idx1_present: Some(*idx1_present), ..AviDiff::default() },
             AviMutation::InsertStream { index, stream } => AviDiff { streams: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: stream.clone() }] }), ..AviDiff::default() },
@@ -93,7 +93,7 @@ impl Mutation<AviSnapshot> for AviMutation {
         })
     }
 
-    async fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
         match self {
             AviMutation::NoMutation => vec![AviMutation::NoMutation],
             AviMutation::SetSnapshot { .. } => vec![AviMutation::SetSnapshot { snapshot: base.clone() }],
@@ -148,19 +148,19 @@ pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) ->
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — plain `serde_json` round-trip (see mp4's identical
 /// module-doc rationale: f6-final-summary.md §4.4, no generic collection-diff `DslField` bridge).
 impl OpText for AviMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 }
 
 impl OpBinary for AviMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
 }

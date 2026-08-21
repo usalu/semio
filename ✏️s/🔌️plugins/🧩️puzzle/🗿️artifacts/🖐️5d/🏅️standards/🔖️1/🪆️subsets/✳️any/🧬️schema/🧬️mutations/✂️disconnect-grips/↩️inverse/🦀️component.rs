@@ -9,8 +9,18 @@ pub async fn inverse(payload: &super::mutation::DisconnectGrips, base: &Puzzle5d
         return Vec::new();
     };
     vec![crate::artifacts::puzzle5d::mutations::connect_grips::mutation::connect_grips(
-        fastener.id.clone(), fastener.source.clone(), fastener.target.clone(), fastener.fastener_kind.clone(),
-        fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y,
+        fastener.id.clone(),
+        fastener.source.clone(),
+        fastener.target.clone(),
+        fastener.fastener_kind.clone(),
+        fastener.gap,
+        fastener.shift,
+        fastener.rise,
+        fastener.rotation,
+        fastener.turn,
+        fastener.tilt,
+        fastener.x,
+        fastener.y,
     )]
 }
 //#endregion 🔖️Inverse

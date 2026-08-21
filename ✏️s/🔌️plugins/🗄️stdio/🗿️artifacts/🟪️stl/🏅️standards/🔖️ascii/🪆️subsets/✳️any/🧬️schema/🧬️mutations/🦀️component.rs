@@ -63,14 +63,14 @@ pub enum StlMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an index target is missing or out of range.
-pub async fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
-    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot).await;
-    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
+pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
+    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -79,7 +79,7 @@ pub async fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutati
 impl Mutation<StlSnapshot> for StlMutation {
     type Diff = StlDiff;
 
-    async fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             StlMutation::NoMutation => StlDiff::default(),
             StlMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
@@ -94,7 +94,7 @@ impl Mutation<StlSnapshot> for StlMutation {
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
     /// prior value up in `base`; a stale/out-of-range index inverts to `NoMutation` (nothing to
     /// undo).
-    async fn inverse(&self, base: &StlSnapshot) -> Vec<Self> {
+    fn inverse(&self, base: &StlSnapshot) -> Vec<Self> {
         match self {
             StlMutation::NoMutation => vec![StlMutation::NoMutation],
             StlMutation::SetSnapshot { .. } => vec![StlMutation::SetSnapshot { snapshot: base.clone() }],
@@ -142,7 +142,7 @@ async fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
     Ok(StlSnapshot { schema: diff::hex_decode_str(schema)?, solid_name: diff::hex_decode_str(solid_name)?, triangles })
 }
 
-async fn print_stl_op(m: &StlMutation) -> String {
+fn print_stl_op(m: &StlMutation) -> String {
     match m {
         StlMutation::NoMutation => "no-mutation".to_string(),
         StlMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
@@ -176,11 +176,11 @@ async fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
 }
 
 impl OpText for StlMutation {
-    async fn print_op(&self) -> String {
-        print_stl_op(self).await
+    fn print_op(&self) -> String {
+        print_stl_op(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_stl_op(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        parse_stl_op(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -198,10 +198,10 @@ async fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
         diff::enc_triangle_bin(t, out);
     }
 }
-async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
     let schema = diff::read_str_bin(reader)?;
     let solid_name = diff::read_str_bin(reader)?;
-    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut triangles = Vec::with_capacity(count as usize);
     for _ in 0..count {
         triangles.push(diff::dec_triangle_bin(reader)?);
@@ -221,7 +221,7 @@ async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnaps
 /// (`SetSnapshot`'s `Vec<StlTriangle>` is a variable-length vector-of-records, the same
 /// `protocol-array-of-records` `walk_protocol` gap the sibling diff protocol file documents).
 impl OpBinary for StlMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         let tag: u8 = match self {
             StlMutation::NoMutation => 0,
@@ -256,14 +256,14 @@ impl OpBinary for StlMutation {
         out[1] = tag;
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes).await;
-        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
-        let tag = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+        let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
         match tag {
             0 => Ok(StlMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetSnapshot { snapshot })
             }
             2 => {
@@ -271,21 +271,21 @@ impl OpBinary for StlMutation {
                 Ok(StlMutation::SetSolidName { name })
             }
             3 => {
-                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
                 let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::InsertTriangle { index, triangle })
             }
             4 => {
-                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
                 Ok(StlMutation::RemoveTriangle { index })
             }
             5 => {
-                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
                 let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleNormal { index, normal })
             }
             6 => {
-                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
                 let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleVertices { index, vertices })
             }

@@ -17,6 +17,11 @@ pub async fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot)
     if base.tension_component_f_uk_kn == payload.new_tension_component_f_uk_kn && base.tension_component_f_k_kn == payload.new_tension_component_f_k_kn && base.tension_component_n_ed_kn == payload.new_tension_component_n_ed_kn {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "This facet already has these values.");
     }
-    protocol::MutationOutcome::new(En1993Diff { tension_component_f_uk_kn: Some(payload.new_tension_component_f_uk_kn), tension_component_f_k_kn: Some(payload.new_tension_component_f_k_kn), tension_component_n_ed_kn: Some(payload.new_tension_component_n_ed_kn), ..Default::default() })
+    protocol::MutationOutcome::new(En1993Diff {
+        tension_component_f_uk_kn: Some(payload.new_tension_component_f_uk_kn),
+        tension_component_f_k_kn: Some(payload.new_tension_component_f_k_kn),
+        tension_component_n_ed_kn: Some(payload.new_tension_component_n_ed_kn),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

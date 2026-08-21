@@ -26,16 +26,8 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 /// `control.if` step whose `then` body holds only `step-3a`.
 fn cached_program() -> Path {
     let mut bodies = std::collections::BTreeMap::new();
-    bodies.insert(
-        "then".to_string(),
-        Path { steps: vec![Step { id: "step-3a".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() }] },
-    );
-    Path {
-        steps: vec![
-            Step { id: "step-1".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() },
-            Step { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new(), bodies },
-        ],
-    }
+    bodies.insert("then".to_string(), Path { steps: vec![Step { id: "step-3a".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() }] });
+    Path { steps: vec![Step { id: "step-1".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: std::collections::BTreeMap::new() }, Step { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new(), bodies }] }
 }
 
 fn before() -> ImperativeSnapshot {

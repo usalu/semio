@@ -8,7 +8,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ pub struct ShareSpace {
 pub async fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.email.trim().is_empty() {
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id })).ok();
-        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(126),  dialog_id: "shareSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));
     }
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "email": payload.email, "role": role })).ok();

@@ -38,14 +38,7 @@ mod tests {
         let mesh_workspace = crate::artifacts::lowpoly::schema::default_mesh_workspace();
         let mesh_json = mesh_workspace.get("obj-1").expect("default workspace entry");
         let mesh = crate::artifacts::lowpoly::mesh_child_handle("obj-1", mesh_json);
-        let object = crate::artifacts::lowpoly::LowpolyObject {
-            id: "obj-1".into(),
-            name: "Unit Box".into(),
-            transform: Default::default(),
-            smooth_shading: false,
-            mesh: Some(mesh),
-            paint_layers: Vec::new(),
-        };
+        let object = crate::artifacts::lowpoly::LowpolyObject { id: "obj-1".into(), name: "Unit Box".into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: Vec::new() };
         let projection = LowpolySnapshot { schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![object] };
         let text = print_dsl(&projection);
         eprintln!("[DEBUG] FIXTURE_TEXT_START");
@@ -98,10 +91,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_invalid_bool_value() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
-        let text = format!(
-            "schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]",
-            enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),
-        );
+        let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
         let result = parse_dsl(&text);
         assert!(result.is_err());
     }
@@ -117,10 +107,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
-        let text = format!(
-            "schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]",
-            enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),
-        );
+        let text = format!("schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
         let result = parse_dsl(&text);
         assert!(result.is_err());
     }
@@ -143,10 +130,7 @@ mod tests {
     async fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
         use crate::artifacts::lowpoly::schema::snapshot::enc_str;
         let tricky_name = "Quote \" and \\ and newline\ndone";
-        let text = format!(
-            "schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],false,[],[]]]",
-            enc_str("lowpoly.document"), enc_str("o1"), enc_str(tricky_name),
-        );
+        let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o1"), enc_str(tricky_name),);
         let projection = parse_dsl(&text).expect("hex-encoded strings never need escaping");
         assert_eq!(projection.objects[0].name, tricky_name);
     }

@@ -2,19 +2,16 @@
 //! exist, Warning `partial` when some do not.
 
 use super::mutation::DragAssets;
-use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingAssetPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let patched: Vec<ShootingAssetPatchEntry> = base
         .assets
         .iter()
         .filter(|asset| payload.asset_ids.contains(&asset.id))
-        .map(|asset| ShootingAssetPatchEntry {
-            id: asset.id.clone(),
-            patch: ShootingAssetPatch { origin: Some([asset.origin[0] + payload.dx, asset.origin[1] + payload.dy, asset.origin[2] + payload.dz]), ..Default::default() },
-        })
+        .map(|asset| ShootingAssetPatchEntry { id: asset.id.clone(), patch: ShootingAssetPatch { origin: Some([asset.origin[0] + payload.dx, asset.origin[1] + payload.dy, asset.origin[2] + payload.dz]), ..Default::default() } })
         .collect();
     if patched.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested asset(s) exist.", payload.asset_ids.len()), payload.asset_ids.clone());

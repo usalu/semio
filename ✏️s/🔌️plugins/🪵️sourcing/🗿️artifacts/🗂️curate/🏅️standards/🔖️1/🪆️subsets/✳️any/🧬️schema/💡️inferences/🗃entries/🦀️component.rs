@@ -23,11 +23,7 @@ pub struct CurateEntries {
 /// just to count it); `entryCount` = `curated.len()`; `totalCount` = sum of every curated line's
 /// `count`.
 pub async fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
-    CurateEntries {
-        stock_count: snapshot.stock_extra.len() as u32,
-        entry_count: snapshot.curated.len() as u32,
-        total_count: snapshot.curated.iter().map(|item| item.count).sum(),
-    }
+    CurateEntries { stock_count: snapshot.stock_extra.len() as u32, entry_count: snapshot.curated.len() as u32, total_count: snapshot.curated.iter().map(|item| item.count).sum() }
 }
 //#endregion 🔖️Entries
 
@@ -49,10 +45,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn stock_and_curated_lines_are_counted_exactly() {
-        let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(
-            vec![object_kind("a"), object_kind("b"), object_kind("c")],
-            vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }],
-        );
+        let snapshot = crate::artifacts::curate::curate_snapshot_from_stock(vec![object_kind("a"), object_kind("b"), object_kind("c")], vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }]);
         let entries = compute_curate_entries(&snapshot);
         assert_eq!(entries.stock_count, 3);
         assert_eq!(entries.entry_count, 2);

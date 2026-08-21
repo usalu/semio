@@ -1,9 +1,9 @@
 //! 👁️ 👁️ Remodel play app commands command — `set-camera`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation, RemodelWorldCamera};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation, RemodelWorldCamera};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -21,7 +21,7 @@ pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, RemodelSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::remodel::commands::{set_active_utility, set_frame_cursor, set_layer_visibility, set_report_table, set_locale};
+    use crate::editor::remodel::commands::{set_active_utility, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
     use crate::editor::remodel::testkit::{app, dispatch, render};
     use crate::editor::remodel::RemodelCommand;
 

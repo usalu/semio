@@ -209,8 +209,8 @@ pub mod color {
 pub mod text {
     //! 🔤️ Text and math labels via Typst-to-SVG compilation.
 
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::scene::sobject::{Sobject, VSobject};
+    use crate::editor::animate::engine::text::color::Color;
     use ecow::EcoString;
     use geometry::{append_shape_to_path, BezPath, Point, Rect};
     use std::path::PathBuf;
@@ -563,7 +563,6 @@ pub mod text {
         }
         Some(typst_svg::svg_merged(&doc, Abs::pt(4.0)))
     }
-
 
     /// 🖨️ Compile Typst markup to merged SVG.
     pub async fn typst_markup_to_svg(markup: &str) -> Option<String> {

@@ -8,25 +8,25 @@
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::editor::block5d::commands::{edit, set_active_example};
+use crate::artifacts::block5d::op::Block5dMutation;
+use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
+use crate::editor::block5d::commands::patch_part_kind;
 use crate::editor::block5d::commands::{add_grip, remove_grip};
 use crate::editor::block5d::commands::{add_grip_kind, remove_grip_kind};
-use crate::editor::block5d::commands::patch_part_kind;
+use crate::editor::block5d::commands::{edit, set_active_example};
 use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use crate::editor::block5d::modes::edit as edit_mode;
 use crate::editor::block5d::modes::edit::windows::{board, world};
 use crate::editor::block5d::panels::{document as document_panel, inspection as inspection_panel};
 use crate::editor::block5d::terminology::block5d_labels;
-use crate::artifacts::block5d::op::Block5dMutation;
-use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionDescriptor, ArtifactEditor, ArtifactKindSpec, ConfigView, Editor, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
-};
-use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
-use store::EngineHandles;
+use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::{
+    ActionDescriptor, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, UiNode,
+};
 use serde_json::Value;
 use std::collections::BTreeMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const BLOCK5D_PLAY_APP_ID: &str = "block5d-play";
@@ -146,7 +146,14 @@ impl ArtifactEditor for Block5dPlayApp {
         }
     }
 
-    async fn handle(command: &Block5dCommand, doc: &ArtifactView<'_, Block5dSnapshot>, cfg: &ConfigView<'_, Block5dConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Block5dCommand,
+        doc: &ArtifactView<'_, Block5dSnapshot>,
+        cfg: &ConfigView<'_, Block5dConfig>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Block5dMutation, Block5dConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -317,7 +324,6 @@ mod tests {
     use super::*;
     use crate::editor::block5d::testkit::{new_app, Block5dApp};
     use semio_framework_plugin::PluginApp;
-
 
     //#region 🔖️CommandSurface
     async fn every_command() -> Vec<Block5dCommand> {
@@ -494,7 +500,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_bridges_set_active_example() {
         let _app = Block5dPlayApp;
-        assert!(matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest"));
+        assert!(
+            matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
+        );
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the old `setSelection` view

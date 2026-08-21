@@ -1,8 +1,8 @@
 //! 🕸️ S Studio app — Compiled DAG window: definition + render (constitutional: ui/WindowKind + Render).
 //! A read-only text view of the workflow projected onto the generic port-directed-DAG wire literal.
 
-use crate::engine::space::engine::compiled_dag_wire_literal;
 use crate::demo_space_projection;
+use crate::engine::space::engine::compiled_dag_wire_literal;
 use semio_framework_os::WorkflowSnapshot;
 use semio_framework_plugin::{build_text_editor_scene, InteractionRef, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 
@@ -63,7 +63,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_compiled_dag_editor() {
-        use semio_framework_plugin::{PluginApp, ViewModel, VcsArtifactApp};
+        use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));

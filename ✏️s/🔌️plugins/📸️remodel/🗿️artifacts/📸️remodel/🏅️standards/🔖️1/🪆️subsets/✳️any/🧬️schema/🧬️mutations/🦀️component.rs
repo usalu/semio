@@ -80,8 +80,8 @@ pub use super::replace_mesh_result::mutation::{replace_mesh_result, ReplaceMeshR
 pub use super::replace_qc::mutation::{replace_qc, ReplaceQc};
 pub use super::replace_sparse::mutation::{replace_sparse, ReplaceSparse};
 pub use super::replace_stream_source::mutation::{replace_stream_source, ReplaceStreamSource};
-pub use super::replace_trajectory::mutation::{replace_trajectory, ReplaceTrajectory};
 pub use super::replace_tracks::mutation::{replace_tracks, ReplaceTracks};
+pub use super::replace_trajectory::mutation::{replace_trajectory, ReplaceTrajectory};
 pub use super::update_camera_calibration::mutation::{update_camera_calibration, UpdateCameraCalibration};
 pub use super::update_dense_params::mutation::{update_dense_params, UpdateDenseParams};
 pub use super::update_feature_params::mutation::{update_feature_params, UpdateFeatureParams};
@@ -98,10 +98,7 @@ pub use super::update_sfm_params::mutation::{update_sfm_params, UpdateSfmParams}
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it
 /// by this name.
-pub async fn apply_remodel_mutation(
-    snapshot: &RemodelSnapshot,
-    mutation: &RemodelMutation,
-) -> protocol::MutationApplyResult<RemodelSnapshot> {
+pub async fn apply_remodel_mutation(snapshot: &RemodelSnapshot, mutation: &RemodelMutation) -> protocol::MutationApplyResult<RemodelSnapshot> {
     protocol::MutationDiff::apply(&mutation.diff(snapshot).into_parts().0, snapshot)
 }
 
@@ -117,8 +114,8 @@ pub async fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &Remodel
 mod tests {
     use super::*;
     use crate::artifacts::remodel::{
-        default_remodel_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot, ReconstructionJob,
-        ReconstructionStage, RemodelMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
+        default_remodel_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot,
+        ReconstructionJob, ReconstructionStage, RemodelMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
     };
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 

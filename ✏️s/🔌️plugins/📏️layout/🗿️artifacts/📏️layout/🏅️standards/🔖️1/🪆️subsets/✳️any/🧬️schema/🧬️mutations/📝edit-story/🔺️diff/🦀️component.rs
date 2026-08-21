@@ -13,10 +13,7 @@ pub async fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> prot
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Story \"{}\" content is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
-        stories: Some(LayoutStoriesDelta {
-            patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: Some(payload.new_content.clone()) } }],
-            ..Default::default()
-        }),
+        stories: Some(LayoutStoriesDelta { patched: vec![LayoutStoryPatchEntry { id: payload.id.clone(), patch: TextStoryPatch { content: Some(payload.new_content.clone()) } }], ..Default::default() }),
         ..Default::default()
     })
 }

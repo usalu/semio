@@ -233,10 +233,7 @@ async fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate:
 //#region 🔖️BatchHelpers
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
 /// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
-pub async fn apply_trinity_graph_mutation(
-    snapshot: &mut JackSnapshot,
-    mutation: &TrinityGraphMutation,
-) -> protocol::MutationApplyResult<()> {
+pub async fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
     let outcome = mutation.diff(snapshot);
     let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
     *snapshot = next;
@@ -267,10 +264,7 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store
-        .dispatch(ArtifactCommand::Apply { mutations: operations, description: None })
-        .map_err(crate::artifacts::jack::TrinityRamError::from)
-        .map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).map_err(crate::artifacts::jack::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 
@@ -278,9 +272,9 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
     use protocol::MutationDiff;
+    use protocol::SemanticMutation;
 
     async fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(

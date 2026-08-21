@@ -572,10 +572,7 @@ mod tests {
         assert_eq!(round_trips("x^2"), MathNode::Sup(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Number("2".to_string()))));
         assert_eq!(round_trips("x_1"), MathNode::Sub(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Number("1".to_string()))));
         let combined = round_trips("x_i^2");
-        assert_eq!(
-            combined,
-            MathNode::Sup(Box::new(MathNode::Sub(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Symbol("i".to_string())))), Box::new(MathNode::Number("2".to_string())))
-        );
+        assert_eq!(combined, MathNode::Sup(Box::new(MathNode::Sub(Box::new(MathNode::Symbol("x".to_string())), Box::new(MathNode::Symbol("i".to_string())))), Box::new(MathNode::Number("2".to_string()))));
     }
 
     #[test]
@@ -611,16 +608,7 @@ mod tests {
     #[test]
     fn parses_matrix_rows_and_cells() {
         let mat = round_trips("mat(1, 2; 3, 4)");
-        assert_eq!(
-            mat,
-            MathNode::Call(
-                "mat".to_string(),
-                vec![
-                    vec![MathNode::Number("1".to_string()), MathNode::Number("2".to_string())],
-                    vec![MathNode::Number("3".to_string()), MathNode::Number("4".to_string())],
-                ]
-            )
-        );
+        assert_eq!(mat, MathNode::Call("mat".to_string(), vec![vec![MathNode::Number("1".to_string()), MathNode::Number("2".to_string())], vec![MathNode::Number("3".to_string()), MathNode::Number("4".to_string())],]));
     }
 
     #[test]

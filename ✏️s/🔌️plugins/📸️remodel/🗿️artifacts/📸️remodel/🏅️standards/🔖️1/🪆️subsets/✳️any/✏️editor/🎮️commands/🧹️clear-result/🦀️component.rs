@@ -1,10 +1,10 @@
 //! 🧹️ 🧹️ Remodel play app commands command — `clear-result`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::artifacts::remodel::mutations::{replace_dense, replace_geo_products, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, replace_tracks};
+use crate::artifacts::remodel::mutations::{replace_dense, replace_geo_products, replace_mesh_result, replace_qc, replace_sparse, replace_tracks, replace_trajectory};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, MeshData};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, MeshData};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Results
@@ -41,13 +41,5 @@ pub struct ClearResult {}
 
 /// 🧹️ Resets all seven `ReconstructionResults` fields in one undoable step.
 pub async fn handle(_payload: &ClearResult, _doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![
-        replace_mesh_result(Box::new(empty_result())),
-        replace_sparse(None),
-        replace_dense(None),
-        replace_trajectory(None),
-        replace_tracks(Vec::new()),
-        replace_geo_products(None),
-        replace_qc(None),
-    ]))
+    Ok(Emit::mutations(vec![replace_mesh_result(Box::new(empty_result())), replace_sparse(None), replace_dense(None), replace_trajectory(None), replace_tracks(Vec::new()), replace_geo_products(None), replace_qc(None)]))
 }

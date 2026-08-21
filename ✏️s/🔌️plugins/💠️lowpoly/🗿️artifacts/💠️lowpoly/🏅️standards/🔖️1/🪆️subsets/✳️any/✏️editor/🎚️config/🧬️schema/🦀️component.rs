@@ -6,26 +6,46 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.lowpoly.lowpoly.config")]
 pub struct LowpolyConfig {
-    #[state(config)] pub active_object_id: String,
-    #[state(config)] pub paint_utility: String,
-    #[state(config)] pub active_paint_layer: u32,
-    #[state(config)] pub utility_params_json: String,
-    #[state(config)] pub paint_color_r: u8,
-    #[state(config)] pub paint_color_g: u8,
-    #[state(config)] pub paint_color_b: u8,
-    #[state(config)] pub paint_color_a: u8,
-    #[state(config)] pub world_camera_position: [f64; 3],
-    #[state(config)] pub world_camera_target: [f64; 3],
-    #[state(config)] pub world_camera_fov: f64,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub show_edges: bool,
-    #[state(config)] pub sun_enabled: bool,
-    #[state(config)] pub sun_azimuth: f64,
-    #[state(config)] pub sun_elevation: f64,
-    #[state(config)] pub sun_intensity: f64,
-    #[state(config)] pub sun_color: String,
-    #[state(config)] pub active_utility_id: String,
-    #[state(config)] pub locale: String,
+    #[state(config)]
+    pub active_object_id: String,
+    #[state(config)]
+    pub paint_utility: String,
+    #[state(config)]
+    pub active_paint_layer: u32,
+    #[state(config)]
+    pub utility_params_json: String,
+    #[state(config)]
+    pub paint_color_r: u8,
+    #[state(config)]
+    pub paint_color_g: u8,
+    #[state(config)]
+    pub paint_color_b: u8,
+    #[state(config)]
+    pub paint_color_a: u8,
+    #[state(config)]
+    pub world_camera_position: [f64; 3],
+    #[state(config)]
+    pub world_camera_target: [f64; 3],
+    #[state(config)]
+    pub world_camera_fov: f64,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub show_edges: bool,
+    #[state(config)]
+    pub sun_enabled: bool,
+    #[state(config)]
+    pub sun_azimuth: f64,
+    #[state(config)]
+    pub sun_elevation: f64,
+    #[state(config)]
+    pub sun_intensity: f64,
+    #[state(config)]
+    pub sun_color: String,
+    #[state(config)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -52,4 +72,3 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
-

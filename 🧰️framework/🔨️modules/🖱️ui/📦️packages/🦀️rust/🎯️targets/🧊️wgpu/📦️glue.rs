@@ -71,6 +71,10 @@ pub mod minimap;
 pub mod gpu;
 
 #[cfg(feature = "wgpu-engine")]
+#[path = "🦀️prepared.rs"]
+pub mod prepared;
+
+#[cfg(feature = "wgpu-engine")]
 #[path = "🦀️input.rs"]
 pub mod input;
 
@@ -221,6 +225,8 @@ pub use engine::Ui;
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
 pub use gpu::GpuContext;
+#[cfg(feature = "wgpu-engine")]
+pub use prepared::{PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(feature = "wgpu-engine")]

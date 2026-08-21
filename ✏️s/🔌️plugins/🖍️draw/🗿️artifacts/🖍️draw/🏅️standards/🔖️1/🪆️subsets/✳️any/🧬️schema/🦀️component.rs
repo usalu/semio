@@ -1,15 +1,14 @@
 //! 🧬️ Draw artifact schema — every field of the artifact with its state class.
 
 use crate::artifacts::draw::{
-    default_draw_trace_params, default_draw_transform, ArtifactDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody,
-    DrawLayerBase, DrawLayerNode, DrawLine, DrawMutation, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment,
-    StrokeStyle, DRAW_DOCUMENT_SCHEMA,
+    default_draw_trace_params, default_draw_transform, ArtifactDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawMutation, DrawPathBody,
+    DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Artifact
@@ -18,20 +17,34 @@ use std::hash::{Hash, Hasher};
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawArtifact {
-    #[state(artifact)] pub schema: String,
-    #[state(artifact)] pub id: String,
-    #[state(artifact)] pub title: Option<String>,
-    #[state(artifact)] pub layers: Vec<DrawLayerNode>,
-    #[state(artifact)] pub assets: BTreeMap<String, DrawImageAsset>,
-    #[state(artifact)] pub artboard: Option<DrawArtboard>,
-    #[state(presence)] pub selected_ids: Vec<String>,
-    #[state(presence)] pub active_utility_id: String,
-    #[state(config)] pub engagement_input: String,
-    #[state(config)] pub camera_x: f64,
-    #[state(config)] pub camera_y: f64,
-    #[state(config)] pub camera_zoom: f64,
-    #[state(config)] pub locale: String,
-    #[state(artifact)] pub hovered_id: Option<String>,
+    #[state(artifact)]
+    pub schema: String,
+    #[state(artifact)]
+    pub id: String,
+    #[state(artifact)]
+    pub title: Option<String>,
+    #[state(artifact)]
+    pub layers: Vec<DrawLayerNode>,
+    #[state(artifact)]
+    pub assets: BTreeMap<String, DrawImageAsset>,
+    #[state(artifact)]
+    pub artboard: Option<DrawArtboard>,
+    #[state(presence)]
+    pub selected_ids: Vec<String>,
+    #[state(presence)]
+    pub active_utility_id: String,
+    #[state(config)]
+    pub engagement_input: String,
+    #[state(config)]
+    pub camera_x: f64,
+    #[state(config)]
+    pub camera_y: f64,
+    #[state(config)]
+    pub camera_zoom: f64,
+    #[state(config)]
+    pub locale: String,
+    #[state(artifact)]
+    pub hovered_id: Option<String>,
 }
 //#endregion 🔖️Artifact
 
@@ -60,27 +73,12 @@ impl Default for DrawArtifact {
 impl DrawArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> DrawSnapshot {
-        DrawSnapshot {
-            schema: self.schema.clone(),
-            id: self.id.clone(),
-            title: self.title.clone(),
-            layers: self.layers.clone(),
-            assets: self.assets.clone(),
-            artboard: self.artboard.clone(),
-        }
+        DrawSnapshot { schema: self.schema.clone(), id: self.id.clone(), title: self.title.clone(), layers: self.layers.clone(), assets: self.assets.clone(), artboard: self.artboard.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: DrawSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            id: snapshot.id,
-            title: snapshot.title,
-            layers: snapshot.layers,
-            assets: snapshot.assets,
-            artboard: snapshot.artboard,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, artboard: snapshot.artboard, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -323,7 +321,14 @@ pub async fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNo
 }
 
 pub async fn default_draw_document(id: &str, title: Option<&str>) -> DrawSnapshot {
-    DrawSnapshot { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: Default::default(), artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }) }
+    DrawSnapshot {
+        schema: DRAW_DOCUMENT_SCHEMA.into(),
+        id: id.into(),
+        title: title.map(str::to_string),
+        layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
+        assets: Default::default(),
+        artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
+    }
 }
 
 pub async fn empty_draw_snapshot() -> DrawSnapshot {
@@ -624,8 +629,7 @@ pub async fn flatten_draw_document_to_scene_nodes(doc: &DrawSnapshot) -> Vec<Dra
                     image: None,
                 }),
                 DrawLayerNode::Image(image) => {
-                    let src =
-                        doc.assets.get(&image.image_key).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
+                    let src = doc.assets.get(&image.image_key).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
                     out.push(DrawSceneNode {
                         id: image.base.id.clone(),
                         transform: draw_transform_to_matrix(&image.base.transform),
@@ -1210,7 +1214,10 @@ pub async fn resolve_draw_artboard(doc: &DrawSnapshot) -> Option<DrawArtboard> {
 
 /// 🔍️ Resolves a trace layer's bitmap source into simplified, artboard-scaled contour segments.
 async fn resolve_trace_layer_segments(doc: &DrawSnapshot, trace: &DrawTraceBody) -> Vec<PathSegment> {
-    let assets = &doc.assets; if assets.is_empty() { return Vec::new() };
+    let assets = &doc.assets;
+    if assets.is_empty() {
+        return Vec::new();
+    };
     let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
     let Some((width, height, luma)) = decode_draw_image_asset_luma(asset) else { return Vec::new() };
     let traced = match semio_s_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {

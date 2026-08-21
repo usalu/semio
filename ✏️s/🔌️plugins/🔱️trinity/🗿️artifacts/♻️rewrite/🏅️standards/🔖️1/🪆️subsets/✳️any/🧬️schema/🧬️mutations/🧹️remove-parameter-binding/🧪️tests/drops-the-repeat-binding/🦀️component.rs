@@ -15,10 +15,10 @@
 //! `mutation.no-op` warning here, never `mutation.target-missing`: this map family has no rejection
 //! branch at all. This case pins the applied removal of a key that really is present.
 
+use crate::artifacts::jack::PropertyValue;
 use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::mutations::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation, RewriteRuleMutation};
 use crate::artifacts::rewrite::RewriteSnapshot;
-use crate::artifacts::jack::PropertyValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");

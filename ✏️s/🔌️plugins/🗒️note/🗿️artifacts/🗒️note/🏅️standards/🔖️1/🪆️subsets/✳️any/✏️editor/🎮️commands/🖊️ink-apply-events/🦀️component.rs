@@ -1,11 +1,11 @@
 //! 🖊️ 🖊️ Note play app command command — `ink-apply-events`.
 
-use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
-use crate::artifacts::note::schema::{block_bounds, block_id, block_locked, block_visible, block_name, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, replace_asset_payload, rename_block, resize_block};
-use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteSnapshot, NoteImageAsset};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::artifacts::note::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
+use crate::artifacts::note::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
+use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnapshot};
+use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::Deserialize;
 
 //#region 🔖️CanvasEvents
@@ -132,7 +132,6 @@ async fn note_ops_from_canvas_events(document: &NoteSnapshot, events: &[NoteCanv
 }
 //#endregion 🔖️CanvasEvents
 
-
 #[derive(Clone, Debug, PartialEq, serde::Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "ink-apply-events")]
 pub struct InkApplyEvents {
@@ -179,9 +178,9 @@ pub async fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::note::schema::{block_id, create_block_by_kind};
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
-    use crate::artifacts::note::schema::{block_id, create_block_by_kind};
     use semio_framework_plugin::PluginApp;
     use serde_json::json;
 

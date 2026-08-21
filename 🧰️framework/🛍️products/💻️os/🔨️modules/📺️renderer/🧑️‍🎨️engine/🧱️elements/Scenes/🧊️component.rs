@@ -3349,7 +3349,10 @@ mod canvas2d_tests {
         let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
         assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
         let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
-        assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)), "sweeping immediately (before the ~350ms settle window) must not yet report this surface");
+        assert!(
+            immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)),
+            "sweeping immediately (before the ~350ms settle window) must not yet report this surface"
+        );
         let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
         let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
         assert_eq!(matched.controller_id, "controller");
@@ -3721,11 +3724,7 @@ fn ink_text_plain(block: &Value) -> String {
         .get("paragraphs")
         .and_then(Value::as_array)
         .map(|paragraphs| {
-            paragraphs
-                .iter()
-                .map(|paragraph| paragraph.get("runs").and_then(Value::as_array).map(|runs| runs.iter().filter_map(|run| run.get("text").and_then(Value::as_str)).collect::<String>()).unwrap_or_default())
-                .collect::<Vec<_>>()
-                .join("\n")
+            paragraphs.iter().map(|paragraph| paragraph.get("runs").and_then(Value::as_array).map(|runs| runs.iter().filter_map(|run| run.get("text").and_then(Value::as_str)).collect::<String>()).unwrap_or_default()).collect::<Vec<_>>().join("\n")
         })
         .unwrap_or_default()
 }

@@ -42,10 +42,11 @@ use std::sync::OnceLock;
 use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
-use semio_framework_async::{CancelToken, ChannelPolicy, Lane, WorkerPool};
-use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, InteractiveStage, TraceEvent, Watchdog};
+use semio_framework_async::{ChannelPolicy, Lane, WorkerPool};
+use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, TraceEvent, Watchdog};
 
-pub use semio_framework_trace::{allocate_operation_id, Generation, OperationId};
+pub use semio_framework_async::CancelToken;
+pub use semio_framework_trace::{allocate_operation_id, Generation, InteractiveStage, OperationId};
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —

@@ -8,7 +8,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -26,7 +26,7 @@ pub struct DeleteSpace {
 pub async fn handle(payload: &DeleteSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if !payload.confirmed {
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "confirmed": true })).ok();
-        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(127),  dialog_id: "deleteSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(127), dialog_id: "deleteSpace".into(), args }));
     }
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id })).ok();
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.delete-space".into(), args }))

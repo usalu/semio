@@ -40,36 +40,19 @@ async fn default_contributions_json() -> String {
 impl Default for ImperativeArtifact {
     fn default() -> Self {
         let empty = crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot::default();
-        Self {
-            schema: empty.schema,
-            flow: empty.flow,
-            text: empty.text,
-            selected_step_ids: Vec::new(),
-            locale: "en-US".into(),
-            contributions_json: default_contributions_json(),
-            run_output_json: String::new(),
-        }
+        Self { schema: empty.schema, flow: empty.flow, text: empty.text, selected_step_ids: Vec::new(), locale: "en-US".into(), contributions_json: default_contributions_json(), run_output_json: String::new() }
     }
 }
 
 impl ImperativeArtifact {
     /// 📸️ Persisted subset.
     pub async fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
-        crate::artifacts::imperative::ImperativeSnapshot {
-            schema: self.schema.clone(),
-            flow: self.flow.clone(),
-            text: self.text.clone(),
-        }
+        crate::artifacts::imperative::ImperativeSnapshot { schema: self.schema.clone(), flow: self.flow.clone(), text: self.text.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub async fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
-        Self {
-            schema: snapshot.schema,
-            flow: snapshot.flow,
-            text: snapshot.text,
-            ..Self::default()
-        }
+        Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -119,10 +102,10 @@ pub async fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDe
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::imperative::schema::diff::ImperativeDiff;
     use crate::artifacts::imperative::schema::mutations::ImperativeMutation;
     use crate::artifacts::imperative::schema::snapshot::ImperativeSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
     pub struct ImperativeBuilderConstruction {
@@ -134,8 +117,12 @@ pub mod derived_construction {
         type Snapshot = ImperativeSnapshot;
         type Mutation = ImperativeMutation;
         type Diff = ImperativeDiff;
-        async fn empty() -> Self { Self { snapshot: ImperativeSnapshot::default(), diagnostics: Vec::new() } }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
+        async fn empty() -> Self {
+            Self { snapshot: ImperativeSnapshot::default(), diagnostics: Vec::new() }
+        }
+        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
@@ -146,24 +133,21 @@ pub mod derived_construction {
             let outcome = <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
-        async fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <ImperativeDiff as protocol::MutationDiff<ImperativeSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
         }
     }
 }
@@ -172,8 +156,8 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
     use crate::artifacts::imperative::ImperativeSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct ImperativeParts {
@@ -247,18 +231,8 @@ async fn default_path() -> crate::artifacts::imperative::Path {
     use neural_engine::{Atom, Value};
     Path {
         steps: vec![
-            Step {
-                id: "step-1".into(),
-                kind: "state.set".into(),
-                params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Integer(1))),
-                bodies: Default::default(),
-            },
-            Step {
-                id: "step-2".into(),
-                kind: "log.print".into(),
-                params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello".into()))),
-                bodies: Default::default(),
-            },
+            Step { id: "step-1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Integer(1))), bodies: Default::default() },
+            Step { id: "step-2".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello".into()))), bodies: Default::default() },
         ],
     }
 }

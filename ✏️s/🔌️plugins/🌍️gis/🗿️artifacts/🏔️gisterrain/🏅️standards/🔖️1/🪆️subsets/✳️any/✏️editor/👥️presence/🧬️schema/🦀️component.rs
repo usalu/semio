@@ -6,5 +6,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.gis.gis3d.presence")]
 pub struct Gis3dPresence {
-    #[state(presence)] pub camera_json: String,
+    #[state(presence)]
+    pub camera_json: String,
 }

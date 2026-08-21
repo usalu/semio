@@ -7,8 +7,8 @@
 use crate::artifacts::puzzle3d::{Puzzle3dMutation, Puzzle3dSnapshot, PUZZLE3D_DIALECT, PUZZLE_3D_SCHEMA};
 use crate::viewer::puzzle3d::modes::view;
 use crate::viewer::puzzle3d::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

@@ -72,13 +72,18 @@ pub enum ApplyOutcome {
     Accepted,
     // 🔒️ Boxed: MutationEnvelope is far larger than the other variants, and clippy's
     // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
-    Transformed { envelope: Box<crate::causal::MutationEnvelope> },
+    Transformed {
+        envelope: Box<crate::causal::MutationEnvelope>,
+    },
     /// 🧾 `messages` (trailing addition, tag unchanged) is one packed `Vec<MutationMessage>` blob —
     /// opaque here (this crate stays decoupled from `os_spr::command`'s concrete type, matching
     /// `ArtifactDiff`/`InverseMutation`'s opaque-bytes convention above), packed by the caller with
     /// `pack::encode_record_body` before construction. See contract-freeze.md §C8 of
     /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
-    Rejected { reason: String, messages: Vec<u8> },
+    Rejected {
+        reason: String,
+        messages: Vec<u8>,
+    },
 }
 
 /// @emoji 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
@@ -93,21 +98,54 @@ pub enum AckStage {
 /// @emoji 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
-    Welcome { session_id: String, resume_token: String, server_frontier: crate::causal::FrontierSummary, bootstrap: Bootstrap },
-    SnapshotChunk { seq: u32, bytes: Vec<u8> },
-    SnapshotDone { seq_count: u32 },
-    Commands { envelopes: Vec<crate::causal::MutationEnvelope>, origin: crate::ids::ActorId, frontier: crate::causal::FrontierSummary },
-    Ack { batch_id: u64, stages: Vec<AckStage>, frontier: crate::causal::FrontierSummary },
-    Preview { actor: crate::ids::ActorId, key: String, seq: u64, payload: Vec<u8> },
-    Presence { peers: Vec<Vec<u8>> },
-    CreditGrant { n: u32 },
-    Error { code: String, message: String },
+    Welcome {
+        session_id: String,
+        resume_token: String,
+        server_frontier: crate::causal::FrontierSummary,
+        bootstrap: Bootstrap,
+    },
+    SnapshotChunk {
+        seq: u32,
+        bytes: Vec<u8>,
+    },
+    SnapshotDone {
+        seq_count: u32,
+    },
+    Commands {
+        envelopes: Vec<crate::causal::MutationEnvelope>,
+        origin: crate::ids::ActorId,
+        frontier: crate::causal::FrontierSummary,
+    },
+    Ack {
+        batch_id: u64,
+        stages: Vec<AckStage>,
+        frontier: crate::causal::FrontierSummary,
+    },
+    Preview {
+        actor: crate::ids::ActorId,
+        key: String,
+        seq: u64,
+        payload: Vec<u8>,
+    },
+    Presence {
+        peers: Vec<Vec<u8>>,
+    },
+    CreditGrant {
+        n: u32,
+    },
+    Error {
+        code: String,
+        message: String,
+    },
     /// @emoji 🎨️ The hub's one-time session assignment for this connection: `color` is the
     /// hub-assigned palette index (`HubState.session_colors`, §C7.3), leased per `(space, actor)` and
     /// stamped by the client actor onto every outbound `PresencePeer` (never filled by a shell). Sent
     /// exactly once per connection, after `Welcome` (and its follow-up bootstrap frames) and before
     /// any `Presence` frame.
-    Session { actor: String, color: u8 },
+    Session {
+        actor: String,
+        color: u8,
+    },
 }
 //#endregion 🔖️ServerFrame
 
@@ -122,78 +160,78 @@ async fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::Prot
 
 //#region 🔖️Combinators
 async fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
-    crate::write_bool(out, value.is_some()).await;
+    crate::write_bool(out, value.is_some());
     if let Some(s) = value {
-        crate::write_str(out, s).await;
+        crate::write_str(out, s);
     }
 }
 
 async fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos).await? {
-        Ok(Some(crate::read_str(bytes, pos).await?))
+    if crate::read_bool(bytes, pos)? {
+        Ok(Some(crate::read_str(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 async fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
-    crate::write_bool(out, value.is_some()).await;
+    crate::write_bool(out, value.is_some());
     if let Some(b) = value {
-        crate::write_bytes(out, b).await;
+        crate::write_bytes(out, b);
     }
 }
 
 async fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos).await? {
-        Ok(Some(crate::read_bytes(bytes, pos).await?))
+    if crate::read_bool(bytes, pos)? {
+        Ok(Some(crate::read_bytes(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 async fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<crate::causal::FrontierSummary>) {
-    crate::write_bool(out, value.is_some()).await;
+    crate::write_bool(out, value.is_some());
     if let Some(f) = value {
-        crate::causal::encode_frontier(f, out).await;
+        crate::causal::encode_frontier(f, out);
     }
 }
 
 async fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<crate::causal::FrontierSummary>, crate::ProtocolError> {
-    if crate::read_bool(bytes, pos).await? {
-        Ok(Some(crate::causal::decode_frontier(bytes, pos).await?))
+    if crate::read_bool(bytes, pos)? {
+        Ok(Some(crate::causal::decode_frontier(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
 async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::wire::write_varint_u64(out, values.len() as u64).await;
+    crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::write_bytes(out, value).await;
+        crate::write_bytes(out, value);
     }
 }
 
 async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::read_bytes(bytes, pos).await?);
+        out.push(crate::read_bytes(bytes, pos)?);
     }
     Ok(out)
 }
 
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::causal::MutationEnvelope]) {
-    crate::wire::write_varint_u64(out, values.len() as u64).await;
+    crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::causal::encode_envelope(value, out).await;
+        crate::causal::encode_envelope(value, out);
     }
 }
 
 async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::causal::MutationEnvelope>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::causal::decode_envelope(bytes, pos).await?);
+        out.push(crate::causal::decode_envelope(bytes, pos)?);
     }
     Ok(out)
 }
@@ -205,7 +243,7 @@ async fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
         Bootstrap::None => out.push(0),
         Bootstrap::Snapshot { pack_hash, inline } => {
             out.push(1);
-            crate::write_hash32(out, pack_hash).await;
+            crate::write_hash32(out, pack_hash);
             write_opt_bytes(out, inline).await;
         }
         Bootstrap::Tail => out.push(2),
@@ -221,7 +259,7 @@ async fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, cr
     match tag {
         0 => Ok(Bootstrap::None),
         1 => {
-            let pack_hash = crate::read_hash32(bytes, pos).await?;
+            let pack_hash = crate::read_hash32(bytes, pos)?;
             let inline = read_opt_bytes(bytes, pos).await?;
             Ok(Bootstrap::Snapshot { pack_hash, inline })
         }
@@ -235,12 +273,12 @@ async fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
         ApplyOutcome::Accepted => out.push(0),
         ApplyOutcome::Transformed { envelope } => {
             out.push(1);
-            crate::causal::encode_envelope(envelope, out).await;
+            crate::causal::encode_envelope(envelope, out);
         }
         ApplyOutcome::Rejected { reason, messages } => {
             out.push(2);
-            crate::write_str(out, reason).await;
-            crate::write_bytes(out, messages).await;
+            crate::write_str(out, reason);
+            crate::write_bytes(out, messages);
         }
     }
 }
@@ -253,8 +291,8 @@ async fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutc
     *pos += 1;
     match tag {
         0 => Ok(ApplyOutcome::Accepted),
-        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::causal::decode_envelope(bytes, pos).await?) }),
-        2 => Ok(ApplyOutcome::Rejected { reason: crate::read_str(bytes, pos).await?, messages: crate::read_bytes(bytes, pos).await? }),
+        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(crate::causal::decode_envelope(bytes, pos)?) }),
+        2 => Ok(ApplyOutcome::Rejected { reason: crate::read_str(bytes, pos)?, messages: crate::read_bytes(bytes, pos)? }),
         other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
@@ -285,14 +323,14 @@ async fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, cra
 }
 
 async fn write_vec_ack_stage(out: &mut Vec<u8>, values: &[AckStage]) {
-    crate::wire::write_varint_u64(out, values.len() as u64).await;
+    crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
         encode_ack_stage(value, out).await;
     }
 }
 
 async fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(decode_ack_stage(bytes, pos).await?);
@@ -308,37 +346,37 @@ pub async fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
     match frame {
         ClientFrame::Hello { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } => {
             out.push(0);
-            crate::wire::write_varint_u64(&mut out, *wire_version as u64).await;
-            crate::wire::write_varint_u64(&mut out, *protocol_version as u64).await;
-            crate::write_str(&mut out, schema).await;
-            crate::write_hash32(&mut out, pack_schema_hash).await;
-            crate::write_str(&mut out, &actor.0).await;
+            crate::wire::write_varint_u64(&mut out, *wire_version as u64);
+            crate::wire::write_varint_u64(&mut out, *protocol_version as u64);
+            crate::write_str(&mut out, schema);
+            crate::write_hash32(&mut out, pack_schema_hash);
+            crate::write_str(&mut out, &actor.0);
             write_opt_str(&mut out, token).await;
             write_opt_str(&mut out, resume_token).await;
             write_opt_frontier(&mut out, frontier).await;
         }
         ClientFrame::Commands { batch_id, envelopes } => {
             out.push(1);
-            crate::wire::write_varint_u64(&mut out, *batch_id).await;
+            crate::wire::write_varint_u64(&mut out, *batch_id);
             write_vec_envelope(&mut out, envelopes).await;
         }
         ClientFrame::FrontierAdvertise { frontier } => {
             out.push(2);
-            crate::causal::encode_frontier(frontier, &mut out).await;
+            crate::causal::encode_frontier(frontier, &mut out);
         }
         ClientFrame::PreviewPublish { key, seq, payload } => {
             out.push(3);
-            crate::write_str(&mut out, key).await;
-            crate::wire::write_varint_u64(&mut out, *seq).await;
-            crate::write_bytes(&mut out, payload).await;
+            crate::write_str(&mut out, key);
+            crate::wire::write_varint_u64(&mut out, *seq);
+            crate::write_bytes(&mut out, payload);
         }
         ClientFrame::Presence { peer } => {
             out.push(4);
-            crate::write_bytes(&mut out, peer).await;
+            crate::write_bytes(&mut out, peer);
         }
         ClientFrame::CreditGrant { n } => {
             out.push(5);
-            crate::wire::write_varint_u64(&mut out, *n as u64).await;
+            crate::wire::write_varint_u64(&mut out, *n as u64);
         }
         ClientFrame::Bye => out.push(6),
     }
@@ -363,20 +401,20 @@ pub async fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), cr
     pos += 1;
     let frame = match tag {
         0 => ClientFrame::Hello {
-            wire_version: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32,
-            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32,
-            schema: crate::read_str(bytes, &mut pos).await?,
-            pack_schema_hash: crate::read_hash32(bytes, &mut pos).await?,
-            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?),
+            wire_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
+            protocol_version: crate::wire::read_varint_u64(bytes, &mut pos)? as u32,
+            schema: crate::read_str(bytes, &mut pos)?,
+            pack_schema_hash: crate::read_hash32(bytes, &mut pos)?,
+            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?),
             token: read_opt_str(bytes, &mut pos).await?,
             resume_token: read_opt_str(bytes, &mut pos).await?,
             frontier: read_opt_frontier(bytes, &mut pos).await?,
         },
-        1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos).await?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
-        2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
-        3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos).await?, seq: crate::wire::read_varint_u64(bytes, &mut pos).await?, payload: crate::read_bytes(bytes, &mut pos).await? },
-        4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos).await? },
-        5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
+        1 => ClientFrame::Commands { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
+        2 => ClientFrame::FrontierAdvertise { frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        3 => ClientFrame::PreviewPublish { key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
+        4 => ClientFrame::Presence { peer: crate::read_bytes(bytes, &mut pos)? },
+        5 => ClientFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
         6 => ClientFrame::Bye,
         other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
     };
@@ -390,38 +428,38 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     match frame {
         ServerFrame::Welcome { session_id, resume_token, server_frontier, bootstrap } => {
             out.push(0);
-            crate::write_str(&mut out, session_id).await;
-            crate::write_str(&mut out, resume_token).await;
-            crate::causal::encode_frontier(server_frontier, &mut out).await;
+            crate::write_str(&mut out, session_id);
+            crate::write_str(&mut out, resume_token);
+            crate::causal::encode_frontier(server_frontier, &mut out);
             encode_bootstrap(bootstrap, &mut out).await;
         }
         ServerFrame::SnapshotChunk { seq, bytes } => {
             out.push(1);
-            crate::wire::write_varint_u64(&mut out, *seq as u64).await;
-            crate::write_bytes(&mut out, bytes).await;
+            crate::wire::write_varint_u64(&mut out, *seq as u64);
+            crate::write_bytes(&mut out, bytes);
         }
         ServerFrame::SnapshotDone { seq_count } => {
             out.push(2);
-            crate::wire::write_varint_u64(&mut out, *seq_count as u64).await;
+            crate::wire::write_varint_u64(&mut out, *seq_count as u64);
         }
         ServerFrame::Commands { envelopes, origin, frontier } => {
             out.push(3);
             write_vec_envelope(&mut out, envelopes).await;
-            crate::write_str(&mut out, &origin.0).await;
-            crate::causal::encode_frontier(frontier, &mut out).await;
+            crate::write_str(&mut out, &origin.0);
+            crate::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Ack { batch_id, stages, frontier } => {
             out.push(4);
-            crate::wire::write_varint_u64(&mut out, *batch_id).await;
+            crate::wire::write_varint_u64(&mut out, *batch_id);
             write_vec_ack_stage(&mut out, stages).await;
-            crate::causal::encode_frontier(frontier, &mut out).await;
+            crate::causal::encode_frontier(frontier, &mut out);
         }
         ServerFrame::Preview { actor, key, seq, payload } => {
             out.push(5);
-            crate::write_str(&mut out, &actor.0).await;
-            crate::write_str(&mut out, key).await;
-            crate::wire::write_varint_u64(&mut out, *seq).await;
-            crate::write_bytes(&mut out, payload).await;
+            crate::write_str(&mut out, &actor.0);
+            crate::write_str(&mut out, key);
+            crate::wire::write_varint_u64(&mut out, *seq);
+            crate::write_bytes(&mut out, payload);
         }
         ServerFrame::Presence { peers } => {
             out.push(6);
@@ -429,16 +467,16 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
         }
         ServerFrame::CreditGrant { n } => {
             out.push(7);
-            crate::wire::write_varint_u64(&mut out, *n as u64).await;
+            crate::wire::write_varint_u64(&mut out, *n as u64);
         }
         ServerFrame::Error { code, message } => {
             out.push(8);
-            crate::write_str(&mut out, code).await;
-            crate::write_str(&mut out, message).await;
+            crate::write_str(&mut out, code);
+            crate::write_str(&mut out, message);
         }
         ServerFrame::Session { actor, color } => {
             out.push(9);
-            crate::write_str(&mut out, actor).await;
+            crate::write_str(&mut out, actor);
             out.push(*color);
         }
     }
@@ -463,27 +501,22 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
     pos += 1;
     let frame = match tag {
         0 => ServerFrame::Welcome {
-            session_id: crate::read_str(bytes, &mut pos).await?,
-            resume_token: crate::read_str(bytes, &mut pos).await?,
-            server_frontier: crate::causal::decode_frontier(bytes, &mut pos).await?,
+            session_id: crate::read_str(bytes, &mut pos)?,
+            resume_token: crate::read_str(bytes, &mut pos)?,
+            server_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
             bootstrap: decode_bootstrap(bytes, &mut pos).await?,
         },
-        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32, bytes: crate::read_bytes(bytes, &mut pos).await? },
-        2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
-        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?), frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
-        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos).await?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos).await? },
-        5 => ServerFrame::Preview {
-            actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos).await?),
-            key: crate::read_str(bytes, &mut pos).await?,
-            seq: crate::wire::read_varint_u64(bytes, &mut pos).await?,
-            payload: crate::read_bytes(bytes, &mut pos).await?,
-        },
+        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: crate::read_bytes(bytes, &mut pos)? },
+        2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
+        5 => ServerFrame::Preview { actor: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), key: crate::read_str(bytes, &mut pos)?, seq: crate::wire::read_varint_u64(bytes, &mut pos)?, payload: crate::read_bytes(bytes, &mut pos)? },
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos).await? },
-        7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos).await? as u32 },
-        8 => ServerFrame::Error { code: crate::read_str(bytes, &mut pos).await?, message: crate::read_str(bytes, &mut pos).await? },
+        7 => ServerFrame::CreditGrant { n: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
+        8 => ServerFrame::Error { code: crate::read_str(bytes, &mut pos)?, message: crate::read_str(bytes, &mut pos)? },
         9 => {
-            let actor = crate::read_str(bytes, &mut pos).await?;
-            let color = crate::read_u8(bytes, &mut pos).await?;
+            let actor = crate::read_str(bytes, &mut pos)?;
+            let color = crate::read_u8(bytes, &mut pos)?;
             ServerFrame::Session { actor, color }
         }
         other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}")).await),
@@ -546,7 +579,8 @@ mod tests {
                 frontier: Some(sample_frontier().await),
             },
             Lane::Command,
-        ).await;
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -554,7 +588,8 @@ mod tests {
         assert_client_round_trips(
             &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: crate::ids::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
             Lane::Command,
-        ).await;
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -770,24 +805,24 @@ async fn encode_presence_view_kind(kind: &PresenceViewKind, out: &mut Vec<u8>) {
     match kind {
         PresenceViewKind::Canvas { x, y, zoom } => {
             out.push(0);
-            crate::write_f64(out, *x).await;
-            crate::write_f64(out, *y).await;
-            crate::write_f64(out, *zoom).await;
+            crate::write_f64(out, *x);
+            crate::write_f64(out, *y);
+            crate::write_f64(out, *zoom);
         }
         PresenceViewKind::Orbit { position, target, up, fov } => {
             out.push(1);
             for value in position.iter().chain(target.iter()).chain(up.iter()) {
-                crate::write_f64(out, *value).await;
+                crate::write_f64(out, *value);
             }
-            crate::write_f64(out, *fov).await;
+            crate::write_f64(out, *fov);
         }
         PresenceViewKind::Geo { lng, lat, zoom, bearing, pitch } => {
             out.push(2);
-            crate::write_f64(out, *lng).await;
-            crate::write_f64(out, *lat).await;
-            crate::write_f64(out, *zoom).await;
-            crate::write_f64(out, *bearing).await;
-            crate::write_f64(out, *pitch).await;
+            crate::write_f64(out, *lng);
+            crate::write_f64(out, *lat);
+            crate::write_f64(out, *zoom);
+            crate::write_f64(out, *bearing);
+            crate::write_f64(out, *pitch);
         }
     }
 }
@@ -799,54 +834,54 @@ async fn decode_presence_view_kind(bytes: &[u8], pos: &mut usize) -> Result<Pres
     };
     *pos += 1;
     match tag {
-        0 => Ok(PresenceViewKind::Canvas { x: crate::read_f64(bytes, pos).await?, y: crate::read_f64(bytes, pos).await?, zoom: crate::read_f64(bytes, pos).await? }),
+        0 => Ok(PresenceViewKind::Canvas { x: crate::read_f64(bytes, pos)?, y: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)? }),
         1 => {
             async fn read3(bytes: &[u8], pos: &mut usize) -> Result<[f64; 3], crate::ProtocolError> {
-                Ok([crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?])
+                Ok([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?])
             }
             let position = read3(bytes, pos).await?;
             let target = read3(bytes, pos).await?;
             let up = read3(bytes, pos).await?;
-            let fov = crate::read_f64(bytes, pos).await?;
+            let fov = crate::read_f64(bytes, pos)?;
             Ok(PresenceViewKind::Orbit { position, target, up, fov })
         }
-        2 => Ok(PresenceViewKind::Geo { lng: crate::read_f64(bytes, pos).await?, lat: crate::read_f64(bytes, pos).await?, zoom: crate::read_f64(bytes, pos).await?, bearing: crate::read_f64(bytes, pos).await?, pitch: crate::read_f64(bytes, pos).await? }),
+        2 => Ok(PresenceViewKind::Geo { lng: crate::read_f64(bytes, pos)?, lat: crate::read_f64(bytes, pos)?, zoom: crate::read_f64(bytes, pos)?, bearing: crate::read_f64(bytes, pos)?, pitch: crate::read_f64(bytes, pos)? }),
         other => Err(malformed("presence view kind tag", *pos as u64, &format!("unknown tag {other:#x}")).await),
     }
 }
 
 async fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8>) {
-    crate::write_str(out, &view.window_id).await;
-    crate::write_str(out, &view.space).await;
+    crate::write_str(out, &view.window_id);
+    crate::write_str(out, &view.space);
     encode_presence_view_kind(&view.kind, out).await;
-    crate::write_f64(out, view.size[0]).await;
-    crate::write_f64(out, view.size[1]).await;
-    crate::write_bool(out, view.pointer.is_some()).await;
+    crate::write_f64(out, view.size[0]);
+    crate::write_f64(out, view.size[1]);
+    crate::write_bool(out, view.pointer.is_some());
     if let Some(pointer) = view.pointer {
         for value in pointer {
-            crate::write_f64(out, value).await;
+            crate::write_f64(out, value);
         }
     }
 }
 
 async fn decode_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<PresenceWindowView, crate::ProtocolError> {
-    let window_id = crate::read_str(bytes, pos).await?;
-    let space = crate::read_str(bytes, pos).await?;
+    let window_id = crate::read_str(bytes, pos)?;
+    let space = crate::read_str(bytes, pos)?;
     let kind = decode_presence_view_kind(bytes, pos).await?;
-    let size = [crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?];
-    let pointer = if crate::read_bool(bytes, pos).await? { Some([crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?, crate::read_f64(bytes, pos).await?]) } else { None };
+    let size = [crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?];
+    let pointer = if crate::read_bool(bytes, pos)? { Some([crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?, crate::read_f64(bytes, pos)?]) } else { None };
     Ok(PresenceWindowView { window_id, space, kind, size, pointer })
 }
 
 async fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
-    crate::wire::write_varint_u64(out, values.len() as u64).await;
+    crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
         encode_presence_window_view(value, out).await;
     }
 }
 
 async fn read_vec_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<Vec<PresenceWindowView>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(decode_presence_window_view(bytes, pos).await?);
@@ -956,7 +991,7 @@ pub struct PresencePeer {
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::write_str(&mut out, &peer.actor).await;
+    crate::write_str(&mut out, &peer.actor);
     let mut flags = 0u64;
     if peer.label.is_some() {
         flags |= 1 << 0;
@@ -988,22 +1023,22 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.ui.is_some() {
         flags |= 1 << 9;
     }
-    crate::wire::write_varint_u64(&mut out, flags).await;
-    crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64).await;
+    crate::wire::write_varint_u64(&mut out, flags);
+    crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
-        crate::write_str(&mut out, label).await;
+        crate::write_str(&mut out, label);
     }
     if let Some(presence_pack) = &peer.presence_pack {
-        crate::write_bytes(&mut out, presence_pack).await;
+        crate::write_bytes(&mut out, presence_pack);
     }
     if let Some(user_id) = &peer.user_id {
-        crate::write_str(&mut out, user_id).await;
+        crate::write_str(&mut out, user_id);
     }
     if let Some(role) = &peer.role {
-        crate::write_str(&mut out, role).await;
+        crate::write_str(&mut out, role);
     }
     if let Some(drag_ghost_json) = &peer.drag_ghost_json {
-        crate::write_str(&mut out, drag_ghost_json).await;
+        crate::write_str(&mut out, drag_ghost_json);
     }
     if let Some(interaction) = &peer.interaction {
         encode_presence_interaction(interaction, &mut out).await;
@@ -1012,7 +1047,7 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
         out.push(color);
     }
     if let Some(surface) = &peer.surface {
-        crate::write_str(&mut out, surface).await;
+        crate::write_str(&mut out, surface);
     }
     if !peer.views.is_empty() {
         write_vec_presence_window_view(&mut out, &peer.views).await;
@@ -1027,17 +1062,17 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
 /// (`ProtocolError::Malformed { what: "presence peer flags", .. }`) — no silent forward compatibility.
 pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::ProtocolError> {
     let mut pos = 0usize;
-    let actor = crate::read_str(bytes, &mut pos).await?;
-    let flags = crate::wire::read_varint_u64(bytes, &mut pos).await?;
+    let actor = crate::read_str(bytes, &mut pos)?;
+    let flags = crate::wire::read_varint_u64(bytes, &mut pos)?;
     if flags >> 10 != 0 {
         return Err(crate::ProtocolError::Malformed { what: "presence peer flags", offset: pos as u64, detail: format!("unknown flag bits set: {flags:#x}") });
     }
-    let connected_at_ms = crate::wire::read_varint_u64(bytes, &mut pos).await? as i64;
-    let label = if flags & (1 << 0) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
-    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::read_bytes(bytes, &mut pos).await?) } else { None };
-    let user_id = if flags & (1 << 2) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
-    let role = if flags & (1 << 3) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
-    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let connected_at_ms = crate::wire::read_varint_u64(bytes, &mut pos)? as i64;
+    let label = if flags & (1 << 0) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
+    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::read_bytes(bytes, &mut pos)?) } else { None };
+    let user_id = if flags & (1 << 2) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
+    let role = if flags & (1 << 3) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
+    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
     let interaction = if flags & (1 << 5) != 0 { Some(decode_presence_interaction(bytes, &mut pos).await?) } else { None };
     let color = if flags & (1 << 6) != 0 {
         let byte = *bytes.get(pos).ok_or(crate::ProtocolError::Malformed { what: "presence peer color", offset: pos as u64, detail: "truncated".to_string() })?;
@@ -1046,7 +1081,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     } else {
         None
     };
-    let surface = if flags & (1 << 7) != 0 { Some(crate::read_str(bytes, &mut pos).await?) } else { None };
+    let surface = if flags & (1 << 7) != 0 { Some(crate::read_str(bytes, &mut pos)?) } else { None };
     let views = if flags & (1 << 8) != 0 { read_vec_presence_window_view(bytes, &mut pos).await? } else { Vec::new() };
     let ui = if flags & (1 << 9) != 0 { Some(decode_presence_ui(bytes, &mut pos).await?) } else { None };
     Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui })
@@ -1073,10 +1108,7 @@ mod presence_codec_tests {
             user_id: Some("user-9".into()),
             role: Some("owner".into()),
             drag_ghost_json: Some("{\"kind\":\"move\"}".into()),
-            interaction: Some(PresenceInteraction {
-                app_id: "draw".into(),
-                domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into()], hovered: vec!["n2".into()] }],
-            }),
+            interaction: Some(PresenceInteraction { app_id: "draw".into(), domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into()], hovered: vec!["n2".into()] }] }),
             color: Some(3),
             surface: Some("s.space.home@1/*#editor".into()),
             views: vec![
@@ -1162,7 +1194,8 @@ mod presence_codec_tests {
                 PresenceDomain { domain: "board".into(), granularity: "card".into(), selected: vec![], hovered: vec!["c1".into(), "c2".into(), "c3".into()] },
                 PresenceDomain { domain: "canvas".into(), granularity: "node".into(), selected: vec!["n9".into()], hovered: vec![] },
             ],
-        })).await;
+        }))
+        .await;
         let bytes = encode_presence_peer(&peer).await;
         let decoded = decode_presence_peer(&bytes).await.unwrap();
         assert_eq!(decoded, peer);
@@ -1666,38 +1699,38 @@ pub struct PresenceDomain {
 // `write_vec_bytes`/`write_vec_envelope`'s own convention in `🔖️Combinators` up top), so no outer
 // length prefix is needed around the whole payload.
 async fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
-    crate::wire::write_varint_u64(out, values.len() as u64).await;
+    crate::wire::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::write_str(out, value).await;
+        crate::write_str(out, value);
     }
 }
 
 async fn read_vec_str(bytes: &[u8], pos: &mut usize) -> Result<Vec<String>, crate::ProtocolError> {
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::read_str(bytes, pos).await?);
+        out.push(crate::read_str(bytes, pos)?);
     }
     Ok(out)
 }
 
 async fn encode_presence_domain(domain: &PresenceDomain, out: &mut Vec<u8>) {
-    crate::write_str(out, &domain.domain).await;
-    crate::write_str(out, &domain.granularity).await;
+    crate::write_str(out, &domain.domain);
+    crate::write_str(out, &domain.granularity);
     write_vec_str(out, &domain.selected).await;
     write_vec_str(out, &domain.hovered).await;
 }
 
 async fn decode_presence_domain(bytes: &[u8], pos: &mut usize) -> Result<PresenceDomain, crate::ProtocolError> {
-    Ok(PresenceDomain { domain: crate::read_str(bytes, pos).await?, granularity: crate::read_str(bytes, pos).await?, selected: read_vec_str(bytes, pos).await?, hovered: read_vec_str(bytes, pos).await? })
+    Ok(PresenceDomain { domain: crate::read_str(bytes, pos)?, granularity: crate::read_str(bytes, pos)?, selected: read_vec_str(bytes, pos).await?, hovered: read_vec_str(bytes, pos).await? })
 }
 
 /// @emoji 🎯️ Encodes one `PresenceInteraction` — `pub` (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4): guests never enable the kernel's `sync` feature, and
 /// `VcsArtifactApp` (the plugin ABI's presence adoption path) must be able to call this directly.
 pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
-    crate::write_str(out, &interaction.app_id).await;
-    crate::wire::write_varint_u64(out, interaction.domains.len() as u64).await;
+    crate::write_str(out, &interaction.app_id);
+    crate::wire::write_varint_u64(out, interaction.domains.len() as u64);
     for domain in &interaction.domains {
         encode_presence_domain(domain, out).await;
     }
@@ -1705,8 +1738,8 @@ pub async fn encode_presence_interaction(interaction: &PresenceInteraction, out:
 
 /// @emoji 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
 pub async fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::ProtocolError> {
-    let app_id = crate::read_str(bytes, pos).await?;
-    let count = crate::wire::read_varint_u64(bytes, pos).await?;
+    let app_id = crate::read_str(bytes, pos)?;
+    let count = crate::wire::read_varint_u64(bytes, pos)?;
     let mut domains = Vec::with_capacity(count as usize);
     for _ in 0..count {
         domains.push(decode_presence_domain(bytes, pos).await?);
@@ -1740,11 +1773,7 @@ pub async fn assemble_presence_interaction(app_id: &str, state: &InteractionStat
     let mut domains = Vec::new();
     for domain_id in domain_ids {
         let selected = if selection_specs.get(domain_id).is_some_and(|spec| spec.broadcast) { state.selection.get(domain_id).map(|selection| selection.ids.clone()).unwrap_or_default() } else { Vec::new() };
-        let hovered = if hover_specs.get(domain_id).is_some_and(|spec| spec.broadcast) {
-            state.hover.get(domain_id).filter(|hover| hover.channel == "pointer").map(|hover| hover.ids.clone()).unwrap_or_default()
-        } else {
-            Vec::new()
-        };
+        let hovered = if hover_specs.get(domain_id).is_some_and(|spec| spec.broadcast) { state.hover.get(domain_id).filter(|hover| hover.channel == "pointer").map(|hover| hover.ids.clone()).unwrap_or_default() } else { Vec::new() };
         if selected.is_empty() && hovered.is_empty() {
             continue;
         }

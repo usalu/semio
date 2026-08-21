@@ -39,10 +39,10 @@
 //! (see `db_storage`'s `fs_storage` module doc): full cross-process mutual exclusion beyond
 //! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
 
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
-use crate::db_ids::{check_len, DbError, ArtifactId};
 use crate::db_durability::{DurabilityClass, EpochFence};
+use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 
@@ -160,7 +160,7 @@ fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fe
 /// @emoji 🚨️ Maps a `neo4rs::Error` into the family's single `DbError` — never lets a foreign
 /// error type leak through a public signature, per the repo's binding convention.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-// 🚫️async: E4 fn-pointer slot
+                                         // 🚫️async: E4 fn-pointer slot
 fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
     match &err {
         neo4rs::Error::IOError { .. } | neo4rs::Error::ConnectionError => DbError::Unavailable(err.to_string()),
@@ -190,7 +190,7 @@ fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
 /// `DbError::Corrupt` — a decode failure always means the stored data doesn't match this crate's
 /// own schema, never a caller mistake.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
-// 🚫️async: E4 fn-pointer slot
+                                         // 🚫️async: E4 fn-pointer slot
 fn map_de_error(err: neo4rs::DeError) -> DbError {
     DbError::Corrupt(format!("neo4j row decode error: {err}"))
 }
@@ -390,246 +390,248 @@ impl Neo4jStorage {
 //#region 🔖️WalStorage
 impl WalStorage for Neo4jStorage {
     async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let row = self.fetch_one(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await?;
-            // 🎯️ `MERGE` always yields exactly one row; an empty stream here means the driver
-            // silently dropped the result, which is this process's bug, not the caller's.
-            let fresh: bool = row.ok_or_else(|| DbError::Internal("wal create_segment returned no row".to_string()))?.get("fresh").map_err(map_de_error)?;
-            if !fresh {
-                return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
-            }
-            Ok(())
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let row = self.fetch_one(query(CYPHER_WAL_CREATE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await?;
+        // 🎯️ `MERGE` always yields exactly one row; an empty stream here means the driver
+        // silently dropped the result, which is this process's bug, not the caller's.
+        let fresh: bool = row.ok_or_else(|| DbError::Internal("wal create_segment returned no row".to_string()))?.get("fresh").map_err(map_de_error)?;
+        if !fresh {
+            return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
         }
+        Ok(())
+    }
 
     async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
-            let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
-            let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
-            let Some(row) = row else {
-                return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
-            };
-            let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-            check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
-            let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-            let sealed: bool = row.get("sealed").map_err(map_de_error)?;
-            let updated = apply_append(&current, sealed, bytes)?;
-            let new_len = updated.len() as u64;
-            txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
-            txn.commit().await.map_err(map_neo4rs_error)?;
-            Ok(new_len)
-        }
+        check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
+        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
+        let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
+        let Some(row) = row else {
+            return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
+        };
+        let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
+        check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
+        let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        let sealed: bool = row.get("sealed").map_err(map_de_error)?;
+        let updated = apply_append(&current, sealed, bytes)?;
+        let new_len = updated.len() as u64;
+        txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
+        txn.commit().await.map_err(map_neo4rs_error)?;
+        Ok(new_len)
+    }
 
     async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
         // 🎯️ See module doc's "Durability" section: every prior `append`/`seal` already committed
         // server-side, so there is nothing left to force for any `DurabilityClass`.
-        { Ok(()) }
+        {
+            Ok(())
+        }
     }
 
     async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let row = self.fetch_one(query(CYPHER_WAL_SEAL).param("document", document.0.clone()).param("index", idx)).await?;
-            row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            Ok(())
-        }
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let row = self.fetch_one(query(CYPHER_WAL_SEAL).param("document", document.0.clone()).param("index", idx)).await?;
+        row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        Ok(())
+    }
 
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
-            check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-            check_len(current_len, MAX_READ_BYTES, "wal_storage::read current length")?;
-            let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-            slice_range(&bytes, range)
-        }
+        check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
+        check_len(current_len, MAX_READ_BYTES, "wal_storage::read current length")?;
+        let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        slice_range(&bytes, range)
+    }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-            i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")
-        }
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")
+    }
 
     async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let mut stream = self.graph.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-            let mut out = Vec::new();
-            while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-                out.push(i64_to_u64(row.get("segIndex").map_err(map_de_error)?, "wal segment index")?);
-            }
-            Ok(out)
+        let mut stream = self.graph.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
+        let mut out = Vec::new();
+        while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
+            out.push(i64_to_u64(row.get("segIndex").map_err(map_de_error)?, "wal segment index")?);
         }
+        Ok(out)
+    }
 
     async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            let idx = u64_to_i64(index, "wal segment index")?;
-            let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
-            let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
-            let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
-            let Some(row) = row else {
-                return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
-            };
-            let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
-            check_len(current_len, MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
-            let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-            let sealed: bool = row.get("sealed").map_err(map_de_error)?;
-            let updated = apply_truncate(&current, sealed, new_len)?;
-            txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(updated.len() as u64, "wal segment length")?))
-                .await
-                .map_err(map_neo4rs_error)?;
-            txn.commit().await.map_err(map_neo4rs_error)?;
-            Ok(())
-        }
+        let idx = u64_to_i64(index, "wal segment index")?;
+        let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
+        let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
+        let row = stream.next(txn.handle()).await.map_err(map_neo4rs_error)?;
+        let Some(row) = row else {
+            return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
+        };
+        let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
+        check_len(current_len, MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
+        let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        let sealed: bool = row.get("sealed").map_err(map_de_error)?;
+        let updated = apply_truncate(&current, sealed, new_len)?;
+        txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(updated.len() as u64, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
+        txn.commit().await.map_err(map_neo4rs_error)?;
+        Ok(())
+    }
 
     async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let idx = u64_to_i64(index, "wal segment index")?;
-            self.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await
-        }
+        let idx = u64_to_i64(index, "wal segment index")?;
+        self.run(query(CYPHER_WAL_DELETE_SEGMENT).param("document", document.0.clone()).param("index", idx)).await
+    }
 }
 //#endregion 🔖️WalStorage
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jStorage {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
-            let generation_param = u64_to_i64(generation, "snapshot generation")?;
-            self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)).await
-        }
+        check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
+        let generation_param = u64_to_i64(generation, "snapshot generation")?;
+        self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)).await
+    }
 
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-            let generation_param = u64_to_i64(generation, "snapshot generation")?;
-            let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
-            let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "snapshot generation length")?;
-            check_len(len, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
-            decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        }
+        let generation_param = u64_to_i64(generation, "snapshot generation")?;
+        let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
+        let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "snapshot generation length")?;
+        check_len(len, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
+        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+    }
 
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            let row = self.fetch_one(query(CYPHER_SNAPSHOT_LATEST).param("document", document.0.clone())).await?;
-            match row.and_then(|row| row.get::<i64>("maxGeneration").ok()) {
-                Some(max) => Ok(Some(i64_to_u64(max, "snapshot generation")?)),
-                None => Ok(None),
-            }
+        let row = self.fetch_one(query(CYPHER_SNAPSHOT_LATEST).param("document", document.0.clone())).await?;
+        match row.and_then(|row| row.get::<i64>("maxGeneration").ok()) {
+            Some(max) => Ok(Some(i64_to_u64(max, "snapshot generation")?)),
+            None => Ok(None),
         }
+    }
 
     async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let mut stream = self.graph.execute(query(CYPHER_SNAPSHOT_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-            let mut out = Vec::new();
-            while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-                out.push(i64_to_u64(row.get("generation").map_err(map_de_error)?, "snapshot generation")?);
-            }
-            Ok(out)
+        let mut stream = self.graph.execute(query(CYPHER_SNAPSHOT_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
+        let mut out = Vec::new();
+        while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
+            out.push(i64_to_u64(row.get("generation").map_err(map_de_error)?, "snapshot generation")?);
         }
+        Ok(out)
+    }
 
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            let generation_param = u64_to_i64(generation, "snapshot generation")?;
-            self.run(query(CYPHER_SNAPSHOT_DELETE).param("document", document.0.clone()).param("generation", generation_param)).await
-        }
+        let generation_param = u64_to_i64(generation, "snapshot generation")?;
+        self.run(query(CYPHER_SNAPSHOT_DELETE).param("document", document.0.clone()).param("generation", generation_param)).await
+    }
 }
 //#endregion 🔖️SnapshotStorage
 
 //#region 🔖️PayloadStorage
 impl PayloadStorage for Neo4jStorage {
     async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-            let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-            self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
-            Ok(hash)
-        }
+        check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
+        let hash = ContentHash(*blake3::hash(bytes).as_bytes());
+        self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
+        Ok(hash)
+    }
 
     async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
-            let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
-            check_len(len, MAX_READ_BYTES, "payload_storage::get")?;
-            decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        }
+        let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
+        let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
+        check_len(len, MAX_READ_BYTES, "payload_storage::get")?;
+        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+    }
 
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            let row = self.fetch_one(query(CYPHER_PAYLOAD_CONTAINS).param("hash", hash.to_string())).await?;
-            let count: i64 = row.ok_or_else(|| DbError::Internal("payload_storage::contains returned no row".to_string()))?.get("c").map_err(map_de_error)?;
-            Ok(count > 0)
-        }
+        let row = self.fetch_one(query(CYPHER_PAYLOAD_CONTAINS).param("hash", hash.to_string())).await?;
+        let count: i64 = row.ok_or_else(|| DbError::Internal("payload_storage::contains returned no row".to_string()))?.get("c").map_err(map_de_error)?;
+        Ok(count > 0)
+    }
 
-    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> { self.run(query(CYPHER_PAYLOAD_DELETE).param("hash", hash.to_string())).await }
+    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+        self.run(query(CYPHER_PAYLOAD_DELETE).param("hash", hash.to_string())).await
+    }
 
     async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let row = self.fetch_one(query(CYPHER_PAYLOAD_LEN).param("hash", hash.to_string())).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
-            i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")
-        }
+        let row = self.fetch_one(query(CYPHER_PAYLOAD_LEN).param("hash", hash.to_string())).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
+        i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")
+    }
 }
 //#endregion 🔖️PayloadStorage
 
 //#region 🔖️CatalogStorage
 impl CatalogStorage for Neo4jStorage {
     async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-            let row = self.fetch_one(query(CYPHER_CATALOG_READ)).await?;
-            let Some(row) = row else {
-                return Ok(None);
-            };
-            let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "catalog epoch")?;
-            let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "catalog root length")?;
-            check_len(len, MAX_READ_BYTES, "catalog_storage::read_root")?;
-            let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-            Ok(Some((bytes, EpochFence { epoch })))
-        }
+        let row = self.fetch_one(query(CYPHER_CATALOG_READ)).await?;
+        let Some(row) = row else {
+            return Ok(None);
+        };
+        let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "catalog epoch")?;
+        let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "catalog root length")?;
+        check_len(len, MAX_READ_BYTES, "catalog_storage::read_root")?;
+        let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        Ok(Some((bytes, EpochFence { epoch })))
+    }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
-            check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
-            let new_fence = expected.next();
-            let row = self
-                .fetch_one(
-                    query(CYPHER_CATALOG_CAS)
-                        .param("expected", u64_to_i64(expected.epoch, "catalog epoch")?)
-                        .param("newEpoch", u64_to_i64(new_fence.epoch, "catalog epoch")?)
-                        .param("bytes", encode_bytes(new_bytes))
-                        .param("len", u64_to_i64(new_bytes.len() as u64, "catalog root length")?),
-                )
-                .await?;
-            if row.is_some() {
-                return Ok(new_fence);
-            }
-            // 🎯️ The CAS attempt itself was atomic (see `CYPHER_CATALOG_CAS`'s doc); this follow-up
-            // read only decides what CURRENT epoch to report in the `Fenced` error, so a benign race
-            // against a concurrent writer can only change the reported number, never the CAS outcome.
-            let current = self.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
-            Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch })
+        check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
+        let new_fence = expected.next();
+        let row = self
+            .fetch_one(
+                query(CYPHER_CATALOG_CAS)
+                    .param("expected", u64_to_i64(expected.epoch, "catalog epoch")?)
+                    .param("newEpoch", u64_to_i64(new_fence.epoch, "catalog epoch")?)
+                    .param("bytes", encode_bytes(new_bytes))
+                    .param("len", u64_to_i64(new_bytes.len() as u64, "catalog root length")?),
+            )
+            .await?;
+        if row.is_some() {
+            return Ok(new_fence);
         }
+        // 🎯️ The CAS attempt itself was atomic (see `CYPHER_CATALOG_CAS`'s doc); this follow-up
+        // read only decides what CURRENT epoch to report in the `Fenced` error, so a benign race
+        // against a concurrent writer can only change the reported number, never the CAS outcome.
+        let current = self.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
+        Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch })
+    }
 }
 //#endregion 🔖️CatalogStorage
 
 //#region 🔖️IndexStorage
 impl IndexStorage for Neo4jStorage {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
-            check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
-            let run_id_param = u64_to_i64(run_id, "index run id")?;
-            self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
-        }
+        check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
+        let run_id_param = u64_to_i64(run_id, "index run id")?;
+        self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
+    }
 
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-            let run_id_param = u64_to_i64(run_id, "index run id")?;
-            let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
-            let row = row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
-            let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "index run length")?;
-            check_len(len, MAX_READ_BYTES, "index_storage::read_run")?;
-            decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
-        }
+        let run_id_param = u64_to_i64(run_id, "index run id")?;
+        let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
+        let row = row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
+        let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "index run length")?;
+        check_len(len, MAX_READ_BYTES, "index_storage::read_run")?;
+        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+    }
 
     async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let mut stream = self.graph.execute(query(CYPHER_INDEX_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-            let mut out = Vec::new();
-            while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-                out.push(i64_to_u64(row.get("runId").map_err(map_de_error)?, "index run id")?);
-            }
-            Ok(out)
+        let mut stream = self.graph.execute(query(CYPHER_INDEX_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
+        let mut out = Vec::new();
+        while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
+            out.push(i64_to_u64(row.get("runId").map_err(map_de_error)?, "index run id")?);
         }
+        Ok(out)
+    }
 
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            let run_id_param = u64_to_i64(run_id, "index run id")?;
-            self.run(query(CYPHER_INDEX_DELETE).param("document", document.0.clone()).param("runId", run_id_param)).await
-        }
+        let run_id_param = u64_to_i64(run_id, "index run id")?;
+        self.run(query(CYPHER_INDEX_DELETE).param("document", document.0.clone()).param("runId", run_id_param)).await
+    }
 }
 //#endregion 🔖️IndexStorage
 
@@ -652,51 +654,51 @@ impl Neo4jStorage {
 
 impl LeaseStorage for Neo4jStorage {
     async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
-            let existing = self.lease_row(&mut txn, resource).await?;
-            let fence = decide_acquire_fence(resource, existing, holder, now_ms)?;
-            let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
-            txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
-                .await
-                .map_err(map_neo4rs_error)?;
-            txn.commit().await.map_err(map_neo4rs_error)?;
-            Ok(fence)
-        }
+        let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
+        let existing = self.lease_row(&mut txn, resource).await?;
+        let fence = decide_acquire_fence(resource, existing, holder, now_ms)?;
+        let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
+        txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
+            .await
+            .map_err(map_neo4rs_error)?;
+        txn.commit().await.map_err(map_neo4rs_error)?;
+        Ok(fence)
+    }
 
     async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
-            let existing = self.lease_row(&mut txn, resource).await?;
-            validate_renew(resource, existing, holder, fence, now_ms)?;
-            let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
-            txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
-                .await
-                .map_err(map_neo4rs_error)?;
-            txn.commit().await.map_err(map_neo4rs_error)?;
-            Ok(())
-        }
+        let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
+        let existing = self.lease_row(&mut txn, resource).await?;
+        validate_renew(resource, existing, holder, fence, now_ms)?;
+        let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
+        txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
+            .await
+            .map_err(map_neo4rs_error)?;
+        txn.commit().await.map_err(map_neo4rs_error)?;
+        Ok(())
+    }
 
     async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
-            let existing = self.lease_row(&mut txn, resource).await?;
-            validate_release(resource, existing, holder, fence)?;
-            txn.run(query(CYPHER_LEASE_DELETE).param("resource", resource)).await.map_err(map_neo4rs_error)?;
-            txn.commit().await.map_err(map_neo4rs_error)?;
-            Ok(())
-        }
+        let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
+        let existing = self.lease_row(&mut txn, resource).await?;
+        validate_release(resource, existing, holder, fence)?;
+        txn.run(query(CYPHER_LEASE_DELETE).param("resource", resource)).await.map_err(map_neo4rs_error)?;
+        txn.commit().await.map_err(map_neo4rs_error)?;
+        Ok(())
+    }
 
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let row = self.fetch_one(query(CYPHER_LEASE_READ).param("resource", resource)).await?;
-            let Some(row) = row else {
-                return Ok(None);
-            };
-            let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "lease epoch")?;
-            let expires_at_ms = i64_to_u64(row.get("expiresAtMs").map_err(map_de_error)?, "lease expiry")?;
-            if now_ms >= expires_at_ms {
-                return Ok(None);
-            }
-            let holder: String = row.get("holder").map_err(map_de_error)?;
-            Ok(Some(LeaseInfo { resource: resource.to_string(), holder, fence: EpochFence { epoch }, expires_at_ms }))
+        let row = self.fetch_one(query(CYPHER_LEASE_READ).param("resource", resource)).await?;
+        let Some(row) = row else {
+            return Ok(None);
+        };
+        let epoch = i64_to_u64(row.get("epoch").map_err(map_de_error)?, "lease epoch")?;
+        let expires_at_ms = i64_to_u64(row.get("expiresAtMs").map_err(map_de_error)?, "lease expiry")?;
+        if now_ms >= expires_at_ms {
+            return Ok(None);
         }
+        let holder: String = row.get("holder").map_err(map_de_error)?;
+        Ok(Some(LeaseInfo { resource: resource.to_string(), holder, fence: EpochFence { epoch }, expires_at_ms }))
+    }
 }
 //#endregion 🔖️LeaseStorage
 

@@ -15,7 +15,9 @@ mod wasm_session {
     use web_sys::HtmlCanvasElement;
 
     use crate::artifacts::layout::schema::parse_layout_document;
-    use crate::editor::layout::engine::scene::{build_scene_from_document_json, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, hit_test_document_json, screen_to_world_json, LayoutDropPreview, LayoutEngine, SceneQuery};
+    use crate::editor::layout::engine::scene::{
+        build_scene_from_document_json, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, hit_test_document_json, screen_to_world_json, LayoutDropPreview, LayoutEngine, SceneQuery,
+    };
 
     #[derive(Clone, Debug)]
     enum LayoutInteraction {

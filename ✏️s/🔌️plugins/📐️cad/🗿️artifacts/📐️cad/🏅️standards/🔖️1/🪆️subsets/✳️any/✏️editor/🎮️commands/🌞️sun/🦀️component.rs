@@ -1,15 +1,14 @@
 //! 🌞️ CAD play app commands — the shared sun/environment controls. Config-only and coalesced, so a slider drag is one undo step.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{runtime_of, snapshot_of};
 use semio_framework_plugin::apply_world3d_sun_action;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-
 
 //#region 🔖️ToggleSun
 pub mod toggle_sun {

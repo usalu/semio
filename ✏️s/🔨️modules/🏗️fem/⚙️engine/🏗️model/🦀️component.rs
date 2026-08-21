@@ -4,7 +4,6 @@
 //! No UI, no VCS, no framework dependency — `fem_2d`/`fem_3d`/`fem-plugin` are the UI layer built
 //! on top of this crate.
 
-
 pub use crate::elements2d::{Bar2, BeamEb2, PlateDkt, Quad4, Quad8, Tri3Cst, Tri6Lst};
 pub use crate::elements3d::{Bar3, Frame3, Hex8, ShellFacet3, Tet4};
 

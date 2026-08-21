@@ -576,14 +576,8 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
 async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
     let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
-    let result = command
-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json))
-        .map_err(|_| "handleCommand failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")?
-    } else {
-        result
-    };
+    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json)).map_err(|_| "handleCommand failed")?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
     serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
 }
@@ -612,8 +606,7 @@ async fn render_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_
 
 #[cfg(target_arch = "wasm32")]
 async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>) -> Result<UiNode, String> {
-    let render =
-        if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
+    let render = if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
     let render = render.ok_or("render failed")?;
     let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
     let result = if let Some(document) = document_dsl {

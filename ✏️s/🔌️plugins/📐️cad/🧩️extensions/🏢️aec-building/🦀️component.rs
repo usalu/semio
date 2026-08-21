@@ -111,9 +111,7 @@ fn computers_manifest() -> CadComputersManifest {
 // that same file); bridged here via `semio_framework::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 fn bundle() -> ExtensionBundle {
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
-        .extends("cad")
-        .depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"));
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0").extends("cad").depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"));
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
     // artifact, one composite mutation + one inference (both dispatched by the host through
@@ -321,15 +319,12 @@ mod tests {
         let base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
         let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
-        let folded = MutationDiff::apply(protocol::fold_plan_diff(&kind, &base).diff(), &base)
-            .expect("valid folded plan diff");
+        let folded = MutationDiff::apply(protocol::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
 
         let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } });
-        let after_create = MutationDiff::apply(create.diff(&base).diff(), &base)
-            .expect("valid create mutation diff");
+        let after_create = MutationDiff::apply(create.diff(&base).diff(), &base).expect("valid create mutation diff");
         let switch = CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() });
-        let after_switch = MutationDiff::apply(switch.diff(&after_create).diff(), &after_create)
-            .expect("valid switch mutation diff");
+        let after_switch = MutationDiff::apply(switch.diff(&after_create).diff(), &after_create).expect("valid switch mutation diff");
 
         assert_eq!(folded, after_switch);
         assert_eq!(after_switch.active_model_definition_id, "aec.building");
@@ -342,7 +337,15 @@ mod tests {
         base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });
         let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(&base);
         let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };
-        let request = ArtifactInferenceExecutionRequest { policy: b"aec-building-test", budgets: &budgets, cancellation_id: "aec-building-test", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Cold, canonical_payload: &pack, dependencies: &[] };
+        let request = ArtifactInferenceExecutionRequest {
+            policy: b"aec-building-test",
+            budgets: &budgets,
+            cancellation_id: "aec-building-test",
+            previous_state: None,
+            requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
+            canonical_payload: &pack,
+            dependencies: &[],
+        };
 
         let execution = infer_building_structure_summary(&request).expect("inference succeeds");
         let summary: BuildingStructureSummary = serde_json::from_slice(&execution.canonical_payload).expect("summary decodes");

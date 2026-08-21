@@ -38,7 +38,11 @@ async fn switches_the_masonry_unit_from_clay_to_calcium_silicate() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-unit applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.unit, "calcium_silicate", "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: unit must read "calcium_silicate" once the change lands");
-    assert_eq!(applied.mortar, before().mortar, "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the mortar class is what the exposure/unit admissibility check reads and must not be silently upgraded to keep the combination admissible");
+    assert_eq!(
+        applied.mortar,
+        before().mortar,
+        "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the mortar class is what the exposure/unit admissibility check reads and must not be silently upgraded to keep the combination admissible"
+    );
 }
 
 /// ↩️ `change-unit`'s inverse reads the OLD "clay" out of BASE, so replaying it puts the clay unit back on

@@ -9,25 +9,25 @@
 //! `🎚️config/🦀️component.rs`, scratch (mid-gesture) state in `🖌️session/🦀️component.rs`, shared
 //! read-view/selection helpers in `🧭️view/🦀️component.rs`.
 
-use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
+use crate::artifacts::lowpoly::op::LowpolyMutation;
+use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
 use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, utility_param_f64, LowpolyView, MESH_INTERACTION_DOMAIN};
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, ArtifactEditor, ConfigView, ArtifactView, Editor, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
-    UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
-};
 use semio_framework_plugin::app::InteractionView;
-use store::EngineHandles;
+use semio_framework_plugin::{
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LabelText, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::ArtifactPack;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -101,7 +101,6 @@ thread_local! {
 }
 //#endregion 🔖️ScratchSlot
 
-
 //#region 🔖️SharedMeasures
 /// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
 /// (Model + UV expose an identical set — see this file's top-level doc comment).
@@ -121,7 +120,20 @@ pub async fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLab
 /// `paint_utility_params_group` below.
 #[allow(clippy::too_many_arguments, reason = "one WindowMeasure::Slider literal per call site; a params struct would only move the same 8 fields around for this single builder")]
 pub async fn utility_param_slider(id: &str, label: LabelText, key: &str, params: &Value, default: f64, min: f64, max: f64, step: f64) -> WindowMeasure {
-    WindowMeasure::Slider { id: format!("lowpoly-measure-{id}"), label: Some(label.into()), value: utility_param_f64(params, key, default), min, max, step: Some(step), ready: None, loading: None, disabled: None, reveal: None, on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))), waiting: None }
+    WindowMeasure::Slider {
+        id: format!("lowpoly-measure-{id}"),
+        label: Some(label.into()),
+        value: utility_param_f64(params, key, default),
+        min,
+        max,
+        step: Some(step),
+        ready: None,
+        loading: None,
+        disabled: None,
+        reveal: None,
+        on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
+        waiting: None,
+    }
 }
 
 /// 🖌️ Utility Options for a stamping paint utility (`brush`/`eraser`) — the live brush size/opacity/
@@ -272,17 +284,17 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name. `mesh_edit`/`uv`/`transform`/`paint`/
 // `selection`/`sun`/`utility`/`engagement`/`fixture` collide with their containing command-group
 // modules and are flattened via glob-free explicit `use`.
-use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
-use uv::{clear_seam, mark_uv_seam, unwrap_active};
-use transform::{rotate_selection, scale_selection, transform_begin, transform_end, translate_selection};
-use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
-use selection::{set_active_object, set_active_paint_layer};
 use camera::set_camera;
-use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use utility::{set_active_utility, set_utility_param};
+use chrome::toggle_show_edges;
 use engagement::{engagement_input, engagement_submit};
 use fixture::{set_fixture_json, set_snapshot_json};
-use chrome::toggle_show_edges;
+use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
+use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke, paint_stroke_begin, paint_stroke_end};
+use selection::{set_active_object, set_active_paint_layer};
+use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
+use transform::{rotate_selection, scale_selection, transform_begin, transform_end, translate_selection};
+use utility::{set_active_utility, set_utility_param};
+use uv::{clear_seam, mark_uv_seam, unwrap_active};
 //#endregion 🔖️Commands
 
 //#region 🔖️LowpolyPlayApp
@@ -386,7 +398,14 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// of its own), so this is the one seam by which those handlers (via `view::build_doc`/
     /// `session::mesh_edit`) see the framework-owned selection. See `🧭️view/🦀️component.rs`'s
     /// `🔖️MeshDomain` region for the id scheme.
-    async fn handle(command: &LowpolyCommand, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &LowpolyCommand,
+        doc: &ArtifactView<'_, LowpolySnapshot>,
+        cfg: &ConfigView<'_, LowpolyConfig>,
+        interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
         let active = resolve_active_object_id(doc.snapshot, cfg.snapshot);
         let selection = selection_from_interaction(&active, interaction);
         LOWPOLY_SCRATCH.with(|scratch| {
@@ -409,9 +428,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         });
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
         let view = LowpolyView { snapshot: render_projection, config };
-        let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT)
-            .then(|| LOWPOLY_SCRATCH.with(|scratch| crate::editor::lowpoly::view::build_doc(projection, config, &scratch.borrow())))
-            .flatten();
+        let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| LOWPOLY_SCRATCH.with(|scratch| crate::editor::lowpoly::view::build_doc(projection, config, &scratch.borrow()))).flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
             LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
@@ -808,7 +825,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
-        testkit::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| app.snapshot().expect("projection"));
+        testkit::assert_ingest_idempotent::<EditorApp<LowpolyPlayApp>, _>(LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) }), |app| {
+            app.snapshot().expect("projection")
+        });
     }
 
     #[semio_framework_async_macros::async_test]

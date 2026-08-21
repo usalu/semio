@@ -4,13 +4,11 @@
 //! 🧷️ `GisTerrainMutation` derives `dsl::DslEnum` directly (no foreign `CollectionMutation` in its
 //! shape, unlike the map artifact), so this component is a pure pass-through over the derived codec.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::gisterrain::schema::mutations::text::GisTerrainMutation;
 use protocol::OpBinary;

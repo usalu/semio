@@ -743,17 +743,7 @@ mod tests {
     async fn valid_model() -> Model {
         Model {
             zones: vec![minimal_zone()],
-            materials: vec![Material {
-                id: EntityId(10),
-                name: "Mat".into(),
-                thickness_m: 0.1,
-                conductivity_w_m_k: 0.04,
-                density_kg_m3: 50.0,
-                specific_heat_j_kg_k: 1000.0,
-                thermal_absorptance: 0.9,
-                solar_absorptance: 0.7,
-                visible_absorptance: 0.7,
-            }],
+            materials: vec![Material { id: EntityId(10), name: "Mat".into(), thickness_m: 0.1, conductivity_w_m_k: 0.04, density_kg_m3: 50.0, specific_heat_j_kg_k: 1000.0, thermal_absorptance: 0.9, solar_absorptance: 0.7, visible_absorptance: 0.7 }],
             constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
             surfaces: vec![Surface {
                 id: EntityId(30),

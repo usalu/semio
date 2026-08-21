@@ -6,8 +6,8 @@
 //! walked into the target `JsonValue` shape by `JsonSnapshot::from_value`; `serialize_bytes`
 //! writes it through stdio's own real RFC 8259 text codec (`write_json_text`), not a re-derived encoder.
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_text;
+use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub async fn register() {}
 

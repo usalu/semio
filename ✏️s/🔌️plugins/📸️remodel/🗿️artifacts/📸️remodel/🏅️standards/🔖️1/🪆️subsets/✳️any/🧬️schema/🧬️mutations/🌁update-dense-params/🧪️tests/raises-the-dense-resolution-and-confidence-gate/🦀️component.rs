@@ -6,8 +6,8 @@
 //! asserted by the shared codec-matrix harness, not here.
 
 use crate::artifacts::remodel::mutations::{apply_remodel_mutation, inverse_remodel_mutation, RemodelMutation};
-use crate::artifacts::remodel::{RemodelDiff, RemodelSnapshot};
 use crate::artifacts::remodel::DenseResolution;
+use crate::artifacts::remodel::{RemodelDiff, RemodelSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️component.json");

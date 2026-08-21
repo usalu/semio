@@ -41,11 +41,7 @@ pub async fn compute_remodel_bounds(snapshot: &RemodelSnapshot) -> RemodelBounds
         return RemodelBounds { bounding_box: RemodelBoundingBox::default(), vertex_count: 0, face_count: 0 };
     }
     let (min, max) = mesh.aabb();
-    RemodelBounds {
-        bounding_box: RemodelBoundingBox { min: [min[0] as f64, min[1] as f64, min[2] as f64], max: [max[0] as f64, max[1] as f64, max[2] as f64] },
-        vertex_count: mesh.vertex_count() as u32,
-        face_count: mesh.triangle_count() as u32,
-    }
+    RemodelBounds { bounding_box: RemodelBoundingBox { min: [min[0] as f64, min[1] as f64, min[2] as f64], max: [max[0] as f64, max[1] as f64, max[2] as f64] }, vertex_count: mesh.vertex_count() as u32, face_count: mesh.triangle_count() as u32 }
 }
 //#endregion 🔖️Bounds
 

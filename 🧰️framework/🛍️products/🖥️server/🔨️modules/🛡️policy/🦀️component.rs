@@ -26,9 +26,7 @@ use std::collections::BTreeMap;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 
-use crate::contract::{
-    CapabilityProof, DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId,
-};
+use crate::contract::{CapabilityProof, DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId};
 
 //#region 🔖️Matching
 /// 🪪️ The stable key a principal is assigned templates under: `user:alice`, `service:indexer`,
@@ -147,12 +145,7 @@ impl PolicyEngine {
                 continue;
             }
             if denied {
-                return PolicyDecision::Deny {
-                    reason: format!(
-                        "explicit deny: {key} is denied '{}' on '{}' by grant '{}' on '{}' at {:?}",
-                        request.action, request.resource, grant.action, grant.resource, request.point
-                    ),
-                };
+                return PolicyDecision::Deny { reason: format!("explicit deny: {key} is denied '{}' on '{}' by grant '{}' on '{}' at {:?}", request.action, request.resource, grant.action, grant.resource, request.point) };
             }
             allowed = true;
         }
@@ -176,14 +169,7 @@ impl PolicyEngine {
 
     /// 🔗️ Every grant reachable from the assignments that apply to this key and scope.
     fn applicable_grants<'a>(&'a self, key: &str, scope: Option<&Scope>) -> Vec<&'a PolicyGrant> {
-        self.assignments
-            .get(key)
-            .into_iter()
-            .flatten()
-            .filter(|assignment| assignment.applies(scope))
-            .filter_map(|assignment| self.templates.get(&assignment.template))
-            .flat_map(|template| template.grants.iter())
-            .collect()
+        self.assignments.get(key).into_iter().flatten().filter(|assignment| assignment.applies(scope)).filter_map(|assignment| self.templates.get(&assignment.template)).flat_map(|template| template.grants.iter()).collect()
     }
 }
 //#endregion 🔖️Engine
@@ -237,12 +223,7 @@ impl PrincipalResolver for BearerTokenResolver {
         if credential.bearer.as_deref() != Some(self.bearer.as_str()) {
             return None;
         }
-        Some(Resolved {
-            principal: self.principal.clone(),
-            session: Some(SessionId(format!("session-{}", self.name))),
-            device: Some(DeviceId("d1".to_string())),
-            via: self.name.clone(),
-        })
+        Some(Resolved { principal: self.principal.clone(), session: Some(SessionId(format!("session-{}", self.name))), device: Some(DeviceId("d1".to_string())), via: self.name.clone() })
     }
 
     async fn name(&self) -> &str {
@@ -333,13 +314,7 @@ mod tests {
     use super::*;
 
     fn template(name: &str, grants: &[(PolicyPoint, &str, &str)]) -> PolicyTemplate {
-        PolicyTemplate {
-            name: name.to_string(),
-            grants: grants
-                .iter()
-                .map(|(point, resource, action)| PolicyGrant { point: *point, resource: (*resource).to_string(), action: (*action).to_string() })
-                .collect(),
-        }
+        PolicyTemplate { name: name.to_string(), grants: grants.iter().map(|(point, resource, action)| PolicyGrant { point: *point, resource: (*resource).to_string(), action: (*action).to_string() }).collect() }
     }
 
     fn alice() -> Principal {
@@ -347,13 +322,7 @@ mod tests {
     }
 
     fn request(point: PolicyPoint, principal: Principal, scope: Option<&str>, resource: &str, action: &str) -> PolicyRequest {
-        PolicyRequest {
-            point,
-            principal,
-            scope: scope.map(|scope| Scope(scope.to_string())),
-            resource: resource.to_string(),
-            action: action.to_string(),
-        }
+        PolicyRequest { point, principal, scope: scope.map(|scope| Scope(scope.to_string())), resource: resource.to_string(), action: action.to_string() }
     }
 
     fn resolver(name: &str, bearer: &str, principal: Principal) -> PrincipalResolvers {

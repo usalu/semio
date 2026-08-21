@@ -1,8 +1,8 @@
 //! 🔍️ Writer play app panel — document/camera inspection plus jack diagnostics.
 
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use trinity::core::{example_graph, lint};
 

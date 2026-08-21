@@ -43,12 +43,7 @@ pub async fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingT
         depth.insert(shot.id.clone(), shot_depth);
     }
 
-    ShootingTopology {
-        topo_order,
-        depth,
-        cycle_free: true,
-        node_count: (snapshot.saved_cameras.len() + snapshot.shots.len()) as u32,
-    }
+    ShootingTopology { topo_order, depth, cycle_free: true, node_count: (snapshot.saved_cameras.len() + snapshot.shots.len()) as u32 }
 }
 //#endregion 🔖️Topology
 

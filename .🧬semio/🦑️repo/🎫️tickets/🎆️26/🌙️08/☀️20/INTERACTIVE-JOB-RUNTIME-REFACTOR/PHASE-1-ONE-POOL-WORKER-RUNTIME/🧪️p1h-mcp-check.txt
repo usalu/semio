@@ -1,0 +1,609 @@
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+    Checking semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12
+     |
+1188 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12
+     |
+1215 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12
+     |
+1234 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12
+     |
+1249 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12
+     |
+1258 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12
+     |
+1268 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12
+     |
+1292 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12
+     |
+1302 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12
+     |
+1315 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12
+     |
+1338 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12
+     |
+1351 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12
+     |
+1413 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12
+     |
+1424 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12
+     |
+1527 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12
+     |
+1569 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12
+     |
+1644 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12
+     |
+1654 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16
+     |
+1308 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16
+     |
+1344 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: `semio-framework-replication` (lib) generated 20 warnings
+    Checking semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1534:15
+     |
+1534 |         pool: Arc<semio_framework_async::WorkerPool>,
+     |               ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1543:28
+     |
+1543 |         fn schedule(self: &Arc<Self>) {
+     |                            ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1551:26
+     |
+1551 |         fn run_job(self: Arc<Self>) {
+     |                          ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1569:29
+     |
+1569 |         fn arm_timer(self: &Arc<Self>) {
+     |                             ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1585:43
+     |
+1585 |     pub(super) async fn spawn_actor(pool: Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBack...
+     |                                           ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1585:239
+     |
+1585 | ...sg>, events: broadcast::Sender<ArtifactEvent>) -> Arc<dyn Fn() + Send + Sync> {
+     |                                                      ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0433]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1587:22
+     |
+1587 |         let runner = Arc::new(ActorRunner {
+     |                      ^^^ use of undeclared type `Arc`
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0425]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1596:23
+     |
+1596 |         let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_schedule.schedule());
+     |                       ^^^ not found in this scope
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+error[E0433]: cannot find type `Arc` in this scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1596:53
+     |
+1596 |         let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_schedule.schedule());
+     |                                                     ^^^ use of undeclared type `Arc`
+     |
+     = note: struct `crate::test_support::Arc` exists but is inaccessible
+help: consider importing this struct
+     |
+ 809 +     use std::sync::Arc;
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:6
+      |
+13101 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+13101 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+13101 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13102:42
+      |
+13102 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13102 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13102 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13102:97
+      |
+13102 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13102 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13102 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13103:64
+      |
+13103 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13103 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+13103 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13104:9
+      |
+13104 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13104 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+13104 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13106:49
+      |
+13106 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13106 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13106 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13106:101
+      |
+13106 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13106 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13106 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13107:21
+      |
+13107 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13107 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+13107 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13108:55
+      |
+13108 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13108 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+13108 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+error[E0277]: `Vec<u8>` is not a future
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:276:72
+     |
+ 276 |         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+     |                      ------------------------------------------------- ^^^^^ `Vec<u8>` is not a future
+     |                      |
+     |                      this call returns `Vec<u8>`
+     |
+     = help: the trait `futures_util::Future` is not implemented for `Vec<u8>`
+     = note: Vec<u8> must be a future or must implement `IntoFuture` to be awaited
+     = note: required for `Vec<u8>` to implement `std::future::IntoFuture`
+help: remove the `.await`
+     |
+ 276 -         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+ 276 +         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+     |
+help: alternatively, consider making `fn encode_wire_value` asynchronous
+    -->  🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1331:8
+     |
+1331 |     pub async fn encode_wire_value(value: &DslValue) -> Vec<u8> {
+     |         +++++
+
+error[E0277]: `Vec<u8>` is not a future
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:292:72
+     |
+ 292 |         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+     |                      ------------------------------------------------- ^^^^^ `Vec<u8>` is not a future
+     |                      |
+     |                      this call returns `Vec<u8>`
+     |
+     = help: the trait `futures_util::Future` is not implemented for `Vec<u8>`
+     = note: Vec<u8> must be a future or must implement `IntoFuture` to be awaited
+     = note: required for `Vec<u8>` to implement `std::future::IntoFuture`
+help: remove the `.await`
+     |
+ 292 -         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl).await);
+ 292 +         bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+     |
+help: alternatively, consider making `fn encode_wire_value` asynchronous
+    -->  🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1331:8
+     |
+1331 |     pub async fn encode_wire_value(value: &DslValue) -> Vec<u8> {
+     |         +++++
+
+error[E0277]: `protocol::HybridLogicalTimestamp` is not a future
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:368:70
+    |
+368 |             None => crate::os_spr::HybridLogicalTimestamp::new(0, 0).await,
+    |                     ------------------------------------------------ ^^^^^ `protocol::HybridLogicalTimestamp` is not a future
+    |                     |
+    |                     this call returns `protocol::HybridLogicalTimestamp`
+    |
+    = help: the trait `futures_util::Future` is not implemented for `protocol::HybridLogicalTimestamp`
+    = note: protocol::HybridLogicalTimestamp must be a future or must implement `IntoFuture` to be awaited
+    = note: required for `protocol::HybridLogicalTimestamp` to implement `std::future::IntoFuture`
+help: remove the `.await`
+    |
+368 -             None => crate::os_spr::HybridLogicalTimestamp::new(0, 0).await,
+368 +             None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
+    |
+
+error[E0507]: cannot move out of `message` in pattern guard
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1004:52
+     |
+1004 |                     Ok(message) if self.handle_cmd(message).await => {
+     |                                                    ^^^^^^^ move occurs because `message` has type `os_store::sync::ArtifactActorMsg`, which does not implement the `Copy` trait
+     |
+     = note: variables bound in patterns cannot be moved from until after the end of the pattern guard
+help: consider cloning the value if the performance cost is acceptable
+     |
+1004 |                     Ok(message) if self.handle_cmd(message.clone()).await => {
+     |                                                           ++++++++
+
+error[E0277]: `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1106:70
+     |
+1106 |                         let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+     |                                         ---------------------------- ^^^^^ `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+     |                                         |
+     |                                         this call returns `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>`
+     |
+     = help: the trait `futures_util::Future` is not implemented for `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>`
+     = note: Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError> must be a future or must implement `IntoFuture` to be awaited
+     = note: required for `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` to implement `std::future::IntoFuture`
+help: remove the `.await`
+     |
+1106 -                         let envelopes = decode_envelopes(&envelopes).await.unwrap_or_default();
+1106 +                         let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
+     |
+
+error[E0277]: `Vec<u8>` is not a future
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1445:107
+     |
+1445 |             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
+     |                                                                              ---------------------------- ^^^^^ `Vec<u8>` is not a future
+     |                                                                              |
+     |                                                                              this call returns `Vec<u8>`
+     |
+     = help: the trait `futures_util::Future` is not implemented for `Vec<u8>`
+     = note: Vec<u8> must be a future or must implement `IntoFuture` to be awaited
+     = note: required for `Vec<u8>` to implement `std::future::IntoFuture`
+help: remove the `.await`
+     |
+1445 -             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes).await }).await;
+1445 +             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await;
+     |
+
+error[E0277]: `Vec<u8>` is not a future
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:49:46
+    |
+ 49 |         let bytes = crate::io::resolve_ready(encode_envelopes(envelopes));
+    |                     ------------------------ ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Vec<u8>` is not a future
+    |                     |
+    |                     required by a bound introduced by this call
+    |
+    = help: the trait `futures_util::Future` is not implemented for `Vec<u8>`
+note: required by a bound in `resolve_ready`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:886:25
+    |
+886 | pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
+    |                         ^^^^^^^^^^^^^^^^^^^ required by this bound in `resolve_ready`
+
+error[E0277]: `Vec<u8>` is not a future
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:49:21
+   |
+49 |         let bytes = crate::io::resolve_ready(encode_envelopes(envelopes));
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Vec<u8>` is not a future
+   |
+   = help: the trait `futures_util::Future` is not implemented for `Vec<u8>`
+
+error[E0277]: `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:85:34
+    |
+ 85 |         crate::io::resolve_ready(decode_envelopes(&bytes)).map_err(serde::de::Error::custom)
+    |         ------------------------ ^^^^^^^^^^^^^^^^^^^^^^^^ `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+    |         |
+    |         required by a bound introduced by this call
+    |
+    = help: the trait `futures_util::Future` is not implemented for `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>`
+note: required by a bound in `resolve_ready`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:886:25
+    |
+886 | pub fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
+    |                         ^^^^^^^^^^^^^^^^^^^ required by this bound in `resolve_ready`
+
+error[E0277]: `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:85:9
+   |
+85 |         crate::io::resolve_ready(decode_envelopes(&bytes)).map_err(serde::de::Error::custom)
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>` is not a future
+   |
+   = help: the trait `futures_util::Future` is not implemented for `Result<Vec<protocol::MutationEnvelope>, protocol::ProtocolError>`
+
+Some errors have detailed explanations: E0277, E0425, E0433, E0507.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 19 previous errors; 9 warnings emitted

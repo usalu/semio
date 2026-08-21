@@ -1,11 +1,11 @@
 //! 🀄️ 🀄️ Animate present app commands command — `add-tile`.
 
-use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
-use crate::editor::animate::{interaction_select_effect, new_tile_id, PresentDispatchCtx};
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileDraft, FigureTileFrame, PresentSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
+use crate::editor::animate::{interaction_select_effect, new_tile_id, PresentDispatchCtx};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -68,8 +68,8 @@ mod tests {
     /// `🎮️commands/🀄️delete-selection`'s own tests for the equivalent single-tile case).
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_only_the_selected_tile() {
-        use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
         use crate::editor::animate::{PRESENT_INTERACTION_DOMAIN, PRESENT_INTERACTION_GRANULARITY};
+        use semio_framework_plugin::{InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
         let mut app = present_app_with_registry();
         seed_2x2(&mut app);
         let first_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();

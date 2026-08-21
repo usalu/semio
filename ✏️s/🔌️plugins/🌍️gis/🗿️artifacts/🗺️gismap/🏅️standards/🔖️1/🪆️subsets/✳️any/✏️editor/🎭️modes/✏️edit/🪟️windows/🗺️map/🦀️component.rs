@@ -1,10 +1,10 @@
 //! 🗺️ GIS 2D play app — the map window (edit mode): the tiled-map canvas and its chrome measures.
 
+use crate::artifacts::gismap::schema::gis_map_descriptor_json;
+use crate::artifacts::gismap::GisMapSnapshot;
 use crate::editor::gis2d::config::Gis2dConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{GIS2D_PLAY_APP_ID, GIS_MAP_LAYER_IDS};
-use crate::artifacts::gismap::schema::gis_map_descriptor_json;
-use crate::artifacts::gismap::GisMapSnapshot;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{build_tiled_map_scene, LocalizedLabel, SurfaceKind, TiledMapScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
@@ -40,13 +40,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// manifest.
 pub async fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::editor::gis2d::modes::edit::windows::map::options;
-    vec![
-        options::render_mode::measure(cfg, labels),
-        options::vector_style::measure(cfg, labels),
-        options::lod_mode::measure(cfg, labels),
-        options::layers::measure(cfg, labels),
-        options::layer_weights::measure(cfg, labels),
-    ]
+    vec![options::render_mode::measure(cfg, labels), options::vector_style::measure(cfg, labels), options::lod_mode::measure(cfg, labels), options::layers::measure(cfg, labels), options::layer_weights::measure(cfg, labels)]
 }
 //#endregion 🔖️Definition
 

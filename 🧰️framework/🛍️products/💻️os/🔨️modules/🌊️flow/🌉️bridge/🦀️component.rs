@@ -4,14 +4,10 @@ use neural_engine as neural;
 
 use std::collections::{BTreeSet, HashMap};
 
-use neural::{
-    cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue,
-    INPUT_KIND, OUTPUT_KIND,
-};
+use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
 
 use crate::artifact::*;
 use crate::host::*;
-
 
 // #region 🔖️EvalBridge
 #[cfg(target_arch = "wasm32")]

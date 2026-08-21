@@ -96,11 +96,11 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 //#region 🔖️Codec
 impl store::ArtifactDsl for Ifc2x3Snapshot {
     const EXTENSION: &'static str = "ifc";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         STDIO_IFC2X3_DOCUMENT_SCHEMA
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -108,7 +108,7 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
         parse_snapshot(body.trim()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let mut body = String::with_capacity(self.document.instances.len().saturating_mul(64));
         body.push_str("schema=");
         body.push_str(&enc_str(&self.schema));
@@ -118,13 +118,13 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
         enc_instance_list_into(&self.document.instances, &mut body);
         body.push_str(" edm-preamble=");
         body.push_str(&enc_optional_edm_preamble(&self.edm_preamble));
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for Ifc2x3Snapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![store::pack_rt::OP_BINARY_FORMAT];
         write_str_bin(&mut raw, &self.schema);
@@ -137,31 +137,31 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
                 enc_edm_preamble_bin(preamble, &mut raw);
             }
         }
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        let mut reader = store::ByteReader::new(&inner).await;
-        let format = reader.read_u8().await.map_err(|error| store::PackError::Schema(format!("snapshot format: {error}")))?;
+        let mut reader = store::ByteReader::new(&inner);
+        let format = reader.read_u8().map_err(|error| store::PackError::Schema(format!("snapshot format: {error}")))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(store::PackError::Schema(format!("snapshot format: unsupported format {format}")));
         }
         let schema = read_str_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot schema: {error}")))?;
         let header = dec_part21_header_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot header: {error}")))?;
         let instances = dec_instance_list_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot instances: {error}")))?;
-        let edm_preamble = match reader.read_u8().await.map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble presence: {error}")))? {
+        let edm_preamble = match reader.read_u8().map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble presence: {error}")))? {
             0 => None,
             1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|error| store::PackError::Schema(format!("snapshot EDM preamble: {error}")))?),
             tag => return Err(store::PackError::Schema(format!("snapshot EDM preamble presence: unknown tag {tag}"))),
         };
-        if reader.remaining().await != 0 {
-            return Err(store::PackError::Schema(format!("snapshot trailing bytes: {}", reader.remaining().await)));
+        if reader.remaining() != 0 {
+            return Err(store::PackError::Schema(format!("snapshot trailing bytes: {}", reader.remaining())));
         }
         Ok(Self { schema, document: Part21Document { header, instances }, edm_preamble })
     }

@@ -45,10 +45,7 @@ async fn rewrites_the_ingest_facet_alone() {
 async fn inverse_is_the_same_verb_carrying_the_base_ingest_facet() {
     let base = before();
     let inverse = inverse_remodel_mutation(&base, &mutation());
-    assert!(
-        matches!(inverse.as_slice(), [RemodelMutation::UpdateIngestParams(payload)] if payload.params.min_sharpness == 0.25 && payload.params.max_frames == 200),
-        "update-ingest-params inverts to itself with the base facet, got {inverse:?}"
-    );
+    assert!(matches!(inverse.as_slice(), [RemodelMutation::UpdateIngestParams(payload)] if payload.params.min_sharpness == 0.25 && payload.params.max_frames == 200), "update-ingest-params inverts to itself with the base facet, got {inverse:?}");
     let mut snapshot = apply_remodel_mutation(&base, &mutation()).expect("forward applies");
     for step in &inverse {
         snapshot = apply_remodel_mutation(&snapshot, step).expect("inverse step applies");

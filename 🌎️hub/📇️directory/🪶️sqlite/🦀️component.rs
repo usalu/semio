@@ -154,13 +154,7 @@ impl SqliteDirectory {
         let actor = DirectoryActor { kind: DirectoryActorKind::System, id: "system:seed".into() };
         let mut clock = HubClock::new();
         let events = vec![
-            NewDirectoryEvent {
-                hlc: clock.tick(),
-                actor: actor.clone(),
-                space_id: None,
-                user_id: Some("seed".into()),
-                body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() },
-            },
+            NewDirectoryEvent { hlc: clock.tick(), actor: actor.clone(), space_id: None, user_id: Some("seed".into()), body: DirectoryEventBody::UserCreated { user_id: "seed".into(), email: "seed@localhost".into(), display_name: "System".into() } },
             NewDirectoryEvent {
                 hlc: clock.tick(),
                 actor: actor.clone(),
@@ -188,11 +182,7 @@ impl SqliteDirectory {
     fn project(&self, tx: &Transaction<'_>, event: &DirectoryEvent) -> DirectoryResult<()> {
         match &event.body {
             DirectoryEventBody::UserCreated { user_id, email, display_name } => {
-                tx.execute(
-                    "INSERT OR IGNORE INTO hub_user (id, email, display_name, created_at) VALUES (?1, ?2, ?3, ?4)",
-                    rusqlite::params![user_id, email, display_name, event.recorded_at_ms],
-                )
-                .map_err(backend)?;
+                tx.execute("INSERT OR IGNORE INTO hub_user (id, email, display_name, created_at) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![user_id, email, display_name, event.recorded_at_ms]).map_err(backend)?;
             }
             DirectoryEventBody::SpaceCreated { space_id, name, space_kind, visibility, owner_user_id } => {
                 tx.execute(
@@ -326,25 +316,15 @@ impl HubDirectory for SqliteDirectory {
                  JOIN hub_space_membership m ON m.space_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
             )
             .map_err(backend)?;
-        let rows = stmt
-            .query_map([user_id], |row| {
-                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?, row.get::<_, String>(6)?))
-            })
-            .map_err(backend)?;
-        Ok(rows
-            .filter_map(|row| row.ok())
-            .filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role)))
-            .collect())
+        let rows =
+            stmt.query_map([user_id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?, row.get::<_, String>(6)?))).map_err(backend)?;
+        Ok(rows.filter_map(|row| row.ok()).filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role))).collect())
     }
 
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
         let conn = self.lock()?;
         let mut stmt = conn.prepare("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space ORDER BY created_at LIMIT ?1 OFFSET ?2").map_err(backend)?;
-        let rows = stmt
-            .query_map(rusqlite::params![limit, offset], |row| {
-                Ok(SpaceRecord { id: row.get(0)?, name: row.get(1)?, owner_user_id: row.get(2)?, created_at: row.get(3)?, kind: row.get(4)?, visibility: row.get(5)? })
-            })
-            .map_err(backend)?;
+        let rows = stmt.query_map(rusqlite::params![limit, offset], |row| Ok(SpaceRecord { id: row.get(0)?, name: row.get(1)?, owner_user_id: row.get(2)?, created_at: row.get(3)?, kind: row.get(4)?, visibility: row.get(5)? })).map_err(backend)?;
         Ok(rows.filter_map(|row| row.ok()).collect())
     }
 
@@ -401,9 +381,7 @@ impl HubDirectory for SqliteDirectory {
         let token = Uuid::now_v7().to_string();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
-        self.lock()?
-            .execute("INSERT INTO hub_space_invite (id, token, space_id, role, created_at, expires_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", rusqlite::params![id, token, space_id, role.as_str(), created_at, expires_at])
-            .map_err(backend)?;
+        self.lock()?.execute("INSERT INTO hub_space_invite (id, token, space_id, role, created_at, expires_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", rusqlite::params![id, token, space_id, role.as_str(), created_at, expires_at]).map_err(backend)?;
         Ok(InviteRecord { id, token, space_id: space_id.to_string(), role, created_at, expires_at, revoked_at: None })
     }
 
@@ -435,7 +413,17 @@ impl HubDirectory for SqliteDirectory {
                 rusqlite::params![id, space_id, document_id, surface, user_id, role_str, client_label, connected_at],
             )
             .map_err(backend)?;
-        Ok(SyncSessionRecord { id, space_id: space_id.to_string(), document_id: document_id.to_string(), surface: surface.to_string(), user_id: user_id.map(str::to_string), space_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
+        Ok(SyncSessionRecord {
+            id,
+            space_id: space_id.to_string(),
+            document_id: document_id.to_string(),
+            surface: surface.to_string(),
+            user_id: user_id.map(str::to_string),
+            space_role,
+            client_label: client_label.to_string(),
+            connected_at,
+            disconnected_at: None,
+        })
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()> {
@@ -445,9 +433,7 @@ impl HubDirectory for SqliteDirectory {
 
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>> {
         let conn = self.lock()?;
-        let mut stmt = conn
-            .prepare("SELECT id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session WHERE document_id = ?1 ORDER BY connected_at DESC")
-            .map_err(backend)?;
+        let mut stmt = conn.prepare("SELECT id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session WHERE document_id = ?1 ORDER BY connected_at DESC").map_err(backend)?;
         let rows = stmt.query_map([document_id], sync_session_row).map_err(backend)?;
         Ok(rows.filter_map(|row| row.ok()).collect())
     }
@@ -463,9 +449,8 @@ impl HubDirectory for SqliteDirectory {
                 mapped.filter_map(|row| row.ok()).collect()
             }
             None => {
-                let mut stmt = conn
-                    .prepare("SELECT id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session WHERE disconnected_at IS NULL ORDER BY connected_at DESC")
-                    .map_err(backend)?;
+                let mut stmt =
+                    conn.prepare("SELECT id, space_id, document_id, surface, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session WHERE disconnected_at IS NULL ORDER BY connected_at DESC").map_err(backend)?;
                 let mapped = stmt.query_map([], sync_session_row).map_err(backend)?;
                 mapped.filter_map(|row| row.ok()).collect()
             }
@@ -505,9 +490,7 @@ impl HubDirectory for SqliteDirectory {
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
         let conn = self.lock()?;
-        let mut stmt = conn
-            .prepare("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event WHERE seq > ?1 ORDER BY seq LIMIT ?2")
-            .map_err(backend)?;
+        let mut stmt = conn.prepare("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event WHERE seq > ?1 ORDER BY seq LIMIT ?2").map_err(backend)?;
         let rows = stmt.query_map(rusqlite::params![since_seq as i64, limit as i64], event_row).map_err(backend)?;
         rows.collect::<Result<Vec<_>, _>>().map_err(backend)
     }
@@ -522,9 +505,7 @@ impl HubDirectory for SqliteDirectory {
         let tx = conn.transaction().map_err(backend)?;
         tx.execute_batch("DELETE FROM hub_space_membership; DELETE FROM hub_space; DELETE FROM hub_user;").map_err(backend)?;
         let events: Vec<DirectoryEvent> = {
-            let mut stmt = tx
-                .prepare("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event ORDER BY seq")
-                .map_err(backend)?;
+            let mut stmt = tx.prepare("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event ORDER BY seq").map_err(backend)?;
             let mapped = stmt.query_map([], event_row).map_err(backend)?;
             let collected: Result<Vec<_>, _> = mapped.collect();
             collected.map_err(backend)?
@@ -575,18 +556,8 @@ fn event_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DirectoryEvent> {
     let user_id: Option<String> = row.get(7)?;
     let payload: String = row.get(8)?;
     let recorded_at_ms: i64 = row.get(9)?;
-    let body: DirectoryEventBody =
-        serde_json::from_str(&payload).map_err(|error| rusqlite::Error::FromSqlConversionFailure(8, rusqlite::types::Type::Text, Box::new(error)))?;
-    Ok(DirectoryEvent {
-        seq: seq as u64,
-        id,
-        hlc: Hlc { physical_ms: hlc_physical, logical: hlc_logical as u32 },
-        actor: DirectoryActor { kind: actor_kind_from_str(&actor_kind), id: actor_id },
-        space_id,
-        user_id,
-        body,
-        recorded_at_ms,
-    })
+    let body: DirectoryEventBody = serde_json::from_str(&payload).map_err(|error| rusqlite::Error::FromSqlConversionFailure(8, rusqlite::types::Type::Text, Box::new(error)))?;
+    Ok(DirectoryEvent { seq: seq as u64, id, hlc: Hlc { physical_ms: hlc_physical, logical: hlc_logical as u32 }, actor: DirectoryActor { kind: actor_kind_from_str(&actor_kind), id: actor_id }, space_id, user_id, body, recorded_at_ms })
 }
 
 //#region 🧪️Tests

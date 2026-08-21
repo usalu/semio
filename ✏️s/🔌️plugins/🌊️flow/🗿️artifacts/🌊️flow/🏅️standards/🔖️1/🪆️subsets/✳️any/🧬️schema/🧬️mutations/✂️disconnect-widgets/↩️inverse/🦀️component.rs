@@ -12,12 +12,5 @@ pub async fn inverse(payload: &DisconnectWidgets, base: &FlowSnapshot) -> Vec<Fl
         return Vec::new();
     };
     let synapse = &scene.synapses[index];
-    vec![FlowMutation::ConnectWidgets(ConnectWidgets {
-        index,
-        id: synapse.id.clone(),
-        from: synapse.from.clone(),
-        from_port: synapse.from_port.clone(),
-        to: synapse.to.clone(),
-        to_port: synapse.to_port.clone(),
-    })]
+    vec![FlowMutation::ConnectWidgets(ConnectWidgets { index, id: synapse.id.clone(), from: synapse.from.clone(), from_port: synapse.from_port.clone(), to: synapse.to.clone(), to_port: synapse.to_port.clone() })]
 }

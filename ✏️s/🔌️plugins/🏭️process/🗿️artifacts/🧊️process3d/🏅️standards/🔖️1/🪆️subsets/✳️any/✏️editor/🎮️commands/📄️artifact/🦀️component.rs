@@ -1,9 +1,9 @@
 //! 📄️ Process 3d play app commands — wholesale document swaps (load example / set document).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::artifacts::process3d::schema::{default_document, plate_document};
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetDocument
@@ -26,7 +26,12 @@ pub mod set_snapshot {
         pub json: String,
     }
 
-    pub async fn handle(payload: &SetDocument, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &SetDocument,
+        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot: Process3dSnapshot = serde_json::from_str(&payload.json).map_err(|e| Fault::from(e.to_string()))?;
         Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
@@ -46,7 +51,12 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub async fn handle(
+        payload: &SetActiveExample,
+        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+    ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = match payload.example_id.as_str() {
             crate::editor::process3d::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
             "" => Process3dSnapshot::default(),

@@ -260,7 +260,8 @@ impl ShardExecutor {
                 let _ = semio_framework_async::block_on(shard.pump());
             }
             while let Some(bytes) = semio_framework_async::block_on(self.kernel_side.recv()) {
-                if let Ok(outcome) = serde_json::from_slice::<ShardOutcome>(&bytes) {
+                let mut pos = 0usize;
+                if let Ok(outcome) = semio_framework_async::block_on(ShardOutcome::pack_decode(&bytes, &mut pos)) {
                     self.outcomes.push(outcome);
                 }
             }
@@ -280,7 +281,7 @@ mod tests {
     use super::*;
     use crate::{GuestRuntime, MockGuestRuntime, PackageHash, PackageId, PackageRef};
     use semio_framework::kernel::Budget;
-    use semio_framework_actor::{ActorId, Envelope, Payload, ShardKind, ShardTable};
+    use semio_framework_actor::{ActorId, Envelope, JobOperation, Payload, ShardKind, ShardTable};
     use semio_framework_async::{ProcessKind, WorkerPoolConfig};
     use std::time::Duration;
 
@@ -334,7 +335,7 @@ mod tests {
         match wait_for_one(&outcomes) {
             ShardOutcome::Turn { actor: reported, result } => {
                 assert_eq!(reported, actor.0);
-                assert_eq!(result.fuel_used, 77, "the scripted turn's own fuel_used must round-trip through the pool job, proving it genuinely ran pump() there");
+                assert_eq!(result.usage.fuel, 77, "the scripted turn's own fuel_used must round-trip through the pool job, proving it genuinely ran pump() there");
             }
             other => panic!("expected ShardOutcome::Turn from the pool job, got {other:?}"),
         }
@@ -421,12 +422,24 @@ mod tests {
             let instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate");
             executor.register(actor, instance).await;
 
-            let suspend = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Suspend { checkpoint: true } };
+            let operation = JobOperation { operation: actor.0, base_revision: 0, generation: actor.generation() as u64, preview_sequence: 0, seed: actor.0 };
+            let suspend = Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Background,
+                seq: 1,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Suspend { operation, applied_progress: i as u64 },
+            };
             executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(suspend)).await, semio_framework_actor::Lane::Background).await;
             let state = match wait_for_one(&outcomes) {
-                ShardOutcome::Checkpoint { actor: reported, state } => {
+                ShardOutcome::Checkpoint { actor: reported, operation: reported_operation, checkpoint } => {
                     assert_eq!(reported, actor.0);
-                    state
+                    assert_eq!(reported_operation, operation);
+                    assert_eq!(checkpoint.applied_progress, i as u64);
+                    checkpoint
                 }
                 other => panic!("actor {i}: expected Checkpoint outcome for Suspend, got {other:?} — a just-registered actor's own Suspend must never fault"),
             };
@@ -434,10 +447,13 @@ mod tests {
             let fresh_instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate (fresh)");
             executor.register(actor, fresh_instance).await;
             let resume =
-                Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Resume { checkpoint: Some(state) } };
+                Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Resume { operation, checkpoint: state } };
             executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(resume)).await, semio_framework_actor::Lane::Background).await;
             match wait_for_one(&outcomes) {
-                ShardOutcome::Resumed { actor: reported } => assert_eq!(reported, actor.0),
+                ShardOutcome::Resumed { actor: reported, operation: reported_operation } => {
+                    assert_eq!(reported, actor.0);
+                    assert_eq!(reported_operation, operation);
+                }
                 other => panic!("actor {i}: expected Resumed outcome, got {other:?} — a Resume dispatched right after register() must find the actor already registered, never fault"),
             }
         }

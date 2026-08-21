@@ -1,8 +1,8 @@
 //! 🔗️ 🔗️ Block 2D play app commands command — `remove-compatibility-rule`.
 
-use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::artifacts::block2d::op::Block2dMutation;
 use crate::artifacts::block2d::Block2dSnapshot;
+use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

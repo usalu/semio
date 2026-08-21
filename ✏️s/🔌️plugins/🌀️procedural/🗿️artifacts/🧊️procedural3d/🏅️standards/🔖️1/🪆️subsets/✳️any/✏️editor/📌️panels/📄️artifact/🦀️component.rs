@@ -1,7 +1,7 @@
 //! 📄️ Procedural3d play app panel — the document tree: widgets of the current fixture.
 
-use crate::editor::procedural3d::terminology::Procedural3dLabels;
 use crate::artifacts::procedural3d::widget_id;
+use crate::editor::procedural3d::terminology::Procedural3dLabels;
 use flow::FlowFixture;
 use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
@@ -11,7 +11,13 @@ pub const PROCEDURAL_3D_PLAY_BODY_DOCUMENT: &str = "procedural.play.document";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"), group: PanelGroup::Workbench, body_key: Some(PROCEDURAL_3D_PLAY_BODY_DOCUMENT.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        group: PanelGroup::Workbench,
+        body_key: Some(PROCEDURAL_3D_PLAY_BODY_DOCUMENT.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

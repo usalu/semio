@@ -1,8 +1,8 @@
 //! 🧩️ 🧩️ Sourcing curate app commands command — `set-contributions`.
 
-use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::{op::SourcingMutation, CurateSnapshot};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

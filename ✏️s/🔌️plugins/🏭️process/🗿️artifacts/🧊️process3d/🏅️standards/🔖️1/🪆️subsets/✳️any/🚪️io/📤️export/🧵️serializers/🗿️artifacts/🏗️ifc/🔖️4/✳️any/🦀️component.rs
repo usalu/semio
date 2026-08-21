@@ -7,8 +7,7 @@ pub async fn register() {}
 pub async fn serialize(snapshot: &Process3dSnapshot) -> Result<IfcSnapshot, store::TextError> {
     let _ = STDIO_IFC_DOCUMENT_SCHEMA;
     let bytes = <Process3dSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn serialize_bytes(snapshot: &Process3dSnapshot) -> Result<Vec<u8>, store::TextError> {

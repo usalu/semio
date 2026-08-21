@@ -100,18 +100,7 @@ pub fn presence_css_var(index: u8) -> String {
 //#endregion 🔖️Palette
 
 fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode {
-        direction: "horizontal".into(),
-        gap: Some("tight".into()),
-        padding: None,
-        id: Some(id),
-        presence: UiPresence::default(),
-        activate: None,
-        drop_action: None,
-        drop_overlay: None,
-        menu: None,
-        children,
-    })
+    UiNode::Stack(UiStackNode { direction: "horizontal".into(), gap: Some("tight".into()), padding: None, id: Some(id), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None, children })
 }
 
 fn presence_text(value: String) -> UiNode {

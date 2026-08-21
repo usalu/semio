@@ -1,9 +1,9 @@
 //! 🕸️ Procedural3d play app — the main flow-graph window (edit mode).
 
-use crate::editor::procedural3d::config::Procedural3dConfig;
-use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use crate::artifacts::procedural3d::schema::{fixture_to_workflow, host_from_fixture};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::Procedural3dConfig;
+use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
 
@@ -29,7 +29,8 @@ pub async fn definition() -> WindowKindDefinition {
         artifact_snapshot_schema: None,
         input_event_schema: None,
         output_schema: None,
-        capabilities: Vec::new()}
+        capabilities: Vec::new(),
+    }
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
@@ -44,7 +45,8 @@ pub async fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<ser
             semio_framework_plugin::MeasureSelectItem { id: "procedural3d-measure-lod-medium".into(), value: "medium".into(), label: "Medium".into() },
             semio_framework_plugin::MeasureSelectItem { id: "procedural3d-measure-lod-fine".into(), value: "fine".into(), label: "Fine".into() },
         ],
-        on_change: on_change("setLodMode", None)}]
+        on_change: on_change("setLodMode", None),
+    }]
 }
 //#endregion 🔖️Definition
 

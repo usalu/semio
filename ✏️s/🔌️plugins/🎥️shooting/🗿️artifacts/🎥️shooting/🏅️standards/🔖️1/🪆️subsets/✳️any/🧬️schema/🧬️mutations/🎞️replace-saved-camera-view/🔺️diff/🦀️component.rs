@@ -2,9 +2,9 @@
 //! `no-op` when the pose is unchanged.
 
 use super::mutation::ReplaceSavedCameraView;
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::{ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta, ShootingDiff};
+use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
 use crate::artifacts::shooting::ShootingSavedCameraPatch;
+use crate::artifacts::shooting::ShootingSnapshot;
 
 pub async fn diff(payload: &ReplaceSavedCameraView, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.saved_cameras.iter().find(|camera| camera.id == payload.id) else {
@@ -14,10 +14,7 @@ pub async fn diff(payload: &ReplaceSavedCameraView, base: &ShootingSnapshot) -> 
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Saved camera \"{}\" view is unchanged.", payload.id));
     }
     protocol::MutationOutcome::new(ShootingDiff {
-        saved_cameras: Some(ShootingSavedCamerasDelta {
-            patched: vec![ShootingSavedCameraPatchEntry { id: payload.id.clone(), patch: ShootingSavedCameraPatch { label: None, camera: Some(payload.new_camera.clone()) } }],
-            ..Default::default()
-        }),
+        saved_cameras: Some(ShootingSavedCamerasDelta { patched: vec![ShootingSavedCameraPatchEntry { id: payload.id.clone(), patch: ShootingSavedCameraPatch { label: None, camera: Some(payload.new_camera.clone()) } }], ..Default::default() }),
         ..Default::default()
     })
 }

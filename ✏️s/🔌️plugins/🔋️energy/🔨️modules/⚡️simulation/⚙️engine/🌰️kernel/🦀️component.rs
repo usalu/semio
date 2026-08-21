@@ -381,8 +381,7 @@ impl SimulationKernel {
             let cool_sp = model.thermostats.iter().find(|t| t.zone_id == zone.id).map_or(setpoints.cooling_c, |t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0);
 
             let humidistat = model.humidistats.iter().find(|h| h.zone_id == zone.id);
-            let hum_spec =
-                humidistat.map(|h| HumidistatSpec { humidifying_setpoint_rh: 0.4, dehumidifying_setpoint_rh: 0.6, humidifying_throttle_range: h.humidifying_throttle_range, dehumidifying_throttle_range: h.dehumidifying_throttle_range });
+            let hum_spec = humidistat.map(|h| HumidistatSpec { humidifying_setpoint_rh: 0.4, dehumidifying_setpoint_rh: 0.6, humidifying_throttle_range: h.humidifying_throttle_range, dehumidifying_throttle_range: h.dehumidifying_throttle_range });
             let therm_spec = ThermostatSpec {
                 heating_setpoint_c: heat_sp,
                 cooling_setpoint_c: cool_sp,

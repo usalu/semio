@@ -1,9 +1,9 @@
 //! 🔍️ Shooting play app panel — the inspector: fields for the selected shot (falling back to the active
 //! shot, then a schema summary). Per-asset fields dropped — see this file's `render` doc comment.
 
+use crate::artifacts::shooting::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode,
     UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -15,7 +15,13 @@ pub const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
 
 //#region 🔖️Definition
 pub async fn definition() -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), group: PanelGroup::Details, body_key: Some(SHOOTING_PLAY_BODY_INSPECTION.into()), children: Vec::new() }
+    PanelTabDefinition {
+        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        group: PanelGroup::Details,
+        body_key: Some(SHOOTING_PLAY_BODY_INSPECTION.into()),
+        children: Vec::new(),
+    }
 }
 //#endregion 🔖️Definition
 

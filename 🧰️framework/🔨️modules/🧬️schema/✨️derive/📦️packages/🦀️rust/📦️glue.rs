@@ -80,12 +80,7 @@ fn parse_field_axis(field: &syn::Field) -> syn::Result<FieldAxis> {
         "config" => "Config",
         "presence" => "Presence",
         "transient" => "Transient",
-        other => {
-            return Err(syn::Error::new_spanned(
-                attr,
-                format!("unknown state class `{other}` — the only four lanes are artifact, config, presence, transient"),
-            ))
-        }
+        other => return Err(syn::Error::new_spanned(attr, format!("unknown state class `{other}` — the only four lanes are artifact, config, presence, transient"))),
     };
     Ok(FieldAxis::State(variant.to_string()))
 }

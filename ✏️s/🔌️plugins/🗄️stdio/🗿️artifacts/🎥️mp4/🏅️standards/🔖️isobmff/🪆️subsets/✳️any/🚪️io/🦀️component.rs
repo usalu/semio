@@ -589,7 +589,7 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
 /// 🐛 The 8 bytes of `reserved`+`data_reference_index` are followed by `pre_defined(2)` +
 /// `reserved(2)` + `pre_defined[3](12)` = 16 bytes before `width`/`height` — matches
 /// `parse_visual_sample_entry`'s read-side `skip(6+2+2+2+12)`.
-async fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, visual: &Mp4VisualSampleEntry, extra: &[u8]) -> Vec<u8> {
+fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, visual: &Mp4VisualSampleEntry, extra: &[u8]) -> Vec<u8> {
     let mut payload = vec![0u8; 6];
     payload.extend_from_slice(&visual.data_reference_index.to_be_bytes());
     payload.extend_from_slice(&visual.version.to_be_bytes());
@@ -614,7 +614,7 @@ async fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16
     write_box(codec_fourcc, &payload)
 }
 
-async fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
+fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
     let mut result = Vec::new();
     if let Some(color) = &track.metadata.color {
         let mut payload = [b' '; 4].to_vec();
@@ -647,7 +647,7 @@ async fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
     stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));
     let stsd = write_box(b"stsd", &stsd_payload);
-    [stsd, build_stts(track), build_stss(track), build_ctts(track), build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
+    [stsd, build_stts(track).await, build_stss(track), build_ctts(track).await, build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
 }
 
 async fn build_stts(track: &Mp4Track) -> Vec<u8> {
@@ -680,7 +680,7 @@ async fn build_ctts(track: &Mp4Track) -> Vec<u8> {
 
 /// ✍️ One chunk per track (all samples together) — adapted from remodel's `mp4_stsc`, which
 /// makes the same single-chunk simplification for its own fixture muxer.
-async fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
+fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
     if track.chunk_sample_counts.is_empty() {
         return vec![track.samples.len() as u32];
     }
@@ -688,10 +688,10 @@ async fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
     track.chunk_sample_counts.clone()
 }
 
-async async async async fn build_stsc(track: &Mp4Track) -> Vec<u8> {
+fn build_stsc(track: &Mp4Track) -> Vec<u8> {
     let counts = normalized_chunk_sample_counts(track);
     let mut entries = Vec::new();
-    for (index, count) in counts.await.into_iter().enumerate() {
+    for (index, count) in counts.into_iter().enumerate() {
         if entries.last().is_some_and(|entry: &(u32, u32)| entry.1 == count) {
             continue;
         }
@@ -704,7 +704,7 @@ async async async async fn build_stsc(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&sample_count.to_be_bytes());
         payload.extend_from_slice(&1u32.to_be_bytes());
     }
-    write_box(b"stsc", &async payload)
+    write_box(b"stsc", &payload)
 }
 
 fn build_stsz(track: &Mp4Track) -> Vec<u8> {
@@ -721,7 +721,7 @@ fn build_stsz(track: &Mp4Track) -> Vec<u8> {
             payload.extend_from_slice(&s.to_be_bytes());
         }
     }
-    write_box(b"stsz", &payloaasync d)
+    write_box(b"stsz", &payload)
 }
 
 fn build_stco(offsets: &[u32]) -> Vec<u8> {
@@ -730,7 +730,7 @@ fn build_stco(offsets: &[u32]) -> Vec<u8> {
     for offset in offsets {
         payload.extend_from_slice(&offset.to_be_bytes());
     }
-    write_box(b"stco", &async payload)
+    write_box(b"stco", &payload)
 }
 
 fn build_stss(track: &Mp4Track) -> Vec<u8> {
@@ -743,7 +743,7 @@ fn build_stss(track: &Mp4Track) -> Vec<u8> {
     for i in indices {
         payload.extend_from_slice(&i.to_be_bytes());
     }
-    write_boasync x(b"stss", &payload)
+    write_box(b"stss", &payload)
 }
 
 fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
@@ -759,7 +759,7 @@ fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
 /// these for brevity; a genuinely conformant video `minf` needs them, so this artifact's encoder
 /// adds them for real player/ffprobe compatibility).
 async fn build_vmhd() -> Vec<u8> {
-    write_box(b"vmhd", &[0, 0, 0, 1, 0, async 0, 0, 0, 0, 0, 0, 0])
+    write_box(b"vmhd", &[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 }
 fn build_dinf() -> Vec<u8> {
     let url = write_box(b"url ", &[0, 0, 0, 1]);
@@ -802,7 +802,7 @@ async fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
     }
     payload.extend_from_slice(&(track.width << 16).to_be_bytes());
     payload.extend_from_slice(&(track.height << 16).to_be_bytes());
-    write_boasync x(b"tkhd", &payload)
+    write_box(b"tkhd", &payload)
 }
 
 fn build_edts(track: &Mp4Track) -> Vec<u8> {
@@ -823,9 +823,9 @@ fn build_edts(track: &Mp4Track) -> Vec<u8> {
 fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let tkhd = build_tkhd(track);
     let stbl = write_box(b"stbl", &build_stbl(track, chunk_offsets));
-    let minf = write_box(b"minf", &[build_vmhd(), build_dinf().await, stbl].concat());
-    let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track).await, minf].concat());
-    write_box(b"trak", &[tkhd, build_edts(track).await, mdia].concat())
+    let minf = write_box(b"minf", &[build_vmhd(), build_dinf(), stbl].concat());
+    let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track), minf].concat());
+    write_box(b"trak", &[tkhd, build_edts(track), mdia].concat())
 }
 
 async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
@@ -842,7 +842,7 @@ async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
         payload.extend_from_slice(&v.to_be_bytes());
     }
     payload.extend_from_slice(&[0u8; 24]);
-    payload.extend_from_slice(&movie.next_track_id.to_be_byteasync s());
+    payload.extend_from_slice(&movie.next_track_id.to_be_bytes());
     write_box(b"mvhd", &payload)
 }
 

@@ -11,9 +11,5 @@ use semio_framework_plugin::StandardId;
 /// pre-migration code for this artifact (unlike stdio's `📜️artifact-definition.json`) — see
 /// `## openQuestions` in the fan-out report, mirrors `🎬️sequence`'s identical documented deviation.
 pub async fn standard() -> StandardDeclaration {
-    StandardDeclaration {
-        id: StandardId("1"),
-        media: MediaDeclaration { mimes: &["application/vnd.semio.animate.present"], extensions: &["present"] },
-        subsets: vec![subsets::any::subset()],
-    }
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.animate.present"], extensions: &["present"] }, subsets: vec![subsets::any::subset()] }
 }

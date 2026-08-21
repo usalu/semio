@@ -21,13 +21,7 @@ struct CadComputersManifest {
 }
 
 fn computers_manifest() -> CadComputersManifest {
-    CadComputersManifest {
-        model_definition_ids: vec!["spatial.shape"],
-        stat_computers: vec!["spatial.shape.geometry"],
-        property_computers: vec!["spatial.shape.volume"],
-        import_profiles: Vec::new(),
-        transformation_appliers: Vec::new(),
-    }
+    CadComputersManifest { model_definition_ids: vec!["spatial.shape"], stat_computers: vec!["spatial.shape.geometry"], property_computers: vec!["spatial.shape.volume"], import_profiles: Vec::new(), transformation_appliers: Vec::new() }
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a

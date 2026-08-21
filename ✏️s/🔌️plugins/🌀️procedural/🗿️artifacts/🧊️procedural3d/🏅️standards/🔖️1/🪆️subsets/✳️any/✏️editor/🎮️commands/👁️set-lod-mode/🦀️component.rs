@@ -1,16 +1,17 @@
 //! 👁️ 👁️ Procedural3d play app commands command — `set-lod-mode`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "lod-mode")]
 pub struct SetLodMode {
-    pub value: String}
+    pub value: String,
+}
 
 pub async fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetLodMode { value: payload.value.clone() }]))
@@ -20,9 +21,9 @@ pub async fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, Procedural3dSn
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::editor::procedural3d::commands::set_active_utility;
     use crate::editor::procedural3d::testkit::{app, app_with_registry, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
-    use crate::editor::procedural3d::commands::set_active_utility;
 
     #[semio_framework_async_macros::async_test]
     async fn set_lod_mode_is_a_view_action_with_no_artifact_mutations() {

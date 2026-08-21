@@ -17,8 +17,8 @@ mod native {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
-    use crate::{ChunkId, PackError, PackLimits, PackSink, PackSource};
     use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
+    use crate::{ChunkId, PackError, PackLimits, PackSink, PackSource};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
     /// place `std::io::Error` is allowed to appear, per the contract's no-`std::io::Error`-in-
@@ -189,8 +189,8 @@ mod native {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
         use crate::format::VerificationLevel;
+        use crate::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
 
         /// @emoji 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
         /// `tempfile` crate dependency, per the contract's std-only preference.

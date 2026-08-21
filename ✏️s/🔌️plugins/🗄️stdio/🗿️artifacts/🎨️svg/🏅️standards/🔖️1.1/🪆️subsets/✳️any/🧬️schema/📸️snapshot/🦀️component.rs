@@ -1323,17 +1323,17 @@ pub fn set_element_attr(node: &mut XmlNode, name: &str, value: Option<String>) {
 //#region 🔖️HandcraftedArtifactCodecs
 impl store::ArtifactDsl for SvgSnapshot {
     const EXTENSION: &'static str = "svg";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "stdio.svg"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let (_, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(format!("svg state envelope: {error}"), dsl::TextSpan::at(1, 1)))?;
-        crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).await.map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = crate::artifacts::svg::schema::mutations::enc_svg_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -1346,25 +1346,25 @@ impl store::ArtifactDsl for SvgSnapshot {
 /// generic object-serialization placeholder, which satisfied the trait but did not describe the
 /// structured SVG state frame.
 impl store::ArtifactPack for SvgSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let mut raw = vec![1];
         crate::artifacts::svg::schema::mutations::enc_svg_snapshot_bin(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        let mut reader = store::ByteReader::new(&inner).await;
-        let version = reader.read_u8().await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let mut reader = store::ByteReader::new(&inner);
+        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
         if version != 1 {
             return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}")));
         }
-        crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).await.map_err(store::PackError::Schema)
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

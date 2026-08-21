@@ -12,12 +12,7 @@ pub async fn inverse(payload: &DeleteNode, base: &MathematicalSnapshot) -> Vec<M
     let Some(node) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();
     };
-    let mut steps = vec![MathematicalMutation::CreateNode(create_node::mutation::CreateNode {
-        id: node.id.clone(),
-        label: node.label.clone(),
-        x: node.x,
-        y: node.y,
-    })];
+    let mut steps = vec![MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: node.id.clone(), label: node.label.clone(), x: node.x, y: node.y })];
     steps.extend(
         graph
             .edges

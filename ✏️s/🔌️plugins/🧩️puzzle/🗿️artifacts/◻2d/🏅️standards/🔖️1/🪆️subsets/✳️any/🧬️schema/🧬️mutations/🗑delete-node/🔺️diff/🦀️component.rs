@@ -9,12 +9,7 @@ pub async fn diff(payload: &super::mutation::DeleteNode, base: &Puzzle2dSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node", payload.id), vec![payload.id.clone()]);
     };
     let handle_ids: Vec<&str> = node.handles.iter().map(|handle| handle.id.as_str()).collect();
-    let severed: Vec<String> = base
-        .edges
-        .iter()
-        .filter(|edge| handle_ids.contains(&edge.source.as_str()) || handle_ids.contains(&edge.target.as_str()))
-        .map(|edge| edge.id.clone())
-        .collect();
+    let severed: Vec<String> = base.edges.iter().filter(|edge| handle_ids.contains(&edge.source.as_str()) || handle_ids.contains(&edge.target.as_str())).map(|edge| edge.id.clone()).collect();
     protocol::MutationOutcome::new(Puzzle2dDiff {
         nodes: Some(Puzzle2dNodesDelta { removed: vec![payload.id.clone()], ..Default::default() }),
         edges: if severed.is_empty() { None } else { Some(Puzzle2dEdgesDelta { removed: severed, ..Default::default() }) },

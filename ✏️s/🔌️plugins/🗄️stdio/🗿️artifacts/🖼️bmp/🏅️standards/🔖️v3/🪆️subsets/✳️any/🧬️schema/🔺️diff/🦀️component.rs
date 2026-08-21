@@ -274,7 +274,7 @@ pub struct BmpDiff {
 }
 
 impl MutationDiff<BmpSnapshot> for BmpDiff {
-    async fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
+    fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
         if let Some(palette) = &self.palette {
             validate_bmp_palette(base.palette.len(), palette)?;
         }
@@ -345,7 +345,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         Ok(next)
     }
 
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.header_size.is_some() {
             self.header_size = other.header_size;
         }
@@ -419,12 +419,12 @@ fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApply
 }
 
 impl DiffAlgebra<BmpSnapshot> for BmpDiff {
-    async fn inverse(&self, base: &BmpSnapshot) -> Self {
-        let applied = self.apply(base).await.unwrap();
-        Self::between(&applied, base).await
+    fn inverse(&self, base: &BmpSnapshot) -> Self {
+        let applied = self.apply(base).unwrap();
+        Self::between(&applied, base)
     }
 
-    async fn between(base: &BmpSnapshot, other: &BmpSnapshot) -> Self {
+    fn between(base: &BmpSnapshot, other: &BmpSnapshot) -> Self {
         let mut d = BmpDiff {
             header_size: (base.header_size != other.header_size).then_some(other.header_size),
             width: (base.width != other.width).then_some(other.width),
@@ -462,7 +462,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
         d
     }
 
-    async fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.header_size.is_none()
             && self.width.is_none()
             && self.height.is_none()

@@ -11,7 +11,5 @@ pub async fn deserialize(from: &PlySnapshot) -> Result<RemodelSnapshot, store::T
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<RemodelSnapshot, store::TextError> {
-    <RemodelSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| {
-        <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes))
-    })
+    <RemodelSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <RemodelSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }

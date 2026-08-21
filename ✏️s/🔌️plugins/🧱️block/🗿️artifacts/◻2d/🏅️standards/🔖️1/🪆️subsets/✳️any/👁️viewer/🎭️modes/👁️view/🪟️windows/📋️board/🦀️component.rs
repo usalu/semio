@@ -39,11 +39,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// editor's own board window imports (`ui_stack_vertical`/`ui_text`); block2d's board surface is
 /// UI-node-based, not a 3D mesh/world scene, so there is no `world2d_*` helper to reuse here.
 pub async fn render(document: &Block2dSnapshot) -> UiNode {
-    let mut lines = vec![ui_text(Label::data(format!(
-        "{}: {}",
-        "Node kind",
-        if document.node_kind.label.is_empty() { "—" } else { &document.node_kind.label }
-    )))];
+    let mut lines = vec![ui_text(Label::data(format!("{}: {}", "Node kind", if document.node_kind.label.is_empty() { "—" } else { &document.node_kind.label })))];
     lines.push(ui_text(Label::data(format!("{} handle kind(s)", document.handle_kinds.len()))));
     for kind in &document.handle_kinds {
         lines.push(ui_text(Label::data(format!("  ◦ {} ({}) — {}", kind.label, kind.id, kind.color))));

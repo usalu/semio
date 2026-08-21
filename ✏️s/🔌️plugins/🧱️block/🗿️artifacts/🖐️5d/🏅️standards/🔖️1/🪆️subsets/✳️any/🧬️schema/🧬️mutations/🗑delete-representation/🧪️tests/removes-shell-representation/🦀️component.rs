@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block5d::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
 use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::artifacts::block5d::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
 use crate::artifacts::block5d::Block5dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -106,7 +106,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::block5d::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block5d::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before())
-        .expect("committed diff applies to the before-snapshot");
+    let produced = <crate::artifacts::block5d::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-representation/removes-shell-representation: committed diff did not carry before to after");
 }

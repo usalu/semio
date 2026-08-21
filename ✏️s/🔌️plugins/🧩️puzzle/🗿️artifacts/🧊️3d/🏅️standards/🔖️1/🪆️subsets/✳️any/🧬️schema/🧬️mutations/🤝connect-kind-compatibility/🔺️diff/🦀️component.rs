@@ -8,13 +8,7 @@ pub async fn diff(payload: &super::mutation::ConnectKindCompatibility, base: &Pu
         return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "already connected").at(vec![payload.source.clone(), payload.target.clone()])]);
     }
     let mut meta = base.meta.clone();
-    meta.kind_compatibility.push(Puzzle3dKindCompatibility {
-        source: payload.source.clone(),
-        target: payload.target.clone(),
-        bidirectional: payload.bidirectional,
-        important: payload.important,
-        specificity: payload.specificity,
-    });
+    meta.kind_compatibility.push(Puzzle3dKindCompatibility { source: payload.source.clone(), target: payload.target.clone(), bidirectional: payload.bidirectional, important: payload.important, specificity: payload.specificity });
     protocol::MutationOutcome::new(Puzzle3dDiff { meta: Some(meta), ..Default::default() })
 }
 //#endregion 🔖️Diff

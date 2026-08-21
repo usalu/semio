@@ -24,7 +24,7 @@ pub struct CoreEdge<E> {
 
 impl<E: Copy + Ord> CoreEdge<E> {
     /// 📐️ Normalize endpoints for undirected storage.
-    pub async fn normalize_undirected(source: E, target: E) -> (E, E) {
+    pub fn normalize_undirected(source: E, target: E) -> (E, E) {
         if source <= target {
             (source, target)
         } else {
@@ -58,11 +58,11 @@ impl Directedness for Undirected {
 
 /// 📐️ Apply directedness when storing edge endpoints.
 #[inline]
-pub async fn orient_endpoints<E: Copy + Ord, D: Directedness>(source: E, target: E) -> (E, E) {
+pub fn orient_endpoints<E: Copy + Ord, D: Directedness>(source: E, target: E) -> (E, E) {
     if D::DIRECTED {
         (source, target)
     } else {
-        CoreEdge::<E>::normalize_undirected(source, target).await
+        CoreEdge::<E>::normalize_undirected(source, target)
     }
 }
 // #endregion 🔖️Directedness
@@ -74,9 +74,9 @@ pub trait PortModel {
     const HAS_PORTS: bool;
     /// 🪢️ Whether this port model allows parallel edges between the same pair (the port axis IS the multi-edge axis: `Ported` ~ NetworkX `Multi(Di)Graph`, `Normal` ~ NetworkX `(Di)Graph`).
     const MULTI_EDGES: bool;
-    async fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64;
-    async fn try_handle_endpoint(handle_id: HandleId) -> Option<Self::Endpoint>;
-    async fn endpoint_as_handle(endpoint: Self::Endpoint) -> Option<HandleId>;
+    fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64;
+    fn try_handle_endpoint(handle_id: HandleId) -> Option<Self::Endpoint>;
+    fn endpoint_as_handle(endpoint: Self::Endpoint) -> Option<HandleId>;
 }
 
 /// 🟠️ Node-to-node edges without handles.
@@ -87,13 +87,13 @@ impl PortModel for Normal {
     type Endpoint = NodeId;
     const HAS_PORTS: bool = false;
     const MULTI_EDGES: bool = false;
-    async fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
+    fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
         endpoint
     }
-    async fn try_handle_endpoint(_: HandleId) -> Option<Self::Endpoint> {
+    fn try_handle_endpoint(_: HandleId) -> Option<Self::Endpoint> {
         None
     }
-    async fn endpoint_as_handle(_: Self::Endpoint) -> Option<HandleId> {
+    fn endpoint_as_handle(_: Self::Endpoint) -> Option<HandleId> {
         None
     }
 }
@@ -106,13 +106,13 @@ impl PortModel for Ported {
     type Endpoint = HandleId;
     const HAS_PORTS: bool = true;
     const MULTI_EDGES: bool = true;
-    async fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
+    fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
         endpoint
     }
-    async fn try_handle_endpoint(handle_id: HandleId) -> Option<Self::Endpoint> {
+    fn try_handle_endpoint(handle_id: HandleId) -> Option<Self::Endpoint> {
         Some(handle_id)
     }
-    async fn endpoint_as_handle(endpoint: Self::Endpoint) -> Option<HandleId> {
+    fn endpoint_as_handle(endpoint: Self::Endpoint) -> Option<HandleId> {
         Some(endpoint)
     }
 }
@@ -135,7 +135,7 @@ pub struct EdgeRecord<E> {
 }
 
 /// 🗑️ Removes one occurrence of `edge_id` from `map[u][v]`, dropping the inner entry once its edge list empties.
-async fn unlink_one(map: &mut BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>, u: NodeId, v: NodeId, edge_id: EdgeId) {
+fn unlink_one(map: &mut BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>, u: NodeId, v: NodeId, edge_id: EdgeId) {
     if let Some(inner) = map.get_mut(&u) {
         if let Some(ids) = inner.get_mut(&v) {
             if let Some(pos) = ids.iter().position(|&e| e == edge_id) {
@@ -187,7 +187,7 @@ impl<P: PortModel, D: Directedness> Default for Storage<P, D> {
 
 impl<P: PortModel, D: Directedness> Storage<P, D> {
     /// 🆕️ Empty storage; every id allocator starts at `0` and is monotone — an id is never reused, even after removal.
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             nodes: BTreeMap::new(),
             edges: BTreeMap::new(),
@@ -204,14 +204,14 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     }
 
     /// 🔗️ Resolves an edge endpoint down to the node it lives on: identity for `Normal` (`Endpoint == NodeId`), a `handle_owner` lookup for `Ported`.
-    async fn endpoint_node(&self, endpoint: P::Endpoint) -> NodeId {
-        match P::endpoint_as_handle(endpoint).await {
+    fn endpoint_node(&self, endpoint: P::Endpoint) -> NodeId {
+        match P::endpoint_as_handle(endpoint) {
             Some(handle_id) => *self.handle_owner.get(&handle_id).expect("every live handle endpoint has a recorded owner node"),
-            None => P::endpoint_as_u64(endpoint).await,
+            None => P::endpoint_as_u64(endpoint),
         }
     }
 
-    async fn link_adjacency(&mut self, u: NodeId, v: NodeId, edge_id: EdgeId) {
+    fn link_adjacency(&mut self, u: NodeId, v: NodeId, edge_id: EdgeId) {
         self.successors.entry(u).or_default().entry(v).or_default().push(edge_id);
         if D::DIRECTED {
             self.predecessors.entry(v).or_default().entry(u).or_default().push(edge_id);
@@ -222,26 +222,26 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         }
     }
 
-    async fn unlink_adjacency(&mut self, u: NodeId, v: NodeId, edge_id: EdgeId) {
+    fn unlink_adjacency(&mut self, u: NodeId, v: NodeId, edge_id: EdgeId) {
         // 🚨️ all four branches were dropped-future no-ops: none of these `unlink_one` calls were
         // ever awaited, so `unlink_adjacency` silently did nothing — the outer `.await` fixed at
         // its own call sites (`remove_edge`) was necessary but not sufficient.
-        unlink_one(&mut self.successors, u, v, edge_id).await;
+        unlink_one(&mut self.successors, u, v, edge_id);
         if D::DIRECTED {
-            unlink_one(&mut self.predecessors, v, u, edge_id).await;
+            unlink_one(&mut self.predecessors, v, u, edge_id);
         } else if u == v {
-            unlink_one(&mut self.successors, u, v, edge_id).await;
+            unlink_one(&mut self.successors, u, v, edge_id);
         } else {
-            unlink_one(&mut self.successors, v, u, edge_id).await;
+            unlink_one(&mut self.successors, v, u, edge_id);
         }
     }
 
     // #subregion Nodes
-    pub async fn add_node(&mut self) -> NodeId {
-        self.add_node_with(PropertyBag::new()).await
+    pub fn add_node(&mut self) -> NodeId {
+        self.add_node_with(PropertyBag::new())
     }
 
-    pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
+    pub fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
         let id = self.next_node_id;
         self.next_node_id += 1;
         self.nodes.insert(id, NodeRecord { attrs, handles: Vec::new() });
@@ -249,7 +249,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     }
 
     /// 🆔️ Inserts a node at a caller-supplied id, or merges `attrs` into it if already present (NetworkX `add_node(id, **attrs)` semantics); bumps the allocator past `id` so future auto-ids never collide with it.
-    pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
+    pub fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
         if self.next_node_id <= id {
             self.next_node_id = id + 1;
         }
@@ -262,12 +262,12 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         id
     }
 
-    pub async fn contains_node(&self, id: NodeId) -> bool {
+    pub fn contains_node(&self, id: NodeId) -> bool {
         self.nodes.contains_key(&id)
     }
 
     /// 🗑️ Removes a node, cascading: every incident edge is removed first, then (for ported storages) every handle anchored on it.
-    pub async fn remove_node(&mut self, id: NodeId) -> bool {
+    pub fn remove_node(&mut self, id: NodeId) -> bool {
         if !self.nodes.contains_key(&id) {
             return false;
         }
@@ -285,7 +285,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         for edge_id in incident {
             // 🚨️ was a dropped-future no-op: incident edges were never actually removed when
             // their node was — `remove_edge`'s side effects on `self.edges`/adjacency never ran.
-            self.remove_edge(edge_id).await;
+            self.remove_edge(edge_id);
         }
         if let Some(record) = self.nodes.remove(&id) {
             for handle_id in record.handles {
@@ -297,19 +297,19 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         true
     }
 
-    pub async fn node_attrs_mut(&mut self, id: NodeId) -> Option<&mut PropertyBag> {
+    pub fn node_attrs_mut(&mut self, id: NodeId) -> Option<&mut PropertyBag> {
         self.nodes.get_mut(&id).map(|r| &mut r.attrs)
     }
     // #endsubregion
 
     // #subregion Edges
-    pub async fn add_edge(&mut self, source: P::Endpoint, target: P::Endpoint) -> EdgeId {
-        self.add_edge_with(source, target, PropertyBag::new()).await
+    pub fn add_edge(&mut self, source: P::Endpoint, target: P::Endpoint) -> EdgeId {
+        self.add_edge_with(source, target, PropertyBag::new())
     }
 
     /// 🔀️ `Normal` storages upsert: an edge already connecting this pair gets `attrs` merged into it and its existing id returned (NetworkX `Graph`/`DiGraph`). `Ported` storages always create a fresh parallel edge with a new `EdgeId` (NetworkX `MultiGraph`/`MultiDiGraph`).
-    pub async fn add_edge_with(&mut self, source: P::Endpoint, target: P::Endpoint, attrs: PropertyBag) -> EdgeId {
-        let (un, vn) = (self.endpoint_node(source).await, self.endpoint_node(target).await);
+    pub fn add_edge_with(&mut self, source: P::Endpoint, target: P::Endpoint, attrs: PropertyBag) -> EdgeId {
+        let (un, vn) = (self.endpoint_node(source), self.endpoint_node(target));
         if !P::MULTI_EDGES {
             if let Some(&existing) = self.successors.get(&un).and_then(|m| m.get(&vn)).and_then(|ids| ids.first()) {
                 if let Some(record) = self.edges.get_mut(&existing) {
@@ -324,31 +324,31 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         // 🚨️ was a dropped-future no-op: `link_adjacency` (mutates `successors`/`predecessors`)
         // was never awaited, so every edge added through this path was silently absent from
         // adjacency — traversal/neighbor/degree queries would all have missed it. See R10 header.
-        self.link_adjacency(un, vn, id).await;
+        self.link_adjacency(un, vn, id);
         id
     }
 
-    pub async fn remove_edge(&mut self, id: EdgeId) -> bool {
+    pub fn remove_edge(&mut self, id: EdgeId) -> bool {
         let Some(record) = self.edges.remove(&id) else { return false };
-        let (u, v) = (self.endpoint_node(record.source).await, self.endpoint_node(record.target).await);
+        let (u, v) = (self.endpoint_node(record.source), self.endpoint_node(record.target));
         // 🚨️ was a dropped-future no-op: `unlink_adjacency` was never awaited, so a removed edge's
         // adjacency entries were silently left in place. Same class as `add_edge_with` above.
-        self.unlink_adjacency(u, v, id).await;
+        self.unlink_adjacency(u, v, id);
         true
     }
 
-    pub async fn edge_attrs_mut(&mut self, id: EdgeId) -> Option<&mut PropertyBag> {
+    pub fn edge_attrs_mut(&mut self, id: EdgeId) -> Option<&mut PropertyBag> {
         self.edges.get_mut(&id).map(|r| &mut r.attrs)
     }
 
-    pub async fn edge_endpoints(&self, id: EdgeId) -> Option<(P::Endpoint, P::Endpoint)> {
+    pub fn edge_endpoints(&self, id: EdgeId) -> Option<(P::Endpoint, P::Endpoint)> {
         self.edges.get(&id).map(|r| (r.source, r.target))
     }
     // #endsubregion
 
     // #subregion Handles
     /// 🪝️ Allocates a new handle anchored on `node`; only meaningful when `P::HAS_PORTS` — returns `None` otherwise (or if `node` doesn't exist), never panics.
-    pub async fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
+    pub fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
         if !P::HAS_PORTS || !self.nodes.contains_key(&node) {
             return None;
         }
@@ -359,22 +359,22 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         Some(id)
     }
 
-    pub async fn handles(&self, node: NodeId) -> &[HandleId] {
+    pub fn handles(&self, node: NodeId) -> &[HandleId] {
         self.nodes.get(&node).map_or(&[], |r| r.handles.as_slice())
     }
 
-    pub async fn handle_owner(&self, handle: HandleId) -> Option<NodeId> {
+    pub fn handle_owner(&self, handle: HandleId) -> Option<NodeId> {
         self.handle_owner.get(&handle).copied()
     }
     // #endsubregion
 
     // #subregion Whole graph
-    pub async fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
+    pub fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
         &mut self.graph_attrs
     }
 
     /// 🧹️ Removes every node, edge, and handle; graph-level attrs are cleared too. Id allocators are NOT reset — ids are never reused, even across a clear.
-    pub async fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.nodes.clear();
         self.edges.clear();
         self.successors.clear();
@@ -384,7 +384,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     }
 
     /// 🧹️ Removes every edge but keeps nodes (and their handles) and graph-level attrs.
-    pub async fn clear_edges(&mut self) {
+    pub fn clear_edges(&mut self) {
         self.edges.clear();
         for adj in self.successors.values_mut() {
             adj.clear();
@@ -408,34 +408,34 @@ pub struct EdgeRef {
 
 /// 🪟️ Structural read-only view every future algorithm crate is written against — the single most important contract in this campaign; keep it minimal and stable.
 pub trait GraphView {
-    async fn node_count(&self) -> usize;
-    async fn nodes(&self) -> impl Iterator<Item = NodeId>;
-    async fn contains_node(&self, node: NodeId) -> bool;
-    async fn edge_count(&self) -> usize;
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef>;
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
+    fn node_count(&self) -> usize;
+    fn nodes(&self) -> impl Iterator<Item = NodeId>;
+    fn contains_node(&self, node: NodeId) -> bool;
+    fn edge_count(&self) -> usize;
+    fn edges(&self) -> impl Iterator<Item = EdgeRef>;
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
     /// ⬅️ Equals `out_neighbors` on an undirected view — there is only one adjacency direction, so predecessors and successors coincide.
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
-    async fn degree(&self, node: NodeId) -> usize;
-    async fn out_degree(&self, node: NodeId) -> usize;
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId>;
+    fn degree(&self, node: NodeId) -> usize;
+    fn out_degree(&self, node: NodeId) -> usize;
     /// ⬅️ Equals `out_degree` on an undirected view, for the same reason as `in_neighbors`.
-    async fn in_degree(&self, node: NodeId) -> usize;
-    async fn is_directed(&self) -> bool;
-    async fn is_multigraph(&self) -> bool;
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef>;
+    fn in_degree(&self, node: NodeId) -> usize;
+    fn is_directed(&self) -> bool;
+    fn is_multigraph(&self) -> bool;
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef>;
 }
 
 /// 🏷️ Attribute lookup companion to `GraphView`.
 pub trait AttrView {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag>;
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag>;
-    async fn graph_attrs(&self) -> &PropertyBag;
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag>;
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag>;
+    fn graph_attrs(&self) -> &PropertyBag;
 }
 
 /// ⚖️ Edge weight lookup, decoupled from attribute storage so algorithms take `impl EdgeWeights` instead of hardcoding a `"weight"` key.
 pub trait EdgeWeights {
-    async fn weight(&self, edge: EdgeRef) -> f64;
+    fn weight(&self, edge: EdgeRef) -> f64;
 }
 
 /// 1⃣ Unweighted default: every edge costs `1.0` (NetworkX's unweighted-graph convention).
@@ -443,7 +443,7 @@ pub trait EdgeWeights {
 pub struct UnitWeight;
 
 impl EdgeWeights for UnitWeight {
-    async fn weight(&self, _edge: EdgeRef) -> f64 {
+    fn weight(&self, _edge: EdgeRef) -> f64 {
         1.0
     }
 }
@@ -456,96 +456,96 @@ pub struct AttrWeight<'g, G> {
 }
 
 impl<'g, G: AttrView> EdgeWeights for AttrWeight<'g, G> {
-    async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.graph.edge_attrs(edge.id).await.and_then(|attrs| attrs.get(self.name)).and_then(PropertyValue::as_f64).unwrap_or(self.default)
+    fn weight(&self, edge: EdgeRef) -> f64 {
+        self.graph.edge_attrs(edge.id).and_then(|attrs| attrs.get(self.name)).and_then(PropertyValue::as_f64).unwrap_or(self.default)
     }
 }
 
 impl<F: Fn(EdgeRef) -> f64> EdgeWeights for F {
-    async fn weight(&self, edge: EdgeRef) -> f64 {
+    fn weight(&self, edge: EdgeRef) -> f64 {
         self(edge)
     }
 }
 
 impl<P: PortModel, D: Directedness> GraphView for Storage<P, D> {
-    async fn node_count(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.nodes.len()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.nodes.keys().copied()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
+    fn contains_node(&self, node: NodeId) -> bool {
         self.nodes.contains_key(&node)
     }
-    async fn edge_count(&self) -> usize {
+    fn edge_count(&self) -> usize {
         self.edges.len()
     }
     /// 📇️ One `EdgeRef` per stored edge, in `EdgeId` order — a self-loop appears once here even though it counts twice towards `degree`.
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         // 🔀️ Rewritten from `.map(..)` — `endpoint_node` is async and cannot be called inside the
         // sync closure that used to build each `EdgeRef` (R10 residue shape #1).
         let mut out = Vec::with_capacity(self.edges.len());
         for (&id, record) in &self.edges {
-            let u = self.endpoint_node(record.source).await;
-            let v = self.endpoint_node(record.target).await;
+            let u = self.endpoint_node(record.source);
+            let v = self.endpoint_node(record.target);
             out.push(EdgeRef { id, u, v });
         }
         out.into_iter()
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.out_neighbors(node).await
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.out_neighbors(node)
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.successors.get(&node).into_iter().flat_map(|m| m.keys().copied())
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         let map = if D::DIRECTED { &self.predecessors } else { &self.successors };
         map.get(&node).into_iter().flat_map(|m| m.keys().copied())
     }
-    async fn degree(&self, node: NodeId) -> usize {
+    fn degree(&self, node: NodeId) -> usize {
         if D::DIRECTED {
-            self.out_degree(node).await + self.in_degree(node).await
+            self.out_degree(node) + self.in_degree(node)
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
+    fn out_degree(&self, node: NodeId) -> usize {
         self.successors.get(&node).map_or(0, |m| m.values().map(Vec::len).sum())
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
+    fn in_degree(&self, node: NodeId) -> usize {
         if D::DIRECTED {
             self.predecessors.get(&node).map_or(0, |m| m.values().map(Vec::len).sum())
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn is_directed(&self) -> bool {
+    fn is_directed(&self) -> bool {
         D::DIRECTED
     }
-    async fn is_multigraph(&self) -> bool {
+    fn is_multigraph(&self) -> bool {
         P::MULTI_EDGES
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.successors.get(&u).and_then(|m| m.get(&v)).into_iter().flatten().copied().map(move |id| EdgeRef { id, u, v })
     }
 }
 
 impl<P: PortModel, D: Directedness> AttrView for Storage<P, D> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
         self.nodes.get(&node).map(|r| &r.attrs)
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
         self.edges.get(&edge).map(|r| &r.attrs)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
+    fn graph_attrs(&self) -> &PropertyBag {
         &self.graph_attrs
     }
 }
 
 /// ⚖️ Reads the graph's own `PropertyBag["weight"]` on each edge, defaulting to `1.0` — the common case; use `AttrWeight`/`UnitWeight`/a closure for anything else.
 impl<P: PortModel, D: Directedness> EdgeWeights for Storage<P, D> {
-    async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.edge_attrs(edge.id).await.and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0)
+    fn weight(&self, edge: EdgeRef) -> f64 {
+        self.edge_attrs(edge.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0)
     }
 }
 // #endregion 🔖️View traits
@@ -565,16 +565,16 @@ pub struct Csr {
 
 impl Csr {
     /// 🏗️ Builds a CSR snapshot from any `GraphView`; each node's out-neighbor slot is sorted by `(target index, edge id)` for determinism under parallel edges. `in_neighbors` is populated only for directed views (empty slots otherwise).
-    pub async fn from_view(view: &impl GraphView) -> Self {
-        let mut node_ids: Vec<NodeId> = view.nodes().await.collect();
+    pub fn from_view(view: &impl GraphView) -> Self {
+        let mut node_ids: Vec<NodeId> = view.nodes().collect();
         node_ids.sort_unstable();
         let node_index: BTreeMap<NodeId, usize> = node_ids.iter().enumerate().map(|(i, &id)| (id, i)).collect();
         let n = node_ids.len();
-        let directed = view.is_directed().await;
+        let directed = view.is_directed();
 
         let mut out_buckets: Vec<Vec<(usize, EdgeId)>> = vec![Vec::new(); n];
         let mut in_buckets: Vec<Vec<usize>> = vec![Vec::new(); n];
-        for edge in view.edges().await {
+        for edge in view.edges() {
             let (Some(&ui), Some(&vi)) = (node_index.get(&edge.u), node_index.get(&edge.v)) else {
                 continue;
             };
@@ -615,27 +615,27 @@ impl Csr {
         Self { node_ids, node_index, out_starts, out_targets, out_edge_ids, in_starts, in_targets }
     }
 
-    pub async fn node_count(&self) -> usize {
+    pub fn node_count(&self) -> usize {
         self.node_ids.len()
     }
 
-    pub async fn out_neighbors(&self, i: usize) -> &[usize] {
+    pub fn out_neighbors(&self, i: usize) -> &[usize] {
         &self.out_targets[self.out_starts[i]..self.out_starts[i + 1]]
     }
 
-    pub async fn in_neighbors(&self, i: usize) -> &[usize] {
+    pub fn in_neighbors(&self, i: usize) -> &[usize] {
         &self.in_targets[self.in_starts[i]..self.in_starts[i + 1]]
     }
 
-    pub async fn out_edges(&self, i: usize) -> &[EdgeId] {
+    pub fn out_edges(&self, i: usize) -> &[EdgeId] {
         &self.out_edge_ids[self.out_starts[i]..self.out_starts[i + 1]]
     }
 
-    pub async fn node_of(&self, i: usize) -> Option<NodeId> {
+    pub fn node_of(&self, i: usize) -> Option<NodeId> {
         self.node_ids.get(i).copied()
     }
 
-    pub async fn index_of(&self, id: NodeId) -> Option<usize> {
+    pub fn index_of(&self, id: NodeId) -> Option<usize> {
         self.node_index.get(&id).copied()
     }
 }
@@ -651,10 +651,10 @@ pub struct SubgraphView<'g, G: GraphView> {
 }
 
 impl<'g, G: GraphView> SubgraphView<'g, G> {
-    pub async fn new(graph: &'g G, nodes: impl IntoIterator<Item = NodeId>) -> Self {
+    pub fn new(graph: &'g G, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let mut kept = BTreeSet::new();
         for n in nodes {
-            if graph.contains_node(n).await {
+            if graph.contains_node(n) {
                 kept.insert(n);
             }
         }
@@ -663,80 +663,80 @@ impl<'g, G: GraphView> SubgraphView<'g, G> {
 }
 
 impl<'g, G: GraphView> GraphView for SubgraphView<'g, G> {
-    async fn node_count(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.nodes.len()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.nodes.iter().copied()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
+    fn contains_node(&self, node: NodeId) -> bool {
         self.nodes.contains(&node)
     }
-    async fn edge_count(&self) -> usize {
-        self.edges().await.count()
+    fn edge_count(&self) -> usize {
+        self.edges().count()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges().await.filter(|e| self.nodes.contains(&e.u) && self.nodes.contains(&e.v))
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges().filter(|e| self.nodes.contains(&e.u) && self.nodes.contains(&e.v))
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.neighbors(node).await.filter(|n| self.nodes.contains(n))
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.neighbors(node).filter(|n| self.nodes.contains(n))
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.out_neighbors(node).await.filter(|n| self.nodes.contains(n))
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.out_neighbors(node).filter(|n| self.nodes.contains(n))
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.in_neighbors(node).await.filter(|n| self.nodes.contains(n))
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.in_neighbors(node).filter(|n| self.nodes.contains(n))
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
-            self.out_degree(node).await + self.in_degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
+            self.out_degree(node) + self.in_degree(node)
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
+    fn out_degree(&self, node: NodeId) -> usize {
         let mut total = 0usize;
-        for nb in self.out_neighbors(node).await {
-            total += self.edges_between(node, nb).await.count();
+        for nb in self.out_neighbors(node) {
+            total += self.edges_between(node, nb).count();
         }
         total
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
+    fn in_degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
             let mut total = 0usize;
-            for nb in self.in_neighbors(node).await {
-                total += self.edges_between(nb, node).await.count();
+            for nb in self.in_neighbors(node) {
+                total += self.edges_between(nb, node).count();
             }
             total
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn is_directed(&self) -> bool {
-        self.graph.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.graph.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.graph.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.graph.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         let keep = self.nodes.contains(&u) && self.nodes.contains(&v);
-        self.graph.edges_between(u, v).await.filter(move |_| keep)
+        self.graph.edges_between(u, v).filter(move |_| keep)
     }
 }
 
 impl<'g, G: GraphView + AttrView> AttrView for SubgraphView<'g, G> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
         if self.nodes.contains(&node) {
-            self.graph.node_attrs(node).await
+            self.graph.node_attrs(node)
         } else {
             None
         }
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.graph.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.graph.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.graph.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.graph.graph_attrs()
     }
 }
 
@@ -748,10 +748,10 @@ pub struct EdgeSubgraphView<'g, G: GraphView> {
 }
 
 impl<'g, G: GraphView> EdgeSubgraphView<'g, G> {
-    pub async fn new(graph: &'g G, edges: impl IntoIterator<Item = EdgeId>) -> Self {
+    pub fn new(graph: &'g G, edges: impl IntoIterator<Item = EdgeId>) -> Self {
         let edge_set: BTreeSet<EdgeId> = edges.into_iter().collect();
         let mut nodes = BTreeSet::new();
-        for e in graph.edges().await {
+        for e in graph.edges() {
             if edge_set.contains(&e.id) {
                 nodes.insert(e.u);
                 nodes.insert(e.v);
@@ -762,28 +762,27 @@ impl<'g, G: GraphView> EdgeSubgraphView<'g, G> {
 }
 
 impl<'g, G: GraphView> GraphView for EdgeSubgraphView<'g, G> {
-    async fn node_count(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.nodes.len()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.nodes.iter().copied()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
+    fn contains_node(&self, node: NodeId) -> bool {
         self.nodes.contains(&node)
     }
-    async fn edge_count(&self) -> usize {
+    fn edge_count(&self) -> usize {
         self.edges.len()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges().await.filter(|e| self.edges.contains(&e.id))
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges().filter(|e| self.edges.contains(&e.id))
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.out_neighbors(node).await
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.out_neighbors(node)
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        let directed = self.graph.is_directed().await;
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        let directed = self.graph.is_directed();
         self.edges()
-            .await
             .filter_map(move |e| {
                 if e.u == node {
                     Some(e.v)
@@ -796,66 +795,66 @@ impl<'g, G: GraphView> GraphView for EdgeSubgraphView<'g, G> {
             .collect::<BTreeSet<_>>()
             .into_iter()
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        if self.graph.is_directed().await {
-            self.edges().await.filter_map(move |e| if e.v == node { Some(e.u) } else { None }).collect::<BTreeSet<_>>().into_iter()
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        if self.graph.is_directed() {
+            self.edges().filter_map(move |e| if e.v == node { Some(e.u) } else { None }).collect::<BTreeSet<_>>().into_iter()
         } else {
-            self.out_neighbors(node).await.collect::<BTreeSet<_>>().into_iter()
+            self.out_neighbors(node).collect::<BTreeSet<_>>().into_iter()
         }
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
-            self.out_degree(node).await + self.in_degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
+            self.out_degree(node) + self.in_degree(node)
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
+    fn out_degree(&self, node: NodeId) -> usize {
         let mut total = 0usize;
-        for nb in self.out_neighbors(node).await {
-            total += self.edges_between(node, nb).await.count();
+        for nb in self.out_neighbors(node) {
+            total += self.edges_between(node, nb).count();
         }
         total
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
+    fn in_degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
             let mut total = 0usize;
-            for nb in self.in_neighbors(node).await {
-                total += self.edges_between(nb, node).await.count();
+            for nb in self.in_neighbors(node) {
+                total += self.edges_between(nb, node).count();
             }
             total
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn is_directed(&self) -> bool {
-        self.graph.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.graph.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.graph.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.graph.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges_between(u, v).await.filter(|e| self.edges.contains(&e.id))
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges_between(u, v).filter(|e| self.edges.contains(&e.id))
     }
 }
 
 impl<'g, G: GraphView + AttrView> AttrView for EdgeSubgraphView<'g, G> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
         if self.nodes.contains(&node) {
-            self.graph.node_attrs(node).await
+            self.graph.node_attrs(node)
         } else {
             None
         }
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
         if self.edges.contains(&edge) {
-            self.graph.edge_attrs(edge).await
+            self.graph.edge_attrs(edge)
         } else {
             None
         }
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.graph.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.graph.graph_attrs()
     }
 }
 
@@ -865,65 +864,65 @@ pub struct ReversedView<'g, G: GraphView> {
 }
 
 impl<'g, G: GraphView> ReversedView<'g, G> {
-    pub async fn new(graph: &'g G) -> Self {
+    pub fn new(graph: &'g G) -> Self {
         Self { graph }
     }
 }
 
 impl<'g, G: GraphView> GraphView for ReversedView<'g, G> {
-    async fn node_count(&self) -> usize {
-        self.graph.node_count().await
+    fn node_count(&self) -> usize {
+        self.graph.node_count()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
-        self.graph.nodes().await
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
+        self.graph.nodes()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
-        self.graph.contains_node(node).await
+    fn contains_node(&self, node: NodeId) -> bool {
+        self.graph.contains_node(node)
     }
-    async fn edge_count(&self) -> usize {
-        self.graph.edge_count().await
+    fn edge_count(&self) -> usize {
+        self.graph.edge_count()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges().await.map(|e| EdgeRef { id: e.id, u: e.v, v: e.u })
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges().map(|e| EdgeRef { id: e.id, u: e.v, v: e.u })
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.out_neighbors(node).await
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.out_neighbors(node)
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.in_neighbors(node).await
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.in_neighbors(node)
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.out_neighbors(node).await
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.out_neighbors(node)
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        self.graph.degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        self.graph.degree(node)
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
-        self.graph.in_degree(node).await
+    fn out_degree(&self, node: NodeId) -> usize {
+        self.graph.in_degree(node)
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        self.graph.out_degree(node).await
+    fn in_degree(&self, node: NodeId) -> usize {
+        self.graph.out_degree(node)
     }
-    async fn is_directed(&self) -> bool {
-        self.graph.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.graph.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.graph.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.graph.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges_between(v, u).await.map(|e| EdgeRef { id: e.id, u: e.v, v: e.u })
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges_between(v, u).map(|e| EdgeRef { id: e.id, u: e.v, v: e.u })
     }
 }
 
 impl<'g, G: GraphView + AttrView> AttrView for ReversedView<'g, G> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.graph.node_attrs(node).await
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+        self.graph.node_attrs(node)
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.graph.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.graph.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.graph.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.graph.graph_attrs()
     }
 }
 
@@ -935,119 +934,119 @@ pub struct FilteredView<'g, G: GraphView, FN, FE> {
 }
 
 impl<'g, G: GraphView, FN: Fn(NodeId) -> bool, FE: Fn(EdgeRef) -> bool> FilteredView<'g, G, FN, FE> {
-    pub async fn new(graph: &'g G, keep_node: FN, keep_edge: FE) -> Self {
+    pub fn new(graph: &'g G, keep_node: FN, keep_edge: FE) -> Self {
         Self { graph, keep_node, keep_edge }
     }
 
-    async fn keep(&self, edge: EdgeRef) -> bool {
+    fn keep(&self, edge: EdgeRef) -> bool {
         (self.keep_node)(edge.u) && (self.keep_node)(edge.v) && (self.keep_edge)(edge)
     }
 }
 
 impl<'g, G: GraphView, FN: Fn(NodeId) -> bool, FE: Fn(EdgeRef) -> bool> GraphView for FilteredView<'g, G, FN, FE> {
-    async fn node_count(&self) -> usize {
-        self.nodes().await.count()
+    fn node_count(&self) -> usize {
+        self.nodes().count()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
-        self.graph.nodes().await.filter(|&n| (self.keep_node)(n))
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
+        self.graph.nodes().filter(|&n| (self.keep_node)(n))
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
-        self.graph.contains_node(node).await && (self.keep_node)(node)
+    fn contains_node(&self, node: NodeId) -> bool {
+        self.graph.contains_node(node) && (self.keep_node)(node)
     }
-    async fn edge_count(&self) -> usize {
-        self.edges().await.count()
+    fn edge_count(&self) -> usize {
+        self.edges().count()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         // 🔀️ Rewritten from `.filter(move |&e| self.keep(e))` — `keep` is async and cannot be
         // called inside a sync closure (R10 residue shape #1).
         let mut out = Vec::new();
-        for e in self.graph.edges().await {
-            if self.keep(e).await {
+        for e in self.graph.edges() {
+            if self.keep(e) {
                 out.push(e);
             }
         }
         out.into_iter()
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.out_neighbors(node).await
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.out_neighbors(node)
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         // 🔀️ Rewritten — `edges_between` is async and cannot be called inside the sync `.filter`
         // predicate that used to guard this (R10 residue shape #1).
         let node_ok = (self.keep_node)(node);
         let mut out = Vec::new();
         if node_ok {
-            for nb in self.graph.out_neighbors(node).await {
-                if self.edges_between(node, nb).await.next().is_some() {
+            for nb in self.graph.out_neighbors(node) {
+                if self.edges_between(node, nb).next().is_some() {
                     out.push(nb);
                 }
             }
         }
         out.into_iter()
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         let node_ok = (self.keep_node)(node);
         let mut out = Vec::new();
         if node_ok {
-            for nb in self.graph.in_neighbors(node).await {
-                if self.edges_between(nb, node).await.next().is_some() {
+            for nb in self.graph.in_neighbors(node) {
+                if self.edges_between(nb, node).next().is_some() {
                     out.push(nb);
                 }
             }
         }
         out.into_iter()
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
-            self.out_degree(node).await + self.in_degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
+            self.out_degree(node) + self.in_degree(node)
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
+    fn out_degree(&self, node: NodeId) -> usize {
         let mut total = 0usize;
-        for nb in self.out_neighbors(node).await {
-            total += self.edges_between(node, nb).await.count();
+        for nb in self.out_neighbors(node) {
+            total += self.edges_between(node, nb).count();
         }
         total
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        if self.graph.is_directed().await {
+    fn in_degree(&self, node: NodeId) -> usize {
+        if self.graph.is_directed() {
             let mut total = 0usize;
-            for nb in self.in_neighbors(node).await {
-                total += self.edges_between(nb, node).await.count();
+            for nb in self.in_neighbors(node) {
+                total += self.edges_between(nb, node).count();
             }
             total
         } else {
-            self.out_degree(node).await
+            self.out_degree(node)
         }
     }
-    async fn is_directed(&self) -> bool {
-        self.graph.is_directed().await
+    fn is_directed(&self) -> bool {
+        self.graph.is_directed()
     }
-    async fn is_multigraph(&self) -> bool {
-        self.graph.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.graph.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         let keep_u = (self.keep_node)(u);
         let keep_v = (self.keep_node)(v);
-        self.graph.edges_between(u, v).await.filter(move |&e| keep_u && keep_v && (self.keep_edge)(e))
+        self.graph.edges_between(u, v).filter(move |&e| keep_u && keep_v && (self.keep_edge)(e))
     }
 }
 
 impl<'g, G: GraphView + AttrView, FN: Fn(NodeId) -> bool, FE: Fn(EdgeRef) -> bool> AttrView for FilteredView<'g, G, FN, FE> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
         if (self.keep_node)(node) {
-            self.graph.node_attrs(node).await
+            self.graph.node_attrs(node)
         } else {
             None
         }
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.graph.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.graph.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.graph.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.graph.graph_attrs()
     }
 }
 
@@ -1057,69 +1056,69 @@ pub struct UndirectedView<'g, G: GraphView> {
 }
 
 impl<'g, G: GraphView> UndirectedView<'g, G> {
-    pub async fn new(graph: &'g G) -> Self {
+    pub fn new(graph: &'g G) -> Self {
         Self { graph }
     }
 }
 
 impl<'g, G: GraphView> GraphView for UndirectedView<'g, G> {
-    async fn node_count(&self) -> usize {
-        self.graph.node_count().await
+    fn node_count(&self) -> usize {
+        self.graph.node_count()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
-        self.graph.nodes().await
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
+        self.graph.nodes()
     }
-    async fn contains_node(&self, node: NodeId) -> bool {
-        self.graph.contains_node(node).await
+    fn contains_node(&self, node: NodeId) -> bool {
+        self.graph.contains_node(node)
     }
-    async fn edge_count(&self) -> usize {
-        self.graph.edge_count().await
+    fn edge_count(&self) -> usize {
+        self.graph.edge_count()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges().await.map(|e| if e.u <= e.v { e } else { EdgeRef { id: e.id, u: e.v, v: e.u } })
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges().map(|e| if e.u <= e.v { e } else { EdgeRef { id: e.id, u: e.v, v: e.u } })
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.graph.out_neighbors(node).await.chain(self.graph.in_neighbors(node).await).collect::<BTreeSet<_>>().into_iter()
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.graph.out_neighbors(node).chain(self.graph.in_neighbors(node)).collect::<BTreeSet<_>>().into_iter()
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.neighbors(node).await
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.neighbors(node)
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        self.neighbors(node).await
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+        self.neighbors(node)
     }
-    async fn degree(&self, node: NodeId) -> usize {
-        self.out_degree(node).await
+    fn degree(&self, node: NodeId) -> usize {
+        self.out_degree(node)
     }
-    async fn out_degree(&self, node: NodeId) -> usize {
+    fn out_degree(&self, node: NodeId) -> usize {
         let mut total = 0usize;
-        for nb in self.neighbors(node).await {
-            total += self.edges_between(node, nb).await.count();
+        for nb in self.neighbors(node) {
+            total += self.edges_between(node, nb).count();
         }
         total
     }
-    async fn in_degree(&self, node: NodeId) -> usize {
-        self.out_degree(node).await
+    fn in_degree(&self, node: NodeId) -> usize {
+        self.out_degree(node)
     }
-    async fn is_directed(&self) -> bool {
+    fn is_directed(&self) -> bool {
         false
     }
-    async fn is_multigraph(&self) -> bool {
-        self.graph.is_multigraph().await
+    fn is_multigraph(&self) -> bool {
+        self.graph.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
-        self.graph.edges_between(u, v).await.chain(self.graph.edges_between(v, u).await)
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+        self.graph.edges_between(u, v).chain(self.graph.edges_between(v, u))
     }
 }
 
 impl<'g, G: GraphView + AttrView> AttrView for UndirectedView<'g, G> {
-    async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.graph.node_attrs(node).await
+    fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
+        self.graph.node_attrs(node)
     }
-    async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.graph.edge_attrs(edge).await
+    fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
+        self.graph.edge_attrs(edge)
     }
-    async fn graph_attrs(&self) -> &PropertyBag {
-        self.graph.graph_attrs().await
+    fn graph_attrs(&self) -> &PropertyBag {
+        self.graph.graph_attrs()
     }
 }
 // #endregion 🔖️Views
@@ -1133,24 +1132,24 @@ pub struct Interner<L: Ord + Clone + std::hash::Hash> {
 }
 
 impl<L: Ord + Clone + std::hash::Hash> Interner<L> {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { labels: Vec::new(), by_label: std::collections::HashMap::new() }
     }
 
     /// 🏗️ Builds an interner from labels sorted for deterministic id assignment; duplicate labels collapse to one id.
-    pub async fn from_labels(labels: impl IntoIterator<Item = L>) -> Self {
+    pub fn from_labels(labels: impl IntoIterator<Item = L>) -> Self {
         let mut sorted: Vec<L> = labels.into_iter().collect();
         sorted.sort();
         sorted.dedup();
-        let mut interner = Self::new().await;
+        let mut interner = Self::new();
         for label in sorted {
-            interner.intern(label).await;
+            interner.intern(label);
         }
         interner
     }
 
     /// ➕️ Returns the existing id for `label` if already interned, otherwise allocates the next sequential id.
-    pub async fn intern(&mut self, label: L) -> NodeId {
+    pub fn intern(&mut self, label: L) -> NodeId {
         if let Some(&id) = self.by_label.get(&label) {
             return id;
         }
@@ -1160,19 +1159,19 @@ impl<L: Ord + Clone + std::hash::Hash> Interner<L> {
         id
     }
 
-    pub async fn label_of(&self, id: NodeId) -> Option<&L> {
+    pub fn label_of(&self, id: NodeId) -> Option<&L> {
         self.labels.get(id as usize)
     }
 
-    pub async fn id_of(&self, label: &L) -> Option<NodeId> {
+    pub fn id_of(&self, label: &L) -> Option<NodeId> {
         self.by_label.get(label).copied()
     }
 
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.labels.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.labels.is_empty()
     }
 }
@@ -1252,7 +1251,7 @@ pub fn pairwise<T: Copy>(items: &[T]) -> impl Iterator<Item = (T, T)> + '_ {
 }
 
 /// 🎯️ Deterministic representative element (the first one) from a slice.
-pub async fn arbitrary_element<T: Copy>(items: &[T]) -> Option<T> {
+pub fn arbitrary_element<T: Copy>(items: &[T]) -> Option<T> {
     items.first().copied()
 }
 
@@ -1272,64 +1271,64 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> Default for MappedHeap<K, V> {
 }
 
 impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { heap: Vec::new(), position: std::collections::HashMap::new() }
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.heap.is_empty()
     }
 
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.heap.len()
     }
 
-    pub async fn contains(&self, item: &V) -> bool {
+    pub fn contains(&self, item: &V) -> bool {
         self.position.contains_key(item)
     }
 
     /// ➕️ Pushes `item` at `priority` if absent, or decreases its priority if `priority` is lower than its current one; no-operation if `item` is present with an already-lower-or-equal priority.
-    pub async fn push_or_decrease(&mut self, item: V, priority: K) {
+    pub fn push_or_decrease(&mut self, item: V, priority: K) {
         if let Some(&i) = self.position.get(&item) {
             if priority < self.heap[i].0 {
                 self.heap[i].0 = priority;
-                self.sift_up(i).await;
+                self.sift_up(i);
             }
         } else {
             self.heap.push((priority, item.clone()));
             let i = self.heap.len() - 1;
             self.position.insert(item, i);
-            self.sift_up(i).await;
+            self.sift_up(i);
         }
     }
 
     /// 🔽️ Lowers `item`'s priority; returns `false` (no-operation) if `item` isn't present or `priority` isn't lower than its current one.
-    pub async fn decrease_key(&mut self, item: &V, priority: K) -> bool {
+    pub fn decrease_key(&mut self, item: &V, priority: K) -> bool {
         let Some(&i) = self.position.get(item) else { return false };
         if priority < self.heap[i].0 {
             self.heap[i].0 = priority;
-            self.sift_up(i).await;
+            self.sift_up(i);
             true
         } else {
             false
         }
     }
 
-    pub async fn pop_min(&mut self) -> Option<(K, V)> {
+    pub fn pop_min(&mut self) -> Option<(K, V)> {
         if self.heap.is_empty() {
             return None;
         }
         let last = self.heap.len() - 1;
-        self.swap(0, last).await;
+        self.swap(0, last);
         let (priority, item) = self.heap.pop().expect("heap checked non-empty above");
         self.position.remove(&item);
         if !self.heap.is_empty() {
-            self.sift_down(0).await;
+            self.sift_down(0);
         }
         Some((priority, item))
     }
 
-    async fn swap(&mut self, i: usize, j: usize) {
+    fn swap(&mut self, i: usize, j: usize) {
         self.heap.swap(i, j);
         self.position.insert(self.heap[i].1.clone(), i);
         self.position.insert(self.heap[j].1.clone(), j);
@@ -1339,11 +1338,11 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
     // ANY of their call sites in this struct (including here, sift_up/sift_down calling their own
     // `swap`), so the whole `MappedHeap` never actually maintained the heap invariant — every push,
     // decrease-key, and pop silently left `self.heap` in insertion order. See R10 header.
-    async fn sift_up(&mut self, mut i: usize) {
+    fn sift_up(&mut self, mut i: usize) {
         while i > 0 {
             let parent = (i - 1) / 2;
             if self.heap[i].0 < self.heap[parent].0 {
-                self.swap(i, parent).await;
+                self.swap(i, parent);
                 i = parent;
             } else {
                 break;
@@ -1351,7 +1350,7 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
         }
     }
 
-    async fn sift_down(&mut self, mut i: usize) {
+    fn sift_down(&mut self, mut i: usize) {
         let n = self.heap.len();
         loop {
             let l = 2 * i + 1;
@@ -1366,13 +1365,12 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
             if smallest == i {
                 break;
             }
-            self.swap(i, smallest).await;
+            self.swap(i, smallest);
             i = smallest;
         }
     }
 }
 // #endregion 🔖️Utils
-
 
 // #region 🔖️Tests
 #[cfg(test)]
@@ -1401,7 +1399,6 @@ mod tests {
         }
     }
 
-
     type NU = Storage<Normal, Undirected>;
     type ND = Storage<Normal, Directed>;
     type PU = Storage<Ported, Undirected>;
@@ -1411,30 +1408,30 @@ mod tests {
     #[test]
     fn add_node_allocates_monotone_ids() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
             assert_eq!(a, 0);
             assert_eq!(b, 1);
-            assert_eq!(g.node_count().await, 2);
+            assert_eq!(g.node_count(), 2);
         });
     }
 
     #[test]
     fn add_node_with_id_upserts_attrs_and_bumps_allocator() {
         block_on_test(async {
-            let mut g = NU::new().await;
+            let mut g = NU::new();
             let mut attrs = PropertyBag::new();
             attrs.insert("color".into(), PropertyValue::String("red".into()));
-            g.add_node_with_id(5, attrs).await;
-            assert!(g.contains_node(5).await);
-            let next = g.add_node().await;
+            g.add_node_with_id(5, attrs);
+            assert!(g.contains_node(5));
+            let next = g.add_node();
             assert_eq!(next, 6, "auto id must skip past the caller-supplied id");
 
             let mut more = PropertyBag::new();
             more.insert("size".into(), PropertyValue::Number(3.0));
-            g.add_node_with_id(5, more).await;
-            let record = g.node_attrs(5).await.expect("node 5 exists");
+            g.add_node_with_id(5, more);
+            let record = g.node_attrs(5).expect("node 5 exists");
             assert_eq!(record.get("color").and_then(PropertyValue::as_str), Some("red"));
             assert_eq!(record.get("size").and_then(PropertyValue::as_f64), Some(3.0));
         });
@@ -1443,35 +1440,35 @@ mod tests {
     #[test]
     fn remove_node_cascades_edges_and_handles() {
         block_on_test(async {
-            let mut g = PU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = PU::new();
+            let a = g.add_node();
+            let b = g.add_node();
             let ha = g.add_handle(a).expect("ported storage grants handles");
             let hb = g.add_handle(b).expect("ported storage grants handles");
-            let e = g.add_edge(ha, hb).await;
-            assert!(g.remove_node(a).await);
-            assert!(!g.contains_node(a).await);
-            assert!(g.edge_endpoints(e).await.is_none(), "incident edge must be cascaded away");
-            assert!(g.handle_owner(ha).await.is_none(), "handle on the removed node must be cascaded away");
-            assert_eq!(g.handles(b).await, &[hb]);
+            let e = g.add_edge(ha, hb);
+            assert!(g.remove_node(a));
+            assert!(!g.contains_node(a));
+            assert!(g.edge_endpoints(e).is_none(), "incident edge must be cascaded away");
+            assert!(g.handle_owner(ha).is_none(), "handle on the removed node must be cascaded away");
+            assert_eq!(g.handles(b), &[hb]);
         });
     }
 
     #[test]
     fn normal_add_edge_upserts_instead_of_duplicating() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
             let mut first = PropertyBag::new();
             first.insert("weight".into(), PropertyValue::Number(1.0));
-            let e1 = g.add_edge_with(a, b, first).await;
+            let e1 = g.add_edge_with(a, b, first);
             let mut second = PropertyBag::new();
             second.insert("label".into(), PropertyValue::String("x".into()));
-            let e2 = g.add_edge_with(a, b, second).await;
+            let e2 = g.add_edge_with(a, b, second);
             assert_eq!(e1, e2, "Normal storages upsert an existing pair instead of creating a parallel edge");
-            assert_eq!(g.edge_count().await, 1);
-            let attrs = g.edge_attrs(e1).await.expect("edge exists");
+            assert_eq!(g.edge_count(), 1);
+            let attrs = g.edge_attrs(e1).expect("edge exists");
             assert_eq!(attrs.get("weight").and_then(PropertyValue::as_f64), Some(1.0));
             assert_eq!(attrs.get("label").and_then(PropertyValue::as_str), Some("x"));
         });
@@ -1480,97 +1477,97 @@ mod tests {
     #[test]
     fn ported_add_edge_always_creates_parallel_edges() {
         block_on_test(async {
-            let mut g = PD::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = PD::new();
+            let a = g.add_node();
+            let b = g.add_node();
             let ha = g.add_handle(a).expect("ported");
             let hb = g.add_handle(b).expect("ported");
-            let e1 = g.add_edge(ha, hb).await;
-            let e2 = g.add_edge(ha, hb).await;
+            let e1 = g.add_edge(ha, hb);
+            let e2 = g.add_edge(ha, hb);
             assert_ne!(e1, e2, "Ported storages always create a fresh parallel edge");
-            assert_eq!(g.edge_count().await, 2);
-            assert_eq!(g.out_degree(a).await, 2);
+            assert_eq!(g.edge_count(), 2);
+            assert_eq!(g.out_degree(a), 2);
         });
     }
 
     #[test]
     fn normal_storage_denies_handles() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
+            let mut g = NU::new();
+            let a = g.add_node();
             assert!(g.add_handle(a).is_none());
-            assert!(g.handles(a).await.is_empty());
+            assert!(g.handles(a).is_empty());
         });
     }
 
     #[test]
     fn remove_edge_unlinks_adjacency_both_ways_when_undirected() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            assert!(g.remove_edge(e).await);
-            assert_eq!(g.out_degree(a).await, 0);
-            assert_eq!(g.out_degree(b).await, 0);
-            assert!(g.edges_between(a, b).await.next().is_none());
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            assert!(g.remove_edge(e));
+            assert_eq!(g.out_degree(a), 0);
+            assert_eq!(g.out_degree(b), 0);
+            assert!(g.edges_between(a, b).next().is_none());
         });
     }
 
     #[test]
     fn clear_edges_keeps_nodes_clear_removes_everything() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.clear_edges().await;
-            assert_eq!(g.node_count().await, 2);
-            assert_eq!(g.edge_count().await, 0);
-            g.clear().await;
-            assert_eq!(g.node_count().await, 0);
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            g.clear_edges();
+            assert_eq!(g.node_count(), 2);
+            assert_eq!(g.edge_count(), 0);
+            g.clear();
+            assert_eq!(g.node_count(), 0);
         });
     }
 
     #[test]
     fn remove_edge_and_remove_node_return_false_for_unknown_ids() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            assert!(!g.remove_edge(999).await, "removing a never-created edge id must fail cleanly");
-            assert!(!g.remove_node(999).await, "removing a never-created node id must fail cleanly");
+            let mut g = NU::new();
+            assert!(!g.remove_edge(999), "removing a never-created edge id must fail cleanly");
+            assert!(!g.remove_node(999), "removing a never-created node id must fail cleanly");
         });
     }
 
     #[test]
     fn node_attrs_mut_and_edge_attrs_mut_edit_in_place_and_are_none_for_unknown_ids() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            g.node_attrs_mut(a).await.expect("node exists").insert("k".into(), PropertyValue::Number(1.0));
-            g.edge_attrs_mut(e).await.expect("edge exists").insert("w".into(), PropertyValue::Number(2.0));
-            assert_eq!(g.node_attrs(a).await.unwrap().get("k").and_then(PropertyValue::as_f64), Some(1.0));
-            assert_eq!(g.edge_attrs(e).await.unwrap().get("w").and_then(PropertyValue::as_f64), Some(2.0));
-            assert!(g.node_attrs_mut(999).await.is_none());
-            assert!(g.edge_attrs_mut(999).await.is_none());
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            g.node_attrs_mut(a).expect("node exists").insert("k".into(), PropertyValue::Number(1.0));
+            g.edge_attrs_mut(e).expect("edge exists").insert("w".into(), PropertyValue::Number(2.0));
+            assert_eq!(g.node_attrs(a).unwrap().get("k").and_then(PropertyValue::as_f64), Some(1.0));
+            assert_eq!(g.edge_attrs(e).unwrap().get("w").and_then(PropertyValue::as_f64), Some(2.0));
+            assert!(g.node_attrs_mut(999).is_none());
+            assert!(g.edge_attrs_mut(999).is_none());
         });
     }
 
     #[test]
     fn add_handle_denies_missing_node_and_handle_owner_is_none_for_unknown_handle() {
         block_on_test(async {
-            let mut g = PU::new().await;
+            let mut g = PU::new();
             assert!(g.add_handle(999).is_none(), "cannot anchor a handle on a node that doesn't exist");
-            assert!(g.handle_owner(999).await.is_none());
+            assert!(g.handle_owner(999).is_none());
         });
     }
 
     #[test]
     fn core_edge_normalize_undirected_orders_the_pair() {
         block_on_test(async {
-            assert_eq!(CoreEdge::<u64>::normalize_undirected(5, 2).await, (2, 5));
-            assert_eq!(CoreEdge::<u64>::normalize_undirected(2, 5).await, (2, 5));
+            assert_eq!(CoreEdge::<u64>::normalize_undirected(5, 2), (2, 5));
+            assert_eq!(CoreEdge::<u64>::normalize_undirected(2, 5), (2, 5));
         });
     }
     // #endsubregion
@@ -1579,40 +1576,40 @@ mod tests {
     #[test]
     fn undirected_self_loop_counts_twice_towards_degree() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            g.add_edge(a, a).await;
-            assert_eq!(g.degree(a).await, 2);
-            assert_eq!(g.edge_count().await, 1, "edges() still lists the self-loop once");
-            assert_eq!(g.edges_between(a, a).await.count(), 2);
+            let mut g = NU::new();
+            let a = g.add_node();
+            g.add_edge(a, a);
+            assert_eq!(g.degree(a), 2);
+            assert_eq!(g.edge_count(), 1, "edges() still lists the self-loop once");
+            assert_eq!(g.edges_between(a, a).count(), 2);
         });
     }
 
     #[test]
     fn directed_degree_is_in_plus_out() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(c, a).await;
-            assert_eq!(g.out_degree(a).await, 1);
-            assert_eq!(g.in_degree(a).await, 1);
-            assert_eq!(g.degree(a).await, 2);
-            assert_eq!(GraphView::neighbors(&g, a).await.collect::<Vec<_>>(), vec![b], "neighbors == out_neighbors for directed storages");
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(c, a);
+            assert_eq!(g.out_degree(a), 1);
+            assert_eq!(g.in_degree(a), 1);
+            assert_eq!(g.degree(a), 2);
+            assert_eq!(GraphView::neighbors(&g, a).collect::<Vec<_>>(), vec![b], "neighbors == out_neighbors for directed storages");
         });
     }
 
     #[test]
     fn undirected_in_neighbors_equals_out_neighbors() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            let out: Vec<_> = g.out_neighbors(a).await.collect();
-            let inn: Vec<_> = g.in_neighbors(a).await.collect();
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            let out: Vec<_> = g.out_neighbors(a).collect();
+            let inn: Vec<_> = g.in_neighbors(a).collect();
             assert_eq!(out, inn);
         });
     }
@@ -1620,22 +1617,22 @@ mod tests {
     #[test]
     fn is_directed_and_is_multigraph_reflect_type_axes() {
         block_on_test(async {
-            assert!(!NU::new().await.is_directed().await);
-            assert!(ND::new().await.is_directed().await);
-            assert!(!NU::new().await.is_multigraph().await);
-            assert!(PU::new().await.is_multigraph().await);
+            assert!(!NU::new().is_directed());
+            assert!(ND::new().is_directed());
+            assert!(!NU::new().is_multigraph());
+            assert!(PU::new().is_multigraph());
         });
     }
 
     #[test]
     fn directed_self_loop_counts_once_each_towards_out_and_in_degree() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            g.add_edge(a, a).await;
-            assert_eq!(g.out_degree(a).await, 1);
-            assert_eq!(g.in_degree(a).await, 1);
-            assert_eq!(g.degree(a).await, 2);
+            let mut g = ND::new();
+            let a = g.add_node();
+            g.add_edge(a, a);
+            assert_eq!(g.out_degree(a), 1);
+            assert_eq!(g.in_degree(a), 1);
+            assert_eq!(g.degree(a), 2);
         });
     }
     // #endsubregion
@@ -1645,44 +1642,44 @@ mod tests {
     fn unit_weight_is_always_one() {
         block_on_test(async {
             let w = UnitWeight;
-            assert_eq!(w.weight(EdgeRef { id: 0, u: 0, v: 1 }).await, 1.0);
+            assert_eq!(w.weight(EdgeRef { id: 0, u: 0, v: 1 }), 1.0);
         });
     }
 
     #[test]
     fn storage_default_weight_reads_weight_attr_with_fallback() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
             let mut attrs = PropertyBag::new();
             attrs.insert("weight".into(), PropertyValue::Number(4.5));
-            let e = g.add_edge_with(a, b, attrs).await;
+            let e = g.add_edge_with(a, b, attrs);
             let edge_ref = EdgeRef { id: e, u: a, v: b };
-            assert_eq!(g.weight(edge_ref).await, 4.5);
+            assert_eq!(g.weight(edge_ref), 4.5);
 
-            let e2 = g.add_edge(b, a).await;
+            let e2 = g.add_edge(b, a);
             assert_eq!(e2, e, "Normal upsert must keep returning the same edge id");
 
-            let mut g2 = NU::new().await;
-            let x = g2.add_node().await;
-            let y = g2.add_node().await;
-            let unweighted_edge = g2.add_edge(x, y).await;
-            assert_eq!(g2.weight(EdgeRef { id: unweighted_edge, u: x, v: y }).await, 1.0);
+            let mut g2 = NU::new();
+            let x = g2.add_node();
+            let y = g2.add_node();
+            let unweighted_edge = g2.add_edge(x, y);
+            assert_eq!(g2.weight(EdgeRef { id: unweighted_edge, u: x, v: y }), 1.0);
         });
     }
 
     #[test]
     fn attr_weight_falls_back_to_default_when_missing_or_non_numeric() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
             let mut attrs = PropertyBag::new();
             attrs.insert("cost".into(), PropertyValue::String("not-a-number".into()));
-            let e = g.add_edge_with(a, b, attrs).await;
+            let e = g.add_edge_with(a, b, attrs);
             let aw = AttrWeight { graph: &g, name: "cost", default: 2.0 };
-            assert_eq!(aw.weight(EdgeRef { id: e, u: a, v: b }).await, 2.0);
+            assert_eq!(aw.weight(EdgeRef { id: e, u: a, v: b }), 2.0);
         });
     }
 
@@ -1690,7 +1687,7 @@ mod tests {
     fn closure_implements_edge_weights() {
         block_on_test(async {
             let double = |edge: EdgeRef| (edge.id as f64) * 2.0;
-            assert_eq!(double.weight(EdgeRef { id: 3, u: 0, v: 1 }).await, 6.0);
+            assert_eq!(double.weight(EdgeRef { id: 3, u: 0, v: 1 }), 6.0);
         });
     }
     // #endsubregion
@@ -1699,54 +1696,54 @@ mod tests {
     #[test]
     fn csr_from_view_preserves_directed_adjacency() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(a, c).await;
-            let csr = Csr::from_view(&g).await;
-            assert_eq!(csr.node_count().await, 3);
-            let ia = csr.index_of(a).await.expect("a indexed");
-            let ib = csr.index_of(b).await.expect("b indexed");
-            let ic = csr.index_of(c).await.expect("c indexed");
-            let mut out: Vec<usize> = csr.out_neighbors(ia).await.to_vec();
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(a, c);
+            let csr = Csr::from_view(&g);
+            assert_eq!(csr.node_count(), 3);
+            let ia = csr.index_of(a).expect("a indexed");
+            let ib = csr.index_of(b).expect("b indexed");
+            let ic = csr.index_of(c).expect("c indexed");
+            let mut out: Vec<usize> = csr.out_neighbors(ia).to_vec();
             out.sort_unstable();
             let mut expected = vec![ib, ic];
             expected.sort_unstable();
             assert_eq!(out, expected);
-            assert_eq!(csr.node_of(ia).await, Some(a));
-            assert!(csr.in_neighbors(ib).await.contains(&ia));
+            assert_eq!(csr.node_of(ia), Some(a));
+            assert!(csr.in_neighbors(ib).contains(&ia));
         });
     }
 
     #[test]
     fn csr_from_view_mirrors_undirected_edges_both_ways() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            let csr = Csr::from_view(&g).await;
-            let ia = csr.index_of(a).await.unwrap();
-            let ib = csr.index_of(b).await.unwrap();
-            assert!(csr.out_neighbors(ia).await.contains(&ib));
-            assert!(csr.out_neighbors(ib).await.contains(&ia));
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            let csr = Csr::from_view(&g);
+            let ia = csr.index_of(a).unwrap();
+            let ib = csr.index_of(b).unwrap();
+            assert!(csr.out_neighbors(ia).contains(&ib));
+            assert!(csr.out_neighbors(ib).contains(&ia));
         });
     }
 
     #[test]
     fn csr_out_edges_and_unknown_ids_return_none() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let csr = Csr::from_view(&g).await;
-            let ia = csr.index_of(a).await.unwrap();
-            assert_eq!(csr.out_edges(ia).await, &[e]);
-            assert_eq!(csr.node_of(999).await, None);
-            assert_eq!(csr.index_of(999).await, None);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let csr = Csr::from_view(&g);
+            let ia = csr.index_of(a).unwrap();
+            assert_eq!(csr.out_edges(ia), &[e]);
+            assert_eq!(csr.node_of(999), None);
+            assert_eq!(csr.index_of(999), None);
         });
     }
     // #endsubregion
@@ -1755,240 +1752,240 @@ mod tests {
     #[test]
     fn subgraph_view_drops_edges_leaving_the_subset() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(b, c).await;
-            let sub = SubgraphView::new(&g, [a, b]).await;
-            assert_eq!(sub.node_count().await, 2);
-            assert_eq!(sub.edge_count().await, 1);
-            assert!(!sub.contains_node(c).await);
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(b, c);
+            let sub = SubgraphView::new(&g, [a, b]);
+            assert_eq!(sub.node_count(), 2);
+            assert_eq!(sub.edge_count(), 1);
+            assert!(!sub.contains_node(c));
         });
     }
 
     #[test]
     fn edge_subgraph_view_nodes_are_exactly_edge_endpoints() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_node().await; // isolated node d, never referenced by an edge
-            let e_ab = g.add_edge(a, b).await;
-            g.add_edge(b, c).await;
-            let view = EdgeSubgraphView::new(&g, [e_ab]).await;
-            let mut nodes: Vec<_> = view.nodes().await.collect();
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_node(); // isolated node d, never referenced by an edge
+            let e_ab = g.add_edge(a, b);
+            g.add_edge(b, c);
+            let view = EdgeSubgraphView::new(&g, [e_ab]);
+            let mut nodes: Vec<_> = view.nodes().collect();
             nodes.sort_unstable();
             assert_eq!(nodes, vec![a, b]);
-            assert_eq!(view.edge_count().await, 1);
+            assert_eq!(view.edge_count(), 1);
         });
     }
 
     #[test]
     fn subgraph_view_degree_counts_only_edges_within_subset() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(a, c).await;
-            let sub = SubgraphView::new(&g, [a, b]).await;
-            assert_eq!(sub.out_degree(a).await, 1, "the edge to c falls outside the node subset");
-            assert_eq!(sub.in_degree(b).await, 1);
-            assert_eq!(sub.degree(a).await, sub.out_degree(a).await + sub.in_degree(a).await, "directed subgraph degree is out+in");
-            assert!(sub.is_directed().await);
-            assert!(!sub.is_multigraph().await);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(a, c);
+            let sub = SubgraphView::new(&g, [a, b]);
+            assert_eq!(sub.out_degree(a), 1, "the edge to c falls outside the node subset");
+            assert_eq!(sub.in_degree(b), 1);
+            assert_eq!(sub.degree(a), sub.out_degree(a) + sub.in_degree(a), "directed subgraph degree is out+in");
+            assert!(sub.is_directed());
+            assert!(!sub.is_multigraph());
         });
     }
 
     #[test]
     fn subgraph_view_attr_view_hides_attrs_outside_the_node_subset() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let sub = SubgraphView::new(&g, [a]).await;
-            assert!(sub.node_attrs(a).await.is_some());
-            assert!(sub.node_attrs(b).await.is_none(), "b is outside the node subset");
-            assert!(sub.edge_attrs(e).await.is_some(), "edge attrs are not filtered by SubgraphView");
-            assert!(std::ptr::eq(sub.graph_attrs().await, g.graph_attrs().await));
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let sub = SubgraphView::new(&g, [a]);
+            assert!(sub.node_attrs(a).is_some());
+            assert!(sub.node_attrs(b).is_none(), "b is outside the node subset");
+            assert!(sub.edge_attrs(e).is_some(), "edge attrs are not filtered by SubgraphView");
+            assert!(std::ptr::eq(sub.graph_attrs(), g.graph_attrs()));
         });
     }
 
     #[test]
     fn edge_subgraph_view_degree_and_directed_flag() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            let e_ab = g.add_edge(a, b).await;
-            g.add_edge(b, c).await;
-            let view = EdgeSubgraphView::new(&g, [e_ab]).await;
-            assert!(view.is_directed().await);
-            assert_eq!(view.out_degree(a).await, 1);
-            assert_eq!(view.in_degree(b).await, 1);
-            assert_eq!(view.degree(a).await, 1);
-            assert!(view.edge_attrs(e_ab).await.is_some());
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            let e_ab = g.add_edge(a, b);
+            g.add_edge(b, c);
+            let view = EdgeSubgraphView::new(&g, [e_ab]);
+            assert!(view.is_directed());
+            assert_eq!(view.out_degree(a), 1);
+            assert_eq!(view.in_degree(b), 1);
+            assert_eq!(view.degree(a), 1);
+            assert!(view.edge_attrs(e_ab).is_some());
         });
     }
 
     #[test]
     fn edge_subgraph_view_undirected_in_neighbors_matches_out_neighbors() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let view = EdgeSubgraphView::new(&g, [e]).await;
-            assert!(!view.is_directed().await);
-            assert_eq!(view.in_neighbors(a).await.collect::<Vec<_>>(), view.out_neighbors(a).await.collect::<Vec<_>>());
-            assert_eq!(view.degree(a).await, view.out_degree(a).await);
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let view = EdgeSubgraphView::new(&g, [e]);
+            assert!(!view.is_directed());
+            assert_eq!(view.in_neighbors(a).collect::<Vec<_>>(), view.out_neighbors(a).collect::<Vec<_>>());
+            assert_eq!(view.degree(a), view.out_degree(a));
         });
     }
 
     #[test]
     fn reversed_view_swaps_direction_on_directed_graph() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            let rev = ReversedView::new(&g).await;
-            assert_eq!(rev.out_neighbors(b).await.collect::<Vec<_>>(), vec![a]);
-            assert_eq!(rev.in_neighbors(a).await.collect::<Vec<_>>(), vec![b]);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            let rev = ReversedView::new(&g);
+            assert_eq!(rev.out_neighbors(b).collect::<Vec<_>>(), vec![a]);
+            assert_eq!(rev.in_neighbors(a).collect::<Vec<_>>(), vec![b]);
         });
     }
 
     #[test]
     fn reversed_view_is_a_no_op_on_undirected_graph() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            let rev = ReversedView::new(&g).await;
-            assert_eq!(rev.out_neighbors(a).await.collect::<Vec<_>>(), g.out_neighbors(a).await.collect::<Vec<_>>());
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            let rev = ReversedView::new(&g);
+            assert_eq!(rev.out_neighbors(a).collect::<Vec<_>>(), g.out_neighbors(a).collect::<Vec<_>>());
         });
     }
 
     #[test]
     fn reversed_view_edges_and_edges_between_swap_endpoints() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let rev = ReversedView::new(&g).await;
-            assert_eq!(rev.edges().await.collect::<Vec<_>>(), vec![EdgeRef { id: e, u: b, v: a }]);
-            assert_eq!(rev.edges_between(b, a).await.next(), Some(EdgeRef { id: e, u: b, v: a }));
-            assert_eq!(rev.degree(a).await, g.degree(a).await);
-            assert_eq!(rev.is_multigraph().await, g.is_multigraph().await);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let rev = ReversedView::new(&g);
+            assert_eq!(rev.edges().collect::<Vec<_>>(), vec![EdgeRef { id: e, u: b, v: a }]);
+            assert_eq!(rev.edges_between(b, a).next(), Some(EdgeRef { id: e, u: b, v: a }));
+            assert_eq!(rev.degree(a), g.degree(a));
+            assert_eq!(rev.is_multigraph(), g.is_multigraph());
         });
     }
 
     #[test]
     fn filtered_view_keep_predicate_hides_by_inversion() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let c = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(b, c).await;
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let c = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(b, c);
             let hidden: BTreeSet<NodeId> = [b].into_iter().collect();
-            let view = FilteredView::new(&g, |n| !hidden.contains(&n), |_e| true).await;
-            assert!(view.contains_node(a).await);
-            assert!(!view.contains_node(b).await);
-            assert_eq!(view.edge_count().await, 0, "both edges touch the hidden node b");
+            let view = FilteredView::new(&g, |n| !hidden.contains(&n), |_e| true);
+            assert!(view.contains_node(a));
+            assert!(!view.contains_node(b));
+            assert_eq!(view.edge_count(), 0, "both edges touch the hidden node b");
         });
     }
 
     #[test]
     fn filtered_view_keep_edge_predicate_hides_specific_edges_without_hiding_nodes() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e_bad = g.add_edge(a, b).await;
-            let view = FilteredView::new(&g, |_n| true, move |e| e.id != e_bad).await;
-            assert!(view.contains_node(a).await);
-            assert!(view.contains_node(b).await);
-            assert_eq!(view.edge_count().await, 0);
-            assert_eq!(view.out_degree(a).await, 0);
-            assert_eq!(view.degree(a).await, 0);
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e_bad = g.add_edge(a, b);
+            let view = FilteredView::new(&g, |_n| true, move |e| e.id != e_bad);
+            assert!(view.contains_node(a));
+            assert!(view.contains_node(b));
+            assert_eq!(view.edge_count(), 0);
+            assert_eq!(view.out_degree(a), 0);
+            assert_eq!(view.degree(a), 0);
         });
     }
 
     #[test]
     fn filtered_view_attr_view_delegates_edge_and_graph_attrs() {
         block_on_test(async {
-            let mut g = NU::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let view = FilteredView::new(&g, |_n| true, |_e| true).await;
-            assert!(view.edge_attrs(e).await.is_some());
-            assert!(std::ptr::eq(view.graph_attrs().await, g.graph_attrs().await));
+            let mut g = NU::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let view = FilteredView::new(&g, |_n| true, |_e| true);
+            assert!(view.edge_attrs(e).is_some());
+            assert!(std::ptr::eq(view.graph_attrs(), g.graph_attrs()));
         });
     }
 
     #[test]
     fn undirected_view_merges_successors_and_predecessors() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            let view = UndirectedView::new(&g).await;
-            assert!(!view.is_directed().await);
-            assert_eq!(view.neighbors(a).await.collect::<Vec<_>>(), vec![b]);
-            assert_eq!(view.neighbors(b).await.collect::<Vec<_>>(), vec![a]);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            let view = UndirectedView::new(&g);
+            assert!(!view.is_directed());
+            assert_eq!(view.neighbors(a).collect::<Vec<_>>(), vec![b]);
+            assert_eq!(view.neighbors(b).collect::<Vec<_>>(), vec![a]);
         });
     }
 
     #[test]
     fn undirected_view_degree_and_edges_between_merge_both_directions() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            g.add_edge(a, b).await;
-            g.add_edge(b, a).await;
-            let view = UndirectedView::new(&g).await;
-            assert_eq!(view.degree(a).await, 2, "both directed edges count towards undirected degree");
-            assert_eq!(view.edges_between(a, b).await.count(), 2);
-            assert_eq!(view.is_multigraph().await, g.is_multigraph().await);
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            g.add_edge(a, b);
+            g.add_edge(b, a);
+            let view = UndirectedView::new(&g);
+            assert_eq!(view.degree(a), 2, "both directed edges count towards undirected degree");
+            assert_eq!(view.edges_between(a, b).count(), 2);
+            assert_eq!(view.is_multigraph(), g.is_multigraph());
         });
     }
 
     #[test]
     fn undirected_view_edges_normalizes_endpoint_order() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(b, a).await;
-            let view = UndirectedView::new(&g).await;
-            assert_eq!(view.edges().await.collect::<Vec<_>>(), vec![EdgeRef { id: e, u: a, v: b }], "edges() orders endpoints u <= v regardless of storage direction");
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(b, a);
+            let view = UndirectedView::new(&g);
+            assert_eq!(view.edges().collect::<Vec<_>>(), vec![EdgeRef { id: e, u: a, v: b }], "edges() orders endpoints u <= v regardless of storage direction");
         });
     }
 
     #[test]
     fn undirected_view_attr_view_delegates_to_parent() {
         block_on_test(async {
-            let mut g = ND::new().await;
-            let a = g.add_node().await;
-            let b = g.add_node().await;
-            let e = g.add_edge(a, b).await;
-            let view = UndirectedView::new(&g).await;
-            assert!(view.node_attrs(a).await.is_some());
-            assert!(view.edge_attrs(e).await.is_some());
-            assert!(std::ptr::eq(view.graph_attrs().await, g.graph_attrs().await));
+            let mut g = ND::new();
+            let a = g.add_node();
+            let b = g.add_node();
+            let e = g.add_edge(a, b);
+            let view = UndirectedView::new(&g);
+            assert!(view.node_attrs(a).is_some());
+            assert!(view.edge_attrs(e).is_some());
+            assert!(std::ptr::eq(view.graph_attrs(), g.graph_attrs()));
         });
     }
     // #endsubregion
@@ -1997,38 +1994,38 @@ mod tests {
     #[test]
     fn interner_intern_is_idempotent() {
         block_on_test(async {
-            let mut interner: Interner<String> = Interner::new().await;
-            let a1 = interner.intern("alpha".to_string()).await;
-            let a2 = interner.intern("alpha".to_string()).await;
-            let b = interner.intern("beta".to_string()).await;
+            let mut interner: Interner<String> = Interner::new();
+            let a1 = interner.intern("alpha".to_string());
+            let a2 = interner.intern("alpha".to_string());
+            let b = interner.intern("beta".to_string());
             assert_eq!(a1, a2);
             assert_ne!(a1, b);
-            assert_eq!(interner.label_of(a1).await, Some(&"alpha".to_string()));
-            assert_eq!(interner.id_of(&"beta".to_string()).await, Some(b));
-            assert_eq!(interner.len().await, 2);
+            assert_eq!(interner.label_of(a1), Some(&"alpha".to_string()));
+            assert_eq!(interner.id_of(&"beta".to_string()), Some(b));
+            assert_eq!(interner.len(), 2);
         });
     }
 
     #[test]
     fn interner_from_labels_is_sorted_and_deduplicated() {
         block_on_test(async {
-            let interner: Interner<String> = Interner::from_labels(["c".to_string(), "a".to_string(), "a".to_string(), "b".to_string()]).await;
-            assert_eq!(interner.len().await, 3);
-            assert_eq!(interner.label_of(0).await, Some(&"a".to_string()));
-            assert_eq!(interner.label_of(1).await, Some(&"b".to_string()));
-            assert_eq!(interner.label_of(2).await, Some(&"c".to_string()));
+            let interner: Interner<String> = Interner::from_labels(["c".to_string(), "a".to_string(), "a".to_string(), "b".to_string()]);
+            assert_eq!(interner.len(), 3);
+            assert_eq!(interner.label_of(0), Some(&"a".to_string()));
+            assert_eq!(interner.label_of(1), Some(&"b".to_string()));
+            assert_eq!(interner.label_of(2), Some(&"c".to_string()));
         });
     }
 
     #[test]
     fn interner_is_empty_and_unknown_lookups_return_none() {
         block_on_test(async {
-            let mut interner: Interner<String> = Interner::new().await;
-            assert!(interner.is_empty().await);
-            assert_eq!(interner.label_of(0).await, None);
-            assert_eq!(interner.id_of(&"ghost".to_string()).await, None);
-            interner.intern("alpha".to_string()).await;
-            assert!(!interner.is_empty().await);
+            let mut interner: Interner<String> = Interner::new();
+            assert!(interner.is_empty());
+            assert_eq!(interner.label_of(0), None);
+            assert_eq!(interner.id_of(&"ghost".to_string()), None);
+            interner.intern("alpha".to_string());
+            assert!(!interner.is_empty());
         });
     }
     // #endsubregion
@@ -2080,8 +2077,8 @@ mod tests {
     #[test]
     fn arbitrary_element_is_deterministic() {
         block_on_test(async {
-            assert_eq!(arbitrary_element(&[9, 1, 2]).await, Some(9));
-            assert_eq!(arbitrary_element::<i32>(&[]).await, None);
+            assert_eq!(arbitrary_element(&[9, 1, 2]), Some(9));
+            assert_eq!(arbitrary_element::<i32>(&[]), None);
         });
     }
 
@@ -2093,60 +2090,60 @@ mod tests {
     #[test]
     fn mapped_heap_pops_in_ascending_priority_order() {
         block_on_test(async {
-            let mut heap: MappedHeap<i64, &str> = MappedHeap::new().await;
-            heap.push_or_decrease("c", 30).await;
-            heap.push_or_decrease("a", 10).await;
-            heap.push_or_decrease("b", 20).await;
-            assert_eq!(heap.pop_min().await, Some((10, "a")));
-            assert_eq!(heap.pop_min().await, Some((20, "b")));
-            assert_eq!(heap.pop_min().await, Some((30, "c")));
-            assert_eq!(heap.pop_min().await, None);
+            let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+            heap.push_or_decrease("c", 30);
+            heap.push_or_decrease("a", 10);
+            heap.push_or_decrease("b", 20);
+            assert_eq!(heap.pop_min(), Some((10, "a")));
+            assert_eq!(heap.pop_min(), Some((20, "b")));
+            assert_eq!(heap.pop_min(), Some((30, "c")));
+            assert_eq!(heap.pop_min(), None);
         });
     }
 
     #[test]
     fn mapped_heap_decrease_key_reorders() {
         block_on_test(async {
-            let mut heap: MappedHeap<i64, &str> = MappedHeap::new().await;
-            heap.push_or_decrease("a", 10).await;
-            heap.push_or_decrease("b", 20).await;
-            assert!(heap.decrease_key(&"b", 5).await);
-            assert!(!heap.decrease_key(&"b", 100).await, "raising priority via decrease_key is a no-operation");
-            assert_eq!(heap.pop_min().await, Some((5, "b")));
-            assert!(heap.contains(&"a").await);
-            assert!(!heap.contains(&"b").await);
+            let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+            heap.push_or_decrease("a", 10);
+            heap.push_or_decrease("b", 20);
+            assert!(heap.decrease_key(&"b", 5));
+            assert!(!heap.decrease_key(&"b", 100), "raising priority via decrease_key is a no-operation");
+            assert_eq!(heap.pop_min(), Some((5, "b")));
+            assert!(heap.contains(&"a"));
+            assert!(!heap.contains(&"b"));
         });
     }
 
     #[test]
     fn mapped_heap_len_and_is_empty_track_size() {
         block_on_test(async {
-            let mut heap: MappedHeap<i64, &str> = MappedHeap::new().await;
-            assert!(heap.is_empty().await);
-            assert_eq!(heap.len().await, 0);
-            heap.push_or_decrease("a", 5).await;
-            assert!(!heap.is_empty().await);
-            assert_eq!(heap.len().await, 1);
+            let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+            assert!(heap.is_empty());
+            assert_eq!(heap.len(), 0);
+            heap.push_or_decrease("a", 5);
+            assert!(!heap.is_empty());
+            assert_eq!(heap.len(), 1);
         });
     }
 
     #[test]
     fn mapped_heap_push_or_decrease_ignores_higher_or_equal_priority() {
         block_on_test(async {
-            let mut heap: MappedHeap<i64, &str> = MappedHeap::new().await;
-            heap.push_or_decrease("a", 5).await;
-            heap.push_or_decrease("a", 10).await;
-            assert_eq!(heap.len().await, 1, "a higher priority for an already-present item must be a no-operation");
-            heap.push_or_decrease("a", 5).await;
-            assert_eq!(heap.pop_min().await, Some((5, "a")), "priority must stay at the lowest value ever pushed");
+            let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+            heap.push_or_decrease("a", 5);
+            heap.push_or_decrease("a", 10);
+            assert_eq!(heap.len(), 1, "a higher priority for an already-present item must be a no-operation");
+            heap.push_or_decrease("a", 5);
+            assert_eq!(heap.pop_min(), Some((5, "a")), "priority must stay at the lowest value ever pushed");
         });
     }
 
     #[test]
     fn decrease_key_returns_false_for_absent_item() {
         block_on_test(async {
-            let mut heap: MappedHeap<i64, &str> = MappedHeap::new().await;
-            assert!(!heap.decrease_key(&"missing", 1).await);
+            let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+            assert!(!heap.decrease_key(&"missing", 1));
         });
     }
     // #endsubregion
@@ -2156,7 +2153,7 @@ mod tests {
         use super::*;
 
         /// 🎲️ Tiny deterministic xorshift so this crate doesn't need `crate::random` as a dependency just for one fuzz test.
-        async fn xorshift(state: &mut u64) -> u64 {
+        fn xorshift(state: &mut u64) -> u64 {
             *state ^= *state << 13;
             *state ^= *state >> 7;
             *state ^= *state << 17;
@@ -2168,24 +2165,24 @@ mod tests {
             block_on_test(async {
                 let mut seed = 0x5eed_u64;
                 for _ in 0..20 {
-                    let mut g = ND::new().await;
-                    let n = 3 + (xorshift(&mut seed).await % 8) as usize;
+                    let mut g = ND::new();
+                    let n = 3 + (xorshift(&mut seed) % 8) as usize;
                     // 🔀️ Rewritten from `.map(..)` — `add_node` is async and cannot be called inside
                     // the sync closure that used to build `nodes` (R10 residue shape #1).
                     let mut nodes: Vec<NodeId> = Vec::with_capacity(n);
                     for _ in 0..n {
-                        nodes.push(g.add_node().await);
+                        nodes.push(g.add_node());
                     }
                     let edge_attempts = n * 2;
                     for _ in 0..edge_attempts {
-                        let u = nodes[(xorshift(&mut seed).await as usize) % n];
-                        let v = nodes[(xorshift(&mut seed).await as usize) % n];
-                        g.add_edge(u, v).await;
+                        let u = nodes[(xorshift(&mut seed) as usize) % n];
+                        let v = nodes[(xorshift(&mut seed) as usize) % n];
+                        g.add_edge(u, v);
                     }
-                    let csr = Csr::from_view(&g).await;
+                    let csr = Csr::from_view(&g);
                     for &node in &nodes {
-                        let i = csr.index_of(node).await.expect("every storage node is indexed");
-                        assert_eq!(csr.out_neighbors(i).await.len(), g.out_degree(node).await, "csr out-degree must match storage out-degree for node {node}");
+                        let i = csr.index_of(node).expect("every storage node is indexed");
+                        assert_eq!(csr.out_neighbors(i).len(), g.out_degree(node), "csr out-degree must match storage out-degree for node {node}");
                     }
                 }
             });
@@ -2195,34 +2192,34 @@ mod tests {
 
     // #subregion MaxFlow
     /// 🏗️ The classic CLRS Ford-Fulkerson network (Fig. 26.1): six nodes `s=0, v1=1, v2=2, v3=3, v4=4, t=5`, known max flow `23`.
-    async fn clrs_flow_network() -> FlowNetwork {
-        let mut net = FlowNetwork::new(6).await;
-        net.add_edge(0, 1, 16.0).await;
-        net.add_edge(0, 2, 13.0).await;
-        net.add_edge(1, 3, 12.0).await;
-        net.add_edge(2, 1, 4.0).await;
-        net.add_edge(3, 2, 9.0).await;
-        net.add_edge(2, 4, 14.0).await;
-        net.add_edge(4, 3, 7.0).await;
-        net.add_edge(3, 5, 20.0).await;
-        net.add_edge(4, 5, 4.0).await;
+    fn clrs_flow_network() -> FlowNetwork {
+        let mut net = FlowNetwork::new(6);
+        net.add_edge(0, 1, 16.0);
+        net.add_edge(0, 2, 13.0);
+        net.add_edge(1, 3, 12.0);
+        net.add_edge(2, 1, 4.0);
+        net.add_edge(3, 2, 9.0);
+        net.add_edge(2, 4, 14.0);
+        net.add_edge(4, 3, 7.0);
+        net.add_edge(3, 5, 20.0);
+        net.add_edge(4, 5, 4.0);
         net
     }
 
     #[test]
     fn max_flow_matches_clrs_textbook_network() {
         block_on_test(async {
-            let mut net = clrs_flow_network().await;
-            assert_eq!(net.max_flow(0, 5).await, 23.0);
+            let mut net = clrs_flow_network();
+            assert_eq!(net.max_flow(0, 5), 23.0);
         });
     }
 
     #[test]
     fn min_cut_capacity_matches_max_flow_value_duality() {
         block_on_test(async {
-            let mut net = clrs_flow_network().await;
-            let flow = net.max_flow(0, 5).await;
-            let reachable: BTreeSet<u32> = net.min_cut(0).await.into_iter().collect();
+            let mut net = clrs_flow_network();
+            let flow = net.max_flow(0, 5);
+            let reachable: BTreeSet<u32> = net.min_cut(0).into_iter().collect();
             assert!(!reachable.contains(&5), "sink must land on the far side of a valid cut");
             let clrs_edges = [(0u32, 1u32, 16.0), (0, 2, 13.0), (1, 3, 12.0), (2, 1, 4.0), (3, 2, 9.0), (2, 4, 14.0), (4, 3, 7.0), (3, 5, 20.0), (4, 5, 4.0)];
             let crossing: f64 = clrs_edges.iter().filter(|&&(u, v, _)| reachable.contains(&u) && !reachable.contains(&v)).map(|&(_, _, cap)| cap).sum();
@@ -2233,37 +2230,37 @@ mod tests {
     #[test]
     fn max_flow_saturates_branching_level_graph() {
         block_on_test(async {
-            let mut net = FlowNetwork::new(5).await;
-            net.add_edge(0, 1, 10.0).await;
-            net.add_edge(0, 2, 10.0).await;
-            net.add_edge(0, 3, 10.0).await;
-            net.add_edge(1, 2, 2.0).await;
-            net.add_edge(2, 3, 2.0).await;
-            net.add_edge(1, 4, 4.0).await;
-            net.add_edge(2, 4, 4.0).await;
-            net.add_edge(3, 4, 4.0).await;
-            assert_eq!(net.max_flow(0, 4).await, 12.0, "sink in-degree 3 at capacity 4 each caps the flow at 12 regardless of source out-degree 3");
+            let mut net = FlowNetwork::new(5);
+            net.add_edge(0, 1, 10.0);
+            net.add_edge(0, 2, 10.0);
+            net.add_edge(0, 3, 10.0);
+            net.add_edge(1, 2, 2.0);
+            net.add_edge(2, 3, 2.0);
+            net.add_edge(1, 4, 4.0);
+            net.add_edge(2, 4, 4.0);
+            net.add_edge(3, 4, 4.0);
+            assert_eq!(net.max_flow(0, 4), 12.0, "sink in-degree 3 at capacity 4 each caps the flow at 12 regardless of source out-degree 3");
         });
     }
 
     #[test]
     fn max_flow_is_zero_when_source_and_sink_are_disconnected() {
         block_on_test(async {
-            let mut net = FlowNetwork::new(2).await;
-            assert_eq!(net.max_flow(0, 1).await, 0.0);
-            assert_eq!(net.min_cut(0).await, vec![0], "with no path at all, only the source itself is reachable");
+            let mut net = FlowNetwork::new(2);
+            assert_eq!(net.max_flow(0, 1), 0.0);
+            assert_eq!(net.min_cut(0), vec![0], "with no path at all, only the source itself is reachable");
         });
     }
 
     #[test]
     fn max_flow_and_min_cut_are_deterministic_across_fresh_instances() {
         block_on_test(async {
-            let mut first = clrs_flow_network().await;
-            let mut second = clrs_flow_network().await;
-            let flow_a = first.max_flow(0, 5).await;
-            let flow_b = second.max_flow(0, 5).await;
+            let mut first = clrs_flow_network();
+            let mut second = clrs_flow_network();
+            let flow_a = first.max_flow(0, 5);
+            let flow_b = second.max_flow(0, 5);
             assert_eq!(flow_a, flow_b, "identically constructed networks must yield byte-identical flow values");
-            assert_eq!(first.min_cut(0).await, second.min_cut(0).await, "identically constructed networks must yield byte-identical min-cut node sets");
+            assert_eq!(first.min_cut(0), second.min_cut(0), "identically constructed networks must yield byte-identical min-cut node sets");
         });
     }
     // #endsubregion
@@ -2275,11 +2272,11 @@ mod tests {
             let mut bag = PropertyBag::new();
             bag.insert("label".into(), PropertyValue::String("hi".into()));
             bag.insert("count".into(), PropertyValue::Number(3.0));
-            let json = property_bag_to_json(&bag).await.expect("non-empty bag serializes to Some");
-            let round_tripped = property_bag_from_json(&json).await;
+            let json = property_bag_to_json(&bag).expect("non-empty bag serializes to Some");
+            let round_tripped = property_bag_from_json(&json);
             assert_eq!(round_tripped.get("label").and_then(PropertyValue::as_str), Some("hi"));
             assert_eq!(round_tripped.get("count").and_then(PropertyValue::as_f64), Some(3.0));
-            assert!(property_bag_to_json(&PropertyBag::new()).await.is_none(), "an empty bag serializes to None");
+            assert!(property_bag_to_json(&PropertyBag::new()).is_none(), "an empty bag serializes to None");
         });
     }
 
@@ -2288,7 +2285,7 @@ mod tests {
         block_on_test(async {
             let value = serde_json::json!("not-an-object-map");
             let bag = property_bag_from_json(&value);
-            assert!(bag.await.is_empty(), "a JSON value that can't deserialize into a PropertyBag falls back to empty");
+            assert!(bag.is_empty(), "a JSON value that can't deserialize into a PropertyBag falls back to empty");
         });
     }
     // #endsubregion
@@ -2297,12 +2294,12 @@ mod tests {
 
 // #region 🔖️PropertyJson
 /// 🧾️ Converts JSON fixture `userData` into a typed property bag.
-pub async fn property_bag_from_json(value: &serde_json::Value) -> PropertyBag {
+pub fn property_bag_from_json(value: &serde_json::Value) -> PropertyBag {
     serde_json::from_value(value.clone()).unwrap_or_default()
 }
 
 /// 🧾️ Serializes a property bag back to JSON for fixture export.
-pub async fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
+pub fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
     if bag.is_empty() {
         None
     } else {
@@ -2390,12 +2387,12 @@ pub struct FlowNetwork {
 
 impl FlowNetwork {
     /// 🆕️ Empty network over nodes `0..node_count`, no edges yet.
-    pub async fn new(node_count: u32) -> Self {
+    pub fn new(node_count: u32) -> Self {
         Self { node_count, edges: Vec::new(), adjacency: vec![Vec::new(); node_count as usize] }
     }
 
     /// ➕️ Adds a directed edge `from -> to` with `capacity`, plus a zero-capacity reverse residual edge; returns the forward edge's id (its reverse is always `id ^ 1`).
-    pub async fn add_edge(&mut self, from: u32, to: u32, capacity: f64) -> u32 {
+    pub fn add_edge(&mut self, from: u32, to: u32, capacity: f64) -> u32 {
         let forward_id = self.edges.len() as u32;
         self.edges.push(FlowEdge { to, capacity });
         self.adjacency[from as usize].push(forward_id);
@@ -2406,7 +2403,7 @@ impl FlowNetwork {
     }
 
     /// 🌊️ BFS level graph from `source`, restricted to edges with residual capacity above `FLOW_EPS`; `None` marks nodes unreached this phase.
-    async fn bfs_levels(&self, source: u32) -> Vec<Option<u32>> {
+    fn bfs_levels(&self, source: u32) -> Vec<Option<u32>> {
         let mut level = vec![None; self.node_count as usize];
         level[source as usize] = Some(0);
         let mut queue = std::collections::VecDeque::new();
@@ -2425,7 +2422,7 @@ impl FlowNetwork {
     }
 
     /// 🌊️ DFS blocking flow along the level graph; `cursor` is the current-arc optimization, skipping adjacency entries already exhausted within this blocking-flow phase.
-    async fn dfs_blocking_flow(&mut self, u: u32, sink: u32, pushed: f64, level: &[Option<u32>], cursor: &mut [usize]) -> f64 {
+    fn dfs_blocking_flow(&mut self, u: u32, sink: u32, pushed: f64, level: &[Option<u32>], cursor: &mut [usize]) -> f64 {
         if u == sink || pushed <= FLOW_EPS {
             return pushed;
         }
@@ -2434,8 +2431,7 @@ impl FlowNetwork {
             let edge = self.edges[edge_id as usize];
             let advances = edge.capacity > FLOW_EPS && level[edge.to as usize] == level[u as usize].map(|l| l + 1);
             if advances {
-                // 🔀️ Box::pin(..) breaks the self-recursion (E0733) — see R10 residue shape #3.
-                let sent = Box::pin(self.dfs_blocking_flow(edge.to, sink, pushed.min(edge.capacity), level, cursor)).await;
+                let sent = self.dfs_blocking_flow(edge.to, sink, pushed.min(edge.capacity), level, cursor);
                 if sent > FLOW_EPS {
                     self.edges[edge_id as usize].capacity -= sent;
                     self.edges[(edge_id ^ 1) as usize].capacity += sent;
@@ -2448,7 +2444,7 @@ impl FlowNetwork {
     }
 
     /// 🏔️ Dinic's max flow: alternates BFS level-graph construction with DFS blocking-flow phases (current-arc optimized) until `sink` is unreachable from `source` in the residual graph; returns the total flow value pushed. `source == sink` short-circuits to `0.0`.
-    pub async fn max_flow(&mut self, source: u32, sink: u32) -> f64 {
+    pub fn max_flow(&mut self, source: u32, sink: u32) -> f64 {
         if source == sink {
             return 0.0;
         }
@@ -2456,13 +2452,13 @@ impl FlowNetwork {
         loop {
             // 🚨️ was a dropped-future no-op: `bfs_levels` was never awaited, so `max_flow` never
             // actually built a level graph — the whole Dinic's-algorithm loop was silently inert.
-            let level = self.bfs_levels(source).await;
+            let level = self.bfs_levels(source);
             if level[sink as usize].is_none() {
                 break;
             }
             let mut cursor = vec![0usize; self.node_count as usize];
             loop {
-                let pushed = self.dfs_blocking_flow(source, sink, f64::INFINITY, &level, &mut cursor).await;
+                let pushed = self.dfs_blocking_flow(source, sink, f64::INFINITY, &level, &mut cursor);
                 if pushed <= FLOW_EPS {
                     break;
                 }
@@ -2473,7 +2469,7 @@ impl FlowNetwork {
     }
 
     /// ✂️ Source side of the minimum cut, valid only after `max_flow` has run: nodes reachable from `source` over edges whose residual capacity still exceeds `FLOW_EPS`, visited in ascending id order via `Vec`-backed BFS — fully deterministic.
-    pub async fn min_cut(&self, source: u32) -> Vec<u32> {
+    pub fn min_cut(&self, source: u32) -> Vec<u32> {
         let mut reachable = vec![false; self.node_count as usize];
         reachable[source as usize] = true;
         let mut queue = std::collections::VecDeque::new();

@@ -11,9 +11,6 @@ pub async fn diff(payload: &DeletePosition, base: &GisMapSnapshot) -> protocol::
     if !base.positions.iter().any(|feature| feature.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Position \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(GisMapDiff {
-        positions: Some(GisMapFeaturesDelta { removed: vec![payload.id.clone()], ..Default::default() }),
-        ..Default::default()
-    })
+    protocol::MutationOutcome::new(GisMapDiff { positions: Some(GisMapFeaturesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

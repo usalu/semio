@@ -5,8 +5,15 @@
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️component.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 
-use crate::editor::cad::commands::contribution::set_contributions;
+use crate::artifacts::cad::op::CadMutation;
+use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
+use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
+    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
+    CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+};
+use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use crate::editor::cad::commands::camera::{set_camera, set_projection, set_projection_param};
+use crate::editor::cad::commands::contribution::set_contributions;
 use crate::editor::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
 use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
 use crate::editor::cad::commands::locale::{set_locale, set_terminology};
@@ -18,35 +25,28 @@ use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::{set_active_utility, set_dislocate_option};
 use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
+use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
-use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
-    cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
-    CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
-};
-use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactView,
-    Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
+use semio_framework_plugin::{
+    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, Emit,
+    Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4) are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️component.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
 // (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
 use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
-use store::EngineHandles;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const CAD_PLAY_APP_ID: &str = "cad-play";
@@ -619,13 +619,12 @@ pub async fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut C
                 return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
-                if (transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input))
-                    && apply_event(session, &transition.event_kind, None) {
-                        runtime.engagement_step = session.state.clone();
-                        runtime.engagement_input.clear();
-                        let session_snapshot = session.clone();
-                        return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
-                    }
+                if (transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input)) && apply_event(session, &transition.event_kind, None) {
+                    runtime.engagement_step = session.state.clone();
+                    runtime.engagement_input.clear();
+                    let session_snapshot = session.clone();
+                    return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
+                }
             }
         } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
             runtime.engagement_session = start_session(&entry.id, pane);
@@ -720,7 +719,6 @@ pub async fn cad_io() -> semio_framework_plugin::AppIo {
     }
 }
 //#endregion 🔖️Io
-
 
 //#region 🔖️Commands
 /// 🧵️ Per-dispatch app-struct state that is neither document nor config: `gesture_preview`'s
@@ -827,8 +825,16 @@ async fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<C
             value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
             param: str_field("param"),
         }),
-        "translateSelection" => CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) }),
-        "rotateSelection" => CadCommand::RotateSelection(rotate_selection::RotateSelection { object_ids: str_vec_field("objectIds"), ax: f64_field("ax").unwrap_or(0.0), ay: f64_field("ay").unwrap_or(0.0), az: f64_field("az").unwrap_or(0.0), angle: f64_field("angle").unwrap_or(0.0) }),
+        "translateSelection" => {
+            CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) })
+        }
+        "rotateSelection" => CadCommand::RotateSelection(rotate_selection::RotateSelection {
+            object_ids: str_vec_field("objectIds"),
+            ax: f64_field("ax").unwrap_or(0.0),
+            ay: f64_field("ay").unwrap_or(0.0),
+            az: f64_field("az").unwrap_or(0.0),
+            angle: f64_field("angle").unwrap_or(0.0),
+        }),
         "scaleSelection" => CadCommand::ScaleSelection(scale_selection::ScaleSelection { object_ids: str_vec_field("objectIds"), sx: f64_field("sx").unwrap_or(1.0), sy: f64_field("sy").unwrap_or(1.0), sz: f64_field("sz").unwrap_or(1.0) }),
         "addObject" => CadCommand::AddObject(add_object::AddObject { typology: str_field("typology") }),
         "patchObject" => CadCommand::PatchObject(patch_object::PatchObject { object_id: str_field("objectId").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") }),
@@ -1245,7 +1251,16 @@ pub async fn forest_working_scene() -> CadWorkingScene {
     let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
     let (energy_objects, energy_geometry) = forest_pane_bundle(CadPaneId::Energy);
     let (structure_classic_objects, structure_classic_geometry) = forest_pane_bundle(CadPaneId::StructureClassic);
-    CadWorkingScene { objects, geometry: Some(geometry), building_objects, building_geometry: Some(building_geometry), energy_objects, energy_geometry: Some(energy_geometry), structure_classic_objects, structure_classic_geometry: Some(structure_classic_geometry) }
+    CadWorkingScene {
+        objects,
+        geometry: Some(geometry),
+        building_objects,
+        building_geometry: Some(building_geometry),
+        energy_objects,
+        energy_geometry: Some(energy_geometry),
+        structure_classic_objects,
+        structure_classic_geometry: Some(structure_classic_geometry),
+    }
 }
 
 /// 🟦️ The single-box placeholder scene `default_document()`'s `CadSnapshot` used to inline directly
@@ -1263,9 +1278,8 @@ pub(crate) mod testkit {
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
     use super::*;
     use protocol::{Mutation, MutationDiff};
-    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
     use semio_framework_plugin::app::EditorApp;
-
+    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
 
     pub async fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
@@ -1316,11 +1330,12 @@ pub(crate) mod testkit {
         let doc = ArtifactView::new(scene, &history);
         let cfg = ConfigView { snapshot: config };
         let command = command_from_action(action, args.as_ref());
-        CAD_PREVIEW_SEQ.with(|preview_seq| {
-            let mut ctx = CadDispatchCtx { preview_seq, interaction: CadInteractionSnapshot::default() };
-            command.dispatch(&doc, &cfg, &mut ctx)
-        })
-        .expect("cad command handled")
+        CAD_PREVIEW_SEQ
+            .with(|preview_seq| {
+                let mut ctx = CadDispatchCtx { preview_seq, interaction: CadInteractionSnapshot::default() };
+                command.dispatch(&doc, &cfg, &mut ctx)
+            })
+            .expect("cad command handled")
     }
 
     pub async fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
@@ -1368,19 +1383,20 @@ pub(crate) mod testkit {
     pub async fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
         CadPlayView { document: scene, runtime }
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     use super::testkit::*;
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
     use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, cad_working_scene_from_dwg, scene_from_spatial_payload};
+    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
+        align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
+        CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
+    };
     use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
-
 
     //#region 🔖️Fixtures
     /// ⚖️ One value per `app_commands!` row (plus a `None`-everywhere twin for every row with
@@ -1667,9 +1683,6 @@ mod tests {
         }
     }
 
-
-
-
     #[semio_framework_async_macros::async_test]
     async fn app_definition_declares_one_window_scoped_dislocate_utility() {
         let definition = create_cad_app();
@@ -1697,15 +1710,7 @@ mod tests {
     async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
         let definition = create_cad_app();
         let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
-        assert_eq!(
-            windows,
-            vec![
-                (shape::WINDOW_KIND_ID, shape::BODY_KEY),
-                (building::WINDOW_KIND_ID, building::BODY_KEY),
-                (energy::WINDOW_KIND_ID, energy::BODY_KEY),
-                (structure_classic::WINDOW_KIND_ID, structure_classic::BODY_KEY),
-            ]
-        );
+        assert_eq!(windows, vec![(shape::WINDOW_KIND_ID, shape::BODY_KEY), (building::WINDOW_KIND_ID, building::BODY_KEY), (energy::WINDOW_KIND_ID, energy::BODY_KEY), (structure_classic::WINDOW_KIND_ID, structure_classic::BODY_KEY),]);
         for window in definition.window_kinds.iter() {
             assert_eq!(window.surface_kind, ui_wgpu::wgpu::SurfaceKind::World3d, "window {} surface kind", window.id);
             assert!(window.options.measures.is_empty(), "window {} must not freeze measures into the manifest", window.id);
@@ -2062,7 +2067,10 @@ mod tests {
 
         let wall_typologies: Vec<&str> = wall_derived.iter().map(|object| object.typology.as_str()).collect();
         let box_typologies: Vec<&str> = box_derived.iter().map(|object| object.typology.as_str()).collect();
-        assert_ne!(wall_typologies, box_typologies, "a thin wall panel and a cube must classify their dominant faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}");
+        assert_ne!(
+            wall_typologies, box_typologies,
+            "a thin wall panel and a cube must classify their dominant faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}"
+        );
     }
 
     #[semio_framework_async_macros::async_test]

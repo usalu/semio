@@ -6,8 +6,8 @@ pub mod scene_json {
 
     use serde::{Deserialize, Serialize};
 
-    pub use crate::infinite::board::{CameraJson, NodeDescJson};
     pub use crate::infinite::board::ports::HandleDescJson;
+    pub use crate::infinite::board::{CameraJson, NodeDescJson};
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -704,13 +704,13 @@ pub mod types {
     // #endregion types
 }
 
+pub use crate::infinite::board::ports::*;
 pub use crate::infinite::board::{
     area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_contains_edge_curve, selection_contains_handle_point, selection_contains_node_bounds,
     selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX,
     SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
 };
-pub use crate::infinite::board::ports::*;
-pub use crate::infinite::canvas as canvas;
+pub use crate::infinite::canvas;
 pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 
@@ -1578,8 +1578,8 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 // #region 🔖️Tests
 #[cfg(test)]
 mod quadrant_tests {
-    use super::*;
     use super::canvas::Color;
+    use super::*;
 
     #[test]
     fn canvas_theme_default_uses_centralized_board_light_tokens() {

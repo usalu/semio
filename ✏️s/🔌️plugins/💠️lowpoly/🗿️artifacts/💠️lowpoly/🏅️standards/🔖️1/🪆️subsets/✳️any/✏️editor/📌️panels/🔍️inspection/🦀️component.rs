@@ -1,13 +1,13 @@
 //! 🔍️ Lowpoly play app panel — the active object's inspector (name, smooth shading, selection summary,
 //! transform utility, staged utility-param sliders).
 
+use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 use crate::editor::lowpoly::lowpoly_action;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyView};
-use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode,
-    UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::Value;
 

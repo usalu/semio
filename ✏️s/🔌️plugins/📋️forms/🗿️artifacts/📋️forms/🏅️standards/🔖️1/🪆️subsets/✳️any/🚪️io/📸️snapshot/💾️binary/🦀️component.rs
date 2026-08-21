@@ -6,13 +6,11 @@
 //! `decode_pack_with` impl, the thin artifact-facing `encode`/`decode` wrappers, and the pack↔dsl
 //! equivalence law plus the command-envelope round-trip law.
 
-
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️component.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️component.protocol.semio");
 //#endregion 📡️SemioProtocol
-
 
 use crate::artifacts::forms::FormsSnapshot;
 use store::PackError;
@@ -82,14 +80,7 @@ async fn decode_forms_snapshot_binary(bytes: &[u8]) -> Result<FormsSnapshot, Str
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(FormsSnapshot {
-        schema: read_str_lp(&mut reader)?,
-        id: read_str_lp(&mut reader)?,
-        version: read_str_lp(&mut reader)?,
-        title: read_opt_str_lp(&mut reader)?,
-        structure: read_child(&mut reader)?,
-        results: read_child(&mut reader)?,
-    })
+    Ok(FormsSnapshot { schema: read_str_lp(&mut reader)?, id: read_str_lp(&mut reader)?, version: read_str_lp(&mut reader)?, title: read_opt_str_lp(&mut reader)?, structure: read_child(&mut reader)?, results: read_child(&mut reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -104,11 +95,7 @@ impl store::ArtifactPack for FormsSnapshot {
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
         decode_forms_snapshot_binary(&inner).map_err(PackError::Schema)
@@ -181,12 +168,7 @@ mod tests {
         let document = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
         let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).expect("valid artifact store fixture");
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).expect("apply");
         let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
