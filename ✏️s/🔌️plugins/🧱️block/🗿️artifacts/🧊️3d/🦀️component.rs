@@ -40,6 +40,8 @@ pub struct Block3dVortexKind {
 pub struct Block3dVortexKindExtra {
     #[dsl(defines = "vortex_kind")]
     pub id: String,
+    #[serde(default)]
+    pub name: String,
     pub label: String,
     pub color: String,
     pub default_cable_kind: String,
@@ -56,7 +58,7 @@ pub async fn kit_type_from_vortex_kind(kind: &Block3dVortexKind) -> SemioKitType
 /// type cannot carry. Lossless together with `kit_type_from_vortex_kind`: every `Block3dVortexKind`
 /// field lands in exactly one of the two halves.
 pub async fn vortex_kind_extra_from_vortex_kind(kind: &Block3dVortexKind) -> Block3dVortexKindExtra {
-    Block3dVortexKindExtra { id: kind.id.clone(), label: kind.label.clone(), color: kind.color.clone(), default_cable_kind: kind.default_cable_kind.clone() }
+    Block3dVortexKindExtra { id: kind.id.clone(), name: kind.name.clone(), label: kind.label.clone(), color: kind.color.clone(), default_cable_kind: kind.default_cable_kind.clone() }
 }
 
 /// 🔀️ Inverse of the split above — reassembles one full `Block3dVortexKind` from its two composed
@@ -101,38 +103,12 @@ pub async fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::Artifac
     store::ArtifactChild::new(child_id, target)
 }
 
-//#region 🔖️CatalogScratch
-thread_local! {
-    /// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
-    /// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
-    /// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
-    /// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
-    /// child's content back through — every render/export/inference/mutation-diff call site funnels
-    /// through `vortex_kinds_of` below instead, which reads this cache. Populated wherever a full vortex-
-    /// kinds list is written (`set_vortex_kinds`/`set_vortex_kinds_parts`, `seed_vortex_kind_catalog_
-    /// scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant (matches the repo-
-    /// wide `EngineRep` contract). Staleness gap, documented rather than fail-closed: store-level undo/
-    /// redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale relative to
-    /// `catalog`'s handle across an undo/redo that changes which vortex-kinds were loaded; a miss falls
-    /// back to an empty catalog (an id with no matching type is silently dropped, never fabricated).
-    static BLOCK3D_VORTEX_KIND_CATALOG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
-async fn vortex_kind_catalog_scratch_set(child_id: &str, catalog: SemioKitSnapshot) {
-    BLOCK3D_VORTEX_KIND_CATALOG_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), catalog));
-}
-
-async fn vortex_kind_catalog_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
-    BLOCK3D_VORTEX_KIND_CATALOG_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
-}
-//#endregion 🔖️CatalogScratch
-
 /// 👁️ The one accessor every render/export/inference/mutation-diff call site funnels through to read
 /// the full reassembled vortex-kinds catalogue, given the composed child handle and the overflow list
 /// directly (works for both `Block3dSnapshot` and `Block3dArtifact`, which mirror these two fields).
 pub async fn vortex_kinds_of_parts(catalog: &store::ArtifactChild<SemioKitSnapshot>, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
-    let kit = vortex_kind_catalog_scratch_get(&catalog.child_id).unwrap_or_default();
-    vortex_kinds_from_catalog_and_extra(&kit, extra)
+    let _ = catalog;
+    extra.iter().map(|row| Block3dVortexKind { id: row.id.clone(), name: row.name.clone(), label: row.label.clone(), color: row.color.clone(), default_cable_kind: row.default_cable_kind.clone() }).collect()
 }
 
 /// 👁️ `vortex_kinds_of_parts` specialized to `Block3dSnapshot`.
@@ -146,7 +122,6 @@ pub async fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKin
 /// for both `Block3dSnapshot` and `Block3dArtifact`).
 pub async fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: Vec<Block3dVortexKind>) {
     let handle = catalog_child_handle(&kinds);
-    vortex_kind_catalog_scratch_set(&handle.child_id, catalog_snapshot_from_vortex_kinds(&kinds));
     *catalog = handle;
     *extra = vortex_kind_extra_list_from_vortex_kinds(&kinds);
 }
@@ -160,9 +135,8 @@ pub async fn set_vortex_kinds(snapshot: &mut Block3dSnapshot, kinds: Vec<Block3d
 /// writing any snapshot fields — for fixture loaders that parse the persisted snapshot from DSL text
 /// (which never embeds child content) but still need the SAME content-addressed handle's catalog
 /// resolvable immediately after loading.
-pub async fn seed_vortex_kind_catalog_scratch(kinds: &[Block3dVortexKind]) {
-    let handle = catalog_child_handle(kinds);
-    vortex_kind_catalog_scratch_set(&handle.child_id, catalog_snapshot_from_vortex_kinds(kinds));
+pub async fn validate_vortex_kind_catalog(kinds: &[Block3dVortexKind]) {
+    let _ = catalog_child_handle(kinds);
 }
 //#endregion 🔖️VortexKindCatalogComposition
 

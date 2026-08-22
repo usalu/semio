@@ -11,10 +11,10 @@
 //! `grep -n "^pub enum Effect" 🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs` before this file was
 //! written) — not a stand-in.
 
-use semio_framework::kernel::{Effect, RequestId};
 use semio_framework::Fault;
+use semio_framework::kernel::{Effect, RequestId};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -25,30 +25,121 @@ enum Slot {
     Ready { result: Result<Vec<u8>, Fault> },
 }
 
-#[derive(Default)]
+const REQUEST_SLOTS: usize = 1_024;
+const REQUEST_OUTBOUND_SLOTS: usize = 1_024;
+const REQUEST_SLOT_WORDS: usize = REQUEST_SLOTS / u64::BITS as usize;
+
+struct SlotEntry {
+    id: u64,
+    instance: u32,
+    value: Slot,
+}
+
 struct Inner {
     next_id: u64,
-    slots: HashMap<u64, Slot>,
+    slots: Box<[std::mem::MaybeUninit<SlotEntry>]>,
+    occupied: [u64; REQUEST_SLOT_WORDS],
     /// 📤️ Effects allocated via `request()` since the last `drain()` — `reactor::poll` moves these
     /// into `turn-result.effects` (subject to `budget.max-effects`; overflow carries over to the
     /// next turn, see design-abi.md §4's `EffectSink` note).
-    outbound: Vec<Effect>,
-    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): which instance allocated
-    /// each still-tracked request id — every `RequestFuture` is created inside an `AsyncTask`'s
-    /// `TaskCtx.host` (no plugin code can await anything outside a spawned task), so this is
-    /// populated purely from the `RequestRegistry` HANDLE's own `instance` tag (see
-    /// `for_instance`), never guessed from timing. Read by `cancel_instance` on `Event::
-    /// InstanceClose` so a dying instance's pending host round-trips leave no slot behind.
-    instance_of: HashMap<u64, u32>,
+    outbound: std::mem::ManuallyDrop<VecDeque<(u32, Effect)>>,
+    allocation_admitted: bool,
 }
 
 impl Inner {
+    fn new() -> Self {
+        let mut slots = Vec::new();
+        let slots_admitted = slots.try_reserve_exact(REQUEST_SLOTS).is_ok();
+        if slots_admitted {
+            slots.resize_with(REQUEST_SLOTS, std::mem::MaybeUninit::uninit);
+        }
+        let mut outbound = VecDeque::new();
+        let outbound_admitted = outbound.try_reserve_exact(REQUEST_OUTBOUND_SLOTS).is_ok();
+        Self { next_id: 0, slots: slots.into_boxed_slice(), occupied: [0; REQUEST_SLOT_WORDS], outbound: std::mem::ManuallyDrop::new(outbound), allocation_admitted: slots_admitted && outbound_admitted }
+    }
+
+    fn index(id: u64) -> usize {
+        id as usize % REQUEST_SLOTS
+    }
+
+    fn occupied(&self, index: usize) -> bool {
+        self.occupied[index / u64::BITS as usize] & (1u64 << (index % u64::BITS as usize)) != 0
+    }
+
+    fn set_occupied(&mut self, index: usize, occupied: bool) {
+        let word = &mut self.occupied[index / u64::BITS as usize];
+        let mask = 1u64 << (index % u64::BITS as usize);
+        if occupied {
+            *word |= mask;
+        } else {
+            *word &= !mask;
+        }
+    }
+
+    fn get_at(&self, index: usize) -> Option<&SlotEntry> {
+        if !self.occupied(index) {
+            return None;
+        }
+        self.slots.get(index).map(|slot| {
+            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
+            unsafe { slot.assume_init_ref() }
+        })
+    }
+
+    fn get_at_mut(&mut self, index: usize) -> Option<&mut SlotEntry> {
+        if !self.occupied(index) {
+            return None;
+        }
+        self.slots.get_mut(index).map(|slot| {
+            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
+            unsafe { slot.assume_init_mut() }
+        })
+    }
+
+    fn get(&self, id: u64) -> Option<&SlotEntry> {
+        self.get_at(Self::index(id)).filter(|entry| entry.id == id)
+    }
+
+    fn get_mut(&mut self, id: u64) -> Option<&mut SlotEntry> {
+        self.get_at_mut(Self::index(id)).filter(|entry| entry.id == id)
+    }
+
+    fn take(&mut self, id: u64) -> Option<SlotEntry> {
+        let index = Self::index(id);
+        if self.get_at(index).is_none_or(|entry| entry.id != id) {
+            return None;
+        }
+        self.set_occupied(index, false);
+        // SAFETY: exact identity and occupancy were checked, and occupancy is now cleared.
+        Some(unsafe { self.slots[index].assume_init_read() })
+    }
+
+    fn insert(&mut self, entry: SlotEntry) -> Result<(), SlotEntry> {
+        if !self.allocation_admitted {
+            return Err(entry);
+        }
+        let index = Self::index(entry.id);
+        if self.occupied(index) {
+            return Err(entry);
+        }
+        self.slots[index].write(entry);
+        self.set_occupied(index, true);
+        Ok(())
+    }
+
+    fn insert_admitted(&mut self, entry: SlotEntry) {
+        let index = Self::index(entry.id);
+        debug_assert!(self.allocation_admitted && !self.occupied(index));
+        self.slots[index].write(entry);
+        self.set_occupied(index, true);
+    }
+
     /// 🔁️ The replace-and-take-waker step `resolve`/`append_chunk` both need — factored out so the
     /// chunk-reassembly cap/done paths reuse the EXACT same resolution mechanics `resolve` already
     /// had, rather than a second hand-rolled copy.
     // 🚫️async: E1 pure in-memory slot mutation consumed by `RequestRegistry`'s sync API below — R9.
     fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
-        match self.slots.get_mut(&id) {
+        match self.get_mut(id).map(|entry| &mut entry.value) {
             Some(slot @ Slot::Pending { .. }) => {
                 let Slot::Pending { waker, .. } = std::mem::replace(slot, Slot::Ready { result }) else { unreachable!() };
                 waker
@@ -58,6 +149,10 @@ impl Inner {
     }
 }
 
+impl Drop for Inner {
+    fn drop(&mut self) {}
+}
+
 /// 📮️ One shared queue per actor (today: one actor per app instance is the default granularity —
 /// design-abi.md §4 — so `instance_of` is future-proofing for the opt-in multi-instance actor, not
 /// a change in today's fan-out). `instance`: which instance THIS HANDLE tags newly allocated
@@ -65,10 +160,29 @@ impl Inner {
 /// registry `⚛️reactor`'s `REGISTRY` thread-local holds); `for_instance` mints a handle sharing the
 /// SAME underlying queue but tagging its own allocations, which is what
 /// `⚛️reactor::host_for_instance(instance)` hands to each `TaskCtx`.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct RequestRegistry {
     inner: Rc<RefCell<Inner>>,
     instance: u32,
+}
+
+impl Default for RequestRegistry {
+    fn default() -> Self {
+        Self { inner: Rc::new(RefCell::new(Inner::new())), instance: 0 }
+    }
+}
+
+pub struct RequestCloseCursor {
+    instance: u32,
+    index: usize,
+    outbound_remaining: usize,
+    outbound_initialized: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RequestCloseStep {
+    Pending,
+    Complete,
 }
 
 impl RequestRegistry {
@@ -91,12 +205,15 @@ impl RequestRegistry {
     /// `Event::Completed` (or job/http-chunk) routing step of `poll`.
     pub fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
         let mut inner = self.inner.borrow_mut();
-        inner.next_id += 1;
+        inner.next_id = inner.next_id.saturating_add(1);
         let raw = inner.next_id;
-        inner.slots.insert(raw, Slot::Pending { waker: None, partial: Vec::new() });
-        inner.instance_of.insert(raw, self.instance);
-        inner.outbound.push(build(RequestId(raw)));
-        RequestFuture { registry: self.inner.clone(), id: raw }
+        if !inner.allocation_admitted || inner.outbound.len() >= REQUEST_OUTBOUND_SLOTS || inner.occupied(Inner::index(raw)) {
+            return RequestFuture { registry: self.inner.clone(), id: 0, admission_failed: true };
+        }
+        let effect = build(RequestId(raw));
+        inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Pending { waker: None, partial: Vec::new() } });
+        inner.outbound.push_back((self.instance, effect));
+        RequestFuture { registry: self.inner.clone(), id: raw, admission_failed: false }
     }
 
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an
@@ -124,7 +241,7 @@ impl RequestRegistry {
     /// `Drop` impl) is a harmless no-op, same as `resolve` on an unknown id.
     pub fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
         let mut inner = self.inner.borrow_mut();
-        let outcome = match inner.slots.get_mut(&id.0) {
+        let outcome = match inner.get_mut(id.0).map(|entry| &mut entry.value) {
             Some(Slot::Pending { partial, .. }) => {
                 partial.extend_from_slice(&bytes);
                 if partial.len() > cap {
@@ -152,26 +269,30 @@ impl RequestRegistry {
     /// owning instance's `QuotaSchema.message_bytes` cap. `None` once the slot is gone (already
     /// resolved or cancelled), same lifetime as every other per-id lookup here.
     pub fn instance_of(&self, id: RequestId) -> Option<u32> {
-        self.inner.borrow().instance_of.get(&id.0).copied()
+        self.inner.borrow().get(id.0).map(|entry| entry.instance)
     }
 
     /// 🔥️ Fire-and-forget: queues `effect` (a variant with no `req`/no completion — `Notify`,
     /// `ClipboardWrite`, `Navigate`, ...) without allocating a `RequestId` or parking anything.
     pub fn emit(&self, effect: Effect) {
-        self.inner.borrow_mut().outbound.push(effect);
+        let mut inner = self.inner.borrow_mut();
+        if inner.allocation_admitted && inner.outbound.len() < REQUEST_OUTBOUND_SLOTS {
+            inner.outbound.push_back((self.instance, effect));
+        }
     }
 
     /// 📤️ Drains and returns every effect queued since the last drain, in request order —
     /// `reactor::poll` calls this once per turn after the executor idles.
     pub fn drain(&self) -> Vec<Effect> {
-        std::mem::take(&mut self.inner.borrow_mut().outbound)
+        self.inner.borrow_mut().outbound.drain(..).map(|(_, effect)| effect).collect()
     }
 
     /// 📸️ `⚛️reactor/📸️checkpoint`'s `pending_requests`: the ids still `Pending` — carried in the
     /// checkpoint pack so a restored actor's host round-trips can be identified as stale/re-run
     /// (see design-abi.md §4: async tasks are never serialised, only marked re-run-on-restore).
     pub fn pending_ids(&self) -> Vec<RequestId> {
-        self.inner.borrow().slots.iter().filter(|(_, slot)| matches!(slot, Slot::Pending { .. })).map(|(id, _)| RequestId(*id)).collect()
+        let inner = self.inner.borrow();
+        (0..REQUEST_SLOTS).filter_map(|index| inner.get_at(index)).filter(|entry| matches!(entry.value, Slot::Pending { .. })).map(|entry| RequestId(entry.id)).collect()
     }
 
     /// 🚫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `Event::InstanceClose`
@@ -182,14 +303,49 @@ impl RequestRegistry {
     /// to observe a "cancelled" resolution — this is cleanup, not notification. Returns the number
     /// of slots removed (diagnostic only). Idempotent: an instance with no pending requests removes
     /// nothing.
-    pub fn cancel_instance(&self, instance: u32) -> usize {
-        let mut inner = self.inner.borrow_mut();
-        let ids: Vec<u64> = inner.instance_of.iter().filter(|(_, owner)| **owner == instance).map(|(id, _)| *id).collect();
-        for id in &ids {
-            inner.slots.remove(id);
-            inner.instance_of.remove(id);
+    pub fn begin_cancel_instance(&self, instance: u32) -> RequestCloseCursor {
+        RequestCloseCursor { instance, index: 0, outbound_remaining: 0, outbound_initialized: false }
+    }
+
+    pub fn cancel_instance_step(&self, cursor: &mut RequestCloseCursor) -> RequestCloseStep {
+        if cursor.index < REQUEST_SLOTS {
+            let detached = {
+                let Ok(mut inner) = self.inner.try_borrow_mut() else { return RequestCloseStep::Pending };
+                let index = cursor.index;
+                cursor.index += 1;
+                if inner.get_at(index).is_some_and(|entry| entry.instance == cursor.instance) {
+                    let id = inner.get_at(index).expect("checked request close slot").id;
+                    inner.take(id)
+                } else {
+                    None
+                }
+            };
+            drop(detached);
+            return RequestCloseStep::Pending;
         }
-        ids.len()
+        if !cursor.outbound_initialized {
+            let Ok(inner) = self.inner.try_borrow() else { return RequestCloseStep::Pending };
+            cursor.outbound_remaining = inner.outbound.len();
+            cursor.outbound_initialized = true;
+            return RequestCloseStep::Pending;
+        }
+        if cursor.outbound_remaining > 0 {
+            let detached = {
+                let Ok(mut inner) = self.inner.try_borrow_mut() else { return RequestCloseStep::Pending };
+                cursor.outbound_remaining -= 1;
+                match inner.outbound.pop_front() {
+                    Some((owner, effect)) if owner == cursor.instance => Some(effect),
+                    Some(entry) => {
+                        inner.outbound.push_back(entry);
+                        None
+                    }
+                    None => None,
+                }
+            };
+            drop(detached);
+            return RequestCloseStep::Pending;
+        }
+        RequestCloseStep::Complete
     }
 }
 
@@ -198,20 +354,23 @@ impl RequestRegistry {
 pub struct RequestFuture {
     registry: Rc<RefCell<Inner>>,
     id: u64,
+    admission_failed: bool,
 }
 
 impl Future for RequestFuture {
     type Output = Result<Vec<u8>, Fault>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        if self.admission_failed {
+            return Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.capacity"), "fixed request authority is saturated".to_string())));
+        }
         let mut inner = self.registry.borrow_mut();
-        match inner.slots.remove(&self.id) {
-            Some(Slot::Ready { result }) => {
-                inner.instance_of.remove(&self.id);
+        match inner.take(self.id) {
+            Some(SlotEntry { value: Slot::Ready { result }, .. }) => {
                 Poll::Ready(result)
             }
-            Some(Slot::Pending { partial, .. }) => {
-                inner.slots.insert(self.id, Slot::Pending { waker: Some(cx.waker().clone()), partial });
+            Some(SlotEntry { instance, value: Slot::Pending { partial, .. }, .. }) => {
+                inner.insert_admitted(SlotEntry { id: self.id, instance, value: Slot::Pending { waker: Some(cx.waker().clone()), partial } });
                 Poll::Pending
             }
             None => Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry"), "request already consumed or unknown".to_string()))),
@@ -232,9 +391,9 @@ impl Future for RequestFuture {
 /// and `poll` returns its guard before the caller can drop the future.
 impl Drop for RequestFuture {
     fn drop(&mut self) {
-        let mut inner = self.registry.borrow_mut();
-        inner.slots.remove(&self.id);
-        inner.instance_of.remove(&self.id);
+        if !self.admission_failed {
+            drop(self.registry.borrow_mut().take(self.id));
+        }
     }
 }
 
@@ -329,7 +488,10 @@ mod tests {
         let nine = scoped_to_9.request(|req| Effect::CancelJob { job: req.0 });
 
         assert_eq!(registry.pending_ids().len(), 3, "all three requests share the one underlying queue");
-        let removed = registry.cancel_instance(7);
+        let before = registry.pending_ids().len();
+        let mut cursor = registry.begin_cancel_instance(7);
+        while registry.cancel_instance_step(&mut cursor) != RequestCloseStep::Complete {}
+        let removed = before - registry.pending_ids().len();
         assert_eq!(removed, 2, "cancel_instance must report exactly the count it removed");
         assert_eq!(registry.pending_ids(), vec![RequestId(3)], "only instance 9's request must survive");
 
@@ -344,7 +506,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_no_op() {
         let registry = RequestRegistry::new();
-        assert_eq!(registry.cancel_instance(42), 0);
+        let mut cursor = registry.begin_cancel_instance(42);
+        while registry.cancel_instance_step(&mut cursor) != RequestCloseStep::Complete {}
+        assert!(registry.pending_ids().is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -353,7 +517,8 @@ mod tests {
         let scoped = registry.for_instance(3);
         let _first = registry.request(|req| Effect::CancelJob { job: req.0 }); // id 1, instance 0
         let _second = scoped.request(|req| Effect::CancelJob { job: req.0 }); // id 2, instance 3
-        assert_eq!(registry.cancel_instance(3), 1, "only the request allocated through the scoped handle belongs to instance 3");
+        let mut cursor = registry.begin_cancel_instance(3);
+        while registry.cancel_instance_step(&mut cursor) != RequestCloseStep::Complete {}
         assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
     }
 

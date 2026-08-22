@@ -408,15 +408,14 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
-        sync_process_machine_contributions(&cfg.snapshot.contributions_json);
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
             PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config),
             PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
-            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, labels),
-            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, labels),
+            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, &config.contributions_json, labels),
+            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, &config.contributions_json, labels),
             PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -630,33 +629,29 @@ pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     (axis, dot.acos())
 }
 
-fn leak_str(value: String) -> &'static str {
-    Box::leak(value.into_boxed_str())
-}
-
 /// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
 /// 🔓️ `pub` (not private): a variant payload of `crate::artifacts::process3d::MachineCatalogs`
 /// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
 /// itself `pub` — a variant field can never be less visible than the enum wrapping it.
 #[derive(Clone)]
 pub struct ContributedMachineCatalog {
-    catalog_id: &'static str,
-    label: &'static str,
-    icon_id: &'static str,
+    catalog_id: String,
+    label: String,
+    icon_id: String,
     machines: Vec<crate::artifacts::process3d::WorkshopMachine>,
 }
 
 impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
-    fn catalog_id(&self) -> &'static str {
-        self.catalog_id
+    fn catalog_id(&self) -> &str {
+        &self.catalog_id
     }
 
-    fn label(&self) -> &'static str {
-        self.label
+    fn label(&self) -> &str {
+        &self.label
     }
 
-    fn icon_id(&self) -> &'static str {
-        self.icon_id
+    fn icon_id(&self) -> &str {
+        &self.icon_id
     }
 
     fn machines(&self) -> Vec<crate::artifacts::process3d::WorkshopMachine> {
@@ -664,13 +659,10 @@ impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
     }
 }
 
-static CONTRIBUTED_MACHINE_CATALOGS: std::sync::Mutex<Vec<ContributedMachineCatalog>> = std::sync::Mutex::new(Vec::new());
-static LAST_PROCESS_CONTRIBUTIONS_JSON: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
-
 /// 🔌️ Refreshes contributed `process.machines` catalogs when the host pushes a new catalogue.
 //#region 🔖️ProcessMachinesTopicPayload
 /// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
-/// `sync_process_machine_contributions` decodes. See `TopicContribution` in
+/// `contributed_machine_catalogs` decodes. See `TopicContribution` in
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -683,16 +675,87 @@ struct ProcessMachinesTopicPayload {
 }
 //#endregion 🔖️ProcessMachinesTopicPayload
 
-// 🚫️async: E1 pure — JSON decode + mutex-guarded merge, zero suspension points; both call sites
-// (`config` snapshot apply, topic-contribution sync) already consume this unawaited — see R9.
+const PROCESS_CONTRIBUTION_MAX_BYTES: usize = 256 * 1024;
+const PROCESS_CONTRIBUTION_MAX_DEPTH: usize = 32;
+const PROCESS_CONTRIBUTION_MAX_ITEMS: usize = 4 * 1024;
+const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 4 * 1024;
+
+fn process_json_envelope_is_bounded(input: &str) -> bool {
+    if input.len() > PROCESS_CONTRIBUTION_MAX_BYTES {
+        return false;
+    }
+    let mut depth = 0usize;
+    let mut items = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    let mut string_bytes = 0usize;
+    let mut in_scalar = false;
+    for byte in input.bytes() {
+        if in_string {
+            if escaped {
+                string_bytes = string_bytes.saturating_add(1);
+                escaped = false;
+            } else if byte == b'\\' {
+                string_bytes = string_bytes.saturating_add(1);
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            } else {
+                string_bytes = string_bytes.saturating_add(1);
+            }
+            if string_bytes > PROCESS_CONTRIBUTION_MAX_STRING_BYTES {
+                return false;
+            }
+            continue;
+        }
+        if in_scalar {
+            if byte.is_ascii_whitespace() || matches!(byte, b',' | b']' | b'}') {
+                in_scalar = false;
+            } else {
+                continue;
+            }
+        }
+        match byte {
+            b'"' => {
+                items = items.saturating_add(1);
+                in_string = true;
+                string_bytes = 0;
+            }
+            b'{' | b'[' => {
+                items = items.saturating_add(1);
+                depth = depth.saturating_add(1);
+                if depth > PROCESS_CONTRIBUTION_MAX_DEPTH {
+                    return false;
+                }
+            }
+            b'}' | b']' => {
+                let Some(next) = depth.checked_sub(1) else {
+                    return false;
+                };
+                depth = next;
+            }
+            b':' | b',' => {}
+            byte if byte.is_ascii_whitespace() => {}
+            _ => {
+                items = items.saturating_add(1);
+                in_scalar = true;
+            }
+        }
+        if items > PROCESS_CONTRIBUTION_MAX_ITEMS {
+            return false;
+        }
+    }
+    !in_string && !escaped && depth == 0
+}
+
+// 🚫️async: E1 pure — bounded JSON decode into operation-owned values, zero suspension points.
 // `TopicContribution::decode` itself is still `fn` in
 // `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (out of this packet's path_scope); bridged via
 // `semio_framework::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
 // packet's lease-request for the SDK owner to revert `decode` to sync directly).
-pub fn sync_process_machine_contributions(contributions_json: &str) {
-    let mut last = LAST_PROCESS_CONTRIBUTIONS_JSON.lock().expect("process contributions lock");
-    if *last == contributions_json {
-        return;
+fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMachineCatalog> {
+    if !process_json_envelope_is_bounded(contributions_json) {
+        return Vec::new();
     }
     let mut catalogs = Vec::new();
     for entry in semio_framework::parse_contributions(contributions_json) {
@@ -703,11 +766,18 @@ pub fn sync_process_machine_contributions(contributions_json: &str) {
         if app_id != PROCESS_3D_PLAY_APP_ID {
             continue;
         }
-        let machines: Vec<crate::artifacts::process3d::WorkshopMachine> = serde_json::from_str(&machines_json).unwrap_or_default();
-        catalogs.push(ContributedMachineCatalog { catalog_id: leak_str(module_id), label: leak_str(label), icon_id: leak_str(icon_id.to_string()), machines });
+        if !process_json_envelope_is_bounded(&machines_json) {
+            continue;
+        }
+        let Ok(machines) = serde_json::from_str::<Vec<crate::artifacts::process3d::WorkshopMachine>>(&machines_json) else {
+            continue;
+        };
+        if machines.len() > PROCESS_CONTRIBUTION_MAX_ITEMS {
+            continue;
+        }
+        catalogs.push(ContributedMachineCatalog { catalog_id: module_id, label, icon_id: icon_id.to_string(), machines });
     }
-    *CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock") = catalogs;
-    *last = contributions_json.to_string();
+    catalogs
 }
 
 fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
@@ -722,19 +792,18 @@ fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
 
 /// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
-/// merged via `sync_process_machine_contributions` from runtime-installable extensions under
+/// parsed from the invoking configuration's runtime-installable extensions under
 /// `🏭️process/🧩️extensions/`.
-pub fn installed_catalogs() -> Vec<MachineCatalogs> {
+pub fn installed_catalogs(contributions_json: &str) -> Vec<MachineCatalogs> {
     let mut catalogs = builtin_installed_catalogs();
-    let contributed = CONTRIBUTED_MACHINE_CATALOGS.lock().expect("process contributed catalogs lock");
-    catalogs.extend(contributed.iter().map(|catalog| catalog.clone().into()));
+    catalogs.extend(contributed_machine_catalogs(contributions_json).into_iter().map(MachineCatalogs::from));
     catalogs
 }
 
 /// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
 /// "install into workshop" lookup for the workshop configurator's add-machine action.
-pub fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
-    let catalog = installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
+pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &str) -> Option<crate::artifacts::process3d::WorkshopMachine> {
+    let catalog = installed_catalogs(contributions_json).into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
     let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
     machine.catalog_id = Some(catalog_id.to_string());
     Some(machine)
@@ -846,7 +915,6 @@ pub(crate) mod testkit {
             },
         ];
         let json = serde_json::to_string(&entries).unwrap();
-        sync_process_machine_contributions(&json);
         let _ = app;
     }
 
@@ -1373,7 +1441,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn sync_process_machine_contributions_merges_hot_installed_catalogs() {
+    async fn process_machine_contributions_are_configuration_owned() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let machine = crate::artifacts::process3d::WorkshopMachine { id: "hot-saw".into(), label: "Hot Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
         let entry = ProgramContributionEntry {
@@ -1390,9 +1458,30 @@ mod tests {
             )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();
-        sync_process_machine_contributions(&json);
-        assert!(installed_catalogs().iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
-        sync_process_machine_contributions("[]");
+        assert!(installed_catalogs(&json).iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
+        assert!(!installed_catalogs("[]").iter().any(|catalog| catalog.catalog_id() == "hot-catalog"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn process_contribution_envelope_accepts_exact_limits_and_rejects_plus_one() {
+        let raw_max = format!("{{}}{}", " ".repeat(PROCESS_CONTRIBUTION_MAX_BYTES - 2));
+        assert!(process_json_envelope_is_bounded(&raw_max));
+        assert!(!process_json_envelope_is_bounded(&(raw_max + " ")));
+
+        let depth_max = format!("{}0{}", "[".repeat(PROCESS_CONTRIBUTION_MAX_DEPTH), "]".repeat(PROCESS_CONTRIBUTION_MAX_DEPTH));
+        assert!(process_json_envelope_is_bounded(&depth_max));
+        let depth_plus_one = format!("{}0{}", "[".repeat(PROCESS_CONTRIBUTION_MAX_DEPTH + 1), "]".repeat(PROCESS_CONTRIBUTION_MAX_DEPTH + 1));
+        assert!(!process_json_envelope_is_bounded(&depth_plus_one));
+
+        let string_max = format!("\"{}\"", "x".repeat(PROCESS_CONTRIBUTION_MAX_STRING_BYTES));
+        assert!(process_json_envelope_is_bounded(&string_max));
+        let string_plus_one = format!("\"{}\"", "x".repeat(PROCESS_CONTRIBUTION_MAX_STRING_BYTES + 1));
+        assert!(!process_json_envelope_is_bounded(&string_plus_one));
+
+        let items_max = format!("[{}]", vec!["0"; PROCESS_CONTRIBUTION_MAX_ITEMS - 1].join(","));
+        assert!(process_json_envelope_is_bounded(&items_max));
+        let items_plus_one = format!("[{}]", vec!["0"; PROCESS_CONTRIBUTION_MAX_ITEMS].join(","));
+        assert!(!process_json_envelope_is_bounded(&items_plus_one));
     }
     //#endregion 🔖️BehaviorTests
 }

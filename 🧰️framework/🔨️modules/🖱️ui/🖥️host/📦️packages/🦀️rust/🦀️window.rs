@@ -671,6 +671,14 @@ mod browser {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
 
+    /// 🧵️ Browser-only split that forbids a RAF callback from invoking the frame-building
+    /// [`WindowDelegate::redraw`] contract. Implementations enqueue/coalesce worker work and expose
+    /// only the newest already-prepared directives for presentation.
+    pub trait BrowserWindowDelegate: WindowDelegate {
+        fn enqueue_browser_frame(&mut self, reason: InvalidationReason);
+        fn present_browser_frame(&mut self) -> RedrawOutcome;
+    }
+
     //#region 🕰️BrowserClock
 
     /// 🕰️ `performance.now()`-backed clock — `std::time::Instant` is unavailable on
@@ -706,7 +714,7 @@ mod browser {
 
     //#region 🌐️CanvasHost
 
-    struct CanvasHostState<D: WindowDelegate> {
+    struct CanvasHostState<D: BrowserWindowDelegate> {
         canvas: web_sys::HtmlCanvasElement,
         clock: BrowserClock,
         raf_pending: bool,
@@ -737,14 +745,14 @@ mod browser {
     /// callback itself clears `raf_pending` *before* doing anything else, so a fresh invalidation that
     /// arrives during the callback's own `redraw` call is free to schedule the *next* frame rather than
     /// being silently dropped.
-    pub struct CanvasHost<D: WindowDelegate + 'static> {
+    pub struct CanvasHost<D: BrowserWindowDelegate + 'static> {
         state: Rc<RefCell<CanvasHostState<D>>>,
         _resize_observer: web_sys::ResizeObserver,
         _resize_closure: Closure<dyn FnMut(js_sys::Array)>,
         _visibility_closure: Closure<dyn FnMut()>,
     }
 
-    impl<D: WindowDelegate + 'static> CanvasHost<D> {
+    impl<D: BrowserWindowDelegate + 'static> CanvasHost<D> {
         pub fn new(canvas: web_sys::HtmlCanvasElement, delegate: D) -> Self {
             let state = Rc::new(RefCell::new(CanvasHostState {
                 canvas: canvas.clone(),
@@ -788,7 +796,7 @@ mod browser {
     /// 🎯️ The one call site that ever invokes `requestAnimationFrame` — see [`CanvasHost`]'s own
     /// docstring for the full dedup contract. Both [`CanvasHost::request_wake`] (invalidation-driven)
     /// and [`on_animation_frame`]'s own re-arm path (deadline-driven) funnel through here.
-    fn request_wake_from_state<D: WindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
+    fn request_wake_from_state<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
         let mut host = state.borrow_mut();
         if host.raf_pending || host.document_hidden {
             return;
@@ -810,13 +818,14 @@ mod browser {
     /// no-op `rAF` callback per display refresh until it is due (no pixels repaint on those ticks, the
     /// `should_request_redraw` gate below still applies every time). A `setTimeout`-based long-wait
     /// path is a fair follow-up; see this packet's report deviations.
-    fn on_animation_frame<D: WindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>, _timestamp_ms: f64) {
+    fn on_animation_frame<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>, _timestamp_ms: f64) {
         let has_pending_deadline = {
             let mut host = state.borrow_mut();
             host.raf_pending = false;
             let now = host.clock.now_seconds();
             if let Some(reason) = should_request_redraw(host.delegate.scheduler_mut(), now) {
-                let outcome = host.delegate.redraw(reason);
+                host.delegate.enqueue_browser_frame(reason);
+                let outcome = host.delegate.present_browser_frame();
                 let canvas = host.canvas.clone();
                 apply_canvas_cursor(&canvas, outcome.cursor, &mut host.last_cursor);
             }
@@ -827,7 +836,7 @@ mod browser {
         }
     }
 
-    fn on_resize<D: WindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
+    fn on_resize<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
         {
             let mut host = state.borrow_mut();
             let canvas = host.canvas.clone();
@@ -844,7 +853,7 @@ mod browser {
     /// 👁️ Whatever accumulated in the dirty mask while hidden (deadlines still fire per
     /// [`FrameScheduler::should_render`]'s own docstring) only becomes visible to `should_render` once
     /// `visible` flips back — so becoming visible again requests the wake that period was owed.
-    fn on_visibility_change<D: WindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
+    fn on_visibility_change<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
         let hidden = web_sys::window().and_then(|window| window.document()).map(|document| document.hidden()).unwrap_or(false);
         {
             let mut host = state.borrow_mut();

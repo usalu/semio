@@ -9,7 +9,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 /// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FlowApps: PluginApp {
-        FlowEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::flow::FlowPlayApp>>),
+        FlowEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
         FlowViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::flow::FlowViewer>>),
     }
 }
@@ -26,7 +26,7 @@ pub async fn plugin() -> Result<Plugin<FlowApps>, semio_framework_plugin::Plugin
         .label("Flow")
         .version("0.1.0")
         .artifact(crate::artifacts::flow::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::flow::FlowPlayApp>(crate::editor::flow::create_flow_app())
+        .editor_with_members::<crate::editor::flow::FlowPlayApp, semio_s_plugin_stdio::artifacts::semio::SemioMembers>(crate::editor::flow::create_flow_app())
         .editor_mutation_roster::<crate::editor::flow::FlowPlayApp>()
         .viewer::<crate::viewer::flow::FlowViewer>(crate::viewer::flow::create_flow_viewer())
         .viewer_mutation_roster::<crate::viewer::flow::FlowViewer>()

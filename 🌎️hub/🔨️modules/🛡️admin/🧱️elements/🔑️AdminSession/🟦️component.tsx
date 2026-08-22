@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Button, Input } from "@semio-tech/ui-react";
+import { Button, Form, Input } from "@semio-tech/ui-react";
 import type { ConnectionView, DirectoryCommand, DirectoryEvent, DocumentView, InviteView, MemberView, SpaceView, UserView } from "@semio-tech/framework-os";
 import { useAdminT } from "../📚️I18n/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -203,7 +203,7 @@ export function AdminTokenForm(): React.ReactElement {
 
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <form
+      <Form
         className="flex w-full max-w-sm flex-col gap-single"
         onSubmit={(event) => {
           event.preventDefault();
@@ -218,7 +218,7 @@ export function AdminTokenForm(): React.ReactElement {
         </label>
         {status === "unauthorized" ? <p className="text-sm text-destructive">{t("admin.session.error")}</p> : null}
         <Button id="admin-session-submit" icon="check" text={t("admin.session.submit")} type="submit" disabled={status === "probing"} />
-      </form>
+      </Form>
     </div>
   );
 }

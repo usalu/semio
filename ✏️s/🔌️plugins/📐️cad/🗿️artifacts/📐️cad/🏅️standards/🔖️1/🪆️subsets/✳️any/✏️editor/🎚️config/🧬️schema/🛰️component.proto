@@ -100,4 +100,8 @@ message CadConfig {
   string terminology = 29;
   // @state config
   string contributions_json = 30;
+  // @state config
+  optional string engagement_preview_operation_json = 31;
+  // @state config; lossless domain 0..2147483647
+  int32 engagement_preview_generation = 32;
 }

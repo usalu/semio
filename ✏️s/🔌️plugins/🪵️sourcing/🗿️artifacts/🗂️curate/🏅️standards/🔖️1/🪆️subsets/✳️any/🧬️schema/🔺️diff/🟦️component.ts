@@ -43,6 +43,8 @@ export interface CurateStringList {
  * `s.stdio.semio.kit` subset's `SemioKitType` (id/name/category only). */
 export interface ObjectKindExtra {
   id: string;
+  name: string;
+  moduleId: string;
   typologyPath: string[];
   availability: number;
   geometry: GeometryRecipe;

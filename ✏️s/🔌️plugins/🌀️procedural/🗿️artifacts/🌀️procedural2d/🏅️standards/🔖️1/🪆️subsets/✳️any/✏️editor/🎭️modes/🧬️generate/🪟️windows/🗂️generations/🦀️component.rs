@@ -1,8 +1,8 @@
 //! 🗂️ Procedural2d play app — the generations list window (generate mode).
 
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
-use flow::playbook::{render_generations_tree, GenerationPlayState};
-use semio_framework_plugin::{Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, WindowKindDefinition, WindowOptions};
+use flow::playbook::GenerationPlayState;
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, SurfaceKind, Terminology, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_WINDOW_GENERATIONS: &str = "procedural2d-generations";
@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_GENERATIONS: &str = "procedural2d.play.generati
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_GENERATIONS.into(),
         label: LocalizedLabel::native("Generations", "Generationen"),
@@ -31,8 +31,8 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> UiNode {
-    render_generations_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", &generation.generations, generation.selected_generation_id.as_deref(), locale, terminology)
+pub fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> BuiltNode {
+    crate::generation_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", generation, locale, terminology)
 }
 //#endregion 🔖️Render
 
@@ -42,8 +42,8 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[semio_framework_async_macros::async_test]
-    async fn generate_mode_renders_surfaces() {
+    #[test]
+    fn generate_mode_renders_surfaces() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_GENERATIONS).contains("addGeneration"));
     }

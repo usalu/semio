@@ -54,6 +54,9 @@ type CadConfig {
   selectedPrimitiveKind: String @state(class: CONFIG)
   engagementPane: String @state(class: CONFIG)
   engagementSessionJson: String @state(class: CONFIG)
+  engagementPreviewOperationJson: String @state(class: CONFIG)
+  """Lossless nonnegative signed-32 generation; maximum 2147483647."""
+  engagementPreviewGeneration: Int! @state(class: CONFIG)
   lastFinalizedInteractionId: String @state(class: CONFIG)
   sun: CadSunConfig! @state(class: CONFIG)
   camera: CadCamera! @state(class: CONFIG)

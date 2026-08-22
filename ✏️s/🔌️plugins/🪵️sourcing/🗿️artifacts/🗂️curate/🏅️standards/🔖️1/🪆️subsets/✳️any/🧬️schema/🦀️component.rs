@@ -7,7 +7,6 @@ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::sync::Mutex;
 
 //#region 🔖️Artifact
 /// 🧬️ Full curate artifact state across the artifact, presence and config lanes. `catalog`/
@@ -354,8 +353,8 @@ fn apply_curation_decision(document: &mut CurateSnapshot, decision: CurationDeci
 /// (O1/R11: closed set ⇒ `dyn_enum_close!`, not a trait object).
 #[dyn_enum]
 pub trait SourcingModule {
-    fn module_id(&self) -> &'static str;
-    fn label(&self) -> &'static str;
+    fn module_id(&self) -> &str;
+    fn label(&self) -> &str;
     fn typology(&self) -> TypologyNode;
     fn demo_kinds(&self) -> Vec<ObjectKind>;
     /// 🧱️ Realizes a kind's preview mesh; defaults to the generic geometry recipe realization.
@@ -370,10 +369,10 @@ pub mod beams {
     pub struct BeamsModule;
 
     impl SourcingModule for BeamsModule {
-        fn module_id(&self) -> &'static str {
+        fn module_id(&self) -> &str {
             "beams"
         }
-        fn label(&self) -> &'static str {
+        fn label(&self) -> &str {
             "Beams"
         }
         fn typology(&self) -> TypologyNode {
@@ -431,10 +430,10 @@ pub mod windows {
     pub struct WindowsModule;
 
     impl SourcingModule for WindowsModule {
-        fn module_id(&self) -> &'static str {
+        fn module_id(&self) -> &str {
             "windows"
         }
-        fn label(&self) -> &'static str {
+        fn label(&self) -> &str {
             "Windows"
         }
         fn typology(&self) -> TypologyNode {
@@ -477,10 +476,10 @@ pub mod slabs {
     pub struct SlabsModule;
 
     impl SourcingModule for SlabsModule {
-        fn module_id(&self) -> &'static str {
+        fn module_id(&self) -> &str {
             "slabs"
         }
-        fn label(&self) -> &'static str {
+        fn label(&self) -> &str {
             "Slabs"
         }
         fn typology(&self) -> TypologyNode {
@@ -517,28 +516,24 @@ pub mod slabs {
     }
 }
 
-fn leak_str(value: String) -> &'static str {
-    Box::leak(value.into_boxed_str())
-}
-
 /// 🧩️ One hot-installed sourcing module deserialized from the `"sourcing.module"` topic contribution.
 /// `pub` (not crate-private) solely so it can sit as a variant payload in the `pub enum SourcingModules`
 /// below without tripping the `private_interfaces` lint — construction stays internal to this module.
 #[derive(Clone)]
 pub struct ContributedSourcingModule {
-    module_id: &'static str,
-    label: &'static str,
+    module_id: String,
+    label: String,
     typology: TypologyNode,
     kinds: Vec<ObjectKind>,
 }
 
 impl SourcingModule for ContributedSourcingModule {
-    fn module_id(&self) -> &'static str {
-        self.module_id
+    fn module_id(&self) -> &str {
+        &self.module_id
     }
 
-    fn label(&self) -> &'static str {
-        self.label
+    fn label(&self) -> &str {
+        &self.label
     }
 
     fn typology(&self) -> TypologyNode {
@@ -561,9 +556,6 @@ dyn_enum_close! {
     }
 }
 
-static CONTRIBUTED_SOURCING_MODULES: Mutex<Vec<ContributedSourcingModule>> = Mutex::new(Vec::new());
-static LAST_SOURCING_CONTRIBUTIONS_JSON: Mutex<String> = Mutex::new(String::new());
-
 const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
 
 /// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
@@ -581,10 +573,82 @@ struct SourcingModuleTopicPayload {
 }
 //#endregion 🔖️SourcingModuleTopicPayload
 
-pub fn sync_sourcing_module_contributions(contributions_json: &str) {
-    let mut last = LAST_SOURCING_CONTRIBUTIONS_JSON.lock().expect("sourcing contributions lock");
-    if *last == contributions_json {
-        return;
+pub(crate) const SOURCING_JSON_MAX_BYTES: usize = 256 * 1024;
+pub(crate) const SOURCING_JSON_MAX_DEPTH: usize = 32;
+pub(crate) const SOURCING_JSON_MAX_ITEMS: usize = 4 * 1024;
+pub(crate) const SOURCING_JSON_MAX_STRING_BYTES: usize = 4 * 1024;
+
+pub(crate) fn sourcing_json_envelope_is_bounded(input: &str) -> bool {
+    if input.len() > SOURCING_JSON_MAX_BYTES {
+        return false;
+    }
+    let mut depth = 0usize;
+    let mut items = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    let mut string_bytes = 0usize;
+    let mut in_scalar = false;
+    for byte in input.bytes() {
+        if in_string {
+            if escaped {
+                string_bytes = string_bytes.saturating_add(1);
+                escaped = false;
+            } else if byte == b'\\' {
+                string_bytes = string_bytes.saturating_add(1);
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            } else {
+                string_bytes = string_bytes.saturating_add(1);
+            }
+            if string_bytes > SOURCING_JSON_MAX_STRING_BYTES {
+                return false;
+            }
+            continue;
+        }
+        if in_scalar {
+            if byte.is_ascii_whitespace() || matches!(byte, b',' | b']' | b'}') {
+                in_scalar = false;
+            } else {
+                continue;
+            }
+        }
+        match byte {
+            b'"' => {
+                items = items.saturating_add(1);
+                in_string = true;
+                string_bytes = 0;
+            }
+            b'{' | b'[' => {
+                items = items.saturating_add(1);
+                depth = depth.saturating_add(1);
+                if depth > SOURCING_JSON_MAX_DEPTH {
+                    return false;
+                }
+            }
+            b'}' | b']' => {
+                let Some(next) = depth.checked_sub(1) else {
+                    return false;
+                };
+                depth = next;
+            }
+            b':' | b',' => {}
+            byte if byte.is_ascii_whitespace() => {}
+            _ => {
+                items = items.saturating_add(1);
+                in_scalar = true;
+            }
+        }
+        if items > SOURCING_JSON_MAX_ITEMS {
+            return false;
+        }
+    }
+    !in_string && !escaped && depth == 0
+}
+
+fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSourcingModule> {
+    if !sourcing_json_envelope_is_bounded(contributions_json) {
+        return Vec::new();
     }
     let mut modules = Vec::new();
     for entry in parse_contributions(contributions_json) {
@@ -595,29 +659,33 @@ pub fn sync_sourcing_module_contributions(contributions_json: &str) {
         if app_id != SOURCING_CURATE_APP_ID {
             continue;
         }
+        if !sourcing_json_envelope_is_bounded(&typology_json) || !sourcing_json_envelope_is_bounded(&kinds_json) {
+            continue;
+        }
         let Ok(typology) = serde_json::from_str::<TypologyNode>(&typology_json) else {
             continue;
         };
         let Ok(kinds) = serde_json::from_str::<Vec<ObjectKind>>(&kinds_json) else {
             continue;
         };
-        modules.push(ContributedSourcingModule { module_id: leak_str(module_id), label: leak_str(label), typology, kinds });
+        if kinds.len() > SOURCING_JSON_MAX_ITEMS {
+            continue;
+        }
+        modules.push(ContributedSourcingModule { module_id, label, typology, kinds });
     }
-    *CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock") = modules;
-    *last = contributions_json.to_string();
+    modules
 }
 
 /// 🧩️ Every sourcing module known to this crate, in stable order.
-pub fn sourcing_modules() -> Vec<SourcingModules> {
+pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
     let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into()];
-    let contributed = CONTRIBUTED_SOURCING_MODULES.lock().expect("sourcing contributed modules lock");
-    modules.extend(contributed.iter().map(|module| SourcingModules::from(module.clone())));
+    modules.extend(contributed_sourcing_modules(contributions_json).into_iter().map(SourcingModules::from));
     modules
 }
 
 /// 🔎️ Looks up a single module by id.
-pub fn module_for(module_id: &str) -> Option<SourcingModules> {
-    sourcing_modules().into_iter().find(|module| module.module_id() == module_id)
+pub fn module_for(contributions_json: &str, module_id: &str) -> Option<SourcingModules> {
+    sourcing_modules(contributions_json).into_iter().find(|module| module.module_id() == module_id)
 }
 //#endregion 🔖️Modules
 
@@ -631,8 +699,8 @@ pub struct ModuleCatalogue {
     pub kinds: Vec<ObjectKind>,
 }
 
-pub fn available_modules() -> Vec<ModuleCatalogue> {
-    sourcing_modules().into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
+pub fn available_modules(contributions_json: &str) -> Vec<ModuleCatalogue> {
+    sourcing_modules(contributions_json).into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖️ModuleCatalogue
 
@@ -666,9 +734,9 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 //#region 🔖️Fixtures
 /// 🧩️ The canonical demo-stock catalogue — every built-in module's demo kinds, in module-registration
 /// order. Single source of truth for `default_document`'s catalog content and every test fixture that
-/// used to independently duplicate `sourcing_modules().iter().flat_map(...)`.
+/// used to independently duplicate `sourcing_modules("[]").iter().flat_map(...)`.
 pub fn demo_stock() -> Vec<ObjectKind> {
-    sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect()
+    sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
 /// 📄️ The demo-stock example, parsed once from `crate::artifacts::curate::dsl::DEMO_STOCK_TEXT` — the
@@ -678,7 +746,7 @@ pub fn demo_stock() -> Vec<ObjectKind> {
 /// working-scene cache with it resolves that exact handle, since a composed child is a handle only,
 /// never inline content, in the persisted DSL text itself.
 pub fn default_document() -> CurateSnapshot {
-    crate::artifacts::curate::seed_catalog_scratch(&demo_stock());
+    crate::artifacts::curate::validate_catalog_payload(&demo_stock());
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::DEMO_STOCK_TEXT).unwrap_or_default()
 }
 
@@ -686,7 +754,7 @@ pub fn default_document() -> CurateSnapshot {
 /// `crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
 /// same content-addressed empty-catalog handle `CurateSnapshot::default()` mints.
 pub fn empty_document() -> CurateSnapshot {
-    crate::artifacts::curate::seed_catalog_scratch(&[]);
+    crate::artifacts::curate::validate_catalog_payload(&[]);
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curate::dsl::EMPTY_CURATION_TEXT).unwrap_or_default()
 }
 //#endregion 🔖️Fixtures
@@ -834,8 +902,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn available_modules_tracks_contributed_modules() {
-        sync_sourcing_module_contributions("[]");
-        assert_eq!(available_modules().len(), 3);
+        assert_eq!(available_modules("[]").len(), 3);
         let beams = beams::BeamsModule;
         let entry = semio_framework::ProgramContributionEntry {
             plugin_id: "sourcing-module-beams".into(),
@@ -851,15 +918,14 @@ mod tests {
                 }),
             )),
         };
-        sync_sourcing_module_contributions(&serde_json::to_string(&vec![entry]).unwrap());
-        let modules = available_modules();
+        let contributions_json = serde_json::to_string(&vec![entry]).unwrap();
+        let modules = available_modules(&contributions_json);
         assert_eq!(modules.len(), 4);
         assert_eq!(modules[0].module_id, "beams");
-        sync_sourcing_module_contributions("[]");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn sync_sourcing_module_contributions_adds_hot_installed_modules() {
+    async fn sourcing_module_contributions_are_configuration_owned() {
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         let entry = ProgramContributionEntry {
             plugin_id: "sourcing-module-test".into(),
@@ -876,9 +942,20 @@ mod tests {
             )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();
-        sync_sourcing_module_contributions(&json);
-        assert!(sourcing_modules().iter().any(|module| module.module_id() == "hot-test"));
-        sync_sourcing_module_contributions("[]");
+        assert!(sourcing_modules(&json).iter().any(|module| module.module_id() == "hot-test"));
+        assert!(!sourcing_modules("[]").iter().any(|module| module.module_id() == "hot-test"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn sourcing_contribution_envelope_rejects_depth_string_and_cardinality_plus_one_before_parse() {
+        let depth_plus_one = format!("{}0{}", "[".repeat(SOURCING_JSON_MAX_DEPTH + 1), "]".repeat(SOURCING_JSON_MAX_DEPTH + 1));
+        assert!(!sourcing_json_envelope_is_bounded(&depth_plus_one));
+        assert_eq!(sourcing_modules(&depth_plus_one).len(), 3, "invalid contribution envelope installs nothing");
+
+        let string_plus_one = format!("\"{}\"", "x".repeat(SOURCING_JSON_MAX_STRING_BYTES + 1));
+        assert!(!sourcing_json_envelope_is_bounded(&string_plus_one));
+        let items_plus_one = format!("[{}]", vec!["0"; SOURCING_JSON_MAX_ITEMS].join(","));
+        assert!(!sourcing_json_envelope_is_bounded(&items_plus_one));
     }
 }
 //#endregion 🧪️Tests

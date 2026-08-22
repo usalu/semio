@@ -13,12 +13,6 @@
 
 // #region 🔌️Adapters
 
-import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import * as SelectPrimitive from "@radix-ui/react-select";
-import * as SliderPrimitive from "@radix-ui/react-slider";
-import * as TabsPrimitive from "@radix-ui/react-tabs";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node as FlowNode, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -54,7 +48,60 @@ import {
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
 export { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, themeColorVar, tokenVar, uiSpacingPx };
-import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialArtifactEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework";
+import {
+  CANVAS_HOVER_SOURCE_CANVAS,
+  CANVAS_HOVER_SOURCE_PICK_MENU,
+  canvasHoverFocusFromTarget,
+  canvasPickTargetKey,
+  effectiveActionArgs,
+  missingRequiredArgs,
+  SHELL_LOCALES,
+  SHELL_TERMINOLOGIES,
+  type ActionArgDef,
+  type CanvasHoverFocus,
+  type CanvasPickRequest,
+  type CanvasPickTarget,
+  type DialogDefinition,
+  type DockSkeleton,
+  type DockTabSkeleton,
+  type IntroductionCursor,
+  type IntroductionDefinition,
+  type IntroductionDemonstration,
+  type IntroductionGesture,
+  type IntroductionKeyModifier,
+  type IntroductionLogo,
+  type IntroductionPlacement,
+  type IntroductionPoint,
+  type IntroductionStepDefinition,
+  type ShellLocale,
+  type ShellTerminology,
+  type StoragePort,
+  createBrowserStoragePort,
+  createMemoryStoragePort,
+  panelTabFirstDraggableElementId,
+  panelTabElementId,
+  windowElementId,
+  pickMostSpecificCanvasTarget,
+  sortCanvasPickTargetsGeneralFirst,
+  START_TUTORIAL_ACTION_ID,
+  RECORD_TUTORIAL_ACTION_ID,
+  TUTORIAL_CONVERGE_MS,
+  type TutorialDefinition,
+  type TutorialChapter,
+  type TutorialUiSnapshot,
+  type TutorialUiChange,
+  type TutorialCameraKeyframe,
+  type TutorialCameraState,
+  type TutorialEasing,
+  type TutorialEvent,
+  type TutorialArtifactEvent,
+  type TutorialGestureCue,
+  type TutorialOverlayRect,
+  type WindowLayout,
+  ephemeralBox,
+  ephemeralMap,
+  ephemeralSet,
+} from "@semio-tech/framework";
 import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import * as React from "react";
@@ -64,7 +111,6 @@ import * as THREE from "three";
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Slot } from "@radix-ui/react-slot";
 import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
 import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../../../🔨️modules/🔎️fuzzy-ranking/🟦️component.ts";
@@ -86,7 +132,6 @@ import {
   useStoreApi,
   ViewportPortal,
 } from "@xyflow/react";
-import { Command as CommandPrimitive } from "cmdk";
 import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/assets";
 import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/assets";
 export type { IconName, MetabolismIconName };
@@ -106,7 +151,7 @@ import { type MergeMode } from "../../../../../🕹️interaction/🟦️compone
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
 import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
 export { reactHostPort, type ReactHostPort };
-
+export { interactiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "../../../../🧱️elements/🔌️Ports/🟦️interactive-job.ts";
 
 /** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
@@ -128,7 +173,6 @@ export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider }
 // 🧱️elements/🔌️Ports/🟦️component.tsx (imported above, in the 🔌️Ports region) — reassignment below
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
-
 
 /** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
@@ -549,14 +593,6 @@ export const HostThreeCanvas = threeHostPort.canvas;
 export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 export type { ThreeEvent };
 
-
-
-
-
-
-
-
-
 /** @emoji 🌳️ Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
@@ -593,19 +629,9 @@ import {
   loadingBorderStateClass,
   chromeStatusBorderClass,
   loadingBorderElementClass,
-  waitingBorderElementClass
+  waitingBorderElementClass,
 } from "../../../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
-export {
-  waitingBorderClass,
-  waitingBorderActiveClass,
-  loadingBorderClass,
-  loadingBorderActiveClass,
-  waitingBorderStateClass,
-  loadingBorderStateClass,
-  chromeStatusBorderClass,
-  loadingBorderElementClass,
-  waitingBorderElementClass
-};
+export { waitingBorderClass, waitingBorderActiveClass, loadingBorderClass, loadingBorderActiveClass, waitingBorderStateClass, loadingBorderStateClass, chromeStatusBorderClass, loadingBorderElementClass, waitingBorderElementClass };
 import {
   interactiveControlTransitionClass,
   interactiveOnClass,
@@ -616,7 +642,7 @@ import {
   interactiveHoverClass,
   interactiveHoverFillClass,
   interactiveActiveFillClass,
-  interactiveActiveBorderClass
+  interactiveActiveBorderClass,
 } from "../../../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 export {
   interactiveControlTransitionClass,
@@ -628,7 +654,7 @@ export {
   interactiveHoverClass,
   interactiveHoverFillClass,
   interactiveActiveFillClass,
-  interactiveActiveBorderClass
+  interactiveActiveBorderClass,
 };
 import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
 export { formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
@@ -649,19 +675,9 @@ import {
   chromeControlGroupShellClass,
   chromeControlGroupClass,
   chromeControlItemOnClass,
-  chromeControlTabActiveClass
+  chromeControlTabActiveClass,
 } from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
-export {
-  chromeControlItemBaseClass,
-  chromeControlItemClass,
-  chromeControlTabItemClass,
-  modeDockTabClassName,
-  windowPaneChromeToggleClass,
-  chromeControlGroupShellClass,
-  chromeControlGroupClass,
-  chromeControlItemOnClass,
-  chromeControlTabActiveClass
-};
+export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
 
 // #region 🔖️SelectionMarquee
 /** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
@@ -1036,36 +1052,445 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 // #endregion 🔖️CanvasPickMenu
 
 // #region 🔖️Icon
-import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
-export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
-
-
-
-
+import {
+  resolveIconSizePx,
+  decodeIcon,
+  encodeIcon,
+  classifyIconSelectorMode,
+  resolveIconUrlsInBoardJson,
+  resolveCatalogIconSvg,
+  resolveMetabolismIconSvg,
+  renderControlIcon,
+  iconSvgMarkup,
+  iconMaskImage,
+  Icon,
+  createIconComponent,
+  AddIcon,
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  AwardIcon,
+  BookIcon,
+  BoxIcon,
+  CameraIcon,
+  ChatIcon,
+  CheckIcon,
+  CheckIconAlt,
+  ChevronDownIcon,
+  ChevronDownIconAlt,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  ChevronsUpDownIcon,
+  CircleDotIcon,
+  CloseIcon,
+  CloseIconAlt,
+  CodeIcon,
+  ComponentIcon,
+  ConnectionIcon,
+  ConnectorIcon,
+  CopyIcon,
+  DetailsIcon,
+  DiagramIcon,
+  DisconnectIcon,
+  DocumentIcon,
+  ExternalLinkIcon,
+  FileArchiveIcon,
+  FileCodeIcon,
+  FileImageIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  FileTypeIcon,
+  FileVideoIcon,
+  FilterIcon,
+  FindInViewIcon,
+  FocusIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  GlobeIcon,
+  GripVerticalIcon,
+  HandIcon,
+  HashIcon,
+  HomeIcon,
+  HudIcon,
+  HudPanelIcon,
+  InfoIcon,
+  IntersectIcon,
+  LandmarkIcon,
+  LassoIcon,
+  LayoutIcon,
+  LayoutGridIcon,
+  LeftSidePanelIcon,
+  LightbulbIcon,
+  LinkIcon,
+  LoaderIcon,
+  LocalKitIcon,
+  Maximize2Icon,
+  MessageCircle,
+  MessageSquareIcon,
+  Minimize2Icon,
+  MonitorIcon,
+  MoonIcon,
+  MoreHorizontalIcon,
+  MousePointerIcon,
+  MoveIcon,
+  NavigateBackIcon,
+  NavigateForwardIcon,
+  NavigateUpIcon,
+  PanelRightIcon,
+  PauseIcon,
+  PieceIcon,
+  PlayIcon,
+  PlugIcon,
+  PlusIcon,
+  PortIcon,
+  Puzzle2dIconFileImportIcon,
+  Puzzle2dIconMathGlyphIcon,
+  Puzzle2dIconRasterGlyphIcon,
+  RecordIcon,
+  RemoteKitIcon,
+  RemoveIcon,
+  ResetIcon,
+  RightSidePanelIcon,
+  SceneIcon,
+  SearchIcon,
+  SelectUtilityIcon,
+  Settings2Icon,
+  SettingsIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SmartphoneIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  StatsIcon,
+  StopIcon,
+  SunIcon,
+  TabletIcon,
+  TableViewIcon,
+  TemporaryKitIcon,
+  TriangleAlertIcon,
+  TutorialIcon,
+  TypeIcon,
+  UserIcon,
+  UsersIcon,
+  UtilitiesIcon,
+  UtilityBarIcon,
+  WorkbenchIcon,
+  Cursor,
+  type IconSizeToken,
+  type IconSelectorMode,
+  type IconSource,
+  type ControlIcon,
+  type IconProps,
+} from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
+export {
+  resolveIconSizePx,
+  decodeIcon,
+  encodeIcon,
+  classifyIconSelectorMode,
+  resolveIconUrlsInBoardJson,
+  resolveCatalogIconSvg,
+  resolveMetabolismIconSvg,
+  renderControlIcon,
+  iconSvgMarkup,
+  iconMaskImage,
+  Icon,
+  createIconComponent,
+  AddIcon,
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  AwardIcon,
+  BookIcon,
+  BoxIcon,
+  CameraIcon,
+  ChatIcon,
+  CheckIcon,
+  CheckIconAlt,
+  ChevronDownIcon,
+  ChevronDownIconAlt,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  ChevronsUpDownIcon,
+  CircleDotIcon,
+  CloseIcon,
+  CloseIconAlt,
+  CodeIcon,
+  ComponentIcon,
+  ConnectionIcon,
+  ConnectorIcon,
+  CopyIcon,
+  DetailsIcon,
+  DiagramIcon,
+  DisconnectIcon,
+  DocumentIcon,
+  ExternalLinkIcon,
+  FileArchiveIcon,
+  FileCodeIcon,
+  FileImageIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  FileTypeIcon,
+  FileVideoIcon,
+  FilterIcon,
+  FindInViewIcon,
+  FocusIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  GlobeIcon,
+  GripVerticalIcon,
+  HandIcon,
+  HashIcon,
+  HomeIcon,
+  HudIcon,
+  HudPanelIcon,
+  InfoIcon,
+  IntersectIcon,
+  LandmarkIcon,
+  LassoIcon,
+  LayoutIcon,
+  LayoutGridIcon,
+  LeftSidePanelIcon,
+  LightbulbIcon,
+  LinkIcon,
+  LoaderIcon,
+  LocalKitIcon,
+  Maximize2Icon,
+  MessageCircle,
+  MessageSquareIcon,
+  Minimize2Icon,
+  MonitorIcon,
+  MoonIcon,
+  MoreHorizontalIcon,
+  MousePointerIcon,
+  MoveIcon,
+  NavigateBackIcon,
+  NavigateForwardIcon,
+  NavigateUpIcon,
+  PanelRightIcon,
+  PauseIcon,
+  PieceIcon,
+  PlayIcon,
+  PlugIcon,
+  PlusIcon,
+  PortIcon,
+  Puzzle2dIconFileImportIcon,
+  Puzzle2dIconMathGlyphIcon,
+  Puzzle2dIconRasterGlyphIcon,
+  RecordIcon,
+  RemoteKitIcon,
+  RemoveIcon,
+  ResetIcon,
+  RightSidePanelIcon,
+  SceneIcon,
+  SearchIcon,
+  SelectUtilityIcon,
+  Settings2Icon,
+  SettingsIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SmartphoneIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  StatsIcon,
+  StopIcon,
+  SunIcon,
+  TabletIcon,
+  TableViewIcon,
+  TemporaryKitIcon,
+  TriangleAlertIcon,
+  TutorialIcon,
+  TypeIcon,
+  UserIcon,
+  UsersIcon,
+  UtilitiesIcon,
+  UtilityBarIcon,
+  WorkbenchIcon,
+  Cursor,
+  type IconSizeToken,
+  type IconSelectorMode,
+  type IconSource,
+  type ControlIcon,
+  type IconProps,
+};
 
 /** @emoji 🌀️ Waiting ring matching the element's current state color; empty when not waiting. */
 
 /** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
 
-
-import { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions } from "../../../../🧱️elements/🖱️ContextMenu/🟦️component.tsx";
-export { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions };
+import {
+  createDOMEventBinding,
+  getElementById,
+  queryElement,
+  ContextMenu,
+  contextMenuOrdinals,
+  contextMenuItemsAtLevel,
+  contextMenuItemAtPath,
+  findContextMenuCheckedPath,
+  contextMenuNavigationFromKey,
+  moveContextMenuActivePath,
+  contextMenuPathForOrdinal,
+  contextMenuOpenSubmenuPath,
+  isContextMenuPointerTarget,
+  contextMenuDigitFromKey,
+  findCheckedContextMenuItem,
+  ContextMenuController,
+  readDomTextSelection,
+  isPointerEventOnDomTextSelection,
+  isDomTextEditableTarget,
+  buildTextSelectionContextMenuItems,
+  copyDomTextSelection,
+  cutDomTextSelection,
+  pasteDomTextSelection,
+  selectAllDomText,
+  TextSelectionContextMenuHost,
+  type ContextMenuItem,
+  type ContextMenuProps,
+  type ContextMenuControllerProps,
+  type ContextMenuNavDirection,
+  type TextSelectionContextMenuLabels,
+  type TextSelectionContextMenuActions,
+} from "../../../../🧱️elements/🖱️ContextMenu/🟦️component.tsx";
+export {
+  createDOMEventBinding,
+  getElementById,
+  queryElement,
+  ContextMenu,
+  contextMenuOrdinals,
+  contextMenuItemsAtLevel,
+  contextMenuItemAtPath,
+  findContextMenuCheckedPath,
+  contextMenuNavigationFromKey,
+  moveContextMenuActivePath,
+  contextMenuPathForOrdinal,
+  contextMenuOpenSubmenuPath,
+  isContextMenuPointerTarget,
+  contextMenuDigitFromKey,
+  findCheckedContextMenuItem,
+  ContextMenuController,
+  readDomTextSelection,
+  isPointerEventOnDomTextSelection,
+  isDomTextEditableTarget,
+  buildTextSelectionContextMenuItems,
+  copyDomTextSelection,
+  cutDomTextSelection,
+  pasteDomTextSelection,
+  selectAllDomText,
+  TextSelectionContextMenuHost,
+  type ContextMenuItem,
+  type ContextMenuProps,
+  type ContextMenuControllerProps,
+  type ContextMenuNavDirection,
+  type TextSelectionContextMenuLabels,
+  type TextSelectionContextMenuActions,
+};
 // #endregion 🖱️ContextMenu
 
-
 // #region UiDriver
-import { type UiDriverLabels, type UiDriverLabelTier, type UiDriverDrag, type UiDriverReveal, type UiDriverTooltips, type UiDriverHotkeys, type UiDriver, DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId } from "../../../../🧱️elements/🚗️UiDriver/🟦️component.tsx";
+import {
+  type UiDriverLabels,
+  type UiDriverLabelTier,
+  type UiDriverDrag,
+  type UiDriverReveal,
+  type UiDriverTooltips,
+  type UiDriverHotkeys,
+  type UiDriver,
+  DEFAULT_UI_DRIVER,
+  COMPACT_UI_DRIVER,
+  builtinUiDrivers,
+  parseUiDriver,
+  serializeUiDriver,
+  resolveUiDriver,
+  UI_CHROME_DRIVER_STORAGE_KEY,
+  readStoredUiDriverId,
+  writeStoredUiDriverId,
+  UI_CUSTOM_DRIVERS_STORAGE_KEY,
+  readStoredUiCustomDrivers,
+  writeStoredUiCustomDrivers,
+  readStoredUiDriver,
+  setUiDriverProvider,
+  activeUiDriver,
+  useUiDriver,
+  UiDriverProvider,
+  useUiDriverDragSurface,
+  useNativeDragArm,
+  useUiDriverTooltips,
+  setControlLabelIdResolver,
+  resolveControlLabelId,
+  panelKindFromPanelToggleControlId,
+  isInternalChromeControlId,
+  humanizeControlSegment,
+  humanizeControlId,
+  humanizeEngagementStepId,
+} from "../../../../🧱️elements/🚗️UiDriver/🟦️component.tsx";
 export type { UiDriverLabels, UiDriverLabelTier, UiDriverDrag, UiDriverReveal, UiDriverTooltips, UiDriverHotkeys, UiDriver };
-export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, serializeUiDriver, resolveUiDriver, UI_CHROME_DRIVER_STORAGE_KEY, readStoredUiDriverId, writeStoredUiDriverId, UI_CUSTOM_DRIVERS_STORAGE_KEY, readStoredUiCustomDrivers, writeStoredUiCustomDrivers, readStoredUiDriver, setUiDriverProvider, activeUiDriver, useUiDriver, UiDriverProvider, useUiDriverDragSurface, useNativeDragArm, useUiDriverTooltips, setControlLabelIdResolver, resolveControlLabelId, panelKindFromPanelToggleControlId, isInternalChromeControlId, humanizeControlSegment, humanizeControlId, humanizeEngagementStepId };
+export {
+  DEFAULT_UI_DRIVER,
+  COMPACT_UI_DRIVER,
+  builtinUiDrivers,
+  parseUiDriver,
+  serializeUiDriver,
+  resolveUiDriver,
+  UI_CHROME_DRIVER_STORAGE_KEY,
+  readStoredUiDriverId,
+  writeStoredUiDriverId,
+  UI_CUSTOM_DRIVERS_STORAGE_KEY,
+  readStoredUiCustomDrivers,
+  writeStoredUiCustomDrivers,
+  readStoredUiDriver,
+  setUiDriverProvider,
+  activeUiDriver,
+  useUiDriver,
+  UiDriverProvider,
+  useUiDriverDragSurface,
+  useNativeDragArm,
+  useUiDriverTooltips,
+  setControlLabelIdResolver,
+  resolveControlLabelId,
+  panelKindFromPanelToggleControlId,
+  isInternalChromeControlId,
+  humanizeControlSegment,
+  humanizeControlId,
+  humanizeEngagementStepId,
+};
 // #endregion UiDriver
 
 // #region ⌨️UiKeybindings
 import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
 import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️component.ts";
-import { buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, useHotkeys, type ControlKeybindingAction, type ControlKeybindingDefinition, type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies } from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
+import {
+  buildKeysByActionId,
+  SHELL_KEYBINDINGS,
+  composeControlKeybindings,
+  UiKeybindingsProvider,
+  useUiKeybindingsByControlId,
+  resolveControlKeybindingRaw,
+  useControlHotkey,
+  useControlKeybinding,
+  useHotkeys,
+  type ControlKeybindingAction,
+  type ControlKeybindingDefinition,
+  type ControlKeybindingCallback,
+  type ControlKeybindingOptions,
+  type ControlKeybindingDependencies,
+} from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️component.ts";
-export { parseKeybindingChords, formatKeybindingShortcut, formatControlTooltipText, buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, ControlHotkeyBadge, readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides };
+export {
+  parseKeybindingChords,
+  formatKeybindingShortcut,
+  formatControlTooltipText,
+  buildKeysByActionId,
+  SHELL_KEYBINDINGS,
+  composeControlKeybindings,
+  UiKeybindingsProvider,
+  useUiKeybindingsByControlId,
+  resolveControlKeybindingRaw,
+  useControlHotkey,
+  useControlKeybinding,
+  ControlHotkeyBadge,
+  readStoredUiKeybindingOverrides,
+  writeStoredUiKeybindingOverrides,
+};
 export type { ControlKeybindingAction, ControlKeybindingDefinition, ControlKeybindingCallback, ControlKeybindingOptions, ControlKeybindingDependencies, ControlHotkeyBadgeProps };
 
 /** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
@@ -1713,8 +2138,41 @@ import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️Ui
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
-import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentEntries, type DeepUiTranslationKeys, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
-export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentEntries, DeepUiTranslationKeys, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
+import {
+  type UiLocale,
+  type UiLabelPair,
+  type UiLabelValue,
+  type UiRibbonParentCategory,
+  type UiRibbonParentEntries,
+  type DeepUiTranslationKeys,
+  type UiTranslationSchema,
+  type UiTranslationKey,
+  type AssertUiRibbonParentKeysCovered,
+  type AssertUiSettingsLanguageKeysCovered,
+  type UiChromeTerminologyId,
+  type AssertUiSettingsTerminologyKeysCovered,
+  type UiTranslateFn,
+  type UiI18nPort,
+  type UiRegisteredTranslationKey,
+  UI_RIBBON_PARENT_CATEGORIES,
+} from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
+export type {
+  UiLocale,
+  UiLabelPair,
+  UiLabelValue,
+  UiRibbonParentCategory,
+  UiRibbonParentEntries,
+  DeepUiTranslationKeys,
+  UiTranslationSchema,
+  UiTranslationKey,
+  AssertUiRibbonParentKeysCovered,
+  AssertUiSettingsLanguageKeysCovered,
+  UiChromeTerminologyId,
+  AssertUiSettingsTerminologyKeysCovered,
+  UiTranslateFn,
+  UiI18nPort,
+  UiRegisteredTranslationKey,
+};
 export { UI_RIBBON_PARENT_CATEGORIES };
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
@@ -3619,13 +4077,9 @@ export function initUiLocaleSync(locale: ShellLocale): void {
   if (i18next.language !== locale) void i18next.changeLanguage(locale);
 }
 
-
 // #endregion 🔌️I18n Port
 
 // #endregion 🪁️I18n Resources
-
-
-
 
 /**
  * Hook binding a keyboard shortcut from the control registry, shell table, or a raw chord literal.
@@ -4181,9 +4635,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
         const targets = searchRoot.querySelectorAll(elementIdSelector(id));
         if (targets.length === 0) continue;
         nextResolved.add(id);
-        targets.forEach((target) =>
-          wantedRoots.add(target.closest('[data-slot="mode-dock-stack"]') ?? target.closest("[data-elevation-root]") ?? target),
-        );
+        targets.forEach((target) => wantedRoots.add(target.closest('[data-slot="mode-dock-stack"]') ?? target.closest("[data-elevation-root]") ?? target));
       }
       stampedRoots.forEach((root) => {
         if (wantedRoots.has(root)) return;
@@ -4945,7 +5397,12 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       <svg className={cn("pointer-events-none inset-0 h-full w-full overflow-visible", demoPositionClass)} aria-hidden="true">
         <path ref={trailPathRef} />
       </svg>
-      <div ref={ghostRef} data-slot="introduction-demonstration-cursor" className={cn("pointer-events-none h-6 w-6 bg-contain bg-no-repeat opacity-0", demoPositionClass)} style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }} />
+      <div
+        ref={ghostRef}
+        data-slot="introduction-demonstration-cursor"
+        className={cn("pointer-events-none h-6 w-6 bg-contain bg-no-repeat opacity-0", demoPositionClass)}
+        style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }}
+      />
       <div ref={calloutRef} data-slot="introduction-demonstration-callout" className={cn("introduction-demo-callout pointer-events-none opacity-0 text-foreground", demoPositionClass)} data-button="left" data-feedback="leftClick">
         <svg className="introduction-demo-mouse" viewBox="0 0 48 72" aria-hidden="true">
           <defs>
@@ -5267,8 +5724,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   // CSS-transform their shells, e.g. the demonstrator grid), placement must use host-local coords —
   // getBoundingClientRect is viewport-space and would otherwise land the box on the wrong pane.
   const hostRect = overlayHost?.getBoundingClientRect() ?? null;
-  const placementAnchor =
-    introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
+  const placementAnchor = introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
   const boxPosition = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;
@@ -5794,7 +6250,13 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
 
   return (
     <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-level="base" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
-      {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
+      {paints ? (
+        <SurfaceScope level="base" fill="surface">
+          {body}
+        </SurfaceScope>
+      ) : (
+        body
+      )}
     </nav>
   );
 };
@@ -5985,14 +6447,6 @@ export const borderNormalFrameClass = `box-border border border-solid ${borderNo
 /** @emoji 📏️ Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
-
-
-
-
-
-
-
-
 /** @emoji 📏️ Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
@@ -6005,8 +6459,13 @@ export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 
 /** @emoji 🪟️ Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
 export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
+// #region 📋️MenuItem
+import { MenuItem, menuItemClassName, type MenuItemProps } from "../../../../🧱️elements/📋️MenuItem/🟦️component.tsx";
+export { MenuItem, menuItemClassName, type MenuItemProps };
+
 /** @emoji 🪟️ Action row inside {@link floatingMenuSurfaceClass}. */
-export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-start text-xs text-element outline-none select-none", menuListItemClassName);
+export const floatingMenuItemClass = menuItemClassName;
+// #endregion 📋️MenuItem
 
 /** @emoji 🪟️ Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
 export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassClass);
@@ -6049,7 +6508,6 @@ export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass
 /** @emoji 📏️ Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
 export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
 
-
 /** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 /** @emoji 📑️ Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 export const panelTabButtonClass = cn(
@@ -6062,7 +6520,6 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-
 /** @emoji 📑️ Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
 export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
   return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
@@ -6072,18 +6529,58 @@ export function panelAnchorTabBarClass(direction: "up" | "down", expanded = fals
 /** @emoji 📑️ Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
-
 // #region 🫳️DragAffordance
 import { DragHandle, HANDLE_HOVER_SCOPE_ATTR } from "../../../../🧱️elements/🧱️DragHandle/🟦️component.tsx";
 export { DragHandle, HANDLE_HOVER_SCOPE_ATTR };
 // #endregion 🫳️DragAffordance
 
-
 /** @emoji 📑️ Shared panel/mobile panel tab bar variant. */
 /** @emoji 📑️ `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
 // #region 📑️PanelTabBar
-import { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps } from "../../../../🧱️elements/📑️PanelTabBar/🟦️component.tsx";
-export { reconcileActivePath, singleTreeLeaf, panelTabChildren, findPanelTabNode, findPanelTabPath, progressPanelTabSelection, usePanelTabSelection, dockSkeletonOf, dockSkeletonsEqual, applyDockSkeleton, PanelTabBar, type PanelTabBarVariant, type PanelTreeUnit, type PanelTabLeaf, type PanelTabBranch, type PanelTabNode, type PanelTabSelectionResult, type PanelTabSelectionOptions, type PanelDock, type PanelTabBarProps };
+import {
+  reconcileActivePath,
+  singleTreeLeaf,
+  panelTabChildren,
+  findPanelTabNode,
+  findPanelTabPath,
+  progressPanelTabSelection,
+  usePanelTabSelection,
+  dockSkeletonOf,
+  dockSkeletonsEqual,
+  applyDockSkeleton,
+  PanelTabBar,
+  type PanelTabBarVariant,
+  type PanelTreeUnit,
+  type PanelTabLeaf,
+  type PanelTabBranch,
+  type PanelTabNode,
+  type PanelTabSelectionResult,
+  type PanelTabSelectionOptions,
+  type PanelDock,
+  type PanelTabBarProps,
+} from "../../../../🧱️elements/📑️PanelTabBar/🟦️component.tsx";
+export {
+  reconcileActivePath,
+  singleTreeLeaf,
+  panelTabChildren,
+  findPanelTabNode,
+  findPanelTabPath,
+  progressPanelTabSelection,
+  usePanelTabSelection,
+  dockSkeletonOf,
+  dockSkeletonsEqual,
+  applyDockSkeleton,
+  PanelTabBar,
+  type PanelTabBarVariant,
+  type PanelTreeUnit,
+  type PanelTabLeaf,
+  type PanelTabBranch,
+  type PanelTabNode,
+  type PanelTabSelectionResult,
+  type PanelTabSelectionOptions,
+  type PanelDock,
+  type PanelTabBarProps,
+};
 // #endregion 📑️PanelTabBar
 
 export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
@@ -6683,18 +7180,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
           chipOnly
           level="panel"
           stackSlot="window-chrome-stack"
-          titleChips={
-            <PanelTabBar
-              variant="panel"
-              anchor={anchor}
-              tabs={tabs}
-              activePath={resolvedPath}
-              onActivePathChange={handlePathChange}
-              maxRows={1}
-              direction={flowFromAnchor(anchor).block}
-              showActiveColor={visible}
-            />
-          }
+          titleChips={<PanelTabBar variant="panel" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} direction={flowFromAnchor(anchor).block} showActiveColor={visible} />}
         />
       </GhostRegionShell>
     </LevelProvider>
@@ -6765,7 +7251,6 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
   if (/(?:^|\s)border-waiting(?:-active|-element)?(?:\s|$)/.test(className)) return "waiting";
   return stackActive ? "active" : "normal";
 }
-
 
 /** @emoji 🪟️ Maps a silhouette border kind to stroke classes and color tokens. */
 export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
@@ -6840,11 +7325,7 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
       frame = 0;
       const next = createWindowSilhouetteGeometry(measureWindowSilhouetteMetrics(stack));
       setGeometry((previous) =>
-        previous.state === next.state &&
-        previous.contentClipPath === next.contentClipPath &&
-        previous.borderPath === next.borderPath &&
-        previous.metrics.width === next.metrics.width &&
-        previous.metrics.height === next.metrics.height
+        previous.state === next.state && previous.contentClipPath === next.contentClipPath && previous.borderPath === next.borderPath && previous.metrics.width === next.metrics.width && previous.metrics.height === next.metrics.height
           ? previous
           : next,
       );
@@ -6870,8 +7351,7 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
         : new MutationObserver((records) => {
             const changed = records.some((record) =>
               record.type === "attributes"
-                ? (record.target === stack && record.attributeName === "data-silhouette-remeasure") ||
-                  (record.target instanceof Element && (record.target.matches(targetSelector) || record.target.closest(targetSelector) !== null))
+                ? (record.target === stack && record.attributeName === "data-silhouette-remeasure") || (record.target instanceof Element && (record.target.matches(targetSelector) || record.target.closest(targetSelector) !== null))
                 : [...record.addedNodes, ...record.removedNodes].some(containsGeometryTarget),
             );
             if (!changed) return;
@@ -7080,7 +7560,17 @@ export const WindowChromeSilhouetteBorder: React.FC<{
   const paint = windowSilhouetteBorderPaint(resolvedKind);
   if (resolvedKind === "celebrated") {
     return (
-      <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-dim="" className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+      <svg
+        data-slot={silhouetteSlot}
+        data-window-silhouette-border
+        data-kind={resolvedKind}
+        data-dim=""
+        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+        width={metrics.width}
+        height={metrics.height}
+        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+        aria-hidden
+      >
         <defs>
           <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
             <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
@@ -7094,7 +7584,17 @@ export const WindowChromeSilhouetteBorder: React.FC<{
     );
   }
   return (
-    <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-dim="" className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+    <svg
+      data-slot={silhouetteSlot}
+      data-window-silhouette-border
+      data-kind={resolvedKind}
+      data-dim=""
+      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+      width={metrics.width}
+      height={metrics.height}
+      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+      aria-hidden
+    >
       <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
     </svg>
   );
@@ -7173,7 +7673,14 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     } as React.CSSProperties;
     // 🪟️ The stack element itself stamps `data-level` (below), so this only needs to open the
     // SurfaceScope (fill="glass" — every cell above already renders it) for descendants to see via useSurface().
-    const wrapLevel = (node: React.ReactNode): React.ReactNode => (level ? <SurfaceScope level={level} fill="glass">{node}</SurfaceScope> : node);
+    const wrapLevel = (node: React.ReactNode): React.ReactNode =>
+      level ? (
+        <SurfaceScope level={level} fill="glass">
+          {node}
+        </SurfaceScope>
+      ) : (
+        node
+      );
 
     if (chipOnly) {
       return wrapLevel(
@@ -7244,8 +7751,25 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             </div>
           ) : null}
         </div>
-        {geometry.bodyRegion ? <div data-slot="window-chrome-body-surface" data-level={bodySurfaceLevel ?? level} aria-hidden className={bodySurfaceClass} style={{ top: geometry.bodyRegion.y, bottom: geometry.metrics.height - geometry.bodyRegion.y - geometry.bodyRegion.height }} /> : null}
-        <div ref={bodyRef} data-slot={bodySlot} data-level={bodySurfaceLevel ?? level} data-window-silhouette-content data-silhouette-state={geometry.state} data-dim className={cn("z-[1] min-h-0 flex-1", bodyContentClass, bodyClassName)} style={contentStyle}>
+        {geometry.bodyRegion ? (
+          <div
+            data-slot="window-chrome-body-surface"
+            data-level={bodySurfaceLevel ?? level}
+            aria-hidden
+            className={bodySurfaceClass}
+            style={{ top: geometry.bodyRegion.y, bottom: geometry.metrics.height - geometry.bodyRegion.y - geometry.bodyRegion.height }}
+          />
+        ) : null}
+        <div
+          ref={bodyRef}
+          data-slot={bodySlot}
+          data-level={bodySurfaceLevel ?? level}
+          data-window-silhouette-content
+          data-silhouette-state={geometry.state}
+          data-dim
+          className={cn("z-[1] min-h-0 flex-1", bodyContentClass, bodyClassName)}
+          style={contentStyle}
+        >
           {body}
         </div>
         {hasFooter ? (
@@ -7349,8 +7873,28 @@ export const windowSearchBodyClass = windowEngagementBodyClass;
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
-import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🚧️WindowContentDeadLine/🟦️component.tsx";
-export { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll };
+import {
+  windowChromeScrollClearanceVar,
+  windowContentDeadLineVar,
+  windowContentDeadLineScrollClass,
+  readWindowChromeScrollClearancePx,
+  measureWindowChromeScrollClearancePx,
+  isWindowContentDeadLineHost,
+  readWindowContentDeadLinePx,
+  readScrollerContentOverflows,
+  useWindowContentDeadLineScroll,
+} from "../../../../🧱️elements/🚧️WindowContentDeadLine/🟦️component.tsx";
+export {
+  windowChromeScrollClearanceVar,
+  windowContentDeadLineVar,
+  windowContentDeadLineScrollClass,
+  readWindowChromeScrollClearancePx,
+  measureWindowChromeScrollClearancePx,
+  isWindowContentDeadLineHost,
+  readWindowContentDeadLinePx,
+  readScrollerContentOverflows,
+  useWindowContentDeadLineScroll,
+};
 
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
 export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(({ className, children, ...props }, ref) => {
@@ -7533,8 +8077,34 @@ export { Layout, type LayoutMobilePanelProps, type LayoutProps };
 // #endregion 🪨️Layout
 
 // #region 🌐️Popover
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "../../../../🧱️elements/🗨️Popover/🟦️component.tsx";
-export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+  resolvePopoverPlacement,
+  type PopoverAlign,
+  type PopoverAnchorProps,
+  type PopoverContentProps,
+  type PopoverPreventableEvent,
+  type PopoverProps,
+  type PopoverSide,
+  type PopoverTriggerProps,
+} from "../../../../🧱️elements/🗨️Popover/🟦️component.tsx";
+export {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+  resolvePopoverPlacement,
+  type PopoverAlign,
+  type PopoverAnchorProps,
+  type PopoverContentProps,
+  type PopoverPreventableEvent,
+  type PopoverProps,
+  type PopoverSide,
+  type PopoverTriggerProps,
+};
 // #endregion 🌐️Popover
 
 // #region 🌥️Base Components
@@ -7912,19 +8482,91 @@ import { Button, type ButtonProps } from "../../../../🧱️elements/🔘️But
 export { Button, type ButtonProps };
 // #endregion 🌩️Button
 
+// #region 🧾️Form
+import { Form, type FormProps } from "../../../../🧱️elements/🧾️Form/🟦️component.tsx";
+export { Form, type FormProps };
+// #endregion 🧾️Form
+
+// #region ☑️Checkbox
+import { Checkbox, type CheckboxProps, type CheckboxState } from "../../../../🧱️elements/☑️Checkbox/🟦️component.tsx";
+export { Checkbox, type CheckboxProps, type CheckboxState };
+// #endregion ☑️Checkbox
+
 // #region 🩺️Input
 import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber } from "../../../../🧱️elements/✏️Input/🟦️component.tsx";
 export { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber };
 // #endregion 🩺️Input
 
 // #region 🔎️Select
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "../../../../🧱️elements/☑️Select/🟦️component.tsx";
-export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  resolveSelectPlacement,
+  type SelectAlign,
+  type SelectContentProps,
+  type SelectGroupProps,
+  type SelectItemProps,
+  type SelectLabelProps,
+  type SelectPosition,
+  type SelectPreventableEvent,
+  type SelectProps,
+  type SelectScrollButtonProps,
+  type SelectSeparatorProps,
+  type SelectSide,
+  type SelectTriggerProps,
+  type SelectValueProps,
+} from "../../../../🧱️elements/☑️Select/🟦️component.tsx";
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  resolveSelectPlacement,
+  type SelectAlign,
+  type SelectContentProps,
+  type SelectGroupProps,
+  type SelectItemProps,
+  type SelectLabelProps,
+  type SelectPosition,
+  type SelectPreventableEvent,
+  type SelectProps,
+  type SelectScrollButtonProps,
+  type SelectSeparatorProps,
+  type SelectSide,
+  type SelectTriggerProps,
+  type SelectValueProps,
+};
 // #endregion 🔎️Select
 
 // #region 🏩️Slider
-import { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady } from "../../../../🧱️elements/🎚️Slider/🟦️component.tsx";
-export { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady };
+import {
+  Slider,
+  sliderValuesMatch,
+  resolveSliderDraftClear,
+  clampSliderValuesToReady,
+  normalizeSliderRange,
+  normalizeSliderValues,
+  type SliderDirection,
+  type SliderOrientation,
+  type SliderProps,
+  type SliderRange,
+  type SliderValue,
+} from "../../../../🧱️elements/🎚️Slider/🟦️component.tsx";
+export { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, type SliderDirection, type SliderOrientation, type SliderProps, type SliderRange, type SliderValue };
 // #endregion 🏩️Slider
 
 // #region 🏬️Stepper
@@ -7944,8 +8586,18 @@ export type { ToggleItem, ToggleProps };
 // #endregion 🗡️Toggle
 
 // #region 🧩️ToggleGroup
-import { ToggleGroup, ToggleGroupItem } from "../../../../🧱️elements/🎛️ToggleGroup/🟦️component.tsx";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+  type ToggleGroupProps,
+  type ToggleGroupSingleProps,
+  type ToggleGroupMultipleProps,
+  type ToggleGroupItemProps,
+  type ToggleGroupOrientation,
+  type ToggleGroupDirection,
+} from "../../../../🧱️elements/🎛️ToggleGroup/🟦️component.tsx";
 export { ToggleGroup, ToggleGroupItem };
+export type { ToggleGroupProps, ToggleGroupSingleProps, ToggleGroupMultipleProps, ToggleGroupItemProps, ToggleGroupOrientation, ToggleGroupDirection };
 // #endregion 🧩️ToggleGroup
 
 // #region 🧫️Ring
@@ -7959,13 +8611,54 @@ export type { RingOrbData, RingProps };
 // #region 🗼️Aggregation Components
 
 // #region 🖥️Collapsible
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../🧱️elements/↕️Collapsible/🟦️component.tsx";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger, type CollapsibleContentProps, type CollapsibleProps, type CollapsibleTriggerProps } from "../../../../🧱️elements/↕️Collapsible/🟦️component.tsx";
 export { Collapsible, CollapsibleContent, CollapsibleTrigger };
+export type { CollapsibleContentProps, CollapsibleProps, CollapsibleTriggerProps };
 // #endregion 🖥️Collapsible
 
 // #region 🧸️Dialog
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "../../../../🧱️elements/💬️Dialog/🟦️component.tsx";
-export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger };
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+  type DialogCloseProps,
+  type DialogContentProps,
+  type DialogDescriptionProps,
+  type DialogOverlayProps,
+  type DialogPortalProps,
+  type DialogPreventableEvent,
+  type DialogProps,
+  type DialogTitleProps,
+  type DialogTriggerProps,
+} from "../../../../🧱️elements/💬️Dialog/🟦️component.tsx";
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+  type DialogCloseProps,
+  type DialogContentProps,
+  type DialogDescriptionProps,
+  type DialogOverlayProps,
+  type DialogPortalProps,
+  type DialogPreventableEvent,
+  type DialogProps,
+  type DialogTitleProps,
+  type DialogTriggerProps,
+};
 // #endregion 🧸️Dialog
 
 // #region 🪬️Resizable
@@ -8107,7 +8800,15 @@ function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }
   const { isFullscreen, toggle } = useDocumentFullscreen(shellScope?.rootRef.current ?? undefined);
   const enterLabel = useLabel("ui.fullscreen.toggle");
   const exitLabel = useLabel("ui.fullscreen.exit");
-  return <Toggle id="ui.fullscreen.toggle" text={isFullscreen ? exitLabel : enterLabel} pressed={isFullscreen} onPressedChange={onToggle ?? toggle} icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />} />;
+  return (
+    <Toggle
+      id="ui.fullscreen.toggle"
+      text={isFullscreen ? exitLabel : enterLabel}
+      pressed={isFullscreen}
+      onPressedChange={onToggle ?? toggle}
+      icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+    />
+  );
 }
 
 /** @emoji 🖥️ Navbar trailing slot for fullscreen — parks width so labels do not collapse when panels open. */
@@ -8140,13 +8841,7 @@ export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?:
   }, [root]);
 
   return (
-    <div
-      ref={shellRef}
-      key="fullscreenToggle"
-      data-slot="navbar-fullscreen-toggle"
-      className="ms-auto flex h-medium shrink-0 min-w-fit items-center"
-      style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}
-    >
+    <div ref={shellRef} key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="ms-auto flex h-medium shrink-0 min-w-fit items-center" style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}>
       <NavbarFullscreenToggle onToggle={onToggle} />
     </div>
   );
@@ -8155,22 +8850,8 @@ export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?:
 // #endregion 🖥️Fullscreen
 
 // #region 🩺️Navbar
-import {
-  Navbar,
-  type NavbarItem,
-  type NavbarProps,
-  SemioLogo,
-  ShellBrandLogo,
-  navbarFillItem,
-} from "../../../../🧱️elements/🔝️Navbar/🟦️component.tsx";
-export {
-  Navbar,
-  type NavbarItem,
-  type NavbarProps,
-  SemioLogo,
-  ShellBrandLogo,
-  navbarFillItem,
-};
+import { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem } from "../../../../🧱️elements/🔝️Navbar/🟦️component.tsx";
+export { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem };
 // #endregion 🩺️Navbar
 
 // #region 🧪️NavbarExampleSelect
@@ -8247,8 +8928,21 @@ export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarPr
 // #endregion 🪟️DesktopTitlebar
 
 // #region 🏷️Tabs
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../🧱️elements/📑️Tabs/🟦️component.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  type TabsProps,
+  type TabsListProps,
+  type TabsTriggerProps,
+  type TabsContentProps,
+  type TabsOrientation,
+  type TabsDirection,
+  type TabsActivationMode,
+} from "../../../../🧱️elements/📑️Tabs/🟦️component.tsx";
 export { Tabs, TabsContent, TabsList, TabsTrigger };
+export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps, TabsOrientation, TabsDirection, TabsActivationMode };
 // #endregion 🏷️Tabs
 
 // #region 🖼️IconSelector
@@ -8257,9 +8951,194 @@ export { IconSelector, type IconSelectorProps };
 // #endregion 🖼️IconSelector
 
 // #region 📜️Tree
-import { BasicChatPanel, CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, PropertyValueColumnContext, SortableTreeItems, Tree, TreeAlignedRow, TreeCheckbox, TreeContent, TreeContext, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeRowAlignmentContext, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, getActiveCatalogueDragPayload, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, markGhostTreeInteraction, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveHoverRow, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeFoldChevronIcon, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, uiSpacingLen, useTreeReorder, useTreeState, type CatalogueItem, type CatalogueProps, type ControlDef, type ControlTreeClassNames, type ControlTreeFolderSettings, type ControlTreeProps, type FileTreeNode, type TreeActionPlacement, type TreeCheckboxAction, type TreeCheckboxProps, type TreeDataActivationContext, type TreeDataItem, type TreeDataSection, type TreeDirection, type TreeDragAndDropController, type TreeDragRole, type TreeDropPosition, type TreeHeaderAction, type TreePointerPaletteDragController, type TreeReorderControllerOptions, type TreeReorderMove, type TreeSectionAction, type TreeSelectionMode, type UseTreeReorderResult, type WindowMeasureTreeGroupProps, type WindowMeasureTreeLeafProps, type WindowPaneChromeToggleProps } from "../../../../🧱️elements/🪵️Tree/🟦️component.tsx";
-export { BasicChatPanel, CATALOGUE_DRAG_MIME, Catalogue, ControlTree, FileTree, HelperRow, PropertyValueColumnContext, SortableTreeItems, Tree, TreeAlignedRow, TreeCheckbox, TreeContent, TreeContext, TreeItem, TreeItemCollapsibleState, TreeItems, TreeRow, TreeRowAlignmentContext, TreeSection, TreeStateProvider, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, WindowPaneChromeToggle, buildControlTree, catalogueTreeDragController, createTreeHighlightStore, createTreeSelectionStore, defaultControlRenderer, deriveTreeDragRoles, detailPanelHeaderLineCenterPx, detailPanelIndentLen, detailPanelIndentPx, detailPanelPropertyControlClassName, detailPanelPropertyInlineGapPx, detailPanelPropertyRowClassName, detailPanelPropertyStackedToInlineHysteresisPx, getActiveCatalogueDragPayload, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, isTreeReorderDragEvent, markGhostTreeInteraction, mergeTreeRowContextMenu, mergeTreeSectionOrder, normalizeTreeSelectedIds, resolveHoverRow, resolveTreeDropPosition, shouldDispatchTreeRowPointerLeave, syncTreeSelectionPath, treeCompactSiblingGapPx, treeFoldChevronIcon, treeHeaderMainClassName, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeItemLabelStyle, treeItemSecondaryTextClassName, treeReorderDragController, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, uiSpacingLen, useTreeReorder, useTreeState };
-export type { CatalogueItem, CatalogueProps, ControlDef, ControlTreeClassNames, ControlTreeFolderSettings, ControlTreeProps, FileTreeNode, TreeActionPlacement, TreeCheckboxAction, TreeCheckboxProps, TreeDataActivationContext, TreeDataItem, TreeDataSection, TreeDirection, TreeDragAndDropController, TreeDragRole, TreeDropPosition, TreeHeaderAction, TreePointerPaletteDragController, TreeReorderControllerOptions, TreeReorderMove, TreeSectionAction, TreeSelectionMode, UseTreeReorderResult, WindowMeasureTreeGroupProps, WindowMeasureTreeLeafProps, WindowPaneChromeToggleProps };
+import {
+  BasicChatPanel,
+  CATALOGUE_DRAG_MIME,
+  Catalogue,
+  ControlTree,
+  FileTree,
+  HelperRow,
+  PropertyValueColumnContext,
+  SortableTreeItems,
+  Tree,
+  TreeAlignedRow,
+  TreeCheckbox,
+  TreeContent,
+  TreeContext,
+  TreeItem,
+  TreeItemCollapsibleState,
+  TreeItems,
+  TreeRow,
+  TreeRowAlignmentContext,
+  TreeSection,
+  TreeStateProvider,
+  WindowMeasureTreeGroup,
+  WindowMeasureTreeLeaf,
+  WindowMeasuresTree,
+  WindowPaneChromeToggle,
+  buildControlTree,
+  catalogueTreeDragController,
+  createTreeHighlightStore,
+  createTreeSelectionStore,
+  defaultControlRenderer,
+  deriveTreeDragRoles,
+  detailPanelHeaderLineCenterPx,
+  detailPanelIndentLen,
+  detailPanelIndentPx,
+  detailPanelPropertyControlClassName,
+  detailPanelPropertyInlineGapPx,
+  detailPanelPropertyRowClassName,
+  detailPanelPropertyStackedToInlineHysteresisPx,
+  getActiveCatalogueDragPayload,
+  getTreeItemOrderedIds,
+  getTreeNextSelectionState,
+  getTreeSiblingGapPx,
+  isTreeReorderDragEvent,
+  markGhostTreeInteraction,
+  mergeTreeRowContextMenu,
+  mergeTreeSectionOrder,
+  normalizeTreeSelectedIds,
+  resolveHoverRow,
+  resolveTreeDropPosition,
+  shouldDispatchTreeRowPointerLeave,
+  syncTreeSelectionPath,
+  treeCompactSiblingGapPx,
+  treeFoldChevronIcon,
+  treeHeaderMainClassName,
+  treeHeaderRowClassName,
+  treeInspectorInnerRowClassName,
+  treeItemLabelStyle,
+  treeItemSecondaryTextClassName,
+  treeReorderDragController,
+  treeRowChromeClasses,
+  treeRowChromeContentFillClasses,
+  treeRowChromeShellClasses,
+  uiSpacingLen,
+  useTreeReorder,
+  useTreeState,
+  type CatalogueItem,
+  type CatalogueProps,
+  type ControlDef,
+  type ControlTreeClassNames,
+  type ControlTreeFolderSettings,
+  type ControlTreeProps,
+  type FileTreeNode,
+  type TreeActionPlacement,
+  type TreeCheckboxAction,
+  type TreeCheckboxProps,
+  type TreeDataActivationContext,
+  type TreeDataItem,
+  type TreeDataSection,
+  type TreeDirection,
+  type TreeDragAndDropController,
+  type TreeDragRole,
+  type TreeDropPosition,
+  type TreeHeaderAction,
+  type TreePointerPaletteDragController,
+  type TreeReorderControllerOptions,
+  type TreeReorderMove,
+  type TreeSectionAction,
+  type TreeSelectionMode,
+  type UseTreeReorderResult,
+  type WindowMeasureTreeGroupProps,
+  type WindowMeasureTreeLeafProps,
+  type WindowPaneChromeToggleProps,
+} from "../../../../🧱️elements/🪵️Tree/🟦️component.tsx";
+export {
+  BasicChatPanel,
+  CATALOGUE_DRAG_MIME,
+  Catalogue,
+  ControlTree,
+  FileTree,
+  HelperRow,
+  PropertyValueColumnContext,
+  SortableTreeItems,
+  Tree,
+  TreeAlignedRow,
+  TreeCheckbox,
+  TreeContent,
+  TreeContext,
+  TreeItem,
+  TreeItemCollapsibleState,
+  TreeItems,
+  TreeRow,
+  TreeRowAlignmentContext,
+  TreeSection,
+  TreeStateProvider,
+  WindowMeasureTreeGroup,
+  WindowMeasureTreeLeaf,
+  WindowMeasuresTree,
+  WindowPaneChromeToggle,
+  buildControlTree,
+  catalogueTreeDragController,
+  createTreeHighlightStore,
+  createTreeSelectionStore,
+  defaultControlRenderer,
+  deriveTreeDragRoles,
+  detailPanelHeaderLineCenterPx,
+  detailPanelIndentLen,
+  detailPanelIndentPx,
+  detailPanelPropertyControlClassName,
+  detailPanelPropertyInlineGapPx,
+  detailPanelPropertyRowClassName,
+  detailPanelPropertyStackedToInlineHysteresisPx,
+  getActiveCatalogueDragPayload,
+  getTreeItemOrderedIds,
+  getTreeNextSelectionState,
+  getTreeSiblingGapPx,
+  isTreeReorderDragEvent,
+  markGhostTreeInteraction,
+  mergeTreeRowContextMenu,
+  mergeTreeSectionOrder,
+  normalizeTreeSelectedIds,
+  resolveHoverRow,
+  resolveTreeDropPosition,
+  shouldDispatchTreeRowPointerLeave,
+  syncTreeSelectionPath,
+  treeCompactSiblingGapPx,
+  treeFoldChevronIcon,
+  treeHeaderMainClassName,
+  treeHeaderRowClassName,
+  treeInspectorInnerRowClassName,
+  treeItemLabelStyle,
+  treeItemSecondaryTextClassName,
+  treeReorderDragController,
+  treeRowChromeClasses,
+  treeRowChromeContentFillClasses,
+  treeRowChromeShellClasses,
+  uiSpacingLen,
+  useTreeReorder,
+  useTreeState,
+};
+export type {
+  CatalogueItem,
+  CatalogueProps,
+  ControlDef,
+  ControlTreeClassNames,
+  ControlTreeFolderSettings,
+  ControlTreeProps,
+  FileTreeNode,
+  TreeActionPlacement,
+  TreeCheckboxAction,
+  TreeCheckboxProps,
+  TreeDataActivationContext,
+  TreeDataItem,
+  TreeDataSection,
+  TreeDirection,
+  TreeDragAndDropController,
+  TreeDragRole,
+  TreeDropPosition,
+  TreeHeaderAction,
+  TreePointerPaletteDragController,
+  TreeReorderControllerOptions,
+  TreeReorderMove,
+  TreeSectionAction,
+  TreeSelectionMode,
+  UseTreeReorderResult,
+  WindowMeasureTreeGroupProps,
+  WindowMeasureTreeLeafProps,
+  WindowPaneChromeToggleProps,
+};
 // #endregion 📜️Tree
 
 // #endregion 🗼️Aggregation Components
@@ -8267,7 +9146,18 @@ export type { CatalogueItem, CatalogueProps, ControlDef, ControlTreeClassNames, 
 // #region 📷️Panel Components
 
 // #region 🧭️Panel
-import { Panel, type PanelProps, type TreePanelConfig, type TreePanelDefinition, type TreePanelSource, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone } from "../../../../🧱️elements/🖼️Panel/🟦️component.tsx";
+import {
+  Panel,
+  type PanelProps,
+  type TreePanelConfig,
+  type TreePanelDefinition,
+  type TreePanelSource,
+  staticTreePanelDefinition,
+  usePointerDrag,
+  useNativeDragAndDrop,
+  PanelTreeUnitsPane,
+  PanelEmptyDockZone,
+} from "../../../../🧱️elements/🖼️Panel/🟦️component.tsx";
 export { Panel, staticTreePanelDefinition, usePointerDrag, useNativeDragAndDrop, PanelTreeUnitsPane, PanelEmptyDockZone };
 export type { PanelProps, TreePanelConfig, TreePanelDefinition, TreePanelSource };
 // #endregion 🧭️Panel
@@ -8600,18 +9490,7 @@ export const Pane: React.FC<PaneProps> = ({
             body={!effectiveFolded ? children : undefined}
           />
           {resizable && !mobile && !effectiveFolded && !expanded && onSizeChange
-            ? resizeSides.map((side) => (
-                <PaneResizeHandle
-                  key={side}
-                  side={side}
-                  size={size}
-                  minSize={minSize}
-                  maxSize={maxSize}
-                  onSizeChange={onSizeChange}
-                  onActiveChange={onResizeActiveChange}
-                  deltaFactor={resizeDeltaFactor}
-                />
-              ))
+            ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} onActiveChange={onResizeActiveChange} deltaFactor={resizeDeltaFactor} />)
             : null}
         </FlowProvider>
       </div>
@@ -8762,7 +9641,6 @@ export const UI_WINDOW_SEARCH = {
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
 
-
 /** @emoji ⌨️ Normalizes engagement action text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
 export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
@@ -8831,7 +9709,7 @@ function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Ele
 
 /** @emoji 🎯️ True when a pointer event targets a search suggestion action row. */
 export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
-  return Boolean(searchSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
+  return Boolean(searchSuggestionPointerTarget(event)?.closest('[data-slot="command-item"]'));
 }
 
 /** @emoji 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
@@ -9539,8 +10417,19 @@ export { Window, type WindowConfig };
 // #region 🧫️Diagram
 export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, FlowNode as Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance, Connection as RFConnection };
-import { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, createDiagramForceSimulation, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton } from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
-export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
+import {
+  DIAGRAM_UNIT,
+  type DiagramLayoutDirection,
+  type DiagramLayoutOptions,
+  createDiagramForceSimulation,
+  type DiagramForceConfig,
+  defaultDiagramForceConfig,
+  type DiagramProps,
+  Diagram,
+  useDiagramLayout,
+  DiagramSkeleton,
+} from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
+export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
 // #endregion 🧫️Diagram
 
 // #region 📍️Scene
@@ -9689,41 +10578,13 @@ export {
 // #endregion 📍️Scene
 
 // #region 🛎️Table
-import {
-  type SortDirection,
-  type TableColumn,
-  type HierarchicalRowData,
-  type DragDropConfig,
-  type TableProps,
-  Table,
-  type TableSkeletonProps,
-  TableSkeleton,
-} from "../../../../🧱️elements/📊️Table/🟦️component.tsx";
-export {
-  type SortDirection,
-  type TableColumn,
-  type HierarchicalRowData,
-  type DragDropConfig,
-  type TableProps,
-  Table,
-  type TableSkeletonProps,
-  TableSkeleton,
-};
+import { type SortDirection, type TableColumn, type HierarchicalRowData, type DragDropConfig, type TableProps, Table, type TableSkeletonProps, TableSkeleton } from "../../../../🧱️elements/📊️Table/🟦️component.tsx";
+export { type SortDirection, type TableColumn, type HierarchicalRowData, type DragDropConfig, type TableProps, Table, type TableSkeletonProps, TableSkeleton };
 // #endregion 🛎️Table
 
 // #region 🗄️HistoryTable
-import {
-  type HistoryColumnAuthor,
-  type HistoryColumn,
-  type HistoryTableProps,
-  HistoryTable,
-} from "../../../../🧱️elements/📜️HistoryTable/🟦️component.tsx";
-export {
-  type HistoryColumnAuthor,
-  type HistoryColumn,
-  type HistoryTableProps,
-  HistoryTable,
-};
+import { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable } from "../../../../🧱️elements/📜️HistoryTable/🟦️component.tsx";
+export { type HistoryColumnAuthor, type HistoryColumn, type HistoryTableProps, HistoryTable };
 // #endregion 🗄️HistoryTable
 
 // #region 📁️VirtualFileSystem
@@ -9925,6 +10786,7 @@ export {
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
+  const { calculateDiagramLayoutForBatchTest } = await import("../../../../🧱️elements/📊️Diagram/🟦️layout.ts");
 
   describe("owned diagram implementations", () => {
     it("lays out a directed graph through the owned structural boundary", () => {
@@ -9933,10 +10795,11 @@ if (import.meta.vitest) {
         { id: "target", position: { x: 0, y: 0 }, data: {} },
       ];
       const edges: Edge[] = [{ id: "source-target", source: "source", target: "target" }];
-      const result = calculateDiagramLayout(nodes, edges, { direction: "LR", nodeWidth: 40, nodeHeight: 20, rankSep: 30, nodeSep: 10 });
+      const result = calculateDiagramLayoutForBatchTest(nodes, edges, { direction: "LR", nodeWidth: 40, nodeHeight: 20, rankSep: 30, nodeSep: 10 });
       expect(result.nodes[0]!.position.x).toBeLessThan(result.nodes[1]!.position.x);
       expect(result.nodes.every((node) => Number.isFinite(node.position.x) && Number.isFinite(node.position.y))).toBe(true);
-      expect(result.edges).toBe(edges);
+      expect(result.edges).not.toBe(edges);
+      expect(result.edges.map(({ id, source, target }) => ({ id, source, target }))).toEqual(edges);
     });
 
     it("settles force nodes through an owned simulation handle", () => {
@@ -9947,7 +10810,7 @@ if (import.meta.vitest) {
       const links = [{ id: "source-target", source: "source", target: "target" }];
       const simulation = createDiagramForceSimulation(nodes, links, { ...defaultDiagramForceConfig, enabled: true });
       const ticks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
-      for (let index = 0; index < ticks; index++) simulation.tick();
+      for (let index = 0; index < ticks; index++) while (!simulation.step({ deadline: performance.now() + 1_000, fuel: 2_048 }).tickComplete) {}
       expect(simulation.nodes()).toBe(nodes);
       expect(nodes.every((node) => Number.isFinite(node.x) && Number.isFinite(node.y))).toBe(true);
       expect(nodes[0]!.x).not.toBe(-100);
@@ -10973,7 +11836,7 @@ if (import.meta.vitest) {
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
-      expect(css).toContain('[data-window-silhouette]');
+      expect(css).toContain("[data-window-silhouette]");
       expect(css).toContain(':not([data-active="true"]):hover');
       expect(css).toContain("stroke: var(--border-emphasized-color)");
       expect(css).toContain("window-silhouette-border-introduced");
@@ -11022,8 +11885,20 @@ if (import.meta.vitest) {
           windowSilhouettePath({
             width: 200,
             height: 100,
-            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
-            bottom: { depth: 24, chips: [{ left: 80, right: 120 }, { left: 140, right: 200 }] },
+            top: {
+              depth: 24,
+              chips: [
+                { left: 0, right: 60 },
+                { left: 160, right: 200 },
+              ],
+            },
+            bottom: {
+              depth: 24,
+              chips: [
+                { left: 80, right: 120 },
+                { left: 140, right: 200 },
+              ],
+            },
           }),
         );
         expect(path).toContain("V99 H140 V75 H120 V99 H80 V75");
@@ -11078,8 +11953,20 @@ if (import.meta.vitest) {
           windowSilhouettePath({
             width: 200,
             height: 100,
-            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
-            bottom: { depth: 24, chips: [{ left: 0, right: 50 }, { left: 80, right: 120 }] },
+            top: {
+              depth: 24,
+              chips: [
+                { left: 0, right: 60 },
+                { left: 160, right: 200 },
+              ],
+            },
+            bottom: {
+              depth: 24,
+              chips: [
+                { left: 0, right: 50 },
+                { left: 80, right: 120 },
+              ],
+            },
           }),
         );
         expect(path).toContain("V75 H120 V99 H80 V75 H50 V99");
@@ -12602,9 +13489,7 @@ if (import.meta.vitest) {
     });
 
     it("WindowChrome with level=dialog stamps its level, keeps payload transparent, and paints chip glass", () => {
-      const { container } = render(
-        <WindowChrome level="dialog" stackSlot="level-dialog-stack" titleChips={<span>Title</span>} body={<div data-testid="dialog-body">Body</div>} />,
-      );
+      const { container } = render(<WindowChrome level="dialog" stackSlot="level-dialog-stack" titleChips={<span>Title</span>} body={<div data-testid="dialog-body">Body</div>} />);
       const stack = container.querySelector('[data-slot="level-dialog-stack"]') as HTMLElement;
       expect(stack.getAttribute("data-level")).toBe("dialog");
       const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
@@ -12702,9 +13587,7 @@ if (import.meta.vitest) {
         <Layout
           navbar={<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />}
           footer={<Footer items={[{ key: "f", content: "Foot" }]} />}
-          canvas={
-            <Mode windows={[{ id: "w", title: uiDataLabel("W"), iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />
-          }
+          canvas={<Mode windows={[{ id: "w", title: uiDataLabel("W"), iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />}
         />,
       );
       const layout = container.querySelector('[data-slot="layout"]');
@@ -12861,7 +13744,7 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
-      expect(css).toContain('[data-window-silhouette-gap]');
+      expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
         <ContextMenu items={[{ id: "demo", label: uiDataLabel("Demo action") }]} title={uiDataLabel("Actions")}>
@@ -12886,7 +13769,8 @@ if (import.meta.vitest) {
 
     it("renders catalog and shortcode menu icons instead of raw labels", async () => {
       render(
-        <ContextMenu title={uiDataLabel("Menu")}
+        <ContextMenu
+          title={uiDataLabel("Menu")}
           items={[
             { id: "delete", label: uiDataLabel("Delete"), icon: "trash" },
             { id: "suggest", label: uiDataLabel("Suggest"), icon: "sparkles" },
@@ -12924,7 +13808,8 @@ if (import.meta.vitest) {
 
     it("highlights checked items without a tick or checkmark", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 8, y: 16 }}
           items={[
@@ -12949,7 +13834,8 @@ if (import.meta.vitest) {
 
     it("omits the color swatch when suggestion-style rows have icon only", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 8, y: 16 }}
           items={[
@@ -12997,7 +13883,8 @@ if (import.meta.vitest) {
       const onSelect = vi.fn();
       const onOpenChange = vi.fn();
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           closeOnSelect={false}
           position={{ x: 8, y: 16 }}
@@ -13019,7 +13906,8 @@ if (import.meta.vitest) {
 
     it("renders ordinal badges for the first nine enabled rows", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
@@ -13041,7 +13929,8 @@ if (import.meta.vitest) {
       const onHover = vi.fn();
       const onHoverEnd = vi.fn();
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
@@ -13064,7 +13953,8 @@ if (import.meta.vitest) {
 
     it("opens nested submenus with ArrowRight and closes with ArrowLeft", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
@@ -13111,7 +14001,8 @@ if (import.meta.vitest) {
 
     it("renders a non-interactive header row for a labeled separator, leaving a bare separator unlabeled", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
@@ -13132,14 +14023,7 @@ if (import.meta.vitest) {
     });
 
     it("toggles a parent row's submenu open and closed on click", async () => {
-      render(
-        <ContextMenuController title={uiDataLabel("Menu")}
-          open
-          position={{ x: 4, y: 4 }}
-          items={[{ id: "transform", label: uiDataLabel("Transform"), children: [{ id: "move", label: uiDataLabel("Move") }] }]}
-          onOpenChange={vi.fn()}
-        />,
-      );
+      render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 4, y: 4 }} items={[{ id: "transform", label: uiDataLabel("Transform"), children: [{ id: "move", label: uiDataLabel("Move") }] }]} onOpenChange={vi.fn()} />);
       const parent = await waitFor(() => screen.getByRole("menuitem", { name: "Transform" }));
       expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
       fireEvent.click(parent);
@@ -13150,7 +14034,8 @@ if (import.meta.vitest) {
 
     it("renders a parent row's shortcut before the submenu chevron", async () => {
       render(
-        <ContextMenuController title={uiDataLabel("Menu")}
+        <ContextMenuController
+          title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[{ id: "transform", label: uiDataLabel("Transform"), shortcut: "⌘️T", children: [{ id: "move", label: uiDataLabel("Move") }] }]}
@@ -13211,10 +14096,13 @@ if (import.meta.vitest) {
     // 🐚️ Memoized: an inline (re-created every render) ref callback makes React detach+reattach the
     // ref on every commit (identity changed → old callback fires with `null`, new one fires with the
     // node), and since each call bumps state, that becomes an infinite render loop.
-    const setRoot = reactHostPort.useCallback((node: HTMLDivElement | null) => {
-      scope.rootRef.current = node;
-      bump((n) => n + 1);
-    }, [scope]);
+    const setRoot = reactHostPort.useCallback(
+      (node: HTMLDivElement | null) => {
+        scope.rootRef.current = node;
+        bump((n) => n + 1);
+      },
+      [scope],
+    );
     return (
       <div ref={setRoot}>
         <ShellScopeProvider scope={scope}>{children()}</ShellScopeProvider>
@@ -13375,9 +14263,7 @@ if (import.meta.vitest) {
       const expandedTopTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
       expect(expandedTopTabs?.className).toContain("border-b");
       expect(expandedTopTabs?.className).toContain("!border-normal");
-      const chromeMarkup = renderToStaticMarkup(
-        <PanelChromeTabBar anchor="top-middle" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => {}} />,
-      );
+      const chromeMarkup = renderToStaticMarkup(<PanelChromeTabBar anchor="top-middle" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => {}} />);
       expect(chromeMarkup).toContain('data-slot="window-chrome-chip-cap"');
       expect(chromeMarkup).toContain("ui-glass");
       expect(chromeMarkup).not.toContain("rounded-sm");
@@ -14124,7 +15010,7 @@ if (import.meta.vitest) {
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const tabMarkup = renderToStaticMarkup(<PanelTabBar variant="panel" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => undefined} />);
       expect(tabMarkup).toContain(modeDockTabLabelClassName);
-      expect(tabMarkup.indexOf('data-icon')).toBeLessThan(tabMarkup.indexOf(">Tab A<"));
+      expect(tabMarkup.indexOf("data-icon")).toBeLessThan(tabMarkup.indexOf(">Tab A<"));
     });
 
     it("mirrors flow-relative alignment onto logical classes (tree label, navbar trailing slot)", () => {
@@ -14188,8 +15074,29 @@ if (import.meta.vitest) {
       });
       expect(windowSilhouettePath(metrics(dockTop()), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
       expect(windowSilhouettePath(metrics(dockTop()))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H1 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H140 V75 H50 V99 H1 Z");
+      expect(
+        windowSilhouettePath(
+          metrics(dockTop(), {
+            depth: 24,
+            chips: [
+              { left: 0, right: 50 },
+              { left: 140, right: 200 },
+            ],
+          }),
+          0,
+        ),
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 Z");
+      expect(
+        windowSilhouettePath(
+          metrics(dockTop(), {
+            depth: 24,
+            chips: [
+              { left: 0, right: 50 },
+              { left: 140, right: 200 },
+            ],
+          }),
+        ),
+      ).toBe("M1,1 H60 V25 H160 V1 H199 V99 H140 V75 H50 V99 H1 Z");
       expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z");
       expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H50 V100 H0 Z");
       expect(
@@ -14374,8 +15281,20 @@ if (import.meta.vitest) {
       const metrics: WindowSilhouetteMetrics = {
         width: 200,
         height: 100,
-        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
-        bottom: { depth: 24, chips: [{ left: 0, right: 50 }, { left: 80, right: 120 }] },
+        top: {
+          depth: 24,
+          chips: [
+            { left: 0, right: 60 },
+            { left: 160, right: 200 },
+          ],
+        },
+        bottom: {
+          depth: 24,
+          chips: [
+            { left: 0, right: 50 },
+            { left: 80, right: 120 },
+          ],
+        },
       };
       const path = windowSilhouettePath(metrics, 0);
       for (const kind of WINDOW_SILHOUETTE_BORDER_KINDS) {
@@ -14549,7 +15468,16 @@ if (import.meta.vitest) {
           <Mode
             windows={[
               { id: "left", title: uiDataLabel("Left"), iconId: "app-window", children: <div>Left Body</div> },
-              { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>Right Body</div> },
+              {
+                id: "right",
+                title: uiDataLabel("Right"),
+                iconId: "app-window",
+                children: (
+                  <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>
+                    Right Body
+                  </div>
+                ),
+              },
             ]}
             layout={{
               kind: "stack",
@@ -14864,7 +15792,14 @@ if (import.meta.vitest) {
               { id: "shape", title: uiDataLabel("Shape"), iconId: "app-window", children: <div>Shape Body</div> },
               { id: "energy", title: uiDataLabel("Energy"), iconId: "app-window", children: <div>Energy Body</div> },
             ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "shape" }, { kind: "window", id: "energy" }], activeId: "energy" }}
+            layout={{
+              kind: "stack",
+              children: [
+                { kind: "window", id: "shape" },
+                { kind: "window", id: "energy" },
+              ],
+              activeId: "energy",
+            }}
             activeWindowId="energy"
             onActiveWindowChange={() => {}}
           />
@@ -15392,7 +16327,6 @@ if (import.meta.vitest) {
       expect(computeModeDropZone(40, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topLeft", index: 0 });
       expect(computeModeDropZone(160, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topRight", index: 0 });
     });
-
 
     it("beginWindowTemplateDrag records a session for mode dock preview", () => {
       beginWindowTemplateDrag({ payload: { windowKindId: "main", templateId: "top" }, label: "Top" });
@@ -16493,7 +17427,13 @@ if (import.meta.vitest) {
 
     it("Window pane chrome uses semantic icons in U-cutout chips, never fold chevrons", () => {
       const { container } = render(
-        <Window id="pane-chrome-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>} utilityBar={<button type="button">Utility</button>}>
+        <Window
+          id="pane-chrome-window"
+          engagement={{ status: [{ id: "s", content: "Idle" }] }}
+          search={{ input: { placeholder: uiDataLabel("Action") } }}
+          measures={<div data-testid="measure-slot">LOD</div>}
+          utilityBar={<button type="button">Utility</button>}
+        >
           <div>Body</div>
         </Window>,
       );
@@ -17088,7 +18028,6 @@ if (import.meta.vitest) {
       }
     });
   });
-
 }
 
 // #endregion 🔍️Window Components
@@ -17117,7 +18056,6 @@ export { ConnectionMode, MiniMap } from "@xyflow/react";
 // #endregion 🎽️XY Flow
 
 // #region 🖋️State Management
-export { useSelector as useXStateSelector } from "@xstate/react";
 export { assign, createActor, fromCallback, setup, type ActorRefFrom, type AnyActorRef, type SnapshotFrom } from "xstate";
 // #endregion 🖋️State Management
 
@@ -17141,14 +18079,9 @@ export { rankFuzzyItems };
 export type { FuzzySearchField, FuzzySearchOptions, FuzzySearchResult };
 // #endregion 🔔️Search
 
-// #region 🧵️MDX
-export { MDXProvider } from "@mdx-js/react";
-// #endregion 🧵️MDX
-
 // #region 🌨️Styling
 export { styleVariants } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
 export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
-export { clsx } from "clsx";
 // #endregion 🌨️Styling
 
 // #region 📮️Resizable Panels
@@ -17513,7 +18446,7 @@ if (treeVitest) {
       expect(panel).toBeTruthy();
       expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
       expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
-      expect(panel.querySelector('[data-window-silhouette-border]')?.hasAttribute("data-dim")).toBe(true);
+      expect(panel.querySelector("[data-window-silhouette-border]")?.hasAttribute("data-dim")).toBe(true);
 
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
       fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
@@ -18145,7 +19078,7 @@ if (treeVitest) {
       expect(onValueChange).toHaveBeenLastCalledWith([56]);
     });
 
-    it("clampToReady stops the thumb at the ready extent instead of the fixed max", async () => {
+    it("clampToReady suppresses a no-op attempt at the ready extent", async () => {
       // 🪣️ Opt-in: most `ready` consumers (the test above) want the highlight without a hard limit;
       // a background-planned count (e.g. puzzle3d's fill slider) needs `clampToReady` to make the
       // un-planned tail physically unreachable.
@@ -18156,11 +19089,10 @@ if (treeVitest) {
       expect(thumb).not.toBeNull();
 
       fireEvent.keyDown(thumb!, { key: "ArrowRight" });
-      // Clamped back to the ready ceiling (55) instead of advancing to 56.
-      expect(onValueChange).toHaveBeenLastCalledWith([55]);
+      expect(onValueChange).not.toHaveBeenCalled();
     });
 
-    it("forwards fractional step to the radix root so 0–1 probability sliders are not stuck at 0/1", async () => {
+    it("forwards fractional step to the owned root so 0–1 probability sliders are not stuck at 0/1", async () => {
       const { fireEvent, render } = await import("@testing-library/react");
       const onValueChange = vi.fn();
       const { container } = render(<Slider id="ui.slider.probability-step" value={[0.5]} min={0} max={1} step={0.01} onValueChange={onValueChange} />);
@@ -18739,10 +19671,13 @@ if (treeVitest) {
       };
       const updatedMarkup = renderToStaticMarkup(<>{updated?.accessor(row)}</>);
       expect(updatedMarkup).toContain("2026");
-      const avatarColumn = buildVirtualFileSystemDescriptorColumns({
-        ...schemaWithMeta,
-        descriptorColumnIds: ["createdBy"],
-      }, "en")[0];
+      const avatarColumn = buildVirtualFileSystemDescriptorColumns(
+        {
+          ...schemaWithMeta,
+          descriptorColumnIds: ["createdBy"],
+        },
+        "en",
+      )[0];
       const avatarMarkup = renderToStaticMarkup(<>{avatarColumn?.accessor(row)}</>);
       expect(avatarMarkup).toContain("avatar-fallback");
       expect(avatarMarkup).toContain(">A<");
@@ -19152,8 +20087,6 @@ if (treeVitest) {
       expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" }, isDragHandle: true }, true)).toEqual(["sort", "transfer"]);
     });
 
-    
-
     it("default driver keeps catalogue transfer on the move handle only", () => {
       const markup = renderToStaticMarkup(
         <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
@@ -19543,9 +20476,7 @@ if (treeVitest) {
       const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
-      const { container: chromeBarContainer } = render(
-        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />,
-      );
+      const { container: chromeBarContainer } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />);
       const { container: foldedPanelContainer } = render(<Panel anchor="top-left" visible={false} tabs={tabs} activeTabPath={["tab-a"]} />);
       const chromeBarButton = chromeBarContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
       const foldedPanelButton = foldedPanelContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
@@ -19859,10 +20790,7 @@ if (treeVitest) {
 
     it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
       const { fireEvent, render, waitFor } = await import("@testing-library/react");
-      const tabs = [
-        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
-        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
-      ];
+      const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
       const onVisibleChange = vi.fn();
       const onFoldToggle = vi.fn();
       const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
@@ -19925,10 +20853,7 @@ if (treeVitest) {
     });
 
     it("panel window-variant tabs use mode-dock pill chrome, normal toggle dividers, and a U-gap", () => {
-      const tabs = [
-        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
-        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
-      ];
+      const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
       const markup = renderToStaticMarkup(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(markup).toContain("bg-active-base");
       expect(markup).toContain("border-0");
@@ -19941,10 +20866,7 @@ if (treeVitest) {
 
     it("panel chip-cap and controls paint glass above one transparent clipped payload", async () => {
       const { render } = await import("@testing-library/react");
-      const tabs = [
-        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
-        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
-      ];
+      const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
       const { container } = render(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
       const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
       const body = container.querySelector('[data-slot="panel-content"]') as HTMLElement;
@@ -20001,7 +20923,13 @@ if (treeVitest) {
       expect(measureWindowSilhouetteMetrics(stack)).toEqual({
         width: 200,
         height: 100,
-        top: { depth: 24, chips: [{ left: 0, right: 40 }, { left: 140, right: 200 }] },
+        top: {
+          depth: 24,
+          chips: [
+            { left: 0, right: 40 },
+            { left: 140, right: 200 },
+          ],
+        },
         bottom: { depth: 0, chips: [] },
       });
     });
@@ -20038,13 +20966,25 @@ if (treeVitest) {
       mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 76, bottom: 100 });
       const metrics = measureWindowSilhouetteMetrics(stack);
       expect(metrics?.top).toEqual({ depth: 0, chips: [] });
-      expect(metrics?.bottom).toEqual({ depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] });
+      expect(metrics?.bottom).toEqual({
+        depth: 24,
+        chips: [
+          { left: 0, right: 60 },
+          { left: 160, right: 200 },
+        ],
+      });
       expect(windowSilhouettePath(metrics!)).toBe(
         windowSilhouettePath({
           width: 200,
           height: 100,
           top: { depth: 0, chips: [] },
-          bottom: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+          bottom: {
+            depth: 24,
+            chips: [
+              { left: 0, right: 60 },
+              { left: 160, right: 200 },
+            ],
+          },
         }),
       );
     });
@@ -20093,7 +21033,13 @@ if (treeVitest) {
       expect(measureWindowSilhouetteMetrics(stack)).toEqual({
         width: 200,
         height: 100,
-        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        top: {
+          depth: 24,
+          chips: [
+            { left: 0, right: 60 },
+            { left: 160, right: 200 },
+          ],
+        },
         bottom: { depth: 0, chips: [] },
       });
     });

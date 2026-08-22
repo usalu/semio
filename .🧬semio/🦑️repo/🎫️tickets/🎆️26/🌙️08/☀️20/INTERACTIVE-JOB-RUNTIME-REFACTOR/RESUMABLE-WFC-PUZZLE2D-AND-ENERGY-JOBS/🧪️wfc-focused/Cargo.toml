@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 semio-framework-job = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 serde = { version = "1", features = ["derive"] }

@@ -11,6 +11,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "graph-pointer-down")]
 pub struct GraphPointerDown {}
 
-pub async fn handle(_payload: &GraphPointerDown, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(_payload: &GraphPointerDown, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::default())
 }

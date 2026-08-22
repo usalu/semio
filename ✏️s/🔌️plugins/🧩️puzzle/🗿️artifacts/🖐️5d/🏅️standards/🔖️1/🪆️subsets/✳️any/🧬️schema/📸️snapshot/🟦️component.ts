@@ -133,6 +133,7 @@ export interface Puzzle5dKindCatalogs {
  * (`id`/`name`/`category`) cannot represent. */
 export interface Puzzle5dCatalogPartKindExtra {
   id: string;
+  name?: string;
   label?: string;
   description?: string;
   icon?: string;
@@ -162,12 +163,14 @@ export interface Puzzle5dCatalogGripKindExtra {
 /** 🧩️ Puzzle5d-owned overflow for one fastener-kind row. */
 export interface Puzzle5dCatalogFastenerKindExtra {
   id: string;
+  name?: string;
   label?: string;
 }
 
 /** 🧩️ Puzzle5d-owned overflow for one rope-kind row. */
 export interface Puzzle5dCatalogRopeKindExtra {
   id: string;
+  name?: string;
   label?: string;
   defaultFastenerKind?: string;
 }

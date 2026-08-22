@@ -25,8 +25,9 @@ use crate::editor::layout::terminology::{layout_labels, LayoutLabels};
 use semio_framework::kernel::Effect;
 use semio_framework::Dialect;
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolJob, ArtifactToolFactoryRegistry};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
 };
@@ -206,6 +207,45 @@ impl ArtifactEditor for LayoutPlayApp {
         command.command_id()
     }
 
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(crate::editor::layout::engine::export::LayoutExportJobFactory::new(&controller_id))?;
+        registry.register(crate::editor::layout::engine::export::LayoutMediaExportJobFactory::new(&controller_id))
+    }
+
+    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        use crate::editor::layout::engine::export::{LayoutExportKind, LayoutExportRequest, LayoutExportToolPayload};
+        let (kind, page_id) = match *request.command {
+            LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+            LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+            LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.or_else(|| Some(request.config.active_page_id.clone()))),
+            LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
+            _ => return Ok(None),
+        };
+        if request.tool_id != kind.tool_id() {
+            return Err(Fault::from("layout-export-command-tool-mismatch"));
+        }
+        let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
+        let payload = LayoutExportToolPayload {
+            request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
+            output_chunks: request.output_chunks,
+            completion: Some(request.completion),
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    fn build_media_export_job(request: ArtifactMediaExportJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        use crate::editor::layout::engine::export::{LayoutExportJob, LayoutExportKind, LayoutExportRequest, LayoutMediaExportJob, LAYOUT_MEDIA_EXPORT_TOOL_ID};
+        if request.port != "layout:out" || request.tool_id != LAYOUT_MEDIA_EXPORT_TOOL_ID {
+            return Ok(None);
+        }
+        let page_id = request.snapshot.pages.first().map(|page| page.id.clone()).ok_or_else(|| Fault::from("layout-export-page-missing"))?;
+        let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
+        let export_request = LayoutExportRequest { kind: LayoutExportKind::Svg, page_id: Some(page_id), snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex };
+        let job = LayoutExportJob::new(request.operation, export_request).map_err(Fault::from)?.with_snapshot_close_lease(request.snapshot_close).with_output_chunks(request.output_chunks).with_media_output_credit(request.output_credit);
+        Ok(Some(ArtifactReservedToolJob::new(LayoutMediaExportJob::new(job, request.completion))))
+    }
+
     async fn handle(
         command: &LayoutCommand,
         doc: &ArtifactView<'_, LayoutSnapshot>,
@@ -218,12 +258,9 @@ impl ArtifactEditor for LayoutPlayApp {
     }
 
     //#region 🔖️Media
-    /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `document:out` replicates the trait default
-    /// exactly (overriding `export_media` for `layout:out` forfeits the default's dispatch); `layout:out`
-    /// re-exports the current layout's first page as `2d.layout` vector/SVG — reuses
-    /// `export_document_svg` (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg`
-    /// parameter reaches this method, so there is no config-carried "active page" to prefer over the
-    /// first page.
+    /// 🎞️ `document:out` is the bounded document-pack batch recipe. Interactive `layout:out`
+    /// is intercepted by the exact registered media-export factory before this reducer is reached;
+    /// direct reducer reachability therefore fails closed instead of completing an export inline.
     async fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
@@ -233,12 +270,7 @@ impl ArtifactEditor for LayoutPlayApp {
                     payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
-            "layout:out" => {
-                let document = doc.snapshot;
-                let page = document.pages.first().ok_or_else(|| MediaError::Payload(port.to_string(), "layout has no pages to export".into()))?;
-                let svg = crate::editor::layout::engine::scene::export_document_svg(document, &page.id).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.layout".into(), json: svg } })
-            }
+            "layout:out" => Err(MediaError::NotImplemented),
             _ => Err(MediaError::NotImplemented),
         }
     }
@@ -646,20 +678,12 @@ mod tests {
 
     //#region 🔖️MediaPorts
     #[semio_framework_async_macros::async_test]
-    async fn export_media_layout_out_returns_svg_of_first_page() {
-        // 🌉️ Same pre-existing per-process registration gap as `🎮️commands/🐚️export`'s
-        // `export_actions_wire_to_real_layout_exporters` test — see that test's comment.
-        crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
+    async fn direct_layout_out_reducer_is_fail_closed_for_runtime_job_interception() {
         let app = layout_app();
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let app = LayoutPlayApp::default();
-        let media = semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("layout:out", &doc)).expect("export layout:out");
-        assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
-        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
-        assert_eq!(schema, "2d.layout");
-        assert!(json.starts_with("<svg"));
+        assert!(matches!(semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("layout:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
     #[semio_framework_async_macros::async_test]

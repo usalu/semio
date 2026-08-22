@@ -33,7 +33,7 @@ async fn applies_to_committed_after() {
     assert_eq!(applied, expected_after(), "edit-block-text/replaces-the-intro-paragraphs: applied state differs from committed after-snapshot");
 }
 
-/// ↩️ The inverse reads the base handle's paragraphs back out of the working-scene cache; the base handle here is the one minted for an EMPTY paragraph list, which is exactly what an uncached read returns.
+/// ↩️ The inverse reads the empty paragraph list owned by the base text-child record.
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_before() {
     let base = before();
@@ -96,7 +96,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "edit-block-text/replaces-the-intro-paragraphs: committed diff JSON is not canonical");
 }
 
-/// 🩹 The committed single-`patched` delta carries `before` to `after` on its own, without any working-scene cache being consulted.
+/// 🩹 The committed single-`patched` delta carries `before` to `after` using only snapshot-owned records.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -104,7 +104,7 @@ async fn committed_diff_applies_to_after() {
     assert_eq!(produced, expected_after(), "edit-block-text/replaces-the-intro-paragraphs: committed diff did not carry before to after");
 }
 
-/// 📝 Content addressing in action: the persisted `content.child_id` changes because the paragraphs changed, while the child's `target` slot (keyed by block id) stays put.
+/// 📝 Content addressing in action: the persisted `content.handle.child_id` changes because the paragraphs changed, while the child's `target` slot (keyed by block id) stays put.
 #[semio_framework_async_macros::async_test]
 async fn content_child_id_is_reminted_while_the_target_slot_is_stable() {
     let base = before();
@@ -115,7 +115,7 @@ async fn content_child_id_is_reminted_while_the_target_slot_is_stable() {
     let NoteBlockNode::Text { content, font_size, .. } = find_block(&applied.blocks, "blk-text").expect("the text block survives") else {
         panic!("edit-block-text must not change the block's kind");
     };
-    assert_ne!(content.child_id, before_content.child_id, "edit-block-text/replaces-the-intro-paragraphs: new paragraphs must mint a new content-addressed child id");
+    assert_ne!(content.handle.child_id, before_content.handle.child_id, "edit-block-text/replaces-the-intro-paragraphs: new paragraphs must mint a new content-addressed child id");
     assert_eq!(content.target, before_content.target, "the child SLOT is keyed by block id, so it must not move when the content changes");
     assert_eq!(*font_size, 16.0, "editing the text must not restyle the block");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-text").expect("the text block exists")), (0.0, 0.0, 280.0, 120.0), "editing the text must not reflow the block's box");

@@ -9,5 +9,9 @@ message DrawConfig {
   string active_utility_id = 3;
   // @state config
   string locale = 4;
+  uint64 trace_pointer_generation = 5;
+  uint64 trace_pointer_completed_work = 6;
+  uint64 trace_pointer_pending_work = 7;
+  string gesture_checkpoint_json = 8;
 }
 message DrawCamera { double x = 1; double y = 2; double zoom = 3; }

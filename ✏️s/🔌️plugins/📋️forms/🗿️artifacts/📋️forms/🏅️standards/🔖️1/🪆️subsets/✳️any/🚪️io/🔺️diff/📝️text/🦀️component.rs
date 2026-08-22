@@ -93,8 +93,8 @@ impl FormsDiff {
             if let Some(value) = self.current_step_index {
                 next.current_step_index = value;
             }
-            if let Some(value) = &self.try_values_json {
-                next.try_values_json = value.clone();
+            if let Some(value) = &self.try_values {
+                next.try_values = value.clone();
             }
             if let Some(value) = &self.locale {
                 next.locale = value.clone();
@@ -148,7 +148,7 @@ impl MutationDiff<FormsSnapshot> for FormsDiff {
         take!(results);
         take!(selected_ids);
         take!(current_step_index);
-        take!(try_values_json);
+        take!(try_values);
         take!(locale);
         take!(contributions_json);
     }

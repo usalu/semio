@@ -20,19 +20,19 @@ pub struct DisconnectSynapse {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DisconnectSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-synapse", record: "DisconnectedSynapse" };
 
-    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::disconnect_synapse::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::disconnect_synapse::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Disconnect synapse \"{}\"", self.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

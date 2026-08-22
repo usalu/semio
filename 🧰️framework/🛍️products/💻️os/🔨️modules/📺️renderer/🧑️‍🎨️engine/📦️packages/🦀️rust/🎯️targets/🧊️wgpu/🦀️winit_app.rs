@@ -26,7 +26,9 @@ use crate::AppInteractionState;
 use crate::RuntimeMailbox;
 use std::sync::Arc;
 use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
-use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton};
+use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
+#[cfg(target_arch = "wasm32")]
+use ui_render::{PointerId, PointerKind};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
@@ -47,6 +49,15 @@ fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_rende
     *frame_generation = frame_generation.wrapping_add(1);
     scheduler.invalidate(InvalidationReason::INPUT_STATE);
     events.enqueue(ui_token, event)
+}
+
+/// 📐️ The mounted resize-callback core, isolated for the same window-free latency proof as
+/// [`enqueue_host_event`]. GPU surface reconfiguration remains the immediate platform-only step.
+fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, physical_width: u32, physical_height: u32, scale_factor: f32) {
+    let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
+    *frame_generation = frame_generation.wrapping_add(1);
+    scheduler.invalidate(InvalidationReason::VIEWPORT);
+    events.enqueue_metrics(ui_token, physical_width, physical_height, scale_factor);
 }
 
 //#region 🔖️WindowDelegate for OsHost
@@ -85,10 +96,7 @@ impl WindowDelegate for OsHost {
     /// allocation beyond what `wgpu`'s own surface reconfiguration already does).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
-        let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-        self.frame_generation = self.frame_generation.wrapping_add(1);
-        self.scheduler.invalidate(InvalidationReason::VIEWPORT);
-        self.events.enqueue_metrics(self.ui_token, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
+        enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let (width, height) = metrics.logical_size();
         self.presenter.resize(width, height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
@@ -108,6 +116,23 @@ impl WindowDelegate for OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_present", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
+        self.redraw_core()
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn close_requested(&mut self) -> bool {
+        true
+    }
+}
+
+impl OsHost {
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn redraw_offscreen_worker(&mut self) -> RedrawOutcome {
+        let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_offscreen_worker", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::InteractiveStep);
+        self.redraw_core()
+    }
+
+    fn redraw_core(&mut self) -> RedrawOutcome {
         if self.frame_ready {
             self.frame_ready = false;
         } else {
@@ -116,11 +141,6 @@ impl WindowDelegate for OsHost {
         let now = self.clock.now_seconds();
         self.build_and_publish_snapshot();
         self.present_snapshot(now)
-    }
-
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn close_requested(&mut self) -> bool {
-        true
     }
 }
 
@@ -164,7 +184,10 @@ impl OsHost {
         let frame = self.frame_build.poll_runtime_and_resubmit(self.runtime.clone(), build_inputs, build_operation, build_generation, self.presenter.dpr());
         let cursor = frame.as_ref().map(|frame| semio_cursor_to_request(frame.cursor)).unwrap_or_else(|| self.snapshot_sink.acquire().cursor);
         if let Some(frame) = frame {
-            self.presenter.present(frame);
+            match self.presenter.present(frame) {
+                Ok(fullscreen) => self.platform_fullscreen = fullscreen,
+                Err(error) => self.present_fault = Some(error),
+            }
         }
         let revision = self.snapshot_sink.next_revision();
         let generation = semio_framework_trace::Generation(self.frame_generation);
@@ -260,6 +283,12 @@ async fn dispatch_normalized_event(app: &mut AppInteractionState, event: Dispatc
             app.wheel_delta += delta_y;
         }
         DispatchEvent::KeyDown { key, modifiers } => {
+            if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
+                return;
+            }
+            if key == "Escape" {
+                app.cancel_text_operations();
+            }
             if let Some(action) = key_action_from_dispatch(&key, true) {
                 app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
             }
@@ -269,11 +298,37 @@ async fn dispatch_normalized_event(app: &mut AppInteractionState, event: Dispatc
                 app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
             }
         }
-        DispatchEvent::TextInput { .. } | DispatchEvent::Paste { .. } | DispatchEvent::Ime(_) => {
-            // 🕳️ Honest gap: `AppRuntime` has no IME/paste entry point today (the old `SemioApp`
-            // never wired `WindowEvent::Ime`/paste either — this is pre-existing scope, not a
-            // regression this packet introduces). See report.
+        DispatchEvent::TextInput { text } | DispatchEvent::Paste { text } => {
+            if let Err(error) = app.enqueue_text_operation(text) {
+                app.text_fault = Some(error);
+            }
         }
+        DispatchEvent::TextEditStart { stream, declared_bytes, .. } => {
+            if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::TextEditChunk { stream, text } => {
+            if let Err(error) = app.push_text_operation(stream, text) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::TextEditCommit { stream } => {
+            if let Err(error) = app.commit_text_operation(stream) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::TextEditAbort { stream } => {
+            if let Err(error) = app.abort_text_operation(stream) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::Ime(ImeEvent::Commit { text }) => {
+            if let Err(error) = app.enqueue_text_operation(text) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::Ime(_) => {}
     }
 }
 
@@ -373,6 +428,7 @@ pub struct WinitApp {
     plugin_modules_root: std::path::PathBuf,
     window: Option<Arc<Window>>,
     host: Option<OsHost>,
+    #[cfg(not(target_arch = "wasm32"))]
     pointers: ui_host::PointerRegistry,
     modifiers: EventModifiers,
     last_pointer_pos: (f32, f32),
@@ -400,11 +456,136 @@ impl WinitApp {
             plugin_modules_root,
             window: None,
             host: None,
+            #[cfg(not(target_arch = "wasm32"))]
             pointers: ui_host::PointerRegistry::new(),
             modifiers: EventModifiers::default(),
             last_pointer_pos: (0.0, 0.0),
             pending_reason: None,
         }
+    }
+}
+
+//#region 🎛️WinitEventNormalization
+
+fn pointer_info_for_mouse(app: &mut WinitApp, device: winit::event::DeviceId) -> PointerInfo {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::pointer_info_for_mouse(&mut app.pointers, device)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = (app, device);
+        PointerInfo { id: PointerId(1_u64 << 62), kind: PointerKind::Mouse, pressure: None, tilt: None }
+    }
+}
+
+fn pointer_info_for_touch(app: &mut WinitApp, touch: &winit::event::Touch) -> PointerInfo {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::pointer_info_for_touch(&mut app.pointers, touch)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = app;
+        PointerInfo { id: PointerId((0b10_u64 << 62) | (touch.id & ((1_u64 << 62) - 1))), kind: PointerKind::Touch, pressure: touch.force.map(|force| force.normalized() as f32), tilt: None }
+    }
+}
+
+fn pointer_button_from_winit(button: winit::event::MouseButton) -> Option<PointerButton> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::pointer_button_from_winit(button)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        match button {
+            winit::event::MouseButton::Left => Some(PointerButton::Primary),
+            winit::event::MouseButton::Right => Some(PointerButton::Secondary),
+            winit::event::MouseButton::Middle => Some(PointerButton::Middle),
+            _ => None,
+        }
+    }
+}
+
+fn normalize_wheel_delta(delta: winit::event::MouseScrollDelta) -> (f32, f32) {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::normalize_wheel_delta_native(delta)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        match delta {
+            winit::event::MouseScrollDelta::LineDelta(x, y) => (x * 40.0, y * 40.0),
+            winit::event::MouseScrollDelta::PixelDelta(position) => (position.x as f32, position.y as f32),
+        }
+    }
+}
+
+fn modifiers_from_winit(state: winit::keyboard::ModifiersState) -> EventModifiers {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::modifiers_from_winit(state)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        EventModifiers { shift: state.shift_key(), ctrl: state.control_key(), alt: state.alt_key(), meta: state.super_key() }
+    }
+}
+
+fn logical_key_to_dispatch_string(key: &winit::keyboard::Key) -> String {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        ui_host::logical_key_to_dispatch_string(key)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        use winit::keyboard::Key;
+        match key {
+            Key::Character(value) => value.to_string(),
+            Key::Named(named) => named_key_label(*named).to_string(),
+            Key::Dead(Some(value)) => value.to_string(),
+            _ => "Unidentified".to_string(),
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn named_key_label(named: winit::keyboard::NamedKey) -> &'static str {
+    use winit::keyboard::NamedKey as N;
+    match named {
+        N::Enter => "Enter",
+        N::Tab => "Tab",
+        N::Space => " ",
+        N::ArrowDown => "ArrowDown",
+        N::ArrowLeft => "ArrowLeft",
+        N::ArrowRight => "ArrowRight",
+        N::ArrowUp => "ArrowUp",
+        N::End => "End",
+        N::Home => "Home",
+        N::PageDown => "PageDown",
+        N::PageUp => "PageUp",
+        N::Backspace => "Backspace",
+        N::Delete => "Delete",
+        N::Escape => "Escape",
+        N::Shift => "Shift",
+        N::Control => "Control",
+        N::Alt => "Alt",
+        N::Meta | N::Super => "Meta",
+        N::CapsLock => "CapsLock",
+        N::ContextMenu => "ContextMenu",
+        N::F1 => "F1",
+        N::F2 => "F2",
+        N::F3 => "F3",
+        N::F4 => "F4",
+        N::F5 => "F5",
+        N::F6 => "F6",
+        N::F7 => "F7",
+        N::F8 => "F8",
+        N::F9 => "F9",
+        N::F10 => "F10",
+        N::F11 => "F11",
+        N::F12 => "F12",
+        _ => "Unidentified",
     }
 }
 
@@ -416,12 +597,12 @@ fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
     match event {
         WindowEvent::CursorMoved { device_id, position } => {
             app.last_pointer_pos = (position.x as f32, position.y as f32);
-            let pointer = ui_host::pointer_info_for_mouse(&mut app.pointers, *device_id);
+            let pointer = pointer_info_for_mouse(app, *device_id);
             Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1 })
         }
         WindowEvent::MouseInput { device_id, state, button } => {
-            let pointer = ui_host::pointer_info_for_mouse(&mut app.pointers, *device_id);
-            let button = ui_host::pointer_button_from_winit(*button)?;
+            let pointer = pointer_info_for_mouse(app, *device_id);
+            let button = pointer_button_from_winit(*button)?;
             let (x, y) = app.last_pointer_pos;
             Some(match state {
                 ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button },
@@ -429,12 +610,12 @@ fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
             })
         }
         WindowEvent::MouseWheel { delta, .. } => {
-            let (delta_x, delta_y) = ui_host::normalize_wheel_delta_native(*delta);
+            let (delta_x, delta_y) = normalize_wheel_delta(*delta);
             let (x, y) = app.last_pointer_pos;
             Some(DispatchEvent::Scroll { x, y, delta_x, delta_y })
         }
         WindowEvent::Touch(touch) => {
-            let pointer = ui_host::pointer_info_for_touch(&mut app.pointers, touch);
+            let pointer = pointer_info_for_touch(app, touch);
             let x = touch.location.x as f32;
             let y = touch.location.y as f32;
             Some(match touch.phase {
@@ -444,16 +625,18 @@ fn normalize(app: &mut WinitApp, event: &WindowEvent) -> Option<DispatchEvent> {
             })
         }
         WindowEvent::KeyboardInput { event, .. } => {
-            let logical = ui_host::logical_key_to_dispatch_string(&event.logical_key);
+            let logical = logical_key_to_dispatch_string(&event.logical_key);
             Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed))
         }
         WindowEvent::ModifiersChanged(modifiers) => {
-            app.modifiers = ui_host::modifiers_from_winit(modifiers.state());
+            app.modifiers = modifiers_from_winit(modifiers.state());
             None
         }
         _ => None,
     }
 }
+
+//#endregion 🎛️WinitEventNormalization
 
 impl ApplicationHandler<HostUserEvent> for WinitApp {
     /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
@@ -519,17 +702,25 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
             HostUserEvent::RuntimeReady { runtime, presenter } => {
                 let mut host = OsHost::new(runtime, presenter);
                 let proxy = self.proxy.clone();
+                #[cfg(not(target_arch = "wasm32"))]
                 host.runtime.set_waker(Arc::new(move || {
+                    let _ = proxy.send_event(HostUserEvent::Wake);
+                }));
+                #[cfg(target_arch = "wasm32")]
+                host.runtime.set_waker(std::rc::Rc::new(move || {
                     let _ = proxy.send_event(HostUserEvent::Wake);
                 }));
                 let proxy = self.proxy.clone();
                 host.kernel.set_waker(crate::kernel_seam::HostWaker::new(move || {
                     let _ = proxy.send_event(HostUserEvent::Wake);
                 }));
-                let proxy = self.proxy.clone();
-                host.frame_build.set_completion_waker(Arc::new(move || {
-                    let _ = proxy.send_event(HostUserEvent::FrameReady);
-                }));
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let proxy = self.proxy.clone();
+                    host.frame_build.set_completion_waker(Arc::new(move || {
+                        let _ = proxy.send_event(HostUserEvent::FrameReady);
+                    }));
+                }
                 host.scheduler.invalidate(InvalidationReason::STRUCTURE);
                 self.host = Some(host);
             }
@@ -604,21 +795,9 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
 }
 
 impl WinitApp {
-    /// 🚦️ `WaitUntil(next deadline)` / `Wait` — never `Poll` (this file's own headline change). The
-    /// target `Instant` is computed directly from `Instant::now()` rather than threading `OsClock`'s
-    /// own origin through, since `WaitUntil` only needs "approximately this far in the future", not
-    /// perfect alignment with `OsClock`'s epoch.
-    ///
-    /// ⚠️ **Assumption flagged for verification (U4: this file is UNRUN — see report):**
-    /// `std::time::Instant::now()` is assumed available on `wasm32-unknown-unknown` here on the
-    /// strength of this crate's own `Cargo.toml` already enabling `getrandom`'s `wasm_js` feature
-    /// (evidence it targets a `std` build with working wasm time/random shims) — but
-    /// `ui_host::window::native::MonotonicClock` (a sibling packet, `backend-iface`/`ui-host`)
-    /// deliberately confines its OWN `Instant`-based clock to `#[cfg(not(target_arch = "wasm32"))]`
-    /// and ships a separate `performance.now()`-based `BrowserClock` for wasm — a signal from that
-    /// packet's own authors that `Instant` was NOT assumed safe there. This file takes the opposite
-    /// bet for now; if wrong, the fix is a wasm32-only branch computing the `WaitUntil` target via
-    /// `web_sys::window().performance()` instead, mirroring `OsClock::now_seconds`'s wasm arm.
+    /// 🚦️ `WaitUntil(next deadline)` / `Wait` — never `Poll` (this file's own headline change).
+    /// `ControlFlow::wait_duration` selects winit's target clock while the scheduler remains in
+    /// elapsed seconds, so native and browser builds share the same deadline policy.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recompute_control_flow(&mut self, event_loop: &ActiveEventLoop) {
         let Some(host) = self.host.as_ref() else {
@@ -628,7 +807,7 @@ impl WinitApp {
         event_loop.set_control_flow(match host.scheduler.next_deadline() {
             Some(deadline) => {
                 let remaining = (deadline.due - host.now_seconds()).max(0.0);
-                winit::event_loop::ControlFlow::WaitUntil(std::time::Instant::now() + std::time::Duration::from_secs_f64(remaining))
+                winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_secs_f64(remaining))
             }
             None => winit::event_loop::ControlFlow::Wait,
         });
@@ -655,5 +834,21 @@ mod callback_latency_tests {
         let (_, _, p99_us) = semio_framework_trace::site_percentiles("os_renderer_event").expect("mounted event callback samples");
         assert!(p99_us < 2_000, "mounted event callback p99 was {p99_us} µs");
         assert_eq!(events.pending_discrete_len(), 0);
+    }
+
+    #[test]
+    fn mounted_resize_storm_callback_p99_stays_below_two_milliseconds() {
+        let mut events = ui_host::EventQueue::new();
+        let mut scheduler = ui_render::FrameScheduler::new();
+        let token = ui_host::UiThreadToken::mint_for_host();
+        let mut generation = 0;
+        for sample in 0..20_000 {
+            enqueue_host_metrics(&mut events, &mut scheduler, token, &mut generation, 800 + sample % 32, 600 + sample % 32, 2.0);
+        }
+        let (_, _, p99_us) = semio_framework_trace::site_percentiles("os_renderer_metrics").expect("mounted resize callback samples");
+        assert!(p99_us < 2_000, "mounted resize callback p99 was {p99_us} µs");
+        let drained = events.drain(ui_host::WorkerContext::new(events.current_generation()));
+        let latest = drained.metrics.expect("coalesced resize sample");
+        assert_eq!((latest.physical_width, latest.physical_height), (831, 631));
     }
 }

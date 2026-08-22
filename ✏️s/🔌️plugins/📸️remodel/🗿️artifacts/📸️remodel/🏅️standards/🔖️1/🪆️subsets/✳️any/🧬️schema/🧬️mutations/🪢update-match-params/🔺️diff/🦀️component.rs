@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::UpdateMatchParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::UpdateMatchParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if !payload.params.ratio_test.is_finite() || payload.params.ratio_test <= 0.0 || payload.params.ratio_test > 1.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Match ratio test {} must be finite and within (0, 1].", payload.params.ratio_test), Vec::<String>::new());
     }

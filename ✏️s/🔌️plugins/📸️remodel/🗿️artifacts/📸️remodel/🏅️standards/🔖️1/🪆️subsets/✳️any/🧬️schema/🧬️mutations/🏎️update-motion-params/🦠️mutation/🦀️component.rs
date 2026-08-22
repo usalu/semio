@@ -16,7 +16,7 @@ pub struct UpdateMotionParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_motion_params(params: MotionParams) -> RemodelMutation {
+pub fn update_motion_params(params: MotionParams) -> RemodelMutation {
     RemodelMutation::UpdateMotionParams(UpdateMotionParams { params })
 }
 

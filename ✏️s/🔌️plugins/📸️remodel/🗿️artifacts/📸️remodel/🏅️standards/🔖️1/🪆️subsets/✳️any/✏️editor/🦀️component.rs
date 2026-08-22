@@ -107,7 +107,7 @@ pub async fn remodel_mesh_out_port() -> MediaPortSpec {
 /// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
 /// Relocated from the artifact's `⚙️engine/🦀️component.rs` (#2553): its only three consumers are all
 /// app-side (`🎮️commands/📥️import-frame-payload`, `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`).
-pub async fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
+pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
     let (header, encoded) = data_url.split_once(',')?;
     let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
     let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
@@ -117,7 +117,7 @@ pub async fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> 
 /// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/📥️import-frame-payload`,
 /// `🎮️commands/🚀️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
 /// type, so it stays app-side (relocated from `⚙️engine/🦀️component.rs`, #2553).
-pub async fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
+pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodel_image::ImageRgba8, remodel_image::ImageError> {
     if mime.contains("jpeg") || mime.contains("jpg") {
         remodel_image::decode_jpeg(bytes)
     } else {
@@ -135,7 +135,7 @@ semio_framework_plugin::app_commands! {
     /// `"setSelection" as "selection"` and `"setLocale" as "locale"` are the rows that prove it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum RemodelCommand for RemodelSnapshot, RemodelMutation, RemodelConfig, RemodelConfigMutation {
-        // 🚀️ Staged reconstruction — fully synchronous; there is no advance/cancel tick.
+        // 🚀️ Generation-tagged reconstruction; the hidden row is appended to preserve ordinals.
         "runReconstruction" as "run-reconstruction" => run_reconstruction::RunReconstruction,
         "retryStage" as "retry-stage" => retry_stage::RetryStage,
         "runStage" as "run-stage" => run_stage::RunStage,
@@ -182,6 +182,8 @@ semio_framework_plugin::app_commands! {
         "importFrames" as "import-frames" => import_frames::ImportFrames,
         "importVideo" as "import-video" => import_video::ImportVideo,
         "exportQcReport" as "export-qc-report" => export_qc_report::ExportQcReport,
+        "advanceReconstruction" as "advance-reconstruction" => advance_reconstruction::AdvanceReconstruction,
+        "cancelReconstruction" as "cancel-reconstruction" => cancel_reconstruction::CancelReconstruction,
     }
 }
 
@@ -189,9 +191,9 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::remodel::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
 use crate::editor::remodel::commands::{add_stream, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
+use crate::editor::remodel::commands::{advance_reconstruction, cancel_reconstruction, retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodel::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodel::commands::{export_qc_report, import_frames, import_video};
-use crate::editor::remodel::commands::{retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodel::commands::{set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
 use crate::editor::remodel::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 //#endregion 🔖️Commands
@@ -203,13 +205,13 @@ use crate::editor::remodel::commands::{set_dense_params, set_feature_params, set
 mod args_bridge {
     use super::*;
 
-    async fn field<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a Value> {
+    fn field<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a Value> {
         args?.get(key)
     }
 
     /// 🔤️ A string arg — also accepts a number, so a select whose option ids are numeric (`textureSize`)
     /// reads the same whether the host sends `"2048"` or `2048`.
-    async fn text(args: Option<&Value>, key: &str) -> Option<String> {
+    fn text(args: Option<&Value>, key: &str) -> Option<String> {
         match field(args, key)? {
             Value::String(value) => Some(value.clone()),
             Value::Number(value) => Some(value.to_string()),
@@ -218,7 +220,7 @@ mod args_bridge {
     }
 
     /// 🔢️ A numeric arg — also accepts a numeric string, which is how select-sourced numbers arrive.
-    async fn number(args: Option<&Value>, key: &str) -> Option<f64> {
+    fn number(args: Option<&Value>, key: &str) -> Option<f64> {
         match field(args, key)? {
             Value::Number(value) => value.as_f64(),
             Value::String(value) => value.parse().ok(),
@@ -226,7 +228,7 @@ mod args_bridge {
         }
     }
 
-    async fn flag(args: Option<&Value>, key: &str) -> Option<bool> {
+    fn flag(args: Option<&Value>, key: &str) -> Option<bool> {
         match field(args, key)? {
             Value::Bool(value) => Some(*value),
             Value::String(value) => value.parse().ok(),
@@ -234,26 +236,38 @@ mod args_bridge {
         }
     }
 
-    async fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
+    fn vec3(args: Option<&Value>, key: &str) -> Option<[f64; 3]> {
         let items = field(args, key)?.as_array()?;
         Some([items.first()?.as_f64()?, items.get(1)?.as_f64()?, items.get(2)?.as_f64()?])
     }
 
-    async fn unknown(action: &str) -> Fault {
+    fn unknown(action: &str) -> Fault {
         Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("remodel has no command for action '{action}'"))
     }
 
     #[allow(clippy::too_many_lines)]
-    pub async fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
+    pub fn command_from_action(action: &str, args: Option<&Value>) -> Result<RemodelCommand, Fault> {
         let text_or = |key: &str, fallback: &str| text(args, key).unwrap_or_else(|| fallback.to_string());
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let f32_or = |key: &str, fallback: f32| number(args, key).map_or(fallback, |value| value as f32);
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
+        let u64_or = |key: &str, fallback: u64| number(args, key).map_or(fallback, |value| value as u64);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
         Ok(match action {
             "runReconstruction" => RemodelCommand::RunReconstruction(run_reconstruction::RunReconstruction {}),
-            "retryStage" => RemodelCommand::RetryStage(retry_stage::RetryStage { stage: text_or("stage", "") }),
+            "retryStage" => RemodelCommand::RetryStage(retry_stage::RetryStage { stage: text_or("stage", "extracting-features") }),
             "runStage" => RemodelCommand::RunStage(run_stage::RunStage { stage: text_or("stage", "extracting-features") }),
+            "advanceReconstruction" => RemodelCommand::AdvanceReconstruction(advance_reconstruction::AdvanceReconstruction {
+                generation: u64_or("generation", 0),
+                job_id: text_or("jobId", ""),
+                requested_stage: text_or("requestedStage", "full"),
+                phase: text_or("phase", "pipeline"),
+                stream_index: u32_or("streamIndex", 0),
+                frame_index: u32_or("frameIndex", 0),
+                terminal_cursor: u64_or("terminalCursor", 0),
+                tick: u32_or("tick", 0),
+            }),
+            "cancelReconstruction" => RemodelCommand::CancelReconstruction(cancel_reconstruction::CancelReconstruction {}),
             "importFramePayload" => RemodelCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: text_or("payload", ""), name: text_or("name", ""), index: u32_or("index", 0) }),
             "importVideoFramePayload" => RemodelCommand::ImportVideoFramePayload(import_video_frame_payload::ImportVideoFramePayload {
                 payload: text_or("payload", ""),
@@ -418,6 +432,20 @@ impl ArtifactEditor for RemodelPlayApp {
     const DIALECT: Dialect = crate::artifacts::remodel::REMODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODEL_DOCUMENT_SCHEMA;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<RemodelPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.remodel.remodel@1/*#editor",
+        document_schema: "remodel.scene",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "runReconstruction" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
+            "retryStage" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
+            "runStage" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
+            "advanceReconstruction" => semio_framework::ToolExecutionContract::bounded_first_step(1_114_112, 1_024, 1_024, 4_096, 7_500),
+        }
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::remodel::config::schema::app_schema_descriptor())
     }
@@ -441,7 +469,8 @@ impl ArtifactEditor for RemodelPlayApp {
                 // through the working-scene cache, honestly `Err` on a cold cache (documented
                 // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
                 // fabricated empty mesh.
-                let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: composed mesh content not resolvable (cold working-scene cache)".into()))?;
+                let mesh = crate::artifacts::remodel::resolve_bounded_remodel_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh)
+                    .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64::engine::general_purpose::STANDARD.encode(bytes) } })
             }
@@ -602,15 +631,32 @@ pub fn create_remodel_app() -> AppDefinition {
             .panel_tab_def(calibration_panel::definition())
             .panel_tab_def(tracks::definition())
             .panel_tab_def(quality::definition())
-            // 🚀️ Staged reconstruction — fully synchronous (see the module doc comment); there is no
-            // `advanceReconstruction`/`cancelReconstruction` action.
+            // 🚀️ Public starts plus the non-palette host continuation.
             .mutation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
+            .mutation("cancelReconstruction", LocalizedLabel::native("Cancel Reconstruction", "Rekonstruktion abbrechen"))
             .mutation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
             .mutation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
-            .action_interactive_job("runReconstruction", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("retryStage", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("runStage", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(run_reconstruction::ADVANCE_RECONSTRUCTION_ACTION_ID, LocalizedLabel::native("Advance Reconstruction", "Rekonstruktion fortsetzen"), ActionKind::Mutation) })
+            .action_interactive_job("runReconstruction", InteractiveJobClassification::Migrated)
+            .action_interactive_job("retryStage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("runStage", InteractiveJobClassification::Migrated)
+            .action_interactive_job(run_reconstruction::ADVANCE_RECONSTRUCTION_ACTION_ID, InteractiveJobClassification::Migrated)
             .action_args("runStage", vec![ActionArgDef::select(
+                "stage",
+                LocalizedLabel::native("Stage", "Stufe"),
+                vec![
+                    ActionArgOption::new("extracting-features", LocalizedLabel::native("Extracting Features", "Merkmale extrahieren")),
+                    ActionArgOption::new("matching-features", LocalizedLabel::native("Matching Features", "Merkmale zuordnen")),
+                    ActionArgOption::new("estimating-poses", LocalizedLabel::native("Estimating Poses", "Posen schätzen")),
+                    ActionArgOption::new("bundle-adjusting", LocalizedLabel::native("Bundle Adjusting", "Bündelausgleich")),
+                    ActionArgOption::new("dense-stereo", LocalizedLabel::native("Dense Stereo", "Dense-Stereo")),
+                    ActionArgOption::new("fusing-volume", LocalizedLabel::native("Fusing Volume", "Volumen fusionieren")),
+                    ActionArgOption::new("extracting-surface", LocalizedLabel::native("Extracting Surface", "Oberfläche extrahieren")),
+                    ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
+                ],
+            )
+            .default_value("extracting-features")])
+            .action_args("retryStage", vec![ActionArgDef::select(
                 "stage",
                 LocalizedLabel::native("Stage", "Stufe"),
                 vec![
@@ -909,6 +955,17 @@ mod tests {
             RemodelCommand::ImportFrames(import_frames::ImportFrames {}),
             RemodelCommand::ImportVideo(import_video::ImportVideo {}),
             RemodelCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
+            RemodelCommand::AdvanceReconstruction(advance_reconstruction::AdvanceReconstruction {
+                generation: 1,
+                job_id: "job-1".into(),
+                requested_stage: "full".into(),
+                phase: "pipeline".into(),
+                stream_index: 0,
+                frame_index: 1,
+                terminal_cursor: 0,
+                tick: 2,
+            }),
+            RemodelCommand::CancelReconstruction(cancel_reconstruction::CancelReconstruction {}),
         ]
     }
 
@@ -958,6 +1015,8 @@ mod tests {
             "import-frames",
             "import-video",
             "export-qc-report",
+            "advance-reconstruction",
+            "cancel-reconstruction",
         ];
         let commands = every_command();
         assert_eq!(commands.len(), keywords.len(), "the keyword list must cover every row");
@@ -994,12 +1053,12 @@ mod tests {
         let mut ids: Vec<&str> = every_command().iter().map(RemodelCommand::command_id).collect();
         ids.sort_unstable();
         ids.dedup();
-        assert_eq!(ids.len(), 39, "39 distinct manifest action ids");
+        assert_eq!(ids.len(), 41, "41 distinct manifest action ids");
 
         let mut keywords: Vec<String> = every_command().iter().map(|command| command.print_op().split_whitespace().next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
-        assert_eq!(keywords.len(), 39, "39 distinct wire keywords");
+        assert_eq!(keywords.len(), 41, "41 distinct wire keywords");
     }
     /// 🌉️ The action bridge covers every action the manifest declares (framework-injected ones aside)
     /// and rejects anything else — the gap this migration closed (see `command_from_action`'s doc).

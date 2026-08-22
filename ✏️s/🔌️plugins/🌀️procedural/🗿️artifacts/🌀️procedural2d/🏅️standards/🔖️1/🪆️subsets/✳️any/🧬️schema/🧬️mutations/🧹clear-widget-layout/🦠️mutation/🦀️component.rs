@@ -17,23 +17,23 @@ pub struct ClearWidgetLayout {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn clear_widget_layout(id: String) -> Procedural2dMutation {
+pub fn clear_widget_layout(id: String) -> Procedural2dMutation {
     Procedural2dMutation::ClearWidgetLayout(ClearWidgetLayout { id })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ClearWidgetLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "widget-layout", kind: "clear-widget-layout", record: "ClearedWidgetLayout" };
 
-    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Clear layout for widget \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

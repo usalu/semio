@@ -3,7 +3,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn diff(payload: &super::mutation::DeleteRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+pub fn diff(payload: &super::mutation::DeleteRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.rules.iter().any(|rule| rule.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Rule \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

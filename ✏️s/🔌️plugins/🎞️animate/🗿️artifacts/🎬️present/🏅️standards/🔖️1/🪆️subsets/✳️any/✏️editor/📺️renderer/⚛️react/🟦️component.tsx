@@ -72,11 +72,7 @@ import {
   type PdfCanvasRenderTask,
   type PdfCanvasStatus,
 } from "./🔨️modules/🔌️pdf-canvas-port/🟦️component.ts";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import rehypeStringify from "rehype-stringify";
-import { unified } from "unified";
+import { compileOwnedMarkdownToHtml } from "./🔨️modules/📝️markdown-html-compiler/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 export {
@@ -99,10 +95,7 @@ export interface MarkdownHtmlCompiler {
 }
 
 const defaultMarkdownHtmlCompiler: MarkdownHtmlCompiler = {
-  async compile(markdown) {
-    const file = await unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeStringify).process(markdown);
-    return String(file);
-  },
+  compile: compileOwnedMarkdownToHtml,
 };
 
 const markdownHtmlCompiler = ephemeralBox<MarkdownHtmlCompiler>("s.plugins.animate.apps.present.renderer.react.component.tsx.markdownHtmlCompiler", defaultMarkdownHtmlCompiler);

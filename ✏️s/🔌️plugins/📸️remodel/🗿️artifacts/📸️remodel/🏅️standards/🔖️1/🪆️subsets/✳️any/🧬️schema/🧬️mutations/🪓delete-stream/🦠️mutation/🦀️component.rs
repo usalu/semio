@@ -14,7 +14,7 @@ pub struct DeleteStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_stream(id: String) -> RemodelMutation {
+pub fn delete_stream(id: String) -> RemodelMutation {
     RemodelMutation::DeleteStream(DeleteStream { id })
 }
 

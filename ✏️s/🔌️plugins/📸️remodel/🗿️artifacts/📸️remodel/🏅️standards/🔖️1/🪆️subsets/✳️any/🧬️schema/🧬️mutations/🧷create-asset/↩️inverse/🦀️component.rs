@@ -11,9 +11,9 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::{remodel_asset, RemodelSnapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::CreateAsset, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub fn inverse(payload: &super::mutation::CreateAsset, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     match base.assets.get(&payload.key) {
-        Some(_) => match remodel_asset(&base.assets, &payload.key) {
+        Some(_) => match remodel_asset(base, &payload.key) {
             Some(old) => vec![super::mutation::create_asset(payload.key.clone(), old)],
             None => Vec::new(),
         },

@@ -81,6 +81,8 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
+  /** 🧵 Drains one operation-owned export chunk; `undefined` is the sealed end marker. */
+  readonly takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<Uint8Array | undefined>;
   readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
@@ -726,6 +728,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       pendingTurnEffects.delete(instanceId);
       shardClient.dispose(actorId);
     },
+    takeSegmentedDownloadChunk: (instanceId, operationId) => shardClient.takeSegmentedDownloadChunk(requireActorId(instanceId), instanceId, operationId),
     enqueue: (instanceId, events) => {
       void runQueuedTurn(instanceId, events);
     },
@@ -952,6 +955,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       channels.delete(instanceId);
       await handle.destroyApp(instanceId);
     },
+    takeSegmentedDownloadChunk: (instanceId, operationId) => handle.takeSegmentedDownloadChunk(instanceId, operationId),
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
     // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
@@ -1553,6 +1557,7 @@ if (import.meta.vitest) {
       manifest: {} as unknown as PluginManifest,
       createApp: async () => 0,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
       refreshUi: async () => ({}),
       contextMenu: async () => [],
@@ -1851,6 +1856,7 @@ if (import.meta.vitest) {
         manifest: {} as unknown as PluginManifest,
         createApp: async () => 0,
         destroyApp: async () => {},
+        takeSegmentedDownloadChunk: async () => undefined,
         handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
         refreshUi: async () => ({}),
         contextMenu: async () => [],
@@ -1930,6 +1936,7 @@ if (import.meta.vitest) {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
+          takeSegmentedDownloadChunk: async () => undefined,
           enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
             const commands = events.map((frame) => decodeAppCommand(frame));
             seenCommands.push(...commands);
@@ -1986,6 +1993,7 @@ if (import.meta.vitest) {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
+          takeSegmentedDownloadChunk: async () => undefined,
           enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
             const commands = events.map((frame) => decodeAppCommand(frame));
             const frames = commands.map((command) => ("LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));

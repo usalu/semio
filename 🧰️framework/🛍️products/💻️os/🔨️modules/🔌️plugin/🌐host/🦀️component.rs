@@ -998,7 +998,9 @@ fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
         Effect::SetPanel { panel_json } => wit_effects::Effect::SetPanel(wit_effects::SetPanelEffect { panel_json }),
         Effect::SetActiveUtility { window_id, utility_id } => wit_effects::Effect::SetActiveUtility(wit_effects::SetActiveUtilityEffect { window_id, utility_id }),
         Effect::SetActiveTool { tool_id } => wit_effects::Effect::SetActiveTool(wit_effects::SetActiveToolEffect { tool_id }),
-        Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => wit_effects::Effect::PatchWorld3dChrome(wit_effects::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids }),
+        Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => {
+            wit_effects::Effect::PatchWorld3dChrome(wit_effects::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids })
+        }
         Effect::ReplayShellCommand { action_id, args } => wit_effects::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
         Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit_effects::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
         Effect::IconRenderExport { items } => wit_effects::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
@@ -1006,7 +1008,9 @@ fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
         Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit_effects::Effect::OpenPluginInstance(wit_effects::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
         Effect::RequestSync => wit_effects::Effect::RequestSync,
         Effect::ReleaseCapability { id } => wit_effects::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
-        other => unreachable!("Host::emit was called with an effect variant it never constructs itself: {other:?} — every completable/streaming variant has its own dedicated HostBackend::Direct arm and host-async import instead of going through emit; this fallback firing means a new self.emit(..) call site was added above without a matching arm here"),
+        other => unreachable!(
+            "Host::emit was called with an effect variant it never constructs itself: {other:?} — every completable/streaming variant has its own dedicated HostBackend::Direct arm and host-async import instead of going through emit; this fallback firing means a new self.emit(..) call site was added above without a matching arm here"
+        ),
     }
 }
 

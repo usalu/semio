@@ -240,7 +240,7 @@ mod tests {
                 seen.insert(format!("{interface_name}.{}", function.name));
             }
         }
-        let expected = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
+        let expected = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "jobs.take-segmented-download-chunk", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
         assert_eq!(seen, expected);
         let pure = functions(named_block(&source, "interface", "pure"));
         for name in ["log", "now-ms", "trace-span"] {

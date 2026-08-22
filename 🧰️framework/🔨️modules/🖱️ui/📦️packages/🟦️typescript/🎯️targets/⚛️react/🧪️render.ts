@@ -27,15 +27,7 @@ export type UiTestEventInit = Readonly<Record<string, unknown>>;
 //#endregion 🔖️Contracts
 
 //#region 🔌️TestingLibraryAdapter
-import {
-  act as testingAct,
-  cleanup as testingCleanup,
-  fireEvent as testingFireEvent,
-  render as testingRender,
-  screen as testingScreen,
-  waitFor as testingWaitFor,
-  within as testingWithin,
-} from "@testing-library/react";
+import { act as testingAct, cleanup as testingCleanup, fireEvent as testingFireEvent, render as testingRender, screen as testingScreen, waitFor as testingWaitFor, within as testingWithin } from "@testing-library/react";
 
 /** 🧪️ Renders a UI fixture behind the repository-owned DOM-test boundary. */
 export function render(node: unknown): UiTestRenderResult {
@@ -69,6 +61,9 @@ export const fireEvent = {
   },
   drop(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.drop(target, init);
+  },
+  keyDown(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.keyDown(target, init);
   },
 };
 

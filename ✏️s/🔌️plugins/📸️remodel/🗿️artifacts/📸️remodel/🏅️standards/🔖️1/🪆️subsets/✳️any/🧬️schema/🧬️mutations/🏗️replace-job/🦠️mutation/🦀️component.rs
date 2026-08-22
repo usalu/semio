@@ -16,7 +16,7 @@ pub struct ReplaceJob {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_job(job: ReconstructionJob) -> RemodelMutation {
+pub fn replace_job(job: ReconstructionJob) -> RemodelMutation {
     RemodelMutation::ReplaceJob(ReplaceJob { job })
 }
 

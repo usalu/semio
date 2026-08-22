@@ -1,9 +1,12 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
-use crate::app::{resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler};
+use crate::app::{
+    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
+    resolve_ready,
+};
 use semio_framework::{
-    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
     AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
+    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
 };
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;
@@ -61,6 +64,9 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// keyed by `kind`, not a `Plugin`-scoped table, since `step_job`/`start_job` never carry a
     /// plugin id to look one up by.
     jobs: Vec<(&'static str, crate::reactor::jobs::JobFn)>,
+    /// 🧭️ Metadata-only routes whose executable is an ActionBus-owned cold job rather than a
+    /// synchronous `ArtifactInferenceService` facade.
+    routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
     artifact_kinds: Vec<semio_framework::ArtifactKindSpec>,
     host_media_handlers: Vec<HostMediaHandlerDeclaration>,
     flow_extensions: Vec<FlowExtensionDeclaration>,
@@ -108,6 +114,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             capabilities: Vec::new(),
             commands: Vec::new(),
             jobs: Vec::new(),
+            routed_inferences: Vec::new(),
             artifact_kinds: Vec::new(),
             host_media_handlers: Vec::new(),
             flow_extensions: Vec::new(),
@@ -140,6 +147,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsLabel, PA> {
             capabilities: self.capabilities,
             commands: self.commands,
             jobs: self.jobs,
+            routed_inferences: self.routed_inferences,
             artifact_kinds: self.artifact_kinds,
             host_media_handlers: self.host_media_handlers,
             flow_extensions: self.flow_extensions,
@@ -174,6 +182,7 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
             capabilities: self.capabilities,
             commands: self.commands,
             jobs: self.jobs,
+            routed_inferences: self.routed_inferences,
             artifact_kinds: self.artifact_kinds,
             host_media_handlers: self.host_media_handlers,
             flow_extensions: self.flow_extensions,
@@ -249,6 +258,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// field's own doc comment for why the registry lives there rather than on `Plugin`.
     pub fn job(mut self, kind: &'static str, run: crate::reactor::jobs::JobFn) -> Self {
         self.jobs.push((kind, run));
+        self
+    }
+
+    /// 🧭️ Advertises one inference implemented by the exact `semio.infer/<schema>` cold-job
+    /// route without manufacturing a second synchronous executable.
+    pub fn routed_inference(mut self, metadata: ArtifactInferenceServiceMetadata) -> Self {
+        self.routed_inferences.push(metadata);
         self
     }
 
@@ -434,6 +450,36 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
     }
 
+    /// 🧩️ Declares an editor whose document owns typed composed children. The member fleet is
+    /// part of the concrete plugin-app variant, so production factories retain child resolution
+    /// instead of erasing it to `NoMembers` at the app-bus boundary.
+    pub fn editor_with_members<E, M>(mut self, mut def: crate::app::AppDefinition) -> Self
+    where
+        E: crate::app::ArtifactEditor,
+        M: store::SpaceMember + store::MemberFactory + Send + 'static,
+        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, M>>,
+    {
+        use semio_framework::kernel::{ArtifactKind, Rights, Scope};
+        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+            resolve_ready(E::app_schema())
+        }
+        fn factory<E, M, PA>(def: &crate::app::AppDefinition) -> PA
+        where
+            E: crate::app::ArtifactEditor,
+            M: store::SpaceMember + store::MemberFactory + Send + 'static,
+            PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, M>>,
+        {
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, M>::with_registry(crate::app::EditorApp::<E>::default(), resolve_ready(crate::app::AppActionRegistry::from_definition(def)))))
+        }
+        if def.io.document_schema.is_empty() {
+            def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
+        }
+        let app = App { definition: def.clone(), examples: Vec::new() };
+        self.app_defs.push((app, (def, factory::<E, M, PA>)));
+        self.app_schema_descriptors.push(app_schema::<E>);
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
+    }
+
     /// 🗂️ Opt-in: registers `E`'s owner-mutation roster — see `viewer_mutation_roster`.
     pub fn editor_mutation_roster<E: crate::app::ArtifactEditor>(mut self) -> Self
     where
@@ -521,6 +567,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             mut capabilities,
             commands,
             jobs,
+            routed_inferences,
             artifact_kinds,
             host_media_handlers,
             flow_extensions,
@@ -588,7 +635,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
                 app_schemas.push(descriptor);
             }
         }
-        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions);
+        let plan = crate::app::ArtifactRegistrationPlan::from_declarations(&artifacts, app_schemas, foreign_document_codecs, &plugin_id, host_media_handlers, flow_extensions, routed_inferences);
         let (mut runtime, registry_plan) = plan.into_runtime(definitions)?;
 
         // 🗂️ Resolve every declared contribution against this plugin's own (now-final) id — pure,
@@ -1009,5 +1056,25 @@ mod schema_stamping_tests {
             Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-viewer").label("Builder Test Schema Stamp Viewer").version("0.1.0").viewer::<SchemaStampViewerFixture>(def).try_build().expect("a minimal viewer surface must assemble");
         let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Viewer).expect("the registered viewer app definition");
         assert_eq!(app.io.document_schema, SchemaStampViewerFixture::DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
+        let metadata = ArtifactInferenceServiceMetadata {
+            owner: "builder-test-routed-inference",
+            artifact_kind: "s.builder-test.route",
+            artifact_schema: "s.builder-test.route",
+            artifact_schema_version: 1,
+            document_schema: "s.builder-test.route",
+            document_schema_version: 1,
+            inference_schema: "s.builder-test.route.solve",
+            inference_schema_version: 1,
+            algorithm_version: 1,
+            policy_version: 1,
+        };
+        let plugin = Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Builder Test Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("metadata-only routed inference must assemble");
+        let roster: Vec<crate::app::WireArtifactInferenceMetadata> = serde_json::from_slice(&plugin.wire_list_artifact_inference_services().expect("frozen roster encodes")).expect("frozen roster decodes");
+        assert_eq!(roster, vec![metadata.into()]);
+        assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
     }
 }

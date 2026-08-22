@@ -59,7 +59,7 @@ mod tests {
     async fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
         NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs),
+            content: crate::artifacts::note::note_text_child_record(id, &paragraphs),
             id: id.into(),
             name: name.into(),
             x: 0.0,

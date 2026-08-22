@@ -10,6 +10,7 @@ use crate::artifacts::forms::{forms_snapshot_with_state, forms_steps, FormQuesti
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full forms artifact state across the artifact, presence and config lanes. Ticket
@@ -40,7 +41,7 @@ pub struct FormsArtifact {
     #[state(config)]
     pub current_step_index: u32,
     #[state(config)]
-    pub try_values_json: String,
+    pub try_values: BTreeMap<String, Vec<String>>,
     #[state(config)]
     pub locale: String,
     #[state(config)]
@@ -61,7 +62,7 @@ impl Default for FormsArtifact {
             results: empty.results,
             selected_ids: Vec::new(),
             current_step_index: 0,
-            try_values_json: "{}".into(),
+            try_values: BTreeMap::new(),
             locale: "en-US".into(),
             contributions_json: "[]".into(),
         }

@@ -39,7 +39,7 @@ pub async fn export_stdio_kinds() -> &'static [&'static str] {
 /// `Triangles` whenever an explicit triangle index list is present (or the flat position count is
 /// itself a multiple of 3, mirroring this engine's own pre-extraction always-triangulate
 /// assumption), else `Points` — the only two topologies `SemioMeshToPly` accepts.
-pub(crate) async fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
+pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
     let positions: Vec<SemioPoint3> = mesh.positions.chunks(3).map(|p| SemioPoint3 { x: f64::from(p[0]), y: f64::from(p[1]), z: f64::from(p[2]) }).collect();
     let normals: Vec<SemioPoint3> = mesh.normals.chunks(3).map(|n| SemioPoint3 { x: f64::from(n[0]), y: f64::from(n[1]), z: f64::from(n[2]) }).collect();
     let colors: Vec<SemioRgba> = if mesh.colors.len() == mesh.positions.len() { mesh.colors.chunks(3).map(|c| SemioRgba { r: c[0], g: c[1], b: c[2], a: 1.0 }).collect() } else { Vec::new() };
@@ -57,11 +57,10 @@ pub(crate) async fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapsho
 /// `SemioMeshSnapshot`'s gltf-shaped primitive (positions/normals/uvs/colors/indices only) — honestly
 /// absent here (empty/`None`), never fabricated. The working-scene cache stores the REAL, full-fidelity
 /// `MeshData` directly (never round-tripped through this conversion) precisely so those buffers are
-/// never lost for the live document; this inverse exists for the case the cache has gone cold (see
-/// `remodel_mesh_workspace`'s doc comment) and only the canonical-but-partial `SemioMeshSnapshot`
-/// content is available.
+/// never lost for the live document; this test-only inverse documents the representable subset of
+/// canonical `SemioMeshSnapshot` content.
 #[cfg(test)]
-pub(crate) async fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
+pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
     let Some(primitive) = semio.meshes.first().and_then(|mesh| mesh.primitives.first()) else {
         return MeshData::default();
     };
@@ -93,16 +92,12 @@ pub async fn mesh_to_las_bytes(mesh: &MeshData) -> Result<Vec<u8>, String> {
 }
 
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `results.mesh.mesh` is now a composed
-/// `store::ArtifactChild<SemioMeshSnapshot>` handle, not embedded `MeshData` — real content only
-/// lives in the working-scene cache (`crate::artifacts::remodel::remodel_mesh_workspace`, populated at
-/// mutation-diff-build/fixture-construction time). A `doc: &Value` parsed fresh from JSON (this
-/// function's only call shape) has no session context of its own, so this reads through the SAME
-/// process-wide `thread_local!` cache every other real call site funnels through — honestly `Err` on a
-/// cold cache (documented staleness gap, matches `raster`/`lowpoly`'s precedent), never a fabricated
-/// empty mesh.
-pub async fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
+/// `store::ArtifactChild<SemioMeshSnapshot>` handle, not embedded `MeshData`. Export resolves only
+/// fixed constants or committed reconstruction chunks admitted by the production 512/512 envelope;
+/// unavailable durable content returns `Err`, never a fabricated empty mesh.
+pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let scene: RemodelSnapshot = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh).ok_or_else(|| "remodel_mesh_from_document: composed mesh content not resolvable (cold working-scene cache)".to_string())
+    crate::artifacts::remodel::resolve_bounded_remodel_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh).ok_or_else(|| "remodel_mesh_from_document: bounded composed mesh content is unavailable".to_string())
 }
 
 /// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
@@ -118,7 +113,7 @@ pub async fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMed
         .and_then(|geo| geo.dsm_asset_id.clone().or_else(|| geo.ortho_asset_id.clone()).or_else(|| geo.dtm_asset_id.clone()))
         .or_else(|| scene.results.mesh.texture_asset_id.clone())
         .ok_or_else(|| "no raster or texture asset is available to export as PNG".to_string())?;
-    let asset = crate::artifacts::remodel::remodel_asset(&scene.assets, &asset_id).ok_or_else(|| "the referenced raster/texture asset is missing (or its working-scene cache is cold)".to_string())?;
+    let asset = crate::artifacts::remodel::remodel_asset(&scene, &asset_id).ok_or_else(|| "the referenced raster/texture asset is missing".to_string())?;
     Ok(semio_framework_os::OsMediaExportResult { data: asset.data, mime_type: "image/png".into(), file_name: "remodel-export.png".into(), encoding: Some("base64".into()) })
 }
 //#endregion 🔖️Exporters
@@ -268,7 +263,7 @@ mod exporters_tests {
         let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
         let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };
         let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
-        let handle = crate::artifacts::remodel::mint_and_stash_asset("tex-1", &asset);
+        let handle = crate::artifacts::remodel::store_remodel_asset("tex-1", &asset);
         scene.assets.insert("tex-1".into(), handle);
         scene.results.mesh.texture_asset_id = Some("tex-1".into());
         let doc = serde_json::to_value(&scene).expect("serialize scene");

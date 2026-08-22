@@ -21,9 +21,8 @@ use crate::editor::procedural2d::panels::{catalogue as catalogue_panel, document
 use crate::editor::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, TopologyNode, UiNode,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -33,10 +32,8 @@ use store::EngineHandles;
 /// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
 pub const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub async fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    semio_framework_plugin::ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action(action, args)
+fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
+    semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog(id, label, kind).with_category(category))
 }
 //#endregion 🔖️Constants
 
@@ -51,6 +48,7 @@ pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
         MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
         semio_framework_plugin::ArtifactPresentation { id: "2d.procedural".into(), name: "2D Procedural".into(), dimension: "2d".into(), component_kind: "procedural2d".into() },
     )
+    .await
     .with_ports(vec![
         semio_framework_plugin::MediaPortSpec {
             id: "params:in".into(),
@@ -71,6 +69,7 @@ pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
             multiplicity: semio_framework::PortMultiplicity::Many,
         },
     ])
+    .await
 }
 //#endregion 🔖️ArtifactIo
 
@@ -142,7 +141,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
     }
 
     async fn io() -> Option<semio_framework_plugin::AppIo> {
-        Some(procedural2d_io())
+        Some(procedural2d_io().await)
     }
 
     async fn command_id(command: &Procedural2dCommand) -> &'static str {
@@ -226,7 +225,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
     async fn interaction_topology(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> InteractionTopology {
-        async fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
                 for child in &tree.neurons {
@@ -267,11 +266,11 @@ impl ArtifactEditor for Procedural2dPlayApp {
         })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> semio_framework_plugin::ComponentTree {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
-        with_process_flow_eval_session(|session| match body_key {
+        semio_framework_plugin::built_to_component_tree(with_process_flow_eval_session(|session| match body_key {
             flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
             edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session),
             generations::PROCEDURAL2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
@@ -280,8 +279,8 @@ impl ArtifactEditor for Procedural2dPlayApp {
             document_panel::PROCEDURAL2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        }))
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
@@ -303,12 +302,15 @@ impl ArtifactEditor for Procedural2dPlayApp {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&config.locale);
         let is_de = config.locale.starts_with("de");
         let selected: Vec<String> = Vec::new();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate").group("mode", |m| m.action("setShowMode")).group("create", |m| m.action("addGeneration")).group("methods", |m| m.action("selectGeneration"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-            menu = menu.item(spec);
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]).await;
+        let mut menu = Menu::of(registry).await.action("addWidget").await.action("reorganize").await.action("generate").await;
+        menu = menu.group("mode", |m| async { m.action("setShowMode").await }).await;
+        menu = menu.group("create", |m| async { m.action("addGeneration").await }).await;
+        menu = menu.group("methods", |m| async { m.action("selectGeneration").await }).await;
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit).await {
+            menu = menu.item(spec).await;
         }
-        menu.build()
+        menu.build().await
     }
 
     /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
@@ -358,7 +360,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 //#endregion 🔖️Procedural2dPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PROCEDURAL2D_DIALECT)
         .document(["semio", "procedural", "2d"])
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
@@ -380,13 +382,13 @@ pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition 
         .panel_tab_def(inspection_panel::definition())
         // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
         // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-        .action_with(ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("selection"))
+        .action_with(categorized_action("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation, "selection"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-        .action_with(ActionDefinition::bounded_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
+        .action_with(categorized_action("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation, "create"))
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
-        .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
-        .action_with(ActionDefinition::bounded_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
+        .action_with(categorized_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "transform"))
+        .action_with(categorized_action("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation, "create"))
         .mutation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
         .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
         .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
@@ -394,14 +396,14 @@ pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition 
         // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
         // (`.interaction(...)` below) — the six framework verbs auto-inject.
         .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
-        .action_with(ActionDefinition::bounded_catalog("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View).with_category("mode"))
-        .action_with(ActionDefinition::bounded_catalog("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View).with_category("actions"))
+        .action_with(categorized_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "mode"))
+        .action_with(categorized_action("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View, "actions"))
         .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
         .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"))
         .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"))
         .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"))
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
-        .action_with(ActionDefinition::bounded_catalog("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View).with_category("methods"))
+        .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -440,8 +442,8 @@ pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition 
         .window_kind_interactions(generate_preview::PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
-        .config(Procedural2dPlayApp::config_spec())
-        .io(procedural2d_io())
+        .config(semio_framework::io::resolve_ready(Procedural2dPlayApp::config_spec()))
+        .io(semio_framework::io::resolve_ready(procedural2d_io()))
         // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
         // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
         // `.workflow(...)` on this builder, so the old `"default"` app-level example registration and
@@ -462,19 +464,19 @@ pub(crate) mod testkit {
 
     pub type Procedural2dApp = VcsArtifactApp<EditorApp<Procedural2dPlayApp>>;
 
-    pub async fn app() -> Procedural2dApp {
+    pub fn app() -> Procedural2dApp {
         new_app::<EditorApp<Procedural2dPlayApp>>()
     }
 
-    pub async fn app_with_registry() -> Procedural2dApp {
+    pub fn app_with_registry() -> Procedural2dApp {
         new_app_with_registry::<EditorApp<Procedural2dPlayApp>>(procedural2d_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Procedural2dApp, command: Procedural2dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Procedural2dApp, command: Procedural2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Procedural2dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Procedural2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
@@ -482,7 +484,7 @@ pub(crate) mod testkit {
     /// definition, examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still
     /// expects — framework testkit gap, not modifiable here (`🧰️framework/**` is outside this
     /// packet's lease).
-    pub async fn procedural2d_manifest_for_testkit() -> App {
+    pub fn procedural2d_manifest_for_testkit() -> App {
         App { definition: create_procedural2d_app(), examples: Vec::new() }
     }
 }
@@ -498,8 +500,8 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     //#region 🔖️CommandSurface
-    #[semio_framework_async_macros::async_test]
-    async fn command_ids_are_unique_and_cover_every_row() {
+    #[test]
+    fn command_ids_are_unique_and_cover_every_row() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(|command| command.command_id()).collect();
         let mut sorted = ids.clone();
@@ -509,8 +511,8 @@ mod tests {
         assert_eq!(ids.len(), 21, "every Procedural2dCommand row must be covered by every_command()");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn every_command_round_trips_through_text_and_binary() {
+    #[test]
+    fn every_command_round_trips_through_text_and_binary() {
         for command in every_command() {
             semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         }
@@ -520,8 +522,8 @@ mod tests {
     /// explicitly per row (not derived from the command id) since `setLocale`/`locale` is the one row
     /// where the two vocabularies genuinely diverge. This is what a missing `#[dsl(keyword = ..)]` on a
     /// payload struct silently breaks (the record prints with no keyword at all and fails to re-parse).
-    #[semio_framework_async_macros::async_test]
-    async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
+    #[test]
+    fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let expected_keywords = [
             "node-graph-edit",
             "move-media-node",
@@ -554,7 +556,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<Procedural2dCommand> {
+    pub(super) fn every_command() -> Vec<Procedural2dCommand> {
         vec![
             Procedural2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
             Procedural2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }),
@@ -582,8 +584,8 @@ mod tests {
     //#endregion 🔖️CommandSurface
 
     //#region 🔖️ManifestSanity
-    #[semio_framework_async_macros::async_test]
-    async fn the_manifest_stitches_every_taxonomy_node() {
+    #[test]
+    fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_procedural2d_app()).expect("app definition json");
         for id in [
             flow_window::PROCEDURAL2D_PLAY_WINDOW_MAIN,
@@ -605,28 +607,28 @@ mod tests {
     //#endregion 🔖️ManifestSanity
 
     //#region 🔖️CrossCutting
-    #[semio_framework_async_macros::async_test]
-    async fn declared_actions_bridge_to_commands() {
+    #[test]
+    fn declared_actions_bridge_to_commands() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>(crate::editor::procedural2d::testkit::procedural2d_manifest_for_testkit);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_widget_materializes_declared_kind_default_into_an_operation() {
+    #[test]
+    fn add_widget_materializes_declared_kind_default_into_an_operation() {
         let mut app = app_with_registry();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add widget");
         assert_eq!(app.snapshot().expect("snapshot").fixture.widgets.len(), before + 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_widget_undo_redo_round_trip() {
+    #[test]
+    fn add_widget_undo_redo_round_trip() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();
         assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| app.snapshot().expect("snapshot").fixture.widgets.len(), before, before + 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn two_instances_converge_disjoint_widget_moves() {
+    #[test]
+    fn two_instances_converge_disjoint_widget_moves() {
         let widgets: Vec<String> = app().snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::procedural2d::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
@@ -641,8 +643,8 @@ mod tests {
         );
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
+    #[test]
+    fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::procedural2d::testkit::render;
         let mut app = app();
         assert!(render(&mut app, "procedural2d.play.nope").contains("Unknown body"));
@@ -656,8 +658,8 @@ mod tests {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, same discovered gap as `render`), so the
     /// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
     /// now only pins the disclosure budget.
-    #[semio_framework_async_macros::async_test]
-    async fn context_menu_stays_within_disclosure_budget() {
+    #[test]
+    fn context_menu_stays_within_disclosure_budget() {
         let mut app = app_with_registry();
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let items = app.context_menu(&request);
@@ -667,23 +669,23 @@ mod tests {
     //#endregion 🔖️ContextMenuTests
 
     //#region 🔖️PortTests
-    #[semio_framework_async_macros::async_test]
-    async fn export_drawing_out_returns_vector_media() {
+    #[test]
+    fn export_drawing_out_returns_vector_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn export_document_out_returns_flow_media() {
+    #[test]
+    fn export_document_out_returns_flow_media() {
         let mut app = app();
         let media = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("export document:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
         assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == PROCEDURAL_2D_SCHEMA));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn import_params_in_patches_matching_input_slider() {
+    #[test]
+    fn import_params_in_patches_matching_input_slider() {
         let mut app = app();
         app.dispatch_typed(Procedural2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::testkit::meta("local")).expect("add slider");
         let slider_id = app
@@ -709,8 +711,8 @@ mod tests {
         assert_eq!(value, Some(42.0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn media_ports_declare_params_in_and_drawing_out() {
+    #[test]
+    fn media_ports_declare_params_in_and_drawing_out() {
         let ports = <Procedural2dPlayApp as ArtifactEditor>::media_ports();
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
@@ -721,9 +723,9 @@ mod tests {
         assert_eq!(drawing_out.kind_id.as_deref(), Some("2d.drawing"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn procedural2d_io_declares_the_params_and_drawing_ports() {
-        let io = procedural2d_io();
+    #[test]
+    fn procedural2d_io_declares_the_params_and_drawing_ports() {
+        let io = semio_framework::io::resolve_ready(procedural2d_io());
         assert_eq!(io.document_schema, "procedural.2d");
         let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
         assert!(!params.required);

@@ -222,6 +222,8 @@ export type PluginWasmHandle = {
   readonly manifest: () => Promise<Uint8Array>;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
+  /** 🧵 Takes one capped operation-owned export chunk; `undefined` is the exact terminal option. */
+  readonly takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<Uint8Array | undefined>;
   /** 📤️ Fire-and-forget: queues `events` (encoded `AppCommand` frames) for `instanceId`'s next turn
    * and returns immediately. The turn's result arrives later on {@link outcomes}, never as this call's
    * return value — replaces the old handle's synchronous per-call method, whose `Promise<Uint8Array[]>`

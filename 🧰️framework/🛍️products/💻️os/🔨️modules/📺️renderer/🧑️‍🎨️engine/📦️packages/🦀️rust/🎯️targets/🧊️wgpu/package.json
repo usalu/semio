@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
+    "test:browser-worker": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser-worker",
     "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
     "serve": "bun nx run @semio-tech/framework-renderer-wgpu:serve",
     "dev": "bun nx run @semio-tech/framework-renderer-wgpu:dev",

@@ -13,6 +13,9 @@ use crate::editor::remodel::engine::{camera as remodel_camera, dense as remodel_
 // #region 🔖️Input
 use std::collections::VecDeque;
 
+const MAX_INTERACTIVE_IMAGE_PIXELS: usize = 262_144;
+const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
+
 /// 🎚️ Frame-ingestion policy shared by [`FrameSource::push_frame`] and [`FrameSource::push_video`]:
 /// `stride` keeps every `stride`-th *offered* frame (applied only to the direct [`FrameSource::push_frame`]
 /// entry point — [`FrameSource::push_video`] instead relies on the container-level stride already applied
@@ -96,7 +99,7 @@ pub struct PushVideoReport {
 /// 🧭️ Gradient-energy sharpness proxy (mean squared Scharr gradient magnitude): high for crisp edges,
 /// collapsing toward zero for a flat/blurred frame — the signal the relative blur gate thresholds
 /// against.
-async fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
+fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     let gray = remodel_image::ImageGray::from_rgba8_luma(image);
     let grad = remodel_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -108,7 +111,7 @@ async fn sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
 
 /// 📐️ Median of a rolling score window (odd or even length both handled by taking the middle element of
 /// the sorted copy — good enough for a soft gating threshold, no need for exact even-length averaging).
-async fn rolling_median(scores: &VecDeque<f32>) -> f32 {
+fn rolling_median(scores: &VecDeque<f32>) -> f32 {
     let mut v: Vec<f32> = scores.iter().copied().collect();
     v.sort_by(f32::total_cmp);
     v[v.len() / 2]
@@ -116,7 +119,7 @@ async fn rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🏷️ Human-facing codec/dimension/duration summary of a [`remodel_video::VideoProbe`], regardless of
 /// container family, for [`PushVideoReport`].
-async fn describe_probe(probe: &remodel_video::VideoProbe) -> (String, u32, u32, f64) {
+fn describe_probe(probe: &remodel_video::VideoProbe) -> (String, u32, u32, f64) {
     match probe {
         remodel_video::VideoProbe::Mp4(info) => (format!("{:?}", info.codec), info.width, info.height, info.duration_ms),
         remodel_video::VideoProbe::Avi(info) => {
@@ -139,23 +142,24 @@ pub struct FrameSource {
 
 impl FrameSource {
     /// 🆕️ An empty frame source under the given ingestion policy.
-    pub async fn new(ingest: IngestParams) -> Self {
+    pub fn new(ingest: IngestParams) -> Self {
         Self { ingest, stream_id: 0, offered: 0, frames: Vec::new(), rolling_scores: VecDeque::new() }
     }
 
     /// 🔍️ Every frame accepted so far, in ingestion order.
-    pub async fn frames(&self) -> &[AcceptedFrame] {
+    pub fn frames(&self) -> &[AcceptedFrame] {
         &self.frames
     }
 
     /// 🔢️ How many frames have been accepted so far.
-    pub async fn accepted_count(&self) -> usize {
+    pub fn accepted_count(&self) -> usize {
         self.frames.len()
     }
 
     /// 📥️ Offers one directly-provided frame (e.g. an imported image sequence): applies this source's
     /// `stride`/`max_frames` sampling, then the relative blur gate.
-    pub async fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
+    #[cfg(test)]
+    pub fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
         self.accept(index, image, timestamp_ms, true)
     }
 
@@ -163,7 +167,8 @@ impl FrameSource {
     /// `remodel_video::extract_frames` (container-level stride/max-frames/downscale already applied per
     /// `opts`), and offers each decoded frame through the same blur gate as [`push_frame`](Self::push_frame)
     /// (without re-applying this source's own stride counter, since the container already sampled).
-    pub async fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+    #[cfg(test)]
+    pub fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
         let probe = remodel_video::probe(bytes)?;
         let (codec, width, height, duration_ms) = describe_probe(&probe);
         let iter = remodel_video::extract_frames(bytes, opts)?;
@@ -182,7 +187,12 @@ impl FrameSource {
 
     /// 🚦️ Shared gate: optional stride counting, then `max_frames`, then the relative blur threshold
     /// against the rolling median of recently accepted scores.
-    async fn accept(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
+    fn accept(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
+        let score = sharpness_score(&image);
+        self.accept_with_sharpness(index, image, timestamp_ms, apply_stride, score)
+    }
+
+    fn accept_with_sharpness(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool, score: f32) -> FrameAcceptance {
         let offered = self.offered;
         self.offered += 1;
         if apply_stride {
@@ -194,7 +204,6 @@ impl FrameSource {
         if self.ingest.max_frames != 0 && self.frames.len() as u32 >= self.ingest.max_frames {
             return FrameAcceptance::RejectedMaxFrames;
         }
-        let score = sharpness_score(&image);
         if self.rolling_scores.len() >= 3 {
             let median = rolling_median(&self.rolling_scores);
             if score < self.ingest.min_sharpness * median {
@@ -266,7 +275,7 @@ impl Default for EngineParams {
 /// 📷️ Default pinhole intrinsics assumed for uncalibrated input: `fx = fy = focal_ratio *
 /// max(width, height)`, principal point at the image center, no distortion — a documented
 /// simplification standing in for the calibration stage the base plan scopes separately.
-async fn default_intrinsics(width: u32, height: u32, focal_ratio: f64) -> remodel_camera::Intrinsics {
+fn default_intrinsics(width: u32, height: u32, focal_ratio: f64) -> remodel_camera::Intrinsics {
     let f = focal_ratio * f64::from(width.max(height));
     remodel_camera::Intrinsics { fx: f, fy: f, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None }
 }
@@ -302,7 +311,7 @@ pub enum EngineStatus {
 }
 
 /// 🔢️ Ordinal of a non-terminal stage in the fixed 9-stage pipeline, for [`ReconstructionEngine::progress`].
-async fn stage_ordinal(stage: EngineStage) -> usize {
+fn stage_ordinal(stage: EngineStage) -> usize {
     match stage {
         EngineStage::Idle => 0,
         EngineStage::ExtractingFeatures => 1,
@@ -321,7 +330,7 @@ async fn stage_ordinal(stage: EngineStage) -> usize {
 /// 🗺️ Maps `remodel_mesh::mesh_pipeline_step`'s internal stage name to the engine-level stage it falls
 /// under, so driving the mesh pipeline (Amendment: engine delegates meshing directly to
 /// `remodel_mesh::mesh_pipeline_step`) still reports through the coarser [`EngineStage`] vocabulary.
-async fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
+fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
     match name {
         "marching_cubes" => EngineStage::ExtractingSurface,
         "unwrap" | "texture_bake" | "interchange" => EngineStage::Texturing,
@@ -332,10 +341,18 @@ async fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
 /// 🏘️ Up to `k` other camera slot indices nearest to `ci` (by registration-order distance, which tracks
 /// frame order for an [`remodel_sfm::IncrementalSfm`] reconstruction), sorted ascending for determinism —
 /// the source-view selection for [`remodel_dense::patchmatch_mvs`]/TSDF fusion.
-async fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
-    let mut idxs: Vec<usize> = (0..n).filter(|&c| c != ci).collect();
-    idxs.sort_by_key(|&c| (c as i64 - ci as i64).abs());
-    idxs.truncate(k);
+fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
+    let mut idxs = Vec::with_capacity(k.min(n.saturating_sub(1)));
+    let mut distance = 1;
+    while idxs.len() < k && (ci >= distance || ci.saturating_add(distance) < n) {
+        if ci >= distance {
+            idxs.push(ci - distance);
+        }
+        if idxs.len() < k && ci + distance < n {
+            idxs.push(ci + distance);
+        }
+        distance += 1;
+    }
     idxs.sort_unstable();
     idxs
 }
@@ -343,7 +360,7 @@ async fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
 /// 🎞️ Evenly spaced camera-slot indices for dense stereo / fusion when a reconstruction has more
 /// registered views than [`EngineParams::max_dense_cameras`] (0 = unlimited). Full SfM cameras stay in
 /// [`Reconstruction`] for gauge alignment; only the expensive depth/TSDF work is subsampled.
-async fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
+fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
     if n == 0 {
         return Vec::new();
     }
@@ -359,8 +376,8 @@ async fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
 /// 📦️ Voxel-index bounds covering `points` with a 20% margin plus a 2-voxel padding shell, for
 /// `remodel_mesh::MeshPipeline::new`'s `bounds_min`/`bounds_max`. Falls back to a small centered cube
 /// when there are no points yet (degenerate input).
-async fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
-    const MAX_CELLS_PER_AXIS: i32 = 120;
+fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
+    const MAX_CELLS_PER_AXIS: i32 = 32;
     if points.is_empty() || voxel_size <= 0.0 {
         return ([-4, -4, -4], [4, 4, 4]);
     }
@@ -392,9 +409,29 @@ async fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3]
     (bounds_min, bounds_max)
 }
 
+fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
+    const MAX_CELLS_PER_AXIS: i32 = 32;
+    if !lo.iter().all(|value| value.is_finite()) || !hi.iter().all(|value| value.is_finite()) || voxel_size <= 0.0 {
+        return ([-4; 3], [4; 3]);
+    }
+    let mut minimum = [0; 3];
+    let mut maximum = [0; 3];
+    for axis in 0..3 {
+        let span = (hi[axis] - lo[axis]).max(voxel_size);
+        let padding = span * 0.2;
+        let raw_minimum = ((lo[axis] - padding) / voxel_size).floor() as i32 - 2;
+        let raw_maximum = ((hi[axis] + padding) / voxel_size).ceil() as i32 + 2;
+        let center = (raw_minimum + raw_maximum) / 2;
+        let half = ((raw_maximum - raw_minimum) / 2).clamp(4, MAX_CELLS_PER_AXIS / 2);
+        minimum[axis] = center - half;
+        maximum[axis] = center + half;
+    }
+    (minimum, maximum)
+}
+
 /// 🧵️ `(camera_slot_index, point_index, observed_pixel)` triples for `remodel_geo::build_quality_report`,
 /// derived from a finished [`remodel_sfm::Reconstruction`]'s tracks and each frame's detected keypoints.
-async fn build_observations(recon: &remodel_sfm::Reconstruction, tracks: Option<&remodel_sfm::FeatureTracks>, keypoints_per_frame: &[Vec<remodel_feature::Keypoint>]) -> Vec<(usize, usize, [f64; 2])> {
+fn build_observations(recon: &remodel_sfm::Reconstruction, tracks: Option<&remodel_sfm::FeatureTracks>, keypoints_per_frame: &[Vec<remodel_feature::Keypoint>]) -> Vec<(usize, usize, [f64; 2])> {
     let Some(tracks) = tracks else { return Vec::new() };
     let camera_index_of: std::collections::BTreeMap<usize, usize> = recon.cameras.iter().enumerate().map(|(ci, &(f, _))| (f, ci)).collect();
     let mut out = Vec::new();
@@ -421,16 +458,27 @@ pub struct ReconstructionEngine {
     stage: EngineStage,
     frames: Vec<AcceptedFrame>,
     cursor: usize,
+    feature_preparation: Option<FeaturePreparation>,
 
     keypoints_per_frame: Vec<Vec<remodel_feature::Keypoint>>,
     descriptors_per_frame: Vec<Vec<remodel_feature::Descriptor256>>,
 
     match_pairs: Vec<(usize, usize)>,
+    match_pair_i: usize,
+    match_pair_j: usize,
+    match_anchor_frame: usize,
+    match_pairs_ready: bool,
     pair_cursor: usize,
+    pair_match_preparation: Option<PairMatchPreparation>,
     pairwise_matches: Vec<(usize, usize, Vec<remodel_feature::Match>)>,
+    track_preparation: Option<TrackPreparation>,
     tracks: Option<remodel_sfm::FeatureTracks>,
 
     sfm: Option<remodel_sfm::IncrementalSfm>,
+    seed_pair_preparation: Option<remodel_sfm::SeedPairPreparation>,
+    registration_preparation: Option<remodel_sfm::RegistrationPreparation>,
+    bundle_preparation: Option<remodel_sfm::BundlePreparation>,
+    finalization_preparation: Option<FinalizationPreparation>,
     pose_cursor: usize,
     ba_substep: usize,
     reconstruction: Option<remodel_sfm::Reconstruction>,
@@ -438,36 +486,258 @@ pub struct ReconstructionEngine {
     dense_camera_indices: Vec<usize>,
 
     stage_cursor: usize,
-    depth_maps: Vec<Option<remodel_dense::DepthMap>>,
+    depth_maps: Vec<remodel_dense::DepthMap>,
+    dense_preparation: Option<DenseStereoPreparation>,
     tsdf: Option<remodel_dense::TsdfVolume>,
+    tsdf_preparation: Option<remodel_dense::TsdfIntegrationPreparation>,
+    fusion_preparation: Option<remodel_dense::FusionPreparation>,
+    fusion_views: Vec<(remodel_camera::CameraPose, remodel_camera::Intrinsics)>,
+    fusion_capacity: usize,
     fusion_finalized: bool,
     dense_cloud: Option<remodel_dense::PointCloud>,
 
     mesh_pipeline: Option<remodel_mesh::MeshPipeline>,
+    meshing_preparation: Option<MeshingPreparation>,
     mesh_data: Option<semio_framework::MeshData>,
     watertight_report: Option<remodel_mesh::WatertightReport>,
 
     failure: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FeaturePhase {
+    Luma,
+    Detect,
+    Describe,
+}
+
+struct FeaturePreparation {
+    frame: usize,
+    phase: FeaturePhase,
+    cursor: usize,
+    gray: Vec<f32>,
+    keypoints: Vec<remodel_feature::Keypoint>,
+    descriptors: Vec<remodel_feature::Descriptor256>,
+}
+
+struct PairMatchPreparation {
+    frame_a: usize,
+    frame_b: usize,
+    query: usize,
+    candidate: usize,
+    best_distance: u32,
+    best_index: u32,
+    second_distance: u32,
+    reverse_candidate: usize,
+    reverse_best_distance: u32,
+    reverse_best_index: u32,
+    pending: Option<(u32, u32)>,
+    matches: Vec<remodel_feature::Match>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DenseStereoPhase {
+    ReferenceLuma,
+    SourceLuma,
+    PatchMatch,
+}
+
+struct DenseStereoPreparation {
+    phase: DenseStereoPhase,
+    reference_frame: usize,
+    reference_camera: (remodel_camera::CameraPose, remodel_camera::Intrinsics),
+    source_frames: Vec<(usize, remodel_camera::CameraPose)>,
+    reference_gray: remodel_image::ImageGray,
+    source_grays: Vec<(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)>,
+    source: usize,
+    pixel: usize,
+    patch_match: Option<remodel_dense::PatchMatchPreparation>,
+}
+
+struct TextureViewPreparation {
+    pose: remodel_camera::CameraPose,
+    intrinsics: remodel_camera::Intrinsics,
+    image: remodel_image::ImageRgba8,
+    cursor: usize,
+}
+
+struct MeshingPreparation {
+    sparse_cursor: usize,
+    dense_cursor: usize,
+    bounds_min: [f64; 3],
+    bounds_max: [f64; 3],
+    view_cursor: usize,
+    active_view: Option<TextureViewPreparation>,
+    views: Vec<remodel_mesh::TextureView>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FinalizationPhase {
+    Snapshot,
+    CameraIndex,
+    Observations,
+    DenseCameras,
+    Done,
+}
+
+struct FinalizationPreparation {
+    phase: FinalizationPhase,
+    snapshot: Option<remodel_sfm::ReconstructionSnapshotPreparation>,
+    camera_cursor: usize,
+    camera_index: std::collections::BTreeMap<usize, usize>,
+    point_cursor: usize,
+    observation_cursor: usize,
+    dense_cursor: usize,
+}
+
+impl MeshingPreparation {
+    fn new() -> Self {
+        Self { sparse_cursor: 0, dense_cursor: 0, bounds_min: [f64::INFINITY; 3], bounds_max: [f64::NEG_INFINITY; 3], view_cursor: 0, active_view: None, views: Vec::new() }
+    }
+
+    fn include(&mut self, point: [f64; 3]) {
+        for axis in 0..3 {
+            self.bounds_min[axis] = self.bounds_min[axis].min(point[axis]);
+            self.bounds_max[axis] = self.bounds_max[axis].max(point[axis]);
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TrackPhase {
+    Union,
+    Group,
+    Finish,
+}
+
+struct TrackGroup {
+    observations: Vec<(usize, u32)>,
+    frames: std::collections::BTreeSet<usize>,
+    conflict: bool,
+}
+
+struct TrackPreparation {
+    phase: TrackPhase,
+    pair: usize,
+    matched: usize,
+    node_of: std::collections::HashMap<(usize, u32), usize>,
+    observations: Vec<(usize, u32)>,
+    parent: Vec<usize>,
+    rank: Vec<u8>,
+    grouping_cursor: usize,
+    groups: std::collections::BTreeMap<usize, TrackGroup>,
+    tracks: Vec<Vec<(usize, u32)>>,
+}
+
+impl TrackPreparation {
+    fn new() -> Self {
+        Self {
+            phase: TrackPhase::Union,
+            pair: 0,
+            matched: 0,
+            node_of: std::collections::HashMap::new(),
+            observations: Vec::new(),
+            parent: Vec::new(),
+            rank: Vec::new(),
+            grouping_cursor: 0,
+            groups: std::collections::BTreeMap::new(),
+            tracks: Vec::new(),
+        }
+    }
+
+    fn node(&mut self, observation: (usize, u32)) -> usize {
+        if let Some(&node) = self.node_of.get(&observation) {
+            return node;
+        }
+        let node = self.observations.len();
+        self.node_of.insert(observation, node);
+        self.observations.push(observation);
+        self.parent.push(node);
+        self.rank.push(0);
+        node
+    }
+
+    fn root(&mut self, mut node: usize) -> usize {
+        while self.parent[node] != node {
+            let parent = self.parent[node];
+            self.parent[node] = self.parent[parent];
+            node = self.parent[node];
+        }
+        node
+    }
+
+    fn union(&mut self, left: usize, right: usize) {
+        let mut left = self.root(left);
+        let mut right = self.root(right);
+        if left == right {
+            return;
+        }
+        if self.rank[left] < self.rank[right] {
+            std::mem::swap(&mut left, &mut right);
+        }
+        self.parent[right] = left;
+        if self.rank[left] == self.rank[right] {
+            self.rank[left] = self.rank[left].saturating_add(1);
+        }
+    }
+}
+
+fn descriptor_distance(a: &remodel_feature::Descriptor256, b: &remodel_feature::Descriptor256) -> u32 {
+    a.0.iter().zip(b.0.iter()).map(|(&left, &right)| (left ^ right).count_ones()).sum()
+}
+
+fn append_luma_slice(source: &remodel_image::ImageRgba8, destination: &mut remodel_image::ImageGray, cursor: &mut usize, pixel_budget: usize) -> bool {
+    let pixels = source.width as usize * source.height as usize;
+    let end = cursor.saturating_add(pixel_budget.max(1)).min(pixels);
+    for index in *cursor..end {
+        let offset = index * 4;
+        destination.data.push((0.299 * f32::from(source.data[offset]) + 0.587 * f32::from(source.data[offset + 1]) + 0.114 * f32::from(source.data[offset + 2])) / 255.0);
+    }
+    *cursor = end;
+    end == pixels
+}
+
+fn reset_pair_query(preparation: &mut PairMatchPreparation) {
+    preparation.query += 1;
+    preparation.candidate = 0;
+    preparation.best_distance = u32::MAX;
+    preparation.best_index = u32::MAX;
+    preparation.second_distance = u32::MAX;
+    preparation.reverse_candidate = 0;
+    preparation.reverse_best_distance = u32::MAX;
+    preparation.reverse_best_index = u32::MAX;
+    preparation.pending = None;
+}
+
 impl ReconstructionEngine {
     /// 🆕️ A fresh engine in [`EngineStage::Idle`], with an internal empty [`FrameSource`] under
     /// `params.ingest`. Push frames via [`push_frame`](Self::push_frame)/[`push_video`](Self::push_video)
     /// before the first [`advance`](Self::advance) call.
-    pub async fn new(params: &EngineParams) -> Self {
+    pub fn new(params: &EngineParams) -> Self {
         Self {
             params: params.clone(),
             frame_source: FrameSource::new(params.ingest.clone()),
             stage: EngineStage::Idle,
             frames: Vec::new(),
             cursor: 0,
+            feature_preparation: None,
             keypoints_per_frame: Vec::new(),
             descriptors_per_frame: Vec::new(),
             match_pairs: Vec::new(),
+            match_pair_i: 0,
+            match_pair_j: 1,
+            match_anchor_frame: 2,
+            match_pairs_ready: false,
             pair_cursor: 0,
+            pair_match_preparation: None,
             pairwise_matches: Vec::new(),
+            track_preparation: None,
             tracks: None,
             sfm: None,
+            seed_pair_preparation: None,
+            registration_preparation: None,
+            bundle_preparation: None,
+            finalization_preparation: None,
             pose_cursor: 0,
             ba_substep: 0,
             reconstruction: None,
@@ -475,10 +745,16 @@ impl ReconstructionEngine {
             dense_camera_indices: Vec::new(),
             stage_cursor: 0,
             depth_maps: Vec::new(),
+            dense_preparation: None,
             tsdf: None,
+            tsdf_preparation: None,
+            fusion_preparation: None,
+            fusion_views: Vec::new(),
+            fusion_capacity: 0,
             fusion_finalized: false,
             dense_cloud: None,
             mesh_pipeline: None,
+            meshing_preparation: None,
             mesh_data: None,
             watertight_report: None,
             failure: None,
@@ -486,49 +762,137 @@ impl ReconstructionEngine {
     }
 
     /// 📥️ Delegates to the internal [`FrameSource::push_frame`].
-    pub async fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
+    #[cfg(test)]
+    pub fn push_frame(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64) -> FrameAcceptance {
         self.frame_source.push_frame(index, image, timestamp_ms)
     }
 
+    /// ⏱️ Commits a frame after its gradient score was computed by the outer resumable ingestion cursor.
+    pub fn push_frame_with_sharpness(&mut self, index: u32, image: remodel_image::ImageRgba8, timestamp_ms: f64, sharpness: f32) -> FrameAcceptance {
+        self.frame_source.accept_with_sharpness(index, image, timestamp_ms, true, sharpness)
+    }
+
     /// 🎞️ Delegates to the internal [`FrameSource::push_video`].
-    pub async fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+    #[cfg(test)]
+    pub fn push_video(&mut self, bytes: &[u8], opts: &remodel_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
         self.frame_source.push_video(bytes, opts)
     }
 
     /// 🔍️ The internal frame source, for inspecting accepted frames/counts without driving the pipeline.
-    pub async fn frame_source(&self) -> &FrameSource {
+    pub fn frame_source(&self) -> &FrameSource {
         &self.frame_source
     }
 
     /// 🚦️ Current stage.
-    pub async fn stage(&self) -> EngineStage {
+    pub fn stage(&self) -> EngineStage {
         self.stage
     }
 
     /// 📸️ Snapshots [`FrameSource::frames`] into the engine's own working set; fails if fewer than 2
     /// frames were accepted (the minimum an [`remodel_sfm::IncrementalSfm`] two-view init needs).
-    async fn start(&mut self) -> Result<(), String> {
-        self.frames = self.frame_source.frames().to_vec();
+    fn start(&mut self) -> Result<(), String> {
+        self.frames = std::mem::take(&mut self.frame_source.frames);
         if self.frames.len() < 2 {
             return Err(format!("reconstruction requires at least 2 accepted frames, got {}", self.frames.len()));
+        }
+        if self.frames.len() > 64 {
+            return Err(format!("reconstruction admits at most 64 frames per interactive job, got {}", self.frames.len()));
+        }
+        for frame in &self.frames {
+            let pixels = frame.image.width as usize * frame.image.height as usize;
+            if pixels > MAX_INTERACTIVE_IMAGE_PIXELS || frame.image.data.len() != pixels.saturating_mul(4) || frame.image.data.len() > MAX_INTERACTIVE_IMAGE_BYTES {
+                return Err(format!("interactive reconstruction image envelope exceeded by frame {}: {}x{} / {} bytes", frame.index, frame.image.width, frame.image.height, frame.image.data.len()));
+            }
         }
         self.cursor = 0;
         Ok(())
     }
 
-    /// 🎯️ One frame's pyramid/detect/describe; returns whether more frames remain in this stage.
-    async fn step_extracting_features(&mut self) -> bool {
-        let i = self.cursor;
-        if i >= self.frames.len() {
+    /// 🎯️ One fuel-bounded luma/detect/describe slice; returns whether more frames remain.
+    fn step_extracting_features(&mut self) -> bool {
+        const PIXELS_PER_STEP: usize = 4_096;
+        const DESCRIPTORS_PER_STEP: usize = 16;
+        if self.cursor >= self.frames.len() {
             return false;
         }
-        let gray = remodel_image::ImageGray::from_rgba8_luma(&self.frames[i].image);
-        let pyramid = remodel_image::build_pyramid(&gray, 3);
-        let keypoints = remodel_feature::detect_orb_keypoints(&pyramid, self.params.target_feature_count);
-        let descriptors = remodel_feature::describe_orb(&pyramid, &keypoints);
-        self.keypoints_per_frame.push(keypoints);
-        self.descriptors_per_frame.push(descriptors);
-        self.cursor += 1;
+        let target_feature_count = self.params.target_feature_count.min(512);
+        if self.feature_preparation.is_none() {
+            let pixels = self.frames[self.cursor].image.width as usize * self.frames[self.cursor].image.height as usize;
+            self.feature_preparation =
+                Some(FeaturePreparation { frame: self.cursor, phase: FeaturePhase::Luma, cursor: 0, gray: Vec::with_capacity(pixels), keypoints: Vec::with_capacity(target_feature_count), descriptors: Vec::with_capacity(target_feature_count) });
+        }
+        let preparation = self.feature_preparation.as_mut().expect("feature preparation");
+        let image = &self.frames[preparation.frame].image;
+        match preparation.phase {
+            FeaturePhase::Luma => {
+                let pixels = image.width as usize * image.height as usize;
+                let end = preparation.cursor.saturating_add(PIXELS_PER_STEP).min(pixels);
+                for index in preparation.cursor..end {
+                    let offset = index * 4;
+                    preparation.gray.push((0.299 * f32::from(image.data[offset]) + 0.587 * f32::from(image.data[offset + 1]) + 0.114 * f32::from(image.data[offset + 2])) / 255.0);
+                }
+                preparation.cursor = end;
+                if end == pixels {
+                    preparation.phase = FeaturePhase::Detect;
+                    preparation.cursor = 0;
+                }
+            }
+            FeaturePhase::Detect => {
+                let width = image.width as usize;
+                let pixels = preparation.gray.len();
+                let end = preparation.cursor.saturating_add(PIXELS_PER_STEP).min(pixels);
+                if width > 2 && image.height > 2 {
+                    for index in preparation.cursor..end {
+                        if preparation.keypoints.len() >= target_feature_count {
+                            break;
+                        }
+                        let x = index % width;
+                        let y = index / width;
+                        if x == 0 || y == 0 || x + 1 >= width || y + 1 >= image.height as usize {
+                            continue;
+                        }
+                        let gx = preparation.gray[index + 1] - preparation.gray[index - 1];
+                        let gy = preparation.gray[index + width] - preparation.gray[index - width];
+                        let response = gx * gx + gy * gy;
+                        if response > 0.001 && (x + y) % 3 == 0 {
+                            preparation.keypoints.push(remodel_feature::Keypoint { x: x as f32, y: y as f32, octave: 0, angle: gy.atan2(gx), response });
+                        }
+                    }
+                }
+                preparation.cursor = end;
+                if end == pixels || preparation.keypoints.len() >= target_feature_count {
+                    preparation.phase = FeaturePhase::Describe;
+                    preparation.cursor = 0;
+                }
+            }
+            FeaturePhase::Describe => {
+                let end = preparation.cursor.saturating_add(DESCRIPTORS_PER_STEP).min(preparation.keypoints.len());
+                let width = image.width as usize;
+                let height = image.height as usize;
+                for keypoint in &preparation.keypoints[preparation.cursor..end] {
+                    let mut words = [0u64; 4];
+                    let cx = keypoint.x as i32;
+                    let cy = keypoint.y as i32;
+                    for bit in 0..256usize {
+                        let ax = (cx + ((bit * 37) % 31) as i32 - 15).clamp(0, width.saturating_sub(1) as i32) as usize;
+                        let ay = (cy + ((bit * 17) % 31) as i32 - 15).clamp(0, height.saturating_sub(1) as i32) as usize;
+                        let bx = (cx + ((bit * 13 + 7) % 31) as i32 - 15).clamp(0, width.saturating_sub(1) as i32) as usize;
+                        let by = (cy + ((bit * 29 + 3) % 31) as i32 - 15).clamp(0, height.saturating_sub(1) as i32) as usize;
+                        if preparation.gray[ay * width + ax] < preparation.gray[by * width + bx] {
+                            words[bit / 64] |= 1u64 << (bit % 64);
+                        }
+                    }
+                    preparation.descriptors.push(remodel_feature::Descriptor256(words));
+                }
+                preparation.cursor = end;
+                if end == preparation.keypoints.len() {
+                    let complete = self.feature_preparation.take().expect("completed feature preparation");
+                    self.keypoints_per_frame.push(complete.keypoints);
+                    self.descriptors_per_frame.push(complete.descriptors);
+                    self.cursor += 1;
+                }
+            }
+        }
         self.cursor < self.frames.len()
     }
 
@@ -541,35 +905,186 @@ impl ReconstructionEngine {
     /// sparse enough on real matches to starve most frames of the 6 correspondences PnP needs. Explicit
     /// anchor pairs make every registerable frame's correspondence-to-the-seed-pair direct instead of
     /// coincidental.
-    async fn build_match_pairs(&mut self) {
+    fn step_build_match_pairs(&mut self, pair_budget: usize) -> bool {
         let n = self.frames.len();
         let window = self.params.sequential_window.max(1);
-        let mut pairs: std::collections::BTreeSet<(usize, usize)> = std::collections::BTreeSet::new();
-        for i in 0..n {
-            let hi = (i + window).min(n.saturating_sub(1));
-            for j in (i + 1)..=hi {
-                pairs.insert((i, j));
+        let mut work = 0;
+        while self.match_pair_i < n && work < pair_budget {
+            let hi = self.match_pair_i.saturating_add(window).min(n.saturating_sub(1));
+            if self.match_pair_j <= hi {
+                self.match_pairs.push((self.match_pair_i, self.match_pair_j));
+                self.match_pair_j += 1;
+                work += 1;
+            } else {
+                self.match_pair_i += 1;
+                self.match_pair_j = self.match_pair_i.saturating_add(1);
             }
         }
-        for f in 2..n {
-            pairs.insert((0, f));
-            pairs.insert((1, f));
+        while self.match_pair_i >= n && self.match_anchor_frame < n && work < pair_budget {
+            let frame = self.match_anchor_frame;
+            if frame > window {
+                self.match_pairs.push((0, frame));
+                work += 1;
+            }
+            if work < pair_budget && frame > 1 + window {
+                self.match_pairs.push((1, frame));
+                work += 1;
+            }
+            self.match_anchor_frame += 1;
         }
-        self.match_pairs = pairs.into_iter().collect();
-        self.pair_cursor = 0;
+        self.match_pair_i >= n && self.match_anchor_frame >= n
     }
 
-    /// 🤝️ Matches one pair's descriptors; returns whether more pairs remain.
-    async fn step_matching_features(&mut self) -> bool {
-        let i = self.pair_cursor;
-        if i >= self.match_pairs.len() {
+    /// 🤝️ Consumes at most 4,096 Hamming comparisons across a resumable pair match.
+    fn step_matching_features(&mut self) -> bool {
+        const COMPARISONS_PER_STEP: usize = 4_096;
+        if self.pair_cursor >= self.match_pairs.len() {
             return false;
         }
-        let (a, b) = self.match_pairs[i];
-        let matches = remodel_feature::match_brute(&self.descriptors_per_frame[a], &self.descriptors_per_frame[b], self.params.match_ratio, self.params.match_mutual);
-        self.pairwise_matches.push((a, b, matches));
-        self.pair_cursor += 1;
+        if self.pair_match_preparation.is_none() {
+            let (frame_a, frame_b) = self.match_pairs[self.pair_cursor];
+            self.pair_match_preparation = Some(PairMatchPreparation {
+                frame_a,
+                frame_b,
+                query: 0,
+                candidate: 0,
+                best_distance: u32::MAX,
+                best_index: u32::MAX,
+                second_distance: u32::MAX,
+                reverse_candidate: 0,
+                reverse_best_distance: u32::MAX,
+                reverse_best_index: u32::MAX,
+                pending: None,
+                matches: Vec::new(),
+            });
+        }
+        let preparation = self.pair_match_preparation.as_mut().expect("pair match preparation");
+        let desc_a = &self.descriptors_per_frame[preparation.frame_a];
+        let desc_b = &self.descriptors_per_frame[preparation.frame_b];
+        if desc_b.is_empty() {
+            preparation.query = preparation.query.saturating_add(COMPARISONS_PER_STEP).min(desc_a.len());
+            if preparation.query == desc_a.len() {
+                let complete = self.pair_match_preparation.take().expect("completed empty pair match");
+                self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
+                self.pair_cursor += 1;
+            }
+            return self.pair_cursor < self.match_pairs.len();
+        }
+        let mut remaining = COMPARISONS_PER_STEP;
+        while remaining > 0 && preparation.query < desc_a.len() {
+            if let Some((distance, best_index)) = preparation.pending {
+                while remaining > 0 && preparation.reverse_candidate < desc_a.len() {
+                    let candidate = preparation.reverse_candidate;
+                    let back_distance = descriptor_distance(&desc_b[best_index as usize], &desc_a[candidate]);
+                    if back_distance < preparation.reverse_best_distance {
+                        preparation.reverse_best_distance = back_distance;
+                        preparation.reverse_best_index = candidate as u32;
+                    }
+                    preparation.reverse_candidate += 1;
+                    remaining -= 1;
+                }
+                if preparation.reverse_candidate == desc_a.len() {
+                    if preparation.reverse_best_index == preparation.query as u32 {
+                        preparation.matches.push(remodel_feature::Match { a: preparation.query as u32, b: best_index, distance });
+                    }
+                    reset_pair_query(preparation);
+                }
+                continue;
+            }
+            while remaining > 0 && preparation.candidate < desc_b.len() {
+                let candidate = preparation.candidate;
+                let distance = descriptor_distance(&desc_a[preparation.query], &desc_b[candidate]);
+                if distance < preparation.best_distance {
+                    preparation.second_distance = preparation.best_distance;
+                    preparation.best_distance = distance;
+                    preparation.best_index = candidate as u32;
+                } else if distance < preparation.second_distance {
+                    preparation.second_distance = distance;
+                }
+                preparation.candidate += 1;
+                remaining -= 1;
+            }
+            if preparation.candidate == desc_b.len() {
+                let passes = preparation.best_index != u32::MAX && (preparation.second_distance == u32::MAX || (preparation.best_distance as f32) < self.params.match_ratio * preparation.second_distance as f32);
+                if passes && self.params.match_mutual {
+                    preparation.pending = Some((preparation.best_distance, preparation.best_index));
+                    preparation.reverse_candidate = 0;
+                    preparation.reverse_best_distance = u32::MAX;
+                    preparation.reverse_best_index = u32::MAX;
+                } else {
+                    if passes {
+                        preparation.matches.push(remodel_feature::Match { a: preparation.query as u32, b: preparation.best_index, distance: preparation.best_distance });
+                    }
+                    reset_pair_query(preparation);
+                }
+            }
+        }
+        if preparation.query == desc_a.len() {
+            let complete = self.pair_match_preparation.take().expect("completed pair match");
+            self.pairwise_matches.push((complete.frame_a, complete.frame_b, complete.matches));
+            self.pair_cursor += 1;
+        }
         self.pair_cursor < self.match_pairs.len()
+    }
+
+    /// 🧵️ Consumes at most 4,096 union/group observations or 64 finalized groups.
+    fn step_build_tracks(&mut self) -> Option<remodel_sfm::FeatureTracks> {
+        const OBSERVATIONS_PER_STEP: usize = 4_096;
+        const GROUPS_PER_STEP: usize = 64;
+        let preparation = self.track_preparation.get_or_insert_with(TrackPreparation::new);
+        match preparation.phase {
+            TrackPhase::Union => {
+                let mut work = 0;
+                while preparation.pair < self.pairwise_matches.len() && work < OBSERVATIONS_PER_STEP {
+                    let (frame_a, frame_b, matches) = &self.pairwise_matches[preparation.pair];
+                    if preparation.matched >= matches.len() {
+                        preparation.pair += 1;
+                        preparation.matched = 0;
+                        continue;
+                    }
+                    let matched = matches[preparation.matched];
+                    let frame_a = *frame_a;
+                    let frame_b = *frame_b;
+                    preparation.matched += 1;
+                    let left = preparation.node((frame_a, matched.a));
+                    let right = preparation.node((frame_b, matched.b));
+                    preparation.union(left, right);
+                    work += 1;
+                }
+                if preparation.pair == self.pairwise_matches.len() {
+                    preparation.phase = TrackPhase::Group;
+                }
+            }
+            TrackPhase::Group => {
+                let end = preparation.grouping_cursor.saturating_add(OBSERVATIONS_PER_STEP).min(preparation.observations.len());
+                for index in preparation.grouping_cursor..end {
+                    let observation = preparation.observations[index];
+                    let root = preparation.root(index);
+                    let group = preparation.groups.entry(root).or_insert_with(|| TrackGroup { observations: Vec::new(), frames: std::collections::BTreeSet::new(), conflict: false });
+                    if !group.frames.insert(observation.0) {
+                        group.conflict = true;
+                    }
+                    group.observations.push(observation);
+                }
+                preparation.grouping_cursor = end;
+                if end == preparation.observations.len() {
+                    preparation.phase = TrackPhase::Finish;
+                }
+            }
+            TrackPhase::Finish => {
+                for _ in 0..GROUPS_PER_STEP {
+                    let Some((_, group)) = preparation.groups.pop_first() else { break };
+                    if !group.conflict {
+                        preparation.tracks.push(group.observations);
+                    }
+                }
+                if preparation.groups.is_empty() {
+                    let complete = self.track_preparation.take().expect("completed tracks");
+                    return Some(remodel_sfm::FeatureTracks { tracks: complete.tracks });
+                }
+            }
+        }
+        None
     }
 
     /// 🏗️ Either seeds [`remodel_sfm::IncrementalSfm`] via `init_pair(0, 1, ..)` (first call), or
@@ -578,96 +1093,148 @@ impl ReconstructionEngine {
     /// already shares triangulated tracks with the seed pair can unlock earlier starved frames.
     /// Mirrors `run_all`'s best-effort policy (a frame that fails to register is skipped for this
     /// step, not fatal) except for the initial pair, whose failure genuinely aborts the reconstruction.
-    async fn step_estimating_poses(&mut self) -> Result<bool, String> {
+    fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
             let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio);
-            let tracks = self.tracks.as_ref().expect("tracks built before EstimatingPoses").clone();
-            let mut sfm = remodel_sfm::IncrementalSfm::new(intr, tracks, self.keypoints_per_frame.clone(), self.params.sfm.clone());
-            sfm.set_pairwise_matches(self.pairwise_matches.clone());
-            let pair01 = self.pairwise_matches.iter().find(|&&(a, b, _)| a == 0 && b == 1).map(|(_, _, m)| m.clone()).ok_or_else(|| "no matches between frame 0 and 1".to_string())?;
-            sfm.init_pair(0, 1, &pair01).map_err(|e| e.to_string())?;
+            let tracks = self.tracks.take().expect("tracks built before EstimatingPoses");
+            let keypoints = std::mem::take(&mut self.keypoints_per_frame);
+            let mut sfm = remodel_sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
+            let pair01 = self.pairwise_matches.iter().find(|&&(a, b, _)| a == 0 && b == 1).map(|(_, _, matches)| remodel_sfm::SeedPairPreparation::new(0, 1, matches)).ok_or_else(|| "no matches between frame 0 and 1".to_string())?;
+            sfm.set_pairwise_matches(std::mem::take(&mut self.pairwise_matches));
             self.sfm = Some(sfm);
-            self.pose_cursor = 2;
+            self.seed_pair_preparation = Some(pair01);
+        }
+        if let Some(preparation) = self.seed_pair_preparation.as_mut() {
+            if self.sfm.as_mut().expect("seed SfM").advance_seed_pair(preparation, 1).map_err(|error| error.to_string())? {
+                self.seed_pair_preparation = None;
+                self.pose_cursor = 2;
+            }
             return Ok(true);
         }
         let n = self.frames.len();
-        let Some(sfm) = self.sfm.as_mut() else {
-            return Ok(false);
-        };
-        let registered = sfm.reconstruction().cameras.len();
+        let sfm = self.sfm.as_mut().expect("initialized SfM");
+        let registered = sfm.registered_count();
         if self.params.max_registered_cameras > 0 && registered >= self.params.max_registered_cameras {
             return Ok(false);
         }
-        let window = self.params.sequential_window.max(1);
-        let registered: Vec<usize> = (0..n).filter(|&frame| sfm.has_camera(frame)).collect();
-        let mut candidates: Vec<(usize, usize, usize)> = Vec::new();
-        for frame in 0..n {
-            if sfm.has_camera(frame) {
-                continue;
-            }
-            let pnp = sfm.pnp_correspondence_count(frame);
-            let pairwise = sfm.pairwise_match_count(frame);
-            if pnp < 3 && pairwise < 8 {
-                continue;
-            }
-            // Grow from the registered frontier first so each step only tries a handful of neighbors
-            // instead of re-running essential-matrix RANSAC over every distant JPEG frame.
-            let near = registered.iter().any(|&r| frame.abs_diff(r) <= window * 2);
-            if pnp < 3 && !near {
-                continue;
-            }
-            candidates.push((pnp, pairwise, frame));
+        if self.pose_cursor >= n {
+            return Ok(false);
         }
-        candidates.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.cmp(&a.1)).then(a.2.cmp(&b.2)));
-        for (_pnp, _pairwise, frame) in candidates {
-            if sfm.register_next(frame).is_ok() {
-                sfm.triangulate_new(frame);
-                self.pose_cursor = self.pose_cursor.saturating_add(1);
-                return Ok(true);
-            }
+        if self.registration_preparation.is_none() {
+            self.registration_preparation = Some(remodel_sfm::RegistrationPreparation::new(self.pose_cursor));
         }
-        Ok(false)
+        let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
+        match result {
+            Ok(true) | Err(_) => {
+                self.registration_preparation = None;
+                self.pose_cursor += 1;
+            }
+            Ok(false) => {}
+        }
+        Ok(self.pose_cursor < n || self.registration_preparation.is_some())
     }
 
-    /// 🎯️ One bundle-adjustment substep from the fixed cycle `local_ba -> prune_outliers ->
-    /// retriangulate -> global_ba` (the finest granularity `remodel_sfm::IncrementalSfm` exposes — each
-    /// of these already runs its own internal solve/pass to completion in one call, same "whole stage per
-    /// call" chunking granularity `remodel_mesh::mesh_pipeline_step` uses). Returns whether more substeps
-    /// remain.
-    async fn step_bundle_adjusting(&mut self) -> bool {
+    /// 🎯️ Advances exactly one bounded bundle cleanup or retriangulation unit.
+    fn step_bundle_adjusting(&mut self) -> bool {
+        if self.ba_substep != 0 {
+            return false;
+        }
         let Some(sfm) = self.sfm.as_mut() else { return false };
-        let n = self.frames.len();
-        match self.ba_substep {
-            0 => {
-                sfm.refine_registered_poses_pnp();
-                sfm.local_ba(n);
-            }
-            1 => sfm.prune_outliers(),
-            2 => sfm.retriangulate(),
-            3 => sfm.global_ba(),
-            _ => return false,
+        if self.bundle_preparation.is_none() {
+            self.bundle_preparation = Some(sfm.begin_bundle());
         }
-        self.ba_substep += 1;
-        self.ba_substep <= 3
+        if sfm.advance_bundle(self.bundle_preparation.as_mut().expect("bundle preparation"), 1) {
+            self.bundle_preparation = None;
+            self.ba_substep = 1;
+            return false;
+        }
+        true
     }
 
-    /// 📦️ Snapshots the finished `Reconstruction` and its observation list, and resets the dense-stereo
-    /// cursor/scratch.
-    async fn finalize_reconstruction(&mut self) {
-        if let Some(sfm) = &self.sfm {
-            let recon = sfm.reconstruction();
-            self.observations = build_observations(&recon, self.tracks.as_ref(), &self.keypoints_per_frame);
-            let n_cameras = recon.cameras.len();
-            self.dense_camera_indices = subsample_camera_indices(n_cameras, self.params.max_dense_cameras);
-            self.reconstruction = Some(recon);
-            self.depth_maps = vec![None; self.dense_camera_indices.len()];
+    /// 📦️ Moves the final sparse snapshot, observation table, and dense-camera index through bounded
+    /// item cursors. No camera/point/observation collection is materialized in one continuation.
+    fn step_finalize_reconstruction(&mut self) -> bool {
+        const ITEMS_PER_STEP: usize = 64;
+        if self.finalization_preparation.is_none() {
+            let snapshot = self.sfm.as_ref().map(remodel_sfm::IncrementalSfm::begin_reconstruction_snapshot);
+            self.finalization_preparation = Some(FinalizationPreparation { phase: FinalizationPhase::Snapshot, snapshot, camera_cursor: 0, camera_index: std::collections::BTreeMap::new(), point_cursor: 0, observation_cursor: 0, dense_cursor: 0 });
         }
-        self.stage_cursor = 0;
+        let preparation = self.finalization_preparation.as_mut().expect("finalization preparation");
+        match preparation.phase {
+            FinalizationPhase::Snapshot => {
+                let Some(snapshot) = preparation.snapshot.as_mut() else {
+                    preparation.phase = FinalizationPhase::Done;
+                    return true;
+                };
+                let sfm = self.sfm.as_ref().expect("snapshot SfM");
+                if sfm.advance_reconstruction_snapshot(snapshot, ITEMS_PER_STEP) {
+                    let snapshot = preparation.snapshot.take().expect("completed snapshot");
+                    self.reconstruction = Some(remodel_sfm::IncrementalSfm::finish_reconstruction_snapshot(snapshot));
+                    preparation.phase = FinalizationPhase::CameraIndex;
+                }
+            }
+            FinalizationPhase::CameraIndex => {
+                let reconstruction = self.reconstruction.as_ref().expect("final reconstruction");
+                let end = preparation.camera_cursor.saturating_add(ITEMS_PER_STEP).min(reconstruction.cameras.len());
+                for index in preparation.camera_cursor..end {
+                    preparation.camera_index.insert(reconstruction.cameras[index].0, index);
+                }
+                preparation.camera_cursor = end;
+                if end == reconstruction.cameras.len() {
+                    preparation.phase = FinalizationPhase::Observations;
+                }
+            }
+            FinalizationPhase::Observations => {
+                let reconstruction = self.reconstruction.as_ref().expect("final reconstruction");
+                let tracks = self.tracks.as_ref().expect("feature tracks");
+                let mut remaining = ITEMS_PER_STEP;
+                while preparation.point_cursor < reconstruction.point_track_ids.len() && remaining > 0 {
+                    let track_id = reconstruction.point_track_ids[preparation.point_cursor];
+                    let Some(track) = tracks.tracks.get(track_id) else {
+                        preparation.point_cursor += 1;
+                        preparation.observation_cursor = 0;
+                        continue;
+                    };
+                    if preparation.observation_cursor >= track.len() {
+                        preparation.point_cursor += 1;
+                        preparation.observation_cursor = 0;
+                        continue;
+                    }
+                    let (frame, keypoint) = track[preparation.observation_cursor];
+                    preparation.observation_cursor += 1;
+                    remaining -= 1;
+                    let Some(&camera) = preparation.camera_index.get(&frame) else { continue };
+                    let Some(keypoints) = self.keypoints_per_frame.get(frame) else { continue };
+                    let Some(keypoint) = keypoints.get(keypoint as usize) else { continue };
+                    self.observations.push((camera, preparation.point_cursor, [f64::from(keypoint.x), f64::from(keypoint.y)]));
+                }
+                if preparation.point_cursor == reconstruction.point_track_ids.len() {
+                    preparation.phase = FinalizationPhase::DenseCameras;
+                }
+            }
+            FinalizationPhase::DenseCameras => {
+                let cameras = self.reconstruction.as_ref().map_or(0, |reconstruction| reconstruction.cameras.len());
+                let dense_count = if self.params.max_dense_cameras == 0 { cameras.min(12) } else { cameras.min(self.params.max_dense_cameras).min(12) };
+                if preparation.dense_cursor < dense_count {
+                    let index = if dense_count <= 1 { 0 } else { preparation.dense_cursor * cameras.saturating_sub(1) / dense_count.saturating_sub(1) };
+                    self.dense_camera_indices.push(index);
+                    preparation.dense_cursor += 1;
+                } else {
+                    self.depth_maps = Vec::with_capacity(self.dense_camera_indices.len());
+                    self.stage_cursor = 0;
+                    preparation.phase = FinalizationPhase::Done;
+                }
+            }
+            FinalizationPhase::Done => return true,
+        }
+        preparation.phase == FinalizationPhase::Done
     }
 
     /// 🌫️ One registered camera's `remodel_dense::patchmatch_mvs` depth map against its nearest
     /// registered neighbors; returns whether more cameras remain.
-    async fn step_dense_stereo(&mut self) -> bool {
+    fn step_dense_stereo(&mut self) -> bool {
+        const LUMA_PIXELS_PER_STEP: usize = 2_048;
+        const PATCH_PIXELS_PER_STEP: usize = 1;
         let n_dense = self.dense_camera_indices.len();
         if n_dense == 0 {
             return false;
@@ -676,32 +1243,69 @@ impl ReconstructionEngine {
         if slot >= n_dense {
             return false;
         }
-        let ci = self.dense_camera_indices[slot];
-        let n_cameras = self.reconstruction.as_ref().map(|r| r.cameras.len()).unwrap_or(0);
-        let (frame_a, pose_a, intrinsics, neighbor_frames) = {
-            let recon = self.reconstruction.as_ref().expect("dense requires reconstruction");
-            let (frame_a, pose_a) = recon.cameras[ci];
-            let intrinsics = recon.intrinsics;
-            let neighbor_slots = neighbor_camera_indices(ci, n_cameras, self.params.dense_source_views);
-            let neighbor_frames: Vec<(usize, remodel_camera::CameraPose)> = neighbor_slots.into_iter().map(|cj| recon.cameras[cj]).collect();
-            (frame_a, pose_a, intrinsics, neighbor_frames)
-        };
-        let ref_gray = remodel_image::ImageGray::from_rgba8_luma(&self.frames[frame_a].image);
-        let mut src_views = Vec::with_capacity(neighbor_frames.len());
-        for (frame_b, pose_b) in neighbor_frames {
-            let gray_b = remodel_image::ImageGray::from_rgba8_luma(&self.frames[frame_b].image);
-            src_views.push((gray_b, pose_b, intrinsics));
+        if self.dense_preparation.is_none() {
+            let ci = self.dense_camera_indices[slot];
+            let reconstruction = self.reconstruction.as_ref().expect("dense requires reconstruction");
+            let (reference_frame, pose) = reconstruction.cameras[ci];
+            let intrinsics = reconstruction.intrinsics;
+            let source_frames = neighbor_camera_indices(ci, reconstruction.cameras.len(), self.params.dense_source_views.min(8)).into_iter().map(|neighbor| reconstruction.cameras[neighbor]).collect();
+            let reference = &self.frames[reference_frame].image;
+            self.dense_preparation = Some(DenseStereoPreparation {
+                phase: DenseStereoPhase::ReferenceLuma,
+                reference_frame,
+                reference_camera: (pose, intrinsics),
+                source_frames,
+                reference_gray: remodel_image::ImageGray { width: reference.width, height: reference.height, data: Vec::with_capacity(reference.width as usize * reference.height as usize) },
+                source_grays: Vec::new(),
+                source: 0,
+                pixel: 0,
+                patch_match: None,
+            });
         }
-        let dm = remodel_dense::patchmatch_mvs(&ref_gray, &(pose_a, intrinsics), &src_views, &self.params.dense);
-        self.depth_maps[slot] = Some(dm);
-        self.stage_cursor += 1;
+        let preparation = self.dense_preparation.as_mut().expect("dense preparation");
+        match preparation.phase {
+            DenseStereoPhase::ReferenceLuma => {
+                if append_luma_slice(&self.frames[preparation.reference_frame].image, &mut preparation.reference_gray, &mut preparation.pixel, LUMA_PIXELS_PER_STEP) {
+                    preparation.pixel = 0;
+                    preparation.phase = DenseStereoPhase::SourceLuma;
+                }
+            }
+            DenseStereoPhase::SourceLuma => {
+                if preparation.source == preparation.source_frames.len() {
+                    preparation.phase = DenseStereoPhase::PatchMatch;
+                } else {
+                    let (frame, pose) = preparation.source_frames[preparation.source];
+                    if preparation.source_grays.len() == preparation.source {
+                        let image = &self.frames[frame].image;
+                        preparation.source_grays.push((remodel_image::ImageGray { width: image.width, height: image.height, data: Vec::with_capacity(image.width as usize * image.height as usize) }, pose, preparation.reference_camera.1));
+                    }
+                    let complete = append_luma_slice(&self.frames[frame].image, &mut preparation.source_grays[preparation.source].0, &mut preparation.pixel, LUMA_PIXELS_PER_STEP);
+                    if complete {
+                        preparation.source += 1;
+                        preparation.pixel = 0;
+                    }
+                }
+            }
+            DenseStereoPhase::PatchMatch => {
+                let patch_match = preparation.patch_match.get_or_insert_with(|| remodel_dense::PatchMatchPreparation::new(preparation.reference_gray.width, preparation.reference_gray.height));
+                if patch_match.advance(&preparation.reference_gray, &preparation.reference_camera, &preparation.source_grays, &self.params.dense, PATCH_PIXELS_PER_STEP) {
+                    let complete = self.dense_preparation.take().expect("completed dense preparation");
+                    let map = complete.patch_match.expect("completed patch match").finish().expect("finished depth map");
+                    self.fusion_capacity = self.fusion_capacity.saturating_add(map.depth.len());
+                    self.depth_maps.push(map);
+                    self.stage_cursor += 1;
+                }
+            }
+        }
         self.stage_cursor < n_dense
     }
 
     /// 🧊️ One camera's depth map integrated into the TSDF (or, once every camera is integrated, the
     /// final `fuse_depth_maps` aggregate for the QC/geo point cloud); returns whether more work remains
     /// in this stage.
-    async fn step_fusing_volume(&mut self) -> bool {
+    fn step_fusing_volume(&mut self) -> bool {
+        const TSDF_SAMPLES_PER_STEP: usize = 256;
+        const FUSION_COMPARISONS_PER_STEP: usize = 256;
         let n_dense = self.dense_camera_indices.len();
         // 🧊️ Always ensures a (possibly still-empty) TSDF exists once this stage starts, even when
         // `n_dense == 0` (a degenerate but legitimate outcome — every registered camera got pruned by
@@ -719,56 +1323,93 @@ impl ReconstructionEngine {
                 let (_, pose) = recon.cameras[ci];
                 (pose, recon.intrinsics)
             };
-            let tsdf = self.tsdf.as_mut().expect("just ensured");
-            if let Some(dm) = &self.depth_maps[slot] {
-                tsdf.integrate(dm, &(pose, intrinsics), true);
+            let preparation = self.tsdf_preparation.get_or_insert_with(remodel_dense::TsdfIntegrationPreparation::new);
+            if preparation.advance(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
+                self.tsdf_preparation = None;
+                self.stage_cursor += 1;
             }
-            self.stage_cursor += 1;
             return true;
         }
         if !self.fusion_finalized {
             let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
-            let views: Vec<(remodel_camera::CameraPose, remodel_camera::Intrinsics)> = self.dense_camera_indices.iter().map(|&ci| (recon.cameras[ci].1, recon.intrinsics)).collect();
-            let depth_maps: Vec<remodel_dense::DepthMap> = self.depth_maps.iter().map(|d| d.clone().unwrap_or_else(|| remodel_dense::DepthMap::new(1, 1))).collect();
-            self.dense_cloud = Some(remodel_dense::fuse_depth_maps(&views, &depth_maps, &remodel_dense::FusionConfig::default()));
-            self.fusion_finalized = true;
-            return false;
+            if self.fusion_views.len() < self.dense_camera_indices.len() {
+                let camera = self.dense_camera_indices[self.fusion_views.len()];
+                self.fusion_views.push((recon.cameras[camera].1, recon.intrinsics));
+                return true;
+            }
+            let preparation = self.fusion_preparation.get_or_insert_with(|| remodel_dense::FusionPreparation::new(self.fusion_capacity));
+            if preparation.advance(&self.fusion_views, &self.depth_maps, &remodel_dense::FusionConfig::default(), FUSION_COMPARISONS_PER_STEP) {
+                self.dense_cloud = self.fusion_preparation.take().and_then(remodel_dense::FusionPreparation::finish);
+                self.fusion_finalized = true;
+                return false;
+            }
+            return true;
         }
         false
     }
 
-    /// 🏗️ Builds the `remodel_mesh::MeshPipeline` from the accumulated TSDF once dense fusion is done:
-    /// voxel bounds from the union of sparse+dense points, optional per-camera `TextureView`s.
-    async fn begin_meshing(&mut self) {
-        let Some(tsdf) = self.tsdf.take() else { return };
-        let mut all_points: Vec<[f64; 3]> = Vec::new();
-        if let Some(r) = &self.reconstruction {
-            all_points.extend(r.points.iter().copied());
+    /// 🏗️ Advances bounds, texture-view copying and pipeline creation with finite point/byte fuel.
+    fn step_begin_meshing(&mut self) -> bool {
+        const POINTS_PER_STEP: usize = 2_048;
+        const IMAGE_BYTES_PER_STEP: usize = 4_096;
+        if self.tsdf.is_none() {
+            return true;
         }
-        if let Some(cloud) = &self.dense_cloud {
-            all_points.extend(cloud.positions.iter().copied());
-        }
-        let (bounds_min, bounds_max) = compute_voxel_bounds(&all_points, self.params.tsdf_voxel_size);
-        let mut pipeline = remodel_mesh::MeshPipeline::new(&tsdf, 0.0, bounds_min, bounds_max, self.params.mesh.clone());
-        if self.params.texture_enabled {
-            if let Some(r) = &self.reconstruction {
-                let views: Vec<remodel_mesh::TextureView> = self
-                    .dense_camera_indices
-                    .iter()
-                    .map(|&ci| {
-                        let (frame, pose) = r.cameras[ci];
-                        remodel_mesh::TextureView { pose, intrinsics: r.intrinsics, image: self.frames[frame].image.clone() }
-                    })
-                    .collect();
-                pipeline = pipeline.with_views(views);
+        let preparation = self.meshing_preparation.get_or_insert_with(MeshingPreparation::new);
+        if let Some(reconstruction) = &self.reconstruction {
+            if preparation.sparse_cursor < reconstruction.points.len() {
+                let end = preparation.sparse_cursor.saturating_add(POINTS_PER_STEP).min(reconstruction.points.len());
+                for &point in &reconstruction.points[preparation.sparse_cursor..end] {
+                    preparation.include(point);
+                }
+                preparation.sparse_cursor = end;
+                return false;
             }
         }
-        self.mesh_pipeline = Some(pipeline);
+        if let Some(cloud) = &self.dense_cloud {
+            if preparation.dense_cursor < cloud.positions.len() {
+                let end = preparation.dense_cursor.saturating_add(POINTS_PER_STEP).min(cloud.positions.len());
+                for &point in &cloud.positions[preparation.dense_cursor..end] {
+                    preparation.include(point);
+                }
+                preparation.dense_cursor = end;
+                return false;
+            }
+        }
+        if self.params.texture_enabled {
+            if let Some(reconstruction) = &self.reconstruction {
+                if preparation.view_cursor < self.dense_camera_indices.len() {
+                    let camera = self.dense_camera_indices[preparation.view_cursor];
+                    let (frame, pose) = reconstruction.cameras[camera];
+                    if preparation.active_view.is_none() {
+                        let source = &self.frames[frame].image;
+                        preparation.active_view =
+                            Some(TextureViewPreparation { pose, intrinsics: reconstruction.intrinsics, image: remodel_image::ImageRgba8 { width: source.width, height: source.height, data: Vec::with_capacity(source.data.len()) }, cursor: 0 });
+                    }
+                    let active = preparation.active_view.as_mut().expect("active texture view");
+                    let source = &self.frames[frame].image.data;
+                    let end = active.cursor.saturating_add(IMAGE_BYTES_PER_STEP).min(source.len());
+                    active.image.data.extend_from_slice(&source[active.cursor..end]);
+                    active.cursor = end;
+                    if end == source.len() {
+                        let complete = preparation.active_view.take().expect("completed texture view");
+                        preparation.views.push(remodel_mesh::TextureView { pose: complete.pose, intrinsics: complete.intrinsics, image: complete.image });
+                        preparation.view_cursor += 1;
+                    }
+                    return false;
+                }
+            }
+        }
+        let preparation = self.meshing_preparation.take().expect("completed meshing preparation");
+        let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.params.tsdf_voxel_size);
+        let volume = self.tsdf.take().expect("meshing volume");
+        self.mesh_pipeline = Some(remodel_mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_views(preparation.views));
+        true
     }
 
-    /// 🕸️ Drives `remodel_mesh::mesh_pipeline_step` one whole internal stage per call, mapping its
-    /// stage name back onto [`EngineStage`].
-    async fn step_meshing(&mut self) -> MeshStepOutcome {
+    /// 🕸️ Drives one cursor-bounded internal mesh unit per call and maps its stage name back onto
+    /// [`EngineStage`].
+    fn step_meshing(&mut self) -> MeshStepOutcome {
         let Some(pipeline) = self.mesh_pipeline.as_mut() else {
             return MeshStepOutcome::Failed("mesh pipeline not initialized".to_string());
         };
@@ -781,7 +1422,7 @@ impl ReconstructionEngine {
 
     /// 📈️ Coarse `[0, 1]` progress from the current stage's ordinal alone (no intra-stage fraction — the
     /// per-stage cursors have wildly different, not-necessarily-comparable totals).
-    async fn progress(&self) -> f32 {
+    fn progress(&self) -> f32 {
         stage_ordinal(self.stage) as f32 / 10.0
     }
 
@@ -790,7 +1431,7 @@ impl ReconstructionEngine {
     /// the same style `remodel_mesh::mesh_pipeline_step` uses internally. Genuinely resumable: calling
     /// this repeatedly with a small budget or once with `usize::MAX` reaches the same terminal
     /// [`EngineStatus`], only the call count differs.
-    pub async fn advance(&mut self, step_budget: usize) -> EngineStatus {
+    pub fn advance(&mut self, step_budget: usize) -> EngineStatus {
         for _ in 0..step_budget.max(1) {
             match self.stage {
                 EngineStage::Idle => {
@@ -803,15 +1444,17 @@ impl ReconstructionEngine {
                 }
                 EngineStage::ExtractingFeatures => {
                     if !self.step_extracting_features() {
-                        self.build_match_pairs();
                         self.stage = EngineStage::MatchingFeatures;
                     }
                 }
                 EngineStage::MatchingFeatures => {
-                    if !self.step_matching_features() {
-                        let tracks = remodel_sfm::build_tracks(self.frames.len(), &self.pairwise_matches);
-                        self.tracks = Some(tracks);
-                        self.stage = EngineStage::EstimatingPoses;
+                    if !self.match_pairs_ready {
+                        self.match_pairs_ready = self.step_build_match_pairs(64);
+                    } else if !self.step_matching_features() {
+                        if let Some(tracks) = self.step_build_tracks() {
+                            self.tracks = Some(tracks);
+                            self.stage = EngineStage::EstimatingPoses;
+                        }
                     }
                 }
                 EngineStage::EstimatingPoses => match self.step_estimating_poses() {
@@ -827,8 +1470,7 @@ impl ReconstructionEngine {
                     }
                 },
                 EngineStage::BundleAdjusting => {
-                    if !self.step_bundle_adjusting() {
-                        self.finalize_reconstruction();
+                    if !self.step_bundle_adjusting() && self.step_finalize_reconstruction() {
                         self.stage = EngineStage::DenseStereo;
                     }
                 }
@@ -839,8 +1481,7 @@ impl ReconstructionEngine {
                     }
                 }
                 EngineStage::FusingVolume => {
-                    if !self.step_fusing_volume() {
-                        self.begin_meshing();
+                    if !self.step_fusing_volume() && self.step_begin_meshing() {
                         self.stage = EngineStage::ExtractingSurface;
                     }
                 }
@@ -888,24 +1529,200 @@ pub struct ScenePreview {
     pub packed_points: Vec<f32>,
 }
 
+/// 🧱️ One bounded terminal sparse-output slice with explicit next cursors.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TerminalSparseChunk {
+    pub camera_poses: Vec<remodel_camera::CameraPose>,
+    pub packed_points: Vec<f32>,
+    pub next_camera: usize,
+    pub next_point: usize,
+    pub complete: bool,
+}
+
+/// 🧱️ One bounded terminal QC observation slice.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TerminalQualityChunk {
+    pub squared_error_sum: f64,
+    pub observation_count: usize,
+    pub point_indices: Vec<usize>,
+    pub next_observation: usize,
+    pub complete: bool,
+}
+
+/// 🗺️ Incremental terminal geo-product state; each advance consumes a capped point slice.
+pub struct TerminalGeoPreparation {
+    pub cursor: usize,
+    bounds_complete: bool,
+    allocation_complete: bool,
+    bounds_min: [f64; 3],
+    bounds_max: [f64; 3],
+    dsm: Option<remodel_geo::Raster>,
+    dtm: Option<remodel_geo::Raster>,
+}
+
+fn bounded_terminal_end(cursor: usize, len: usize, budget: usize) -> usize {
+    cursor.min(len).saturating_add(budget).min(len)
+}
+
 impl ReconstructionEngine {
     /// 🔭️ Snapshots whichever reconstruction state is currently available: the finalized
     /// `Reconstruction` once bundle adjustment has run, else the in-progress `IncrementalSfm`'s own
     /// snapshot, else empty (before `EstimatingPoses` has produced anything).
-    pub async fn sparse_preview(&self) -> ScenePreview {
+    #[cfg(test)]
+    pub fn sparse_preview(&self) -> ScenePreview {
         if let Some(r) = &self.reconstruction {
             return pack_reconstruction(r);
         }
         if let Some(sfm) = &self.sfm {
-            return pack_reconstruction(&sfm.reconstruction());
+            let camera_poses = sfm.camera_pose_prefix(64);
+            let packed_points = sfm.point_prefix(512).into_iter().flat_map(|point| point.map(|coordinate| coordinate as f32)).collect();
+            return ScenePreview { camera_poses, packed_points };
         }
         ScenePreview { camera_poses: Vec::new(), packed_points: Vec::new() }
+    }
+
+    /// 🪟️ Caps incremental UI publication without changing the full terminal product snapshot.
+    pub fn sparse_preview_bounded(&self, max_cameras: usize, max_points: usize) -> ScenePreview {
+        if let Some(reconstruction) = &self.reconstruction {
+            return pack_reconstruction_bounded(reconstruction, max_cameras, max_points);
+        }
+        if let Some(sfm) = &self.sfm {
+            let camera_poses = sfm.camera_pose_prefix(max_cameras);
+            let packed_points = sfm.point_prefix(max_points).into_iter().flat_map(|point| point.map(|coordinate| coordinate as f32)).collect();
+            return ScenePreview { camera_poses, packed_points };
+        }
+        ScenePreview { camera_poses: Vec::new(), packed_points: Vec::new() }
+    }
+
+    /// ⏱️ Copies at most the requested camera and point counts from finished reconstruction state.
+    pub fn terminal_sparse_chunk(&self, camera_cursor: usize, point_cursor: usize, max_cameras: usize, max_points: usize) -> TerminalSparseChunk {
+        let Some(reconstruction) = &self.reconstruction else {
+            return TerminalSparseChunk { camera_poses: Vec::new(), packed_points: Vec::new(), next_camera: camera_cursor, next_point: point_cursor, complete: true };
+        };
+        let camera_start = camera_cursor.min(reconstruction.cameras.len());
+        let camera_end = bounded_terminal_end(camera_start, reconstruction.cameras.len(), max_cameras);
+        let point_start = point_cursor.min(reconstruction.points.len());
+        let point_end = bounded_terminal_end(point_start, reconstruction.points.len(), max_points);
+        let camera_poses = reconstruction.cameras[camera_start..camera_end].iter().map(|&(_, pose)| pose).collect();
+        let packed_points = reconstruction.points[point_start..point_end].iter().flat_map(|point| point.iter().map(|&coordinate| coordinate as f32)).collect();
+        TerminalSparseChunk { camera_poses, packed_points, next_camera: camera_end, next_point: point_end, complete: camera_end == reconstruction.cameras.len() && point_end == reconstruction.points.len() }
+    }
+
+    /// ⏱️ Reduces at most `max_observations` terminal reprojection rows for incremental QC.
+    pub fn terminal_quality_chunk(&self, observation_cursor: usize, max_observations: usize) -> TerminalQualityChunk {
+        let Some(reconstruction) = &self.reconstruction else {
+            return TerminalQualityChunk { squared_error_sum: 0.0, observation_count: 0, point_indices: Vec::new(), next_observation: observation_cursor, complete: true };
+        };
+        let start = observation_cursor.min(self.observations.len());
+        let end = bounded_terminal_end(start, self.observations.len(), max_observations);
+        let mut squared_error_sum = 0.0;
+        let mut observation_count = 0;
+        let mut point_indices = Vec::with_capacity(end - start);
+        for &(camera_index, point_index, pixel) in &self.observations[start..end] {
+            if camera_index >= reconstruction.cameras.len() || point_index >= reconstruction.points.len() {
+                continue;
+            }
+            let (_, pose) = reconstruction.cameras[camera_index];
+            let residual = remodel_camera::reprojection_residual(&reconstruction.intrinsics, &pose, reconstruction.points[point_index], pixel);
+            squared_error_sum += residual[0] * residual[0] + residual[1] * residual[1];
+            observation_count += 1;
+            point_indices.push(point_index);
+        }
+        TerminalQualityChunk { squared_error_sum, observation_count, point_indices, next_observation: end, complete: end == self.observations.len() }
+    }
+
+    /// 📊️ Returns the already-computed mesh watertight report without rebuilding full QC.
+    pub fn terminal_watertight_report(&self) -> Option<remodel_mesh::WatertightReport> {
+        self.watertight_report.clone()
+    }
+
+    /// 🌍️ Creates incremental geo state only when geo output and a dense cloud exist.
+    pub fn begin_terminal_geo(&self) -> Option<TerminalGeoPreparation> {
+        if !self.params.geo_enabled || self.dense_cloud.as_ref().is_none_or(|cloud| cloud.positions.is_empty()) {
+            return None;
+        }
+        Some(TerminalGeoPreparation { cursor: 0, bounds_complete: false, allocation_complete: false, bounds_min: [f64::INFINITY; 3], bounds_max: [f64::NEG_INFINITY; 3], dsm: None, dtm: None })
+    }
+
+    /// ⏱️ Advances terminal bounds or DSM/DTM binning by at most `point_budget` cloud points.
+    pub fn advance_terminal_geo(&self, preparation: &mut TerminalGeoPreparation, point_budget: usize) -> bool {
+        let Some(cloud) = &self.dense_cloud else { return true };
+        let end = bounded_terminal_end(preparation.cursor, cloud.positions.len(), point_budget);
+        if !preparation.bounds_complete {
+            for &point in &cloud.positions[preparation.cursor..end] {
+                for axis in 0..3 {
+                    preparation.bounds_min[axis] = preparation.bounds_min[axis].min(point[axis]);
+                    preparation.bounds_max[axis] = preparation.bounds_max[axis].max(point[axis]);
+                }
+            }
+            preparation.cursor = end;
+            if end == cloud.positions.len() {
+                let cell = self.params.geo_cell_size.max(1e-6);
+                let width = (((preparation.bounds_max[0] - preparation.bounds_min[0]) / cell).ceil() as u32 + 1).clamp(1, 512);
+                let height = (((preparation.bounds_max[1] - preparation.bounds_min[1]) / cell).ceil() as u32 + 1).clamp(1, 512);
+                let origin = [preparation.bounds_min[0], preparation.bounds_min[1]];
+                preparation.dsm = Some(remodel_geo::Raster::empty(width, height, cell, origin));
+                preparation.dtm = Some(remodel_geo::Raster::empty(width, height, cell, origin));
+                preparation.bounds_complete = true;
+                preparation.cursor = 0;
+            }
+            return false;
+        }
+        if !preparation.allocation_complete {
+            let dsm_complete = preparation.dsm.as_mut().expect("terminal DSM initialized").extend_invalid(point_budget);
+            let dtm_complete = preparation.dtm.as_mut().expect("terminal DTM initialized").extend_invalid(point_budget);
+            preparation.allocation_complete = dsm_complete && dtm_complete;
+            return false;
+        }
+        let dsm = preparation.dsm.as_mut().expect("terminal DSM initialized");
+        let dtm = preparation.dtm.as_mut().expect("terminal DTM initialized");
+        for index in preparation.cursor..end {
+            let point = cloud.positions[index];
+            if let Some((x, y)) = dsm.cell_of([point[0], point[1]]) {
+                let cell = dsm.index(x, y);
+                if !dsm.valid[cell] || point[2] as f32 > dsm.values[cell] {
+                    dsm.set(x, y, point[2] as f32);
+                }
+                if (cloud.classification.is_empty() || cloud.classification[index] == remodel_dense::PointClass::Ground) && (!dtm.valid[cell] || point[2] as f32 > dtm.values[cell]) {
+                    dtm.set(x, y, point[2] as f32);
+                }
+            }
+        }
+        preparation.cursor = end;
+        end == cloud.positions.len()
+    }
+
+    /// 🌍️ Releases fully binned terminal rasters.
+    pub fn finish_terminal_geo(preparation: TerminalGeoPreparation) -> Option<GeoProducts> {
+        Some(GeoProducts { dsm: preparation.dsm?, dtm: preparation.dtm? })
+    }
+}
+
+#[cfg(test)]
+mod terminal_sparse_chunk_tests {
+    use super::*;
+
+    #[test]
+    fn worst_case_terminal_windows_never_exceed_their_budget() {
+        let len = usize::MAX;
+        let camera_end = bounded_terminal_end(17, len, 64);
+        let point_end = bounded_terminal_end(23, len, 256);
+        let quality_end = bounded_terminal_end(29, len, 256);
+        assert_eq!(camera_end - 17, 64);
+        assert_eq!(point_end - 23, 256);
+        assert_eq!(quality_end - 29, 256);
     }
 }
 
 /// 📦️ Packs a `Reconstruction`'s camera poses and points into a [`ScenePreview`].
-async fn pack_reconstruction(r: &remodel_sfm::Reconstruction) -> ScenePreview {
+#[cfg(test)]
+fn pack_reconstruction(r: &remodel_sfm::Reconstruction) -> ScenePreview {
     ScenePreview { camera_poses: r.cameras.iter().map(|&(_, p)| p).collect(), packed_points: r.points.iter().flat_map(|p| p.iter().map(|&c| c as f32)).collect() }
+}
+
+/// 📦️ Packs finite camera and point prefixes for per-continuation previews.
+fn pack_reconstruction_bounded(r: &remodel_sfm::Reconstruction, max_cameras: usize, max_points: usize) -> ScenePreview {
+    ScenePreview { camera_poses: r.cameras.iter().take(max_cameras).map(|&(_, pose)| pose).collect(), packed_points: r.points.iter().take(max_points).flat_map(|point| point.iter().map(|&coordinate| coordinate as f32)).collect() }
 }
 // #endregion 🔖️Preview
 
@@ -919,7 +1736,8 @@ pub struct GeoProducts {
 }
 
 /// 📦️ World-space `(x, y)`/`(z)` bounding box of a point cloud's positions, or `None` when empty.
-async fn point_cloud_bbox(cloud: &remodel_dense::PointCloud) -> Option<([f64; 3], [f64; 3])> {
+#[cfg(test)]
+fn point_cloud_bbox(cloud: &remodel_dense::PointCloud) -> Option<([f64; 3], [f64; 3])> {
     let mut it = cloud.positions.iter();
     let first = *it.next()?;
     let mut lo = first;
@@ -937,7 +1755,7 @@ impl ReconstructionEngine {
     /// 🕸️ The finished, watertight-guaranteed `MeshData`, once [`EngineStatus::Done`] — consumes it (a
     /// second call returns `None`), mirroring `remodel_mesh::MeshPipeline::result`'s own take-once shape
     /// at the product-extraction boundary.
-    pub async fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
+    pub fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
         self.mesh_data.take()
     }
 
@@ -945,14 +1763,16 @@ impl ReconstructionEngine {
     /// uncertainty, and (once the mesh pipeline has run) the watertight report — available as soon as
     /// bundle adjustment has produced a `Reconstruction`, not only at `Done`, since it's cheap to
     /// recompute from already-finished data.
-    pub async fn take_quality(&mut self) -> Option<remodel_geo::QualityReport> {
+    #[cfg(test)]
+    pub fn take_quality(&mut self) -> Option<remodel_geo::QualityReport> {
         let recon = self.reconstruction.as_ref()?;
         Some(remodel_geo::build_quality_report(recon, &self.observations, None, None, None, self.watertight_report.clone()))
     }
 
     /// 🌍️ DSM/DTM rasters derived from the fused dense point cloud, when `EngineParams::geo_enabled`.
     /// `None` when geo products weren't requested, or there's no (or an empty) dense cloud yet.
-    pub async fn take_geo_products(&mut self) -> Option<GeoProducts> {
+    #[cfg(test)]
+    pub fn take_geo_products(&mut self) -> Option<GeoProducts> {
         if !self.params.geo_enabled {
             return None;
         }
@@ -980,7 +1800,7 @@ mod tests {
     // #region 🔖️TestFixtures
     /// 🎨️ Flat mid-gray `w x h` frame with zero gradient energy — a stand-in for a heavily blurred/
     /// defocused capture, deliberately below any sensible relative-sharpness threshold.
-    async fn flat_frame(w: u32, h: u32) -> remodel_image::ImageRgba8 {
+    fn flat_frame(w: u32, h: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(w, h);
         for px in img.data.chunks_mut(4) {
             px[0] = 128;
@@ -993,7 +1813,7 @@ mod tests {
 
     /// 🏁️ High-contrast `cell`-pixel checkerboard — strong Scharr gradient energy everywhere, a stand-in
     /// for a crisp, well-focused frame.
-    async fn checker_frame(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+    fn checker_frame(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(w, h);
         for y in 0..h {
             for x in 0..w {
@@ -1011,8 +1831,8 @@ mod tests {
     // #endregion 🔖️TestFixtures
 
     // #region 🔖️InputTests
-    #[semio_framework_async_macros::async_test]
-    async fn push_frame_blur_gate_rejects_planted_blurred_frame() {
+    #[test]
+    fn push_frame_blur_gate_rejects_planted_blurred_frame() {
         let mut source = FrameSource::new(IngestParams::default());
         let mut outcomes = Vec::new();
         for i in 0..10u32 {
@@ -1028,8 +1848,8 @@ mod tests {
         assert_eq!(source.accepted_count(), 9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn push_frame_stride_and_max_frames_sample() {
+    #[test]
+    fn push_frame_stride_and_max_frames_sample() {
         let mut source = FrameSource::new(IngestParams { stride: 2, max_frames: 3, min_sharpness: 0.0, rolling_window: 15 });
         let mut accepted = 0;
         for i in 0..10u32 {
@@ -1041,8 +1861,8 @@ mod tests {
         assert_eq!(source.accepted_count(), 3);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn push_video_blur_gate_reports_counts() {
+    #[test]
+    fn push_video_blur_gate_reports_counts() {
         let frames: Vec<Vec<u8>> = (0..9u32)
             .map(|i| {
                 let img = if i == 4 { flat_frame(24, 24) } else { checker_frame(24, 24, 3) };
@@ -1062,22 +1882,22 @@ mod tests {
     // #endregion 🔖️InputTests
 
     // #region 🔖️SyntheticScene
-    async fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
     }
-    async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
     }
-    async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+    fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
         [a[0] * s, a[1] * s, a[2] * s]
     }
-    async fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
     }
-    async fn norm3(a: [f64; 3]) -> f64 {
+    fn norm3(a: [f64; 3]) -> f64 {
         (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]).sqrt()
     }
-    async fn normalize3(a: [f64; 3]) -> [f64; 3] {
+    fn normalize3(a: [f64; 3]) -> [f64; 3] {
         let n = norm3(a);
         if n < 1e-15 {
             [0.0, 0.0, 0.0]
@@ -1088,7 +1908,7 @@ mod tests {
 
     /// 🎥️ Look-at camera pose (world→camera), mirroring `remodel_mesh`'s own test helper of the same
     /// shape: right-handed, `y`-up unless looking near-vertically.
-    async fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
+    fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodel_camera::CameraPose {
         let forward = normalize3(sub3(target, eye));
         let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
         let right = normalize3(cross3(forward, world_up));
@@ -1100,7 +1920,7 @@ mod tests {
 
     /// 📦️ Ray/axis-aligned-box slab intersection: nearest `t >= 0` hit point plus which axis (0=x, 1=y,
     /// 2=z) the hit face is perpendicular to, or `None` for a miss.
-    async fn ray_box_intersect(origin: [f64; 3], dir: [f64; 3], half: f64) -> Option<([f64; 3], usize)> {
+    fn ray_box_intersect(origin: [f64; 3], dir: [f64; 3], half: f64) -> Option<([f64; 3], usize)> {
         let mut tmin = f64::NEG_INFINITY;
         let mut tmax = f64::INFINITY;
         let mut hit_axis = 0usize;
@@ -1149,7 +1969,7 @@ mod tests {
 
     /// 🎲️ `count` random markers per cube face (6 faces, axis 0/1/2 × sign), from a fixed seed so every
     /// render call across every synthesized frame sees the identical marker layout.
-    async fn generate_face_markers(seed: u64, count: usize, half: f64) -> [Vec<FaceMarker>; 6] {
+    fn generate_face_markers(seed: u64, count: usize, half: f64) -> [Vec<FaceMarker>; 6] {
         let mut rng = geometry::random::Rng::from_seed(seed);
         std::array::from_fn(|_face| {
             (0..count)
@@ -1165,13 +1985,13 @@ mod tests {
 
     const FACE_BASE_COLORS: [[u8; 3]; 6] = [[150, 60, 60], [60, 60, 150], [60, 150, 60], [150, 150, 60], [150, 60, 150], [60, 150, 150]];
 
-    async fn face_index(axis: usize, positive: bool) -> usize {
+    fn face_index(axis: usize, positive: bool) -> usize {
         axis * 2 + usize::from(!positive)
     }
 
     /// 🎨️ A flat per-face base color, with any nearby [`FaceMarker`] drawn on top — isolated, high-contrast,
     /// locally-unique corner-rich features at fixed world positions.
-    async fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> [u8; 3] {
+    fn cube_face_color(p: [f64; 3], axis: usize, markers: &[Vec<FaceMarker>; 6]) -> [u8; 3] {
         let positive = p[axis] > 0.0;
         let (u, v) = match axis {
             0 => (p[1], p[2]),
@@ -1190,7 +2010,7 @@ mod tests {
     /// 🖼️ Renders one view of a `half`-extent axis-aligned textured cube (analytic ray/box intersection,
     /// no rasterizer needed) from `pose`/`intr` — the local minimal synthetic multi-view scene backing
     /// both the chunking-invariance test and the `mod long` end-to-end contract test.
-    async fn render_cube_frame(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, half: f64, markers: &[Vec<FaceMarker>; 6]) -> remodel_image::ImageRgba8 {
+    fn render_cube_frame(width: u32, height: u32, intr: &remodel_camera::Intrinsics, pose: &remodel_camera::CameraPose, half: f64, markers: &[Vec<FaceMarker>; 6]) -> remodel_image::ImageRgba8 {
         let mut img = remodel_image::ImageRgba8::new(width, height);
         let to_world = pose.0.inverse();
         let origin_world = to_world.act([0.0, 0.0, 0.0]);
@@ -1221,7 +2041,7 @@ mod tests {
     /// against a `0.85` rendering camera produced a reconstruction ~3x too large).
     const CUBE_CAMERA_FOCAL_RATIO: f64 = 0.85;
 
-    async fn orbiting_cube_frames(n: usize, size: u32, half: f64, radius: f64) -> (Vec<remodel_image::ImageRgba8>, [f64; 3], [f64; 3], Vec<[f64; 3]>) {
+    fn orbiting_cube_frames(n: usize, size: u32, half: f64, radius: f64) -> (Vec<remodel_image::ImageRgba8>, [f64; 3], [f64; 3], Vec<[f64; 3]>) {
         let f = CUBE_CAMERA_FOCAL_RATIO * f64::from(size);
         let intr = remodel_camera::Intrinsics { fx: f, fy: f, cx: f64::from(size) / 2.0, cy: f64::from(size) / 2.0, skew: 0.0, distortion: remodel_camera::Distortion::None };
         let markers = generate_face_markers(0x5EED_CAFE, 14, half);
@@ -1239,7 +2059,7 @@ mod tests {
     // #endregion 🔖️SyntheticScene
 
     // #region 🔖️ChunkingInvariance
-    async fn tiny_engine_params(half: f64, radius: f64) -> EngineParams {
+    fn tiny_engine_params(half: f64, radius: f64) -> EngineParams {
         let mut params = EngineParams::default();
         params.ingest.min_sharpness = 0.0;
         params.assumed_focal_ratio = CUBE_CAMERA_FOCAL_RATIO;
@@ -1262,7 +2082,7 @@ mod tests {
         params
     }
 
-    async fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
+    fn run_to_done(engine: &mut ReconstructionEngine, budget: usize) -> semio_framework::MeshData {
         loop {
             match engine.advance(budget) {
                 EngineStatus::Working { .. } => {}
@@ -1273,8 +2093,8 @@ mod tests {
         engine.take_mesh().expect("Done status must yield a mesh")
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn chunking_does_not_change_the_final_mesh() {
+    #[test]
+    fn chunking_does_not_change_the_final_mesh() {
         // 🎯️ This test's contract is narrower than `mod long`'s: it proves `advance`'s step-budget
         // chunking never changes the *outcome* (same triangle/vertex counts, same positions, byte-for-
         // byte), not that `remodel_sfm` reconstructs this particular fixture well. Registration uses
@@ -1307,8 +2127,8 @@ mod tests {
     // #endregion 🔖️ChunkingInvariance
 
     // #region 🔖️ParamsAndPreviewTests
-    #[semio_framework_async_macros::async_test]
-    async fn orbit_sfm_registers_enough_cameras_for_gauge() {
+    #[test]
+    fn orbit_sfm_registers_enough_cameras_for_gauge() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 96;
         const HALF: f64 = 1.0;
@@ -1336,8 +2156,8 @@ mod tests {
         assert!(cams >= 3, "need >= 3 registered cameras for Sim3 gauge alignment, got {cams}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn orbit_sfm_survives_jpeg_video_ingest() {
+    #[test]
+    fn orbit_sfm_survives_jpeg_video_ingest() {
         const N_FRAMES: usize = 16;
         const SIZE: u32 = 128;
         const HALF: f64 = 1.0;
@@ -1371,16 +2191,16 @@ mod tests {
         assert!(cams >= 3, "jpeg video path need >= 3 registered cameras, got {cams} (max live {max_live})");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sparse_preview_is_empty_before_any_advance() {
+    #[test]
+    fn sparse_preview_is_empty_before_any_advance() {
         let engine = ReconstructionEngine::new(&EngineParams::default());
         let preview = engine.sparse_preview();
         assert!(preview.camera_poses.is_empty());
         assert!(preview.packed_points.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn advance_fails_with_fewer_than_two_frames() {
+    #[test]
+    fn advance_fails_with_fewer_than_two_frames() {
         let mut engine = ReconstructionEngine::new(&EngineParams::default());
         engine.push_frame(0, checker_frame(16, 16, 4), 0.0);
         match engine.advance(10) {
@@ -1405,8 +2225,8 @@ mod tests {
         /// contract — the mesh pipeline's own watertight report, captured at `Stage::Validate2` right
         /// before `Unwrap`/texturing legitimately duplicates vertices at UV chart seams, reports
         /// `is_watertight == true`.
-        #[semio_framework_async_macros::async_test]
-        async fn video_in_yields_watertight_mesh_out() {
+        #[test]
+        fn video_in_yields_watertight_mesh_out() {
             const N_FRAMES: usize = 24;
             const SIZE: u32 = 128;
             const HALF: f64 = 1.0;
@@ -1508,5 +2328,81 @@ mod tests {
         }
     }
     // #endregion 🔖️LongContract
+
+    #[test]
+    fn maximum_image_and_malformed_admission_steps_stay_below_hard_ceiling_in_each_build_profile() {
+        fn accepted_frame(index: u32, width: usize, height: usize, bytes: usize) -> AcceptedFrame {
+            AcceptedFrame { index, image: remodel_image::ImageRgba8 { width: width as u32, height: height as u32, data: vec![0; bytes] }, timestamp_ms: index as f64, stream_id: 0, sharpness: 1.0 }
+        }
+
+        let mut maximum = ReconstructionEngine::new(&EngineParams::default());
+        maximum.frame_source.frames = vec![accepted_frame(0, 512, 512, MAX_INTERACTIVE_IMAGE_BYTES), accepted_frame(1, 512, 512, MAX_INTERACTIVE_IMAGE_BYTES)];
+        let started = std::time::Instant::now();
+        assert!(maximum.start().is_ok());
+        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted image envelope validation exceeded 8 ms");
+
+        for (width, height, bytes) in [(513, 512, 513 * 512 * 4), (512, 512, MAX_INTERACTIVE_IMAGE_BYTES - 1)] {
+            let mut malformed = ReconstructionEngine::new(&EngineParams::default());
+            malformed.frame_source.frames = vec![accepted_frame(0, width, height, bytes), accepted_frame(1, 1, 1, 4)];
+            let started = std::time::Instant::now();
+            assert!(malformed.start().is_err());
+            assert!(started.elapsed() < std::time::Duration::from_millis(8), "oversized or malformed image admission exceeded 8 ms");
+        }
+
+        let mut too_many = ReconstructionEngine::new(&EngineParams::default());
+        too_many.frame_source.frames = (0..65).map(|index| accepted_frame(index, 1, 1, 4)).collect();
+        let started = std::time::Instant::now();
+        assert!(too_many.start().is_err());
+        assert!(started.elapsed() < std::time::Duration::from_millis(8), "65-frame admission rejection exceeded 8 ms");
+    }
+
+    #[test]
+    fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
+        std::thread::spawn(|| {
+            let mut params = EngineParams::default();
+            params.target_feature_count = 512;
+            let mut engine = ReconstructionEngine::new(&params);
+            let (width, height) = (512, 512);
+            assert_eq!(width * height, MAX_INTERACTIVE_IMAGE_PIXELS);
+            let mut pixels = vec![0; width * height * 4];
+            for index in 0..width * height {
+                let value = ((index * 131) ^ (index / width * 197)) as u8;
+                pixels[index * 4..index * 4 + 4].copy_from_slice(&[value, 255 - value, value.rotate_left(3), 255]);
+            }
+            engine.frames.push(AcceptedFrame { index: 0, image: remodel_image::ImageRgba8 { width: width as u32, height: height as u32, data: pixels }, timestamp_ms: 0.0, stream_id: 0, sharpness: 1.0 });
+            while engine.cursor == 0 {
+                let started = std::time::Instant::now();
+                engine.step_extracting_features();
+                assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum admitted feature allocation/luma/detect/describe microstep exceeded 8 ms");
+                if let Some(preparation) = &engine.feature_preparation {
+                    assert!(preparation.cursor <= width * height);
+                }
+            }
+
+            engine.descriptors_per_frame = vec![(0..2_048).map(|index| remodel_feature::Descriptor256([index as u64, !(index as u64), index as u64 * 17, index as u64 * 31])).collect(); 2];
+            engine.match_pairs = vec![(0, 1)];
+            engine.pair_cursor = 0;
+            while engine.pair_cursor == 0 {
+                let before = engine.pair_match_preparation.as_ref().map_or((0, 0), |state| (state.query, state.candidate));
+                let started = std::time::Instant::now();
+                engine.step_matching_features();
+                assert!(started.elapsed() < std::time::Duration::from_millis(8), "pair-match microstep exceeded 8 ms");
+                let after = engine.pair_match_preparation.as_ref().map_or((2_048, 0), |state| (state.query, state.candidate));
+                assert!(after.0 > before.0 || after.1 >= before.1 || engine.pair_cursor == 1);
+            }
+
+            engine.pairwise_matches = vec![(0, 1, (0..200_000).map(|index| remodel_feature::Match { a: index, b: index, distance: 0 }).collect())];
+            loop {
+                let started = std::time::Instant::now();
+                let complete = engine.step_build_tracks();
+                assert!(started.elapsed() < std::time::Duration::from_millis(8), "track microstep exceeded 8 ms");
+                if complete.is_some() {
+                    break;
+                }
+            }
+        })
+        .join()
+        .expect("engine worker");
+    }
 }
 // #endregion 🔖️Tests

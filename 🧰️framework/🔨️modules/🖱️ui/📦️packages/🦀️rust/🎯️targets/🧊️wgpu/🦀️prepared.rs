@@ -586,6 +586,22 @@ impl UiPresentToken {
         Self { _ui_thread: std::marker::PhantomData }
     }
 }
+
+/// 🧵️ Non-Send authority for a transferred `OffscreenCanvas` owned by a dedicated browser Worker.
+#[cfg(target_arch = "wasm32")]
+pub struct OffscreenPresentToken {
+    _worker_isolate: std::marker::PhantomData<Rc<()>>,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl OffscreenPresentToken {
+    pub fn mint_for_dedicated_worker() -> Result<Self, &'static str> {
+        if web_sys::window().is_some() {
+            return Err("offscreen presentation authority cannot be minted in the browser UI isolate");
+        }
+        Ok(Self { _worker_isolate: std::marker::PhantomData })
+    }
+}
 //#endregion 🛡️PresentationGate
 
 #[cfg(test)]

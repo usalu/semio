@@ -148,8 +148,8 @@ impl GraphSolver {
         beam::beam_search(&self.model, &self.topology, beam_config, seed, self.init_domains.as_deref(), &self.fixed)
     }
 
-    /// 🧵️ Runs `attempts` independent solves in parallel (one `std::thread` each, seeded
-    /// deterministically from `base_seed`) and deterministically reduces them — see
+    /// 🧵️ Runs `attempts` independent solves in stable index order, seeded deterministically
+    /// from `base_seed`, and deterministically reduces them — see
     /// [`crate::wfc_engine::parallel::multi_start`]'s docs for the exact reduction rule. Ignores constraints
     /// (like `solve`/`solve_all` without constraints attached); ignores soft scoring.
     pub fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SolveOutcome {

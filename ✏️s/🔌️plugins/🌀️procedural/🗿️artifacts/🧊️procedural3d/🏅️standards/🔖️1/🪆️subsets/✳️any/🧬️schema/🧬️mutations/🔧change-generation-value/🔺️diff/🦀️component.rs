@@ -5,7 +5,7 @@ use crate::artifacts::procedural3d::mutations::change_generation_value::mutation
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::playbook::GenerationMutation;
 
-pub async fn diff(payload: &ChangeGenerationValue, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub fn diff(payload: &ChangeGenerationValue, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     let Some(existing) = base.generation.generations.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

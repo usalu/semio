@@ -273,7 +273,7 @@ async fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content:
     let id = crate::artifacts::note::schema::create_note_id("dwg-text");
     let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }];
     NoteBlockNode::Text {
-        content: crate::artifacts::note::note_text_child_handle_and_cache(&id, &paragraphs),
+        content: crate::artifacts::note::note_text_child_record(&id, &paragraphs),
         id,
         name: "Imported Text".into(),
         x: at[0],
@@ -376,7 +376,7 @@ mod media_tests {
     async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
         let mut document = crate::artifacts::note::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_handle_and_cache("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
+            content: crate::artifacts::note::note_text_child_record("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
             id: "t1".into(),
             name: "Text".into(),
             x: 10.0,

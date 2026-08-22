@@ -4,7 +4,7 @@
 use crate::artifacts::procedural2d::diff::{diff_fixture_from_helpers, LayoutDiff, Procedural2dDiff, SynapsesDiff, WidgetsDiff};
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
-pub async fn diff(payload: &super::mutation::DisconnectSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &super::mutation::DisconnectSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     if !base.fixture.synapses.iter().any(|synapse| synapse.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

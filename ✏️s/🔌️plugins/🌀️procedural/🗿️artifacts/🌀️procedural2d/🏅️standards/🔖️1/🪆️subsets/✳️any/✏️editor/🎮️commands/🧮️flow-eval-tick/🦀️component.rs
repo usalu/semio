@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "flow-eval-tick")]
 pub struct FlowEvalTick {}
 
-pub async fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let mut host = host_from_fixture_with_session(fixture, session);
     let more = session.tick(&mut host);

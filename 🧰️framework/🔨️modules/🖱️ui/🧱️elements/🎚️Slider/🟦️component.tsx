@@ -7,7 +7,6 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵️Tree/🟦️component.tsx";
@@ -19,7 +18,7 @@ import { useInteractionCommands } from "../../📦️packages/🟦️typescript/
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider
-// Range slider built on Radix primitives.
+// Owned range slider.
 // Consumers MUST provide min and max values.
 
 /** @emoji 🎚️ Slider filled range presentation. */
@@ -39,6 +38,77 @@ const sliderThumbClassName = cn(
 
 /** @emoji 🎚️ Slider numeric readout presentation. */
 const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
+
+// #region 📐️Contract
+export type SliderOrientation = "horizontal" | "vertical";
+export type SliderDirection = "ltr" | "rtl";
+export type SliderValue = number[];
+
+/** 🎚️ Owned slider root, tuple, interaction, and presentation contract. */
+export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "id" | "defaultValue" | "dir" | "onChange" | "onPointerDown" | "onPointerUp" | "onPointerCancel" | "onKeyDown" | "onKeyUp">, ElementProps {
+  defaultValue?: SliderValue;
+  value?: SliderValue;
+  min?: number;
+  max?: number;
+  step?: number;
+  minStepsBetweenThumbs?: number;
+  orientation?: SliderOrientation;
+  dir?: SliderDirection;
+  inverted?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  ready?: number;
+  clampToReady?: boolean;
+  loading?: boolean;
+  waiting?: boolean;
+  showLabel?: boolean;
+  showValue?: boolean;
+  formatDisplayValue?: (value: number) => string;
+  onValueChange?: (values: SliderValue) => void;
+  onValueCommit?: (values: SliderValue) => void;
+  onPointerDown?: () => void;
+  onPointerUp?: () => void;
+  onPointerCancel?: () => void;
+  interactionId?: string;
+  snapValues?: number[];
+}
+
+export interface SliderRange {
+  min: number;
+  max: number;
+  step: number;
+}
+
+/** 📏️ Normalizes non-finite and inverted numeric bounds to a safe, possibly degenerate range. */
+export function normalizeSliderRange(min: number, max: number, step: number | undefined): SliderRange {
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) ? Math.max(safeMin, max) : safeMin;
+  return { min: safeMin, max: safeMax, step: step != null && Number.isFinite(step) && step > 0 ? step : 1 };
+}
+
+function decimalPlaces(value: number): number {
+  const text = value.toString().toLowerCase();
+  if (text.includes("e-")) return Number(text.split("e-")[1] ?? 0);
+  return text.split(".")[1]?.length ?? 0;
+}
+
+function normalizeSliderValue(value: number, range: SliderRange): number {
+  const precision = Math.min(12, Math.max(decimalPlaces(range.min), decimalPlaces(range.step)));
+  const finite = Number.isFinite(value) ? value : range.min;
+  const snapped = Math.round((finite - range.min) / range.step) * range.step + range.min;
+  return Math.min(range.max, Math.max(range.min, Number(snapped.toFixed(precision))));
+}
+
+/** 🧮️ Snaps, clamps, and sorts an owned slider tuple while preserving an empty tuple. */
+export function normalizeSliderValues(values: readonly number[], range: SliderRange): SliderValue {
+  return values.map((value) => normalizeSliderValue(value, range)).sort((lhs, rhs) => lhs - rhs);
+}
+// #endregion 📐️Contract
+
+interface SliderGestureStart {
+  values: SliderValue;
+  thumbIds: string[];
+}
 
 /** @emoji 🎚️ Whether two slider value tuples match within a step-aware epsilon. */
 export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number): boolean {
@@ -62,84 +132,81 @@ export function clampSliderValuesToReady(values: readonly number[], ready: numbe
   return values.map((value) => Math.min(value, ceiling));
 }
 
-/**
- * Slider holds the data fields for a Slider record.
- **/
-function Slider({
-  className,
-  defaultValue,
-  value,
-  min = 0,
-  max = 100,
-  ready,
-  loading = false,
-  waiting = false,
-  showLabel,
-  showValue = true,
-  formatDisplayValue,
-  onValueChange,
-  onValueCommit,
-  onPointerDown,
-  onPointerUp,
-  onPointerCancel,
-  interactionId,
-  id,
-  snapValues,
-  step,
-  disabled,
-  clampToReady = false,
-  ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root> &
-  ElementProps & {
-    /** @emoji 🎚️ Absolute value along the fixed `[min, max]` range that is already preloaded/ready; drawn as a highlight to the right of the knob. */
-    ready?: number;
-    /** @emoji 🪣️ When true, the thumb cannot be dragged/keyed/typed past `ready` — for measures where
-     * `ready` is a hard availability limit (e.g. a background-planned count), not merely a preload hint.
-     * Most `ready` consumers want the highlight without the hard limit, so this defaults to `false`. */
-    clampToReady?: boolean;
-    /** @emoji 🌀️ Spinning loading ring around the track only — never the row, so the knob and hover chrome stay visible. */
-    loading?: boolean;
-    /** @emoji 🌀️ Dashed, slow-spinning waiting ring around the track only — never the row, so the knob and hover chrome stay visible. */
-    waiting?: boolean;
-    showLabel?: boolean;
-    /** @emoji 🔢️ When false, only the track+thumb render (graph overlays that already paint the value elsewhere). */
-    showValue?: boolean;
-    /** @emoji 🔢️ Optional readout formatter — defaults to {@link formatNumber}. */
-    formatDisplayValue?: (value: number) => string;
-    /** @emoji 🪣️ Fires once per gesture on release (pointer-up, arrow-key-up, or Enter in the text edit) — snapped and clamped-to-`ready` like `onValueChange`, but never fired mid-drag. Use for callers that must not round-trip on every drag value. */
-    onValueCommit?: (values: number[]) => void;
-    onPointerDown?: () => void;
-    onPointerUp?: () => void;
-    onPointerCancel?: () => void;
-    interactionId?: string;
-    snapValues?: number[];
-  }) {
+/** 🎚️ Renders an owned pointer- and keyboard-operable slider tuple. */
+const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
+  {
+    className,
+    defaultValue,
+    value,
+    min = 0,
+    max = 100,
+    ready,
+    loading = false,
+    waiting = false,
+    showLabel,
+    showValue = true,
+    formatDisplayValue,
+    onValueChange,
+    onValueCommit,
+    onPointerDown,
+    onPointerUp,
+    onPointerCancel,
+    interactionId,
+    id,
+    snapValues,
+    step,
+    minStepsBetweenThumbs = 0,
+    orientation = "horizontal",
+    dir = "ltr",
+    inverted = false,
+    disabled = false,
+    readOnly = false,
+    clampToReady = false,
+    ...props
+  },
+  forwardedRef,
+) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
-  const [isSliding, setIsSliding] = reactHostPort.useState(false);
   const [isDragging, setIsDragging] = reactHostPort.useState(false);
-  const pointerActiveRef = reactHostPort.useRef(false);
+  const pointerIdRef = reactHostPort.useRef<number | null>(null);
+  const activeThumbIdRef = reactHostPort.useRef<string | null>(null);
+  const gestureStartRef = reactHostPort.useRef<SliderGestureStart | null>(null);
+  const gestureChangedRef = reactHostPort.useRef(false);
+  const keyboardActiveRef = reactHostPort.useRef(false);
+  const trackRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const [editValue, setEditValue] = reactHostPort.useState("");
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const doubleClickToEditLabel = useLabel("ui.common.doubleClickToEdit");
-  const externalValues = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
-  // 🖱️ While actively sliding, track the value locally instead of re-reading the (possibly-controlled)
-  // `value` prop on every render — a slow or stale round-trip back to `value` would otherwise fight the
-  // drag and snap the thumb back to its pre-drag position mid-gesture.
+  const range = reactHostPort.useMemo(() => normalizeSliderRange(min, max, step), [max, min, step]);
+  const controlled = Array.isArray(value);
+  const [uncontrolledValues, setUncontrolledValues] = reactHostPort.useState<SliderValue>(() => normalizeSliderValues(Array.isArray(defaultValue) ? defaultValue : [range.min, range.max], range));
+  const externalValues = reactHostPort.useMemo(() => normalizeSliderValues(controlled ? value : uncontrolledValues, range), [controlled, range, uncontrolledValues, value]);
   const [pendingDraftValues, setPendingDraftValues] = reactHostPort.useState<number[] | null>(null);
-  const draftValues = resolveSliderDraftClear(pendingDraftValues, externalValues, step ?? undefined);
+  const draftValues = controlled ? resolveSliderDraftClear(pendingDraftValues, externalValues, range.step) : null;
   reactHostPort.useEffect(() => {
-    setPendingDraftValues((pending) => resolveSliderDraftClear(pending, externalValues, step ?? undefined));
-  }, [externalValues, step]);
+    if (controlled) setPendingDraftValues((pending) => resolveSliderDraftClear(pending, externalValues, range.step));
+    else
+      setUncontrolledValues((current) => {
+        const normalized = normalizeSliderValues(current, range);
+        return sliderValuesMatch(current, normalized, range.step) ? current : normalized;
+      });
+  }, [controlled, externalValues, range]);
   const _values = draftValues ?? externalValues;
+  const valuesRef = reactHostPort.useRef(_values);
+  valuesRef.current = _values;
+  const thumbIdBase = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
+  const nextThumbIdRef = reactHostPort.useRef(0);
+  const thumbIdsRef = reactHostPort.useRef<string[]>([]);
+  while (thumbIdsRef.current.length < _values.length) thumbIdsRef.current.push(`${thumbIdBase}-thumb-${nextThumbIdRef.current++}`);
+  if (thumbIdsRef.current.length > _values.length) thumbIdsRef.current = thumbIdsRef.current.slice(0, _values.length);
 
-  const displayValue = _values[0] ?? min;
+  const displayValue = _values[0] ?? range.min;
   const formatReadout = formatDisplayValue ?? formatNumber;
-  const span = max - min;
-  const readyExtent = ready == null || span <= 0 ? null : Math.min(max, Math.max(min, ready));
-  const readyStartPct = span <= 0 ? 0 : ((displayValue - min) / span) * 100;
+  const span = range.max - range.min;
+  const readyExtent = ready == null || span <= 0 ? null : Math.min(range.max, Math.max(range.min, ready));
   const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : ((readyExtent - displayValue) / span) * 100;
 
   const findNearestSnapValue = reactHostPort.useCallback(
@@ -159,27 +226,74 @@ function Slider({
     [snapValues],
   );
 
-  const handleValueChange = reactHostPort.useCallback(
-    (values: number[]) => {
-      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
-      const nextValues = clampToReady ? clampSliderValuesToReady(snapped, ready, min) : snapped;
-      setPendingDraftValues(nextValues);
-      onValueChange?.(nextValues);
+  const publishValues = reactHostPort.useCallback(
+    (rawValues: SliderValue, rawThumbIds: readonly string[] = thumbIdsRef.current): SliderValue => {
+      const records = rawValues
+        .map((rawValue, index) => ({ id: rawThumbIds[index] ?? `${thumbIdBase}-thumb-${nextThumbIdRef.current++}`, value: normalizeSliderValue(rawValue, range) }))
+        .map((record) => ({ ...record, value: snapValues?.length ? findNearestSnapValue(record.value) : record.value }))
+        .map((record) => ({ ...record, value: clampToReady ? (clampSliderValuesToReady([record.value], ready, range.min)[0] ?? range.min) : record.value }))
+        .map((record) => ({ ...record, value: normalizeSliderValue(record.value, range) }))
+        .sort((lhs, rhs) => lhs.value - rhs.value);
+      const nextValues = records.map((record) => record.value);
+      const minimumGap = Math.max(0, Number.isFinite(minStepsBetweenThumbs) ? minStepsBetweenThumbs : 0) * range.step;
+      if (nextValues.some((next, index) => index > 0 && next - (nextValues[index - 1] ?? next) < minimumGap)) return valuesRef.current;
+      const changed = !sliderValuesMatch(nextValues, valuesRef.current, range.step);
+      if (!changed) return valuesRef.current;
+      valuesRef.current = nextValues;
+      thumbIdsRef.current = records.map((record) => record.id);
+      gestureChangedRef.current = true;
+      if (controlled) setPendingDraftValues(nextValues);
+      else setUncontrolledValues(nextValues);
+      onValueChange?.(nextValues.slice());
+      return nextValues;
     },
-    [snapValues, findNearestSnapValue, onValueChange, clampToReady, ready, min],
+    [clampToReady, controlled, findNearestSnapValue, minStepsBetweenThumbs, onValueChange, range, ready, snapValues, thumbIdBase],
   );
 
-  const handleValueCommit = reactHostPort.useCallback(
-    (values: number[]) => {
-      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
-      const nextValues = clampToReady ? clampSliderValuesToReady(snapped, ready, min) : snapped;
-      onValueCommit?.(nextValues);
+  const updateThumb = reactHostPort.useCallback(
+    (thumbId: string, nextValue: number): SliderValue => {
+      const index = thumbIdsRef.current.indexOf(thumbId);
+      if (index < 0) return valuesRef.current;
+      const next = valuesRef.current.slice();
+      next[index] = nextValue;
+      activeThumbIdRef.current = thumbId;
+      return publishValues(next, thumbIdsRef.current);
     },
-    [snapValues, findNearestSnapValue, onValueCommit, clampToReady, ready, min],
+    [publishValues],
   );
+
+  const beginGesture = reactHostPort.useCallback(() => {
+    if (gestureStartRef.current) return;
+    gestureStartRef.current = { values: valuesRef.current.slice(), thumbIds: thumbIdsRef.current.slice() };
+    gestureChangedRef.current = false;
+  }, []);
+
+  const commitGesture = reactHostPort.useCallback(() => {
+    if (!gestureStartRef.current) return;
+    const changed = gestureChangedRef.current;
+    gestureStartRef.current = null;
+    gestureChangedRef.current = false;
+    if (changed) onValueCommit?.(valuesRef.current.slice());
+  }, [onValueCommit]);
+
+  const cancelGesture = reactHostPort.useCallback(() => {
+    const start = gestureStartRef.current;
+    if (!start) return;
+    const changed = gestureChangedRef.current;
+    gestureStartRef.current = null;
+    gestureChangedRef.current = false;
+    if (changed) {
+      valuesRef.current = start.values;
+      thumbIdsRef.current = start.thumbIds;
+      if (controlled) setPendingDraftValues(start.values);
+      else setUncontrolledValues(start.values);
+      onValueChange?.(start.values.slice());
+    }
+    onPointerCancel?.();
+  }, [controlled, onPointerCancel, onValueChange]);
 
   const handleValueClick = () => {
-    if (disabled) return;
+    if (disabled || readOnly) return;
     if (!hasBeenEdited) setHasBeenEdited(true);
     setEditValue(formatReadout(displayValue));
     setIsEditing(true);
@@ -188,9 +302,10 @@ function Slider({
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       const newValue = parseFloat(editValue);
-      if (!isNaN(newValue) && newValue >= min && newValue <= max) {
-        handleValueChange([newValue]);
-        handleValueCommit([newValue]);
+      if (!isNaN(newValue) && newValue >= range.min && newValue <= range.max) {
+        beginGesture();
+        publishValues([newValue]);
+        commitGesture();
       }
       setIsEditing(false);
     } else if (e.key === "Escape") {
@@ -202,91 +317,120 @@ function Slider({
     setIsEditing(false);
   };
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    pointerActiveRef.current = true;
+  const pointerValue = reactHostPort.useCallback(
+    (event: React.PointerEvent): number => {
+      const rect = trackRef.current?.getBoundingClientRect();
+      if (!rect || span <= 0) return range.min;
+      let ratio = orientation === "horizontal" ? (event.clientX - rect.left) / Math.max(1, rect.width) : 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
+      if (orientation === "horizontal" && dir === "rtl") ratio = 1 - ratio;
+      if (inverted) ratio = 1 - ratio;
+      return range.min + Math.min(1, Math.max(0, ratio)) * span;
+    },
+    [dir, inverted, orientation, range.min, span],
+  );
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (disabled || readOnly || pointerIdRef.current !== null) return;
+    pointerIdRef.current = event.pointerId;
+    beginGesture();
     if (!hasBeenEdited) setHasBeenEdited(true);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
-    if (!isSliding) {
-      setPendingDraftValues(externalValues);
-      setIsSliding(true);
-    }
+    const thumb = (event.target as Element).closest<HTMLElement>('[data-slot="slider-thumb"]');
+    const valueAtPointer = pointerValue(event);
+    const nearestIndex = valuesRef.current.reduce((best, current, index, values) => (Math.abs(current - valueAtPointer) < Math.abs((values[best] ?? current) - valueAtPointer) ? index : best), 0);
+    activeThumbIdRef.current = thumb?.dataset.sliderThumbId ?? thumbIdsRef.current[nearestIndex] ?? null;
+    if (!thumb && activeThumbIdRef.current) updateThumb(activeThumbIdRef.current, valueAtPointer);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     onPointerDown?.();
   };
 
-  const handlePointerMove = () => {
-    if (pointerActiveRef.current) setIsDragging(true);
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current !== event.pointerId) return;
+    setIsDragging(true);
+    if (activeThumbIdRef.current) updateThumb(activeThumbIdRef.current, pointerValue(event));
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    pointerActiveRef.current = false;
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current !== event.pointerId) return;
+    pointerIdRef.current = null;
     setIsDragging(false);
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
-    if (isSliding) {
-      setIsSliding(false);
-    }
+    commitGesture();
     onPointerUp?.();
   };
 
-  const handlePointerCancel = (e: React.PointerEvent) => {
-    pointerActiveRef.current = false;
+  const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current !== event.pointerId) return;
+    pointerIdRef.current = null;
     setIsDragging(false);
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
-    if (isSliding) {
-      setIsSliding(false);
-      setPendingDraftValues(null);
-    }
-    onPointerCancel?.();
+    cancelGesture();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
-      if (!isSliding) {
-        setPendingDraftValues(externalValues);
-        setIsSliding(true);
-      }
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>, thumbId: string) => {
+    if (disabled || readOnly) return;
+    if (event.key === "Escape" && keyboardActiveRef.current) {
+      event.preventDefault();
+      keyboardActiveRef.current = false;
+      cancelGesture();
+      return;
     }
+    const positiveHorizontal = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+    const negativeHorizontal = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+    let delta = event.key === positiveHorizontal || event.key === "ArrowUp" || event.key === "PageUp" ? 1 : event.key === negativeHorizontal || event.key === "ArrowDown" || event.key === "PageDown" ? -1 : 0;
+    if (inverted) delta *= -1;
+    const handled = delta !== 0 || event.key === "Home" || event.key === "End";
+    if (!handled) return;
+    event.preventDefault();
+    if (!keyboardActiveRef.current) {
+      beginGesture();
+      keyboardActiveRef.current = true;
+    }
+    const multiplier = event.key === "PageUp" || event.key === "PageDown" || event.shiftKey ? 10 : 1;
+    const current = valuesRef.current[thumbIdsRef.current.indexOf(thumbId)] ?? range.min;
+    updateThumb(thumbId, event.key === "Home" ? range.min : event.key === "End" ? range.max : current + delta * range.step * multiplier);
   };
 
-  const handleKeyUp = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
-      if (isSliding) {
-        setIsSliding(false);
-      }
-    } else if (e.key === "Escape") {
-      if (isSliding) {
-        setIsSliding(false);
-        setPendingDraftValues(null);
-        onPointerCancel?.();
-      }
-    }
+  const handleKeyUp = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!keyboardActiveRef.current || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
+    keyboardActiveRef.current = false;
+    commitGesture();
   };
 
   const sliderTitle = useControlAccessibleLabel(id);
+  const valuePercent = (sliderValue: number): number => (span <= 0 ? 0 : ((sliderValue - range.min) / span) * 100);
+  const physicalPercent = (sliderValue: number): number => {
+    const logical = valuePercent(sliderValue);
+    const physical = orientation === "vertical" ? (inverted ? 100 - logical : logical) : (dir === "rtl") !== inverted ? 100 - logical : logical;
+    return Number(physical.toFixed(12));
+  };
+  const physicalValues = _values.map(physicalPercent);
+  const rangeStart = physicalValues.length === 1 ? physicalPercent(range.min) : Math.min(...physicalValues);
+  const rangeEnd = physicalValues.length ? Math.max(...physicalValues) : rangeStart;
+  const readyPhysicalStart = physicalPercent(displayValue);
+  const readyPhysicalEnd = readyExtent == null ? readyPhysicalStart : physicalPercent(readyExtent);
   const sliderElement = (
-    <SliderPrimitive.Root
+    <div
+      {...props}
+      ref={forwardedRef}
       data-slot="slider"
       id={id}
       title={sliderTitle}
-      defaultValue={defaultValue}
-      value={_values}
-      min={min}
-      max={max}
-      step={step}
-      onValueChange={handleValueChange}
-      onValueCommit={handleValueCommit}
+      dir={dir}
+      aria-disabled={disabled || undefined}
+      data-disabled={disabled ? "" : undefined}
+      data-orientation={orientation}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
-      onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
-      disabled={disabled}
       className={cn(
         "group relative flex h-full w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
         "has-[[data-slot=slider-thumb]:hover]:[&_[data-slot=slider-range]]:bg-emphasized",
         "has-[[data-slot=slider-thumb][data-dragging=true]]:[&_[data-slot=slider-range]]:bg-active-base",
       )}
-      {...props}
     >
       <div
         data-slot="slider-track-wrap"
@@ -294,15 +438,69 @@ function Slider({
         data-waiting={waiting ? "true" : undefined}
         className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading) || waitingBorderStateClass(waiting))}
       >
-        <SliderPrimitive.Track data-slot="slider-track" className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}>
-          <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
-          {readyWidthPct > 0 ? <div data-slot="slider-ready" data-orientation="horizontal" className={sliderReadyClassName} style={{ left: `${readyStartPct}%`, width: `${readyWidthPct}%` }} /> : null}
-        </SliderPrimitive.Track>
+        <div
+          ref={trackRef}
+          data-slot="slider-track"
+          data-orientation={orientation}
+          className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
+        >
+          <div
+            data-slot="slider-range"
+            data-orientation={orientation}
+            data-dragging={isDragging ? "true" : undefined}
+            className={cn(sliderRangeClassName)}
+            style={orientation === "horizontal" ? { left: `${rangeStart}%`, width: `${Math.max(0, rangeEnd - rangeStart)}%` } : { bottom: `${rangeStart}%`, height: `${Math.max(0, rangeEnd - rangeStart)}%` }}
+          />
+          {readyWidthPct > 0 ? (
+            <div
+              data-slot="slider-ready"
+              data-orientation={orientation}
+              className={sliderReadyClassName}
+              style={
+                orientation === "horizontal"
+                  ? { left: `${Math.min(readyPhysicalStart, readyPhysicalEnd)}%`, width: `${Math.abs(readyPhysicalEnd - readyPhysicalStart)}%` }
+                  : { bottom: `${Math.min(readyPhysicalStart, readyPhysicalEnd)}%`, height: `${Math.abs(readyPhysicalEnd - readyPhysicalStart)}%` }
+              }
+            />
+          ) : null}
+        </div>
       </div>
-      {Array.from({ length: _values.length }, (_, index) => (
-        <SliderPrimitive.Thumb data-slot="slider-thumb" data-dragging={isDragging ? "true" : undefined} key={index} className={sliderThumbClassName} />
-      ))}
-    </SliderPrimitive.Root>
+      {_values.map((sliderValue, index) => {
+        const thumbId = thumbIdsRef.current[index]!;
+        return (
+          <span
+            role="slider"
+            tabIndex={disabled ? -1 : 0}
+            aria-disabled={disabled || undefined}
+            aria-readonly={readOnly || undefined}
+            aria-valuemin={range.min}
+            aria-valuemax={range.max}
+            aria-valuenow={sliderValue}
+            aria-orientation={orientation}
+            aria-label={props["aria-label"] ?? sliderTitle}
+            aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]}
+            data-slot="slider-thumb"
+            data-slider-index={index}
+            data-slider-thumb-id={thumbId}
+            data-orientation={orientation}
+            data-dragging={isDragging && activeThumbIdRef.current === thumbId ? "true" : undefined}
+            key={thumbId}
+            className={sliderThumbClassName}
+            style={orientation === "horizontal" ? { position: "absolute", left: `${physicalValues[index]}%`, transform: "translateX(-50%)" } : { position: "absolute", bottom: `${physicalValues[index]}%`, transform: "translateY(50%)" }}
+            onFocus={() => {
+              activeThumbIdRef.current = thumbId;
+            }}
+            onKeyDown={(event) => handleKeyDown(event, thumbId)}
+            onKeyUp={handleKeyUp}
+            onBlur={() => {
+              if (!keyboardActiveRef.current) return;
+              keyboardActiveRef.current = false;
+              commitGesture();
+            }}
+          />
+        );
+      })}
+    </div>
   );
 
   const contentClassName = showLabel ? undefined : className;
@@ -320,8 +518,8 @@ function Slider({
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
             className="w-large min-w-large border-0 px-0 text-end text-xs"
-            min={min}
-            max={max}
+            min={range.min}
+            max={range.max}
             autoFocus
             id={id}
           />
@@ -347,7 +545,7 @@ function Slider({
   }
 
   return sliderContent;
-}
+});
 
 export { Slider };
 

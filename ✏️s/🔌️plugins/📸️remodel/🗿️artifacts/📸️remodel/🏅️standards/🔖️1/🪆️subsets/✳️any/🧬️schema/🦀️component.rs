@@ -1,6 +1,6 @@
 //! 🧬️ Remodel artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelSnapshot, VideoCodec};
+use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelAssetChild, RemodelDurableArtifactStore, RemodelSnapshot, VideoCodec};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 /// the generated id itself becomes real, undoable document content the moment an operation stores it).
 /// Relocated from `⚙️engine/🦀️component.rs` (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 /// #2553): a pure document-side id generator, not app or engine behaviour.
-pub async fn next_remodel_id(prefix: &str) -> String {
+pub fn next_remodel_id(prefix: &str) -> String {
     static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
     let next = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     format!("{prefix}-{next}")
@@ -22,7 +22,7 @@ pub async fn next_remodel_id(prefix: &str) -> String {
 //#region 🔖️Codecs
 /// 🏷️ Display label for one `ReconstructionStage` — pure document-enum formatting, no engine
 /// dependency (relocated from `⚙️engine/🦀️component.rs`, #2553).
-pub async fn stage_display(stage: ReconstructionStage) -> &'static str {
+pub fn stage_display(stage: ReconstructionStage) -> &'static str {
     match stage {
         ReconstructionStage::Idle => "Idle",
         ReconstructionStage::Ingesting => "Ingesting",
@@ -47,7 +47,7 @@ pub async fn stage_display(stage: ReconstructionStage) -> &'static str {
 
 /// 🎞️ Label → document `VideoCodec` — pure string parsing, no engine dependency (relocated from
 /// `⚙️engine/🦀️component.rs`, #2553).
-pub async fn video_codec_from_label(label: &str) -> VideoCodec {
+pub fn video_codec_from_label(label: &str) -> VideoCodec {
     match label.to_ascii_lowercase().as_str() {
         "avc" | "h264" | "h.264" => VideoCodec::Avc,
         "hevc" | "h265" | "h.265" => VideoCodec::Hevc,
@@ -73,6 +73,8 @@ pub struct RemodelArtifact {
     pub streams: Vec<MediaStream>,
     #[state(artifact)]
     pub assets: BTreeMap<String, RemodelAssetChild>,
+    #[state(artifact)]
+    pub durable_artifacts: RemodelDurableArtifactStore,
     #[state(artifact)]
     pub calibration: CalibrationState,
     #[state(artifact)]
@@ -159,12 +161,13 @@ impl Default for RemodelArtifact {
 
 impl RemodelArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> RemodelSnapshot {
+    pub fn to_snapshot(&self) -> RemodelSnapshot {
         RemodelSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
             streams: self.streams.clone(),
             assets: self.assets.clone(),
+            durable_artifacts: self.durable_artifacts.clone(),
             calibration: self.calibration.clone(),
             params: self.params.clone(),
             gcps: self.gcps.clone(),
@@ -174,12 +177,13 @@ impl RemodelArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: RemodelSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: RemodelSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
             streams: snapshot.streams,
             assets: snapshot.assets,
+            durable_artifacts: snapshot.durable_artifacts,
             calibration: snapshot.calibration,
             params: snapshot.params,
             gcps: snapshot.gcps,
@@ -196,11 +200,12 @@ impl RemodelArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: RemodelSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: RemodelSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.streams = snapshot.streams;
         self.assets = snapshot.assets;
+        self.durable_artifacts = snapshot.durable_artifacts;
         self.calibration = snapshot.calibration;
         self.params = snapshot.params;
         self.gcps = snapshot.gcps;

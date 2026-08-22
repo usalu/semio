@@ -245,22 +245,11 @@ pub(crate) fn plugin_host_worker_pool() -> WorkerPool {
 //#region ⏲️PeriodicPoolTimer
 /// ⏲️ P1f: the shared shape behind every "tick forever on `Lane::Timer`" mechanism this crate needs
 /// (the epoch ticker below; `process_transport::StdioTransport`'s heartbeat sender) — `WorkerPool::
-/// submit`, `block_on`-driving ONE `sleep_until` wait, then RESUBMITTING a fresh job for the next
-/// tick instead of looping forever inside the same job closure.
+/// submit_at` retains the deadline without occupying a worker, then submits one finite callback and
+/// registers the next deadline instead of looping inside a job closure.
 ///
-/// This is DELIBERATELY NOT `semio-framework-os-services`' `TimerWheel::spawn_driver`/`HttpPool::
-/// spawn_refill_driver` shape (a `loop { sleep_until; tick() }` body inside ONE `block_on` call) —
-/// that shape permanently pins its `WorkerPool` worker for the driver's entire lifetime (its own
-/// `🚨️ HONEST GAP` doc says so), which is an accepted, BOUNDED cost for THOSE two mechanisms because
-/// each is a true process-wide singleton (exactly one `TimerWheel`/`HttpPool` ever exists). Neither
-/// [`EpochTicker`] nor the heartbeat sender is a singleton: `WasmtimeRuntime::new` runs once per
-/// test/caller, so many `EpochTicker`s can be alive concurrently on the SAME shared
-/// [`plugin_host_worker_pool`] (every `#[semio_framework_async_macros::async_test]` in this crate
-/// that builds a `WasmtimeRuntime` does). Looping-forever-in-one-job would mean the Nth concurrent
-/// ticker, once N exceeds the pool's `worker_count`, sits queued FOREVER behind tickers that never
-/// release their worker — silent epoch-interruption failure, not merely slower ticks. Resubmitting a
-/// fresh, short-lived job per tick means a job ALWAYS returns (releasing its worker) after one wait,
-/// so extra concurrent tickers degrade tick cadence under contention instead of starving outright.
+/// [`EpochTicker`] and the heartbeat sender are not process singletons, so retaining their waits in
+/// the pool's timer wheel prevents any number of concurrent tickers from consuming worker permits.
 struct PeriodicPoolTimer {
     stop: Arc<AtomicBool>,
 }
@@ -277,19 +266,13 @@ impl PeriodicPoolTimer {
         Self { stop }
     }
 
-    /// 🔁️ One job = one wait, one `tick()`, one resubmission — never a job that outlives its own
-    /// single tick. `tick`/`stop` are `Arc`-shared across every resubmission of the SAME logical
-    /// timer, not recreated per tick.
+    /// 🔁️ One timer registration = one `tick()`, one next registration. Waiting owns no worker.
     fn schedule(pool: &WorkerPool, lane: Lane, interval_ms: u64, tick: Arc<Mutex<dyn FnMut() -> bool + Send>>, stop: Arc<AtomicBool>) {
         let driver_pool = pool.clone();
-        pool.submit(
+        pool.submit_at(
+            pool.now_ms().saturating_add(interval_ms),
             lane,
             Box::new(move || {
-                if stop.load(std::sync::atomic::Ordering::Relaxed) {
-                    return;
-                }
-                let deadline_ms = driver_pool.now_ms() + interval_ms;
-                semio_framework_async::block_on(driver_pool.timer().sleep_until(deadline_ms));
                 if stop.load(std::sync::atomic::Ordering::Relaxed) {
                     return;
                 }
@@ -303,10 +286,7 @@ impl PeriodicPoolTimer {
 }
 
 impl Drop for PeriodicPoolTimer {
-    /// 🛑️ Requests the NEXT scheduled tick job to stop rather than resubmit (bounded by
-    /// `interval_ms` — the currently in-flight job, if any, is already parked inside its own
-    /// `sleep_until`). No `WorkerPool` job-join primitive exists to wait on synchronously (unlike the
-    /// old dedicated thread's `JoinHandle::join`), so this is fire-and-forget.
+    /// 🛑️ Requests the next scheduled callback to stop rather than register another deadline.
     fn drop(&mut self) {
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
     }
@@ -673,13 +653,10 @@ impl From<PluginHostError> for TurnFault {
 /// wrapper terra-trait-asyncify staged here is gone (R1: `dyn Future` is banned from trait-method
 /// return position). `compile`/`instantiate`/`drop_instance` stay plain, non-`async fn`: `compile`
 /// is CPU-bound with no await point, `instantiate` only BUILDS a task spec for an async backend
-/// (never runs one), and `drop_instance` is a destructor. `WasmtimeRuntime`/`MockGuestRuntime`/
-/// `RecordingRuntime` (all eagerly-ready, no real suspension) resolve on their very first poll,
-/// which is exactly what makes them safe to drive with [`semio_framework_async::block_on`] from a
-/// plain OS thread loop with no executor of its own (`ShardLoop`'s thread root,
-/// `PluginInstanceHandle::run_job_to_completion`'s sync ABI boundary) — the day a genuinely-
-/// suspending backend (`WasmtimeAsyncRuntime`/`AsyncActor`, a sibling packet) joins this enum, ITS
-/// call sites drive it some other way (a real task per actor), never `block_on` on a hot path.
+/// (never runs one), and `drop_instance` is a destructor. `PluginInstanceHandle` treats every
+/// implementation as genuinely suspending: it moves the guest instance into a retained-waker
+/// future and polls it through the process worker pool without parking a worker or holding the
+/// instance mutex across suspension.
 pub trait GuestRuntime: Send + Sync {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
@@ -687,7 +664,7 @@ pub trait GuestRuntime: Send + Sync {
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
     /// (`start-job`/`step-job`/`cancel-job`), not one: a job cannot be stepped before it exists.
-    /// `PluginInstanceHandle::run_job_to_completion` (`//#region 🔀️PostTurnRelay`) is the only caller.
+    /// `PluginInstanceHandle::run_job_on_worker` (`//#region 🔀️PostTurnRelay`) is the only caller.
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault>;
     async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
     /// 🛑️ `jobs.wit`'s `cancel-job` export — added past `design-runtime.md` §2's literal trait
@@ -709,6 +686,11 @@ pub trait GuestRuntime: Send + Sync {
 enum ScriptedOutcome {
     Turn(TurnResult),
     Job(JobStep),
+    #[cfg(test)]
+    PendingJob {
+        gate: Arc<MockJobStepGate>,
+        step: JobStep,
+    },
     Fault(String),
     /// 🛑️ terra-shard-lane piece 2: distinct from `Fault(String)` (which always becomes
     /// `TurnFault::Trapped`) — this scripts the SPECIFIC `TurnFault::DeadlineExceeded` variant a
@@ -725,6 +707,41 @@ struct MockInstanceState {
     checkpoint: Option<Vec<u8>>,
 }
 
+#[cfg(test)]
+#[derive(Default)]
+struct MockJobStepGate {
+    ready: AtomicBool,
+    polls: std::sync::atomic::AtomicUsize,
+    waker: Mutex<Option<std::task::Waker>>,
+}
+
+#[cfg(test)]
+impl MockJobStepGate {
+    async fn wait(&self) {
+        std::future::poll_fn(|context| {
+            self.polls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if self.ready.load(std::sync::atomic::Ordering::Acquire) {
+                std::task::Poll::Ready(())
+            } else {
+                *self.waker.lock().expect("mock job gate lock poisoned") = Some(context.waker().clone());
+                std::task::Poll::Pending
+            }
+        })
+        .await
+    }
+
+    fn release(&self) {
+        self.ready.store(true, std::sync::atomic::Ordering::Release);
+        if let Some(waker) = self.waker.lock().expect("mock job gate lock poisoned").take() {
+            waker.wake();
+        }
+    }
+
+    fn is_waiting(&self) -> bool {
+        self.polls.load(std::sync::atomic::Ordering::SeqCst) > 0
+    }
+}
+
 /// 🎭️ `design-runtime.md` §2's `MockGuestRuntime` (`#[cfg(test)]`): scripted turns + a controllable
 /// clock, backing scheduler/failure-ladder tests without a real wasm component or `bindgen!` — the
 /// TS twin is `createMockShard()`. `script_turn`/`script_fault` queue outcomes FIFO per actor;
@@ -735,6 +752,16 @@ struct MockInstanceState {
 pub struct MockGuestRuntime {
     now_ms: std::sync::atomic::AtomicI64,
     scripts: Mutex<HashMap<u64, VecDeque<ScriptedOutcome>>>,
+    start_admissions: std::sync::atomic::AtomicUsize,
+    step_admissions: std::sync::atomic::AtomicUsize,
+    cancel_admissions: std::sync::atomic::AtomicUsize,
+    fail_start: AtomicBool,
+    fail_cancel: AtomicBool,
+    panic_start: AtomicBool,
+    panic_step: AtomicBool,
+    panic_cancel: AtomicBool,
+    relay_start_failure_release: Mutex<Option<Arc<MockJobStepGate>>>,
+    relay_step_failure_release: Mutex<Option<Arc<MockJobStepGate>>>,
     /// 📼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1): every `events` slice `execute_turn` was
     /// ever called with, per actor, in call order — `_events` used to be ignored entirely. A test
     /// proving a job's completion actually reaches the ORIGINATING actor (not just that
@@ -746,7 +773,21 @@ pub struct MockGuestRuntime {
 #[cfg(test)]
 impl Default for MockGuestRuntime {
     fn default() -> Self {
-        Self { now_ms: std::sync::atomic::AtomicI64::new(0), scripts: Mutex::new(HashMap::new()), observed_events: Mutex::new(HashMap::new()) }
+        Self {
+            now_ms: std::sync::atomic::AtomicI64::new(0),
+            scripts: Mutex::new(HashMap::new()),
+            start_admissions: std::sync::atomic::AtomicUsize::new(0),
+            step_admissions: std::sync::atomic::AtomicUsize::new(0),
+            cancel_admissions: std::sync::atomic::AtomicUsize::new(0),
+            fail_start: AtomicBool::new(false),
+            fail_cancel: AtomicBool::new(false),
+            panic_start: AtomicBool::new(false),
+            panic_step: AtomicBool::new(false),
+            panic_cancel: AtomicBool::new(false),
+            relay_start_failure_release: Mutex::new(None),
+            relay_step_failure_release: Mutex::new(None),
+            observed_events: Mutex::new(HashMap::new()),
+        }
     }
 }
 
@@ -780,6 +821,64 @@ impl MockGuestRuntime {
 
     pub async fn script_job_step(&self, actor: RuntimeActorId, step: JobStep) {
         self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Job(step));
+    }
+
+    async fn script_pending_job_step(&self, actor: RuntimeActorId, step: JobStep) -> Arc<MockJobStepGate> {
+        let gate = Arc::new(MockJobStepGate::default());
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::PendingJob { gate: Arc::clone(&gate), step });
+        gate
+    }
+
+    fn start_admissions(&self) -> usize {
+        self.start_admissions.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn step_admissions(&self) -> usize {
+        self.step_admissions.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn cancel_admissions(&self) -> usize {
+        self.cancel_admissions.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn panic_next_start(&self) {
+        self.panic_start.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn fail_next_start(&self) {
+        self.fail_start.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn panic_next_step(&self) {
+        self.panic_step.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn panic_next_cancel(&self) {
+        self.panic_cancel.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn fail_next_cancel(&self) {
+        self.fail_cancel.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    fn pause_after_next_start_failure_release(&self) -> Arc<MockJobStepGate> {
+        let gate = Arc::new(MockJobStepGate::default());
+        *self.relay_start_failure_release.lock().expect("mock start release barrier lock poisoned") = Some(Arc::clone(&gate));
+        gate
+    }
+
+    fn pause_after_next_step_failure_release(&self) -> Arc<MockJobStepGate> {
+        let gate = Arc::new(MockJobStepGate::default());
+        *self.relay_step_failure_release.lock().expect("mock step release barrier lock poisoned") = Some(Arc::clone(&gate));
+        gate
+    }
+
+    fn take_relay_start_failure_release(&self) -> Option<Arc<MockJobStepGate>> {
+        self.relay_start_failure_release.lock().expect("mock start release barrier lock poisoned").take()
+    }
+
+    fn take_relay_step_failure_release(&self) -> Option<Arc<MockJobStepGate>> {
+        self.relay_step_failure_release.lock().expect("mock step release barrier lock poisoned").take()
     }
 
     pub async fn script_fault(&self, actor: RuntimeActorId, message: impl Into<String>) {
@@ -826,18 +925,21 @@ impl GuestRuntime for MockGuestRuntime {
         match queue.pop_front() {
             Some(ScriptedOutcome::Turn(result)) => Ok(result),
             Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
+            Some(ScriptedOutcome::PendingJob { .. }) => Err(TurnFault::Trapped("scripted outcome was a pending job step, not a turn".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
             Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
             None => Err(TurnFault::Exhausted),
         }
     }
 
-    /// 🎬️ `start-job` has no interesting return value on success (`jobs.wit`: `result<_,
-    /// plugin-error>`), so it is not scripted through `ScriptedOutcome` like `execute_turn`/`step_job`
-    /// — a test that needs a scripted `start-job` failure schedules a `ScriptedOutcome::Fault` and
-    /// asserts it surfaces from the FIRST call after `start_job` (i.e. the first `step_job`), matching
-    /// `run_job_to_completion`'s own call order (`start_job` then `step_job` in a loop).
+    /// 🎬️ `start-job` has no interesting success payload, so normal outcomes do not consume
+    /// `ScriptedOutcome`; dedicated one-shot failure/panic flags exercise relay recovery directly.
     async fn start_job(&self, inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
+        self.start_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        assert!(!self.panic_start.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted start-job panic after guest instance acquisition");
+        if self.fail_start.swap(false, std::sync::atomic::Ordering::AcqRel) {
+            return Err(TurnFault::Trapped("scripted start-job failure".to_string()));
+        }
         if !self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.contains_key(&inst.actor.0) {
             return Err(TurnFault::Exhausted);
         }
@@ -845,10 +947,18 @@ impl GuestRuntime for MockGuestRuntime {
     }
 
     async fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> Result<JobStep, TurnFault> {
-        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
-        let queue = scripts.entry(inst.actor.0).or_default();
-        match queue.pop_front() {
+        self.step_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        assert!(!self.panic_step.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted step-job panic after guest instance acquisition");
+        let scripted = {
+            let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+            scripts.entry(inst.actor.0).or_default().pop_front()
+        };
+        match scripted {
             Some(ScriptedOutcome::Job(step)) => Ok(step),
+            Some(ScriptedOutcome::PendingJob { gate, step }) => {
+                gate.wait().await;
+                Ok(step)
+            }
             Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
             Some(ScriptedOutcome::DeadlineExceeded) => Err(TurnFault::DeadlineExceeded),
@@ -856,12 +966,14 @@ impl GuestRuntime for MockGuestRuntime {
         }
     }
 
-    /// 🛑️ Mirrors `run_job_to_completion`'s own assumption that cancellation just drops
-    /// bookkeeping (`⚛️reactor/💼️jobs/🦀️component.rs::cancel_job`'s real guest-side counterpart) —
-    /// no scripted outcome to consume, since a cancelled job is never stepped again by whichever
-    /// caller cancelled it (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump` removes it from
-    /// `running_jobs` in the SAME turn it sees the `Effect::CancelJob`).
+    /// 🛑️ Cancellation succeeds without consuming the step queue by default; dedicated
+    /// one-shot failure/panic flags prove callers retain or retire uncertain guest state.
     async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+        self.cancel_admissions.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        assert!(!self.panic_cancel.swap(false, std::sync::atomic::Ordering::AcqRel), "scripted cancel-job panic after guest instance acquisition");
+        if self.fail_cancel.swap(false, std::sync::atomic::Ordering::AcqRel) {
+            return Err(TurnFault::Trapped("scripted cancel-job failure".to_string()));
+        }
         Ok(())
     }
 
@@ -2505,10 +2617,684 @@ mod wasmtime_runtime_tests {
 //#endregion 🎭️GuestRuntime
 
 //#region 🔀️PostTurnRelay
-/// ⛽️ `jobs.wit`'s `job-budget` has no per-call caller-supplied value anywhere in this file yet (it
-/// only ever arrived from a live `Kernel`'s scheduler, which does not exist in this crate) — a single
-/// generous constant stands in until `ShardLoop`/`Kernel` (H1-H4/T1) thread a real one through.
-const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: 50_000_000, deadline_ms: 200 };
+/// ⛽️ Every cold relay turn stays inside the user-visible interactive slice. The guest job owns its
+/// persistent state; the host grants one `step-job` call per shared-pool closure.
+const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS as u32 };
+
+/// 🔁️ One retained-waker future polled once per finite shared-pool turn.
+struct GuestRelayPoolFuture {
+    pool: WorkerPool,
+    lane: Lane,
+    future: Mutex<Option<std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>>>>,
+    panic_handler: Mutex<Option<Box<dyn FnOnce() + Send + 'static>>>,
+    scheduled: AtomicBool,
+    wake_requested: AtomicBool,
+    complete: AtomicBool,
+}
+
+impl GuestRelayPoolFuture {
+    fn spawn_recoverable(pool: WorkerPool, lane: Lane, future: impl std::future::Future<Output = ()> + Send + 'static, panic_handler: impl FnOnce() + Send + 'static) {
+        Self::spawn_inner(pool, lane, future, Box::new(panic_handler));
+    }
+
+    fn spawn_inner(pool: WorkerPool, lane: Lane, future: impl std::future::Future<Output = ()> + Send + 'static, panic_handler: Box<dyn FnOnce() + Send + 'static>) {
+        let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), panic_handler: Mutex::new(Some(panic_handler)), scheduled: AtomicBool::new(false), wake_requested: AtomicBool::new(false), complete: AtomicBool::new(false) });
+        task.schedule();
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.pool.is_shutdown() {
+            return;
+        }
+        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        if self.scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
+            let task = Arc::clone(self);
+            self.pool.submit(self.lane, Box::new(move || task.poll_once()));
+        }
+    }
+
+    fn poll_once(self: Arc<Self>) {
+        self.wake_requested.store(false, std::sync::atomic::Ordering::Release);
+        let waker = std::task::Waker::from(Arc::clone(&self));
+        let mut context = std::task::Context::from_waker(&waker);
+        let poll = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut future = self.future.lock().expect("guest relay future lock poisoned");
+            future.as_mut().map_or(std::task::Poll::Ready(()), |future| std::future::Future::poll(future.as_mut(), &mut context))
+        }));
+        match poll {
+            Ok(std::task::Poll::Pending) => {
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                if self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel) {
+                    self.schedule();
+                }
+            }
+            Ok(std::task::Poll::Ready(())) => {
+                self.complete.store(true, std::sync::atomic::Ordering::Release);
+                self.future.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            }
+            Err(_) => {
+                self.complete.store(true, std::sync::atomic::Ordering::Release);
+                let future = self.future.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                drop(future);
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                if let Some(panic_handler) = self.panic_handler.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(panic_handler));
+                }
+            }
+        }
+    }
+}
+
+impl std::task::Wake for GuestRelayPoolFuture {
+    fn wake(self: Arc<Self>) {
+        self.schedule();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.schedule();
+    }
+}
+
+enum GuestRelayRequest {
+    Start { kind: String, input: Vec<u8> },
+    Step,
+    Cancel,
+}
+
+#[derive(Clone, Copy)]
+enum GuestRelayRequestKind {
+    Start,
+    Step,
+    Cancel,
+}
+
+impl GuestRelayRequest {
+    fn kind(&self) -> GuestRelayRequestKind {
+        match self {
+            Self::Start { .. } => GuestRelayRequestKind::Start,
+            Self::Step => GuestRelayRequestKind::Step,
+            Self::Cancel => GuestRelayRequestKind::Cancel,
+        }
+    }
+}
+
+enum GuestRelayCompletion {
+    Started(Result<(), TurnFault>),
+    Stepped(Result<JobStep, TurnFault>),
+    Cancelled,
+    Rejected(Vec<u8>),
+    Fault(Vec<u8>),
+}
+
+#[cfg(test)]
+async fn wait_for_scripted_guest_relay_release(runtime: &GuestRuntimes, completion: &GuestRelayCompletion) {
+    let GuestRuntimes::Mock(mock) = runtime else {
+        return;
+    };
+    let barrier = match completion {
+        GuestRelayCompletion::Started(Err(_)) => mock.take_relay_start_failure_release(),
+        GuestRelayCompletion::Stepped(Err(_)) => mock.take_relay_step_failure_release(),
+        _ => None,
+    };
+    if let Some(barrier) = barrier {
+        barrier.wait().await;
+    }
+}
+
+#[derive(Clone)]
+struct GuestRelayCompletionSender {
+    sender: Arc<Mutex<Option<semio_framework_async::oneshot::Sender<GuestRelayCompletion>>>>,
+}
+
+impl GuestRelayCompletionSender {
+    fn new(sender: semio_framework_async::oneshot::Sender<GuestRelayCompletion>) -> Self {
+        Self { sender: Arc::new(Mutex::new(Some(sender))) }
+    }
+
+    fn send(&self, completion: GuestRelayCompletion) {
+        if let Some(sender) = self.sender.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            let _ = sender.send(completion);
+        }
+    }
+}
+
+enum GuestInstanceSlot {
+    Available(GuestInstance),
+    Leased,
+    CleanupPending { instance: Option<GuestInstance>, detail: Vec<u8> },
+    Quarantined { instance: GuestInstance, detail: Vec<u8> },
+}
+
+impl GuestInstanceSlot {
+    #[cfg(test)]
+    fn is_available(&self) -> bool {
+        matches!(self, Self::Available(_))
+    }
+
+    #[cfg(test)]
+    fn is_quarantined(&self) -> bool {
+        matches!(self, Self::Quarantined { .. })
+    }
+
+    #[cfg(test)]
+    fn is_cleanup_pending(&self) -> bool {
+        matches!(self, Self::CleanupPending { .. })
+    }
+
+    fn admission_fault(&self) -> Option<Vec<u8>> {
+        match self {
+            Self::CleanupPending { detail, .. } | Self::Quarantined { detail, .. } => Some(detail.clone()),
+            Self::Available(_) | Self::Leased => None,
+        }
+    }
+}
+
+enum GuestInstanceLeaseOrigin {
+    Mounted,
+    Cleanup,
+}
+
+enum GuestInstanceLeaseDisposition {
+    Available,
+    CleanupResolved,
+    CleanupPending(Vec<u8>),
+    Quarantined(Vec<u8>),
+}
+
+struct GuestInstanceLease {
+    slot: Arc<Mutex<GuestInstanceSlot>>,
+    guest: Option<GuestInstance>,
+    origin: GuestInstanceLeaseOrigin,
+    disposition: GuestInstanceLeaseDisposition,
+}
+
+impl GuestInstanceLease {
+    fn acquire(slot: Arc<Mutex<GuestInstanceSlot>>, unwind_detail: Vec<u8>) -> Result<Self, Vec<u8>> {
+        let state = {
+            let mut state = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            std::mem::replace(&mut *state, GuestInstanceSlot::Leased)
+        };
+        match state {
+            GuestInstanceSlot::Available(guest) => Ok(Self { slot, guest: Some(guest), origin: GuestInstanceLeaseOrigin::Mounted, disposition: GuestInstanceLeaseDisposition::CleanupPending(unwind_detail) }),
+            GuestInstanceSlot::Leased => {
+                *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestInstanceSlot::Leased;
+                Err(b"plugin instance missing behind an acquired relay permit".to_vec())
+            }
+            pending @ GuestInstanceSlot::CleanupPending { .. } => {
+                let error = pending.admission_fault().expect("cleanup-pending slot owns its detail");
+                *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = pending;
+                Err(error)
+            }
+            GuestInstanceSlot::Quarantined { instance, detail } => {
+                let error = detail.clone();
+                *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestInstanceSlot::Quarantined { instance, detail };
+                Err(error)
+            }
+        }
+    }
+
+    fn acquire_cleanup(slot: Arc<Mutex<GuestInstanceSlot>>) -> Result<Self, Vec<u8>> {
+        let state = {
+            let mut state = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            std::mem::replace(&mut *state, GuestInstanceSlot::Leased)
+        };
+        match state {
+            GuestInstanceSlot::CleanupPending { instance: Some(guest), detail } => {
+                *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestInstanceSlot::CleanupPending { instance: None, detail };
+                Ok(Self { slot, guest: Some(guest), origin: GuestInstanceLeaseOrigin::Cleanup, disposition: GuestInstanceLeaseDisposition::Quarantined(b"plugin instance quarantined after cleanup cancel-job panic".to_vec()) })
+            }
+            state => {
+                let error = state.admission_fault().unwrap_or_else(|| b"plugin instance was not cleanup-pending behind an acquired cleanup permit".to_vec());
+                *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = state;
+                Err(error)
+            }
+        }
+    }
+
+    fn guest(&mut self) -> &mut GuestInstance {
+        self.guest.as_mut().expect("guest instance lease owns its instance")
+    }
+
+    fn quarantine(&mut self, detail: Vec<u8>) {
+        self.disposition = GuestInstanceLeaseDisposition::Quarantined(detail);
+    }
+
+    fn cleanup_pending(&mut self, detail: Vec<u8>) {
+        self.disposition = GuestInstanceLeaseDisposition::CleanupPending(detail);
+    }
+
+    fn available(&mut self) {
+        self.disposition = GuestInstanceLeaseDisposition::Available;
+    }
+
+    fn cleanup_resolved(&mut self) {
+        self.disposition = GuestInstanceLeaseDisposition::CleanupResolved;
+    }
+}
+
+impl Drop for GuestInstanceLease {
+    fn drop(&mut self) {
+        let Some(guest) = self.guest.take() else {
+            return;
+        };
+        let mut slot = self.slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let external_cleanup_detail = match (&self.origin, &*slot) {
+            (GuestInstanceLeaseOrigin::Mounted, GuestInstanceSlot::CleanupPending { instance: None, detail }) => Some(detail.clone()),
+            _ => None,
+        };
+        let expected = match self.origin {
+            GuestInstanceLeaseOrigin::Mounted => matches!(&*slot, GuestInstanceSlot::Leased | GuestInstanceSlot::CleanupPending { instance: None, .. }),
+            GuestInstanceLeaseOrigin::Cleanup => matches!(&*slot, GuestInstanceSlot::CleanupPending { instance: None, .. }),
+        };
+        if expected {
+            *slot = match std::mem::replace(&mut self.disposition, GuestInstanceLeaseDisposition::Quarantined(b"plugin instance lease lost its disposition".to_vec())) {
+                GuestInstanceLeaseDisposition::Available => match external_cleanup_detail {
+                    Some(detail) => GuestInstanceSlot::CleanupPending { instance: Some(guest), detail },
+                    None => GuestInstanceSlot::Available(guest),
+                },
+                GuestInstanceLeaseDisposition::CleanupResolved => GuestInstanceSlot::Available(guest),
+                GuestInstanceLeaseDisposition::CleanupPending(detail) => GuestInstanceSlot::CleanupPending { instance: Some(guest), detail },
+                GuestInstanceLeaseDisposition::Quarantined(detail) => GuestInstanceSlot::Quarantined { instance: guest, detail },
+            };
+            return;
+        }
+        *slot = match std::mem::replace(&mut *slot, GuestInstanceSlot::Leased) {
+            GuestInstanceSlot::Available(instance) => GuestInstanceSlot::Quarantined { instance, detail: b"plugin instance ownership conflict during relay recovery".to_vec() },
+            GuestInstanceSlot::CleanupPending { instance: Some(instance), .. } => GuestInstanceSlot::Quarantined { instance, detail: b"plugin instance ownership conflict during cleanup recovery".to_vec() },
+            GuestInstanceSlot::CleanupPending { instance: None, .. } | GuestInstanceSlot::Leased => GuestInstanceSlot::Quarantined { instance: guest, detail: b"plugin instance ownership conflict during relay recovery".to_vec() },
+            quarantine @ GuestInstanceSlot::Quarantined { .. } => quarantine,
+        };
+    }
+}
+
+fn quarantine_guest_instance(slot: &Arc<Mutex<GuestInstanceSlot>>, detail: Vec<u8>) {
+    let mut slot = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    *slot = match std::mem::replace(&mut *slot, GuestInstanceSlot::Leased) {
+        GuestInstanceSlot::Available(instance) => GuestInstanceSlot::Quarantined { instance, detail },
+        GuestInstanceSlot::CleanupPending { instance: Some(instance), .. } => GuestInstanceSlot::Quarantined { instance, detail },
+        pending @ GuestInstanceSlot::CleanupPending { instance: None, .. } => pending,
+        GuestInstanceSlot::Leased => GuestInstanceSlot::Leased,
+        quarantine @ GuestInstanceSlot::Quarantined { .. } => quarantine,
+    };
+}
+
+fn mark_guest_cleanup_pending(slot: &Arc<Mutex<GuestInstanceSlot>>, detail: Vec<u8>) {
+    let mut slot = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    *slot = match std::mem::replace(&mut *slot, GuestInstanceSlot::Leased) {
+        GuestInstanceSlot::Available(instance) => GuestInstanceSlot::CleanupPending { instance: Some(instance), detail },
+        GuestInstanceSlot::Leased => GuestInstanceSlot::CleanupPending { instance: None, detail },
+        pending @ GuestInstanceSlot::CleanupPending { .. } => pending,
+        quarantine @ GuestInstanceSlot::Quarantined { .. } => quarantine,
+    };
+}
+
+async fn wait_for_guest_relay_cancellation(pool: WorkerPool, cancel: semio_framework_async::CancelToken) {
+    while !cancel.is_cancelled_now() {
+        pool.timer().sleep_until(pool.now_ms().saturating_add(1)).await;
+    }
+}
+
+async fn cancel_guest_job_once(runtime: &GuestRuntimes, instance: &mut GuestInstance, job: u64, cancel_admitted: &AtomicBool) -> Result<bool, TurnFault> {
+    if cancel_admitted.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
+        runtime.cancel_job(instance, job).await?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+fn cancel_guest_job_failure_detail(error: &TurnFault) -> Vec<u8> {
+    format!("plugin instance quarantined after cancel-job failure: {error}").into_bytes()
+}
+
+fn guest_relay_cleanup_pending_detail(stage: &str, error: &TurnFault) -> Vec<u8> {
+    format!("plugin instance cleanup pending after {stage} failure: {error}").into_bytes()
+}
+
+fn foreground_cancel_completion(result: Result<bool, TurnFault>, guest: &mut GuestInstanceLease) -> GuestRelayCompletion {
+    match result {
+        Ok(true) => {
+            guest.cleanup_resolved();
+            GuestRelayCompletion::Cancelled
+        }
+        Ok(false) => {
+            let detail = b"plugin instance quarantined because cancel-job admission was already consumed".to_vec();
+            guest.quarantine(detail.clone());
+            GuestRelayCompletion::Fault(detail)
+        }
+        Err(error) => {
+            let detail = cancel_guest_job_failure_detail(&error);
+            guest.quarantine(detail.clone());
+            GuestRelayCompletion::Fault(detail)
+        }
+    }
+}
+
+async fn run_guest_relay_request(
+    runtime: Arc<GuestRuntimes>,
+    instance: Arc<Mutex<GuestInstanceSlot>>,
+    instance_gate: Arc<semio_framework_async::Semaphore>,
+    pool: WorkerPool,
+    cancel: semio_framework_async::CancelToken,
+    cancel_scheduled: Arc<AtomicBool>,
+    cancel_admitted: Arc<AtomicBool>,
+    job: u64,
+    request: GuestRelayRequest,
+    sender: GuestRelayCompletionSender,
+) {
+    let permit = if matches!(&request, GuestRelayRequest::Cancel) {
+        instance_gate.acquire_owned().await
+    } else {
+        match semio_framework_async::select2(instance_gate.acquire_owned(), wait_for_guest_relay_cancellation(pool.clone(), cancel.clone())).await {
+            semio_framework_async::Either::Left(permit) => permit,
+            semio_framework_async::Either::Right(()) => {
+                sender.send(GuestRelayCompletion::Cancelled);
+                return;
+            }
+        }
+    };
+    let unwind_detail = match &request {
+        GuestRelayRequest::Cancel => b"plugin instance quarantined after cancel-job panic".to_vec(),
+        GuestRelayRequest::Start { .. } | GuestRelayRequest::Step => b"plugin instance cleanup pending after guest relay panic".to_vec(),
+    };
+    let mut guest = match GuestInstanceLease::acquire(Arc::clone(&instance), unwind_detail) {
+        Ok(guest) => guest,
+        Err(error) => {
+            sender.send(GuestRelayCompletion::Rejected(error));
+            return;
+        }
+    };
+    let mut cleanup_pending = false;
+    let completion = match request {
+        GuestRelayRequest::Start { kind, input } => match semio_framework_async::select2(runtime.start_job(guest.guest(), job, &kind, input), wait_for_guest_relay_cancellation(pool.clone(), cancel.clone())).await {
+            semio_framework_async::Either::Left(Ok(())) => {
+                guest.available();
+                GuestRelayCompletion::Started(Ok(()))
+            }
+            semio_framework_async::Either::Left(Err(error)) => {
+                guest.cleanup_pending(guest_relay_cleanup_pending_detail("start-job", &error));
+                cleanup_pending = true;
+                GuestRelayCompletion::Started(Err(error))
+            }
+            semio_framework_async::Either::Right(()) => {
+                let result = cancel_guest_job_once(&runtime, guest.guest(), job, &cancel_admitted).await;
+                foreground_cancel_completion(result, &mut guest)
+            }
+        },
+        GuestRelayRequest::Step => match semio_framework_async::select2(runtime.step_job(guest.guest(), job, RELAY_JOB_BUDGET), wait_for_guest_relay_cancellation(pool.clone(), cancel)).await {
+            semio_framework_async::Either::Left(Ok(step)) => {
+                guest.available();
+                GuestRelayCompletion::Stepped(Ok(step))
+            }
+            semio_framework_async::Either::Left(Err(error)) => {
+                guest.cleanup_pending(guest_relay_cleanup_pending_detail("step-job", &error));
+                cleanup_pending = true;
+                GuestRelayCompletion::Stepped(Err(error))
+            }
+            semio_framework_async::Either::Right(()) => {
+                let result = cancel_guest_job_once(&runtime, guest.guest(), job, &cancel_admitted).await;
+                foreground_cancel_completion(result, &mut guest)
+            }
+        },
+        GuestRelayRequest::Cancel => {
+            let result = cancel_guest_job_once(&runtime, guest.guest(), job, &cancel_admitted).await;
+            foreground_cancel_completion(result, &mut guest)
+        }
+    };
+    drop(guest);
+    drop(permit);
+    #[cfg(test)]
+    wait_for_scripted_guest_relay_release(&runtime, &completion).await;
+    if cleanup_pending {
+        schedule_guest_relay_cancel(Arc::clone(&runtime), instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted);
+    }
+    sender.send(completion);
+}
+
+fn schedule_guest_relay_cancel(
+    runtime: Arc<GuestRuntimes>,
+    instance: Arc<Mutex<GuestInstanceSlot>>,
+    instance_gate: Arc<semio_framework_async::Semaphore>,
+    pool: WorkerPool,
+    job: u64,
+    cancel_scheduled: Arc<AtomicBool>,
+    cancel_admitted: Arc<AtomicBool>,
+) {
+    if cancel_scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        return;
+    }
+    mark_guest_cleanup_pending(&instance, b"plugin instance cleanup pending until cancel-job resolves".to_vec());
+    let panic_instance = Arc::clone(&instance);
+    GuestRelayPoolFuture::spawn_recoverable(
+        pool,
+        Lane::UserVisible,
+        async move {
+            let _permit = instance_gate.acquire_owned().await;
+            let Ok(mut guest) = GuestInstanceLease::acquire_cleanup(instance) else {
+                return;
+            };
+            match cancel_guest_job_once(&runtime, guest.guest(), job, &cancel_admitted).await {
+                Ok(true) => guest.cleanup_resolved(),
+                Ok(false) => guest.quarantine(b"plugin instance quarantined because cancel-job admission was already consumed".to_vec()),
+                Err(error) => guest.quarantine(cancel_guest_job_failure_detail(&error)),
+            }
+        },
+        move || quarantine_guest_instance(&panic_instance, b"plugin instance quarantined after cleanup cancel-job panic".to_vec()),
+    );
+}
+
+fn recover_guest_relay_panic(
+    runtime: Arc<GuestRuntimes>,
+    instance: Arc<Mutex<GuestInstanceSlot>>,
+    instance_gate: Arc<semio_framework_async::Semaphore>,
+    pool: WorkerPool,
+    job: u64,
+    cancel_scheduled: Arc<AtomicBool>,
+    cancel_admitted: Arc<AtomicBool>,
+    sender: GuestRelayCompletionSender,
+    request: GuestRelayRequestKind,
+) {
+    #[cfg(test)]
+    if let GuestRuntimes::Mock(mock) = runtime.as_ref() {
+        let barrier = match request {
+            GuestRelayRequestKind::Start => mock.take_relay_start_failure_release(),
+            GuestRelayRequestKind::Step => mock.take_relay_step_failure_release(),
+            GuestRelayRequestKind::Cancel => None,
+        };
+        if let Some(barrier) = barrier {
+            let panic_instance = Arc::clone(&instance);
+            GuestRelayPoolFuture::spawn_recoverable(
+                pool.clone(),
+                Lane::UserVisible,
+                async move {
+                    barrier.wait().await;
+                    recover_guest_relay_panic(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted, sender, request);
+                },
+                move || quarantine_guest_instance(&panic_instance, b"plugin instance quarantined after relay panic recovery panic".to_vec()),
+            );
+            return;
+        }
+    }
+    let detail = if matches!(request, GuestRelayRequestKind::Cancel) || cancel_admitted.load(std::sync::atomic::Ordering::Acquire) {
+        let detail = b"plugin instance quarantined after cancel-job panic";
+        quarantine_guest_instance(&instance, detail.to_vec());
+        detail.to_vec()
+    } else {
+        schedule_guest_relay_cancel(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted);
+        b"plugin guest relay panicked after acquiring its instance".to_vec()
+    };
+    sender.send(GuestRelayCompletion::Fault(detail));
+}
+
+struct GuestColdRelayJob {
+    runtime: Arc<GuestRuntimes>,
+    instance: Arc<Mutex<GuestInstanceSlot>>,
+    instance_gate: Arc<semio_framework_async::Semaphore>,
+    pool: WorkerPool,
+    cancel: semio_framework_async::CancelToken,
+    cancel_scheduled: Arc<AtomicBool>,
+    cancel_admitted: Arc<AtomicBool>,
+    job: u64,
+    start: Option<(String, Vec<u8>)>,
+    pending: Option<semio_framework_async::oneshot::Receiver<GuestRelayCompletion>>,
+    start_submitted: bool,
+    started: bool,
+    cleanup_required: bool,
+    terminal_delivered: bool,
+}
+
+impl GuestColdRelayJob {
+    fn submit(&mut self, request: GuestRelayRequest) {
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        let sender = GuestRelayCompletionSender::new(sender);
+        let request_kind = request.kind();
+        GuestRelayPoolFuture::spawn_recoverable(
+            self.pool.clone(),
+            Lane::UserVisible,
+            run_guest_relay_request(
+                Arc::clone(&self.runtime),
+                Arc::clone(&self.instance),
+                Arc::clone(&self.instance_gate),
+                self.pool.clone(),
+                self.cancel.clone(),
+                Arc::clone(&self.cancel_scheduled),
+                Arc::clone(&self.cancel_admitted),
+                self.job,
+                request,
+                sender.clone(),
+            ),
+            {
+                let runtime = Arc::clone(&self.runtime);
+                let instance = Arc::clone(&self.instance);
+                let instance_gate = Arc::clone(&self.instance_gate);
+                let pool = self.pool.clone();
+                let job = self.job;
+                let cancel_scheduled = Arc::clone(&self.cancel_scheduled);
+                let cancel_admitted = Arc::clone(&self.cancel_admitted);
+                move || recover_guest_relay_panic(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted, sender, request_kind)
+            },
+        );
+        self.pending = Some(receiver);
+    }
+
+    fn schedule_cleanup(&self) {
+        if self.start_submitted {
+            self.cancel.cancel_now();
+            schedule_guest_relay_cancel(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), self.pool.clone(), self.job, Arc::clone(&self.cancel_scheduled), Arc::clone(&self.cancel_admitted));
+        }
+    }
+
+    fn submit_cleanup(&mut self) {
+        self.cancel.cancel_now();
+        if self.start_submitted && self.pending.is_none() && self.cancel_scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
+            self.submit(GuestRelayRequest::Cancel);
+        }
+    }
+
+    fn terminal(&mut self, outcome: semio_framework_job::StepOutcome) -> semio_framework_job::StepOutcome {
+        self.terminal_delivered = true;
+        outcome
+    }
+
+    fn terminal_with_cleanup(&mut self, outcome: semio_framework_job::StepOutcome) -> semio_framework_job::StepOutcome {
+        self.schedule_cleanup();
+        self.terminal(outcome)
+    }
+}
+
+impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
+    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if self.terminal_delivered {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if context.is_cancelled() || self.cancel.is_cancelled_now() {
+            self.cancel.cancel_now();
+            if self.pending.is_none() && self.cleanup_required {
+                self.submit_cleanup();
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            if self.pending.is_none() {
+                return self.terminal(semio_framework_job::StepOutcome::Cancelled);
+            }
+        }
+        if let Some(receiver) = &mut self.pending {
+            let completion = match receiver.try_recv() {
+                Ok(completion) => completion,
+                Err(semio_framework_async::oneshot::TryRecvError::Empty) => return semio_framework_job::StepOutcome::Yield,
+                Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
+                    self.pending = None;
+                    return self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin guest relay future closed without an outcome".to_vec() }));
+                }
+            };
+            self.pending = None;
+            return match completion {
+                GuestRelayCompletion::Started(Ok(())) => {
+                    self.started = true;
+                    semio_framework_job::StepOutcome::Yield
+                }
+                GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.to_string().into_bytes() })),
+                GuestRelayCompletion::Stepped(Ok(JobStep::Running { progress: Some(progress) })) => semio_framework_job::StepOutcome::PreviewReady(progress),
+                GuestRelayCompletion::Stepped(Ok(JobStep::Running { progress: None })) => semio_framework_job::StepOutcome::Yield,
+                GuestRelayCompletion::Stepped(Ok(JobStep::Done { output })) => {
+                    self.cleanup_required = false;
+                    self.terminal(semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output }))
+                }
+                GuestRelayCompletion::Stepped(Ok(JobStep::Failed { error })) => {
+                    self.cleanup_required = false;
+                    self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error }))
+                }
+                GuestRelayCompletion::Rejected(error) => {
+                    self.cleanup_required = false;
+                    self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error }))
+                }
+                GuestRelayCompletion::Fault(error) => self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error })),
+                GuestRelayCompletion::Cancelled => {
+                    self.cleanup_required = false;
+                    self.terminal(semio_framework_job::StepOutcome::Cancelled)
+                }
+            };
+        }
+        if let Some((kind, input)) = self.start.take() {
+            self.start_submitted = true;
+            self.cleanup_required = true;
+            self.submit(GuestRelayRequest::Start { kind, input });
+        } else if self.started {
+            self.submit(GuestRelayRequest::Step);
+        } else {
+            return self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin guest relay lost its start state".to_vec() }));
+        }
+        semio_framework_job::StepOutcome::Yield
+    }
+}
+
+impl Drop for GuestColdRelayJob {
+    fn drop(&mut self) {
+        if self.cleanup_required {
+            self.schedule_cleanup();
+        }
+    }
+}
+
+impl GuestColdRelayJob {
+    fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, kind: String, input: Vec<u8>) -> Self {
+        Self {
+            runtime,
+            instance,
+            instance_gate,
+            pool,
+            cancel,
+            cancel_scheduled: Arc::new(AtomicBool::new(false)),
+            cancel_admitted: Arc::new(AtomicBool::new(false)),
+            job,
+            start: Some((kind, input)),
+            pending: None,
+            start_submitted: false,
+            started: false,
+            cleanup_required: false,
+            terminal_delivered: false,
+        }
+    }
+}
 
 /// 🧬️ design-runtime.md §2's post-turn dispatch replacement for the old `Arc<WasmPluginRuntime>`
 /// synchronous-call handle. `IoRouter`/`ArtifactInferenceRouter` used to hold a full `WasmPluginRuntime`
@@ -2522,36 +3308,52 @@ const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: 50_000_000, deadline_ms: 2
 pub struct PluginInstanceHandle {
     pub actor: RuntimeActorId,
     runtime: Arc<GuestRuntimes>,
-    instance: Mutex<GuestInstance>,
+    instance: Arc<Mutex<GuestInstanceSlot>>,
+    instance_gate: Arc<semio_framework_async::Semaphore>,
     next_job_id: std::sync::atomic::AtomicU64,
 }
 
 impl PluginInstanceHandle {
     pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
-        Self { actor, runtime, instance: Mutex::new(instance), next_job_id: std::sync::atomic::AtomicU64::new(1) }
+        Self { actor, runtime, instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))), instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)), next_job_id: std::sync::atomic::AtomicU64::new(1) }
     }
 
-    /// 🧵️ `start-job` then repeated `step-job` until `Done`/`Failed`, synchronously — safe here
-    /// because every caller of this method runs POST-TURN, dispatching to a DIFFERENT actor's
-    /// instance than whichever turn's effect triggered it (never re-entrant into an in-flight turn's
-    /// own `Store`, which is the deadlock `IoRouter::run_io`'s own doc comment already guards against
-    /// one layer up, at route-resolution time).
-    async fn run_job_to_completion(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    /// 🧵️ Starts one cold job, then explicitly admits one persistent relay step per shared-pool
+    /// turn. A preview/yield returns control to this loop before the next admission; the pool never
+    /// owns an internal run-to-completion chain.
+    async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        if let Some(detail) = self.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).admission_fault() {
+            return Err(PluginHostError::Plugin(format!("{kind} job rejected: {}", String::from_utf8_lossy(&detail))));
+        }
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut instance = self.instance.lock().map_err(|_| PluginHostError::LockPoisoned("plugin instance handle"))?;
-        // 🚫️async: E5 executor bridge. `run_job_to_completion` is called from inside a wasmtime
-        // host-import call chain (`IoRouter::run_io`/`compose`/`identify` -> guest wasm import ->
-        // this method, strictly post-turn against a DIFFERENT actor's instance) — a genuinely-sync
-        // ABI boundary wasmtime's own (non-async) linker imposes, not something this packet can
-        // thread `.await` through without mounting `⏳️runtime.rs`'s async runtime (out of scope; a
-        // later packet's `AsyncActor` variant is exactly what removes this bridge). `block_on` is
-        // sound here because every impl `GuestRuntimes` wraps today resolves on its first poll.
-        semio_framework_async::block_on(self.runtime.start_job(&mut instance, job, kind, input)).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
+        let pool = plugin_host_worker_pool();
+        let cancel = semio_framework_job::root_cancel_token();
+        let operation = semio_framework_job::OperationId(self.actor.0);
+        let generation = semio_framework_job::Generation(job);
+        let params = semio_framework_job::BatchJobParams {
+            operation,
+            generation,
+            cancel: semio_framework_job::root_cancel_token(),
+            config: semio_framework_job::BatchDriveConfig {
+                site: "plugin-host.cold-relay",
+                stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+                fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
+                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+            },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, kind.to_string(), input);
+        let session = semio_framework_job::WorkerJobSession::new(relay, params);
         loop {
-            match semio_framework_async::block_on(self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET)).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
-                JobStep::Done { output } => return Ok(output),
-                JobStep::Failed { error } => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&error)))),
-                JobStep::Running { .. } => continue,
+            let outcome = session.step(&pool, semio_framework_async::Lane::UserVisible).await.map_err(|_| PluginHostError::Plugin(format!("{kind} worker result channel closed")))?;
+            if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(operation, generation) {
+                return Err(PluginHostError::Plugin(format!("{kind} step exceeded the 8 ms ceiling ({elapsed_us} µs)")));
+            }
+            match outcome {
+                semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
+                semio_framework_job::StepOutcome::Complete(candidate) => return Ok(candidate.output),
+                semio_framework_job::StepOutcome::Cancelled => return Err(PluginHostError::Plugin(format!("{kind} job cancelled"))),
+                semio_framework_job::StepOutcome::Fault(fault) => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&fault.detail)))),
             }
         }
     }
@@ -2565,7 +3367,7 @@ impl PluginInstanceHandle {
     pub async fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload)?;
         let input = serde_json::to_vec(&(from, into, io_payload))?;
-        self.run_job_to_completion("semio.io-run", input).await
+        self.run_job_on_worker("semio.io-run", input).await
     }
 
     /// 🔍️ Sniffs this plugin's own `(from, into)` hop — the absorbed `io-sniff` guest export, now
@@ -2574,7 +3376,7 @@ impl PluginInstanceHandle {
     pub async fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
         let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(payload)?;
         let input = serde_json::to_vec(&(from, into, io_payload))?;
-        let result = self.run_job_to_completion("semio.io-sniff", input).await?;
+        let result = self.run_job_on_worker("semio.io-sniff", input).await?;
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
 
@@ -2584,7 +3386,7 @@ impl PluginInstanceHandle {
     /// the deleted `WasmPluginRuntime::artifact_infer` used — no tuple wrapping needed, since that
     /// call already took exactly one opaque payload.
     pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_to_completion("semio.infer", request.to_vec()).await
+        self.run_job_on_worker("semio.infer", request.to_vec()).await
     }
 
     /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest mutation-plan
@@ -2594,7 +3396,7 @@ impl PluginInstanceHandle {
     /// `HostArtifactMutationPlanRequest`/`Result`'s field-for-field guest mirror) — no tuple
     /// wrapping needed, mirroring `infer`'s own doc note above.
     pub async fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_to_completion("semio.mutation-plan", request.to_vec()).await
+        self.run_job_on_worker("semio.mutation-plan", request.to_vec()).await
     }
 
     /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest versioned
@@ -2608,7 +3410,7 @@ impl PluginInstanceHandle {
     /// call site — see this packet's report `## lease-requests`).
     pub async fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let input = serde_json::to_vec(&(from, to, pack))?;
-        self.run_job_to_completion("semio.migrate", input).await
+        self.run_job_on_worker("semio.migrate", input).await
     }
 
     /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): routes to this plugin's own
@@ -2628,13 +3430,576 @@ impl PluginInstanceHandle {
             sources: &'a [u8],
         }
         let input = serde_json::to_vec(&ComposeInput { key: key_bytes, sources: sources_bytes })?;
-        self.run_job_to_completion("semio.compose", input).await
+        self.run_job_on_worker("semio.compose", input).await
     }
 }
 
 impl std::fmt::Debug for PluginInstanceHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PluginInstanceHandle").field("actor", &self.actor).finish()
+    }
+}
+
+#[cfg(test)]
+mod guest_cold_relay_tests {
+    use super::*;
+
+    async fn relay_session_with_tokens(
+        mock: Arc<MockGuestRuntime>,
+        actor: RuntimeActorId,
+        pool: WorkerPool,
+        relay_cancel: semio_framework_async::CancelToken,
+        session_cancel: semio_framework_async::CancelToken,
+        step: JobStep,
+    ) -> (semio_framework_job::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>, Arc<Mutex<GuestInstanceSlot>>) {
+        let compiled = mock.compile(&PackageRef { package: PackageId("relay-test".to_string()), hash: PackageHash([41; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+        let instance = Arc::new(Mutex::new(GuestInstanceSlot::Available(instance)));
+        let gate = mock.script_pending_job_step(actor, step).await;
+        let relay = GuestColdRelayJob::new(Arc::new(GuestRuntimes::Mock(mock)), Arc::clone(&instance), Arc::new(semio_framework_async::Semaphore::new(1)), pool, relay_cancel, 1, "semio.infer".to_string(), b"request".to_vec());
+        let params = semio_framework_job::BatchJobParams {
+            operation: semio_framework_job::OperationId(actor.0),
+            generation: semio_framework_job::Generation(1),
+            cancel: session_cancel,
+            config: semio_framework_job::BatchDriveConfig {
+                site: "test.plugin-host.guest-cold-relay",
+                stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+                fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
+                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+            },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        (semio_framework_job::WorkerJobSession::new(relay, params), gate, instance)
+    }
+
+    async fn relay_session(
+        mock: Arc<MockGuestRuntime>,
+        actor: RuntimeActorId,
+        pool: WorkerPool,
+        cancel: semio_framework_async::CancelToken,
+        step: JobStep,
+    ) -> (semio_framework_job::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>, Arc<Mutex<GuestInstanceSlot>>) {
+        relay_session_with_tokens(mock, actor, pool, cancel.clone(), cancel, step).await
+    }
+
+    async fn mounted_handle(mock: Arc<MockGuestRuntime>, actor: RuntimeActorId) -> PluginInstanceHandle {
+        let compiled = mock.compile(&PackageRef { package: PackageId("mounted-relay-test".to_string()), hash: PackageHash([43; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4_096, max_frames: 1 }).await.expect("mock instantiate");
+        PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await
+    }
+
+    async fn relay_session_for_handle(
+        handle: &PluginInstanceHandle,
+        mock: &MockGuestRuntime,
+        pool: WorkerPool,
+        relay_cancel: semio_framework_async::CancelToken,
+        session_cancel: semio_framework_async::CancelToken,
+        step: JobStep,
+    ) -> (semio_framework_job::WorkerJobSession<GuestColdRelayJob>, Arc<MockJobStepGate>) {
+        let gate = mock.script_pending_job_step(handle.actor, step).await;
+        let relay = GuestColdRelayJob::new(Arc::clone(&handle.runtime), Arc::clone(&handle.instance), Arc::clone(&handle.instance_gate), pool, relay_cancel, 77, "semio.infer".to_string(), b"request".to_vec());
+        let params = semio_framework_job::BatchJobParams {
+            operation: semio_framework_job::OperationId(handle.actor.0),
+            generation: semio_framework_job::Generation(77),
+            cancel: session_cancel,
+            config: semio_framework_job::BatchDriveConfig {
+                site: "test.plugin-host.guest-cold-relay.mounted",
+                stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+                fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
+                step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+            },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        (semio_framework_job::WorkerJobSession::new(relay, params), gate)
+    }
+
+    async fn drive_until_step_admitted(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, pool: &WorkerPool, mock: &MockGuestRuntime) {
+        for _ in 0..64 {
+            assert_eq!(session.step(pool, Lane::UserVisible).await.expect("relay caller turn"), semio_framework_job::StepOutcome::Yield);
+            if mock.step_admissions() == 1 {
+                return;
+            }
+        }
+        panic!("pending guest step was not admitted");
+    }
+
+    async fn wait_for_cancel_admission(pool: &WorkerPool, mock: &MockGuestRuntime) {
+        for _ in 0..64 {
+            if mock.cancel_admissions() == 1 {
+                return;
+            }
+            let (sender, receiver) = semio_framework_async::oneshot::channel();
+            pool.submit_at(
+                pool.now_ms().saturating_add(1),
+                Lane::UserVisible,
+                Box::new(move || {
+                    let _ = sender.send(());
+                }),
+            );
+            receiver.await.expect("timer barrier");
+        }
+        panic!("guest cancellation was not admitted");
+    }
+
+    async fn wait_for_quarantine(pool: &WorkerPool, instance: &Arc<Mutex<GuestInstanceSlot>>) {
+        for _ in 0..64 {
+            if instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined() {
+                return;
+            }
+            let (sender, receiver) = semio_framework_async::oneshot::channel();
+            pool.submit_at(
+                pool.now_ms().saturating_add(1),
+                Lane::UserVisible,
+                Box::new(move || {
+                    let _ = sender.send(());
+                }),
+            );
+            receiver.await.expect("quarantine timer barrier");
+        }
+        panic!("guest instance was not quarantined");
+    }
+
+    async fn wait_for_available_instance(pool: &WorkerPool, instance: &Arc<Mutex<GuestInstanceSlot>>) {
+        for _ in 0..64 {
+            if instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available() {
+                return;
+            }
+            let (sender, receiver) = semio_framework_async::oneshot::channel();
+            pool.submit_at(
+                pool.now_ms().saturating_add(1),
+                Lane::UserVisible,
+                Box::new(move || {
+                    let _ = sender.send(());
+                }),
+            );
+            receiver.await.expect("instance restoration timer barrier");
+        }
+        panic!("guest instance was not restored");
+    }
+
+    async fn wait_for_release_barrier(pool: &WorkerPool, barrier: &MockJobStepGate) {
+        for _ in 0..64 {
+            if barrier.is_waiting() {
+                return;
+            }
+            let (sender, receiver) = semio_framework_async::oneshot::channel();
+            pool.submit_at(
+                pool.now_ms().saturating_add(1),
+                Lane::UserVisible,
+                Box::new(move || {
+                    let _ = sender.send(());
+                }),
+            );
+            receiver.await.expect("release barrier timer");
+        }
+        panic!("guest relay did not reach its post-release barrier");
+    }
+
+    fn spawn_mounted_infer(pool: WorkerPool, handle: Arc<PluginInstanceHandle>, request: &'static [u8]) -> semio_framework_async::oneshot::Receiver<Result<Vec<u8>, PluginHostError>> {
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        GuestRelayPoolFuture::spawn_recoverable(
+            pool,
+            Lane::UserVisible,
+            async move {
+                let _ = sender.send(handle.infer(request).await);
+            },
+            || {},
+        );
+        receiver
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn pending_guest_releases_the_only_worker_and_admits_no_duplicate_step() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let cancel = semio_framework_async::CancelToken::root_now();
+        let (session, gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_001), pool.clone(), cancel, JobStep::Done { output: b"done".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+
+        for _ in 0..8 {
+            assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("pending relay poll"), semio_framework_job::StepOutcome::Yield);
+        }
+        assert_eq!(mock.start_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 1, "pending caller turns must only try-receive the admitted guest future");
+
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let _ = sender.send(b"competitor-progress".to_vec());
+            }),
+        );
+        assert_eq!(receiver.await.expect("competing user-visible job"), b"competitor-progress", "a genuinely pending guest must not park the single worker");
+
+        gate.release();
+        let terminal = loop {
+            let outcome = session.step(&pool, Lane::UserVisible).await.expect("relay completion turn");
+            if outcome.is_terminal() {
+                break outcome;
+            }
+        };
+        assert!(matches!(terminal, semio_framework_job::StepOutcome::Complete(candidate) if candidate.output == b"done"));
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-terminal relay turn"), semio_framework_job::StepOutcome::Yield);
+        assert_eq!(mock.step_admissions(), 1, "neither pending polls nor terminal replay may duplicate guest admission");
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cancellation_race_admits_one_guest_cancel_and_one_terminal_outcome() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let cancel = semio_framework_async::CancelToken::root_now();
+        let (session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_002), pool.clone(), cancel.clone(), JobStep::Done { output: b"raced".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+
+        cancel.cancel_now();
+        let terminal = loop {
+            let outcome = session.step(&pool, Lane::UserVisible).await.expect("cancelled relay turn");
+            if outcome.is_terminal() {
+                break outcome;
+            }
+        };
+        assert_eq!(terminal, semio_framework_job::StepOutcome::Cancelled);
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-cancel relay turn"), semio_framework_job::StepOutcome::Yield, "the terminal cancellation must not be delivered twice");
+        drop(session);
+        wait_for_cancel_admission(&pool, &mock).await;
+        assert_eq!(mock.step_admissions(), 1);
+        assert_eq!(mock.cancel_admissions(), 1, "the completion/cancellation race must admit guest cancellation exactly once");
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn dropping_a_live_nonterminal_relay_cancels_the_guest_exactly_once() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let cancel = semio_framework_async::CancelToken::root_now();
+        let (session, _gate, _) = relay_session(Arc::clone(&mock), RuntimeActorId(8_003), pool.clone(), cancel.clone(), JobStep::Done { output: b"unreachable".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+
+        drop(session);
+        wait_for_cancel_admission(&pool, &mock).await;
+        assert!(cancel.is_cancelled_now(), "dropping an admitted nonterminal relay must cancel its owned scope before scheduling guest cleanup");
+        assert_eq!(mock.step_admissions(), 1);
+        assert_eq!(mock.cancel_admissions(), 1, "the pending-step and Drop cleanup paths share one cancellation admission bit");
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_start_panic_restores_the_instance_and_the_next_route_progresses() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_004);
+        let handle = mounted_handle(Arc::clone(&mock), actor).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"mounted-after-start-panic".to_vec() }).await;
+        mock.panic_next_start();
+
+        let error = handle.infer(b"first").await.expect_err("start panic must surface as a typed host fault");
+        assert!(error.to_string().contains("plugin guest relay panicked"));
+        let pool = plugin_host_worker_pool();
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_available_instance(&pool, &handle.instance).await;
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available(), "the unwind lease must restore the taken instance");
+
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let _ = sender.send(());
+            }),
+        );
+        receiver.await.expect("the process worker pool must survive the retained-future panic");
+        assert_eq!(handle.infer(b"second").await.expect("the next mounted route must acquire the restored instance"), b"mounted-after-start-panic");
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_step_panic_restores_the_instance_and_terminalizes_once() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_005);
+        let handle = mounted_handle(Arc::clone(&mock), actor).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"mounted-after-step-panic".to_vec() }).await;
+        mock.panic_next_step();
+
+        let error = handle.infer(b"first").await.expect_err("step panic must surface as a typed host fault");
+        assert!(error.to_string().contains("plugin guest relay panicked"));
+        let pool = plugin_host_worker_pool();
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_available_instance(&pool, &handle.instance).await;
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
+        assert_eq!(handle.infer(b"second").await.expect("a mounted route after step panic must not deadlock"), b"mounted-after-step-panic");
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cancel_panic_quarantines_instance_releases_permit_and_faults_once_on_one_worker() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_006)).await;
+        let relay_cancel = semio_framework_async::CancelToken::root_now();
+        let session_cancel = semio_framework_async::CancelToken::root_now();
+        let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+        mock.panic_next_cancel();
+        relay_cancel.cancel_now();
+
+        let terminal = loop {
+            let outcome = session.step(&pool, Lane::UserVisible).await.expect("panic receiver turn");
+            if outcome.is_terminal() {
+                break outcome;
+            }
+        };
+        assert!(matches!(terminal, semio_framework_job::StepOutcome::Fault(fault) if fault.detail == b"plugin instance quarantined after cancel-job panic"));
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-fault receiver turn"), semio_framework_job::StepOutcome::Yield);
+        wait_for_cancel_admission(&pool, &mock).await;
+        assert_eq!(mock.cancel_admissions(), 1, "a panicking cancel-job admission must never be retried");
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined(), "cancel unwind must retain but quarantine the uncertain instance before fault delivery");
+
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let _ = sender.send(());
+            }),
+        );
+        receiver.await.expect("the sole worker and semaphore permit must survive cancel panic");
+        pool.shutdown();
+        let next = handle.infer(b"next-route").await.expect_err("a mounted route must reject rather than reuse a quarantined guest");
+        assert!(next.to_string().contains("quarantined after cancel-job panic"));
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn background_cleanup_cancel_panic_quarantines_before_the_next_mounted_route() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_008)).await;
+        mock.panic_next_start();
+        mock.panic_next_cancel();
+
+        let first = handle.infer(b"first").await.expect_err("start panic must fault");
+        assert!(first.to_string().contains("plugin guest relay panicked"));
+        let pool = plugin_host_worker_pool();
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        let next = handle.infer(b"next-route").await.expect_err("the mounted route must reject background-cancel quarantine without deadlock");
+        assert!(next.to_string().contains("quarantined after cleanup cancel-job panic"));
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn context_cancellation_failure_faults_once_quarantines_and_releases_one_worker() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_009)).await;
+        let relay_cancel = semio_framework_async::CancelToken::root_now();
+        let session_cancel = semio_framework_async::CancelToken::root_now();
+        let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), relay_cancel.clone(), session_cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+        mock.fail_next_cancel();
+        relay_cancel.cancel_now();
+
+        let terminal = loop {
+            let outcome = session.step(&pool, Lane::UserVisible).await.expect("failed-cancel receiver turn");
+            if outcome.is_terminal() {
+                break outcome;
+            }
+        };
+        assert!(matches!(
+            terminal,
+            semio_framework_job::StepOutcome::Fault(fault)
+                if fault.detail == b"plugin instance quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"
+        ));
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-fault receiver turn"), semio_framework_job::StepOutcome::Yield);
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        assert_eq!(mock.cancel_admissions(), 1, "ordinary cancel failure must consume the sole admission without retry");
+
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let _ = sender.send(b"worker-survived".to_vec());
+            }),
+        );
+        assert_eq!(receiver.await.expect("one-worker competitor after cancel failure"), b"worker-survived");
+        pool.shutdown();
+
+        let start_admissions = mock.start_admissions();
+        let next = handle.infer(b"next-route").await.expect_err("quarantined mounted route must reject without entering the guest");
+        assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
+        assert_eq!(mock.start_admissions(), start_admissions, "quarantine rejection must not enter start-job");
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn drop_cleanup_cancel_failure_quarantines_before_the_next_mounted_route() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_010)).await;
+        let cancel = semio_framework_async::CancelToken::root_now();
+        let (session, _gate) = relay_session_for_handle(&handle, &mock, pool.clone(), cancel.clone(), cancel, JobStep::Done { output: b"unreachable".to_vec() }).await;
+        drive_until_step_admitted(&session, &pool, &mock).await;
+        mock.fail_next_cancel();
+
+        drop(session);
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        assert_eq!(mock.cancel_admissions(), 1, "Drop cleanup must not retry an ordinary cancel failure");
+        let (sender, receiver) = semio_framework_async::oneshot::channel();
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let _ = sender.send(());
+            }),
+        );
+        receiver.await.expect("one-worker permit and worker survive Drop cleanup failure");
+        pool.shutdown();
+
+        let start_admissions = mock.start_admissions();
+        let next = handle.infer(b"next-route").await.expect_err("stored Drop cleanup quarantine must reject promptly");
+        assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
+        assert_eq!(mock.start_admissions(), start_admissions);
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn start_failure_cleanup_cancel_failure_is_stored_for_the_next_route() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_011)).await;
+        mock.fail_next_start();
+        mock.fail_next_cancel();
+
+        let first = handle.infer(b"first").await.expect_err("ordinary start failure must fault");
+        assert!(first.to_string().contains("guest trapped: scripted start-job failure"));
+        let pool = plugin_host_worker_pool();
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        let start_admissions = mock.start_admissions();
+        let next = handle.infer(b"next-route").await.expect_err("start-failure cleanup quarantine must reject promptly");
+        assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
+        assert_eq!(mock.start_admissions(), start_admissions);
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn step_failure_cleanup_cancel_failure_is_stored_for_the_next_route() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_012);
+        let handle = mounted_handle(Arc::clone(&mock), actor).await;
+        mock.script_fault(actor, "scripted step-job failure").await;
+        mock.fail_next_cancel();
+
+        let first = handle.infer(b"first").await.expect_err("ordinary step failure must fault");
+        assert!(first.to_string().contains("guest trapped: scripted step-job failure"));
+        let pool = plugin_host_worker_pool();
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        let start_admissions = mock.start_admissions();
+        let next = handle.infer(b"next-route").await.expect_err("step-failure cleanup quarantine must reject promptly");
+        assert!(next.to_string().contains("quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"));
+        assert_eq!(mock.start_admissions(), start_admissions);
+        assert_eq!(mock.step_admissions(), 1);
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn concurrent_route_rejects_start_failure_cleanup_pending_then_reuses_only_after_cleanup_success() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_013);
+        let handle = Arc::new(mounted_handle(Arc::clone(&mock), actor).await);
+        let release = mock.pause_after_next_start_failure_release();
+        mock.fail_next_start();
+        let pool = plugin_host_worker_pool();
+        let first = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"first");
+
+        wait_for_release_barrier(&pool, &release).await;
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_cleanup_pending());
+        assert_eq!(mock.cancel_admissions(), 0, "the barrier must precede cleanup scheduling");
+        let second = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"concurrent");
+        let second_error = second.await.expect("concurrent mounted result").expect_err("cleanup-pending route must reject promptly");
+        assert!(second_error.to_string().contains("cleanup pending after start-job failure"));
+        assert_eq!(mock.start_admissions(), 1, "cleanup-pending rejection must not re-enter start-job");
+
+        release.release();
+        let first_error = first.await.expect("failed producer result").expect_err("ordinary start fault");
+        assert!(first_error.to_string().contains("scripted start-job failure"));
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_available_instance(&pool, &handle.instance).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"clean-reuse".to_vec() }).await;
+        assert_eq!(handle.infer(b"after-cleanup").await.expect("cleanup success restores mounted availability"), b"clean-reuse");
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn concurrent_route_rejects_step_failure_cleanup_pending_then_quarantine_is_stable() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_014);
+        let handle = Arc::new(mounted_handle(Arc::clone(&mock), actor).await);
+        let release = mock.pause_after_next_step_failure_release();
+        mock.script_fault(actor, "scripted concurrent step-job failure").await;
+        mock.fail_next_cancel();
+        let pool = plugin_host_worker_pool();
+        let first = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"first");
+
+        wait_for_release_barrier(&pool, &release).await;
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_cleanup_pending());
+        let second = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"concurrent");
+        let second_error = second.await.expect("concurrent mounted result").expect_err("cleanup-pending route must not enter the guest");
+        assert!(second_error.to_string().contains("cleanup pending after step-job failure"));
+        assert_eq!(mock.start_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 1);
+
+        release.release();
+        let first_error = first.await.expect("failed producer result").expect_err("ordinary step fault");
+        assert!(first_error.to_string().contains("scripted concurrent step-job failure"));
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_quarantine(&pool, &handle.instance).await;
+        let third_error = handle.infer(b"after-failed-cleanup").await.expect_err("cancel failure must leave a stable quarantine");
+        assert!(third_error.to_string().contains("quarantined after cancel-job failure"));
+        assert_eq!(mock.start_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 1);
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn concurrent_route_rejects_retained_start_panic_cleanup_pending_before_recovery() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_015);
+        let handle = Arc::new(mounted_handle(Arc::clone(&mock), actor).await);
+        let release = mock.pause_after_next_start_failure_release();
+        mock.panic_next_start();
+        let pool = plugin_host_worker_pool();
+        let first = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"first");
+
+        wait_for_release_barrier(&pool, &release).await;
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_cleanup_pending());
+        let second = spawn_mounted_infer(pool.clone(), Arc::clone(&handle), b"concurrent");
+        let second_error = second.await.expect("concurrent mounted result").expect_err("panic cleanup-pending route must reject promptly");
+        assert!(second_error.to_string().contains("cleanup pending after guest relay panic"));
+        assert_eq!(mock.start_admissions(), 1, "panic cleanup-pending rejection must not re-enter start-job");
+
+        release.release();
+        let first_error = first.await.expect("panicking producer result").expect_err("retained start panic must fault");
+        assert!(first_error.to_string().contains("plugin guest relay panicked"));
+        wait_for_cancel_admission(&pool, &mock).await;
+        wait_for_available_instance(&pool, &handle.instance).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"panic-clean-reuse".to_vec() }).await;
+        assert_eq!(handle.infer(b"after-panic-cleanup").await.expect("panic cleanup success restores availability"), b"panic-clean-reuse");
+        assert_eq!(mock.cancel_admissions(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = RuntimeActorId(8_007);
+        let handle = mounted_handle(Arc::clone(&mock), actor).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"poison-recovered".to_vec() }).await;
+        let instance = Arc::clone(&handle.instance);
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _guard = instance.lock().expect("unpoisoned fixture slot");
+            panic!("scripted instance-slot poison");
+        }));
+        assert!(handle.instance.is_poisoned());
+        assert_eq!(handle.infer(b"request").await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
+        assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
     }
 }
 //#endregion 🔀️PostTurnRelay
@@ -3287,7 +4652,7 @@ impl IoRouter {
     /// (which would deadlock, since that mutex is already held by the caller of this very host call).
     /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): resolution (unchanged) now feeds a
     /// REAL dispatch — `PluginInstanceHandle::compose` driving the owner's own `semio.compose` cold
-    /// job to completion via `run_job_to_completion`, the same post-turn relay `run_io`/`identify`
+    /// job through `run_job_on_worker`, the same post-turn relay `run_io`/`identify`
     /// below already use. The guest body is the live `compose-await` packet's, not this file's —
     /// until it registers `"semio.compose"`, this surfaces the OWNER's own `job.unknown-kind` fault
     /// (a real, dynamic failure reflecting actual guest state) rather than the previous hand-written
@@ -3546,11 +4911,12 @@ struct InferenceRouteResult {
 pub struct ArtifactInferenceRouter {
     routes: Mutex<BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>>,
     runtimes: Mutex<HashMap<String, Arc<PluginInstanceHandle>>>,
+    live_commits: Mutex<BTreeMap<String, (u64, u64)>>,
 }
 
 impl ArtifactInferenceRouter {
     pub fn new() -> Self {
-        Self { routes: Mutex::new(BTreeMap::new()), runtimes: Mutex::new(HashMap::new()) }
+        Self { routes: Mutex::new(BTreeMap::new()), runtimes: Mutex::new(HashMap::new()), live_commits: Mutex::new(BTreeMap::new()) }
     }
 
     /// 📌️ `dependencies` is the reporting plugin's OWN declared `PluginManifest.dependencies` —
@@ -3603,7 +4969,38 @@ impl ArtifactInferenceRouter {
     }
 
     pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.infer_with_visited(request, &mut Vec::new()).await
+        let identity: InferenceRouteRequest = serde_json::from_slice(request)?;
+        {
+            let mut live = self.live_commits.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?;
+            if live.insert(identity.cancellation_id.clone(), (identity.revision, identity.generation)).is_some() {
+                return Err(PluginHostError::Plugin(format!("inference cancellation identity {:?} is already active", identity.cancellation_id)));
+            }
+        }
+        let result = self.infer_with_visited(request, &mut Vec::new()).await;
+        let live = self
+            .live_commits
+            .lock()
+            .map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?
+            .remove(&identity.cancellation_id)
+            .ok_or_else(|| PluginHostError::Plugin("inference live commit authority disappeared before admission".into()))?;
+        let result = result?;
+        let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(identity.revision), semio_framework_job::Generation(identity.generation), 0);
+        match semio_framework_job::validate_commit(&operation, semio_framework_job::RevisionId(live.0), semio_framework_job::Generation(live.1)) {
+            semio_framework_job::CommitValidation::Accepted => Ok(result),
+            semio_framework_job::CommitValidation::Stale { .. } => {
+                Err(PluginHostError::Plugin(format!("inference commit for {:?} is stale: based on revision/generation {}/{}, live authority is {}/{}", identity.cancellation_id, identity.revision, identity.generation, live.0, live.1)))
+            }
+        }
+    }
+
+    /// 🪪️ Model-actor freshness handoff for an active inference. The final route admission reads this
+    /// value only after the guest's terminal candidate returns, then calls
+    /// `semio_framework_job::validate_commit` immediately before exposing the result.
+    pub async fn set_live_revision_generation(&self, cancellation_id: &str, revision: u64, generation: u64) -> Result<(), PluginHostError> {
+        let mut live = self.live_commits.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference live commits"))?;
+        let authority = live.get_mut(cancellation_id).ok_or_else(|| PluginHostError::Plugin(format!("no active inference has cancellation identity {cancellation_id:?}")))?;
+        *authority = (revision, generation);
+        Ok(())
     }
 
     /// 🕸️ Contract §6: before dispatching to the owner/contributor's own `artifact-infer`, resolves
@@ -3838,6 +5235,19 @@ mod artifact_inference_router_tests {
         assert!(validate_inference_echo(&request, &valid).await.is_ok());
         let stale = InferenceRouteResult { generation: 8, ..valid };
         assert!(matches!(validate_inference_echo(&request, &stale).await, Err(PluginHostError::Plugin(_))));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn live_revision_and_generation_change_rejects_the_terminal_candidate() {
+        let router = ArtifactInferenceRouter::new();
+        router.live_commits.lock().expect("live authority").insert("assembly-stale".into(), (7, 9));
+        router.set_live_revision_generation("assembly-stale", 8, 10).await.expect("model actor freshness update");
+        let live = router.live_commits.lock().expect("live authority").remove("assembly-stale").expect("active authority");
+        let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(7), semio_framework_job::Generation(9), 0);
+        assert!(matches!(
+            semio_framework_job::validate_commit(&operation, semio_framework_job::RevisionId(live.0), semio_framework_job::Generation(live.1)),
+            semio_framework_job::CommitValidation::Stale { live_revision: semio_framework_job::RevisionId(8), live_generation: semio_framework_job::Generation(10) }
+        ));
     }
 }
 //#endregion 💡️InferenceRouter
@@ -5955,14 +7365,13 @@ mod tests {
         }
     }
 
-    /// 🎬️ `PluginInstanceHandle`'s `run_job_to_completion` (`start-job` then a `step-job` loop)
+    /// 🎬️ `PluginInstanceHandle`'s `run_job_on_worker` (`start-job`, then one `step-job` per pool turn)
     /// against `MockGuestRuntime` — the FIRST real coverage of the post-turn job-dispatch mechanism
     /// itself (design-runtime.md §2), independent of whether any real `.wasm` exports `world actor`
-    /// yet. `step_job`'s FIRST scripted outcome is `Running`, forcing `run_job_to_completion`'s loop
-    /// to actually iterate at least once before the scripted `Done` — proves this is a real loop, not
-    /// a single call that happens to work.
+    /// yet. `step_job`'s FIRST scripted outcome is `Running`, forcing the persistent relay to
+    /// resubmit before the scripted `Done` — proves this is not a single batch call.
     #[semio_framework_async_macros::async_test]
-    async fn plugin_instance_handle_drives_io_run_job_to_completion_through_a_running_step() {
+    async fn plugin_instance_handle_drives_io_run_job_on_worker_through_a_running_step() {
         let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(100);
         let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).await.expect("mock compile");

@@ -17,7 +17,7 @@
 //! INTROSPECTION table is incomplete for this one field (matches `🖨️raster`'s/`💠️lowpoly`'s own
 //! already-accepted gap for the identical shape).
 
-use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild, REMODEL_DOCUMENT_SCHEMA};
+use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild, RemodelDurableArtifactStore, REMODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -40,6 +40,9 @@ pub struct RemodelSnapshot {
     #[serde(default)]
     #[state(artifact)]
     pub assets: BTreeMap<String, RemodelAssetChild>,
+    #[serde(default)]
+    #[state(artifact)]
+    pub durable_artifacts: RemodelDurableArtifactStore,
     #[serde(default)]
     #[dsl(block)]
     #[state(artifact)]
@@ -110,6 +113,7 @@ impl Default for RemodelSnapshot {
             id: "remodel".into(),
             streams: Vec::new(),
             assets: BTreeMap::new(),
+            durable_artifacts: RemodelDurableArtifactStore::new(),
             calibration: CalibrationState::default(),
             params: ReconstructionParams::default(),
             gcps: Vec::new(),

@@ -16,7 +16,7 @@ use serde_json::{json, Value};
 /// — recomputes the ephemeral generation preview for the currently selected generation and stores it
 /// on the config (never on the persisted document). References [`Procedural2dConfig`], an app type, so
 /// it stayed out of the artifact's `🧬️schema` unlike its sibling document helpers.
-async fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &FlowFixture, generation: &GenerationPlayState) {
+fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &FlowFixture, generation: &GenerationPlayState) {
     let Some(selected) = flow::playbook::selected_generation(generation) else {
         config.generation_preview_text = None;
         return;
@@ -30,7 +30,7 @@ async fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &F
 /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral
 /// selection and preview from the post-operation state via a whole-config `Snapshot`.
 /// `selectGeneration` is config-only (no document operations).
-async fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
+fn handle_generation(action: &str, args: Option<&Value>, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Emit<Procedural2dMutation, Procedural2dConfigMutation> {
     let projection = doc.snapshot;
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.clone();
@@ -91,7 +91,7 @@ pub struct UpdateGenerationValues {
     pub value: dsl::DslValue,
 }
 
-pub async fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
     Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc, cfg, session))
 }

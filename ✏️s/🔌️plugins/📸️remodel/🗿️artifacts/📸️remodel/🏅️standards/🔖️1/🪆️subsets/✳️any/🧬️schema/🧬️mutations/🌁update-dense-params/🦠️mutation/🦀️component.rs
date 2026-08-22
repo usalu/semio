@@ -16,7 +16,7 @@ pub struct UpdateDenseParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_dense_params(params: DenseParams) -> RemodelMutation {
+pub fn update_dense_params(params: DenseParams) -> RemodelMutation {
     RemodelMutation::UpdateDenseParams(UpdateDenseParams { params })
 }
 

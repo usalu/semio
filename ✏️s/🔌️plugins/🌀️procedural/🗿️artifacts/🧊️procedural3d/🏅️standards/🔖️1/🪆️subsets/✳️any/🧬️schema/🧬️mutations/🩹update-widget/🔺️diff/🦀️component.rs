@@ -10,7 +10,7 @@ use flow::Widget;
 /// 🏗️ Builds the sparse fixture delta replacing one existing widget's body. The index is
 /// irrelevant here — `apply_widgets_diff` resolves an existing entry by id before ever consulting
 /// the index, which only matters for a genuinely new (`create-widget`) insertion.
-pub async fn diff(payload: &UpdateWidget, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub fn diff(payload: &UpdateWidget, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     let id = widget_id(&payload.widget);
     let Some(index) = widget_index(&base.fixture, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{id}\" does not exist."), [id.to_string()]);

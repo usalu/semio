@@ -7,13 +7,21 @@ message Process3dSnapshot {
   // @state artifact
   Process3dWorkshop workshop = 1;
   // @state artifact
-  Process3dStock stock = 2;
+  string stock_id = 2;
   // @state artifact
-  repeated Process3dStep steps = 3;
+  string stock_label = 3;
+  Process3dPose stock_pose = 4;
+  Process3dStock stock_payload = 5;
+  ArtifactChildHandle stock_solid = 6;
+  ArtifactChildHandle steps = 7;
+  repeated Process3dStep step_payloads = 8;
+  repeated ArtifactChildHandle tool_solids = 9;
   // @state artifact
-  optional uint32 resolved_up_to = 4;
+  optional uint32 resolved_up_to = 10;
 }
 
 message Process3dWorkshop {}
 message Process3dStock {}
 message Process3dStep {}
+message Process3dPose {}
+message ArtifactChildHandle { string child_id = 1; string target = 2; }

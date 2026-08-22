@@ -10,7 +10,7 @@
 
 use crate::artifacts::assembly::mutations::{change_seed, change_weight, connect_slots, create_rule, create_slot, delete_rule, delete_slot, disconnect_slots, remove_weight};
 use crate::artifacts::assembly::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
-use crate::artifacts::assembly::{ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA, AssemblyMutation, AssemblySnapshot};
+use crate::artifacts::assembly::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
 use crate::editor::assembly::modes::edit;
 use crate::editor::assembly::modes::edit::windows::structure;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
@@ -83,9 +83,7 @@ impl ArtifactEditor for AssemblyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let (mutation, description) = match command {
-            AssemblyEditorCommand::CreateSlot { index, id, x, y, z, pinned_module_id } => {
-                (create_slot(*index, AssemblySlot { id: id.clone(), x: *x, y: *y, z: *z, pinned_module_id: pinned_module_id.clone() }), format!("Create slot {id}"))
-            }
+            AssemblyEditorCommand::CreateSlot { index, id, x, y, z, pinned_module_id } => (create_slot(*index, AssemblySlot { id: id.clone(), x: *x, y: *y, z: *z, pinned_module_id: pinned_module_id.clone() }), format!("Create slot {id}")),
             AssemblyEditorCommand::DeleteSlot { id } => (delete_slot(id.clone()), format!("Delete slot {id}")),
             AssemblyEditorCommand::CreateRule { index, id, module_a_id, module_b_id, allowed } => {
                 (create_rule(*index, AssemblyRule { id: id.clone(), module_a_id: module_a_id.clone(), module_b_id: module_b_id.clone(), allowed: *allowed, ..Default::default() }), format!("Create rule {id}"))
@@ -102,17 +100,17 @@ impl ArtifactEditor for AssemblyEditor {
         Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_assembly_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_assembly_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(ASSEMBLY_DIALECT)
         .document(["semio", "assembly"])
         .icon_id("network")
@@ -129,20 +127,20 @@ pub async fn create_assembly_editor() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_assembly_editor_builds_a_definition_for_the_editor_role() {
+    #[test]
+    fn create_assembly_editor_builds_a_definition_for_the_editor_role() {
         let def = create_assembly_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, ASSEMBLY_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn editor_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AssemblyEditor as ArtifactEditor>::DIALECT, ASSEMBLY_DIALECT);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn editor_declares_the_structure_window() {
+    #[test]
+    fn editor_declares_the_structure_window() {
         let def = create_assembly_editor();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
     }

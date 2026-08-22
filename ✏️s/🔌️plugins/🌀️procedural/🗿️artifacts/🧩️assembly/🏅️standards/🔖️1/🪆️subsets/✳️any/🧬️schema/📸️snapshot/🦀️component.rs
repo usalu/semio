@@ -108,16 +108,16 @@ impl Default for AssemblySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Addressing
-pub async fn slot_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub fn slot_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.slots.iter().position(|slot| slot.id == id)
 }
-pub async fn edge_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub fn edge_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.edges.iter().position(|edge| edge.id == id)
 }
-pub async fn rule_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
+pub fn rule_index(snapshot: &AssemblySnapshot, id: &str) -> Option<usize> {
     snapshot.rules.iter().position(|rule| rule.id == id)
 }
-pub async fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Option<usize> {
+pub fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Option<usize> {
     snapshot.weights.iter().position(|weight| weight.module_id == module_id)
 }
 //#endregion 🔖️Addressing
@@ -127,16 +127,16 @@ pub async fn weight_index(snapshot: &AssemblySnapshot, module_id: &str) -> Optio
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn default_snapshot_is_empty_and_zero_seeded() {
+    #[test]
+    fn default_snapshot_is_empty_and_zero_seeded() {
         let snapshot = AssemblySnapshot::default();
         assert_eq!(snapshot.schema, ASSEMBLY_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.seed, 0);
         assert!(snapshot.slots.is_empty() && snapshot.edges.is_empty() && snapshot.modules.is_empty() && snapshot.weights.is_empty() && snapshot.rules.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn json_round_trips() {
+    #[test]
+    fn json_round_trips() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
         snapshot.edges.push(AssemblySlotEdge { id: "e1".into(), from_slot_id: "s1".into(), to_slot_id: "s1".into() });
@@ -147,8 +147,8 @@ mod tests {
         assert_eq!(snapshot, back);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn addressing_finds_existing_and_misses_unknown() {
+    #[test]
+    fn addressing_finds_existing_and_misses_unknown() {
         let mut snapshot = AssemblySnapshot::default();
         snapshot.slots.push(AssemblySlot { id: "s1".into(), ..Default::default() });
         assert_eq!(slot_index(&snapshot, "s1"), Some(0));

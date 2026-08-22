@@ -13,7 +13,7 @@ pub struct NodeGraphViewport {
     pub viewport_json: String,
 }
 
-pub async fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     match serde_json::from_str::<CameraJson>(&payload.viewport_json) {
         Ok(camera) => Ok(Emit::config(vec![Procedural2dConfigMutation::SetCamera { camera }])),
         Err(_) => Ok(Emit::default()),

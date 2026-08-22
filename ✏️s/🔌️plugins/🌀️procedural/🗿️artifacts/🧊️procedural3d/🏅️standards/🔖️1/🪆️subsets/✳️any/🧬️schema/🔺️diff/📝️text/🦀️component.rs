@@ -36,7 +36,7 @@ pub struct LayoutDiff {
     pub set: Vec<(String, WidgetLayout)>,
 }
 
-pub(crate) async fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
+pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
     for id in &diff.removed {
         widgets.retain(|widget| widget_id(widget) != id);
     }
@@ -49,7 +49,7 @@ pub(crate) async fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &Widgets
     }
 }
 
-pub(crate) async fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
+pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
     for id in &diff.removed {
         synapses.retain(|synapse| synapse.id != *id);
     }
@@ -62,7 +62,7 @@ pub(crate) async fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &
     }
 }
 
-async fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
+fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -72,7 +72,7 @@ async fn apply_layout_diff(layout: &mut std::collections::BTreeMap<String, Widge
 }
 
 /// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub async fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowFixture {
+pub fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowFixture {
     let mut next = fixture.clone();
     apply_widgets_diff(&mut next.widgets, widgets);
     apply_synapses_diff(&mut next.synapses, synapses);
@@ -87,7 +87,7 @@ pub async fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff,
 }
 
 /// 🧩 Applies generation mutations onto a cloned play state.
-pub async fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
     let mut next = state.clone();
     for operation in ops {
         apply_generation_mutation(&mut next, operation);
@@ -99,7 +99,7 @@ pub async fn apply_generation_helpers(state: &GenerationPlayState, ops: &[Genera
 //#region 🔖️Apply
 impl Procedural3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Procedural3dArtifact) -> protocol::MutationApplyResult<Procedural3dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Procedural3dArtifact) -> protocol::MutationApplyResult<Procedural3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -153,7 +153,7 @@ impl Procedural3dDiff {
 }
 
 impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
-    async fn apply(&self, snapshot: &Procedural3dSnapshot) -> protocol::MutationApplyResult<Procedural3dSnapshot> {
+    fn apply(&self, snapshot: &Procedural3dSnapshot) -> protocol::MutationApplyResult<Procedural3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -168,7 +168,7 @@ impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -200,13 +200,13 @@ impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
-pub async fn diff_fixture_from_helpers(base: &Procedural3dSnapshot, widgets: WidgetsDiff, synapses: SynapsesDiff, layout: LayoutDiff, camera: Option<CameraJson>, schema: Option<String>) -> Procedural3dDiff {
+pub fn diff_fixture_from_helpers(base: &Procedural3dSnapshot, widgets: WidgetsDiff, synapses: SynapsesDiff, layout: LayoutDiff, camera: Option<CameraJson>, schema: Option<String>) -> Procedural3dDiff {
     let fixture = apply_fixture_helpers(&base.fixture, &widgets, &synapses, &layout, camera.as_ref(), schema.as_deref());
     Procedural3dDiff { fixture: Some(fixture), ..Procedural3dDiff::default() }
 }
 
 /// 🏗️ Generation field delta after applying ordered generation mutations.
-pub async fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<GenerationMutation>) -> Procedural3dDiff {
+pub fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<GenerationMutation>) -> Procedural3dDiff {
     let generation = apply_generation_helpers(&base.generation, &ops);
     Procedural3dDiff { generation: Some(generation), ..Procedural3dDiff::default() }
 }
@@ -217,8 +217,8 @@ pub async fn diff_generation_from_ops(base: &Procedural3dSnapshot, ops: Vec<Gene
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn diff_absorb_prefers_incoming_scalars() {
+    #[test]
+    fn diff_absorb_prefers_incoming_scalars() {
         let mut first = Procedural3dDiff { show_mode: Some("shaded".into()), ..Procedural3dDiff::default() };
         first.absorb(Procedural3dDiff { locale: Some("de-DE".into()), preview_camera: Some(Procedural3dPreviewCamera::default()), ..Procedural3dDiff::default() });
         assert_eq!(first.show_mode.as_deref(), Some("shaded"));

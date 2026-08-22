@@ -1,0 +1,997 @@
+{
+  "manifests": 83,
+  "externalRows": 272,
+  "evidencedRows": 123,
+  "unownedRows": [
+    {
+      "dependency": "typescript",
+      "manifest": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/package.json",
+      "scope": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "♻️mit-bestand/🧺️demonstrator/package.json",
+      "scope": "♻️mit-bestand/🧺️demonstrator",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/✒️writer",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/➗️mathematical",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🌀️procedural",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🌊️flow",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🌍️gis",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🌿️vcs",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎞️animate",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎞️animate",
+      "evidence": []
+    },
+    {
+      "dependency": "pdfjs-dist",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎞️animate",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎞️animate",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎥️shooting",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎪️demonstrator",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🎬️sequence",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🏗️fem",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🏛️architect",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🏭️process",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/💠️lowpoly",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/💡️reasoning",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📋️forms",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📏️layout",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/drei",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/fiber",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "@tailwindcss/vite",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/three",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "three",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "vite",
+      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📕️norm",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📖️playbook",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📜️imperative",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/📸️remodel",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🔋️energy",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🔱️trinity",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🕸️dag",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🖍️draw",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🖨️raster",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🗄️stdio",
+      "evidence": []
+    },
+    {
+      "dependency": "vitest",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🗄️stdio",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🗒️note",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/drei",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/fiber",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@tailwindcss/vite",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/three",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "@vitejs/plugin-react",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "brepjs",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "brepjs-opencascade",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "chevrotain",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "react",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "three",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "vite",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "xstate",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧩️puzzle",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🧱️block",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🪐️space",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
+      "scope": "✏️s/🔌️plugins/🪵️sourcing",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🌎️hub/📦️packages/🟦️typescript/package.json",
+      "scope": "🌎️hub",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+      "scope": "🌎️hub/🔨️modules/🛡️admin",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+      "scope": "🌎️hub/🔨️modules/🛡️admin",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+      "scope": "🌎️hub/🔨️modules/🛡️admin",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/🎠️kernel",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/📡️replication",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui/🎨️styling",
+      "evidence": []
+    },
+    {
+      "dependency": "@mdx-js/rollup",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@tailwindcss/typography",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@vitest/coverage-v8",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "postcss",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "rehype-autolink-headings",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "rehype-slug",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "remark-frontmatter",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "remark-gfm",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "remark-mdx-frontmatter",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "tailwindcss",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🔨️modules/🖱️ui",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/🖼️assets",
+      "evidence": []
+    },
+    {
+      "dependency": "jsdom",
+      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/🖼️assets",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🔨️modules/🧊️3d",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/drei",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "@react-three/fiber",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/three",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "vite",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "vitest",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer",
+      "evidence": []
+    },
+    {
+      "dependency": "vite",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/three",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell",
+      "evidence": []
+    },
+    {
+      "dependency": "@bytecodealliance/jco",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev",
+      "evidence": []
+    },
+    {
+      "dependency": "pngjs",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🖥️server",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/vscode",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "@vscode/test-electron",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "@vscode/vsce",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "vite",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
+      "evidence": []
+    },
+    {
+      "dependency": "@nx/devkit",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+      "evidence": []
+    },
+    {
+      "dependency": "nx",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react-dom",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "react",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator",
+      "evidence": []
+    },
+    {
+      "dependency": "@nx/devkit",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/node",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "@types/react",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "@vitest/coverage-v8",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "binaryen",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "chevrotain",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "dependency-cruiser",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "esbuild",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "eslint",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "eslint-plugin-react-hooks",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "playwright",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "react-dom",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    },
+    {
+      "dependency": "typescript",
+      "manifest": "package.json",
+      "scope": "",
+      "evidence": []
+    }
+  ],
+  "undeclaredImports": [],
+  "lockMismatches": [
+    {
+      "dependency": "rehype-stringify",
+      "kind": "stale-in-lock",
+      "lockVersion": "^10.0.1",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "remark-gfm",
+      "kind": "stale-in-lock",
+      "lockVersion": "^4.0.1",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "remark-parse",
+      "kind": "stale-in-lock",
+      "lockVersion": "^11.0.0",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "remark-rehype",
+      "kind": "stale-in-lock",
+      "lockVersion": "^11.1.1",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "unified",
+      "kind": "stale-in-lock",
+      "lockVersion": "^11.0.5",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@mdx-js/react",
+      "kind": "stale-in-lock",
+      "lockVersion": "^3.1.1",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@radix-ui/react-avatar",
+      "kind": "stale-in-lock",
+      "lockVersion": "^1.1.11",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@radix-ui/react-collapsible",
+      "kind": "stale-in-lock",
+      "lockVersion": "^1.1.11",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@radix-ui/react-dropdown-menu",
+      "kind": "stale-in-lock",
+      "lockVersion": "^2.1.16",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@radix-ui/react-slot",
+      "kind": "stale-in-lock",
+      "lockVersion": "^1.2.5",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "@radix-ui/react-toggle",
+      "kind": "stale-in-lock",
+      "lockVersion": "^1.1.3",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "clsx",
+      "kind": "stale-in-lock",
+      "lockVersion": "^2.1.1",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    },
+    {
+      "dependency": "tailwind-merge",
+      "kind": "stale-in-lock",
+      "lockVersion": "^3.4.0",
+      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
+      "section": "dependencies"
+    }
+  ],
+  "lockFixtureChecks": 5,
+  "lockWorkspaces": 44
+}

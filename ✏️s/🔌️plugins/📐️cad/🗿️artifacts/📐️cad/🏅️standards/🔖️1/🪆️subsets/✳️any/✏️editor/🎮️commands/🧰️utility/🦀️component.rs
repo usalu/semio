@@ -5,7 +5,7 @@ use crate::artifacts::cad::CadPaneId;
 use crate::artifacts::cad::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_config_from_runtime, cad_pane_id_from_suffix, cad_window_id_for_pane, runtime_of, snapshot_of};
+use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, preview_transition_snapshot_of, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
         // any in-progress engagement session / rubber-band scratch so a stale preview cannot
         // leak across a utility switch.
@@ -27,9 +27,8 @@ pub mod set_active_utility {
         runtime.engagement_input.clear();
         runtime.engagement_session = None;
         runtime.engagement_step = "Idle".into();
-        let mut config = cad_config_from_runtime(&runtime, cfg.snapshot);
-        config.active_utility_id = payload.utility_id.clone();
-        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
+        runtime.active_utility_id = payload.utility_id.clone();
+        Ok(Emit::config(vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -46,7 +45,7 @@ pub mod set_dislocate_option {
         pub pressed: Option<bool>,
     }
 
-    pub async fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let window_id = cad_window_id_for_pane(pane);
@@ -56,7 +55,7 @@ pub mod set_dislocate_option {
             "rotate" => options.rotate_enabled = payload.pressed.unwrap_or(!options.rotate_enabled),
             _ => {}
         }
-        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)]))
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
     }
 }
 //#endregion 🔖️SetDislocateOption

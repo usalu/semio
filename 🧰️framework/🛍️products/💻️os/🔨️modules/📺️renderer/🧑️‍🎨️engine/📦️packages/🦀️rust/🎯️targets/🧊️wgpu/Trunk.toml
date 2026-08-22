@@ -2,6 +2,7 @@
 target = "🌐️index.html"
 dist = "../../../../../../../../../../.🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu"
 public_url = "/"
+filehash = false
 
 [watch]
 watch = ["📦️glue.rs", "🟦️typescript", "🌐️index.html", "../../../../../../🧑️‍💻️dev/🔌️plugin-modules"]

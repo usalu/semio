@@ -29,14 +29,14 @@ pub async fn definition() -> PanelTabDefinition {
 /// 🏷️ Display label for a catalog id, resolved against `installed_catalogs()` — falls back to the raw
 /// id if the catalog that seeded a workshop machine was since uninstalled (never resolved back, per
 /// `WorkshopMachine::catalog_id`'s informational-only contract).
-async fn catalog_label(catalog_id: &str) -> String {
-    installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map_or_else(|| catalog_id.to_string(), |catalog| catalog.label().to_string())
+async fn catalog_label(contributions_json: &str, catalog_id: &str) -> String {
+    installed_catalogs(contributions_json).into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map_or_else(|| catalog_id.to_string(), |catalog| catalog.label().to_string())
 }
 
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy.
-pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> UiNode {
     // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
     // composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
     // `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — every capability rule is treated
@@ -70,7 +70,7 @@ pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> Ui
             })
             .collect();
         let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
-        let section_label = catalog_id.map_or_else(|| labels.workshop.into(), |id| Label::data(catalog_label(id)));
+        let section_label = catalog_id.map_or_else(|| labels.workshop.into(), |id| Label::data(catalog_label(contributions_json, id)));
         builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items);
     }
     let stock_items = vec![

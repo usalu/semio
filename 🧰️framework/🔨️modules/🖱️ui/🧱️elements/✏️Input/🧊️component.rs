@@ -19,7 +19,7 @@ pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<
     let border = if focused { ctx.theme.border_emphasized } else { ctx.theme.border_normal };
     push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg);
     let (display, muted) = if focused {
-        (ctx.input.text_buffer.clone(), false)
+        (ctx.input.text_view().to_string(), false)
     } else if value.is_empty() {
         (placeholder.unwrap_or("").to_string(), true)
     } else {
@@ -27,7 +27,8 @@ pub(crate) fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<
     };
     draw_text(ctx, &display, bounds.x + 8.0, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, if muted { ctx.theme.text_muted } else { ctx.theme.text });
     if focused {
-        let cursor_x = bounds.x + 8.0 + measure_text_width(ctx, &display[..ctx.input.cursor_pos.min(display.len())], ctx.theme.font_size_body);
+        let cursor = ctx.input.text_view_cursor();
+        let cursor_x = bounds.x + 8.0 + measure_text_width(ctx, &display[..cursor], ctx.theme.font_size_body);
         ctx.draw.push_solid([cursor_x, bounds.y + 6.0, 1.0, bounds.h - 12.0], ctx.theme.text);
     }
     ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(id.to_string()), kind: HitKind::Input, drag_axis: None, drag_data: None });

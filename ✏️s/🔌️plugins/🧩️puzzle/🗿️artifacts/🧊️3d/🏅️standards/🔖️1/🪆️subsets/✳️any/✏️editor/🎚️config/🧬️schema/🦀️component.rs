@@ -93,6 +93,10 @@ pub struct Puzzle3dConfig {
     #[state(config)]
     pub fill_count: u32,
     #[state(config)]
+    pub fill_apply_generation: u64,
+    #[state(config)]
+    pub fill_applied_count: u32,
+    #[state(config)]
     pub fill_checkpoint: Vec<u8>,
     #[state(config)]
     pub brush_candidate_index: usize,

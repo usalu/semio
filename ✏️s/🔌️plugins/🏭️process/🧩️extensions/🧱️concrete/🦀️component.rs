@@ -19,15 +19,15 @@ fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capability
 }
 
 impl MachineCatalog for ConcreteCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "concrete"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Concrete"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "slab"
     }
 

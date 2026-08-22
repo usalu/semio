@@ -21,19 +21,19 @@ pub struct UpdateSynapse {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for UpdateSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "synapse", kind: "update-synapse", record: "UpdatedSynapse" };
 
-    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::update_synapse::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::update_synapse::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Update synapse \"{}\"", self.synapse.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.synapse.id.clone()]
     }
 }

@@ -136,6 +136,10 @@ pub mod guest {
         async fn cancel_job(job: u64) {
             profile::jobs::cancel_job(job);
         }
+
+        async fn take_segmented_download_chunk(_instance_id: u32, _operation_id: u64) -> Result<Option<Vec<u8>>, PluginError> {
+            Ok(None)
+        }
     }
 
     impl CheckpointGuest for FixtureGuest {

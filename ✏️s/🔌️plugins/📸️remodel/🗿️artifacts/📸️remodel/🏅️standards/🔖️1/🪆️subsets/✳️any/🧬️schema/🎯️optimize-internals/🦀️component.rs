@@ -11,21 +11,21 @@ use std::collections::HashMap;
 /// whose parameters live on a manifold (e.g. `SE3`-parameterized poses in a later camera-geometry
 /// crate) override it; everything else gets ordinary Euclidean addition for free.
 pub trait LeastSquaresProblem {
-    async fn residual_count(&self) -> usize;
-    async fn parameter_count(&self) -> usize;
-    async fn residuals(&self, x: &VecD, out: &mut VecD);
-    async fn jacobian(&self, x: &VecD, out: &mut MatD);
+    fn residual_count(&self) -> usize;
+    fn parameter_count(&self) -> usize;
+    fn residuals(&self, x: &VecD, out: &mut VecD);
+    fn jacobian(&self, x: &VecD, out: &mut MatD);
 
     /// 🧭️ Retracts a local update `dx` onto the parameter manifold at `x`; ordinary vector addition
     /// for Euclidean parameterizations.
-    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         x.add(dx)
     }
 }
 
 /// 🔬️ Central-difference Jacobian via [`LeastSquaresProblem::plus`], for problems where an analytic
 /// Jacobian is unavailable or for cross-checking one that is.
-pub async fn numeric_jacobian(problem: &impl LeastSquaresProblem, x: &VecD, eps: f64, out: &mut MatD) {
+pub fn numeric_jacobian(problem: &impl LeastSquaresProblem, x: &VecD, eps: f64, out: &mut MatD) {
     let n = problem.parameter_count();
     let m = problem.residual_count();
     for j in 0..n {
@@ -59,7 +59,7 @@ pub enum RobustLoss {
 
 impl RobustLoss {
     /// ⚖️ IRLS reweighting factor for a squared residual `r2`.
-    pub async fn weight(&self, r2: f64) -> f64 {
+    pub fn weight(&self, r2: f64) -> f64 {
         match *self {
             Self::Trivial => 1.0,
             Self::Huber(delta) => {
@@ -84,7 +84,7 @@ impl RobustLoss {
     }
 
     /// 📉️ Robust cost `rho(r)` for a squared residual `r2`, for reporting total cost under the loss.
-    pub async fn rho(&self, r2: f64) -> f64 {
+    pub fn rho(&self, r2: f64) -> f64 {
         match *self {
             Self::Trivial => 0.5 * r2,
             Self::Huber(delta) => {
@@ -116,7 +116,7 @@ impl RobustLoss {
 // #region 🔖️GaussNewton
 /// 🧮️ Assembles the IRLS-weighted `(JᵀWJ, JᵀWr)` normal-equation pieces and the robustified cost at
 /// `x` — the Gauss-Newton machinery that [`levenberg_marquardt`] damps and iterates.
-async fn evaluate_weighted(problem: &impl LeastSquaresProblem, x: &VecD, loss: &RobustLoss) -> (MatD, VecD, f64) {
+fn evaluate_weighted(problem: &impl LeastSquaresProblem, x: &VecD, loss: &RobustLoss) -> (MatD, VecD, f64) {
     let m = problem.residual_count();
     let n = problem.parameter_count();
     let mut r = VecD::zeros(m);
@@ -131,7 +131,7 @@ async fn evaluate_weighted(problem: &impl LeastSquaresProblem, x: &VecD, loss: &
 
 /// 🧮️ Solves the (possibly damped) normal-equation system `A dx = b` via Cholesky, falling back to
 /// partial-pivoted LU when `A` isn't positive definite (indefinite damping regime, near-singular Jacobian).
-async fn solve_normal_equations(a: &MatD, b: &VecD) -> Option<VecD> {
+fn solve_normal_equations(a: &MatD, b: &VecD) -> Option<VecD> {
     match cholesky(a) {
         Ok(l) => Some(cholesky_solve(&l, b)),
         Err(_) => a.lu_solve(b),
@@ -140,7 +140,7 @@ async fn solve_normal_equations(a: &MatD, b: &VecD) -> Option<VecD> {
 
 /// 📐️ Local quadratic model's predicted cost reduction `0.5 * dx . (lambda * diag(H) * dx - g)`
 /// (Madsen/Nielsen/Tingleff eq. 3.16), used by the Nielsen gain-ratio accept/reject rule.
-async fn quadratic_gain(h: &MatD, g: &VecD, d: &VecD, lambda: f64) -> f64 {
+fn quadratic_gain(h: &MatD, g: &VecD, d: &VecD, lambda: f64) -> f64 {
     (0..d.len()).map(|i| d.get(i) * (lambda * h.get(i, i).max(1e-12) * d.get(i) - g.get(i))).sum()
 }
 
@@ -148,7 +148,7 @@ async fn quadratic_gain(h: &MatD, g: &VecD, d: &VecD, lambda: f64) -> f64 {
 /// (`cfg.loss`, `cfg.max_iters`, `cfg.tol_grad`, `cfg.tol_dx` from [`LmConfig`] — `initial_lambda` is
 /// unused here) and always accepts the step; exact in one iteration on linear residuals, but has no
 /// trust-region fallback, so a rank-deficient Jacobian simply halts iteration early rather than damping.
-pub async fn gauss_newton(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &LmConfig) -> LmResult {
+pub fn gauss_newton(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &LmConfig) -> LmResult {
     let mut x = x0;
     let (mut jtj, mut jtr, mut cost) = evaluate_weighted(problem, &x, &cfg.loss);
     let mut iterations = 0usize;
@@ -209,7 +209,7 @@ pub struct LmResult {
 /// reweighting per [`LmConfig::loss`] and stepped via [`LeastSquaresProblem::plus`]. Damping follows
 /// Nielsen's classic update rule: accepted steps shrink `lambda` by the gain ratio's cube law, rejected
 /// steps grow it by a doubling factor `nu`.
-pub async fn levenberg_marquardt(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &LmConfig) -> LmResult {
+pub fn levenberg_marquardt(problem: &impl LeastSquaresProblem, x0: VecD, cfg: &LmConfig) -> LmResult {
     let n = problem.parameter_count();
     let mut x = x0;
     let (mut jtj, mut jtr, mut cost) = evaluate_weighted(problem, &x, &cfg.loss);
@@ -275,12 +275,12 @@ pub struct ResidualTerm {
 /// one B block — the structure [`schur_lm`] exploits to eliminate the B blocks analytically. Generic
 /// over what A/B actually are; camera- or `SE3`-specific parameterizations belong in a dependent crate.
 pub trait BipartiteResiduals {
-    async fn num_a_blocks(&self) -> usize;
-    async fn num_b_blocks(&self) -> usize;
-    async fn a_block_dim(&self) -> usize;
-    async fn b_block_dim(&self) -> usize;
-    async fn residual_terms(&self) -> &[ResidualTerm];
-    async fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD);
+    fn num_a_blocks(&self) -> usize;
+    fn num_b_blocks(&self) -> usize;
+    fn a_block_dim(&self) -> usize;
+    fn b_block_dim(&self) -> usize;
+    fn residual_terms(&self) -> &[ResidualTerm];
+    fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD);
 }
 
 /// 📦️ Outcome of [`schur_lm`]: refined A/B blocks, final cost, and the marginal covariance diagonal
@@ -296,7 +296,7 @@ pub struct SchurResult {
 }
 
 /// 🧮️ Accumulates `Jᵀ W J` into `target` (`target` sized `j.cols x j.cols`) for a single term's block Jacobian.
-async fn add_weighted_gram(target: &mut MatD, j: &MatD, w: f64) {
+fn add_weighted_gram(target: &mut MatD, j: &MatD, w: f64) {
     for row in 0..j.rows {
         for a in 0..j.cols {
             let ja = j.get(row, a);
@@ -311,7 +311,7 @@ async fn add_weighted_gram(target: &mut MatD, j: &MatD, w: f64) {
 }
 
 /// 🧮️ Accumulates the `ja^T W jb` cross block (sized `ja.cols x jb.cols`) for a term touching both sides.
-async fn add_weighted_cross(target: &mut MatD, ja: &MatD, jb: &MatD, w: f64) {
+fn add_weighted_cross(target: &mut MatD, ja: &MatD, jb: &MatD, w: f64) {
     for row in 0..ja.rows {
         for a in 0..ja.cols {
             let va = ja.get(row, a);
@@ -326,7 +326,7 @@ async fn add_weighted_cross(target: &mut MatD, ja: &MatD, jb: &MatD, w: f64) {
 }
 
 /// 🧮️ Accumulates `Jᵀ W r` into `target`.
-async fn add_weighted_jt_r(target: &mut VecD, j: &MatD, r: &VecD, w: f64) {
+fn add_weighted_jt_r(target: &mut VecD, j: &MatD, r: &VecD, w: f64) {
     for row in 0..j.rows {
         let rw = w * r.get(row);
         for a in 0..j.cols {
@@ -338,7 +338,7 @@ async fn add_weighted_jt_r(target: &mut VecD, j: &MatD, r: &VecD, w: f64) {
 /// 🧮️ One robustified pass over every residual term, accumulating the block-diagonal `Haa`/`Hbb`
 /// Hessian pieces, the sparse `Hab` cross blocks, the gradient pieces, and the total cost.
 #[allow(clippy::type_complexity, reason = "the block Hessian pieces are each a distinct accumulator with their own shape; bundling them into a struct would just rename the same five return values without reducing what the caller needs to unpack")]
-async fn accumulate_bipartite(problem: &impl BipartiteResiduals, a_params: &[VecD], b_params: &[VecD], loss: &RobustLoss) -> (Vec<MatD>, Vec<MatD>, HashMap<(usize, usize), MatD>, Vec<VecD>, Vec<VecD>, f64) {
+fn accumulate_bipartite(problem: &impl BipartiteResiduals, a_params: &[VecD], b_params: &[VecD], loss: &RobustLoss) -> (Vec<MatD>, Vec<MatD>, HashMap<(usize, usize), MatD>, Vec<VecD>, Vec<VecD>, f64) {
     let ad = problem.a_block_dim();
     let bd = problem.b_block_dim();
     let num_a = problem.num_a_blocks();
@@ -377,7 +377,7 @@ async fn accumulate_bipartite(problem: &impl BipartiteResiduals, a_params: &[Vec
     clippy::too_many_arguments,
     reason = "each argument is a distinct accumulator (per-block Hessian/gradient pieces plus the damping scalar) produced by accumulate_bipartite; bundling them into a struct would just rename this same data without reducing what the function needs"
 )]
-async fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &HashMap<(usize, usize), MatD>, ga: &[VecD], gb: &[VecD], lambda: f64) -> Option<(Vec<VecD>, Vec<VecD>, MatD)> {
+fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &HashMap<(usize, usize), MatD>, ga: &[VecD], gb: &[VecD], lambda: f64) -> Option<(Vec<VecD>, Vec<VecD>, MatD)> {
     let num_b = hbb.len();
     let total_a = num_a * ad;
     let mut reduced_h = MatD::zeros(total_a, total_a);
@@ -456,7 +456,7 @@ async fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &H
 
 /// 🧮️ Marginal covariance diagonal blocks: inverts the dense reduced system once (column-by-column
 /// solves) and slices out each A block's own `ad x ad` diagonal submatrix.
-async fn covariance_diagonals(h: &MatD, ad: usize, num_a: usize) -> Vec<MatD> {
+fn covariance_diagonals(h: &MatD, ad: usize, num_a: usize) -> Vec<MatD> {
     let total = h.rows;
     let mut inv = MatD::zeros(total, total);
     for col in 0..total {
@@ -485,7 +485,7 @@ async fn covariance_diagonals(h: &MatD, ad: usize, num_a: usize) -> Vec<MatD> {
 /// the B blocks each iteration; algebraically exact (not an approximation of the dense normal
 /// equations) and Nielsen accept/reject exactly as [`levenberg_marquardt`]. Both A and B updates are
 /// applied via plain elementwise addition — this generic solver has no notion of a manifold retraction.
-pub async fn schur_lm(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<VecD>, cfg: &LmConfig) -> SchurResult {
+pub fn schur_lm(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<VecD>, cfg: &LmConfig) -> SchurResult {
     let ad = problem.a_block_dim();
     let num_a = a0.len();
     let mut a_params = a0;
@@ -545,7 +545,7 @@ pub async fn schur_lm(problem: &impl BipartiteResiduals, a0: Vec<VecD>, b0: Vec<
 }
 
 /// 📊️ The marginal covariance diagonal blocks computed during `result`'s final accepted iteration.
-pub async fn camera_covariances(result: &SchurResult) -> &[MatD] {
+pub fn camera_covariances(result: &SchurResult) -> &[MatD] {
     &result.a_block_covariance_diagonals
 }
 // #endregion 🔖️SchurBundle
@@ -557,8 +557,8 @@ pub trait MinimalSolver {
     type Datum: Clone;
     type Model: Clone;
     const SAMPLE_SIZE: usize;
-    async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model>;
-    async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64;
+    fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model>;
+    fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64;
 }
 
 /// 📏️ How a candidate model's fit to the full dataset is scored.
@@ -596,7 +596,7 @@ pub struct RansacResult<M> {
 
 /// 📏️ `(msac_cost, inlier_count)` for `model` against every datum — both tracked together so
 /// [`is_better`] can compare consistently regardless of [`RansacScoring`] mode.
-async fn score_model<S: MinimalSolver>(solver: &S, data: &[S::Datum], model: &S::Model, threshold: f64) -> (f64, usize) {
+fn score_model<S: MinimalSolver>(solver: &S, data: &[S::Datum], model: &S::Model, threshold: f64) -> (f64, usize) {
     let t2 = threshold * threshold;
     let mut inlier_count = 0usize;
     let mut msac_cost = 0.0;
@@ -613,14 +613,14 @@ async fn score_model<S: MinimalSolver>(solver: &S, data: &[S::Datum], model: &S:
 
 /// ⚖️ Whether `candidate` beats `current_best` under `scoring` (higher inlier count wins for
 /// [`RansacScoring::InlierCount`], lower truncated cost wins for [`RansacScoring::Msac`]).
-async fn is_better(scoring: RansacScoring, candidate: (f64, usize), current_best: (f64, usize)) -> bool {
+fn is_better(scoring: RansacScoring, candidate: (f64, usize), current_best: (f64, usize)) -> bool {
     match scoring {
         RansacScoring::InlierCount => candidate.1 > current_best.1,
         RansacScoring::Msac => candidate.0 < current_best.0,
     }
 }
 
-async fn collect_inliers<S: MinimalSolver>(solver: &S, data: &[S::Datum], model: &S::Model, threshold: f64) -> Vec<usize> {
+fn collect_inliers<S: MinimalSolver>(solver: &S, data: &[S::Datum], model: &S::Model, threshold: f64) -> Vec<usize> {
     data.iter().enumerate().filter(|(_, datum)| solver.residual(model, datum).abs() <= threshold).map(|(i, _)| i).collect()
 }
 
@@ -628,7 +628,7 @@ async fn collect_inliers<S: MinimalSolver>(solver: &S, data: &[S::Datum], model:
 /// returns, and adaptively shrinks the iteration cap via the standard confidence formula whenever a
 /// better model is found. `on_new_best` lets [`lo_ransac`] hook in a local-optimization refinement
 /// without duplicating the sampling/scoring/adaptive-cap machinery.
-async fn ransac_core<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, mut on_new_best: impl FnMut(S::Model, (f64, usize)) -> (S::Model, (f64, usize))) -> Option<(S::Model, (f64, usize))> {
+fn ransac_core<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, mut on_new_best: impl FnMut(S::Model, (f64, usize)) -> (S::Model, (f64, usize))) -> Option<(S::Model, (f64, usize))> {
     if data.len() < S::SAMPLE_SIZE {
         return None;
     }
@@ -666,7 +666,7 @@ async fn ransac_core<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &Rans
     best
 }
 
-async fn finish<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, model: S::Model, score: (f64, usize)) -> RansacResult<S::Model> {
+fn finish<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, model: S::Model, score: (f64, usize)) -> RansacResult<S::Model> {
     let inliers = collect_inliers(solver, data, &model, cfg.threshold);
     let score = match cfg.scoring {
         RansacScoring::InlierCount => score.1 as f64,
@@ -678,7 +678,7 @@ async fn finish<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacCon
 /// 🎲️ Standard RANSAC: repeatedly fits a minimal-sample model and keeps the best-scoring hypothesis,
 /// adaptively shrinking the iteration budget as the estimated inlier ratio improves. `None` if `data`
 /// is smaller than the minimal sample size or no hypothesis ever fit.
-pub async fn ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig) -> Option<RansacResult<S::Model>> {
+pub fn ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig) -> Option<RansacResult<S::Model>> {
     let (model, score) = ransac_core(solver, data, cfg, |model, score| (model, score))?;
     Some(finish(solver, data, cfg, model, score))
 }
@@ -686,7 +686,7 @@ pub async fn ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &Ransa
 /// 🎲️ Locally-optimized RANSAC: identical to [`ransac`], except every time a new best model is found,
 /// `local_opt` is offered that model's current inlier set and may return a refined model, which
 /// replaces the candidate whenever it scores strictly better.
-pub async fn lo_ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, local_opt: impl Fn(&[S::Datum], &S::Model) -> Option<S::Model>) -> Option<RansacResult<S::Model>> {
+pub fn lo_ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &RansacConfig, local_opt: impl Fn(&[S::Datum], &S::Model) -> Option<S::Model>) -> Option<RansacResult<S::Model>> {
     let (model, score) = ransac_core(solver, data, cfg, |model, score| {
         let inlier_idx = collect_inliers(solver, data, &model, cfg.threshold);
         let subset: Vec<S::Datum> = inlier_idx.iter().map(|&i| data[i].clone()).collect();
@@ -707,7 +707,7 @@ pub async fn lo_ransac<S: MinimalSolver>(solver: &S, data: &[S::Datum], cfg: &Ra
 // #endregion 🔖️Consensus
 
 // #region 🔖️Scalar
-async fn sign_or_one(v: f64) -> f64 {
+fn sign_or_one(v: f64) -> f64 {
     if v > 0.0 {
         1.0
     } else if v < 0.0 {
@@ -719,7 +719,7 @@ async fn sign_or_one(v: f64) -> f64 {
 
 /// 🔍️ Golden-section search for the minimum of a unimodal `f` on `[a, b]`, shrinking the bracket by
 /// the golden ratio each step until its width drops below `tol` (bounded to 200 steps).
-pub async fn golden_section(f: impl Fn(f64) -> f64, a: f64, b: f64, tol: f64) -> (f64, f64) {
+pub fn golden_section(f: impl Fn(f64) -> f64, a: f64, b: f64, tol: f64) -> (f64, f64) {
     let gr = (5f64.sqrt() - 1.0) / 2.0;
     let (mut lo, mut hi) = (a.min(b), a.max(b));
     let mut c = hi - gr * (hi - lo);
@@ -751,7 +751,7 @@ pub async fn golden_section(f: impl Fn(f64) -> f64, a: f64, b: f64, tol: f64) ->
 /// 🔍️ Brent's method on a bounded interval `[a, b]`: combines golden-section steps with safeguarded
 /// inverse-parabolic interpolation for superlinear convergence near the minimum (the classic
 /// Netlib/Brent `fmin` algorithm), bounded to 100 function evaluations.
-pub async fn brent_minimize(f: impl Fn(f64) -> f64, a: f64, b: f64, tol: f64) -> (f64, f64) {
+pub fn brent_minimize(f: impl Fn(f64) -> f64, a: f64, b: f64, tol: f64) -> (f64, f64) {
     let sqrt_eps = 2.220_446_049_250_313e-16_f64.sqrt();
     let golden_mean = 0.5 * (3.0 - 5f64.sqrt());
     let (mut lo, mut hi) = (a.min(b), a.max(b));
@@ -842,21 +842,21 @@ mod tests {
     struct Rosenbrock;
 
     impl LeastSquaresProblem for Rosenbrock {
-        async fn residual_count(&self) -> usize {
+        fn residual_count(&self) -> usize {
             2
         }
 
-        async fn parameter_count(&self) -> usize {
+        fn parameter_count(&self) -> usize {
             2
         }
 
-        async fn residuals(&self, x: &VecD, out: &mut VecD) {
+        fn residuals(&self, x: &VecD, out: &mut VecD) {
             let (x0, x1) = (x.get(0), x.get(1));
             out.set(0, 10.0 * (x1 - x0 * x0));
             out.set(1, 1.0 - x0);
         }
 
-        async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+        fn jacobian(&self, x: &VecD, out: &mut MatD) {
             let x0 = x.get(0);
             out.set(0, 0, -20.0 * x0);
             out.set(0, 1, 10.0);
@@ -865,8 +865,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn levenberg_marquardt_solves_rosenbrock() {
+    #[test]
+    fn levenberg_marquardt_solves_rosenbrock() {
         let cfg = LmConfig::default();
         let x0 = VecD::from_vec(vec![-1.2, 1.0]);
         let result = levenberg_marquardt(&Rosenbrock, x0, &cfg);
@@ -876,8 +876,8 @@ mod tests {
         assert!(result.cost < 1e-8, "cost = {}", result.cost);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn numeric_jacobian_matches_analytic_jacobian_for_rosenbrock() {
+    #[test]
+    fn numeric_jacobian_matches_analytic_jacobian_for_rosenbrock() {
         let x = VecD::from_vec(vec![0.7, -0.3]);
         let mut analytic = MatD::zeros(2, 2);
         Rosenbrock.jacobian(&x, &mut analytic);
@@ -895,22 +895,22 @@ mod tests {
     struct ConsistentLinearSystem;
 
     impl LeastSquaresProblem for ConsistentLinearSystem {
-        async fn residual_count(&self) -> usize {
+        fn residual_count(&self) -> usize {
             3
         }
 
-        async fn parameter_count(&self) -> usize {
+        fn parameter_count(&self) -> usize {
             2
         }
 
-        async fn residuals(&self, x: &VecD, out: &mut VecD) {
+        fn residuals(&self, x: &VecD, out: &mut VecD) {
             let (a, b) = (x.get(0), x.get(1));
             out.set(0, 2.0 * a + b - 5.0);
             out.set(1, a - b - 1.0);
             out.set(2, 3.0 * a + 2.0 * b - 8.0);
         }
 
-        async fn jacobian(&self, _x: &VecD, out: &mut MatD) {
+        fn jacobian(&self, _x: &VecD, out: &mut MatD) {
             out.set(0, 0, 2.0);
             out.set(0, 1, 1.0);
             out.set(1, 0, 1.0);
@@ -920,8 +920,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn gauss_newton_solves_consistent_linear_system_in_one_step() {
+    #[test]
+    fn gauss_newton_solves_consistent_linear_system_in_one_step() {
         let cfg = LmConfig { max_iters: 20, tol_grad: 1e-14, tol_dx: 1e-14, ..LmConfig::default() };
         let x0 = VecD::from_vec(vec![0.0, 0.0]);
         let result = gauss_newton(&ConsistentLinearSystem, x0, &cfg);
@@ -940,22 +940,22 @@ mod tests {
     }
 
     impl LeastSquaresProblem for LinearRegressionProblem {
-        async fn residual_count(&self) -> usize {
+        fn residual_count(&self) -> usize {
             self.xs.len()
         }
 
-        async fn parameter_count(&self) -> usize {
+        fn parameter_count(&self) -> usize {
             2
         }
 
-        async fn residuals(&self, x: &VecD, out: &mut VecD) {
+        fn residuals(&self, x: &VecD, out: &mut VecD) {
             let (m, b) = (x.get(0), x.get(1));
             for (i, (&xi, &yi)) in self.xs.iter().zip(self.ys.iter()).enumerate() {
                 out.set(i, m * xi + b - yi);
             }
         }
 
-        async fn jacobian(&self, _x: &VecD, out: &mut MatD) {
+        fn jacobian(&self, _x: &VecD, out: &mut MatD) {
             for (i, &xi) in self.xs.iter().enumerate() {
                 out.set(i, 0, xi);
                 out.set(i, 1, 1.0);
@@ -963,8 +963,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn huber_loss_recovers_line_that_trivial_loss_misses() {
+    #[test]
+    fn huber_loss_recovers_line_that_trivial_loss_misses() {
         let true_m = 2.0;
         let true_b = -1.0;
         let n = 40;
@@ -1003,7 +1003,7 @@ mod tests {
         observed: Vec<Vec<f64>>,
     }
 
-    async fn toy_predict(a: &VecD, b: &VecD) -> f64 {
+    fn toy_predict(a: &VecD, b: &VecD) -> f64 {
         let scale = a.get(0);
         let offset = a.get(1);
         let value = b.get(0);
@@ -1017,7 +1017,7 @@ mod tests {
     }
 
     impl FlatToyProblem<'_> {
-        async fn unpack(&self, x: &VecD) -> (Vec<VecD>, Vec<VecD>) {
+        fn unpack(&self, x: &VecD) -> (Vec<VecD>, Vec<VecD>) {
             let a = (0..self.num_cameras).map(|i| VecD::from_vec(vec![x.get(2 * i), x.get(2 * i + 1)])).collect();
             let base = 2 * self.num_cameras;
             let b = (0..self.num_points).map(|j| VecD::from_vec(vec![x.get(base + j)])).collect();
@@ -1026,15 +1026,15 @@ mod tests {
     }
 
     impl LeastSquaresProblem for FlatToyProblem<'_> {
-        async fn residual_count(&self) -> usize {
+        fn residual_count(&self) -> usize {
             self.num_cameras * self.num_points
         }
 
-        async fn parameter_count(&self) -> usize {
+        fn parameter_count(&self) -> usize {
             2 * self.num_cameras + self.num_points
         }
 
-        async fn residuals(&self, x: &VecD, out: &mut VecD) {
+        fn residuals(&self, x: &VecD, out: &mut VecD) {
             let (a, b) = self.unpack(x);
             for (i, ai) in a.iter().enumerate() {
                 for (j, bj) in b.iter().enumerate() {
@@ -1043,7 +1043,7 @@ mod tests {
             }
         }
 
-        async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+        fn jacobian(&self, x: &VecD, out: &mut MatD) {
             let (a, b) = self.unpack(x);
             for (i, ai) in a.iter().enumerate() {
                 for (j, bj) in b.iter().enumerate() {
@@ -1065,27 +1065,27 @@ mod tests {
     }
 
     impl BipartiteResiduals for SchurToyProblem<'_> {
-        async fn num_a_blocks(&self) -> usize {
+        fn num_a_blocks(&self) -> usize {
             self.model.observed.len()
         }
 
-        async fn num_b_blocks(&self) -> usize {
+        fn num_b_blocks(&self) -> usize {
             self.num_points
         }
 
-        async fn a_block_dim(&self) -> usize {
+        fn a_block_dim(&self) -> usize {
             2
         }
 
-        async fn b_block_dim(&self) -> usize {
+        fn b_block_dim(&self) -> usize {
             1
         }
 
-        async fn residual_terms(&self) -> &[ResidualTerm] {
+        fn residual_terms(&self) -> &[ResidualTerm] {
             &self.terms
         }
 
-        async fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD) {
+        fn evaluate(&self, a_params: &[VecD], b_params: &[VecD], term: &ResidualTerm) -> (VecD, MatD, MatD) {
             let i = term.a_index.expect("toy terms always touch a camera");
             let j = term.b_index.expect("toy terms always touch a point");
             let scale = a_params[i].get(0);
@@ -1100,8 +1100,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn schur_lm_matches_flat_levenberg_marquardt() {
+    #[test]
+    fn schur_lm_matches_flat_levenberg_marquardt() {
         let num_cameras = 2;
         let num_points = 8;
         let a_true: Vec<VecD> = (0..num_cameras).map(|i| VecD::from_vec(vec![1.0 + 0.3 * i as f64, 0.1 * i as f64])).collect();
@@ -1149,7 +1149,7 @@ mod tests {
         type Model = (f64, f64);
         const SAMPLE_SIZE: usize = 2;
 
-        async fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
+        fn solve(&self, sample: &[Self::Datum]) -> Vec<Self::Model> {
             let (x1, y1) = sample[0];
             let (x2, y2) = sample[1];
             if (x2 - x1).abs() < 1e-12 {
@@ -1160,12 +1160,12 @@ mod tests {
             vec![(m, b)]
         }
 
-        async fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
+        fn residual(&self, model: &Self::Model, datum: &Self::Datum) -> f64 {
             model.0 * datum.0 + model.1 - datum.1
         }
     }
 
-    async fn synthetic_line_data(seed: u64) -> (Vec<(f64, f64)>, f64, f64, usize) {
+    fn synthetic_line_data(seed: u64) -> (Vec<(f64, f64)>, f64, f64, usize) {
         let true_m = 2.0;
         let true_b = 1.0;
         let n = 100;
@@ -1185,8 +1185,8 @@ mod tests {
         (data, true_m, true_b, n - outlier_count)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn ransac_recovers_line_and_planted_inlier_count() {
+    #[test]
+    fn ransac_recovers_line_and_planted_inlier_count() {
         let (data, true_m, true_b, planted_inliers) = synthetic_line_data(2026);
         let cfg = RansacConfig { threshold: 0.2, confidence: 0.999, max_iters: 500, seed: 7, scoring: RansacScoring::Msac };
         let result = ransac(&LineSolver, &data, &cfg).expect("line is fittable");
@@ -1195,8 +1195,8 @@ mod tests {
         assert!((result.model.1 - true_b).abs() < 0.05, "b = {}", result.model.1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn lo_ransac_improves_on_plain_ransac_accuracy() {
+    #[test]
+    fn lo_ransac_improves_on_plain_ransac_accuracy() {
         let (data, true_m, true_b, _) = synthetic_line_data(2026);
         let cfg = RansacConfig { threshold: 0.2, confidence: 0.999, max_iters: 500, seed: 7, scoring: RansacScoring::Msac };
         let plain = ransac(&LineSolver, &data, &cfg).expect("line is fittable");
@@ -1223,15 +1223,15 @@ mod tests {
     // #endregion 🔖️RansacTests
 
     // #region 🔖️ScalarTests
-    #[semio_framework_async_macros::async_test]
-    async fn brent_minimize_finds_convex_minimum() {
+    #[test]
+    fn brent_minimize_finds_convex_minimum() {
         let (x, fx) = brent_minimize(|x| (x - 2.0).powi(2) + 1.0, 0.0, 5.0, 1e-10);
         assert!((x - 2.0).abs() < 1e-6, "x = {x}");
         assert!((fx - 1.0).abs() < 1e-6, "fx = {fx}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn golden_section_finds_convex_minimum() {
+    #[test]
+    fn golden_section_finds_convex_minimum() {
         let (x, fx) = golden_section(|x| (x - 2.0).powi(2) + 1.0, 0.0, 5.0, 1e-8);
         assert!((x - 2.0).abs() < 1e-4, "x = {x}");
         assert!((fx - 1.0).abs() < 1e-4, "fx = {fx}");

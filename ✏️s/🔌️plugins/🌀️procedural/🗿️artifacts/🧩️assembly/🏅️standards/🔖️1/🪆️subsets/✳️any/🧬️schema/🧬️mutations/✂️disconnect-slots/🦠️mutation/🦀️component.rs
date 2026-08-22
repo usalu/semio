@@ -13,23 +13,23 @@ pub struct DisconnectSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn disconnect_slots(id: String) -> AssemblyMutation {
+pub fn disconnect_slots(id: String) -> AssemblyMutation {
     AssemblyMutation::DisconnectSlots(DisconnectSlots { id })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for DisconnectSlots {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "slots", kind: "disconnect-slots", record: "DisconnectedSlots" };
 
-    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Disconnect slots edge \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

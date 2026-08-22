@@ -9,12 +9,12 @@ pub const ASSEMBLY_EDIT_MODE_ID: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::assembly::create_assembly_editor`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ASSEMBLY_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-pane `structure` window — a first pass has no quadrant layout to allocate.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: "stack".into(),

@@ -27,8 +27,8 @@ pub async fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelS
             continue;
         }
         let Some(frame) = stream.frames.first() else { continue };
-        let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
-        let (width, height) = (asset.width.max(1), asset.height.max(1));
+        let Some((width, height)) = crate::artifacts::remodel::remodel_asset_dimensions(scene, &frame.asset_id) else { continue };
+        let (width, height) = (width.max(1), height.max(1));
         let f = f64::from(width.max(height));
         seen.push(camera_id.clone());
         mutations.push(create_camera_calibration(CameraCalibration {

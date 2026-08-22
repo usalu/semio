@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
 /// prior call's already-committed mutations, since dispatches within one batch are sequential).
-async fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
+fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
     } else {
@@ -84,7 +84,7 @@ pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) ->
 }
 
 #[cfg(test)]
-async fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
     let mut image = remodel_image::ImageRgba8::new(w, h);
     for y in 0..h {
         for x in 0..w {

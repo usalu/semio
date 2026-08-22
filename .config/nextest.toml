@@ -2,7 +2,6 @@
 
 [profile.fundamental]
 slow-timeout = { period = "15s", terminate-after = 1 }
-test-threads = 7
 
 [profile.quick]
 slow-timeout = { period = "30s", terminate-after = 1 }

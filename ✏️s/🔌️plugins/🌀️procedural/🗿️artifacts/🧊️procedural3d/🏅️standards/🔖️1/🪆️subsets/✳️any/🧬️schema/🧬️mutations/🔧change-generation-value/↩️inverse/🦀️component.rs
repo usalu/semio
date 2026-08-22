@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use serde_json::Value;
 
-pub async fn inverse(payload: &ChangeGenerationValue, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub fn inverse(payload: &ChangeGenerationValue, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     base.generation
         .generations
         .iter()

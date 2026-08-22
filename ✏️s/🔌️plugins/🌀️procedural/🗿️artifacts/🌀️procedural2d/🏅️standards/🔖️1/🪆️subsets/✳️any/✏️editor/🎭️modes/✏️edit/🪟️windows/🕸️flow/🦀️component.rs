@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::config::Procedural2dConfig;
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const PROCEDURAL2D_PLAY_WINDOW_MAIN: &str = "procedural2d-main";
@@ -14,7 +14,7 @@ const PROCEDURAL2D_PLAY_SURFACE_MAIN: &str = "procedural2d.play.main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Fluss"),
@@ -35,7 +35,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> BuiltNode {
     let fixture = &document.fixture;
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
@@ -45,10 +45,11 @@ pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig
     // for the wrapper to stamp post-render either (see the `🧊️3d` sibling window's identical note,
     // ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `selection` is left at
     // `NodeGraphScene::base`'s empty default until a future wave threads interaction into rendering.
-    build_node_graph_scene(
+    let _ = PROCEDURAL2D_PLAY_APP_ID;
+    crate::scene_surface(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
-        PROCEDURAL2D_PLAY_APP_ID,
-        NodeGraphScene {
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
+        &NodeGraphScene {
             editable: Some(true),
             operators: flow_extras.operators,
             catalogue_json: flow_extras.catalogue_json,
@@ -69,14 +70,14 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_main_graph_scene() {
+    #[test]
+    fn renders_main_graph_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+    #[test]
+    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_MAIN);
         let value: serde_json::Value = serde_json::from_str(&json).expect("ui node json");
@@ -86,8 +87,8 @@ mod tests {
         assert!(graph.get("capabilitiesJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow")));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_node_graph_surface_and_body_key() {
+    #[test]
+    fn definition_declares_the_node_graph_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, PROCEDURAL2D_PLAY_BODY_MAIN);
         assert!(matches!(definition.surface_kind, SurfaceKind::NodeGraph));

@@ -67,18 +67,18 @@ message Puzzle5dKindCatalogs {
   repeated Puzzle5dCatalogRopeKind ropes = 4;
 }
 message Puzzle5dCatalogPartKindExtra {
-  string id = 1; string label = 2; string description = 3; string icon = 4;
-  string image = 5; string unit = 6; bool abstract = 7; repeated string base_kinds = 8;
-  repeated Puzzle5dRepresentation representations = 9; repeated Puzzle5dGripTemplate grips = 10;
-  repeated Puzzle5dAttribute attributes = 11; repeated Puzzle5dAuthor authors = 12;
+  string id = 1; string name = 2; string label = 3; string description = 4; string icon = 5;
+  string image = 6; string unit = 7; bool abstract = 8; repeated string base_kinds = 9;
+  repeated Puzzle5dRepresentation representations = 10; repeated Puzzle5dGripTemplate grips = 11;
+  repeated Puzzle5dAttribute attributes = 12; repeated Puzzle5dAuthor authors = 13;
 }
 message Puzzle5dCatalogGripKindExtra {
   string id = 1; optional string code = 2; optional string label = 3; optional int32 order = 4;
   repeated string compatible_with = 5; string description = 6; string icon = 7; string color = 8;
   string default_rope_kind = 9;
 }
-message Puzzle5dCatalogFastenerKindExtra { string id = 1; optional string label = 2; }
-message Puzzle5dCatalogRopeKindExtra { string id = 1; string label = 2; string default_fastener_kind = 3; }
+message Puzzle5dCatalogFastenerKindExtra { string id = 1; string name = 2; optional string label = 3; }
+message Puzzle5dCatalogRopeKindExtra { string id = 1; string name = 2; string label = 3; string default_fastener_kind = 4; }
 message Puzzle5dKindCatalogsExtra {
   repeated Puzzle5dCatalogPartKindExtra parts = 1;
   repeated Puzzle5dCatalogGripKindExtra grips = 2;

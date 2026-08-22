@@ -6,6 +6,6 @@ use crate::artifacts::procedural3d::mutations::delete_generation::mutation::Dele
 use crate::artifacts::procedural3d::mutations::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
-pub async fn inverse(payload: &DeleteGeneration, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+pub fn inverse(payload: &DeleteGeneration, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
     base.generation.generations.iter().find(|entry| entry.id == payload.id).map(|entry| vec![Procedural3dMutation::CreateGeneration(CreateGeneration { generation: entry.clone() })]).unwrap_or_default()
 }

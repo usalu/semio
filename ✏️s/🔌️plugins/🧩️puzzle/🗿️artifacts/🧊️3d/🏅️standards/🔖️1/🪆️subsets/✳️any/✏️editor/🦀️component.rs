@@ -13,7 +13,7 @@
 //! (`puzzle3d_operations_from_fixture_change`) turning the old fixture into the new one.
 
 use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
-use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+use crate::artifacts::puzzle3d::schema::Puzzle3dEngineCommand;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
@@ -52,9 +52,9 @@ use store::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️Constants
 pub const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
@@ -91,11 +91,6 @@ pub const PUZZLE3D_GRANULARITY_KIND: &str = "kind";
 
 /// 🔢️ Monotone serial behind every app-minted object / attraction / target-volume id.
 pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
-
-/// 🗃️ Real GLB geometry the browser round-tripped via `registerBrushMesh` this session, keyed by mesh
-/// url; anything not yet loaded falls back to a box. `fn` pointers can't capture state, so this backs
-/// the export handlers' plain-function-pointer signature.
-pub static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `ArtifactApp::Snapshot`) stays a
 /// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dSnapshot`, so the DSL-text
@@ -410,7 +405,6 @@ fn puzzle3d_action_document_intent(action: &str) -> bool {
             | "deleteTargetVolume"
             | "setTargetVolumeFlag"
             | "addBrushObject"
-            | "setFillCount"
             | "acceptSuggestion"
     )
 }
@@ -1113,20 +1107,6 @@ fn puzzle3d_fixture_with_fill_display_memo(mut fixture: Puzzle3dFixture, precomp
     fixture
 }
 
-/// 🔒️ Clamps to what the engine actually has planned so far — the slider primitive already clamps to
-/// `ready` client-side, this is the root-level backstop so the committed value and the document can
-/// never disagree with what `compose_fill_display`/`apply_fill_count` actually applied.
-pub fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, envelope: &mut Puzzle3dScene, count: u32) {
-    if count > 0 {
-        envelope.active_utility = fill_tool::TOOL_ID.into();
-    }
-    envelope.runtime.fill_count = count.min(precompute.fill_available_count());
-    if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = precompute.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count }) {
-        if let Some(next) = fixture_from_engine_fixture(envelope, &fixture) {
-            *envelope = next;
-        }
-    }
-}
 //#endregion 🔖️EngineBridge
 
 //#region 🔖️AttractionResolve
@@ -1759,6 +1739,7 @@ puzzle3d_command_variants! {
     EngagementControlSelect = "engagementControlSelect",
     AddBrushObject = "addBrushObject",
     SetFillCount = "setFillCount",
+    SetFillCountStep = "setFillCountStep",
     SetBrushPlacementOverlapBudget = "setBrushPlacementOverlapBudget",
     SetObjectKindWeight = "setObjectKindWeight",
     SetVortexKindWeight = "setVortexKindWeight",
@@ -2001,55 +1982,21 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
 /// `&self`), so the precompute/gumball scratch lives behind one process-owned lock until
 /// `EngineHandles` carries it. A thread-local session loses resumable fill state whenever the
 /// shared worker pool resumes a command on another worker.
-struct Puzzle3dPlaySessions {
-    sessions: HashMap<usize, Arc<Mutex<Puzzle3dPlayApp>>>,
-    prewarmed: VecDeque<Puzzle3dPlayApp>,
-}
-
-static PUZZLE3D_PLAY_SESSIONS: std::sync::OnceLock<Mutex<Puzzle3dPlaySessions>> = std::sync::OnceLock::new();
-static LAST_PUZZLE3D_PLAY_SESSION: AtomicUsize = AtomicUsize::new(0);
-
-fn puzzle3d_play_sessions() -> &'static Mutex<Puzzle3dPlaySessions> {
-    PUZZLE3D_PLAY_SESSIONS.get_or_init(|| Mutex::new(Puzzle3dPlaySessions { sessions: HashMap::new(), prewarmed: VecDeque::new() }))
-}
-
-fn puzzle3d_play_session(config: &Puzzle3dConfig) -> Arc<Mutex<Puzzle3dPlayApp>> {
-    let key = config.runtime_session_id.0 as usize;
-    LAST_PUZZLE3D_PLAY_SESSION.store(key, Ordering::Release);
-    let mut sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
-    if let Some(session) = sessions.sessions.get(&key) {
-        return Arc::clone(session);
-    }
-    let session = Arc::new(Mutex::new(sessions.prewarmed.pop_front().unwrap_or_default()));
-    sessions.sessions.insert(key, Arc::clone(&session));
-    session
-}
-
 fn with_puzzle3d_app_for<R>(config: &Puzzle3dConfig, f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
-    let session = puzzle3d_play_session(config);
-    let app = session.lock().expect("puzzle3d play session lock");
+    let app = Puzzle3dPlayApp::default();
+    if !config.fill_checkpoint.is_empty() {
+        app.precompute.borrow_mut().restore_persisted_fill(&config.fill_checkpoint);
+    }
     f(&app)
 }
 
 fn with_puzzle3d_app<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
-    let key = LAST_PUZZLE3D_PLAY_SESSION.load(Ordering::Acquire);
-    let session = {
-        let sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
-        sessions.sessions.get(&key).cloned()
-    }
-    .unwrap_or_else(|| Arc::new(Mutex::new(Puzzle3dPlayApp::default())));
-    let app = session.lock().expect("puzzle3d play session lock");
+    let app = Puzzle3dPlayApp::default();
     f(&app)
 }
 
 pub(crate) fn with_puzzle3d_app_mut<R>(f: impl FnOnce(&mut Puzzle3dPlayApp) -> R) -> R {
-    let key = LAST_PUZZLE3D_PLAY_SESSION.load(Ordering::Acquire);
-    let session = {
-        let sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
-        sessions.sessions.get(&key).cloned()
-    }
-    .unwrap_or_else(|| Arc::new(Mutex::new(Puzzle3dPlayApp::default())));
-    let mut app = session.lock().expect("puzzle3d play session lock");
+    let mut app = Puzzle3dPlayApp::default();
     f(&mut app)
 }
 
@@ -2230,7 +2177,7 @@ impl Puzzle3dPlayApp {
             return semio_framework::io::resolve_ready(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
         }
         if action == "transformBegin" {
-            self.begin_transform_session(&doc.snapshot.0);
+            self.begin_transform_session(doc.snapshot.value());
             return Emit::default();
         }
         let interaction_selection = semio_framework::io::resolve_ready(interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
@@ -2242,13 +2189,13 @@ impl Puzzle3dPlayApp {
             (Vec::new(), Vec::new())
         };
         if action == "transformEnd" {
-            return self.commit_transform(&doc.snapshot.0, &transform_object_ids);
+            return self.commit_transform(doc.snapshot.value(), &transform_object_ids);
         }
         if *self.transform_drag_active.borrow() && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
-            return self.transform_drag_tick(action, args, &doc.snapshot.0, &transform_object_ids, &transform_volume_ids);
+            return self.transform_drag_tick(action, args, doc.snapshot.value(), &transform_object_ids, &transform_volume_ids);
         }
         let document_action = puzzle3d_action_document_intent(action);
-        let before = document_action.then(|| doc.snapshot.0.clone());
+        let before = document_action.then(|| doc.snapshot.value().clone());
         let active_utility_initial = puzzle3d_scene_active_utility(config, window_id);
         // 🪟️ This action targets exactly one window instance — materialize ITS view-local options onto
         // the scene runtime before handling, and snapshot them back out (via `save_window`) so a
@@ -2263,13 +2210,14 @@ impl Puzzle3dPlayApp {
             runtime_for_window.window_ids.push(wid.clone());
         }
         runtime_for_window.load_window(&wid);
-        let mut scene = scene_from_projection(&doc.snapshot.0, runtime_for_window, &active_utility_initial);
+        let mut scene = scene_from_projection(doc.snapshot.value(), runtime_for_window, &active_utility_initial);
         let mut ui_scope = UiDirtyScope::Full;
         let mut effects = Vec::new();
         let uses_precompute = puzzle3d_action_uses_precompute(action);
         if uses_precompute {
             sync_precompute_session(&mut self.precompute.borrow_mut(), &scene);
             self.precompute.borrow_mut().restore_persisted_fill(&config.fill_checkpoint);
+            self.precompute.borrow_mut().set_fill_applied_count(config.fill_applied_count);
         }
         let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, interaction, ui_scope: &mut ui_scope, effects: &mut effects, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
@@ -2375,7 +2323,6 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "suggestionsTick" => suggestions_tick::suggestions_tick(ctx),
         "registerBrushMesh" => register_brush_mesh::register_brush_mesh(ctx, args),
         "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
-        "setFillCount" => set_fill_count::set_fill_count(ctx, args),
         "fillBuildTick" => fill_build_tick::fill_build_tick(ctx),
         "setObjectKindWeight" | "setVortexKindWeight" => set_kind_weight::set_kind_weight(ctx, action, args),
         "engagementInput" => engagement_input::engagement_input(ctx, args),
@@ -2436,13 +2383,12 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     async fn initial_snapshot() -> Puzzle3dPlaySnapshot {
         LazyLock::force(&NAKAGIN_EXAMPLE_FIXTURE);
         LazyLock::force(&PUZZLE3D_EXAMPLE_OPERATIONS);
-        let snapshot = Puzzle3dPlaySnapshot(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)));
+        let snapshot = Puzzle3dPlaySnapshot::new(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)));
         let config = Puzzle3dConfig::default();
         let active_utility = puzzle3d_scene_active_utility(&config, None);
-        let scene = scene_from_projection(&snapshot.0, config, &active_utility);
+        let scene = scene_from_projection(snapshot.value(), config, &active_utility);
         let mut app = Puzzle3dPlayApp::default();
         sync_precompute_session(&mut app.precompute.borrow_mut(), &scene);
-        puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock").prewarmed.push_back(app);
         snapshot
     }
 
@@ -2468,7 +2414,25 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
-        Ok(with_puzzle3d_app_for(&cfg.snapshot, |app| app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
+        Ok(with_puzzle3d_app_for(&cfg.snapshot, |app| {
+            if command.action_id() == "fillBuildTick" {
+                if let Some(emit) = fill_build_tick::fill_build_tick_cached(app, &cfg.snapshot) {
+                    return emit;
+                }
+            }
+            if matches!(command.action_id(), "setFillCount" | set_fill_count::STEP_ACTION_ID) {
+                let mut precompute = app.precompute.borrow_mut();
+                if !cfg.snapshot.fill_checkpoint.is_empty() && !precompute.restore_persisted_fill(&cfg.snapshot.fill_checkpoint) {
+                    let active_utility = puzzle3d_scene_active_utility(&cfg.snapshot, command.window_id());
+                    let scene = scene_from_projection(doc.snapshot.value(), cfg.snapshot.clone(), &active_utility);
+                    sync_precompute_session(&mut precompute, &scene);
+                    precompute.restore_persisted_fill(&cfg.snapshot.fill_checkpoint);
+                }
+                precompute.set_fill_applied_count(cfg.snapshot.fill_applied_count);
+                return if command.action_id() == "setFillCount" { set_fill_count::begin(&mut precompute, &cfg.snapshot, command.args()) } else { set_fill_count::step(&mut precompute, &cfg.snapshot, command.args()) };
+            }
+            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)
+        }))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -2477,25 +2441,27 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// object they mark — the one real nesting relationship this app's document carries, replacing
     /// what `hoveredVortexFullId`'s ad hoc highlighting used to do by hand.
     async fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::InteractionTopology {
-        let fixture: Puzzle3dFixture = serde_json::from_value(doc.snapshot.0.clone()).unwrap_or_else(|_| empty_fixture());
+        let snapshot = doc.snapshot.typed();
         let mut ordered = Vec::new();
-        for object in &fixture.objects {
+        for object in &snapshot.objects {
             ordered.push(semio_framework_plugin::TopologyNode { id: object.id.clone(), granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), parent: None });
             for vortex in &object.vortices {
                 ordered.push(semio_framework_plugin::TopologyNode { id: puzzle3d_vortex_full_id(&object.id, &vortex.id), granularity: PUZZLE3D_GRANULARITY_VORTEX.into(), parent: Some(object.id.clone()) });
             }
         }
-        for attraction in &fixture.attractions {
+        for attraction in &snapshot.attractions {
             ordered.push(semio_framework_plugin::TopologyNode { id: attraction.id.clone(), granularity: PUZZLE3D_GRANULARITY_ATTRACTION.into(), parent: None });
         }
-        for volume in &fixture.target_volumes {
+        for volume in &snapshot.target_volumes {
             ordered.push(semio_framework_plugin::TopologyNode { id: volume.id.clone(), granularity: PUZZLE3D_GRANULARITY_TARGET_VOLUME.into(), parent: None });
         }
-        for reference in &fixture.references {
+        for reference in &snapshot.references {
             ordered.push(semio_framework_plugin::TopologyNode { id: reference.id.clone(), granularity: PUZZLE3D_GRANULARITY_REFERENCE.into(), parent: None });
         }
-        for kind_id in puzzle3d_kind_ids(&fixture, "objects") {
-            ordered.push(semio_framework_plugin::TopologyNode { id: kind_id, granularity: PUZZLE3D_GRANULARITY_KIND.into(), parent: None });
+        if let Some(catalogs) = &snapshot.meta.kind_catalogs {
+            for kind in &catalogs.objects {
+                ordered.push(semio_framework_plugin::TopologyNode { id: kind.id.clone(), granularity: PUZZLE3D_GRANULARITY_KIND.into(), parent: None });
+            }
         }
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(PUZZLE3D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered });
@@ -2523,7 +2489,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             return Err(MediaError::Payload(port.to_string(), "kit:in only accepts a Structured (JSON) payload".into()));
         };
         let fragment: Value = serde_json::from_str(json.as_str()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut fixture: Puzzle3dFixture = serde_json::from_value(doc.snapshot.0.clone()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let mut fixture: Puzzle3dFixture = serde_json::from_value(doc.snapshot.value().clone()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
 
         let mut catalogs = fixture.meta.kind_catalogs.clone().unwrap_or_else(|| json!({ "objects": [], "vortices": [], "cables": [], "attractions": [] }));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "objects", fragment.get("objectKinds"));
@@ -2545,7 +2511,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             fixture.meta.kind_compatibility = Some(Value::Array(compat));
         }
 
-        let operations = puzzle3d_operations_from_fixture_change(&doc.snapshot.0, &fixture);
+        let operations = puzzle3d_operations_from_fixture_change(doc.snapshot.value(), &fixture);
         Ok(Emit::mutations(operations))
     }
 
@@ -2560,18 +2526,19 @@ impl ArtifactEditor for Puzzle3dPlayApp {
                 runtime_for_window.window_ids.push(wid.to_string());
             }
             runtime_for_window.load_window(wid);
-            let precompute_scene = app.scene_for(&doc.snapshot.0, config, wid);
+            let precompute_scene = app.scene_for(doc.snapshot.value(), config, wid);
             {
                 let mut precompute = app.precompute.borrow_mut();
                 sync_precompute_session(&mut precompute, &precompute_scene);
                 precompute.restore_persisted_fill(&config.fill_checkpoint);
+                precompute.set_fill_applied_count(config.fill_applied_count);
             }
             let precompute = app.precompute.borrow();
             // 🪣️ Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture —
             // safe even during a live gumball scratch drag, since it never touches/replaces any
             // already-present object (the dragged one included).
             let fill_available = precompute.fill_available_count();
-            let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&doc.snapshot.0), &precompute, runtime_for_window.fill_count, fill_available, &app.fill_display_memo);
+            let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(doc.snapshot.value()), &precompute, config.fill_applied_count, fill_available, &app.fill_display_memo);
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility };
             let labels = puzzle3d_labels(config);
             match base_body_key {
@@ -2597,7 +2564,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             window_instance_ids(config, main::WINDOW_KIND_ID)
                 .into_iter()
                 .map(|wid| {
-                    let envelope = app.scene_for(&doc.snapshot.0, config, &wid);
+                    let envelope = app.scene_for(doc.snapshot.value(), config, &wid);
                     (wid, main::engagement(&envelope, labels))
                 })
                 .collect()
@@ -2611,7 +2578,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             window_instance_ids(config, main::WINDOW_KIND_ID)
                 .into_iter()
                 .map(|wid| {
-                    let envelope = app.scene_for(&doc.snapshot.0, config, &wid);
+                    let envelope = app.scene_for(doc.snapshot.value(), config, &wid);
                     let precompute = restored_precompute_session(&envelope, &config.fill_checkpoint);
                     (wid, main::window_measures(&envelope, &precompute, labels))
                 })
@@ -2624,7 +2591,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let config = cfg.snapshot;
             let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
             let labels = puzzle3d_labels(config);
-            let envelope = app.scene_for(&doc.snapshot.0, config, wid);
+            let envelope = app.scene_for(doc.snapshot.value(), config, wid);
             let precompute = restored_precompute_session(&envelope, &config.fill_checkpoint);
             HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &precompute, labels))])
         })
@@ -2640,7 +2607,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let labels = puzzle3d_labels(config);
         let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
         let active_utility = puzzle3d_scene_active_utility(config, Some(wid));
-        let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
+        let envelope = scene_from_projection(doc.snapshot.value(), config.clone(), &active_utility);
         let selection = Puzzle3dContextSelection::from_surface(request.surface.as_ref());
         puzzle3d_context_menu_items(&envelope, &selection, labels, registry)
     }
@@ -2762,6 +2729,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets")))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_fill_count::STEP_ACTION_ID, LocalizedLabel::native("Set Fill Count Step", "Füllanzahl-Schritt"), ActionKind::Mutation) })
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
             // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
             .shell_action("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")))
@@ -3029,7 +2997,7 @@ pub(crate) mod testkit {
     }
 
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").0
+        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").value().clone()
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -3163,6 +3131,31 @@ pub(crate) mod testkit {
         }
         fill_ready(app)
     }
+
+    /// 🧵️ Drives the same generation-tagged fill continuation the host executes in production.
+    pub async fn finish_fill_count(app: &mut Puzzle3dApp, mut result: InvocationResult) -> (usize, std::time::Duration) {
+        let mut max_step = std::time::Duration::ZERO;
+        for step in 0..1_024 {
+            let next = result.requested_effects.into_iter().find_map(|effect| match effect {
+                Effect::DispatchAction { action, args, .. } if action == set_fill_count::STEP_ACTION_ID => Some(args.map(|value| semio_framework::from_dsl_value::<Value>(value).expect("fill-count step args decode"))),
+                _ => None,
+            });
+            let Some(args) = next else {
+                return (step, max_step);
+            };
+            let started = std::time::Instant::now();
+            result = dispatch(app, set_fill_count::STEP_ACTION_ID, args.as_ref(), None).await.expect("advance fill-count materialization");
+            let elapsed = started.elapsed();
+            max_step = max_step.max(elapsed);
+            assert!(result.mutations.len() <= set_fill_count::MAX_PLACEMENTS_PER_STEP * 2, "one fill-count continuation exceeded its fixed semantic mutation bound");
+        }
+        panic!("fill-count materialization did not finish within its deterministic step bound");
+    }
+
+    pub async fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
+        let result = dispatch(app, "setFillCount", Some(&json!({ "value": value })), window_id).await.expect("begin setFillCount");
+        finish_fill_count(app, result).await
+    }
     //#endregion 🔖️MeasureProbes
 
     /// 🖱️ `context_menu()` through the `VcsArtifactApp` funnel (already-organized rows).
@@ -3199,22 +3192,12 @@ mod tests {
     use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
 
     #[test]
-    fn two_documents_never_share_or_serialize_their_runtime_session() {
+    fn two_documents_carry_independent_serialized_checkpoints() {
         let first = Puzzle3dConfig::default();
         let second = Puzzle3dConfig::default();
-        let first_session = puzzle3d_play_session(&first);
-        let second_session = puzzle3d_play_session(&second);
-        assert!(!Arc::ptr_eq(&first_session, &second_session));
-        let barrier = Arc::new(std::sync::Barrier::new(2));
-        let worker_barrier = Arc::clone(&barrier);
-        let worker = std::thread::spawn(move || {
-            let _first = first_session.lock().expect("first session lock");
-            worker_barrier.wait();
-            std::thread::sleep(std::time::Duration::from_millis(20));
-        });
-        barrier.wait();
-        assert!(second_session.try_lock().is_ok(), "a busy document must not serialize an unrelated document's command step");
-        worker.join().expect("session holder joins");
+        assert!(first.fill_checkpoint.is_empty());
+        assert!(second.fill_checkpoint.is_empty());
+        assert_eq!(serde_json::to_value(first).unwrap(), serde_json::to_value(second).unwrap());
     }
 
     //#region 🔖️Operations
@@ -3953,7 +3936,13 @@ mod tests {
         assert_eq!(find_measure_slider_max(tool_measures, "puzzle3d-fill-count"), Some(PUZZLE3D_FILL_COUNT_MAX as f64), "fill slider range stays fixed at the fill count max");
         let available_count = find_measure_slider_ready(tool_measures, "puzzle3d-fill-count").expect("expected a fill-count slider ready extent") as usize;
         assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("setFillCount");
+        let begin = dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("setFillCount");
+        assert_eq!(object_count(&app), object_count_before, "the slider gesture only publishes the reveal cutoff; document materialization is resumable");
+        let immediate = render_composite(&mut app);
+        assert_eq!(instance_count(&immediate), object_count_before + available_count, "the complete planned prefix is previewed immediately before document continuations finish");
+        assert_eq!(interaction_of(&immediate).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(available_count as u64), "the reveal cutoff updates in the initiating interaction step");
+        let (_, max_step) = finish_fill_count(&mut app, begin).await;
+        assert!(max_step < std::time::Duration::from_millis(8), "every fill-count continuation must remain below the hard 8 ms interaction ceiling");
         assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
         assert_eq!(instance_count(&render_composite(&mut app)), object_count_before + available_count, "the viewport must show every materialized fill object immediately");
         let initial_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
@@ -3963,7 +3952,7 @@ mod tests {
         let hovered_id = first_object_id(&app);
         hover_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, Some(&hovered_id)).await.expect("interactionHover after fill");
         let reduced = available_count / 2;
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), None).await.expect("reduce fill count after sync");
+        set_fill_count_and_finish(&mut app, reduced as u32, None).await;
         assert_eq!(object_count(&app), object_count_before + reduced, "sliding down after an incidental sync must still remove fill objects from the document");
         let reduced_render = render_composite(&mut app);
         // 🪣️ The viewport keeps showing the FULL available plan (tagged revealIndex) even after
@@ -3973,14 +3962,14 @@ mod tests {
         assert_eq!(interaction_of(&reduced_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64), "the committed reveal cutoff tracks the reduced count");
         // 🔽️🔼️ Prefix-stable plan: moving back up to a count that was already planned before must be
         // INSTANT — no replanning, no `fillBuildTick` catch-up dispatch.
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("move back up to the previously-planned count");
+        set_fill_count_and_finish(&mut app, available_count as u32, None).await;
         assert_eq!(object_count(&app), object_count_before + available_count, "moving back up within the preserved plan is instant, not gated on another fillBuildTick");
         let target_measures = semio_framework::io::resolve_ready(app.tool_measures());
         let target_tool_measures = target_measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
         assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
         let restored_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
         assert_eq!(restored_fill_ids, initial_fill_ids, "up-down-up restores the exact same planned objects — the plan is prefix-stable, never discarded and re-rolled");
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": 0 })), None).await.expect("clear fill count");
+        set_fill_count_and_finish(&mut app, 0, None).await;
         assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
     }
 
@@ -3993,10 +3982,12 @@ mod tests {
         let mut app = app();
         let object_count_before = object_count(&app);
         dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
-        dispatch(&mut app, "fillBuildTick", None, None).await.expect("one fillBuildTick");
-        let available_count = fill_ready(&mut app) as u32;
+        let available_count = drive_fill_until_ready(&mut app, PUZZLE3D_FILL_COUNT_MAX as f64).await as u32;
+        assert!(available_count > 0, "the maximum-delta timing proof requires a planned prefix");
         // Request far beyond what a single tick could have planned.
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": PUZZLE3D_FILL_COUNT_MAX })), None).await.expect("setFillCount beyond available");
+        let (steps, max_step) = set_fill_count_and_finish(&mut app, PUZZLE3D_FILL_COUNT_MAX, None).await;
+        assert!(steps <= available_count.div_ceil(set_fill_count::MAX_PLACEMENTS_PER_STEP as u32) as usize, "a maximum slider request must use only fixed-size continuation chunks");
+        assert!(max_step < std::time::Duration::from_millis(8), "maximum-delta fill materialization measured {max_step:?}; every continuation must remain below 8 ms");
         let measures = semio_framework::io::resolve_ready(app.tool_measures());
         let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
         let clamped = find_measure_slider(tool_measures, "puzzle3d-fill-count").expect("fill-count slider value");
@@ -4007,6 +3998,25 @@ mod tests {
             !tick.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "setFillCount")),
             "fillBuildTick must never self-dispatch setFillCount — the clamp at commit time means fill_count can never run ahead of what's planned"
         );
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn newer_fill_count_request_cancels_a_stale_continuation() {
+        let mut app = app_with_registry();
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        let ready = drive_fill_until_ready(&mut app, 4.0).await as u32;
+        assert!(ready > 0, "need a planned prefix for cancellation");
+        let first = dispatch(&mut app, "setFillCount", Some(&json!({ "value": ready })), None).await.expect("begin first request");
+        let stale_args = first.requested_effects.into_iter().find_map(|effect| match effect {
+            Effect::DispatchAction { action, args, .. } if action == set_fill_count::STEP_ACTION_ID => args.map(|value| semio_framework::from_dsl_value::<Value>(value).expect("stale fill-count args decode")),
+            _ => None,
+        });
+        let second = dispatch(&mut app, "setFillCount", Some(&json!({ "value": 0 })), None).await.expect("supersede first request");
+        finish_fill_count(&mut app, second).await;
+        let before = projection_of(&app);
+        let stale = dispatch(&mut app, set_fill_count::STEP_ACTION_ID, stale_args.as_ref(), None).await.expect("stale continuation is a no-op");
+        assert!(stale.mutations.is_empty() && stale.requested_effects.is_empty(), "a stale generation must not mutate or requeue");
+        assert_eq!(projection_of(&app), before, "a stale continuation cannot revive a superseded fill target");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4038,7 +4048,7 @@ mod tests {
         assert_eq!(interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "nothing committed yet — the reveal cutoff mirrors runtime.fill_count (0)");
         assert_eq!(interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(0));
 
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": ready })), None).await.expect("setFillCount");
+        set_fill_count_and_finish(&mut app, ready as u32, None).await;
         let after_commit = render_composite(&mut app);
         assert_eq!(instance_count(&after_commit), object_count_before + ready, "instance count is unchanged by commit — only the cutoff (and document) advanced");
         let committed_interaction = interaction_of(&after_commit);
@@ -4060,7 +4070,7 @@ mod tests {
 
         // Commit from the top pane only — the perspective pane must still track the same cutoff.
         let committed = ready.min(3);
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": committed })), Some(top)).await.expect("setFillCount on top");
+        set_fill_count_and_finish(&mut app, committed as u32, Some(top)).await;
 
         let top_render = render_window(&mut app, top);
         let perspective_render = render_window(&mut app, perspective);
@@ -4073,7 +4083,7 @@ mod tests {
 
         // Sliding from the other pane must keep both panes in lockstep.
         let reduced = committed.saturating_sub(1);
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), Some(perspective)).await.expect("setFillCount on perspective");
+        set_fill_count_and_finish(&mut app, reduced as u32, Some(perspective)).await;
         let top_after = render_window(&mut app, top);
         let perspective_after = render_window(&mut app, perspective);
         assert_eq!(interaction_of(&top_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
@@ -4780,7 +4790,7 @@ mod tests {
         let emit = semio_framework::io::resolve_ready(Puzzle3dPlayApp::import_media("kit:in", &media, &doc)).expect("kit:in import_media succeeds");
         assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
-        let mut next_projection = projection.0.clone();
+        let mut next_projection = projection.value().clone();
         for operation in &emit.artifact_mutations {
             next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
         }
@@ -4805,7 +4815,7 @@ mod tests {
         let app = Puzzle3dPlayApp::default();
         let projection = semio_framework::io::resolve_ready(Puzzle3dPlayApp::initial_snapshot());
         let history = semio_framework::io::resolve_ready(semio_framework_plugin::HistoryView::empty());
-        let mut current = projection.0.clone();
+        let mut current = projection.value().clone();
 
         let fragment = json!({
             "objectKinds": [{ "id": "capsule", "name": "capsule", "label": "Capsule", "meshUrl": "/mesh/capsule.glb", "vortices": [] }],
@@ -4817,7 +4827,7 @@ mod tests {
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
         for _ in 0..2 {
-            let doc_projection = Puzzle3dPlaySnapshot(current.clone());
+            let doc_projection = Puzzle3dPlaySnapshot::new(current.clone());
             let doc = semio_framework::io::resolve_ready(ArtifactView::new(&doc_projection, &history));
             let emit = semio_framework::io::resolve_ready(Puzzle3dPlayApp::import_media("kit:in", &media, &doc)).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {

@@ -15,6 +15,10 @@ export interface Puzzle3dConfig {
   /** @state config */
   fillCount: number;
   /** @state config */
+  fillApplyGeneration: number;
+  /** @state config */
+  fillAppliedCount: number;
+  /** @state config */
   fillCheckpoint: number[];
   /** @state config */
   brushCandidateIndex: number;

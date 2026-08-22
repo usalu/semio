@@ -15,7 +15,7 @@ pub struct ChangeStreamSync {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelMutation {
+pub fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelMutation {
     RemodelMutation::ChangeStreamSync(ChangeStreamSync { id, new_sync_offset_ms })
 }
 

@@ -8,6 +8,24 @@ use crate::artifacts::cad::CadCamera;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️PreviewGeneration
+/// 🔢️ Largest preview generation represented exactly by Rust, Proto `int32`, GraphQL `Int`,
+/// JSON Schema, and JavaScript `number`.
+pub const CAD_PREVIEW_GENERATION_MAX: i32 = i32::MAX;
+
+/// 🛡️ Rejects negative generations at every JSON-backed config ingestion boundary.
+pub fn deserialize_cad_preview_generation<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let generation = i32::deserialize(deserializer)?;
+    if generation < 0 {
+        return Err(serde::de::Error::custom("cad preview generation must be nonnegative"));
+    }
+    Ok(generation)
+}
+//#endregion 🔖️PreviewGeneration
+
 //#region 🔖️Config
 /// 🎛️ Per-pane handle groups exposed by the Dislocate gumball utility — was keyed by an arbitrary
 /// host-pushed `ViewModel.window_id` (`cad_ui::CadPlayRuntime::dislocate_options_by_window_id`); the
@@ -91,6 +109,12 @@ pub struct CadConfig {
     /// 👁️ Was `CadPlayRuntime::engagement_session` (`Option<CadEngagementScratch>`) — see the struct
     /// doc comment for why this is an opaque JSON string here.
     pub engagement_session_json: Option<String>,
+    /// 🪪️ Exact serialized public-operation identity that last advanced the engagement preview.
+    pub engagement_preview_operation_json: Option<String>,
+    /// 🔢️ Persisted increment-only engagement preview generation in the lossless cross-surface
+    /// domain `0..=2_147_483_647`.
+    #[serde(deserialize_with = "deserialize_cad_preview_generation")]
+    pub engagement_preview_generation: i32,
     /// 👁️ Was `CadPlayRuntime::last_finalized_interaction_id`.
     pub last_finalized_interaction_id: Option<String>,
     /// 👁️ Was `CadPlayRuntime::sun` (`WorldSunConfig`).
@@ -190,6 +214,8 @@ impl Default for CadConfig {
             selected_reference_id: None,
             engagement_pane: None,
             engagement_session_json: None,
+            engagement_preview_operation_json: None,
+            engagement_preview_generation: 0,
             last_finalized_interaction_id: None,
             sun: CadSunConfig::default(),
             camera: CadCamera::default(),
@@ -308,7 +334,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
                 }
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
-                crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::sync_cad_computer_contributions(json);
+                crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
                 protocol::MutationOutcome::new(next)
             }
         }

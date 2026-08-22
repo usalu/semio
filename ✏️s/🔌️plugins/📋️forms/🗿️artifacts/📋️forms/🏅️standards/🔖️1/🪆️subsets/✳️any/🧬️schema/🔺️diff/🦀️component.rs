@@ -3,6 +3,7 @@
 use crate::artifacts::forms::{FormQuestion, FormStep, FormsResultsChild, FormsStructureChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the forms artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -43,7 +44,7 @@ pub struct FormsDiff {
     #[state(config)]
     pub current_step_index: Option<u32>,
     #[state(config)]
-    pub try_values_json: Option<String>,
+    pub try_values: Option<BTreeMap<String, Vec<String>>>,
     #[state(config)]
     pub locale: Option<String>,
     #[state(config)]

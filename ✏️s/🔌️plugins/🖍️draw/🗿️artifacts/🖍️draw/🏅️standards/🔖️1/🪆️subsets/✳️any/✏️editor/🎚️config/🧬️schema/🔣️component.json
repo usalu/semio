@@ -7,6 +7,10 @@
     "engagementInput",
     "camera",
     "activeUtilityId",
+    "tracePointerGeneration",
+    "tracePointerCompletedWork",
+    "tracePointerPendingWork",
+    "gestureCheckpointJson",
     "locale"
   ],
   "properties": {
@@ -20,6 +24,26 @@
     },
     "activeUtilityId": {
       "type": "string",
+      "x-semio-state": "config"
+    },
+    "tracePointerGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "tracePointerCompletedWork": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "tracePointerPendingWork": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "gestureCheckpointJson": {
+      "type": "string",
+      "maxLength": 4096,
       "x-semio-state": "config"
     },
     "locale": {

@@ -6,7 +6,15 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::DeleteAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::DeleteAsset, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    if let Some((_, staging_id, _)) = crate::artifacts::remodel::remodel_asset_stage_parts(&payload.key) {
+        crate::artifacts::remodel::discard_staged_remodel_asset(staging_id);
+        return protocol::MutationOutcome::new(RemodelDiff::default());
+    }
+    if let Some((staging_id, _)) = crate::artifacts::remodel::remodel_mesh_stage_asset_parts(&payload.key) {
+        crate::artifacts::remodel::discard_staged_remodel_mesh(staging_id);
+        return protocol::MutationOutcome::new(RemodelDiff::default());
+    }
     if !base.assets.contains_key(&payload.key) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
     }

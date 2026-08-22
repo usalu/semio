@@ -17,7 +17,7 @@ pub struct UpdateRigExtrinsic {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelMutation {
+pub fn update_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelMutation {
     RemodelMutation::UpdateRigExtrinsic(UpdateRigExtrinsic { extrinsic })
 }
 

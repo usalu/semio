@@ -1064,6 +1064,9 @@ interface jobs {
   start-job: async func(job: u64, kind: string, input: list<u8>) -> result<_, plugin-error>;
   step-job: async func(job: u64, budget: job-budget) -> result<job-step, plugin-error>;
   cancel-job: async func(job: u64);
+  /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
+  /// bytes; the first `none` is the terminal observation and releases the operation authority.
+  take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4). No more

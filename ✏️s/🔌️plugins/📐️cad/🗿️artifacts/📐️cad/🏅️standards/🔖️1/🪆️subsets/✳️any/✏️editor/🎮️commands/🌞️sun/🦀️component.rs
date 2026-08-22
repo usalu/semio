@@ -18,10 +18,10 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub async fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         apply_world3d_sun_action(&mut runtime.sun, "toggleSun", None);
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], "sun"))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
 }
 //#endregion 🔖️ToggleSun
@@ -36,11 +36,11 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub async fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let args_value = json!({ "value": payload.value });
         apply_world3d_sun_action(&mut runtime.sun, "setSunAzimuth", Some(&args_value));
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], "sun"))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
 }
 //#endregion 🔖️SetSunAzimuth
@@ -55,11 +55,11 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub async fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunElevation, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let args_value = json!({ "value": payload.value });
         apply_world3d_sun_action(&mut runtime.sun, "setSunElevation", Some(&args_value));
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], "sun"))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
 }
 //#endregion 🔖️SetSunElevation
@@ -74,11 +74,11 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub async fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let args_value = json!({ "value": payload.value });
         apply_world3d_sun_action(&mut runtime.sun, "setSunIntensity", Some(&args_value));
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], "sun"))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], "sun"))
     }
 }
 //#endregion 🔖️SetSunIntensity

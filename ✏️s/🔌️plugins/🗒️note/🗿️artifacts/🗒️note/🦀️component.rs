@@ -4,8 +4,7 @@
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 //#region 🔖️Register
 /// 🔖️ This artifact's OLD-channel definition (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1).
@@ -161,7 +160,8 @@ pub enum NoteBlockNode {
         /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
         /// replaces the former inline `paragraphs: Vec<NoteTextParagraph>` (which duplicated stdio's
         /// `s.stdio.semio.text` run/mark shape) with a content-addressed handle onto that composed
-        /// subset. See this file's `🔖️TextBridge`/`🔖️WorkingScene` regions for the converter/cache.
+        /// subset. See this file's `🔖️TextBridge`/`🔖️TextChildren` regions for the
+        /// converter and durable child-record accessor.
         content: NoteTextChild,
         font_size: f64,
         font_weight: String,
@@ -257,8 +257,15 @@ pub enum NoteBlockNode {
 }
 
 //#region 🔖️ComposedTypes
-/// 🕸️ Owned CHILD handle type for one text block's composed `s.stdio.semio.text` content.
-pub type NoteTextChild = store::ArtifactChild<SemioTextSnapshot>;
+/// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
+/// paragraph records are durable authority that survives reopen and worker migration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct NoteTextChild {
+    pub handle: store::ArtifactChild<SemioTextSnapshot>,
+    #[serde(default)]
+    pub paragraphs: Vec<NoteTextParagraph>,
+}
 //#endregion 🔖️ComposedTypes
 
 //#region 🔖️TextBridge
@@ -329,51 +336,22 @@ pub async fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagr
     let child_id = format!("note-text-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
-    store::ArtifactChild::new(child_id, target)
+    NoteTextChild { handle: store::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
 }
 //#endregion 🔖️TextBridge
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of every text block's live paragraphs, keyed by
-/// `NoteTextChild::child_id` — NEVER persisted, NEVER a durable field on `NoteSnapshot`/`NoteBlockNode`
-/// (matches the `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base).
-/// Exists because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet
-/// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only here — same standing gap
-/// writer/cad/lowpoly's reports document) and `ArtifactView::with_children` has zero live content
-/// behind it for any plugin as of this ticket's own wave-4 notes; until a real seam exists, this cache
-/// is the only way a persisted content-addressed handle round-trips to real paragraphs within one
-/// process — mirrors writer's `WRITER_SCRATCH: RefCell<HashMap<child_id, text>>`.
-///
-/// ⚠️ Same documented staleness gap as lowpoly's `StaleMeshWorkspace`/writer's `WriterWorkingScene`:
-/// store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a handle can in principle go
-/// uncached — [`note_block_text`] fails soft (empty `Vec`) rather than panicking.
-thread_local! {
-    static NOTE_TEXT_SCRATCH: RefCell<HashMap<String, Vec<NoteTextParagraph>>> = RefCell::new(HashMap::new());
-}
-
-/// 📝 Seeds the scratch cache for a handle — call whenever new paragraph content is about to become a
-/// text block's `content` field (every mutation-diff/fixture builder in this plugin does, via
-/// [`note_text_child_handle_and_cache`]).
-pub async fn cache_note_block_text(child_id: &str, paragraphs: &[NoteTextParagraph]) {
-    NOTE_TEXT_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), paragraphs.to_vec()));
-}
-
-/// 🔎 Reads the cached live paragraphs for a text child handle — empty `Vec` (never a panic) when
-/// nothing has cached it yet (see this region's module doc comment for why that can happen).
+//#region 🔖️TextChildren
+/// 🔎 Reads the durable paragraphs owned by the text-child record.
 pub async fn note_block_text(handle: &NoteTextChild) -> Vec<NoteTextParagraph> {
-    NOTE_TEXT_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
+    handle.paragraphs.clone()
 }
 
-/// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its paragraphs in one
-/// call — the standard way every mutation-diff/fixture/converter builder in this plugin creates a
-/// text block's `content` field value; never construct a handle without also caching, or
-/// [`note_block_text`] will read back empty.
-pub async fn note_text_child_handle_and_cache(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
-    let handle = note_text_child_handle(block_id, paragraphs);
-    cache_note_block_text(&handle.child_id, paragraphs);
-    handle
+/// 🏗️ Mints a new content-addressed handle and stores its paragraphs in the same snapshot-owned
+/// record used by mutation-diff, fixture, and converter builders.
+pub async fn note_text_child_record(block_id: &str, paragraphs: &[NoteTextParagraph]) -> NoteTextChild {
+    note_text_child_handle(block_id, paragraphs)
 }
-//#endregion 🔖️WorkingScene
+//#endregion 🔖️TextChildren
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -473,22 +451,22 @@ mod tests {
         assert_eq!(restored[0].runs[0].underline, None);
     }
 
-    /// 🧪️ Working-scene cache: minting a handle seeds it, `note_block_text` reads it back, and two
-    /// distinct block ids never collide even with identical paragraph content.
+    /// 🧪️ Each minted text-child record owns its paragraphs, and two distinct block ids never
+    /// collide even with identical paragraph content.
     #[semio_framework_async_macros::async_test]
-    async fn working_scene_caches_by_child_id_and_block_id_never_collides() {
+    async fn text_child_records_are_owned_and_block_ids_never_collide() {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "hi".into(), bold: None, italic: None, underline: None, link: None }] }];
-        let a = note_text_child_handle_and_cache("block-a", &paragraphs);
-        let b = note_text_child_handle_and_cache("block-b", &paragraphs);
-        assert_ne!(a.child_id, b.child_id, "identical content on distinct block ids must not share a child slot");
+        let a = note_text_child_record("block-a", &paragraphs);
+        let b = note_text_child_record("block-b", &paragraphs);
+        assert_ne!(a.handle.child_id, b.handle.child_id, "identical content on distinct block ids must not share a child slot");
         assert_eq!(note_block_text(&a), paragraphs);
         assert_eq!(note_block_text(&b), paragraphs);
     }
 
-    /// 🧪️ An uncached handle fails soft (empty `Vec`), never panics — the documented staleness gap.
+    /// 🧪️ An explicitly empty durable child record reads back an empty paragraph list.
     #[semio_framework_async_macros::async_test]
-    async fn note_block_text_fails_soft_on_a_cache_miss() {
-        let handle = note_text_child_handle("never-cached", &[]);
+    async fn note_block_text_reads_an_empty_owned_record() {
+        let handle = note_text_child_handle("empty-owned-record", &[]);
         assert_eq!(note_block_text(&handle), Vec::<NoteTextParagraph>::new());
     }
     //#endregion 🔖️TextBridgeTests

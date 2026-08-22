@@ -42,11 +42,12 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
-use semio_framework_async::{oneshot, ChannelPolicy, Lane, WorkerPool};
-use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, TraceEvent, Watchdog};
+use semio_framework_async::{ChannelPolicy, oneshot};
+use semio_framework_trace::{TraceEvent, Watchdog, record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed};
 
 pub use semio_framework_async::CancelToken;
-pub use semio_framework_trace::{allocate_operation_id, Generation, InteractiveStage, OperationId};
+pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
+pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id};
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —
@@ -131,11 +132,7 @@ pub enum CommitValidation {
 /// ✅️ Checks `op`'s base revision and generation against the document's current `live_revision`/
 /// `live_generation` — the ONLY gate a [`CommitCandidate`] passes through before it may be applied.
 pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
-    if op.base_revision == live_revision && op.generation == live_generation {
-        CommitValidation::Accepted
-    } else {
-        CommitValidation::Stale { live_revision, live_generation }
-    }
+    if op.base_revision == live_revision && op.generation == live_generation { CommitValidation::Accepted } else { CommitValidation::Stale { live_revision, live_generation } }
 }
 //#endregion 🪪️Identity
 
@@ -741,6 +738,82 @@ pub fn run_on_worker<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane,
     receiver
 }
 
+struct WorkerJobSessionState<J> {
+    job: J,
+    params: BatchJobParams,
+    preview_sequence: u64,
+    terminal_delivered: bool,
+}
+
+/// 🎛️ Persistent worker-owned job state whose [`WorkerJobSession::step`] method submits
+/// exactly one bounded [`InteractiveJob::step`] closure to the caller's shared [`WorkerPool`]. Unlike
+/// [`run_on_worker_async`], this session never self-requeues: the production bridge decides when the
+/// next turn is admitted after publishing or backpressuring the previous outcome.
+pub struct WorkerJobSession<J> {
+    state: Arc<Mutex<WorkerJobSessionState<J>>>,
+}
+
+impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
+    pub fn new(job: J, params: BatchJobParams) -> Self {
+        record_operation_started(params.operation, params.generation);
+        Self { state: Arc::new(Mutex::new(WorkerJobSessionState { job, params, preview_sequence: 0, terminal_delivered: false })) }
+    }
+
+    /// 🧹️ Recovers the exact persistent job only after every submitted closure released its
+    /// session share. Failure returns this session unchanged so a cleanup owner can yield and retry.
+    pub fn try_into_job(self) -> Result<J, Self> {
+        match Arc::try_unwrap(self.state) {
+            Ok(state) => Ok(state.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner).job),
+            Err(state) => Err(Self { state }),
+        }
+    }
+
+    /// 📮️ Enqueues one bounded step and returns a non-blocking receiver for lock-bound runtimes.
+    pub fn submit_step(&self, pool: &WorkerPool, lane: Lane) -> oneshot::Receiver<StepOutcome> {
+        let state = Arc::clone(&self.state);
+        let (sender, receiver) = oneshot::channel();
+        pool.submit(
+            lane,
+            Box::new(move || {
+                let outcome = {
+                    let mut state = state.lock().expect("WorkerJobSession mutex poisoned");
+                    let WorkerJobSessionState { job, params, preview_sequence, terminal_delivered } = &mut *state;
+                    if *terminal_delivered {
+                        StepOutcome::Yield
+                    } else {
+                        let config = params.config;
+                        let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().saturating_add(config.step_budget_ms));
+                        let outcome = drive_step(job, config.site, params.operation, params.generation, config.stage, budget, params.cancel.clone(), params.now_ms, preview_sequence);
+                        *terminal_delivered = outcome.is_terminal();
+                        outcome
+                    }
+                };
+                let _ = sender.send(outcome);
+            }),
+        );
+        receiver
+    }
+
+    pub async fn step(&self, pool: &WorkerPool, lane: Lane) -> Result<StepOutcome, oneshot::RecvError> {
+        let receiver = self.submit_step(pool, lane);
+        #[cfg(target_arch = "wasm32")]
+        {
+            let mut receiver = receiver;
+            loop {
+                match receiver.try_recv() {
+                    Ok(outcome) => break Ok(outcome),
+                    Err(oneshot::TryRecvError::Empty) => pool.pump(default_now_ms()),
+                    Err(oneshot::TryRecvError::Closed) => break Err(oneshot::RecvError),
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            receiver.await
+        }
+    }
+}
+
 struct AsyncWorkerDriveState<J> {
     job: J,
     params: BatchJobParams,
@@ -1288,6 +1361,76 @@ mod tests {
         );
         assert!(!competitor_rx.recv_timeout(Duration::from_secs(1)).expect("competing closure never ran"));
         assert!(matches!(terminal.recv_timeout(Duration::from_secs(1)), Ok(StepOutcome::Complete(_))));
+        pool.shutdown();
+    }
+
+    struct CountedSessionJob {
+        steps: Arc<AtomicU32>,
+    }
+
+    impl InteractiveJob for CountedSessionJob {
+        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+            let step = self.steps.fetch_add(1, Ordering::SeqCst) + 1;
+            if step < 3 { StepOutcome::Yield } else { StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: vec![step as u8] }) }
+        }
+    }
+
+    struct GatedSessionJob {
+        release: Arc<AtomicBool>,
+        steps: Arc<AtomicU32>,
+    }
+
+    impl InteractiveJob for GatedSessionJob {
+        fn step(&mut self, _context: &mut StepContext<'_>) -> StepOutcome {
+            self.steps.fetch_add(1, Ordering::SeqCst);
+            while !self.release.load(Ordering::SeqCst) {
+                std::thread::yield_now();
+            }
+            StepOutcome::Yield
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let release = Arc::new(AtomicBool::new(false));
+        let steps = Arc::new(AtomicU32::new(0));
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "test.worker-session.pending-first-poll", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
+            now_ms: default_now_ms,
+        };
+        let session = WorkerJobSession::new(GatedSessionJob { release: Arc::clone(&release), steps: Arc::clone(&steps) }, params);
+        let mut pending = session.submit_step(&pool, Lane::Interactive);
+        assert_eq!(pending.try_recv(), Err(semio_framework_async::oneshot::TryRecvError::Empty));
+        assert!(steps.load(Ordering::SeqCst) <= 1, "one submitted receiver must never enter the job twice");
+        release.store(true, Ordering::SeqCst);
+        assert_eq!(pending.await.expect("gated worker result"), StepOutcome::Yield);
+        assert_eq!(steps.load(Ordering::SeqCst), 1);
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn worker_job_session_admits_exactly_one_step_per_caller_turn() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let steps = Arc::new(AtomicU32::new(0));
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "test.worker-session.single-turn", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: USER_VISIBLE_LANE_WALL_MS },
+            now_ms: default_now_ms,
+        };
+        let session = WorkerJobSession::new(CountedSessionJob { steps: Arc::clone(&steps) }, params);
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("first worker turn"), StepOutcome::Yield);
+        assert_eq!(steps.load(Ordering::SeqCst), 1, "session must not self-requeue after the caller receives one outcome");
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("second worker turn"), StepOutcome::Yield);
+        assert_eq!(steps.load(Ordering::SeqCst), 2);
+        assert!(matches!(session.step(&pool, Lane::UserVisible).await.expect("terminal worker turn"), StepOutcome::Complete(candidate) if candidate.output == vec![3]));
+        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-terminal worker turn"), StepOutcome::Yield, "a terminal outcome must be delivered exactly once");
+        assert_eq!(steps.load(Ordering::SeqCst), 3, "the job must not be entered after its terminal outcome");
         pool.shutdown();
     }
     //#endregion 🏭️Batch

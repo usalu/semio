@@ -550,11 +550,8 @@ impl ShardLoop {
     }
 
     /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
-    /// [`super::GuestRuntime::execute_turn`], admits any `SpawnJob`/`CancelJob` effects (unchanged
-    /// from the body this replaces — see the K1 report for that mechanism's own history), and sends
-    /// the resulting [`ShardOutcome`]. Factored out of [`Self::pump_primed`]'s old single inline
-    /// loop (terra-shard-lane piece 1) so both the interactive queue and the background re-check
-    /// can call the identical body.
+    /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
+    /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.
     async fn execute_turn_for(&mut self, actor_id: u64, events_by_actor: &mut HashMap<u64, Vec<Event>>, driven: &mut usize) -> Result<(), PluginHostError> {
         let Some(events) = events_by_actor.remove(&actor_id) else { return Ok(()) };
         // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
@@ -607,10 +604,21 @@ impl ShardLoop {
                             }
                         },
                         Effect::CancelJob { job } => {
-                            if self.running_jobs.remove(&(actor_id, *job)) {
-                                self.job_turns.remove(&(actor_id, *job));
-                                self.job_placement.remove(&(actor_id, *job));
-                                let _ = self.runtime.cancel_job(instance, *job).await;
+                            if self.running_jobs.contains(&(actor_id, *job)) {
+                                match self.runtime.cancel_job(instance, *job).await {
+                                    Ok(()) => {
+                                        self.running_jobs.remove(&(actor_id, *job));
+                                        self.job_turns.remove(&(actor_id, *job));
+                                        self.job_placement.remove(&(actor_id, *job));
+                                    }
+                                    Err(fault) => {
+                                        let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault).await);
+                                        self.unregister(ActorId(actor_id)).await;
+                                        self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
+                                        *driven += 1;
+                                        return Ok(());
+                                    }
+                                }
                             }
                         }
                         _ => {}
@@ -723,22 +731,27 @@ impl ShardLoop {
             // anywhere in the tree to infer intent from — read and confirmed empty before writing
             // this. Grouped with `Suspend`/`Resume` (actor lifecycle), not `JobStep` (single-job
             // control, which already has its own guest-side path via `Effect::CancelJob`), so
-            // this is read as actor-level teardown: cancel EVERY job this actor has running via
-            // `GuestRuntime::cancel_job`, then unregister (drop) its instance outright — `seq` is
-            // not consumed (no documented meaning to key behavior off), only surfaced as
-            // the actor id already is. If a future packet's doc comment reveals a narrower
-            // per-job meaning for `seq`, this arm is the one to revisit.
+            // this is read as actor-level teardown: cancel every job in stable order, then retire
+            // the instance. The first failure is reported instead of claiming cancellation.
             Payload::Cancel { seq: _ } => {
                 let actor_id = envelope.to.0;
                 if self.instances.contains_key(&actor_id) {
                     let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
+                    let mut cancel_failure = None;
                     if let Some(instance) = self.instances.get_mut(&actor_id) {
                         for job in jobs {
-                            let _ = self.runtime.cancel_job(instance, job).await;
+                            if let Err(fault) = self.runtime.cancel_job(instance, job).await {
+                                cancel_failure = Some((job, fault));
+                                break;
+                            }
                         }
                     }
                     self.unregister(ActorId(actor_id)).await;
-                    self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id }).await?;
+                    let outcome = match cancel_failure {
+                        Some((job, fault)) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor cancel-job {job} failed before retirement: {}", turn_fault_message(&fault).await) },
+                        None => ShardOutcome::Cancelled { actor: actor_id },
+                    };
+                    self.send_outcome(&outcome).await?;
                 } else {
                     self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") }).await?;
                 }
@@ -1200,9 +1213,7 @@ mod tests {
         }
     }
 
-    /// 🛑️ `Effect::CancelJob` removes a job from `running_jobs` in the SAME turn it is seen, so a
-    /// job cancelled before its first step is never stepped at all — no stray `ShardOutcome::Job`
-    /// for it, ever.
+    /// 🛑️ A successful `Effect::CancelJob` removes the job in the same turn, before step.
     #[semio_framework_async_macros::async_test]
     async fn cancel_job_effect_stops_a_job_before_it_is_ever_stepped() {
         let mock = Arc::new(MockGuestRuntime::new().await);
@@ -1229,6 +1240,44 @@ mod tests {
         let outbound = probe.take_outbound().await;
         let outcomes = decode_outcomes(&outbound).await;
         assert!(!outcomes.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { .. })), "a cancelled-before-first-step job must never produce a ShardOutcome::Job");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_fault() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = ActorId(23);
+        let package = PackageRef { package: PackageId("remodel-cancel-failure".to_string()), hash: PackageHash([11u8; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let job_id = 889u64;
+        let mut turn = MockGuestRuntime::idle_turn().await;
+        turn.effects.push(Effect::SpawnJob { job: job_id, kind: "remodel.reconstruct".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
+        turn.effects.push(Effect::CancelJob { job: job_id });
+        mock.script_turn(actor, turn).await;
+        mock.fail_next_cancel();
+
+        let (transport, probe) = LoopbackTransport::paired().await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+        shard.register(actor, instance);
+
+        assert_eq!(pump(&mut shard).await.expect("pump failed cancellation"), 1);
+        assert!(!shard.is_registered(actor).await, "a failed hot-shard cancellation must retire the uncertain actor instance");
+        assert!(!shard.running_jobs.contains(&(actor.0, job_id)));
+        assert_eq!(mock.cancel_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 0, "the retired actor's job must never enter step-job");
+        let outcomes = decode_outcomes(&probe.take_outbound().await).await;
+        assert!(matches!(
+            outcomes.as_slice(),
+            [ShardOutcome::Fault { actor: reported, message }]
+                if *reported == actor.0
+                    && message == "ShardLoop::pump: cancel-job 889 failed; actor 23 retired: guest trapped: scripted cancel-job failure"
+        ));
+
+        probe.push_inbound(encode_event_envelope(actor, 2, &Event::InstanceClose).await).await;
+        assert_eq!(pump(&mut shard).await.expect("post-retirement pump"), 0);
+        assert_eq!(mock.cancel_admissions(), 1, "retirement must not retry cancellation");
+        assert!(matches!(decode_outcomes(&probe.take_outbound().await).await.as_slice(), [ShardOutcome::Fault { actor: reported, .. }] if *reported == actor.0));
     }
 
     //#region 🔖️K1SuspendResumePlacement
@@ -1351,6 +1400,43 @@ mod tests {
         let driven3 = pump(&mut shard).await.expect("pump 3");
         assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
         assert!(probe.take_outbound().await.is_empty(), "no further outcome of any kind for the cancelled job");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_cancelled() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = ActorId(42);
+        let package = PackageRef { package: PackageId("cancel-payload-failure".to_string()), hash: PackageHash([8u8; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let job_id = 556u64;
+        let mut turn = MockGuestRuntime::idle_turn().await;
+        turn.effects.push(Effect::SpawnJob { job: job_id, kind: "remodel.reconstruct".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
+        mock.script_turn(actor, turn).await;
+        mock.script_job_step(actor, JobStep::Running { progress: None }).await;
+
+        let (transport, probe) = LoopbackTransport::paired().await;
+        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+        shard.register(actor, instance);
+        assert_eq!(pump(&mut shard).await.expect("pump live job"), 2);
+        probe.take_outbound().await;
+
+        mock.fail_next_cancel();
+        probe.push_inbound(encode_payload_envelope(actor, 3, Payload::Cancel { seq: 0 }).await).await;
+        assert_eq!(pump(&mut shard).await.expect("pump failed actor cancel"), 0);
+        assert!(!shard.is_registered(actor).await);
+        assert_eq!(mock.cancel_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 1, "retirement must prevent any later guest step");
+        let outcomes = decode_outcomes(&probe.take_outbound().await).await;
+        assert!(matches!(
+            outcomes.as_slice(),
+            [ShardOutcome::Fault { actor: reported, message }]
+                if *reported == actor.0
+                    && message == "ShardLoop::pump: actor cancel-job 556 failed before retirement: guest trapped: scripted cancel-job failure"
+        ));
+        assert!(!outcomes.iter().any(|outcome| matches!(outcome, ShardOutcome::Cancelled { .. })), "failed actor cancellation must never claim success");
     }
 
     /// 🚦 `JobPlacement::Exclusive` must be honoured rather than silently ignored: an `Exclusive`

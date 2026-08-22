@@ -65,9 +65,11 @@ message ObjectKind {
 
 message ObjectKindExtra {
   string id = 1;
-  repeated string typology_path = 2;
-  uint32 availability = 3;
-  GeometryRecipe geometry = 4;
+  string name = 2;
+  string module_id = 3;
+  repeated string typology_path = 4;
+  uint32 availability = 5;
+  GeometryRecipe geometry = 6;
 }
 
 message ArtifactChildHandle { string child_id = 1; string target = 2; }

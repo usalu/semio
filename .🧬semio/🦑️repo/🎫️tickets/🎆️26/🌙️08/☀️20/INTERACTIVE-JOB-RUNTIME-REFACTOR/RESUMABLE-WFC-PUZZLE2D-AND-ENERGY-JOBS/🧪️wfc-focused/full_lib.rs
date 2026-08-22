@@ -1,9 +1,11 @@
-extern crate semio_framework_graph as graph_core;
 extern crate self as geometry;
+extern crate semio_framework_graph as graph_core;
 
 pub mod random {
     #[derive(Clone, Copy)]
-    pub struct Rng { state: [u64; 4] }
+    pub struct Rng {
+        state: [u64; 4],
+    }
 
     impl Rng {
         pub fn from_seed(seed: u64) -> Self {
@@ -18,27 +20,46 @@ pub mod random {
             }
             Self { state }
         }
-        pub fn from_state(state: [u64; 4]) -> Self { Self { state } }
-        pub fn state(&self) -> [u64; 4] { self.state }
+        pub fn from_state(state: [u64; 4]) -> Self {
+            Self { state }
+        }
+        pub fn state(&self) -> [u64; 4] {
+            self.state
+        }
         pub fn next_u64(&mut self) -> u64 {
             let result = self.state[1].wrapping_mul(5).rotate_left(7).wrapping_mul(9);
             let t = self.state[1] << 17;
-            self.state[2] ^= self.state[0]; self.state[3] ^= self.state[1];
-            self.state[1] ^= self.state[2]; self.state[0] ^= self.state[3];
-            self.state[2] ^= t; self.state[3] = self.state[3].rotate_left(45);
+            self.state[2] ^= self.state[0];
+            self.state[3] ^= self.state[1];
+            self.state[1] ^= self.state[2];
+            self.state[0] ^= self.state[3];
+            self.state[2] ^= t;
+            self.state[3] = self.state[3].rotate_left(45);
             result
         }
-        pub fn next_f64(&mut self) -> f64 { (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64) }
-        pub fn next_range(&mut self, lo: u64, hi: u64) -> u64 { lo + self.next_u64() % (hi - lo).max(1) }
-        pub fn next_bool(&mut self, probability: f64) -> bool { self.next_f64() < probability }
+        pub fn next_f64(&mut self) -> f64 {
+            (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+        }
+        pub fn next_range(&mut self, lo: u64, hi: u64) -> u64 {
+            lo + self.next_u64() % (hi - lo).max(1)
+        }
+        pub fn next_bool(&mut self, probability: f64) -> bool {
+            self.next_f64() < probability
+        }
         pub fn shuffle<T>(&mut self, values: &mut [T]) {
-            for i in (1..values.len()).rev() { let j = self.next_range(0, (i + 1) as u64) as usize; values.swap(i, j); }
+            for i in (1..values.len()).rev() {
+                let j = self.next_range(0, (i + 1) as u64) as usize;
+                values.swap(i, j);
+            }
         }
         pub fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
             (!values.is_empty()).then(|| &values[self.next_range(0, values.len() as u64) as usize])
         }
         pub fn sample_without_replacement(&mut self, n: usize, k: usize) -> Vec<usize> {
-            let mut values: Vec<_> = (0..n).collect(); self.shuffle(&mut values); values.truncate(k); values
+            let mut values: Vec<_> = (0..n).collect();
+            self.shuffle(&mut values);
+            values.truncate(k);
+            values
         }
     }
 }
@@ -128,3 +149,55 @@ pub mod wfc_engine {
     pub mod weights;
 }
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod worker_replay_tests {
+    use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
+    use semio_framework_job::{allocate_operation_id, default_now_ms, root_cancel_token, run_on_worker, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, Operation, RevisionId, StepOutcome};
+
+    use crate::wfc_engine::ids::NodeId;
+    use crate::wfc_engine::job::{WfcJob, WfcJobConfig};
+    use crate::wfc_engine::model::ModelBuilder;
+    use crate::wfc_engine::topology::GraphTopologyBuilder;
+
+    fn job(seed: u64) -> (WfcJob<crate::wfc_engine::topology::GraphTopology>, Operation) {
+        let mut model = ModelBuilder::new();
+        let black = model.add_pattern(1.0);
+        let white = model.add_pattern(2.0);
+        let adjacent = model.add_relation("adjacent");
+        model.allow_mirrored(adjacent, black, white);
+        let model = model.compile().expect("model");
+        let mut topology = GraphTopologyBuilder::new(257);
+        for node in 0..256 {
+            topology.arc(NodeId::from_index(node), NodeId::from_index(node + 1), adjacent);
+            topology.arc(NodeId::from_index(node + 1), NodeId::from_index(node), adjacent);
+        }
+        let operation = Operation::new(allocate_operation_id(), RevisionId(3), Generation(5), seed);
+        (WfcJob::new(operation, model, topology.build().expect("topology"), WfcJobConfig::default(), None, Vec::new()), operation)
+    }
+
+    #[test]
+    fn wfc_replays_byte_identically_on_actual_worker_counts() {
+        let default_count = std::thread::available_parallelism().map_or(1, usize::from);
+        let mut counts = vec![1, 2, 4, default_count];
+        counts.dedup();
+        let mut outputs = Vec::new();
+        for count in counts {
+            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, count));
+            let (job, operation) = job(0x5eed_1234);
+            let params = BatchJobParams {
+                operation: operation.operation,
+                generation: operation.generation,
+                cancel: root_cancel_token(),
+                config: BatchDriveConfig { site: "wfc.worker-count-replay", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 64, step_budget_ms: 2 },
+                now_ms: default_now_ms,
+            };
+            let outcome = run_on_worker(&pool, Lane::UserVisible, job, params).recv().expect("worker result");
+            pool.shutdown();
+            match outcome {
+                StepOutcome::Complete(candidate) => outputs.push(candidate.output),
+                other => panic!("worker count {count} failed: {other:?}"),
+            }
+        }
+        assert!(outputs.windows(2).all(|pair| pair[0] == pair[1]));
+    }
+}

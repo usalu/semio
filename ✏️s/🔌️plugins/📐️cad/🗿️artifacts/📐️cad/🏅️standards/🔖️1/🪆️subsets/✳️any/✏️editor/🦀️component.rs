@@ -24,7 +24,7 @@ use crate::editor::cad::commands::reference::{patch_cad_play_reference, referenc
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::{set_active_utility, set_dislocate_option};
-use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
+use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
@@ -136,6 +136,10 @@ pub struct CadPlayRuntime {
     #[serde(default)]
     pub engagement_session: Option<CadEngagementScratch>,
     #[serde(default)]
+    pub engagement_preview_operation_json: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_cad_preview_generation")]
+    pub engagement_preview_generation: i32,
+    #[serde(default)]
     pub last_finalized_interaction_id: Option<String>,
     #[serde(default)]
     pub sun: WorldSunConfig,
@@ -151,6 +155,12 @@ pub struct CadPlayRuntime {
     pub camera_structure_classic: CadCamera,
     #[serde(default)]
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
+    #[serde(default)]
+    pub active_utility_id: String,
+    #[serde(default)]
+    pub locale: String,
+    #[serde(default)]
+    pub terminology: String,
 }
 
 impl Default for CadPlayRuntime {
@@ -165,6 +175,8 @@ impl Default for CadPlayRuntime {
             selected_reference_id: None,
             engagement_pane: None,
             engagement_session: None,
+            engagement_preview_operation_json: None,
+            engagement_preview_generation: 0,
             last_finalized_interaction_id: None,
             sun: WorldSunConfig::default(),
             camera: CadCamera::default(),
@@ -172,6 +184,9 @@ impl Default for CadPlayRuntime {
             camera_energy: CadCamera::default(),
             camera_structure_classic: CadCamera::default(),
             dislocate_options_by_window_id: HashMap::new(),
+            active_utility_id: "move".into(),
+            locale: "en-US".into(),
+            terminology: "native".into(),
         }
     }
 }
@@ -200,6 +215,8 @@ pub async fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
         selected_reference_id: cfg.selected_reference_id.clone(),
         engagement_pane: cfg.engagement_pane.clone(),
         engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
+        engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
+        engagement_preview_generation: cfg.engagement_preview_generation,
         last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
         sun: cad_sun_config_to_world(&cfg.sun),
         camera: cfg.camera.clone(),
@@ -212,16 +229,16 @@ pub async fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
             (energy::WINDOW_KIND_ID.to_string(), cfg.dislocate_energy),
             (structure_classic::WINDOW_KIND_ID.to_string(), cfg.dislocate_structure_classic),
         ]),
+        active_utility_id: cfg.active_utility_id.clone(),
+        locale: cfg.locale.clone(),
+        terminology: cfg.terminology.clone(),
     }
 }
 
 /// @emoji 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
-/// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot for
-/// `CadConfigMutation::Snapshot`. `active_utility_id`/`locale` aren't part of `CadPlayRuntime` (they
-/// never had a runtime-side representation pre-B1 either — they were read straight off `ViewModel`),
-/// so callers that need to change them patch the returned `CadConfig` directly instead of threading
-/// them through `CadPlayRuntime`.
-pub async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
+/// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot. Kept private so production
+/// command modules cannot bypass the checked snapshot authorities below.
+async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
     CadConfig {
         contributions_json: base.contributions_json.clone(),
         selected_node_ids: runtime.selected_node_ids.clone(),
@@ -233,6 +250,8 @@ pub async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig)
         selected_reference_id: runtime.selected_reference_id.clone(),
         engagement_pane: runtime.engagement_pane.clone(),
         engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
+        engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
+        engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
         sun: cad_sun_config_from_world(&runtime.sun),
         camera: runtime.camera.clone(),
@@ -243,9 +262,9 @@ pub async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig)
         dislocate_building: runtime.dislocate_options(building::WINDOW_KIND_ID),
         dislocate_energy: runtime.dislocate_options(energy::WINDOW_KIND_ID),
         dislocate_structure_classic: runtime.dislocate_options(structure_classic::WINDOW_KIND_ID),
-        active_utility_id: base.active_utility_id.clone(),
-        locale: base.locale.clone(),
-        terminology: base.terminology.clone(),
+        active_utility_id: runtime.active_utility_id.clone(),
+        locale: runtime.locale.clone(),
+        terminology: runtime.terminology.clone(),
     }
 }
 
@@ -336,9 +355,30 @@ pub async fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
     cad_runtime_from_config(cfg.snapshot)
 }
 
-/// 🔀️ The outbound twin of [`runtime_of`]: the whole-record config snapshot a handler emits.
-pub async fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfigMutation {
-    CadConfigMutation::Snapshot { config: cad_config_from_runtime(runtime, base) }
+/// 🔀️ Emits a non-session config snapshot and fails closed if a caller attempts to bypass the
+/// operation-aware engagement transition authority.
+pub async fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
+    let config = cad_config_from_runtime(runtime, base);
+    if config.engagement_session_json != base.engagement_session_json {
+        return Err(Fault::from("cad.preview.invalid: engagement checkpoint transition requires operation-aware persistence"));
+    }
+    Ok(CadConfigMutation::Snapshot { config })
+}
+
+/// 🪪️ The sole engagement-checkpoint persistence authority: it stamps one exact public-operation
+/// identity and advances the bounded generation exactly once iff the checkpoint changed.
+pub async fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig, ctx: &CadDispatchCtx) -> Result<CadConfigMutation, Fault> {
+    let mut config = cad_config_from_runtime(runtime, base);
+    if config.engagement_session_json != base.engagement_session_json {
+        let operation = ctx.preview_operation.as_ref().ok_or_else(|| Fault::from("cad.preview.invalid: engagement transition is missing public operation identity"))?;
+        if base.engagement_preview_generation < 0 {
+            return Err(Fault::from("cad.preview.invalid: engagement preview generation is negative"));
+        }
+        config.engagement_preview_generation =
+            base.engagement_preview_generation.checked_add(1).filter(|generation| *generation <= CAD_PREVIEW_GENERATION_MAX).ok_or_else(|| Fault::from("cad.preview.conflict: engagement preview generation exhausted"))?;
+        config.engagement_preview_operation_json = Some(serde_json::to_string(operation).map_err(|_| Fault::from("cad.preview.invalid: operation identity serialization failed"))?);
+    }
+    Ok(CadConfigMutation::Snapshot { config })
 }
 //#endregion 🔖️Runtime
 
@@ -721,15 +761,64 @@ pub async fn cad_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Commands
-/// 🧵️ Per-dispatch app-struct state that is neither document nor config: `gesture_preview`'s
-/// monotone tick counter (see [`CadPlayApp::gesture_preview`]) plus (26/08/14) a read-only
+/// 🧵️ Per-dispatch app-struct state carrying the exact public-operation identity used by
+/// `gesture_preview` plus (26/08/14) a read-only
 /// [`CadInteractionSnapshot`] of the framework's `"cad"` domain — the `semio_framework_plugin::
 /// app_commands!`-generated `dispatch` has no way to thread `InteractionView` itself (see that
 /// macro's own doc comment on `ctx`), so `ArtifactApp::handle` builds the snapshot once and hands
 /// it down through this app-owned context instead.
-pub struct CadDispatchCtx<'a> {
-    pub preview_seq: &'a std::cell::RefCell<u64>,
+pub struct CadDispatchCtx {
     pub interaction: CadInteractionSnapshot,
+    pub preview_operation: Option<CadPreviewOperationIdentity>,
+}
+
+/// 🪪️ Collision-free public-operation identity attached to every persisted preview generation.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadPreviewOperationIdentity {
+    pub app_instance_id: u32,
+    pub parent_document_id: String,
+    pub operation_id: u64,
+    pub operation_generation: u64,
+    pub canonical_base_revision: String,
+}
+
+impl From<&semio_framework_plugin::AppOperationContext> for CadPreviewOperationIdentity {
+    fn from(operation: &semio_framework_plugin::AppOperationContext) -> Self {
+        Self {
+            app_instance_id: operation.app_instance_id,
+            parent_document_id: operation.parent_document_id.clone(),
+            operation_id: operation.operation_id,
+            operation_generation: operation.generation,
+            canonical_base_revision: operation.canonical_base_revision_hex(),
+        }
+    }
+}
+
+/// 👁️ Exact freshness stamp; both fields must match/advance, so ABA and finite hashes are absent.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CadPreviewStamp {
+    pub operation: CadPreviewOperationIdentity,
+    pub generation: i32,
+}
+
+impl CadPreviewStamp {
+    pub fn is_fresher_than(&self, current: &CadPreviewStamp) -> bool {
+        self.operation == current.operation && self.generation > current.generation
+    }
+}
+
+/// 👁️ Operation-stamped transient preview payload.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CadGesturePreview {
+    pub stamp: CadPreviewStamp,
+    pub payload: Vec<u8>,
+}
+
+impl CadGesturePreview {
+    pub fn is_fresher_than(&self, current: &CadPreviewStamp) -> bool {
+        self.stamp.is_fresher_than(current)
+    }
 }
 
 semio_framework_plugin::app_commands! {
@@ -737,7 +826,7 @@ semio_framework_plugin::app_commands! {
     /// one `🎮️commands/<group>/<command>` payload module per row. Row order IS the binary variant
     /// ordinal and the two literals are two different vocabularies (camelCase manifest action id,
     /// kebab wire keyword) — both are copied verbatim from the pre-consolidation `CadCommand` enum.
-    pub enum CadCommand for CadSnapshot, CadMutation, CadConfig, CadConfigMutation, ctx = CadDispatchCtx<'_> {
+    pub enum CadCommand for CadSnapshot, CadMutation, CadConfig, CadConfigMutation, ctx = CadDispatchCtx {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "addObject" as "add-object" => add_object::AddObject,
         "patchObject" as "patch-object" => patch_object::PatchObject,
@@ -887,30 +976,23 @@ async fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<C
 //#region 🔖️PlayApp
 // 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
 // `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
-// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
-// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
-// rubber-band tick counter, not app state.
-thread_local! {
-    static CAD_PREVIEW_SEQ: std::cell::RefCell<u64> = std::cell::RefCell::new(0);
-}
-
+// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). Preview freshness is the
+// persisted public-operation identity plus checked generation, never process-local state.
 #[derive(Default, Clone, Copy)]
 pub struct CadPlayApp;
 
 impl CadPlayApp {
-    /// 🔬️ CW7 preview-law seam: reads engagement scratch from config only; bumps a TLS seq for staleness.
-    pub async fn gesture_preview(&self, config: &CadConfig) -> Option<(String, u64, Vec<u8>)> {
+    /// 🔬️ CW7 preview-law seam: reads the operation-stamped engagement checkpoint from config only.
+    pub async fn gesture_preview(&self, config: &CadConfig) -> Option<CadGesturePreview> {
         let session_json = config.engagement_session_json.as_ref()?;
         if session_json.is_empty() || session_json == "null" {
             return None;
         }
-        let payload = session_json.as_bytes().to_vec();
-        let seq = CAD_PREVIEW_SEQ.with(|cell| {
-            let mut seq = cell.borrow_mut();
-            *seq = seq.wrapping_add(1);
-            *seq
-        });
-        Some(("gesture:engagement".into(), seq, payload))
+        if !(0..=CAD_PREVIEW_GENERATION_MAX).contains(&config.engagement_preview_generation) {
+            return None;
+        }
+        let operation = serde_json::from_str(config.engagement_preview_operation_json.as_ref()?).ok()?;
+        Some(CadGesturePreview { stamp: CadPreviewStamp { operation, generation: config.engagement_preview_generation }, payload: session_json.as_bytes().to_vec() })
     }
 }
 
@@ -1028,14 +1110,12 @@ impl ArtifactEditor for CadPlayApp {
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
         let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
-        CAD_PREVIEW_SEQ.with(|preview_seq| {
-            let mut ctx = CadDispatchCtx { preview_seq, interaction: snapshot };
-            command.dispatch(doc, cfg, &mut ctx)
-        })
+        let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)) };
+        command.dispatch(doc, cfg, &mut ctx)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
-        crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::sync_cad_computer_contributions(&cfg.snapshot.contributions_json);
+        crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
         let window_kind_id = match body_key {
@@ -1325,17 +1405,21 @@ pub(crate) mod testkit {
     /// and cad-owned), so tests build that by hand and skip the adaptation `handle` exists for.
     #[allow(clippy::needless_pass_by_value)]
     pub async fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
+        let operation = CadPreviewOperationIdentity { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) };
+        drive_with_operation(app, scene, action, args, config, Some(operation)).expect("cad command handled")
+    }
+
+    /// 🪪️ Production-dispatch harness with an explicit public operation identity, including the
+    /// missing-context case used by fail-closed transition fixtures.
+    #[allow(clippy::needless_pass_by_value)]
+    pub async fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, preview_operation: Option<CadPreviewOperationIdentity>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let _ = app;
         let history = empty_history();
         let doc = ArtifactView::new(scene, &history);
         let cfg = ConfigView { snapshot: config };
         let command = command_from_action(action, args.as_ref());
-        CAD_PREVIEW_SEQ
-            .with(|preview_seq| {
-                let mut ctx = CadDispatchCtx { preview_seq, interaction: CadInteractionSnapshot::default() };
-                command.dispatch(&doc, &cfg, &mut ctx)
-            })
-            .expect("cad command handled")
+        let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation };
+        command.dispatch(&doc, &cfg, &mut ctx)
     }
 
     pub async fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
@@ -2131,6 +2215,33 @@ mod tests {
     }
 
     //#region 🔖️GesturePreview
+    fn preview_operation(app_instance_id: u32) -> CadPreviewOperationIdentity {
+        CadPreviewOperationIdentity { app_instance_id, parent_document_id: "cad-preview-document".into(), operation_id: 41, operation_generation: 3, canonical_base_revision: "cd".repeat(32) }
+    }
+
+    fn persisted_preview_stamp(config: &CadConfig) -> CadPreviewStamp {
+        CadPreviewStamp { operation: serde_json::from_str(config.engagement_preview_operation_json.as_ref().expect("persisted operation identity")).expect("valid persisted operation identity"), generation: config.engagement_preview_generation }
+    }
+
+    fn spatial_scene_import_args() -> Value {
+        let file_text = json!({
+            "schema": "spatial.model",
+            "revision": 1,
+            "modelDefinitionId": "spatial.shape",
+            "objects": [{
+                "id": "object-preview-transition",
+                "label": "Preview transition",
+                "typology": "spatial.shape.primitive.box",
+                "visible": true,
+                "locked": false,
+                "origin": [0.0, 0.0, 0.0],
+                "primitives": []
+            }]
+        })
+        .to_string();
+        json!({ "payload": file_text, "name": "preview-transition.spatial.json" })
+    }
+
     /// 🔬️ CW7 preview-law seam: `CadPlayApp::gesture_preview` reads `CadEngagementScratch` only, never
     /// `CadSnapshot`/`CadMutation` — driven through the real `worldPointerMove` handler (the natural
     /// per-tick gesture handler) via the existing `drive` helper, config threaded explicitly across
@@ -2151,16 +2262,17 @@ mod tests {
 
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
         let config = config_after(&emit, &config);
-        let (key, seq_after_first, payload) = app.gesture_preview(&config).expect("a live engagement session is previewable");
-        assert_eq!(key, "gesture:engagement");
-        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
+        let first = app.gesture_preview(&config).expect("a live engagement session is previewable");
+        let value: Value = serde_json::from_slice(&first.payload).expect("payload is valid json");
         assert_eq!(value["context"]["cursor"], json!([3.0, 4.0, 0.0]));
 
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [5.0, 6.0, 0.0] })), &config);
         let config = config_after(&emit, &config);
-        let (_, seq_after_second, payload_after_second) = app.gesture_preview(&config).expect("still live mid-gesture");
-        assert!(seq_after_second > seq_after_first, "seq is monotone per tick, for staleness detection on the receiving end");
-        let value_after_second: Value = serde_json::from_slice(&payload_after_second).expect("payload is valid json");
+        let second = app.gesture_preview(&config).expect("still live mid-gesture");
+        assert_eq!(second.stamp.operation, first.stamp.operation);
+        assert_eq!(second.stamp.generation, first.stamp.generation + 1, "the persisted preview generation advances exactly once per changed checkpoint");
+        assert!(second.is_fresher_than(&first.stamp));
+        let value_after_second: Value = serde_json::from_slice(&second.payload).expect("payload is valid json");
         assert_eq!(value_after_second["context"]["cursor"], json!([5.0, 6.0, 0.0]), "preview tracks the live cursor, not the gesture start");
 
         let emit = drive_with_config(&app, &scene, "engagementAbort", None, &config);
@@ -2178,9 +2290,184 @@ mod tests {
         let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &config);
         let config = config_after(&emit, &config);
         let session_before = config.engagement_session_json.clone();
-        let _ = app.gesture_preview(&config);
-        let _ = app.gesture_preview(&config);
+        let first = app.gesture_preview(&config);
+        let second = app.gesture_preview(&config);
+        assert_eq!(first, second, "equal checkpoint reads keep the exact same freshness stamp");
         assert_eq!(config.engagement_session_json, session_before, "gesture_preview must never mutate the live engagement session it reads");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn production_transition_authority_routes_engagement_utility_and_import_without_noop_increment() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let operation = preview_operation(1);
+        let base = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+
+        let started_emit = drive_with_operation(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &base, Some(operation.clone())).expect("ordinary engagement transition");
+        let started = config_after(&started_emit, &base);
+        let started_stamp = persisted_preview_stamp(&started);
+        assert!(started.engagement_session_json.is_some());
+        assert_eq!(started_stamp.operation, operation);
+        assert_eq!(started_stamp.generation, base.engagement_preview_generation + 1);
+
+        let utility_emit = drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &started, Some(operation.clone())).expect("utility clear transition");
+        let utility_cleared = config_after(&utility_emit, &started);
+        let utility_stamp = persisted_preview_stamp(&utility_cleared);
+        assert!(utility_cleared.engagement_session_json.is_none());
+        assert!(utility_stamp.is_fresher_than(&started_stamp));
+        assert_eq!(utility_stamp.generation, started_stamp.generation + 1);
+
+        let noop_emit = drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": "move" })), &utility_cleared, Some(operation.clone())).expect("same checkpoint utility update");
+        let noop = config_after(&noop_emit, &utility_cleared);
+        assert_eq!(noop.engagement_session_json, utility_cleared.engagement_session_json);
+        assert_eq!(persisted_preview_stamp(&noop), utility_stamp, "a non-session config change must not advance the preview generation");
+
+        let input_emit = drive_with_operation(&app, &scene, "engagementInput", Some(json!({ "value": "b", "pane": "shape" })), &noop, Some(operation.clone())).expect("engagement input");
+        let with_input = config_after(&input_emit, &noop);
+        assert_eq!(persisted_preview_stamp(&with_input), utility_stamp, "input-only config must preserve the stamp");
+        let restarted_emit = drive_with_operation(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &with_input, Some(operation.clone())).expect("restart engagement");
+        let restarted = config_after(&restarted_emit, &with_input);
+        let restarted_stamp = persisted_preview_stamp(&restarted);
+        assert!(restarted_stamp.is_fresher_than(&utility_stamp));
+
+        let import_emit = drive_with_operation(&app, &scene, "importCadFile", Some(spatial_scene_import_args()), &restarted, Some(operation)).expect("scene import clear transition");
+        let import_cleared = config_after(&import_emit, &restarted);
+        let import_stamp = persisted_preview_stamp(&import_cleared);
+        assert!(import_cleared.engagement_session_json.is_none());
+        assert!(import_stamp.is_fresher_than(&restarted_stamp));
+        assert_eq!(import_stamp.generation, restarted_stamp.generation + 1);
+        assert!(matches!(import_emit.effects.first(), Some(Effect::LoadDocument { .. })));
+
+        let example_emit = drive_with_operation(&app, &scene, "setActiveExample", Some(json!({ "exampleId": "" })), &restarted, Some(preview_operation(1))).expect("active example clear transition");
+        let example_cleared = config_after(&example_emit, &restarted);
+        let example_stamp = persisted_preview_stamp(&example_cleared);
+        assert!(example_cleared.engagement_session_json.is_none());
+        assert!(example_stamp.is_fresher_than(&restarted_stamp));
+        assert_eq!(example_stamp.generation, restarted_stamp.generation + 1);
+        assert!(matches!(example_emit.effects.first(), Some(Effect::LoadDocument { .. })));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn production_transition_authority_isolates_two_app_aba_sequences() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let base = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let operations = [preview_operation(1), preview_operation(2)];
+        let mut previews = Vec::new();
+
+        for operation in operations {
+            let started_emit = drive_with_operation(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &base, Some(operation.clone())).expect("start app-local engagement");
+            let started = config_after(&started_emit, &base);
+            let a_emit = drive_with_operation(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &started, Some(operation.clone())).expect("A");
+            let at_a = config_after(&a_emit, &started);
+            let first_a = app.gesture_preview(&at_a).expect("first A preview");
+            let b_emit = drive_with_operation(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &at_a, Some(operation.clone())).expect("B");
+            let at_b = config_after(&b_emit, &at_a);
+            let a_again_emit = drive_with_operation(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &at_b, Some(operation)).expect("A again");
+            let at_a_again = config_after(&a_again_emit, &at_b);
+            let second_a = app.gesture_preview(&at_a_again).expect("second A preview");
+            assert_eq!(first_a.payload, second_a.payload);
+            assert_eq!(second_a.stamp.generation, first_a.stamp.generation + 2);
+            assert_ne!(first_a.stamp, second_a.stamp);
+            previews.push(second_a);
+        }
+
+        assert_eq!(previews[0].payload, previews[1].payload);
+        assert_eq!(previews[0].stamp.generation, previews[1].stamp.generation);
+        assert_ne!(previews[0].stamp.operation, previews[1].stamp.operation);
+        assert!(!previews[0].is_fresher_than(&previews[1].stamp));
+        assert!(!previews[1].is_fresher_than(&previews[0].stamp));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn production_transition_exhaustion_and_missing_context_fail_before_checkpoint_persistence() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let operation = preview_operation(9);
+        let base = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let started_emit = drive_with_operation(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &base, Some(operation.clone())).expect("start live engagement");
+        let started = config_after(&started_emit, &base);
+        let mut at_max = started.clone();
+        at_max.engagement_preview_generation = CAD_PREVIEW_GENERATION_MAX;
+        let checkpoint_before = at_max.engagement_session_json.clone();
+        let operation_before = at_max.engagement_preview_operation_json.clone();
+
+        assert!(drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &at_max, Some(operation.clone())).is_err());
+        assert!(drive_with_operation(&app, &scene, "importCadFile", Some(spatial_scene_import_args()), &at_max, Some(operation.clone())).is_err());
+        assert!(drive_with_operation(&app, &scene, "setActiveExample", Some(json!({ "exampleId": "" })), &at_max, Some(operation.clone())).is_err());
+        assert!(drive_with_operation(&app, &scene, "engagementAbort", None, &at_max, Some(operation)).is_err());
+        assert_eq!(at_max.engagement_session_json, checkpoint_before, "failed commands cannot persist their cleared checkpoint");
+        assert_eq!(at_max.engagement_preview_generation, CAD_PREVIEW_GENERATION_MAX);
+        assert_eq!(at_max.engagement_preview_operation_json, operation_before);
+
+        assert!(drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &started, None).is_err());
+        assert!(drive_with_operation(&app, &scene, "importCadFile", Some(spatial_scene_import_args()), &started, None).is_err());
+        let mut bypass = cad_runtime_from_config(&started);
+        bypass.engagement_session = None;
+        assert!(snapshot_of(&bypass, &started).is_err(), "ordinary snapshots must reject session-transition bypasses");
+        assert_eq!(started.engagement_session_json, checkpoint_before);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn gesture_preview_rejects_aba_collision_and_cross_app_stamps_and_survives_restart() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let base = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &base);
+        let started = config_after(&emit, &base);
+
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &started);
+        let at_a = config_after(&emit, &started);
+        let preview_a = app.gesture_preview(&at_a).expect("A preview");
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &at_a);
+        let at_b = config_after(&emit, &at_a);
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &at_b);
+        let at_a_again = config_after(&emit, &at_b);
+        let preview_a_again = app.gesture_preview(&at_a_again).expect("second A preview");
+        assert_eq!(preview_a.payload, preview_a_again.payload, "fixture must exercise A → B → A");
+        assert_eq!(preview_a_again.stamp.generation, preview_a.stamp.generation + 2);
+        assert_ne!(preview_a.stamp, preview_a_again.stamp, "ABA payload equality cannot reproduce a freshness stamp");
+
+        let restarted: CadConfig = serde_json::from_slice(&serde_json::to_vec(&at_a_again).expect("config checkpoint")).expect("cold reopen config");
+        assert_eq!(app.gesture_preview(&restarted).expect("reopened preview").stamp, preview_a_again.stamp);
+
+        let mut other_app = restarted.clone();
+        other_app.engagement_preview_operation_json =
+            Some(serde_json::to_string(&CadPreviewOperationIdentity { app_instance_id: 2, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) }).expect("identity"));
+        let collision = app.gesture_preview(&other_app).expect("other app preview");
+        assert_eq!(collision.stamp.generation, preview_a_again.stamp.generation, "forced finite-generation collision fixture");
+        assert_ne!(collision.stamp.operation, preview_a_again.stamp.operation);
+        assert!(!collision.is_fresher_than(&preview_a_again.stamp), "freshness requires exact operation identity, not only a colliding counter");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn preview_generation_cross_surface_domain_round_trips_max_and_rejects_plus_one() {
+        let app = CadPlayApp::default();
+        let operation = CadPreviewOperationIdentity { app_instance_id: 7, parent_document_id: "cad-max-document".into(), operation_id: 11, operation_generation: 13, canonical_base_revision: "ab".repeat(32) };
+        let at_max =
+            CadConfig { engagement_session_json: Some("{}".into()), engagement_preview_operation_json: Some(serde_json::to_string(&operation).expect("identity")), engagement_preview_generation: CAD_PREVIEW_GENERATION_MAX, ..CadConfig::default() };
+        let encoded = serde_json::to_string(&at_max).expect("maximum generation serializes");
+        let decoded: CadConfig = serde_json::from_str(&encoded).expect("maximum generation deserializes exactly");
+        assert_eq!(decoded.engagement_preview_generation, CAD_PREVIEW_GENERATION_MAX);
+        assert_eq!(app.gesture_preview(&decoded).expect("maximum generation remains previewable").stamp.generation, CAD_PREVIEW_GENERATION_MAX);
+
+        let plus_one = i64::from(CAD_PREVIEW_GENERATION_MAX) + 1;
+        let oversized = encoded.replace(&format!("\"engagementPreviewGeneration\":{}", CAD_PREVIEW_GENERATION_MAX), &format!("\"engagementPreviewGeneration\":{plus_one}"));
+        assert!(serde_json::from_str::<CadConfig>(&oversized).is_err(), "maximum + 1 must fail before entering persisted config");
+
+        let mut runtime = cad_runtime_from_config(&decoded);
+        runtime.engagement_session = None;
+        let ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(operation) };
+        assert!(preview_transition_snapshot_of(&runtime, &decoded, &ctx).is_err(), "incrementing the maximum generation must fail closed");
+
+        let json_schema: Value = serde_json::from_str(include_str!("🎚️config/🧬️schema/🔣️component.json")).expect("CAD config JSON descriptor");
+        let generation_schema = &json_schema["properties"]["engagementPreviewGeneration"];
+        assert_eq!(generation_schema["minimum"], json!(0));
+        assert_eq!(generation_schema["maximum"], json!(CAD_PREVIEW_GENERATION_MAX));
+        assert!(include_str!("🎚️config/🧬️schema/🛰️component.proto").contains("int32 engagement_preview_generation = 32;"));
+        assert!(include_str!("🎚️config/🧬️schema/🔗️component.graphql").contains("engagementPreviewGeneration: Int!"));
+        assert!(include_str!("🎚️config/🧬️schema/🟦️component.ts").contains("engagementPreviewGeneration: number;"));
+        assert!(include_str!("🎚️config/🧬️schema/🦀️component.rs").contains("engagement_preview_generation: i32"));
     }
     //#endregion 🔖️GesturePreview
 

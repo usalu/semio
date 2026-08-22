@@ -7,7 +7,7 @@
 //! `📐️cad`/`✳️object`/`✳️kit` hit) in favor of a hand-rolled `ArtifactDsl`/`ArtifactPack` — see
 //! `🔖️HandcraftedArtifactCodecs` below, matching `📐️cad`'s own snapshot facet exactly.
 
-use crate::artifacts::process3d::{Pose, Workshop};
+use crate::artifacts::process3d::{Pose, ProcessStep, Stock, Workshop};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
@@ -32,11 +32,16 @@ pub struct Process3dSnapshot {
     #[state(artifact)]
     pub stock_pose: Pose,
     #[state(artifact)]
+    pub stock_payload: Stock,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    #[state(artifact)]
+    #[serde(default)]
+    pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     #[serde(default)]
@@ -134,13 +139,15 @@ async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> 
 //#region 🔖️TextPrimitives
 async fn print_process3d_snapshot_body(s: &Process3dSnapshot) -> String {
     format!(
-        "workshop={}\nstockId={}\nstockLabel={}\nstockPose={}\nstockSolid={}\nsteps={}\ntoolSolids={}\nresolvedUpTo={}",
+        "workshop={}\nstockId={}\nstockLabel={}\nstockPose={}\nstockPayload={}\nstockSolid={}\nsteps={}\nstepPayloads={}\ntoolSolids={}\nresolvedUpTo={}",
         enc_json(&s.workshop),
         enc_str(&s.stock_id),
         enc_str(&s.stock_label),
         enc_json(&s.stock_pose),
+        enc_json(&s.stock_payload),
         enc_child(&s.stock_solid),
         enc_child(&s.steps),
+        enc_json(&s.step_payloads),
         enc_child_list(&s.tool_solids),
         enc_json(&s.resolved_up_to),
     )
@@ -162,10 +169,14 @@ async fn parse_process3d_snapshot_body(body: &str) -> Result<Process3dSnapshot, 
             snapshot.stock_label = dec_str(rest)?;
         } else if let Some(rest) = line.strip_prefix("stockPose=") {
             snapshot.stock_pose = dec_json(rest)?;
+        } else if let Some(rest) = line.strip_prefix("stockPayload=") {
+            snapshot.stock_payload = dec_json(rest)?;
         } else if let Some(rest) = line.strip_prefix("stockSolid=") {
             snapshot.stock_solid = dec_child(rest)?;
         } else if let Some(rest) = line.strip_prefix("steps=") {
             snapshot.steps = dec_child(rest)?;
+        } else if let Some(rest) = line.strip_prefix("stepPayloads=") {
+            snapshot.step_payloads = dec_json(rest)?;
         } else if let Some(rest) = line.strip_prefix("toolSolids=") {
             snapshot.tool_solids = dec_child_list(rest)?;
         } else if let Some(rest) = line.strip_prefix("resolvedUpTo=") {
@@ -233,8 +244,10 @@ async fn encode_process3d_snapshot_binary(s: &Process3dSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &s.stock_id);
     write_str_lp(&mut out, &s.stock_label);
     write_str_lp(&mut out, &serde_json::to_string(&s.stock_pose).expect("Pose is always JSON-serializable"));
+    write_str_lp(&mut out, &serde_json::to_string(&s.stock_payload).expect("Stock is always JSON-serializable"));
     write_child(&mut out, &s.stock_solid);
     write_child(&mut out, &s.steps);
+    write_str_lp(&mut out, &serde_json::to_string(&s.step_payloads).expect("process steps are always JSON-serializable"));
     write_child_list(&mut out, &s.tool_solids);
     write_str_lp(&mut out, &serde_json::to_string(&s.resolved_up_to).expect("Option<usize> is always JSON-serializable"));
     out
@@ -251,8 +264,10 @@ async fn decode_process3d_snapshot_binary(bytes: &[u8]) -> Result<Process3dSnaps
     snapshot.stock_id = read_str_lp(&mut reader)?;
     snapshot.stock_label = read_str_lp(&mut reader)?;
     snapshot.stock_pose = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    snapshot.stock_payload = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     snapshot.stock_solid = read_child(&mut reader)?;
     snapshot.steps = read_child(&mut reader)?;
+    snapshot.step_payloads = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     snapshot.tool_solids = read_child_list(&mut reader)?;
     snapshot.resolved_up_to = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     Ok(snapshot)

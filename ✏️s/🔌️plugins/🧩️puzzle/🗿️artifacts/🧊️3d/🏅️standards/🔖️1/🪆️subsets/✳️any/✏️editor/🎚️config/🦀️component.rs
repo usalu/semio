@@ -13,23 +13,8 @@
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-use std::sync::atomic::{AtomicU64, Ordering};
 
 //#region 🔖️Defaults
-#[derive(Clone, Copy, Debug, Eq)]
-pub(crate) struct RuntimeSessionId(pub(crate) u64);
-
-impl PartialEq for RuntimeSessionId {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-fn next_runtime_session_id() -> RuntimeSessionId {
-    static NEXT: AtomicU64 = AtomicU64::new(1);
-    RuntimeSessionId(NEXT.fetch_add(1, Ordering::Relaxed))
-}
-
 fn one_f64() -> f64 {
     1.0
 }
@@ -153,17 +138,18 @@ pub struct Puzzle3dSuggestionMenu {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dConfig {
-    /// 🧠 Ephemeral worker-portable identity for the retained precompute session. Cloning a
-    /// config into an `AppCommandJob` preserves it; persistence intentionally allocates a fresh
-    /// session and restores from `fill_checkpoint`.
-    #[serde(skip, default = "next_runtime_session_id")]
-    pub(crate) runtime_session_id: RuntimeSessionId,
     #[serde(default)]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[serde(default = "default_overlap_budget")]
     pub overlap_budget: f64,
     #[serde(default)]
     pub fill_count: u32,
+    /// 🧵 Invalidates stale fill-materialization continuations after a newer slider request.
+    #[serde(default)]
+    pub fill_apply_generation: u64,
+    /// 🪣️ Persisted prefix cursor, kept separate so each continuation need not reserialize the full plan.
+    #[serde(default)]
+    pub fill_applied_count: u32,
     /// 🧵 Worker-independent checkpoint for the bounded fill planner. This travels with the
     /// config snapshot so successive commands may execute on any shared-pool worker.
     #[serde(default)]
@@ -242,10 +228,11 @@ impl Default for Puzzle3dConfig {
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
         Self {
-            runtime_session_id: next_runtime_session_id(),
             suggestion_menu: None,
             overlap_budget: default_overlap_budget(),
             fill_count: 0,
+            fill_apply_generation: 0,
+            fill_applied_count: 0,
             fill_checkpoint: Vec::new(),
             brush_candidate_index: 0,
             object_kind_weights: HashMap::new(),
@@ -428,12 +415,12 @@ impl Puzzle3dConfig {
 //#endregion 🔖️WindowOptions
 
 //#region 🔖️ConfigMutation
-/// 🧮️ B1: `Puzzle3dConfig`'s operation enum. Every real config edit is captured as "the whole config
-/// after this edit"; `backwards()` is the same one-liner regardless of what changed ("restore the
-/// whole-config snapshot from just before"), so no per-field inverse bookkeeping is needed.
+/// 🧮️ `Puzzle3dConfig` operations, with compact fill-cursor mutations for resumable hot paths.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Puzzle3dConfigMutation {
     Snapshot { config: Puzzle3dConfig },
+    SetFillRequest { count: u32, generation: u64 },
+    SetFillAppliedCount { count: u32 },
 }
 
 impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
@@ -442,11 +429,26 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
     fn diff(&self, _base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle3dConfigMutation::Snapshot { config } => config.clone(),
+            Puzzle3dConfigMutation::SetFillRequest { count, generation } => {
+                let mut next = _base.clone();
+                next.fill_count = *count;
+                next.fill_apply_generation = *generation;
+                next
+            }
+            Puzzle3dConfigMutation::SetFillAppliedCount { count } => {
+                let mut next = _base.clone();
+                next.fill_applied_count = *count;
+                next
+            }
         })
     }
 
     fn inverse(&self, base: &Puzzle3dConfig) -> Vec<Self> {
-        vec![Puzzle3dConfigMutation::Snapshot { config: base.clone() }]
+        vec![match self {
+            Puzzle3dConfigMutation::Snapshot { .. } => Puzzle3dConfigMutation::Snapshot { config: base.clone() },
+            Puzzle3dConfigMutation::SetFillRequest { .. } => Puzzle3dConfigMutation::SetFillRequest { count: base.fill_count, generation: base.fill_apply_generation },
+            Puzzle3dConfigMutation::SetFillAppliedCount { .. } => Puzzle3dConfigMutation::SetFillAppliedCount { count: base.fill_applied_count },
+        }]
     }
 }
 
@@ -475,13 +477,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn runtime_session_identity_is_ephemeral_and_equality_neutral() {
+    fn config_round_trip_has_no_process_identity() {
         let config = Puzzle3dConfig::default();
         let json = serde_json::to_string(&config).expect("config serializes");
-        assert!(!json.contains("runtimeSessionId"));
-        assert!(!json.contains("runtime_session_id"));
         let restored: Puzzle3dConfig = serde_json::from_str(&json).expect("config deserializes");
-        assert_ne!(config.runtime_session_id.0, restored.runtime_session_id.0);
         assert_eq!(config, restored);
         let mutation = Puzzle3dConfigMutation::Snapshot { config };
         let encoded = protocol::OpBinary::encode_op(&mutation).expect("mutation encodes");

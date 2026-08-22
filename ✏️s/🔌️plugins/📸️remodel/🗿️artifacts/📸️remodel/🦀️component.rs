@@ -16,6 +16,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schem
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.remodel` artifact kind — lifted verbatim out of the manifest builder's
@@ -213,23 +214,53 @@ pub const REMODEL_DIALECT: semio_framework_plugin::Dialect = semio_framework_plu
 /// (`image_key`-equivalent lookups by asset id; `ReplaceMeshResult`'s whole-`RemodelMesh` payload
 /// shape) — the type/mutation/persistence layer is fully real, only the derive's SCHEMA
 /// INTROSPECTION table is incomplete for these two fields.
-use crate::artifacts::remodel::standards::v1::subsets::any::io::{mesh_data_to_semio_mesh, semio_image_snapshot_from_image_asset};
-
 pub type RemodelAssetChild = store::ArtifactChild<SemioImageSnapshot>;
 pub type RemodelMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
 
+/// 🧩️ Restart-stable content authority. Every encoded leaf decodes to at most 4 KiB; values carry
+/// only bounded metadata and content-addressed leaves, never a whole image or mesh object.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RemodelDurableArtifact {
+    pub kind: String,
+    pub mime: Option<String>,
+    pub width: u32,
+    pub height: u32,
+    #[dsl(table)]
+    pub chunks: Vec<String>,
+}
+
+pub type RemodelDurableArtifactStore = BTreeMap<String, RemodelDurableArtifact>;
+
+const REMODEL_DURABLE_CHUNK_RAW_BYTES: usize = 4_096;
+const REMODEL_MAX_STAGED_BLOBS: usize = 32;
+const REMODEL_SPARSE_CONTENT_BYTES: usize = 512 * 3 * 4;
+const REMODEL_SPARSE_CONTENT_CHUNKS: u64 = 2;
+const REMODEL_RASTER_CONTENT_BYTES: usize = 1_114_112;
+const REMODEL_RASTER_CONTENT_CHUNKS: u64 = 272;
+const REMODEL_MESH_CONTENT_BYTES: usize = 87_552 + 30;
+const REMODEL_MESH_CONTENT_CHUNKS: u64 = 30;
+const REMODEL_EMPTY_MESH_CHILD_ID: &str = "remodel-mesh-constant-empty";
+const REMODEL_BOX_MESH_CHILD_ID: &str = "remodel-mesh-constant-box";
+const REMODEL_BOUNDED_MESH_VERTICES: usize = 512;
+const REMODEL_BOUNDED_MESH_TRIANGLES: usize = 512;
+
 //#region 🔖️AssetHandles
-async fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChild {
+fn mint_asset_child_handle(asset_id: &str, content_hash: u64) -> RemodelAssetChild {
     let child_id = format!("remodel-asset-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = store::os_io::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
-/// fallback shape used only when the bytes can't be decoded into real `SemioImageSnapshot` content
-/// (see `mint_and_stash_asset`), mirrors `🖨️raster`'s `image_asset_child_handle` exactly.
-pub async fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+pub fn committed_remodel_asset_handle(asset_id: &str, content_id: &str) -> RemodelAssetChild {
+    let mut handle = mint_asset_child_handle(asset_id, 0);
+    handle.child_id = content_id.into();
+    handle
+}
+
+/// 🕸️ Deterministic content-addressed CHILD handle for one bounded durable asset.
+pub fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     asset.mime.hash(&mut hasher);
@@ -237,130 +268,601 @@ pub async fn image_asset_child_handle(asset_id: &str, asset: &ImageAsset) -> Rem
     mint_asset_child_handle(asset_id, hasher.finish())
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
-/// pack bytes — makes `decode → cache → re-encode → decode` idempotent at the handle level, exactly
-/// `🖨️raster`'s `image_content_child_handle` rationale (two pixel-identical PNGs from different
-/// encoders are not byte-identical, so hashing raw bytes would mint two handles for the same image).
-/// Used only when the asset decodes into real `SemioImageSnapshot` content (`image/png` today); every
-/// other mime mints off the raw bytes instead (`image_asset_child_handle`).
-async fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> RemodelAssetChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
-    mint_asset_child_handle(asset_id, hasher.finish())
+/// 🧩️ Admits a normal imported asset as independently bounded raw leaves. No whole `ImageAsset`
+/// value is retained outside the typed mutation currently being reduced.
+pub fn store_remodel_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
+    image_asset_child_handle(asset_id, asset)
 }
 
-// 🩹️ Working-scene cache, keyed `child_id`. Caches the REAL `ImageAsset` (mime + base64 bytes)
-// directly — deliberately NOT the lossy `SemioImageSnapshot` projection raster's own identical cache
-// stores. Divergence from raster's own precedent, documented honestly: raster's `assets` carry
-// exactly one real mime (`image/png`, its own doc comment), so a decode failure there is anomalous
-// input worth leaving uncached. `remodel`'s `assets` legitimately carry TWO real mimes in normal
-// operation — `image/png` (textures/DSM/DTM/ortho) AND `image/jpeg` (`MediaStream.frames`, sampled
-// video frames, the editor surface's own `🎮️commands/📥️import-frame-payload`'s own real call sites) — so a jpeg asset
-// failing `semio_image_snapshot_from_image_asset` (jpeg bridge not wired yet, see that function's
-// doc comment) is an EXPECTED, common, correct case, not bad data; leaving the cache slot empty for
-// it would make every jpeg-sourced `create-asset`'s inverse silently lossy. Caching the real asset
-// bytes regardless of decodability keeps every mutation's inverse (`create-asset`/`delete-asset`,
-// `🧬️mutations/…/↩️inverse`) exact for BOTH mimes today.
-thread_local! {
-    static REMODEL_ASSET_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, ImageAsset>> = std::cell::RefCell::new(std::collections::HashMap::new());
+/// 🧶️ Snapshot-owned decoded-leaf view for bounded consumers. Identity and display metadata stay
+/// separate from the compressed payload, and no leaf can exceed 4 KiB.
+#[derive(Clone)]
+pub struct RemodelAssetChunkSource {
+    pub identity: String,
+    pub mime: String,
+    pub width: u32,
+    pub height: u32,
+    pub leaves: Vec<Arc<[u8]>>,
+    pub byte_len: usize,
 }
 
-pub async fn stash_remodel_asset(child_id: &str, asset: ImageAsset) {
-    REMODEL_ASSET_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(child_id.to_string(), asset);
-    });
+pub fn remodel_asset_chunk_source(snapshot: &RemodelSnapshot, asset_id: &str) -> Option<RemodelAssetChunkSource> {
+    let handle = snapshot.assets.get(asset_id)?;
+    let artifact = snapshot.durable_artifacts.get(&handle.child_id).filter(|artifact| artifact.kind == "image")?;
+    let mime = artifact.mime.clone()?;
+    let mut leaves = Vec::with_capacity(artifact.chunks.len());
+    let mut byte_len = 0usize;
+    for encoded in &artifact.chunks {
+        let chunk = decode_remodel_durable_chunk(encoded)?;
+        byte_len = byte_len.checked_add(chunk.len())?;
+        if byte_len > REMODEL_RASTER_CONTENT_BYTES {
+            return None;
+        }
+        leaves.push(Arc::from(chunk));
+    }
+    (!leaves.is_empty()).then(|| RemodelAssetChunkSource { identity: handle.child_id.clone(), mime, width: artifact.width, height: artifact.height, leaves, byte_len })
 }
 
-pub async fn cached_remodel_asset(child_id: &str) -> Option<ImageAsset> {
-    REMODEL_ASSET_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+pub fn remodel_asset_dimensions(snapshot: &RemodelSnapshot, asset_id: &str) -> Option<(u32, u32)> {
+    let handle = snapshot.assets.get(asset_id)?;
+    let artifact = snapshot.durable_artifacts.get(&handle.child_id).filter(|artifact| artifact.kind == "image")?;
+    Some((artifact.width, artifact.height))
 }
 
-/// 🌉️ The single funnel-through "add real content" primitive for `assets`: mints a handle (the
-/// CANONICAL content-addressed one when the bytes decode into real `SemioImageSnapshot` content —
-/// today `image/png` only — the raw-bytes one otherwise) and ALWAYS stashes the real `ImageAsset` into
-/// the working-scene cache (see that field's doc comment for why, unlike raster, this never leaves the
-/// cache slot empty). Every call site that used to do `assets.insert(id, ImageAsset{..})` now calls
-/// this instead, and gets back only the handle.
-pub async fn mint_and_stash_asset(asset_id: &str, asset: &ImageAsset) -> RemodelAssetChild {
-    let handle = match semio_image_snapshot_from_image_asset(asset) {
-        Ok(image) => image_content_child_handle(asset_id, &image),
-        Err(_) => image_asset_child_handle(asset_id, asset),
-    };
-    stash_remodel_asset(&handle.child_id, asset.clone());
-    handle
+/// 🖼️ Reconstructs a bounded API value for export and UI presentation only. Active reconstruction
+/// consumes `remodel_asset_chunk_source` directly and never passes through this whole-value facade.
+pub fn remodel_asset(snapshot: &RemodelSnapshot, asset_id: &str) -> Option<ImageAsset> {
+    let source = remodel_asset_chunk_source(snapshot, asset_id)?;
+    let mut bytes = Vec::with_capacity(source.byte_len);
+    for leaf in source.leaves {
+        bytes.extend_from_slice(&leaf);
+    }
+    Some(ImageAsset { mime: source.mime, data: base64::engine::general_purpose::STANDARD.encode(bytes), width: source.width, height: source.height })
 }
 
-/// 🌉️ The single read accessor every render/export/inference call site funnels through — resolves
-/// `asset_id` through the persisted handle map, then through the working-scene cache. `None` on either
-/// a missing handle OR a cold cache (store-level undo/redo bypassing `ArtifactApp::handle`, matching
-/// every prior exemplar's documented staleness gap in this ticket) — fails soft, never panics.
-pub async fn remodel_asset(assets: &BTreeMap<String, RemodelAssetChild>, asset_id: &str) -> Option<ImageAsset> {
-    let handle = assets.get(asset_id)?;
-    cached_remodel_asset(&handle.child_id)
+pub fn durable_remodel_asset(asset: &ImageAsset) -> Option<RemodelDurableArtifact> {
+    let bytes = base64::engine::general_purpose::STANDARD.decode(asset.data.as_bytes()).ok()?;
+    (bytes.len() <= REMODEL_RASTER_CONTENT_BYTES).then_some(RemodelDurableArtifact {
+        kind: "image".into(),
+        mime: Some(asset.mime.clone()),
+        width: asset.width,
+        height: asset.height,
+        chunks: bytes.chunks(REMODEL_DURABLE_CHUNK_RAW_BYTES).map(|chunk| base64::engine::general_purpose::STANDARD.encode(chunk)).collect(),
+    })
 }
+
+pub fn durable_staged_remodel_asset(staging_id: &str, kind: &str, mime: Option<String>, width: u32, height: u32) -> Option<RemodelDurableArtifact> {
+    let content = remodel_asset_content().lock().expect("remodel asset content lock");
+    let blob = content.get(staging_id)?;
+    Some(RemodelDurableArtifact {
+        kind: kind.into(),
+        mime,
+        width,
+        height,
+        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64::engine::general_purpose::STANDARD.encode(blob.chunks.get(&index).expect("contiguous staged asset"))).collect(),
+    })
+}
+
+//#region 🔖️ReplayableAssetBlobs
+struct RemodelAssetBlob {
+    chunks: BTreeMap<u64, Arc<[u8]>>,
+    kind: Option<RemodelAssetContentKind>,
+    byte_count: usize,
+    digest: [u64; 4],
+    digest_len: u64,
+}
+
+impl Default for RemodelAssetBlob {
+    fn default() -> Self {
+        Self { chunks: BTreeMap::new(), kind: None, byte_count: 0, digest: [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f], digest_len: 0 }
+    }
+}
+
+/// 🛡️ Typed bounded-admission result shared by durable asset and mesh staging.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RemodelStagingFault {
+    Busy,
+    Invalid,
+}
+
+/// 🏷️ Exact durable asset envelope selected before the first chunk is retained.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RemodelAssetContentKind {
+    Sparse,
+    Raster,
+}
+
+impl RemodelAssetContentKind {
+    fn wire(self) -> &'static str {
+        match self {
+            Self::Sparse => "sparse",
+            Self::Raster => "raster",
+        }
+    }
+
+    fn parse(value: &str) -> Option<Self> {
+        match value {
+            "sparse" => Some(Self::Sparse),
+            "raster" => Some(Self::Raster),
+            _ => None,
+        }
+    }
+
+    fn max_bytes(self) -> usize {
+        match self {
+            Self::Sparse => REMODEL_SPARSE_CONTENT_BYTES,
+            Self::Raster => REMODEL_RASTER_CONTENT_BYTES,
+        }
+    }
+
+    fn max_chunks(self) -> u64 {
+        match self {
+            Self::Sparse => REMODEL_SPARSE_CONTENT_CHUNKS,
+            Self::Raster => REMODEL_RASTER_CONTENT_CHUNKS,
+        }
+    }
+}
+
+fn record_content_digest(digest: &mut [u64; 4], digest_len: &mut u64, bytes: &[u8]) -> Result<(), RemodelStagingFault> {
+    for byte in bytes {
+        *digest_len = (*digest_len).checked_add(1).ok_or(RemodelStagingFault::Busy)?;
+        digest[0] = (digest[0] ^ u64::from(*byte)).wrapping_mul(0x00000100000001b3);
+        digest[1] = (digest[1] ^ digest[0].rotate_left(17) ^ *digest_len).wrapping_mul(0x9e3779b185ebca87);
+        digest[2] = (digest[2] ^ digest[1].rotate_left(29) ^ u64::from(*byte)).wrapping_mul(0xc2b2ae3d27d4eb4f);
+        digest[3] = (digest[3] ^ digest[2].rotate_left(41) ^ (*digest_len).rotate_left(7)).wrapping_mul(0x165667b19e3779f9);
+    }
+    Ok(())
+}
+
+fn content_digest_id(prefix: &str, digest: [u64; 4], digest_len: u64) -> String {
+    format!("{prefix}-{:016x}{:016x}{:016x}{:016x}-{digest_len:016x}", digest[0], digest[1], digest[2], digest[3])
+}
+
+static REMODEL_PRIVATE_ASSET_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelAssetBlob>>> = OnceLock::new();
+
+fn remodel_asset_content() -> &'static Mutex<BTreeMap<String, RemodelAssetBlob>> {
+    REMODEL_PRIVATE_ASSET_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+pub fn stage_remodel_asset_chunk(staging_id: &str, kind: RemodelAssetContentKind, index: u64, encoded: &str) -> Result<(), RemodelStagingFault> {
+    let Some(bytes) = decode_remodel_durable_chunk(encoded) else { return Err(RemodelStagingFault::Invalid) };
+    let next_count = index.checked_add(1).ok_or(RemodelStagingFault::Busy)?;
+    let mut content = remodel_asset_content().lock().expect("remodel asset content lock");
+    if !content.contains_key(staging_id) && content.len() >= REMODEL_MAX_STAGED_BLOBS {
+        return Err(RemodelStagingFault::Busy);
+    }
+    let blob = content.entry(staging_id.into()).or_default();
+    if let Some(existing) = blob.chunks.get(&index) {
+        return (blob.kind == Some(kind) && existing.as_ref() == bytes).then_some(()).ok_or(RemodelStagingFault::Invalid);
+    }
+    let next_bytes = blob.byte_count.checked_add(bytes.len()).ok_or(RemodelStagingFault::Busy)?;
+    if u64::try_from(blob.chunks.len()).ok() != Some(index) || blob.kind.is_some_and(|existing| existing != kind) || next_count > kind.max_chunks() || next_bytes > kind.max_bytes() {
+        content.remove(staging_id);
+        return Err(RemodelStagingFault::Invalid);
+    }
+    let mut digest = blob.digest;
+    let mut digest_len = blob.digest_len;
+    if let Err(fault) = record_content_digest(&mut digest, &mut digest_len, &bytes) {
+        content.remove(staging_id);
+        return Err(fault);
+    }
+    blob.kind = Some(kind);
+    blob.digest = digest;
+    blob.digest_len = digest_len;
+    blob.byte_count = next_bytes;
+    blob.chunks.insert(index, Arc::from(bytes));
+    Ok(())
+}
+
+#[cfg(test)]
+pub fn staged_remodel_asset_chunk_count(staging_id: &str) -> u64 {
+    remodel_asset_content().lock().expect("remodel asset content lock").get(staging_id).and_then(|blob| u64::try_from(blob.chunks.len()).ok()).unwrap_or(0)
+}
+
+fn staged_asset_commit_is_valid(content: &BTreeMap<String, RemodelAssetBlob>, staging_id: &str, content_id: &str, chunk_count: u64, expected_kind: Option<RemodelAssetContentKind>) -> bool {
+    let Some(blob) = content.get(staging_id) else { return false };
+    let Some(kind) = blob.kind else { return false };
+    chunk_count != 0
+        && expected_kind.is_none_or(|expected| expected == kind)
+        && chunk_count <= kind.max_chunks()
+        && blob.byte_count <= kind.max_bytes()
+        && u64::try_from(blob.chunks.len()).ok() == Some(chunk_count)
+        && blob.digest_len == u64::try_from(blob.byte_count).unwrap_or(u64::MAX)
+        && content_digest_id("remodel-asset", blob.digest, blob.digest_len) == content_id
+}
+
+pub fn discard_staged_remodel_asset(staging_id: &str) {
+    remodel_asset_content().lock().expect("remodel asset content lock").remove(staging_id);
+}
+
+pub fn remodel_asset_stage_key(staging_id: &str, kind: RemodelAssetContentKind, index: u64) -> String {
+    format!("__remodel_asset_stage__:{}|{staging_id}:{index}", kind.wire())
+}
+
+pub fn remodel_asset_stage_parts(key: &str) -> Option<(RemodelAssetContentKind, &str, u64)> {
+    let tail = key.strip_prefix("__remodel_asset_stage__:")?;
+    let (staging_id, index) = tail.rsplit_once(':')?;
+    let (kind, staging_id) = staging_id.split_once('|')?;
+    Some((RemodelAssetContentKind::parse(kind)?, staging_id, index.parse().ok()?))
+}
+
+pub fn remodel_asset_content_handle(content_id: &str, staging_id: &str, chunk_count: u64) -> String {
+    format!("remodel-content:{content_id}|{staging_id}|{chunk_count}")
+}
+
+pub fn remodel_asset_content_handle_parts(value: &str) -> Option<(&str, &str, u64)> {
+    let tail = value.strip_prefix("remodel-content:")?;
+    let (tail, chunk_count) = tail.rsplit_once('|')?;
+    let (content_id, staging_id) = tail.split_once('|')?;
+    Some((content_id, staging_id, chunk_count.parse().ok()?))
+}
+//#endregion 🔖️ReplayableAssetBlobs
 //#endregion 🔖️AssetHandles
 
 //#region 🔖️MeshHandle
-async fn mint_mesh_child_handle(content_hash: u64) -> RemodelMeshChild {
-    let child_id = format!("remodel-mesh-{content_hash:016x}");
+fn mesh_child_handle(child_id: String, artifact_id: String) -> RemodelMeshChild {
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    let target = store::os_io::ArtifactRef { artifact_id: "remodel-mesh".into(), dialect };
+    let target = store::os_io::ArtifactRef { artifact_id, dialect };
     store::ArtifactChild::new(child_id, target)
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle for `results.mesh.mesh`, hashed off the REAL
-/// canonical conversion's pack bytes (`mesh_data_to_semio_mesh`, already real — reused from
-/// `🚪️io/🦀️component.rs`'s existing PLY/LAS export hand-off, not reimplemented) — same
-/// canonical-content-hash rationale as `image_content_child_handle` above.
-async fn mesh_content_child_handle(mesh: &MeshData) -> RemodelMeshChild {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    let semio = mesh_data_to_semio_mesh(mesh);
-    <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(&semio).hash(&mut hasher);
-    mint_mesh_child_handle(hasher.finish())
+fn decode_remodel_durable_chunk(encoded: &str) -> Option<Vec<u8>> {
+    let encoded_limit = REMODEL_DURABLE_CHUNK_RAW_BYTES.checked_add(2)?.checked_div(3)?.checked_mul(4)?;
+    if encoded.len() > encoded_limit {
+        return None;
+    }
+    let bytes = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    (bytes.len() <= REMODEL_DURABLE_CHUNK_RAW_BYTES).then_some(bytes)
 }
 
-thread_local! {
-    static REMODEL_MESH_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MeshData>> = std::cell::RefCell::new(std::collections::HashMap::new());
+#[cfg(test)]
+fn mesh_digest_bytes(chunks: impl IntoIterator<Item = impl AsRef<[u8]>>) -> String {
+    let mut digest = [0x6c62272e07bb0142u64, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f];
+    let mut len = 0u64;
+    for byte in chunks.into_iter().flat_map(|chunk| chunk.as_ref().to_vec()) {
+        len = len.checked_add(1).expect("bounded test mesh digest");
+        digest[0] = (digest[0] ^ u64::from(byte)).wrapping_mul(0x00000100000001b3);
+        digest[1] = (digest[1] ^ digest[0].rotate_left(17) ^ len).wrapping_mul(0x9e3779b185ebca87);
+        digest[2] = (digest[2] ^ digest[1].rotate_left(29) ^ u64::from(byte)).wrapping_mul(0xc2b2ae3d27d4eb4f);
+        digest[3] = (digest[3] ^ digest[2].rotate_left(41) ^ len.rotate_left(7)).wrapping_mul(0x165667b19e3779f9);
+    }
+    format!("remodel-mesh-{:016x}{:016x}{:016x}{:016x}-{len:016x}", digest[0], digest[1], digest[2], digest[3])
 }
 
-pub async fn stash_remodel_mesh(child_id: &str, mesh: MeshData) {
-    REMODEL_MESH_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(child_id.to_string(), mesh);
-    });
+struct RemodelMeshBlob {
+    chunks: BTreeMap<u64, Arc<[u8]>>,
+    digest: [u64; 4],
+    digest_len: u64,
+    byte_count: usize,
+    last_field: Option<u8>,
 }
 
-pub async fn cached_remodel_mesh(child_id: &str) -> Option<MeshData> {
-    REMODEL_MESH_SCRATCH.with(|cache| cache.borrow().get(child_id).cloned())
+impl Default for RemodelMeshBlob {
+    fn default() -> Self {
+        Self { chunks: BTreeMap::new(), digest: [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f], digest_len: 0, byte_count: 0, last_field: None }
+    }
 }
 
-/// 🌉️ The single funnel-through "add real content" primitive for `results.mesh.mesh`: mints the
-/// canonical content-addressed handle (via the real `mesh_data_to_semio_mesh` conversion) and stashes
-/// the REAL, full-fidelity `MeshData` — never the lossy `SemioMeshSnapshot` projection — into the
-/// working-scene cache. Full fidelity matters here specifically: `SemioMeshSnapshot`'s gltf-shaped
-/// primitive has no slot for `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64`, all of which
-/// this plugin's own interactive mesh view/undo path genuinely needs; caching the real `MeshData`
-/// directly (not round-tripping through the lossy conversion) means those buffers are never lost for
-/// the live document — only a COLD cache (see the staleness gap below) ever falls back to the lossy
-/// `semio_mesh_to_mesh_data` reconstruction.
-pub async fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
-    let handle = mesh_content_child_handle(&mesh);
-    stash_remodel_mesh(&handle.child_id, mesh);
-    handle
+impl RemodelMeshBlob {
+    fn content_id(&self) -> String {
+        format!("remodel-mesh-{:016x}{:016x}{:016x}{:016x}-{:016x}", self.digest[0], self.digest[1], self.digest[2], self.digest[3], self.digest_len)
+    }
 }
 
-/// 🌉️ The single read accessor every render/export/mutation call site funnels through — reads the
-/// REAL, full-fidelity `MeshData` back out of the working-scene cache by the handle's `child_id`.
-/// **Staleness gap, documented honestly** (matches every prior exemplar in this ticket): store-level
-/// undo/redo bypasses `ArtifactApp::handle`, so the cache can go stale relative to a snapshot's `mesh`
-/// handle across an undo/redo spanning a process boundary; `None` on a cold cache, never a fabricated
-/// mesh. `semio_mesh_to_mesh_data` (`🚪️io/🦀️component.rs`) is the real inverse for the day a
-/// `LinkResolver`/child-dispatch seam (migration recipe §3) makes the composed child's OWN
-/// `SemioMeshSnapshot` content independently resolvable — not wired in here today because nothing in
-/// this plugin populates that content separately from this cache.
-pub async fn remodel_mesh_workspace(handle: &RemodelMeshChild) -> Option<MeshData> {
-    cached_remodel_mesh(&handle.child_id)
+static REMODEL_PRIVATE_MESH_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelMeshBlob>>> = OnceLock::new();
+
+fn remodel_mesh_blobs() -> &'static Mutex<BTreeMap<String, RemodelMeshBlob>> {
+    REMODEL_PRIVATE_MESH_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -> bool {
+    let Some((&field, values)) = bytes.split_first() else { return false };
+    if field > 11 || last_field.is_some_and(|previous| field < previous) {
+        return false;
+    }
+    let component_count = values.len() / 4;
+    match field {
+        0 | 1 | 2 | 4 | 7 | 9 if values.len() % 4 == 0 => {
+            let target = match field {
+                0 => &mut mesh.positions,
+                1 => &mut mesh.normals,
+                2 => &mut mesh.colors,
+                4 => &mut mesh.uvs,
+                7 => &mut mesh.edge_positions,
+                _ => &mut mesh.edge_uvs,
+            };
+            let limit = match field {
+                0 | 1 => REMODEL_BOUNDED_MESH_VERTICES * 3,
+                2 => REMODEL_BOUNDED_MESH_VERTICES * 4,
+                4 => REMODEL_BOUNDED_MESH_VERTICES * 2,
+                7 => REMODEL_BOUNDED_MESH_TRIANGLES * 6,
+                _ => REMODEL_BOUNDED_MESH_TRIANGLES * 4,
+            };
+            if target.len().checked_add(component_count).is_none_or(|count| count > limit) {
+                return false;
+            }
+            target.extend(values.chunks_exact(4).map(|value| f32::from_le_bytes(value.try_into().expect("four-byte mesh f32"))));
+        }
+        3 | 5 | 6 | 8 if values.len() % 4 == 0 => {
+            let target = match field {
+                3 => &mut mesh.indices,
+                5 => &mut mesh.face_ids,
+                6 => &mut mesh.vertex_ids,
+                _ => &mut mesh.edge_ids,
+            };
+            let limit = match field {
+                3 => REMODEL_BOUNDED_MESH_TRIANGLES * 3,
+                5 => REMODEL_BOUNDED_MESH_TRIANGLES,
+                6 => REMODEL_BOUNDED_MESH_VERTICES,
+                _ => REMODEL_BOUNDED_MESH_TRIANGLES * 3,
+            };
+            if target.len().checked_add(component_count).is_none_or(|count| count > limit) {
+                return false;
+            }
+            target.extend(values.chunks_exact(4).map(|value| u32::from_le_bytes(value.try_into().expect("four-byte mesh u32"))));
+        }
+        10 => {
+            if mesh.edge_is_seam.len().checked_add(values.len()).is_none_or(|count| count > REMODEL_BOUNDED_MESH_TRIANGLES * 3) {
+                return false;
+            }
+            mesh.edge_is_seam.extend_from_slice(values);
+        }
+        11 => {
+            let Ok(value) = std::str::from_utf8(values) else { return false };
+            if mesh.paint_texture_base64.as_ref().map_or(0, String::len).checked_add(value.len()).is_none_or(|count| count > 24_576) {
+                return false;
+            }
+            mesh.paint_texture_base64.get_or_insert_with(String::new).push_str(value);
+        }
+        _ => return false,
+    }
+    true
+}
+
+fn mesh_from_blob(blob: &RemodelMeshBlob) -> Option<MeshData> {
+    let mut mesh = MeshData::default();
+    let mut last_field = None;
+    for index in 0..u64::try_from(blob.chunks.len()).ok()? {
+        let chunk = blob.chunks.get(&index)?;
+        if !apply_mesh_chunk(&mut mesh, last_field, chunk) {
+            return None;
+        }
+        last_field = chunk.first().copied();
+    }
+    Some(mesh)
+}
+
+/// 🧱️ Replays one fixed-size full-fidelity mesh chunk into process-wide owned staging.
+pub fn stage_remodel_mesh_chunk(staging_id: &str, index: u64, encoded: &str) -> Result<(), RemodelStagingFault> {
+    let Some(bytes) = decode_remodel_durable_chunk(encoded) else { return Err(RemodelStagingFault::Invalid) };
+    let next_count = index.checked_add(1).ok_or(RemodelStagingFault::Busy)?;
+    let mut blobs = remodel_mesh_blobs().lock().expect("remodel mesh blob lock");
+    if !blobs.contains_key(staging_id) && blobs.len() >= REMODEL_MAX_STAGED_BLOBS {
+        return Err(RemodelStagingFault::Busy);
+    }
+    let blob = blobs.entry(staging_id.into()).or_default();
+    if let Some(existing) = blob.chunks.get(&index) {
+        return (existing.as_ref() == bytes).then_some(()).ok_or(RemodelStagingFault::Invalid);
+    }
+    let next_bytes = blob.byte_count.checked_add(bytes.len()).ok_or(RemodelStagingFault::Busy)?;
+    let mut digest = blob.digest;
+    let mut digest_len = blob.digest_len;
+    let mut candidate = match mesh_from_blob(blob) {
+        Some(mesh) => mesh,
+        None => {
+            blobs.remove(staging_id);
+            return Err(RemodelStagingFault::Invalid);
+        }
+    };
+    if record_content_digest(&mut digest, &mut digest_len, &bytes).is_err()
+        || u64::try_from(blob.chunks.len()).ok() != Some(index)
+        || next_count > REMODEL_MESH_CONTENT_CHUNKS
+        || next_bytes > REMODEL_MESH_CONTENT_BYTES
+        || !apply_mesh_chunk(&mut candidate, blob.last_field, &bytes)
+    {
+        blobs.remove(staging_id);
+        return Err(RemodelStagingFault::Invalid);
+    }
+    blob.last_field = bytes.first().copied();
+    blob.byte_count = next_bytes;
+    blob.digest = digest;
+    blob.digest_len = digest_len;
+    blob.chunks.insert(index, Arc::from(bytes));
+    Ok(())
+}
+
+pub fn discard_staged_remodel_mesh(staging_id: &str) {
+    remodel_mesh_blobs().lock().expect("remodel mesh blob lock").remove(staging_id);
+}
+
+pub fn staged_remodel_mesh_chunk_count(staging_id: &str) -> u64 {
+    remodel_mesh_blobs().lock().expect("remodel mesh blob lock").get(staging_id).and_then(|blob| u64::try_from(blob.chunks.len()).ok()).unwrap_or(0)
+}
+
+fn staged_mesh_commit_is_valid(blobs: &BTreeMap<String, RemodelMeshBlob>, staging_id: &str, content_id: &str, chunk_count: u64) -> bool {
+    let Some(blob) = blobs.get(staging_id) else { return false };
+    chunk_count != 0
+        && chunk_count <= REMODEL_MESH_CONTENT_CHUNKS
+        && blob.byte_count <= REMODEL_MESH_CONTENT_BYTES
+        && u64::try_from(blob.chunks.len()).ok() == Some(chunk_count)
+        && blob.digest_len == u64::try_from(blob.byte_count).unwrap_or(u64::MAX)
+        && mesh_from_blob(blob).is_some_and(|mesh| mesh_is_within_resolution_envelope(&mesh))
+        && blob.content_id() == content_id
+}
+
+/// 🏁️ Validates every terminal artifact before publishing any staged content, then applies all
+/// promotions while both bounded stores remain exclusively held.
+pub fn commit_staged_remodel_reconstruction(assets: &[(&str, &str, u64, RemodelAssetContentKind)], mesh: Option<(&str, &str, u64)>) -> bool {
+    let mut asset_content = remodel_asset_content().lock().expect("remodel asset content lock");
+    let mut mesh_content = remodel_mesh_blobs().lock().expect("remodel mesh blob lock");
+    if !assets.iter().all(|(staging_id, content_id, chunk_count, kind)| staged_asset_commit_is_valid(&asset_content, staging_id, content_id, *chunk_count, Some(*kind)))
+        || mesh.is_some_and(|(staging_id, content_id, chunk_count)| !staged_mesh_commit_is_valid(&mesh_content, staging_id, content_id, chunk_count))
+    {
+        return false;
+    }
+    for (staging_id, _, _, _) in assets {
+        asset_content.remove(*staging_id);
+    }
+    if let Some((staging_id, _, _)) = mesh {
+        mesh_content.remove(staging_id);
+    }
+    true
+}
+
+pub fn remodel_mesh_stage_asset_key(staging_id: &str, index: u64) -> String {
+    format!("__remodel_mesh_stage__:{staging_id}:{index}")
+}
+
+pub fn remodel_mesh_stage_asset_parts(key: &str) -> Option<(&str, u64)> {
+    let tail = key.strip_prefix("__remodel_mesh_stage__:")?;
+    let (staging_id, index) = tail.rsplit_once(':')?;
+    Some((staging_id, index.parse().ok()?))
+}
+
+pub fn staged_remodel_mesh_handle(content_id: &str, staging_id: &str) -> RemodelMeshChild {
+    mesh_child_handle(content_id.into(), format!("mesh-stage:{staging_id}"))
+}
+
+pub fn replayable_remodel_mesh_handle(content_id: &str, staging_id: &str, chunk_count: u64) -> RemodelMeshChild {
+    mesh_child_handle(content_id.into(), format!("remodel-mesh-log:{staging_id}:{chunk_count}"))
+}
+
+pub fn replayable_remodel_mesh_handle_parts(handle: &RemodelMeshChild) -> Option<(&str, &str, u64)> {
+    let tail = handle.target.artifact_id.strip_prefix("remodel-mesh-log:")?;
+    let (staging_id, chunk_count) = tail.rsplit_once(':')?;
+    Some((&handle.child_id, staging_id, chunk_count.parse().ok()?))
+}
+
+/// 🧊️ Stable empty-mesh handle with no process-owned payload.
+pub fn empty_remodel_mesh_handle() -> RemodelMeshChild {
+    mesh_child_handle(REMODEL_EMPTY_MESH_CHILD_ID.into(), "remodel-mesh-constant:empty".into())
+}
+
+/// 📦️ Stable bounded placeholder handle with no process-owned payload.
+pub fn placeholder_remodel_mesh_handle() -> RemodelMeshChild {
+    mesh_child_handle(REMODEL_BOX_MESH_CHILD_ID.into(), "remodel-mesh-constant:box".into())
+}
+
+fn mesh_is_within_resolution_envelope(mesh: &MeshData) -> bool {
+    let vertices = mesh.positions.len().checked_div(3);
+    let triangles = mesh.indices.len().checked_div(3);
+    let Some(vertices) = vertices.filter(|_| mesh.positions.len() % 3 == 0) else { return false };
+    let Some(triangles) = triangles.filter(|_| mesh.indices.len() % 3 == 0) else { return false };
+    vertices <= REMODEL_BOUNDED_MESH_VERTICES
+        && triangles <= REMODEL_BOUNDED_MESH_TRIANGLES
+        && mesh.indices.iter().all(|index| usize::try_from(*index).ok().is_some_and(|index| index < vertices))
+        && (mesh.normals.is_empty() || vertices.checked_mul(3) == Some(mesh.normals.len()))
+        && (mesh.colors.is_empty() || vertices.checked_mul(3) == Some(mesh.colors.len()) || vertices.checked_mul(4) == Some(mesh.colors.len()))
+        && (mesh.uvs.is_empty() || vertices.checked_mul(2) == Some(mesh.uvs.len()))
+        && (mesh.face_ids.is_empty() || mesh.face_ids.len() == triangles)
+        && (mesh.vertex_ids.is_empty() || mesh.vertex_ids.len() == vertices)
+        && mesh.normals.len() <= REMODEL_BOUNDED_MESH_VERTICES * 3
+        && mesh.colors.len() <= REMODEL_BOUNDED_MESH_VERTICES * 4
+        && mesh.uvs.len() <= REMODEL_BOUNDED_MESH_VERTICES * 2
+        && mesh.face_ids.len() <= REMODEL_BOUNDED_MESH_TRIANGLES
+        && mesh.vertex_ids.len() <= REMODEL_BOUNDED_MESH_VERTICES
+        && mesh.edge_positions.len() <= REMODEL_BOUNDED_MESH_TRIANGLES * 6
+        && mesh.edge_ids.len() <= REMODEL_BOUNDED_MESH_TRIANGLES * 3
+        && mesh.edge_uvs.len() <= REMODEL_BOUNDED_MESH_TRIANGLES * 4
+        && mesh.edge_is_seam.len() <= REMODEL_BOUNDED_MESH_TRIANGLES * 3
+        && mesh.paint_texture_base64.as_ref().is_none_or(|value| value.len() <= 24_576)
+}
+
+/// 🧱️ Returns the durable raw chunk count without reconstructing or cloning mesh fields.
+pub fn bounded_remodel_mesh_chunk_count(store: &RemodelDurableArtifactStore, handle: &RemodelMeshChild) -> Option<u64> {
+    let (content_id, _, chunk_count) = replayable_remodel_mesh_handle_parts(handle)?;
+    let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
+    (u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)).then_some(chunk_count)
+}
+
+/// 🧱️ Resolves one admitted durable mesh chunk without cloning the reconstructed mesh.
+pub fn bounded_remodel_mesh_chunk(store: &RemodelDurableArtifactStore, handle: &RemodelMeshChild, index: u64) -> Option<Arc<[u8]>> {
+    let (content_id, _, chunk_count) = replayable_remodel_mesh_handle_parts(handle)?;
+    if index >= chunk_count {
+        return None;
+    }
+    let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
+    if u64::try_from(artifact.chunks.len()).ok() != Some(chunk_count) {
+        return None;
+    }
+    Some(Arc::from(decode_remodel_durable_chunk(artifact.chunks.get(usize::try_from(index).ok()?)?)?))
+}
+
+/// 🧱️ Resolves only fixed constants or reconstruction output admitted by the 512/512 envelope.
+pub fn resolve_bounded_remodel_mesh(store: &RemodelDurableArtifactStore, handle: &RemodelMeshChild) -> Option<MeshData> {
+    match handle.child_id.as_str() {
+        REMODEL_EMPTY_MESH_CHILD_ID => Some(MeshData::default()),
+        REMODEL_BOX_MESH_CHILD_ID => Some(semio_framework::mesh_from_kind("box")),
+        _ => {
+            let (content_id, _, chunk_count) = replayable_remodel_mesh_handle_parts(handle)?;
+            let artifact = store.get(content_id).filter(|artifact| artifact.kind == "mesh")?;
+            if u64::try_from(artifact.chunks.len()).ok() != Some(chunk_count) {
+                return None;
+            }
+            let mut mesh = MeshData::default();
+            let mut last_field = None;
+            for encoded in &artifact.chunks {
+                let chunk = decode_remodel_durable_chunk(encoded)?;
+                if !apply_mesh_chunk(&mut mesh, last_field, &chunk) {
+                    return None;
+                }
+                last_field = chunk.first().copied();
+            }
+            mesh_is_within_resolution_envelope(&mesh).then_some(mesh)
+        }
+    }
+}
+
+#[cfg(test)]
+static REMODEL_TEST_MESHES: OnceLock<Mutex<BTreeMap<String, MeshData>>> = OnceLock::new();
+
+#[cfg(test)]
+fn remodel_test_meshes() -> &'static Mutex<BTreeMap<String, MeshData>> {
+    REMODEL_TEST_MESHES.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+#[cfg(test)]
+pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
+    let bytes = serde_json::to_vec(&mesh).unwrap_or_default();
+    let child_id = mesh_digest_bytes([bytes.as_slice()]);
+    remodel_test_meshes().lock().expect("remodel test mesh lock").insert(child_id.clone(), mesh);
+    mesh_child_handle(child_id, "remodel-mesh".into())
+}
+
+#[cfg(test)]
+pub fn remodel_mesh_workspace(handle: &RemodelMeshChild) -> Option<MeshData> {
+    if handle.child_id == REMODEL_EMPTY_MESH_CHILD_ID {
+        return Some(MeshData::default());
+    }
+    if handle.child_id == REMODEL_BOX_MESH_CHILD_ID {
+        return Some(semio_framework::mesh_from_kind("box"));
+    }
+    remodel_test_meshes().lock().expect("remodel test mesh lock").get(&handle.child_id).cloned()
+}
+
+pub fn durable_staged_remodel_mesh(staging_id: &str) -> Option<RemodelDurableArtifact> {
+    let blobs = remodel_mesh_blobs().lock().expect("remodel mesh blob lock");
+    let blob = blobs.get(staging_id)?;
+    Some(RemodelDurableArtifact {
+        kind: "mesh".into(),
+        mime: None,
+        width: 0,
+        height: 0,
+        chunks: (0..u64::try_from(blob.chunks.len()).ok()?).map(|index| base64::engine::general_purpose::STANDARD.encode(blob.chunks.get(&index).expect("contiguous staged mesh"))).collect(),
+    })
+}
+
+#[cfg(test)]
+pub fn forget_remodel_mesh_content_for_test(content_id: &str, staging_id: &str) {
+    remodel_mesh_blobs().lock().expect("remodel mesh blob lock").remove(staging_id);
+    remodel_test_meshes().lock().expect("remodel test mesh lock").remove(content_id);
+}
+
+#[cfg(test)]
+pub fn forget_all_remodel_content_for_test() {
+    remodel_asset_content().lock().expect("remodel asset content lock").clear();
+    remodel_mesh_blobs().lock().expect("remodel mesh blob lock").clear();
+    remodel_test_meshes().lock().expect("remodel test mesh lock").clear();
 }
 //#endregion 🔖️MeshHandle
 //#endregion 🧩️Composition
@@ -375,14 +877,14 @@ pub struct PackedF32(pub String);
 
 impl PackedF32 {
     /// 📦️ Encodes a `f32` slice as a base64 string of its little-endian bytes.
-    pub async fn from_f32_slice(values: &[f32]) -> Self {
+    pub fn from_f32_slice(values: &[f32]) -> Self {
         let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
         Self(base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
     /// 📦️ Decodes back into a `f32` vec; a malformed payload (bad base64, length not a multiple of 4)
     /// decodes as empty rather than panicking, since packed buffers only ever round-trip in-process.
-    pub async fn to_f32_vec(&self) -> Vec<f32> {
+    pub fn to_f32_vec(&self) -> Vec<f32> {
         let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
             return Vec::new();
         };
@@ -393,7 +895,22 @@ impl PackedF32 {
         chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn to_f32_vec_from(&self, store: &RemodelDurableArtifactStore) -> Vec<f32> {
+        let Some((content_id, _, chunk_count)) = remodel_asset_content_handle_parts(&self.0) else { return self.to_f32_vec() };
+        let Some(artifact) = store.get(content_id).filter(|artifact| artifact.kind == "sparse" && u64::try_from(artifact.chunks.len()).ok() == Some(chunk_count)) else { return Vec::new() };
+        let mut values = Vec::new();
+        for encoded in &artifact.chunks {
+            let Some(bytes) = decode_remodel_durable_chunk(encoded) else { return Vec::new() };
+            let (chunks, remainder) = bytes.as_chunks::<4>();
+            if !remainder.is_empty() {
+                return Vec::new();
+            }
+            values.extend(chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)));
+        }
+        values
+    }
+
+    pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
@@ -406,16 +923,16 @@ pub struct PackedU8(pub String);
 
 impl PackedU8 {
     /// 📦️ Encodes a `u8` slice as a base64 string.
-    pub async fn from_u8_slice(values: &[u8]) -> Self {
+    pub fn from_u8_slice(values: &[u8]) -> Self {
         Self(base64::engine::general_purpose::STANDARD.encode(values))
     }
 
     /// 📦️ Decodes back into a `u8` vec; a malformed payload decodes as empty.
-    pub async fn to_u8_vec(&self) -> Vec<u8> {
+    pub fn to_u8_vec(&self) -> Vec<u8> {
         base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()).unwrap_or_default()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
@@ -928,7 +1445,8 @@ pub struct WatertightReportSnapshot {
 /// 🧵️ The reconstructed (or placeholder/imported) mesh. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `mesh` is now a composed `s.stdio.semio/v1/mesh`
 /// CHILD handle (`RemodelMeshChild`, `🧩️Composition` region above), never embedded `MeshData` —
-/// the real geometry lives in the working-scene cache (`mint_and_stash_mesh`/`remodel_mesh_workspace`).
+/// reconstructed geometry resolves through a bounded durable chunk handle; the empty and box
+/// placeholders are typed constants that require no process cache.
 /// `source`/`texture_asset_id`/`watertight` are genuinely NOT part of the composed mesh's own content
 /// (they describe THIS document's relationship to the mesh — provenance, a separate asset reference, a
 /// derived QC summary — not geometry), so they stay sibling fields here rather than folding into the
@@ -954,7 +1472,7 @@ pub struct RemodelMesh {
 
 impl Default for RemodelMesh {
     fn default() -> Self {
-        Self { mesh: mint_and_stash_mesh(MeshData::default()), source: MeshSource::default(), texture_asset_id: None, watertight: None }
+        Self { mesh: empty_remodel_mesh_handle(), source: MeshSource::default(), texture_asset_id: None, watertight: None }
     }
 }
 
@@ -1081,17 +1599,18 @@ pub use crate::artifacts::remodel::schema::snapshot::RemodelSnapshot;
 
 /// 🌱️ An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
 /// something to render before any media has been imported/reconstructed.
-pub async fn default_remodel_scene() -> RemodelSnapshot {
+pub fn default_remodel_scene() -> RemodelSnapshot {
     RemodelSnapshot {
         schema: REMODEL_DOCUMENT_SCHEMA.into(),
         id: "remodel".into(),
         streams: Vec::new(),
         assets: BTreeMap::new(),
+        durable_artifacts: RemodelDurableArtifactStore::new(),
         calibration: CalibrationState::default(),
         params: ReconstructionParams::default(),
         gcps: Vec::new(),
         job: ReconstructionJob::default(),
-        results: ReconstructionResults { mesh: RemodelMesh { mesh: mint_and_stash_mesh(semio_framework::mesh_from_kind("box")), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
+        results: ReconstructionResults { mesh: RemodelMesh { mesh: placeholder_remodel_mesh_handle(), source: MeshSource::Placeholder, ..RemodelMesh::default() }, ..ReconstructionResults::default() },
     }
 }
 //#endregion 🔖️Domain
@@ -1119,7 +1638,7 @@ mod tests {
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-        scene.assets.insert("asset-1".into(), mint_and_stash_asset("asset-1", &asset_one));
+        scene.assets.insert("asset-1".into(), store_remodel_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),

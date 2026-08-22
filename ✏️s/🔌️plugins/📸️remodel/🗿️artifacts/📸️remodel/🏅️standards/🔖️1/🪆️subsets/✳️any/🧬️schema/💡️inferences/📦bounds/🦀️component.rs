@@ -1,15 +1,14 @@
 //! 📦 `bounds` — one named inference: the reconstructed mesh's axis-aligned bounding box plus
 //! vertex/face counts, read off `results.mesh.mesh` (the only field on this snapshot with real 3D
 //! geometry). Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `results.mesh.mesh` is now a
-//! composed `s.stdio.semio/v1/mesh` CHILD handle, so this reads the real `MeshData` back through
-//! `remodel_mesh_workspace`'s working-scene cache — an empty/absent working-scene entry (cold cache;
-//! the migration recipe names "inference" as one of the accessor's expected call sites) infers a clean
-//! zero `RemodelBounds`, matching the pre-existing "empty mesh" behavior rather than erroring, since an
-//! inference must always produce SOME value. Whole-snapshot scalar, not per-entity, so this leaf holds
+//! composed `s.stdio.semio/v1/mesh` CHILD handle, so this reads fixed constants or committed content
+//! through the 512/512 production resolver. Unavailable content infers a clean zero `RemodelBounds`,
+//! matching the pre-existing "empty mesh" behavior rather than erroring. Whole-snapshot scalar, not
+//! per-entity, so this leaf holds
 //! a plain pure function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<RemodelSnapshot>` calls it directly.
 
-use crate::artifacts::remodel::{remodel_mesh_workspace, RemodelSnapshot};
+use crate::artifacts::remodel::{resolve_bounded_remodel_mesh, RemodelSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
@@ -34,7 +33,7 @@ pub struct RemodelBounds {
 /// vertices to fold over); normalized here to a zero box so an empty/default snapshot infers a
 /// clean, serializable `RemodelBounds::default()` rather than propagating infinities.
 pub async fn compute_remodel_bounds(snapshot: &RemodelSnapshot) -> RemodelBounds {
-    let Some(mesh) = remodel_mesh_workspace(&snapshot.results.mesh.mesh) else {
+    let Some(mesh) = resolve_bounded_remodel_mesh(&snapshot.durable_artifacts, &snapshot.results.mesh.mesh) else {
         return RemodelBounds { bounding_box: RemodelBoundingBox::default(), vertex_count: 0, face_count: 0 };
     };
     if mesh.positions.is_empty() {

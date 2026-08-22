@@ -16,7 +16,7 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> Block3dSnapshot {
-    crate::artifacts::block3d::seed_vortex_kind_catalog_scratch(&[
+    crate::artifacts::block3d::validate_vortex_kind_catalog(&[
         crate::artifacts::block3d::Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
         crate::artifacts::block3d::Block3dVortexKind { id: "hatch".into(), name: "hatch".into(), label: "Hatch".into(), color: "hsl(37 52% 48%)".into(), default_cable_kind: "cable.bus".into() },
     ]);
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "rename-vortex-kind/renames-door-to-portal: applied state differs from committed after-snapshot");
     assert_eq!(
         snapshot.vortex_kind_extra[0],
-        crate::artifacts::block3d::Block3dVortexKindExtra { id: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
+        crate::artifacts::block3d::Block3dVortexKindExtra { id: "door".into(), name: "Door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
         "rename-vortex-kind touches the kit half only: the block-owned overflow row must come through byte-identical"
     );
 }

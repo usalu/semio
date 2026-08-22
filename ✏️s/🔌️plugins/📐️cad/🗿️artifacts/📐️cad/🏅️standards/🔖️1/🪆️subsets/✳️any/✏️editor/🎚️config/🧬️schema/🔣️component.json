@@ -10,6 +10,7 @@
     "componentSelection",
     "engagementInput",
     "engagementStep",
+    "engagementPreviewGeneration",
     "sun",
     "camera",
     "cameraBuilding",
@@ -93,6 +94,17 @@
     },
     "engagementSessionJson": {
       "type": "string",
+      "x-semio-state": "config"
+    },
+    "engagementPreviewOperationJson": {
+      "type": "string",
+      "contentMediaType": "application/json",
+      "x-semio-state": "config"
+    },
+    "engagementPreviewGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647,
       "x-semio-state": "config"
     },
     "lastFinalizedInteractionId": {

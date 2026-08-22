@@ -79,7 +79,7 @@ test result: ok. 1 passed; 0 failed
 Production gates also pass in dev and release profiles. `bun ./📜️script.ts verify
 interactivity` reports `DENY mode — clean`.
 
-The wasm command remains dependency-blocked, not renderer-failed:
+The initial wasm attempt stopped in dependencies before reaching the renderer:
 
 ```text
 cargo check -p semio-framework-os-renderer-wgpu --target wasm32-unknown-unknown --message-format=short
@@ -89,6 +89,40 @@ surface/node-graph/component.rs:590: E0599, E0277
 surface/tiled-map/component.rs:3316: E0599, E0277
 ```
 
-Each E0599 is a `.map_err` call on the future returned by the now-async `RenderContext::new`; E0277
-is derivative error recovery. Compilation stops before `semio-framework-os-renderer-wgpu`, so no
-renderer wasm diagnostic is known and no wasm pass is claimed.
+Each E0599 was a `.map_err` call on the future returned by the now-async `RenderContext::new`; E0277
+was derivative error recovery. This checkpoint is retained as diagnostic history; the repairs and
+green final compiler evidence are immediately below.
+
+## 2026-08-22 cross-target closure
+
+The four upstream `RenderContext::new` call sites now await correctly, and the browser build reaches
+the renderer.
+
+```text
+cargo check -p semio-framework-os-renderer-wgpu --target wasm32-unknown-unknown --message-format=short
+Finished dev profile in 21.91s; warnings only
+
+cargo check -p semio-framework-os-renderer-wgpu --target wasm32-wasip2 --message-format=short
+Finished dev profile in 0.46s; three mailbox-core dead-code warnings only
+
+cargo check -p semio-framework-os-renderer-wgpu --release --message-format=short
+Finished release profile in 1m 01s; warnings only
+
+cargo test -p semio-framework-os-renderer-wgpu --lib --no-run --message-format=short
+Finished test profile in 1m 25s
+```
+
+Final focused results from that native test build:
+
+- `async_boundary_tests`: 4 passed.
+- `runtime_mailbox_core::tests`: 1 passed.
+- `kernel_seam::tests`: 3 passed.
+- `frame_job::tests`: 6 passed.
+- `winit_app::callback_latency_tests`: 2 passed; mounted pointer and resize storms each assert p99
+  below 2 ms over 20,000 samples.
+- `shell::media_frames_tests::stalled_shell_io_keeps_mailbox_poll_p99_below_two_ms`: 1 passed.
+- `bun ./📜️script.ts verify interactivity`: `DENY mode — clean`.
+
+The Wasip2 target compiles the renderer's shared bounded mailbox core without winit or native window
+code. Browser Wasm compiles the presentation path with cooperative `spawn_local`, bounded
+continuations, target-local non-`Send` host wakers, and inline capacity-one frame preparation.

@@ -17,7 +17,7 @@ pub struct ReplaceTrajectory {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelMutation {
+pub fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelMutation {
     RemodelMutation::ReplaceTrajectory(ReplaceTrajectory { trajectory })
 }
 

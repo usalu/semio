@@ -4,13 +4,13 @@ use crate::artifacts::remodel::mutations::{replace_dense, replace_geo_products, 
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, MeshData};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Results
 /// 🫙️ An empty mesh result — what `clearMeshResult`/`clearResult` leave behind.
-async fn empty_result() -> RemodelMesh {
-    RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(MeshData::default()), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+fn empty_result() -> RemodelMesh {
+    RemodelMesh { mesh: crate::artifacts::remodel::empty_remodel_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
 

@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
 /// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
-async fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dSnapshot, cfg: &Procedural3dConfig) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+fn handle_generation(action: &str, args: Option<&Value>, projection: &Procedural3dSnapshot, cfg: &Procedural3dConfig) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);
     let mut state = projection.generation.clone();
     state.selected_generation_id = cfg.selected_generation_id.clone();
@@ -59,7 +59,7 @@ pub struct UpdateGenerationValues {
     pub value: dsl::DslValue,
 }
 
-pub async fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let value_json = dsl::from_dsl_value(payload.value.clone()).unwrap_or(Value::Null);
     Ok(handle_generation("updateGenerationValues", Some(&json!({ "generationId": payload.generation_id, "questionId": payload.question_id, "value": value_json })), doc.snapshot, cfg.snapshot))
 }

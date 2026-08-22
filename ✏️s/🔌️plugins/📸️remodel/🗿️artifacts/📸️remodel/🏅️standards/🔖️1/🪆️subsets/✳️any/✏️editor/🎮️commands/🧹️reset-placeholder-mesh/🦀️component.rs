@@ -4,13 +4,13 @@ use crate::artifacts::remodel::mutations::replace_mesh_result;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use semio_framework_plugin::{mesh_from_kind, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Results
 /// 📦️ The seeded stand-in mesh a fresh document (and `resetPlaceholderMesh`) carries.
-async fn placeholder_result() -> RemodelMesh {
-    RemodelMesh { mesh: crate::artifacts::remodel::mint_and_stash_mesh(mesh_from_kind("box")), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+fn placeholder_result() -> RemodelMesh {
+    RemodelMesh { mesh: crate::artifacts::remodel::placeholder_remodel_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
 

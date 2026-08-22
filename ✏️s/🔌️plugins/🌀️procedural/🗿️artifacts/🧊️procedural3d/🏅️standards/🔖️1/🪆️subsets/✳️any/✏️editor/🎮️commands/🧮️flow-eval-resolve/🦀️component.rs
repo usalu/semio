@@ -14,7 +14,7 @@ pub struct FlowEvalResolve {
     pub output_json: String,
 }
 
-pub async fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let _ = session.seed_node_cache(payload.node_hash, &payload.output_json);
     Ok(Emit { effects: vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(102), action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() })
 }

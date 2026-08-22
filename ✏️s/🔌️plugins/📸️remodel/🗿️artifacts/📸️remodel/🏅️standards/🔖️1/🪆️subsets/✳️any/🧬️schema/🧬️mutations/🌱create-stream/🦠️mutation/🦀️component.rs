@@ -15,7 +15,7 @@ pub struct CreateStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_stream(stream: MediaStream) -> RemodelMutation {
+pub fn create_stream(stream: MediaStream) -> RemodelMutation {
     RemodelMutation::CreateStream(CreateStream { stream })
 }
 

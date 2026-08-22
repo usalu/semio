@@ -1052,7 +1052,7 @@ function slideParticipantIds(slide: Slide): ReadonlySet<string> {
 }
 
 function slideMorphParticipantIds(slide: Slide): ReadonlySet<string> {
-	const ids = slideParticipantIds(slide);
+	const ids = new Set(slideParticipantIds(slide));
 	for (const disposition of slide.arrangement.dispositions) {
 		for (const slot of disposition.morphFrom ?? []) {
 			ids.add(slot.participantId);

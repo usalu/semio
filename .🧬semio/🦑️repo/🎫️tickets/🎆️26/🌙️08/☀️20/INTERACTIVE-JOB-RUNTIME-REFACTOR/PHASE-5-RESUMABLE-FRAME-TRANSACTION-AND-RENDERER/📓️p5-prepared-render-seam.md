@@ -54,3 +54,31 @@ The focused release run initially exceeded the repository wrapper's default 15-s
 - `🎯️targets/🧊️wgpu/🦀️draw.rs`
 - `🎯️targets/🧊️wgpu/📦️glue.rs`
 - `📝️p5-prepared-render-diagnostics.txt`
+
+## Renderer mailbox follow-through
+
+Phase 3's runtime ownership transfer now feeds this prepared-render seam without retaining
+`AppRuntime` or a mutex guard across suspension. Native continuations are retained-waker jobs on the
+single process `WorkerPool`; their capacity-128 serial completion mailbox reserves one slot for the
+owned interaction-state return, rejects lossless keyless overflow, and only coalesces matching
+replaceable keys. Frame preparation remains capacity one and rejects stale generations before UI
+presentation.
+
+The same generic mailbox core is compiled for all targets. Browser Wasm keeps bounded cooperative
+`spawn_local` driving and inline frame preparation. The new crate-root boundary excludes winit and
+native window dependencies for Wasip2 while compiling that core instead of patching external winit.
+
+Final follow-through gates on 2026-08-22:
+
+| Gate | Result |
+| --- | --- |
+| Renderer native dev check | PASS, 21.80 s, warnings only |
+| Renderer native release check | PASS, 1 min 01 s, warnings only |
+| Renderer lib no-run | PASS, 1 min 25 s |
+| Browser `wasm32-unknown-unknown` check | PASS, 21.91 s, warnings only |
+| Framework API `wasm32-wasip2` check | PASS, 0.46 s, three mailbox-core dead-code warnings |
+| Async boundary / mailbox core | PASS, 4/4 + 1/1 |
+| Kernel seam / frame generation | PASS, 3/3 + 6/6 |
+| Mounted pointer + resize p99 | PASS, 2/2, each below 2 ms over 20,000 samples |
+| Stalled mailbox p99 | PASS, 1/1, below 2 ms |
+| Interactivity deny gate | PASS, clean |

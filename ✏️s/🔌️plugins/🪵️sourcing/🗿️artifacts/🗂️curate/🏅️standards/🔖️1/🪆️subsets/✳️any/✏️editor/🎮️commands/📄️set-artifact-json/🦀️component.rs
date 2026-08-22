@@ -1,6 +1,7 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `set-artifact-json`.
 
 use crate::artifacts::curate::op::SourcingMutation;
+use crate::artifacts::curate::schema::sourcing_json_envelope_is_bounded;
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::editor::sourcing::reset_document_effect;
@@ -15,9 +16,12 @@ pub struct SetArtifactJson {
 
 /// 🛠️ Dev-only whole-document import — kept out of the command palette.
 pub async fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+    if !sourcing_json_envelope_is_bounded(&payload.json) {
+        return Err(Fault::from("sourcing.invalid-payload: document JSON exceeds byte, depth, string, or cardinality limit"));
+    }
     match serde_json::from_str::<CurateSnapshot>(&payload.json) {
         Ok(document) => Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }),
-        Err(_) => Ok(Emit::default()),
+        Err(_) => Err(Fault::from("sourcing.invalid-payload: document schema mismatch")),
     }
 }
 
@@ -32,6 +36,30 @@ mod tests {
     use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::{HistoryView, PluginApp};
+
+    #[semio_framework_async_macros::async_test]
+    async fn pre_deserialization_envelope_accepts_exact_limits_and_rejects_plus_one() {
+        use crate::artifacts::curate::schema::{SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES};
+
+        let raw_max = format!("{{}}{}", " ".repeat(SOURCING_JSON_MAX_BYTES - 2));
+        assert!(sourcing_json_envelope_is_bounded(&raw_max));
+        assert!(!sourcing_json_envelope_is_bounded(&(raw_max + " ")));
+
+        let depth_max = format!("{}0{}", "[".repeat(SOURCING_JSON_MAX_DEPTH), "]".repeat(SOURCING_JSON_MAX_DEPTH));
+        assert!(sourcing_json_envelope_is_bounded(&depth_max));
+        let depth_plus_one = format!("{}0{}", "[".repeat(SOURCING_JSON_MAX_DEPTH + 1), "]".repeat(SOURCING_JSON_MAX_DEPTH + 1));
+        assert!(!sourcing_json_envelope_is_bounded(&depth_plus_one));
+
+        let string_max = format!("\"{}\"", "x".repeat(SOURCING_JSON_MAX_STRING_BYTES));
+        assert!(sourcing_json_envelope_is_bounded(&string_max));
+        let string_plus_one = format!("\"{}\"", "x".repeat(SOURCING_JSON_MAX_STRING_BYTES + 1));
+        assert!(!sourcing_json_envelope_is_bounded(&string_plus_one));
+
+        let items_max = format!("[{}]", vec!["0"; SOURCING_JSON_MAX_ITEMS - 1].join(","));
+        assert!(sourcing_json_envelope_is_bounded(&items_max));
+        let items_plus_one = format!("[{}]", vec!["0"; SOURCING_JSON_MAX_ITEMS].join(","));
+        assert!(!sourcing_json_envelope_is_bounded(&items_plus_one));
+    }
 
     async fn empty_view() -> (CurateSnapshot, HistoryView) {
         (CurateSnapshot::default(), HistoryView::empty())
@@ -104,7 +132,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
         let loaded = load_document_pack(&emit);
-        let expected: usize = crate::artifacts::curate::schema::sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
+        let expected: usize = crate::artifacts::curate::schema::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();
         assert_eq!(loaded.stock_extra.len(), expected);
 
         let doc2 = ArtifactView::new(&loaded, &history);

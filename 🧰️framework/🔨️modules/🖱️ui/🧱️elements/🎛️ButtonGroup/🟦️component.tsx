@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { Slot } from "../../🔨️modules/🏷️class-name-composition/🟦️slot.tsx";
 import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
@@ -99,40 +99,16 @@ type ButtonGroupItemProps = React.ComponentProps<"button"> &
     asChild?: boolean;
   };
 
-function ButtonGroupItem({
-  className,
-  children,
-  id,
-  icon,
-  text,
-  asChild = false,
-  variant,
-  ...props
-}: ButtonGroupItemProps) {
+function ButtonGroupItem({ className, children, id, icon, text, asChild = false, variant, ...props }: ButtonGroupItemProps) {
   const context = reactHostPort.useContext(ButtonGroupContext);
   const level = context.level ?? "base";
-  const Comp = asChild ? Slot : "button";
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
   const tooltipText = useControlTooltipText(id, text);
   const ariaLabel = inlineText ? undefined : accessibleLabel;
 
-  const buttonGroupItemElement = (
-    <Comp
-      data-slot="button-group-item"
-      id={id}
-      aria-label={ariaLabel}
-      title={tooltipText}
-      data-level={context.level || level}
-      className={cn(
-        buttonGroupItemVariants({ variant }),
-        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
-        className,
-      )}
-      {...(props as any)}
-    >
-      {children}
+  const decorations = (
+    <>
       {inlineText ? (
         <span data-slot="inline-label" className={cn("min-w-0 text-xs whitespace-nowrap", /\bjustify-between\b/.test(String(className ?? "")) && "flex-1 truncate")}>
           {inlineText}
@@ -140,10 +116,37 @@ function ButtonGroupItem({
       ) : null}
       <ControlHotkeyBadge id={id} allowInline={Boolean(inlineText)} />
       {renderControlIcon(icon)}
-    </Comp>
+    </>
   );
+  const itemProps = {
+    "data-slot": "button-group-item",
+    id,
+    "aria-label": ariaLabel,
+    title: tooltipText,
+    "data-level": context.level || level,
+    className: cn(
+      buttonGroupItemVariants({ variant }),
+      inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+      inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
+      className,
+    ),
+    ...(props as any),
+  };
 
-  return buttonGroupItemElement;
+  if (asChild) {
+    if (React.Children.count(children) !== 1 || !React.isValidElement<{ children?: React.ReactNode }>(children)) {
+      throw new Error("ButtonGroupItem with asChild requires exactly one valid React element child.");
+    }
+    const child = React.cloneElement(children, undefined, children.props.children, decorations);
+    return <Slot {...itemProps}>{child}</Slot>;
+  }
+
+  return (
+    <button {...itemProps}>
+      {children}
+      {decorations}
+    </button>
+  );
 }
 
 export { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };

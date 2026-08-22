@@ -25,6 +25,8 @@
 use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
+#[cfg(target_arch = "wasm32")]
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use ui_contract::UiIntent;
 
@@ -38,13 +40,26 @@ const OUTCOME_CAPACITY: usize = 64;
 /// loop wakes up even though it is sitting in `ControlFlow::WaitUntil`/`Wait`. Deliberately NOT the
 /// raw `std::task::Waker` the pool future itself needs. This wrapper is the host-side
 /// "please redraw/re-check me" signal and is safe to call from the completing worker.
+#[cfg(not(target_arch = "wasm32"))]
+type HostWake = Arc<dyn Fn() + Send + Sync>;
+
+#[cfg(target_arch = "wasm32")]
+type HostWake = Rc<dyn Fn()>;
+
 #[derive(Clone)]
-pub struct HostWaker(Arc<dyn Fn() + Send + Sync>);
+pub struct HostWaker(HostWake);
 
 impl HostWaker {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn new(wake: impl Fn() + Send + Sync + 'static) -> Self {
         Self(Arc::new(wake))
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(target_arch = "wasm32")]
+    pub fn new(wake: impl Fn() + 'static) -> Self {
+        Self(Rc::new(wake))
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

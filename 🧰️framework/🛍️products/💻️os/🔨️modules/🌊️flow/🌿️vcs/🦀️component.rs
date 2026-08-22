@@ -838,30 +838,33 @@ mod flow_vcs_wasm {
     #[wasm_bindgen]
     impl FlowArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<FlowArtifactVcs, JsValue> {
+        pub async fn new(envelope_json: Option<String>) -> Result<FlowArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    FlowStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+                    FlowStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            let mut store = self.store.try_borrow_mut().map_err(|_| JsValue::from_str("Flow VCS operation already in progress"))?;
+            store.dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            let mut store = self.store.try_borrow_mut().map_err(|_| JsValue::from_str("Flow VCS operation already in progress"))?;
+            store.dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = snapshotJson)]
-        pub fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
+            let store = self.store.try_borrow().map_err(|_| JsValue::from_str("Flow VCS operation already in progress"))?;
+            store.snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -1141,16 +1144,17 @@ mod flow_vcs_tests {
         assert_eq!(materialized.layout.get("c"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     }
 
-    #[test]
-    fn coalesced_layout_drag_produces_one_edit() {
-        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).expect("valid flow store fixture");
+    #[semio_framework_async_macros::async_test]
+    async fn coalesced_layout_drag_produces_one_edit() {
+        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.expect("valid flow store fixture");
         for y in [10.0, 20.0, 30.0] {
             store
                 .dispatch(ArtifactCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
+                .await
                 .expect("drag tick");
         }
-        assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
-        assert_eq!(store.snapshot().expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
+        assert_eq!(store.envelope().await.vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
+        assert_eq!(store.snapshot().await.expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
     }
 
     /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,
@@ -1213,14 +1217,15 @@ mod flow_vcs_tests {
     /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `FlowMutationDsl`
     /// mirror, see `🔖️OpText` above), so this closes the missing coverage rather than adding any new
     /// codec.
-    #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[semio_framework_async_macros::async_test]
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
-        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).expect("apply");
-        let edit: &Edit<FlowMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
+        let envelope = store.envelope().await;
+        let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
+        crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
     }
 
     /// 📜️ `flow/example/🌊️default.flow` is the handcrafted `.flow` DSL-text migration of what used to

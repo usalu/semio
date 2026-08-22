@@ -24,13 +24,13 @@ pub mod set_camera {
         pub camera: CadCamera,
     }
 
-    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the FULL `surfaceId` (`"cad.play.scene3d/building"`), not a bare
         // pane suffix — mirrors the pre-B1 `args.get("surfaceId")` resolution exactly.
         let mut runtime = runtime_of(cfg);
         let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
         *cad_pane_camera_runtime_mut(&mut runtime, pane) = payload.camera.clone();
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], format!("camera:{}", cad_pane_suffix(pane))))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("camera:{}", cad_pane_suffix(pane))))
     }
 }
 //#endregion 🔖️SetCamera
@@ -49,7 +49,7 @@ pub mod set_projection {
         pub param: Option<String>,
     }
 
-    pub async fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetProjection, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
@@ -65,7 +65,7 @@ pub mod set_projection {
         }
         cad_camera_set_projection_config(&mut camera, &projection_config);
         *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], format!("projection:{}", cad_pane_suffix(pane_id))))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("projection:{}", cad_pane_suffix(pane_id))))
     }
 }
 //#endregion 🔖️SetProjection
@@ -84,7 +84,7 @@ pub mod set_projection_param {
         pub param: Option<String>,
     }
 
-    pub async fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &SetProjectionParam, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment.
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_surface_id);
@@ -100,7 +100,7 @@ pub mod set_projection_param {
         }
         cad_camera_set_projection_config(&mut camera, &projection_config);
         *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
-        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)], format!("projection:{}", cad_pane_suffix(pane_id))))
+        Ok(Emit::amend_config(vec![snapshot_of(&runtime, cfg.snapshot)?], format!("projection:{}", cad_pane_suffix(pane_id))))
     }
 }
 //#endregion 🔖️SetProjectionParam

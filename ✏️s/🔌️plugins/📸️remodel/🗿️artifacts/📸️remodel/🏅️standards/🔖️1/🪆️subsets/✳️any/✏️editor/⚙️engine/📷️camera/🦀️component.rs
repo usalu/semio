@@ -28,7 +28,7 @@ pub enum Distortion {
 }
 
 impl Distortion {
-    async fn distort(&self, p: [f64; 2]) -> [f64; 2] {
+    fn distort(&self, p: [f64; 2]) -> [f64; 2] {
         match *self {
             Self::None => p,
             Self::BrownConrady { k1, k2, k3, p1, p2 } => {
@@ -58,7 +58,7 @@ impl Distortion {
 impl Distortion {
     /// 🔢️ Free distortion-parameter count feeding the `[fx, fy, cx, cy, skew, <distortion params>]`
     /// intrinsics-Jacobian ordering used by [`reprojection_jacobians`].
-    async fn param_count(&self) -> usize {
+    fn param_count(&self) -> usize {
         match self {
             Self::None => 0,
             Self::BrownConrady { .. } => 5,
@@ -70,7 +70,7 @@ impl Distortion {
     /// derivatives `d(distorted)/d(param)` (empty for [`Distortion::None`], ordered `[k1,k2,k3,p1,p2]` for
     /// [`Distortion::BrownConrady`], `[k1,k2,k3,k4]` for [`Distortion::FisheyeEquidistant`]) — the shared
     /// chain-rule kernel [`reprojection_jacobians`] builds its intrinsics/point/pose blocks on top of.
-    async fn distort_with_jacobian(&self, p: [f64; 2]) -> ([f64; 2], [[f64; 2]; 2], Vec<[f64; 2]>) {
+    fn distort_with_jacobian(&self, p: [f64; 2]) -> ([f64; 2], [[f64; 2]; 2], Vec<[f64; 2]>) {
         match *self {
             Self::None => (p, [[1.0, 0.0], [0.0, 1.0]], Vec::new()),
             Self::BrownConrady { k1, k2, k3, p1, p2 } => {
@@ -126,7 +126,7 @@ impl Distortion {
 
 impl Intrinsics {
     /// 🎯️ Projects a camera-space point to pixel coordinates, applying distortion to the normalized coordinates first; `None` when the point is behind the camera (`z <= 0`).
-    pub async fn project(&self, p_cam: [f64; 3]) -> Option<[f64; 2]> {
+    pub fn project(&self, p_cam: [f64; 3]) -> Option<[f64; 2]> {
         if p_cam[2] <= 0.0 {
             return None;
         }
@@ -137,7 +137,7 @@ impl Intrinsics {
     }
 
     /// 🔬️ Newton iteration (finite-difference Jacobian, 8 steps) undoing the forward distortion map: finds normalized coordinates `p` such that `distortion.distort(p) == distorted`.
-    async fn newton_undistort(&self, distorted: [f64; 2]) -> [f64; 2] {
+    fn newton_undistort(&self, distorted: [f64; 2]) -> [f64; 2] {
         if matches!(self.distortion, Distortion::None) {
             return distorted;
         }
@@ -164,7 +164,7 @@ impl Intrinsics {
     }
 
     /// ↩️ Inverse of the linear intrinsic map followed by Newton undistortion, returning a ray direction with `z = 1`.
-    pub async fn unproject_ray(&self, p_px: [f64; 2]) -> [f64; 3] {
+    pub fn unproject_ray(&self, p_px: [f64; 2]) -> [f64; 3] {
         let yd = (p_px[1] - self.cy) / self.fy;
         let xd = (p_px[0] - self.cx - self.skew * yd) / self.fx;
         let [x, y] = self.newton_undistort([xd, yd]);
@@ -172,7 +172,7 @@ impl Intrinsics {
     }
 
     /// ↩️ Undistorts a normalized (post-linear-map) point via fixed-point/Newton iteration, undoing [`Distortion::distort`].
-    pub async fn undistort_point(&self, p_norm: [f64; 2]) -> [f64; 2] {
+    pub fn undistort_point(&self, p_norm: [f64; 2]) -> [f64; 2] {
         self.newton_undistort(p_norm)
     }
 }
@@ -183,25 +183,25 @@ impl Intrinsics {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CameraPose(pub Se3);
 
-async fn se3_at(x: &VecD, offset: usize) -> Se3 {
+fn se3_at(x: &VecD, offset: usize) -> Se3 {
     Se3::exp(std::array::from_fn(|k| x.get(offset + k)))
 }
 
-async fn retract_se3_block(x: &VecD, dx: &VecD, offset: usize) -> [f64; 6] {
+fn retract_se3_block(x: &VecD, dx: &VecD, offset: usize) -> [f64; 6] {
     let pose = se3_at(x, offset);
     let dxi: [f64; 6] = std::array::from_fn(|k| dx.get(offset + k));
     Se3::exp(dxi).semio_compose_rs(&pose).log()
 }
 
 /// 🎯️ Transforms a world point by a camera pose and projects it through the camera's intrinsics.
-pub async fn reproject(intr: &Intrinsics, pose: &CameraPose, point_world: [f64; 3]) -> Option<[f64; 2]> {
+pub fn reproject(intr: &Intrinsics, pose: &CameraPose, point_world: [f64; 3]) -> Option<[f64; 2]> {
     intr.project(pose.0.act(point_world))
 }
 
 /// 🎯️ Reprojection residual `predicted_pixel - observed_pixel` — the shared kernel behind bundle
 /// adjustment, PnP and calibration in this crate and downstream (`remodel_sfm`). Points behind the camera
 /// (`z <= 0`) fall back to a large constant residual so callers never see `NaN` or a discontinuous jump.
-pub async fn reprojection_residual(intrinsics: &Intrinsics, pose: &CameraPose, point_world: [f64; 3], observed_pixel: [f64; 2]) -> [f64; 2] {
+pub fn reprojection_residual(intrinsics: &Intrinsics, pose: &CameraPose, point_world: [f64; 3], observed_pixel: [f64; 2]) -> [f64; 2] {
     match reproject(intrinsics, pose, point_world) {
         Some(pred) => [pred[0] - observed_pixel[0], pred[1] - observed_pixel[1]],
         None => [1.0e3, 1.0e3],
@@ -216,7 +216,7 @@ pub async fn reprojection_residual(intrinsics: &Intrinsics, pose: &CameraPose, p
 /// (`K = 5 + distortion.param_count()`), chaining the linear intrinsic map through
 /// [`Distortion::distort_with_jacobian`]. Points behind the camera return all-zero Jacobians, matching
 /// [`reprojection_residual`]'s constant-residual fallback so a damped LM step simply ignores the observation.
-pub async fn reprojection_jacobians(intrinsics: &Intrinsics, pose: &CameraPose, point_world: [f64; 3], _observed_pixel: [f64; 2]) -> (MatD, MatD, MatD) {
+pub fn reprojection_jacobians(intrinsics: &Intrinsics, pose: &CameraPose, point_world: [f64; 3], _observed_pixel: [f64; 2]) -> (MatD, MatD, MatD) {
     let k = 5 + intrinsics.distortion.param_count();
     let mut j_pose = MatD::zeros(2, 6);
     let mut j_point = MatD::zeros(2, 3);
@@ -281,26 +281,26 @@ pub struct ReprojectionProblem {
 }
 
 impl ReprojectionProblem {
-    async fn point_offset(&self, point_idx: usize) -> usize {
+    fn point_offset(&self, point_idx: usize) -> usize {
         self.num_cameras * 6 + point_idx * 3
     }
 
-    async fn point_at(&self, x: &VecD, point_idx: usize) -> [f64; 3] {
+    fn point_at(&self, x: &VecD, point_idx: usize) -> [f64; 3] {
         let base = self.point_offset(point_idx);
         [x.get(base), x.get(base + 1), x.get(base + 2)]
     }
 }
 
 impl LeastSquaresProblem for ReprojectionProblem {
-    async fn residual_count(&self) -> usize {
+    fn residual_count(&self) -> usize {
         self.observations.len() * 2
     }
 
-    async fn parameter_count(&self) -> usize {
+    fn parameter_count(&self) -> usize {
         self.num_cameras * 6 + self.num_points * 3
     }
 
-    async fn residuals(&self, x: &VecD, out: &mut VecD) {
+    fn residuals(&self, x: &VecD, out: &mut VecD) {
         for (row, &(cam_idx, point_idx, obs)) in self.observations.iter().enumerate() {
             let pose = CameraPose(se3_at(x, cam_idx * 6));
             let point = self.point_at(x, point_idx);
@@ -313,7 +313,7 @@ impl LeastSquaresProblem for ReprojectionProblem {
     /// 🔬️ Analytic Jacobians assembled per-observation from [`reprojection_jacobians`]'s pose/point blocks
     /// (intrinsics are fixed here, so its intrinsics block is discarded), scattered into this problem's
     /// per-camera/per-point column ranges.
-    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    fn jacobian(&self, x: &VecD, out: &mut MatD) {
         for (row, &(cam_idx, point_idx, obs)) in self.observations.iter().enumerate() {
             let pose = CameraPose(se3_at(x, cam_idx * 6));
             let point = self.point_at(x, point_idx);
@@ -330,7 +330,7 @@ impl LeastSquaresProblem for ReprojectionProblem {
         }
     }
 
-    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let mut out = VecD::zeros(x.len());
         for cam_idx in 0..self.num_cameras {
             let updated = retract_se3_block(x, dx, cam_idx * 6);
@@ -362,14 +362,14 @@ pub enum ReadoutDirection {
     BottomToTop,
 }
 
-async fn scale6(xi: [f64; 6], s: f64) -> [f64; 6] {
+fn scale6(xi: [f64; 6], s: f64) -> [f64; 6] {
     std::array::from_fn(|k| xi[k] * s)
 }
 
 /// 🎞️ Camera pose at a given sensor row under a linearized constant-velocity rolling-shutter model: the
 /// row's readout time `t = effective_row * line_delay_s` (top-to-bottom counts rows directly, bottom-to-top
 /// counts from the last row) integrates `velocity_se3` on top of `pose0` via the SE(3) exponential.
-pub async fn pose_at_row(model: &RollingShutterModel, row: u32, image_height: u32, pose0: &CameraPose, velocity_se3: [f64; 6]) -> CameraPose {
+pub fn pose_at_row(model: &RollingShutterModel, row: u32, image_height: u32, pose0: &CameraPose, velocity_se3: [f64; 6]) -> CameraPose {
     let last_row = image_height.saturating_sub(1);
     let clamped_row = row.min(last_row);
     let effective_row = match model.readout {
@@ -388,7 +388,7 @@ pub async fn pose_at_row(model: &RollingShutterModel, row: u32, image_height: u3
 /// mutually dependent), ignoring translational parallax — the standard rolling-shutter-without-depth
 /// approximation, exact for rotation-dominated motion. Pixels that never reproject in front of the camera
 /// fall back to their own (unchanged) coordinate.
-pub async fn rectify_remap_field(intrinsics: &Intrinsics, model: &RollingShutterModel, pose0: &CameraPose, velocity_se3: [f64; 6], width: u32, height: u32) -> Vec<[f32; 2]> {
+pub fn rectify_remap_field(intrinsics: &Intrinsics, model: &RollingShutterModel, pose0: &CameraPose, velocity_se3: [f64; 6], width: u32, height: u32) -> Vec<[f32; 2]> {
     let mut field = vec![[0.0f32; 2]; width as usize * height as usize];
     for row in 0..height {
         for col in 0..width {
@@ -436,13 +436,13 @@ pub struct CameraRig {
 
 /// 🔗️ Composes a camera's fixed rig-relative pose with the rig's world pose (`rig_pose`: world-to-rig)
 /// into that camera's world-to-camera transform.
-pub async fn rig_pose_of_camera(rig_pose: &Se3, camera_in_rig: &Se3) -> Se3 {
+pub fn rig_pose_of_camera(rig_pose: &Se3, camera_in_rig: &Se3) -> Se3 {
     camera_in_rig.semio_compose_rs(rig_pose)
 }
 
 /// 📡️ Projects a world point through one rig camera via [`rig_pose_of_camera`], then reprojects. `None`
 /// if `camera_id` isn't in the rig or the point is behind the camera.
-pub async fn rig_project(rig: &CameraRig, intrinsics: &[Intrinsics], camera_id: &str, rig_pose: &CameraPose, point_world: [f64; 3]) -> Option<[f64; 2]> {
+pub fn rig_project(rig: &CameraRig, intrinsics: &[Intrinsics], camera_id: &str, rig_pose: &CameraPose, point_world: [f64; 3]) -> Option<[f64; 2]> {
     let idx = rig.cameras.iter().position(|c| c.camera_id == camera_id)?;
     let world_to_camera = rig_pose_of_camera(&rig_pose.0, &rig.cameras[idx].pose_in_rig);
     reproject(intrinsics.get(idx)?, &CameraPose(world_to_camera), point_world)
@@ -484,7 +484,7 @@ struct RigRefinementProblem<'a> {
 }
 
 impl RigRefinementProblem<'_> {
-    async fn camera_in_rig(&self, x: &VecD, camera_idx: usize) -> Se3 {
+    fn camera_in_rig(&self, x: &VecD, camera_idx: usize) -> Se3 {
         if camera_idx == 0 {
             self.camera0_pose_in_rig
         } else {
@@ -492,21 +492,21 @@ impl RigRefinementProblem<'_> {
         }
     }
 
-    async fn rig_instance_base(&self) -> usize {
+    fn rig_instance_base(&self) -> usize {
         (self.num_cameras - 1) * 6
     }
 }
 
 impl LeastSquaresProblem for RigRefinementProblem<'_> {
-    async fn residual_count(&self) -> usize {
+    fn residual_count(&self) -> usize {
         self.observations.len() * 2
     }
 
-    async fn parameter_count(&self) -> usize {
+    fn parameter_count(&self) -> usize {
         (self.num_cameras - 1) * 6 + self.num_instances * 6
     }
 
-    async fn residuals(&self, x: &VecD, out: &mut VecD) {
+    fn residuals(&self, x: &VecD, out: &mut VecD) {
         let base = self.rig_instance_base();
         for (row, obs) in self.observations.iter().enumerate() {
             let camera_in_rig = self.camera_in_rig(x, obs.camera_idx);
@@ -518,7 +518,7 @@ impl LeastSquaresProblem for RigRefinementProblem<'_> {
         }
     }
 
-    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    fn jacobian(&self, x: &VecD, out: &mut MatD) {
         let base = self.rig_instance_base();
         for (row, obs) in self.observations.iter().enumerate() {
             let camera_in_rig = self.camera_in_rig(x, obs.camera_idx);
@@ -544,7 +544,7 @@ impl LeastSquaresProblem for RigRefinementProblem<'_> {
         }
     }
 
-    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let mut out = VecD::zeros(x.len());
         for i in 0..(self.num_cameras - 1) {
             let updated = retract_se3_block(x, dx, i * 6);
@@ -568,7 +568,7 @@ impl LeastSquaresProblem for RigRefinementProblem<'_> {
 /// the shared [`reprojection_residual`]. Camera 0's `pose_in_rig` is held fixed at its initial value — it
 /// defines the rig's own reference frame, so refining it too would leave the whole rig gauge-free and the
 /// normal equations singular. Requires at least one camera, one rig instance and one observation.
-pub async fn refine_rig(intrinsics: &[Intrinsics], initial: &CameraRig, initial_rig_poses: &[Se3], observations: &[RigObservation]) -> Result<RigRefinementResult, CameraError> {
+pub fn refine_rig(intrinsics: &[Intrinsics], initial: &CameraRig, initial_rig_poses: &[Se3], observations: &[RigObservation]) -> Result<RigRefinementResult, CameraError> {
     let num_cameras = initial.cameras.len();
     let num_instances = initial_rig_poses.len();
     if num_cameras == 0 || num_instances == 0 || observations.is_empty() {
@@ -628,39 +628,39 @@ impl std::error::Error for CameraError {}
 // #endregion 🔖️Error
 
 // #region 🔖️Mat3Helpers
-async fn scale3(v: [f64; 3], s: f64) -> [f64; 3] {
+fn scale3(v: [f64; 3], s: f64) -> [f64; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
-async fn skew3(v: [f64; 3]) -> [[f64; 3]; 3] {
+fn skew3(v: [f64; 3]) -> [[f64; 3]; 3] {
     [[0.0, -v[2], v[1]], [v[2], 0.0, -v[0]], [-v[1], v[0], 0.0]]
 }
 
-async fn mat3_vec(m: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
+fn mat3_vec(m: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
     std::array::from_fn(|r| m[r][0] * v[0] + m[r][1] * v[1] + m[r][2] * v[2])
 }
 
-async fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| (0..3).map(|k| a[r][k] * b[k][c]).sum()))
 }
 
-async fn transpose3(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+fn transpose3(m: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| m[c][r]))
 }
 
-async fn mat3d_rowmajor(m: &Mat3d) -> [[f64; 3]; 3] {
+fn mat3d_rowmajor(m: &Mat3d) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| m.cols[c][r]))
 }
 
-async fn mat2_mul(a: &[[f64; 2]; 2], b: &[[f64; 2]; 2]) -> [[f64; 2]; 2] {
+fn mat2_mul(a: &[[f64; 2]; 2], b: &[[f64; 2]; 2]) -> [[f64; 2]; 2] {
     std::array::from_fn(|r| std::array::from_fn(|c| a[r][0] * b[0][c] + a[r][1] * b[1][c]))
 }
 
-async fn mat2x2_mul_2x3(a: &[[f64; 2]; 2], b: &[[f64; 3]; 2]) -> [[f64; 3]; 2] {
+fn mat2x2_mul_2x3(a: &[[f64; 2]; 2], b: &[[f64; 3]; 2]) -> [[f64; 3]; 2] {
     std::array::from_fn(|r| std::array::from_fn(|c| a[r][0] * b[0][c] + a[r][1] * b[1][c]))
 }
 
-async fn mat2x3_mul_3x3(a: &[[f64; 3]; 2], b: &[[f64; 3]; 3]) -> [[f64; 3]; 2] {
+fn mat2x3_mul_3x3(a: &[[f64; 3]; 2], b: &[[f64; 3]; 3]) -> [[f64; 3]; 2] {
     std::array::from_fn(|r| std::array::from_fn(|c| (0..3).map(|k| a[r][k] * b[k][c]).sum()))
 }
 // #endregion 🔖️Mat3Helpers
@@ -677,7 +677,7 @@ pub struct CalibrationResult {
     pub covariance: MatD,
 }
 
-async fn normalize_2d(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
+fn normalize_2d(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
     let n = pts.len() as f64;
     let mean = pts.iter().fold([0.0, 0.0], |acc, p| [acc[0] + p[0], acc[1] + p[1]]);
     let mean = [mean[0] / n, mean[1] / n];
@@ -688,7 +688,7 @@ async fn normalize_2d(pts: &[[f64; 2]]) -> (Vec<[f64; 2]>, [[f64; 3]; 3]) {
     (normalized, t)
 }
 
-async fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     let s = t[0][0];
     let mx = -t[0][2] / s;
     let my = -t[1][2] / s;
@@ -697,7 +697,7 @@ async fn invert_similarity(t: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
 
 /// 📐️ Estimates a planar homography `image_px ~ H * [board_xy, 1]` via normalized DLT (Hartley
 /// normalization on both point sets, nullspace of the 2n x 9 design matrix via [`svd_nullvector`]).
-async fn estimate_homography(board_xy: &[[f64; 2]], image_px: &[[f64; 2]]) -> Result<[[f64; 3]; 3], CameraError> {
+fn estimate_homography(board_xy: &[[f64; 2]], image_px: &[[f64; 2]]) -> Result<[[f64; 3]; 3], CameraError> {
     let n = board_xy.len();
     if n < 4 {
         return Err(CameraError::DegenerateHomography);
@@ -727,7 +727,7 @@ async fn estimate_homography(board_xy: &[[f64; 2]], image_px: &[[f64; 2]]) -> Re
     Ok(mat3_mul(&mat3_mul(&ti_inv, &h_tilde), &tb))
 }
 
-async fn v_pq(h: &[[f64; 3]; 3], p: usize, q: usize) -> [f64; 6] {
+fn v_pq(h: &[[f64; 3]; 3], p: usize, q: usize) -> [f64; 6] {
     let hp = |r: usize| h[r][p];
     let hq = |r: usize| h[r][q];
     [hp(0) * hq(0), hp(0) * hq(1) + hp(1) * hq(0), hp(1) * hq(1), hp(2) * hq(0) + hp(0) * hq(2), hp(2) * hq(1) + hp(1) * hq(2), hp(2) * hq(2)]
@@ -735,7 +735,7 @@ async fn v_pq(h: &[[f64; 3]; 3], p: usize, q: usize) -> [f64; 6] {
 
 /// 📐️ Recovers `(fx, fy, cx, cy, skew)` from the symmetric image-of-the-absolute-conic vector
 /// `b = [B11, B12, B22, B13, B23, B33]` via Zhang's closed-form.
-async fn recover_intrinsics(b: &VecD) -> Result<(f64, f64, f64, f64, f64), CameraError> {
+fn recover_intrinsics(b: &VecD) -> Result<(f64, f64, f64, f64, f64), CameraError> {
     let mut vals: [f64; 6] = std::array::from_fn(|i| b.get(i));
     if vals[0] < 0.0 {
         for v in vals.iter_mut() {
@@ -766,7 +766,7 @@ async fn recover_intrinsics(b: &VecD) -> Result<(f64, f64, f64, f64, f64), Camer
 
 /// 📐️ Recovers a view's extrinsic pose from its homography and the shared intrinsics: `r1 = K⁻¹h1/‖·‖`,
 /// `r2 = K⁻¹h2/‖·‖`, `r3 = r1 × r2`, `t = K⁻¹h3/‖·‖`, orthonormalized via [`So3::project_to_so3`].
-async fn recover_pose(h: &[[f64; 3]; 3], fx: f64, fy: f64, cx: f64, cy: f64, skew: f64) -> Result<CameraPose, CameraError> {
+fn recover_pose(h: &[[f64; 3]; 3], fx: f64, fy: f64, cx: f64, cy: f64, skew: f64) -> Result<CameraPose, CameraError> {
     let k_inv = [[1.0 / fx, -skew / (fx * fy), (skew * cy - cx * fy) / (fx * fy)], [0.0, 1.0 / fy, -cy / fy], [0.0, 0.0, 1.0]];
     let h1 = [h[0][0], h[1][0], h[2][0]];
     let h2 = [h[0][1], h[1][1], h[2][1]];
@@ -791,7 +791,7 @@ async fn recover_pose(h: &[[f64; 3]; 3], fx: f64, fy: f64, cx: f64, cy: f64, ske
     Ok(CameraPose(Se3 { r: So3::project_to_so3(&rot), t }))
 }
 
-async fn intrinsics_from_params(x: &VecD) -> Intrinsics {
+fn intrinsics_from_params(x: &VecD) -> Intrinsics {
     Intrinsics { fx: x.get(0), fy: x.get(1), cx: x.get(2), cy: x.get(3), skew: x.get(4), distortion: Distortion::BrownConrady { k1: x.get(5), k2: x.get(6), k3: 0.0, p1: x.get(7), p2: x.get(8) } }
 }
 
@@ -804,15 +804,15 @@ struct PlanarCalibrationProblem<'a> {
 }
 
 impl LeastSquaresProblem for PlanarCalibrationProblem<'_> {
-    async fn residual_count(&self) -> usize {
+    fn residual_count(&self) -> usize {
         self.views.iter().map(|v| v.len() * 2).sum()
     }
 
-    async fn parameter_count(&self) -> usize {
+    fn parameter_count(&self) -> usize {
         9 + 6 * self.views.len()
     }
 
-    async fn residuals(&self, x: &VecD, out: &mut VecD) {
+    fn residuals(&self, x: &VecD, out: &mut VecD) {
         let intr = intrinsics_from_params(x);
         let mut row = 0usize;
         for (i, view) in self.views.iter().enumerate() {
@@ -831,7 +831,7 @@ impl LeastSquaresProblem for PlanarCalibrationProblem<'_> {
     /// pose columns, and the intrinsics block (ordered `[fx,fy,cx,cy,skew,k1,k2,k3,p1,p2]`) drops its `k3`
     /// column (index 7, fixed at zero and not part of `x`) when scattering into this problem's 9 shared
     /// intrinsics columns `[fx,fy,cx,cy,skew,k1,k2,p1,p2]`.
-    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    fn jacobian(&self, x: &VecD, out: &mut MatD) {
         const INTRINSICS_SRC_COLS: [usize; 9] = [0, 1, 2, 3, 4, 5, 6, 8, 9];
         let intr = intrinsics_from_params(x);
         let mut row = 0usize;
@@ -853,7 +853,7 @@ impl LeastSquaresProblem for PlanarCalibrationProblem<'_> {
         }
     }
 
-    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let mut out = VecD::zeros(x.len());
         for k in 0..9 {
             out.set(k, x.get(k) + dx.get(k));
@@ -872,7 +872,7 @@ impl LeastSquaresProblem for PlanarCalibrationProblem<'_> {
 /// from the image-of-the-absolute-conic linear system, per-view extrinsics from each homography, then a
 /// full nonlinear joint refinement (shared intrinsics + BrownConrady distortion + all view poses) via
 /// [`levenberg_marquardt`]. Requires at least 3 views; returns [`CameraError`] for degenerate inputs.
-pub async fn calibrate_planar(views: &[Vec<([f64; 2], [f64; 2])>], image_width: u32, image_height: u32) -> Result<CalibrationResult, CameraError> {
+pub fn calibrate_planar(views: &[Vec<([f64; 2], [f64; 2])>], image_width: u32, image_height: u32) -> Result<CalibrationResult, CameraError> {
     if views.len() < 3 {
         return Err(CameraError::TooFewViews);
     }
@@ -934,7 +934,7 @@ pub async fn calibrate_planar(views: &[Vec<([f64; 2], [f64; 2])>], image_width: 
 // #endregion 🔖️PlanarCalibration
 
 // #region 🔖️SelfCalibration
-async fn nullvector_3x3(m: &[[f64; 3]; 3]) -> Option<[f64; 3]> {
+fn nullvector_3x3(m: &[[f64; 3]; 3]) -> Option<[f64; 3]> {
     let mut a = MatD::zeros(3, 3);
     for (r, row) in m.iter().enumerate() {
         for (c, &v) in row.iter().enumerate() {
@@ -947,7 +947,7 @@ async fn nullvector_3x3(m: &[[f64; 3]; 3]) -> Option<[f64; 3]> {
 
 /// 📍️ `(e1, e2)` epipoles of a fundamental matrix: `e1` satisfies `F·e1 = 0` (epipole in image 1), `e2`
 /// satisfies `Fᵀ·e2 = 0` (epipole in image 2), both as raw (not `z`-normalized) SVD nullvectors.
-async fn epipoles_from_fundamental_matrix(f: &[[f64; 3]; 3]) -> Option<([f64; 3], [f64; 3])> {
+fn epipoles_from_fundamental_matrix(f: &[[f64; 3]; 3]) -> Option<([f64; 3], [f64; 3])> {
     let e1 = nullvector_3x3(f)?;
     let e2 = nullvector_3x3(&transpose3(f))?;
     Some((e1, e2))
@@ -955,7 +955,7 @@ async fn epipoles_from_fundamental_matrix(f: &[[f64; 3]; 3]) -> Option<([f64; 3]
 
 /// 🔄️ 2D rotation (embedded in the top-left 3x3 block) that eliminates the `y`-component of `v`'s
 /// direction: the [`bougnoux_focal_from_fundamental`] epipole-alignment step.
-async fn rotation_eliminate_y(v: [f64; 3]) -> [[f64; 3]; 3] {
+fn rotation_eliminate_y(v: [f64; 3]) -> [[f64; 3]; 3] {
     let r = (v[0] * v[0] + v[1] * v[1]).sqrt();
     if r < 1e-300 {
         return [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
@@ -966,7 +966,7 @@ async fn rotation_eliminate_y(v: [f64; 3]) -> [[f64; 3]; 3] {
 
 /// 📐️ Fundamental matrix corresponding to both principal points shifted to the coordinate origin:
 /// `F_shifted = T2⁻ᵀ · F · T1⁻¹` for the pure-translation `T1, T2` moving `pp1, pp2` to `(0,0)`.
-async fn shift_principal_points_to_origin(f: &[[f64; 3]; 3], pp1: [f64; 2], pp2: [f64; 2]) -> [[f64; 3]; 3] {
+fn shift_principal_points_to_origin(f: &[[f64; 3]; 3], pp1: [f64; 2], pp2: [f64; 2]) -> [[f64; 3]; 3] {
     let t1_inv = [[1.0, 0.0, pp1[0]], [0.0, 1.0, pp1[1]], [0.0, 0.0, 1.0]];
     let t2_inv_transpose = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [pp2[0], pp2[1], 1.0]];
     mat3_mul(&mat3_mul(&t2_inv_transpose, f), &t1_inv)
@@ -980,7 +980,7 @@ async fn shift_principal_points_to_origin(f: &[[f64; 3]; 3], pp1: [f64; 2], pp2:
 /// `FocalFromFundamental`). Scale-invariant in `f_matrix` (numerator and denominator are both linear in
 /// it, so any nonzero multiple gives the same answer). `None` for degenerate epipolar geometry (near-zero
 /// epipole components, singular denominators) or a non-positive focal-length estimate.
-pub async fn bougnoux_focal_from_fundamental(f_matrix: &MatD, pp1: [f64; 2], pp2: [f64; 2]) -> Option<(f64, f64)> {
+pub fn bougnoux_focal_from_fundamental(f_matrix: &MatD, pp1: [f64; 2], pp2: [f64; 2]) -> Option<(f64, f64)> {
     if f_matrix.rows != 3 || f_matrix.cols != 3 {
         return None;
     }
@@ -1017,8 +1017,8 @@ pub async fn bougnoux_focal_from_fundamental(f_matrix: &MatD, pp1: [f64; 2], pp2
 /// [`bougnoux_focal_from_fundamental`] estimates across image pairs of the same two cameras): each
 /// closed-form estimate is sensitive to noise in `F` and to near-degenerate epipolar geometry, so the
 /// median across many pairs is far more stable than trusting any single one. `(0.0, 0.0)` when empty.
-pub async fn aggregate_self_calibration(candidates: &[(f64, f64)]) -> (f64, f64) {
-    async fn median_of(values: &mut [f64]) -> f64 {
+pub fn aggregate_self_calibration(candidates: &[(f64, f64)]) -> (f64, f64) {
+    fn median_of(values: &mut [f64]) -> f64 {
         values.sort_by(f64::total_cmp);
         let n = values.len();
         if n == 0 {
@@ -1041,20 +1041,20 @@ pub async fn aggregate_self_calibration(candidates: &[(f64, f64)]) -> (f64, f64)
 mod tests {
     use super::*;
 
-    async fn lcg(state: &mut u64) -> f64 {
+    fn lcg(state: &mut u64) -> f64 {
         *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         ((*state >> 11) as f64 / (1_u64 << 53) as f64) * 2.0 - 1.0
     }
 
-    async fn gaussian(state: &mut u64, sigma: f64) -> f64 {
+    fn gaussian(state: &mut u64, sigma: f64) -> f64 {
         let u1 = (0.5 * (lcg(state) + 1.0)).max(1e-12);
         let u2 = 0.5 * (lcg(state) + 1.0);
         (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos() * sigma
     }
 
     // #region 🔖️DistortionTests
-    #[semio_framework_async_macros::async_test]
-    async fn project_unproject_round_trips_for_none_distortion() {
+    #[test]
+    fn project_unproject_round_trips_for_none_distortion() {
         let intr = Intrinsics { fx: 600.0, fy: 610.0, cx: 320.0, cy: 240.0, skew: 0.5, distortion: Distortion::None };
         for ix in -3..=3 {
             for iy in -3..=3 {
@@ -1067,8 +1067,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn undistort_distort_round_trips_for_brown_conrady_and_fisheye() {
+    #[test]
+    fn undistort_distort_round_trips_for_brown_conrady_and_fisheye() {
         let models = [Distortion::BrownConrady { k1: -0.15, k2: 0.03, k3: -0.002, p1: 0.001, p2: -0.0015 }, Distortion::FisheyeEquidistant { k1: -0.05, k2: 0.01, k3: -0.002, k4: 0.0005 }];
         for distortion in models {
             let intr = Intrinsics { fx: 700.0, fy: 690.0, cx: 330.0, cy: 250.0, skew: 0.0, distortion };
@@ -1084,8 +1084,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn project_unproject_round_trips_through_moderate_distortion() {
+    #[test]
+    fn project_unproject_round_trips_through_moderate_distortion() {
         let intr = Intrinsics { fx: 650.0, fy: 655.0, cx: 315.0, cy: 245.0, skew: 0.0, distortion: Distortion::BrownConrady { k1: -0.1, k2: 0.02, k3: 0.0, p1: 0.0005, p2: -0.0004 } };
         for ix in -3..=3 {
             for iy in -3..=3 {
@@ -1100,8 +1100,8 @@ mod tests {
     // #endregion 🔖️DistortionTests
 
     // #region 🔖️ReprojectionTests
-    #[semio_framework_async_macros::async_test]
-    async fn reprojection_problem_residuals_vanish_at_ground_truth_and_lm_recovers_from_perturbation() {
+    #[test]
+    fn reprojection_problem_residuals_vanish_at_ground_truth_and_lm_recovers_from_perturbation() {
         let intr = Intrinsics { fx: 500.0, fy: 500.0, cx: 250.0, cy: 200.0, skew: 0.0, distortion: Distortion::None };
         let num_cameras = 3;
         let num_points = 8;
@@ -1150,8 +1150,8 @@ mod tests {
     // #endregion 🔖️ReprojectionTests
 
     // #region 🔖️PlanarCalibrationTests
-    #[semio_framework_async_macros::async_test]
-    async fn calibrate_planar_recovers_intrinsics_from_synthetic_checkerboard() {
+    #[test]
+    fn calibrate_planar_recovers_intrinsics_from_synthetic_checkerboard() {
         let true_intr = Intrinsics { fx: 800.0, fy: 810.0, cx: 322.0, cy: 238.0, skew: 0.0, distortion: Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.0, p1: 0.0005, p2: -0.0003 } };
         let (nx, ny, square) = (7, 5, 0.03);
         let board_points: Vec<[f64; 2]> = (0..ny).flat_map(|iy| (0..nx).map(move |ix| [(ix as f64 - (nx - 1) as f64 / 2.0) * square, (iy as f64 - (ny - 1) as f64 / 2.0) * square])).collect();
@@ -1194,8 +1194,8 @@ mod tests {
         assert_eq!(result.poses.len(), num_views);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn calibrate_planar_rejects_too_few_views() {
+    #[test]
+    fn calibrate_planar_rejects_too_few_views() {
         let view = vec![([0.0, 0.0], [100.0, 100.0]), ([0.1, 0.0], [150.0, 100.0]), ([0.0, 0.1], [100.0, 150.0]), ([0.1, 0.1], [150.0, 150.0])];
         let views = vec![view.clone(), view];
         assert!(matches!(calibrate_planar(&views, 640, 480), Err(CameraError::TooFewViews)));
@@ -1203,8 +1203,8 @@ mod tests {
     // #endregion 🔖️PlanarCalibrationTests
 
     // #region 🔖️RollingShutterTests
-    #[semio_framework_async_macros::async_test]
-    async fn pose_at_row_matches_pose0_at_first_row_and_grows_monotonically() {
+    #[test]
+    fn pose_at_row_matches_pose0_at_first_row_and_grows_monotonically() {
         let model = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
         let pose0 = CameraPose(Se3::exp([0.1, -0.05, 0.2, 0.05, 0.02, -0.03]));
         let velocity = [0.5, 0.2, -0.1, 0.05, -0.02, 0.03];
@@ -1221,8 +1221,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn pose_at_row_bottom_to_top_reverses_direction() {
+    #[test]
+    fn pose_at_row_bottom_to_top_reverses_direction() {
         let model_top = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
         let model_bottom = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::BottomToTop };
         let pose0 = CameraPose(Se3::identity());
@@ -1233,8 +1233,8 @@ mod tests {
         assert!(diff < 1e-9, "top-to-bottom last row should match bottom-to-top first row");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn rectify_remap_field_is_near_identity_at_zero_velocity() {
+    #[test]
+    fn rectify_remap_field_is_near_identity_at_zero_velocity() {
         let intr = Intrinsics { fx: 400.0, fy: 400.0, cx: 100.0, cy: 75.0, skew: 0.0, distortion: Distortion::None };
         let model = RollingShutterModel { line_delay_s: 1e-5, readout: ReadoutDirection::TopToBottom };
         let pose0 = CameraPose(Se3::exp([0.1, 0.0, 0.0, 0.0, 0.05, 0.0]));
@@ -1252,8 +1252,8 @@ mod tests {
     // #endregion 🔖️RollingShutterTests
 
     // #region 🔖️RigTests
-    #[semio_framework_async_macros::async_test]
-    async fn rig_project_matches_manual_composition() {
+    #[test]
+    fn rig_project_matches_manual_composition() {
         let intr = Intrinsics { fx: 400.0, fy: 400.0, cx: 200.0, cy: 150.0, skew: 0.0, distortion: Distortion::None };
         let camera_from_rig = Se3::exp([0.1, 0.0, 0.0, 0.0, 0.2, 0.0]);
         let rig = CameraRig { cameras: vec![RigExtrinsic { camera_id: "cam7".to_string(), pose_in_rig: camera_from_rig }] };
@@ -1265,8 +1265,8 @@ mod tests {
         assert!(rig_project(&rig, &[intr], "unknown", &rig_pose, point_world).is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn refine_rig_recovers_planted_extrinsics_and_instance_poses_from_perturbation() {
+    #[test]
+    fn refine_rig_recovers_planted_extrinsics_and_instance_poses_from_perturbation() {
         let intr = Intrinsics { fx: 500.0, fy: 505.0, cx: 250.0, cy: 200.0, skew: 0.0, distortion: Distortion::None };
         let intrinsics = [intr, intr, intr];
         let true_cameras = [
@@ -1334,11 +1334,11 @@ mod tests {
     // #endregion 🔖️RigTests
 
     // #region 🔖️SelfCalibrationTests
-    async fn k_inverse(f: f64, px: f64, py: f64) -> [[f64; 3]; 3] {
+    fn k_inverse(f: f64, px: f64, py: f64) -> [[f64; 3]; 3] {
         [[1.0 / f, 0.0, -px / f], [0.0, 1.0 / f, -py / f], [0.0, 0.0, 1.0]]
     }
 
-    async fn matd_from_3x3(m: &[[f64; 3]; 3]) -> MatD {
+    fn matd_from_3x3(m: &[[f64; 3]; 3]) -> MatD {
         let mut a = MatD::zeros(3, 3);
         for (r, row) in m.iter().enumerate() {
             for (c, &v) in row.iter().enumerate() {
@@ -1348,8 +1348,8 @@ mod tests {
         a
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn bougnoux_focal_from_fundamental_recovers_distinct_ground_truth_focals() {
+    #[test]
+    fn bougnoux_focal_from_fundamental_recovers_distinct_ground_truth_focals() {
         let f1_true = 850.0;
         let f2_true = 1200.0;
         let pp1 = [310.0, 245.0];
@@ -1376,8 +1376,8 @@ mod tests {
         assert!((rf2_scaled - rf2).abs() < 1e-6, "f2 should be scale-invariant: {rf2_scaled} vs {rf2}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn aggregate_self_calibration_recovers_median_and_rejects_outliers() {
+    #[test]
+    fn aggregate_self_calibration_recovers_median_and_rejects_outliers() {
         let candidates = [(800.0, 1000.0), (820.0, 990.0), (5000.0, 40.0), (810.0, 1010.0), (790.0, 1005.0)];
         let (f1, f2) = aggregate_self_calibration(&candidates);
         assert!((f1 - 810.0).abs() < 1e-9, "f1 median = {f1}");
@@ -1385,8 +1385,8 @@ mod tests {
         assert_eq!(aggregate_self_calibration(&[]), (0.0, 0.0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn bougnoux_focal_from_fundamental_rejects_wrong_shaped_matrix() {
+    #[test]
+    fn bougnoux_focal_from_fundamental_rejects_wrong_shaped_matrix() {
         let mut f_wrong = MatD::zeros(2, 3);
         f_wrong.set(0, 0, 1.0);
         assert!(bougnoux_focal_from_fundamental(&f_wrong, [0.0, 0.0], [0.0, 0.0]).is_none());
@@ -1394,7 +1394,7 @@ mod tests {
     // #endregion 🔖️SelfCalibrationTests
 
     // #region 🔖️ReprojectionJacobianTests
-    async fn perturb_intrinsics(intr: &Intrinsics, k: usize, delta: f64) -> Intrinsics {
+    fn perturb_intrinsics(intr: &Intrinsics, k: usize, delta: f64) -> Intrinsics {
         let mut out = *intr;
         match k {
             0 => out.fx += delta,
@@ -1433,8 +1433,8 @@ mod tests {
         out
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reprojection_jacobians_match_central_difference_at_random_configurations() {
+    #[test]
+    fn reprojection_jacobians_match_central_difference_at_random_configurations() {
         let mut state = 909_u64;
         let models = [Distortion::None, Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.001, p1: 0.0008, p2: -0.0005 }, Distortion::FisheyeEquidistant { k1: -0.04, k2: 0.008, k3: -0.001, k4: 0.0002 }];
         let eps = 1e-6;

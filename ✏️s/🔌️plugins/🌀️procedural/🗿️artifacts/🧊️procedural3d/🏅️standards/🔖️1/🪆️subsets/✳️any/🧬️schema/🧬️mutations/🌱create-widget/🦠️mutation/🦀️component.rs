@@ -20,19 +20,19 @@ pub struct CreateWidget {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for CreateWidget {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
-    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::create_widget::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::create_widget::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create widget \"{}\"", crate::artifacts::procedural3d::widget_id(&self.widget))
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![crate::artifacts::procedural3d::widget_id(&self.widget).to_string()]
     }
 }

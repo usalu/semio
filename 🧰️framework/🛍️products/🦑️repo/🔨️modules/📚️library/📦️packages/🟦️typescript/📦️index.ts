@@ -7,7 +7,7 @@
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, fstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { devNull, homedir, tmpdir } from "node:os";
+import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
@@ -1372,6 +1372,8 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
   const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
   const profileArgs = ["--profile", level];
+  const assertionThreads = Math.max(1, availableParallelism() - Math.max(1, Math.ceil(availableParallelism() / 4)));
+  const assertionThreadArgs = level === "fundamental" ? ["--test-threads", String(assertionThreads)] : [];
 
   if (coverageEnabled()) {
     const testBudgetMs = testLevelBudgetMs(level);
@@ -1409,7 +1411,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
       writeFileSync(binariesMetadataPath, binariesMetadata);
       await runTestBudgeted(
         "cargo",
-        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...profileArgs, "--", ...libtestArgs, ...skipArgs],
+        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...assertionThreadArgs, ...profileArgs, "--", ...libtestArgs, ...skipArgs],
         { cwd, env, budgetMs: testLevelBudgetMs(level) },
       );
     } finally {

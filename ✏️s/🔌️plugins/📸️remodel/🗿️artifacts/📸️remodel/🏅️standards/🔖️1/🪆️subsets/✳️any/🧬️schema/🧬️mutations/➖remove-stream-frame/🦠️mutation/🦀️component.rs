@@ -18,7 +18,7 @@ pub struct RemoveStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn remove_stream_frame(id: String, frame_index: u32) -> RemodelMutation {
+pub fn remove_stream_frame(id: String, frame_index: u32) -> RemodelMutation {
     RemodelMutation::RemoveStreamFrame(RemoveStreamFrame { id, frame_index })
 }
 

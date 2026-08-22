@@ -18,7 +18,7 @@ pub struct CreateAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_asset(key: String, asset: ImageAsset) -> RemodelMutation {
+pub fn create_asset(key: String, asset: ImageAsset) -> RemodelMutation {
     RemodelMutation::CreateAsset(CreateAsset { key, asset })
 }
 

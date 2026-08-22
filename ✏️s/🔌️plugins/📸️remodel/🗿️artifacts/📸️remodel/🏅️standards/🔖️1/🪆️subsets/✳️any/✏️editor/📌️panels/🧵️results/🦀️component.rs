@@ -18,12 +18,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub async fn render(scene: &RemodelSnapshot, labels: &RemodelLabels) -> UiNode {
     let results = &scene.results;
-    // 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads real vertex/triangle counts
-    // through `remodel_mesh_workspace`'s working-scene cache; a cold cache reports 0/0 rather than
-    // panicking or fabricating a count.
-    let mesh = crate::artifacts::remodel::remodel_mesh_workspace(&results.mesh.mesh).unwrap_or_default();
+    // 🧩️ The composed handle resolves only fixed constants or committed bounded reconstruction
+    // content; unavailable content reports 0/0 rather than fabricating a count.
+    let mesh = crate::artifacts::remodel::resolve_bounded_remodel_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, mesh.vertex_count(), labels.vertices.as_str(), mesh.triangle_count(), labels.triangles.as_str());
-    let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec().len() / 3));
+    let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec_from(&scene.durable_artifacts).len() / 3));
     let dense_label = results.dense.as_ref().map_or_else(|| format!("{}: {}", labels.dense_cloud.as_str(), labels.results_none.as_str()), |dense| format!("{}: {}", labels.dense_cloud.as_str(), dense.positions.to_f32_vec().len() / 3));
     let trajectory_label =
         results.trajectory.as_ref().map_or_else(|| format!("{}: {}", labels.trajectory.as_str(), labels.results_none.as_str()), |trajectory| format!("{}: {} {}", labels.trajectory.as_str(), trajectory.poses.len(), labels.poses.as_str()));

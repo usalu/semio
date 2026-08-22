@@ -1,35 +1,305 @@
-//! 💡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `semio.infer` — the cold job kind
-//! design-abi.md §2 names as the replacement for the deleted `contributor.artifact-infer` guest
-//! export. `input`/the result are the SAME JSON `WireArtifactInferenceRequest`/`WireArtifactInferenceResult`
-//! bytes the deleted export used (`🖥️host/🦀️component.rs`'s `PluginInstanceHandle::infer` already
-//! passes them straight through, no tuple wrapping — see that method's own doc comment); dispatch
-//! goes through `crate::app::wire_artifact_infer`, the SAME process-registered
-//! `ArtifactInferenceServiceRegistry` lookup `job_io_run`/`job_io_sniff` (this crate's other two
-//! builtin kinds) already use for their own process-global registries — not the per-instance
-//! `crate::plugin_runtime::plugin_wire_artifact_infer`, which is scoped to a `PLUGIN` bundle
-//! installed through a completely different mechanism (`install_plugin_bundle`) that a native
-//! inference-service registration never requires.
-//!
-//! Sliced across `super::run_two_phase`'s two ticks: slice 1 decodes+validates `input` (reporting
-//! `(artifact_kind, inference_schema)` as progress, matching what a caller most wants to see
-//! mid-flight) and checkpoints; slice 2 runs the real `wire_artifact_infer` dispatch. The dormant
-//! 10,930-LOC WFC solve this unblocks (`✏️s/🔌️plugins/🌀️procedural/🦀️component.rs`'s own blocker
-//! comment) still needs its OWN internal `ctx.tick()` calls to be genuinely preemptible mid-solve —
-//! that migration is explicitly out of this packet's scope (a W7 flagship owns it) — but the cold
-//! job kind it will call into now exists and is real, not a stub.
+//! 💡️ `semio.infer` cold-job bridge. Exact ActionBus routes such as `s.assembly.solve`
+//! decode through their factory-owned schema and retain one persistent `InteractiveJob` session.
+//! Every guest continuation admits exactly one bounded step to the shared WorkerPool; previews
+//! coalesce, checkpoints and commits remain lossless under explicit item/byte bounds, and
+//! diagnostics use a bounded ring. Inferences without an ActionBus route retain the synchronous
+//! two-phase registry path.
 
-use super::{run_two_phase, JobCtx};
+use super::{JobCtx, run_two_phase};
+use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, RevisionId, StepOutcome};
+use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
+
+const PREVIEW_MAX_BYTES: usize = 1 << 20;
+const LOSSLESS_MAX_ITEMS: usize = 2;
+const LOSSLESS_MAX_BYTES: usize = 2 << 20;
+const DIAGNOSTIC_MAX_ITEMS: usize = 32;
+const DIAGNOSTIC_MAX_BYTES: usize = 64 << 10;
+
+//#region 🌉️Channels
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+enum InferenceBridgeKind {
+    Scheduled,
+    Preview,
+    Diagnostic,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct InferenceBridgeItem {
+    kind: InferenceBridgeKind,
+    operation: u64,
+    generation: u64,
+    sequence: u64,
+    payload: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum LosslessInferenceItem {
+    Checkpoint(semio_framework_job::Checkpoint),
+    Commit(CommitCandidate),
+}
+
+impl LosslessInferenceItem {
+    fn byte_len(&self) -> usize {
+        match self {
+            Self::Checkpoint(checkpoint) => checkpoint.state.len(),
+            Self::Commit(candidate) => candidate.state.len().saturating_add(candidate.output.len()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum InferenceBridgeError {
+    Oversized { channel: &'static str, bytes: usize, max_bytes: usize },
+    Saturated { channel: &'static str, items: usize, bytes: usize },
+}
+
+impl std::fmt::Display for InferenceBridgeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Oversized { channel, bytes, max_bytes } => write!(formatter, "{channel} item has {bytes} bytes, above {max_bytes}"),
+            Self::Saturated { channel, items, bytes } => write!(formatter, "{channel} is saturated at {items} items/{bytes} bytes"),
+        }
+    }
+}
+
+struct InferenceBridge {
+    operation: Operation,
+    sequence: u64,
+    preview: Option<InferenceBridgeItem>,
+    lossless: [Option<LosslessInferenceItem>; LOSSLESS_MAX_ITEMS],
+    lossless_len: usize,
+    lossless_bytes: usize,
+    diagnostics: VecDeque<InferenceBridgeItem>,
+    diagnostic_bytes: usize,
+}
+
+impl InferenceBridge {
+    fn new(operation: Operation) -> Self {
+        Self { operation, sequence: 0, preview: None, lossless: std::array::from_fn(|_| None), lossless_len: 0, lossless_bytes: 0, diagnostics: VecDeque::new(), diagnostic_bytes: 0 }
+    }
+
+    fn item(&mut self, kind: InferenceBridgeKind, payload: Vec<u8>) -> InferenceBridgeItem {
+        let item = InferenceBridgeItem { kind, operation: self.operation.operation.0, generation: self.operation.generation.0, sequence: self.sequence, payload };
+        self.sequence = self.sequence.saturating_add(1);
+        item
+    }
+
+    fn publish_preview(&mut self, payload: Vec<u8>) -> Result<(), InferenceBridgeError> {
+        if payload.len() > PREVIEW_MAX_BYTES {
+            return Err(InferenceBridgeError::Oversized { channel: "preview", bytes: payload.len(), max_bytes: PREVIEW_MAX_BYTES });
+        }
+        let item = self.item(InferenceBridgeKind::Preview, payload);
+        self.preview = Some(item);
+        Ok(())
+    }
+
+    fn take_preview(&mut self) -> Option<InferenceBridgeItem> {
+        self.preview.take()
+    }
+
+    fn publish_lossless(&mut self, item: LosslessInferenceItem) -> Result<(), InferenceBridgeError> {
+        let bytes = item.byte_len();
+        if bytes > LOSSLESS_MAX_BYTES {
+            return Err(InferenceBridgeError::Oversized { channel: "checkpoint-commit", bytes, max_bytes: LOSSLESS_MAX_BYTES });
+        }
+        let total_bytes = self.lossless_bytes.checked_add(bytes).ok_or(InferenceBridgeError::Saturated { channel: "checkpoint-commit", items: self.lossless_len, bytes: self.lossless_bytes })?;
+        if self.lossless_len >= LOSSLESS_MAX_ITEMS || total_bytes > LOSSLESS_MAX_BYTES {
+            return Err(InferenceBridgeError::Saturated { channel: "checkpoint-commit", items: self.lossless_len, bytes: self.lossless_bytes });
+        }
+        self.lossless[self.lossless_len] = Some(item);
+        self.lossless_len += 1;
+        self.lossless_bytes = total_bytes;
+        Ok(())
+    }
+
+    fn take_lossless(&mut self) -> Option<LosslessInferenceItem> {
+        let item = self.lossless[0].take()?;
+        for index in 1..self.lossless_len {
+            self.lossless[index - 1] = self.lossless[index].take();
+        }
+        self.lossless_len -= 1;
+        self.lossless_bytes = self.lossless_bytes.saturating_sub(item.byte_len());
+        Some(item)
+    }
+
+    fn publish_diagnostic(&mut self, payload: Vec<u8>) {
+        if payload.len() > DIAGNOSTIC_MAX_BYTES {
+            return;
+        }
+        while self.diagnostics.len() >= DIAGNOSTIC_MAX_ITEMS || self.diagnostic_bytes.saturating_add(payload.len()) > DIAGNOSTIC_MAX_BYTES {
+            let Some(removed) = self.diagnostics.pop_front() else {
+                break;
+            };
+            self.diagnostic_bytes = self.diagnostic_bytes.saturating_sub(removed.payload.len());
+        }
+        self.diagnostic_bytes = self.diagnostic_bytes.saturating_add(payload.len());
+        let item = self.item(InferenceBridgeKind::Diagnostic, payload);
+        self.diagnostics.push_back(item);
+    }
+
+    fn scheduled(&mut self) -> InferenceBridgeItem {
+        self.item(InferenceBridgeKind::Scheduled, Vec::new())
+    }
+
+    fn latest_diagnostic(&self) -> Option<&InferenceBridgeItem> {
+        self.diagnostics.back()
+    }
+}
+
+fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(1 + 8 * 3 + 4 + item.payload.len());
+    bytes.push(match item.kind {
+        InferenceBridgeKind::Scheduled => 0,
+        InferenceBridgeKind::Preview => 1,
+        InferenceBridgeKind::Diagnostic => 2,
+    });
+    bytes.extend_from_slice(&item.operation.to_le_bytes());
+    bytes.extend_from_slice(&item.generation.to_le_bytes());
+    bytes.extend_from_slice(&item.sequence.to_le_bytes());
+    bytes.extend_from_slice(&(item.payload.len() as u32).to_le_bytes());
+    bytes.extend_from_slice(&item.payload);
+    bytes
+}
+//#endregion 🌉️Channels
 
 // 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
 // module for the full explanation; same `JobFn` registry shape.
 pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
+        let request: crate::app::WireArtifactInferenceRequest = serde_json::from_slice(&input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+        let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
+        if semio_framework::ActionBus::production().contains(&key) {
+            return run_interactive_inference(ctx, request, restored).await;
+        }
         let decode_input = input.clone();
         let execute_input = input;
         run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { crate::app::wire_artifact_infer(&execute_input).await.map_err(|error| super::fault(error.code, error.message.clone())) }).await
     })
+}
+
+async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifactInferenceRequest, restored: Option<Vec<u8>>) -> Result<Vec<u8>, semio_framework::Fault> {
+    crate::app::validate_wire_request_resources(&request).map_err(|error| super::fault(error.code, error.message))?;
+    let _cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| super::fault(error.code, error.message))?;
+    let operation = Operation::new(OperationId(ctx.id().await), RevisionId(request.revision), Generation(request.generation), 0);
+    let mut bridge = InferenceBridge::new(operation);
+    ctx.tick().await;
+    bridge.publish_preview(serde_json::to_vec(&(request.artifact_kind.clone(), request.inference_schema.clone())).map_err(|error| super::fault("job.infer.progress", error.to_string()))?).map_err(bridge_fault)?;
+    if let Some(item) = bridge.take_preview() {
+        ctx.progress(encode_bridge_item(&item)).await;
+    }
+
+    let bus = semio_framework::ActionBus::production();
+    let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
+    let schema_id = bus.payload_schema_id(&key).ok_or_else(|| super::fault("job.infer.dispatch", "interactive inference factory disappeared before admission"))?;
+    let dispatch = bus.dispatch_wire(super::JOB_KIND_INFER, request.inference_schema.clone(), schema_id, &request.canonical_payload, restored, operation).map_err(|error| super::fault("job.infer.dispatch", error.to_string()))?;
+    let cancel = semio_framework_job::root_cancel_token();
+    let params = semio_framework_job::BatchJobParams {
+        operation: operation.operation,
+        generation: operation.generation,
+        cancel: cancel.clone(),
+        config: semio_framework_job::BatchDriveConfig {
+            site: "semio.infer.action-bus",
+            stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+            fuel_per_step: request.budgets.work_units.min(semio_framework_job::USER_VISIBLE_LANE_FUEL).max(1),
+            step_budget_ms: semio_framework_job::USER_VISIBLE_LANE_WALL_MS,
+        },
+        now_ms: semio_framework_job::default_now_ms,
+    };
+    let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
+    let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+    let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
+
+    loop {
+        if crate::app::inference_cancelled(&request.cancellation_id).map_err(|error| super::fault(error.code, error.message))? {
+            cancel.cancel_now();
+        }
+        ctx.tick().await;
+        let scheduled = bridge.scheduled();
+        ctx.progress(encode_bridge_item(&scheduled)).await;
+        let outcome = session.step(&pool, semio_framework_async::Lane::UserVisible).await.map_err(|_| super::fault("job.infer.worker-closed", "interactive inference worker result channel closed"))?;
+        match outcome {
+            StepOutcome::Yield => {}
+            StepOutcome::PreviewReady(bytes) => {
+                bridge.publish_preview(bytes).map_err(bridge_fault)?;
+                if let Some(item) = bridge.take_preview() {
+                    ctx.progress(encode_bridge_item(&item)).await;
+                }
+            }
+            StepOutcome::CheckpointReady(checkpoint) => {
+                bridge.publish_lossless(LosslessInferenceItem::Checkpoint(checkpoint)).map_err(bridge_fault)?;
+                if let Some(LosslessInferenceItem::Checkpoint(checkpoint)) = bridge.take_lossless() {
+                    ctx.checkpoint(checkpoint.state).await;
+                }
+            }
+            StepOutcome::Complete(candidate) => {
+                bridge.publish_lossless(LosslessInferenceItem::Commit(candidate)).map_err(bridge_fault)?;
+                let Some(LosslessInferenceItem::Commit(candidate)) = bridge.take_lossless() else {
+                    return Err(super::fault("job.infer.bridge", "commit channel returned a non-commit item"));
+                };
+                return encode_result(request, candidate.output);
+            }
+            StepOutcome::Cancelled => return Err(super::fault("job.infer.cancelled", "interactive inference was cancelled")),
+            StepOutcome::Fault(fault) => {
+                bridge.publish_diagnostic(fault.detail.clone());
+                if let Some(item) = bridge.latest_diagnostic() {
+                    ctx.progress(encode_bridge_item(item)).await;
+                }
+                return Err(super::fault("job.infer.interactive", String::from_utf8_lossy(&fault.detail).into_owned()));
+            }
+        }
+    }
+}
+
+fn bridge_fault(error: InferenceBridgeError) -> semio_framework::Fault {
+    super::fault("job.infer.bridge", error.to_string())
+}
+
+fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>) -> Result<Vec<u8>, semio_framework::Fault> {
+    let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| super::fault("job.infer.result", "allocation budget exceeds this runtime's address space"))?;
+    if canonical_payload.len() > allocation {
+        return Err(super::fault("job.infer.result", format!("interactive inference result has {} bytes, above allocation budget {allocation}", canonical_payload.len())));
+    }
+    let provenance = crate::app::WireArtifactInferenceProvenance {
+        owner: request.owner.clone(),
+        inference_schema: request.inference_schema.clone(),
+        algorithm_version: request.algorithm_version,
+        policy_version: request.policy_version,
+        source_dialect: request.source_dialect.clone(),
+    };
+    let result = crate::app::WireArtifactInferenceResult {
+        wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
+        owner: request.owner,
+        artifact_kind: request.artifact_kind,
+        artifact_schema: request.artifact_schema,
+        artifact_schema_version: request.artifact_schema_version,
+        document_schema: request.document_schema,
+        document_schema_version: request.document_schema_version,
+        inference_schema: request.inference_schema,
+        inference_schema_version: request.inference_schema_version,
+        algorithm_version: request.algorithm_version,
+        policy_version: request.policy_version,
+        revision: request.revision,
+        generation: request.generation,
+        source_dialect: request.source_dialect,
+        policy: request.policy,
+        budgets: request.budgets,
+        previous_state: request.previous_state,
+        requested_cache_mode: request.requested_cache_mode.clone(),
+        canonical_payload,
+        dependencies: request.dependencies,
+        diagnostics: Vec::new(),
+        provenance,
+        validity: "valid".into(),
+        quality: "exact".into(),
+        complete: true,
+        actual_cache_mode: request.requested_cache_mode,
+        cancellation_id: request.cancellation_id,
+    };
+    serde_json::to_vec(&result).map_err(|error| super::fault("job.infer.result-encode", error.to_string()))
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactInferenceRequest` and reports its
@@ -44,6 +314,7 @@ async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    use super::*;
     use crate::app::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
 
     const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceServiceMetadata {
@@ -170,5 +441,41 @@ mod tests {
             }
             _ => panic!("garbage infer input must fail on slice 1, before ever reaching the registry"),
         }
+    }
+
+    #[test]
+    fn interactive_bridge_coalesces_preview_but_backpressures_lossless_items() {
+        let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(7), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 0);
+        let mut bridge = InferenceBridge::new(operation);
+        bridge.publish_preview(vec![1]).expect("first preview");
+        bridge.publish_preview(vec![2, 3]).expect("latest preview");
+        assert_eq!(bridge.take_preview().expect("coalesced preview").payload, vec![2, 3]);
+
+        bridge.publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: vec![4], applied_progress: 1 })).expect("first checkpoint");
+        bridge.publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: vec![5], applied_progress: 2 })).expect("second checkpoint");
+        assert!(matches!(bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![6] })), Err(InferenceBridgeError::Saturated { .. })));
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.state == vec![4]));
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.state == vec![5]));
+        assert!(matches!(bridge.publish_preview(vec![0; PREVIEW_MAX_BYTES + 1]), Err(InferenceBridgeError::Oversized { channel: "preview", .. })));
+        bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![0; LOSSLESS_MAX_BYTES] })).expect("exact byte maximum");
+        assert_eq!(bridge.lossless_len, 1);
+        assert_eq!(bridge.lossless_bytes, LOSSLESS_MAX_BYTES);
+        assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Commit(_))));
+        assert!(matches!(
+            bridge.publish_lossless(LosslessInferenceItem::Commit(semio_framework_job::CommitCandidate { state: Vec::new(), output: vec![0; LOSSLESS_MAX_BYTES + 1] })),
+            Err(InferenceBridgeError::Oversized { channel: "checkpoint-commit", .. })
+        ));
+    }
+
+    #[test]
+    fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
+        let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(8), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 0);
+        let mut bridge = InferenceBridge::new(operation);
+        for index in 0..(DIAGNOSTIC_MAX_ITEMS + 9) {
+            bridge.publish_diagnostic(vec![index as u8; 8]);
+        }
+        assert_eq!(bridge.diagnostics.len(), DIAGNOSTIC_MAX_ITEMS);
+        assert!(bridge.diagnostic_bytes <= DIAGNOSTIC_MAX_BYTES);
+        assert_eq!(bridge.diagnostics.front().expect("ring head").payload, vec![9; 8]);
     }
 }

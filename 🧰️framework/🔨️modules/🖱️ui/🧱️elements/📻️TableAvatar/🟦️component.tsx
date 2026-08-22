@@ -7,50 +7,24 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📻️TableAvatar
-const Avatar = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
-  const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
-  const isFullSize = className && className.includes("size-full");
-  const hasExplicitSize = style && (style.width || style.height);
-  return (
-    <AvatarPrimitive.Root
-      ref={ref}
-      data-slot="avatar"
-      style={style}
-      className={cn("relative flex overflow-hidden rounded-full", !hasExplicitSize && "shrink-0", !isFullSize && "border", !isSizeClass && !hasExplicitSize && "size-small", className)}
-      {...props}
-    />
-  );
-});
-Avatar.displayName = "TableAvatarRoot";
+type AvatarImageStatus = "loading" | "loaded" | "error";
 
-const AvatarImage = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image ref={ref} data-slot="avatar-image" className={cn("aspect-square size-full", className)} {...props} />
-));
-AvatarImage.displayName = "TableAvatarImage";
-
-const AvatarFallback = reactHostPort.forwardRef<React.ElementRef<typeof AvatarPrimitive.Fallback>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Fallback ref={ref} data-slot="avatar-fallback" className={cn("bg-muted flex size-full items-center justify-center rounded-full", className)} {...props} />
-));
-AvatarFallback.displayName = "TableAvatarFallback";
-
-export interface TableAvatarProps {
-  id?: string;
+/** 📻️ Owned native avatar props. */
+export interface TableAvatarProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> {
   icon?: string | React.ReactNode;
   name?: string;
-  className?: string;
   isSelected?: boolean;
   isHovered?: boolean;
-  style?: React.CSSProperties;
   fallbackStyle?: React.CSSProperties;
 }
 
-export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
+/** 📻️ Renders a native image with an immediate fallback until the current source loads. */
+export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatarProps>(function TableAvatar({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle, ...props }, ref) {
   const normalizedName = (name ?? "").trim();
   const initials = normalizedName
     ? normalizedName
@@ -61,16 +35,56 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, classN
         .toUpperCase()
         .substring(0, 2)
     : "";
-  const isImageIcon = typeof icon === "string";
+  const isImageIcon = typeof icon === "string" && icon.length > 0;
   const isReactIcon = icon && !isImageIcon;
+  const imageSource = isImageIcon ? icon : undefined;
+  const [imageState, setImageState] = reactHostPort.useState<{ source: string; status: AvatarImageStatus }>(() => ({ source: imageSource ?? "", status: "loading" }));
+  const imageLoaded = Boolean(imageSource && imageState.source === imageSource && imageState.status === "loaded");
+  const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
+  const isFullSize = className && className.includes("size-full");
+  const hasExplicitSize = style && (style.width || style.height);
+
   return (
-    <Avatar id={id} style={style} className={cn("shrink-0", className, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && "ring-1 ring-[color:var(--hover-base)]")}>
-      {isImageIcon ? <AvatarImage src={icon} alt={normalizedName} /> : null}
-      <AvatarFallback style={fallbackStyle} className={cn("text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}>
+    <span
+      ref={ref}
+      data-slot="avatar"
+      id={id}
+      style={style}
+      className={cn(
+        "relative flex overflow-hidden rounded-full",
+        !hasExplicitSize && "shrink-0",
+        !isFullSize && "border",
+        !isSizeClass && !hasExplicitSize && "size-small",
+        className,
+        isSelected && "ring-1 ring-[color:var(--active-base)]",
+        isHovered && "ring-1 ring-[color:var(--hover-base)]",
+      )}
+      {...props}
+    >
+      {imageSource ? (
+        <img
+          key={imageSource}
+          data-slot="avatar-image"
+          className="aspect-square size-full"
+          src={imageSource}
+          alt={normalizedName}
+          hidden={!imageLoaded}
+          onLoad={() => setImageState({ source: imageSource, status: "loaded" })}
+          onError={() => setImageState({ source: imageSource, status: "error" })}
+        />
+      ) : null}
+      <span
+        data-slot="avatar-fallback"
+        role={normalizedName ? "img" : undefined}
+        aria-label={normalizedName || undefined}
+        hidden={imageLoaded}
+        style={fallbackStyle}
+        className={cn("bg-muted flex size-full items-center justify-center rounded-full text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}
+      >
         {isReactIcon ? icon : initials}
-      </AvatarFallback>
-    </Avatar>
+      </span>
+    </span>
   );
-};
+});
 TableAvatar.displayName = "TableAvatar";
 // #endregion 📻️TableAvatar

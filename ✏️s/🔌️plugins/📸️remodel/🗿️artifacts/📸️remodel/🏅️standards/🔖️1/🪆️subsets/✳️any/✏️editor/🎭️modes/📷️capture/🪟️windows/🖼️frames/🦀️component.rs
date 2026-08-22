@@ -43,7 +43,7 @@ async fn frames_layers_json(scene: &RemodelSnapshot, cursor: &RemodelFrameCursor
     let Some(stream_id) = &cursor.stream_id else { return "[]".into() };
     let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
     if let Some(frame) = stream.frames.iter().find(|frame| frame.index == cursor.frame_index) {
-        if let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) {
+        if let Some(asset) = crate::artifacts::remodel::remodel_asset(scene, &frame.asset_id) {
             layers.push(json!({
                 "type": "image",
                 "assetId": frame.asset_id,

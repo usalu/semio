@@ -14,7 +14,7 @@ pub struct SetSunIntensity {
     pub value: f64,
 }
 
-pub async fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetSunIntensity, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let mut sun = cfg.snapshot.sun();
     apply_world3d_sun_action(&mut sun, "setSunIntensity", Some(&json!({ "value": payload.value })));
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))

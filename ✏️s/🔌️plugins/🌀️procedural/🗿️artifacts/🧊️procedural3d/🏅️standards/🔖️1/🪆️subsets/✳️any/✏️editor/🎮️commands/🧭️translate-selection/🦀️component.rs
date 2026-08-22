@@ -12,7 +12,7 @@ use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
 /// to the current config selection when the command carries no explicit ids.
-async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
+fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() {
         fallback.to_vec()
     } else {
@@ -23,7 +23,7 @@ async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<St
 /// 🧭️ Runs a gumball transform (translate/rotate/scale) as a fixture operation, splicing transform
 /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets. `None` when no
 /// transform actually changed anything (nothing to commit).
-async fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Procedural3dMutation>, Vec<String>)> {
+fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Procedural3dMutation>, Vec<String>)> {
     let mut host = host_from_fixture(fixture);
     let mut new_selection = Vec::new();
     let mut changed = false;
@@ -61,7 +61,7 @@ pub struct TranslateSelection {
     pub dz: f64,
 }
 
-async fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, dz: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, dz: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     match gumball_transform(fixture, ids, "translate", move |host, transform_id| {
         let current = gumball_widget_offset(host, transform_id);
         let next = [current[0] + dx, current[1] + dy, current[2] + dz];
@@ -76,7 +76,7 @@ async fn translate_ids(fixture: &FlowFixture, ids: &[String], dx: f64, dy: f64, 
 /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// reachable only through that macro-generated path (`Procedural3dPlayApp::handle` always routes this
 /// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
-pub async fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
     Ok(translate_ids(&doc.snapshot.fixture, &ids, payload.dx, payload.dy, payload.dz))
 }
@@ -85,14 +85,14 @@ pub async fn handle(payload: &TranslateSelection, doc: &ArtifactView<'_, Procedu
 /// command carries no explicit ids. The created gumball transform widget is no longer auto-reselected
 /// — the framework, not this app, owns `graph`'s selection now, and no `Emit` channel can write it
 /// directly.
-pub async fn apply(
+pub fn apply(
     payload: &TranslateSelection,
     doc: &ArtifactView<'_, Procedural3dSnapshot>,
     _cfg: &ConfigView<'_, Procedural3dConfig>,
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids);
     Ok(translate_ids(&doc.snapshot.fixture, &ids, payload.dx, payload.dy, payload.dz))
 }
 
@@ -106,8 +106,8 @@ mod tests {
     use crate::editor::procedural3d::Procedural3dCommand;
     use flow::Widget;
 
-    #[semio_framework_async_macros::async_test]
-    async fn translate_selection_persists_transform_into_flow_graph() {
+    #[test]
+    fn translate_selection_persists_transform_into_flow_graph() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
@@ -127,8 +127,8 @@ mod tests {
         assert_eq!(gumball_widget_offset(&host_from_fixture(&projection2.fixture), transform_id), [2.0, 2.0, 3.0]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn rotate_and_scale_selection_persist_into_flow_graph() {
+    #[test]
+    fn rotate_and_scale_selection_persist_into_flow_graph() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut rotate_app = app();
         dispatch(&mut rotate_app, Procedural3dCommand::RotateSelection(rotate_selection::RotateSelection { node_ids: vec!["extrude".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::FRAC_PI_2 }));

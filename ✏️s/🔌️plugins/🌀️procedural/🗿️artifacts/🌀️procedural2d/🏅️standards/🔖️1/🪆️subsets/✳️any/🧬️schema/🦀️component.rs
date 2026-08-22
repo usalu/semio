@@ -57,17 +57,17 @@ impl Default for Procedural2dArtifact {
 
 impl Procedural2dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Procedural2dSnapshot {
+    pub fn to_snapshot(&self) -> Procedural2dSnapshot {
         Procedural2dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Procedural2dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Procedural2dSnapshot) -> Self {
         Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Procedural2dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Procedural2dSnapshot) {
         self.fixture = snapshot.fixture;
         self.generation = snapshot.generation;
     }
@@ -75,7 +75,7 @@ impl Procedural2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.procedural.procedural2d` — twenty handcrafted schema leaves.
-pub async fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn procedural2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.procedural.procedural2d",
         artifact: schema::FacetLeaves {
@@ -131,10 +131,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Procedural2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -226,13 +226,13 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// pure helpers over document types (`FlowFixture`/`DagFixture`/eval `Value`), not app-referencing.
-pub async fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     host
 }
 
-pub async fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
     flow_host_with_session(fixture, session)
 }
 
@@ -240,18 +240,18 @@ pub async fn host_from_fixture_with_session(fixture: &FlowFixture, session: &Flo
 /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
-pub async fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::procedural2d::op::Procedural2dMutation> {
+pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::procedural2d::op::Procedural2dMutation> {
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     mutate(&mut host);
     crate::artifacts::procedural2d::op::procedural2d_fixture_operations(&baseline, &host.fixture)
 }
 
-pub async fn split_endpoint(endpoint: &str) -> (String, String) {
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -279,7 +279,7 @@ pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeReco
     (nodes, edges)
 }
 
-pub async fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+pub fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
@@ -300,7 +300,7 @@ pub async fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<
     }
 }
 
-pub async fn affine_transform_array(value: &Value) -> [f64; 6] {
+pub fn affine_transform_array(value: &Value) -> [f64; 6] {
     if let Some(matrix) = value.as_array() {
         let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
         for (index, entry) in matrix.iter().take(6).enumerate() {
@@ -315,7 +315,7 @@ pub async fn affine_transform_array(value: &Value) -> [f64; 6] {
     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 }
 
-pub async fn path_segments_from_node(node: &Value) -> Vec<Value> {
+pub fn path_segments_from_node(node: &Value) -> Vec<Value> {
     if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
         return segments.clone();
     }
@@ -329,7 +329,7 @@ pub async fn path_segments_from_node(node: &Value) -> Vec<Value> {
     Vec::new()
 }
 
-pub async fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value> {
+pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value> {
     let scene_json = render_scene_json(handle);
     let Ok(scene) = serde_json::from_str::<Value>(&scene_json) else {
         return Vec::new();
@@ -359,7 +359,7 @@ pub async fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec
         .collect()
 }
 
-pub async fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
     let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
@@ -367,7 +367,7 @@ pub async fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_j
     host.evaluate().unwrap_or_default()
 }
 
-pub async fn generation_preview_layers(eval_json: &str) -> String {
+pub fn generation_preview_layers(eval_json: &str) -> String {
     let prefix = "procedural2d-generate-preview";
     let mut layers = Vec::new();
     if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
@@ -384,11 +384,11 @@ pub async fn generation_preview_layers(eval_json: &str) -> String {
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example
 /// fixture, falling back to the empty document if the fixture ever fails to parse.
-pub async fn default_snapshot() -> Procedural2dSnapshot {
+pub fn default_snapshot() -> Procedural2dSnapshot {
     Procedural2dSnapshot::parse_dsl(crate::artifacts::procedural2d::dsl::PROCEDURAL2D_EXAMPLE_TEXT).unwrap_or_default()
 }
 
-pub async fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
+pub fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
     Procedural2dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
@@ -398,8 +398,8 @@ pub async fn empty_procedural2d_snapshot() -> Procedural2dSnapshot {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn default_snapshot_parses_the_bundled_example() {
+    #[test]
+    fn default_snapshot_parses_the_bundled_example() {
         assert!(!default_snapshot().fixture.widgets.is_empty());
     }
 }

@@ -7,15 +7,18 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as TogglePrimitive from "@radix-ui/react-toggle";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
+import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
 import { ToggleGroup } from "../🎛️ToggleGroup/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️component.tsx";
+import { Label, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
+import { useLevel } from "../🌈️Surface/🟦️component.tsx";
 import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -34,10 +37,18 @@ export interface ToggleItem<T extends string> {
   id?: string;
 }
 
+/** 🗡️ Native button and owned pressed-state contract shared by toggle variants. */
+interface ToggleButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "defaultValue" | "id" | "onChange" | "type" | "value"> {
+  pressed?: boolean;
+  defaultPressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
+  ref?: React.Ref<HTMLButtonElement>;
+}
+
 /**
  * ToggleStandardProps holds the data fields for a ToggleStandardProps record.
  **/
-interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
+interface ToggleStandardProps extends ToggleButtonProps, ElementProps {
   kind?: "default" | "icon" | "single";
   i18nPressed?: string;
   showLabel?: boolean;
@@ -48,7 +59,7 @@ interface ToggleStandardProps extends Omit<React.ComponentProps<typeof TogglePri
 /**
  * ToggleWithActionProps holds the data fields for a ToggleWithActionProps record.
  **/
-interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
+interface ToggleWithActionProps extends ToggleButtonProps, ElementProps {
   kind: "withAction";
   actionIcon: ControlIcon;
   onActionClick: () => void;
@@ -61,7 +72,7 @@ interface ToggleWithActionProps extends Omit<React.ComponentProps<typeof ToggleP
 /**
  * ToggleDropdownProps holds the data fields for a ToggleDropdownProps record.
  **/
-interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProps<typeof TogglePrimitive.Root>, "type" | "id">, ElementProps {
+interface ToggleDropdownProps<T extends string> extends ToggleButtonProps, ElementProps {
   kind: "dropdown";
   value?: T;
   defaultValue?: T;
@@ -99,19 +110,126 @@ const addIconSize = (element: ControlIcon): ControlIcon => {
   return element;
 };
 
+// #region 🟢️PressedButton
+/** 🟢️ Owns native controlled and uncontrolled pressed-button semantics. */
+function ToggleStandardButton({
+  id,
+  showLabel,
+  className,
+  icon,
+  text,
+  kind: _kind,
+  i18nPressed: _i18nPressed,
+  pressed,
+  defaultPressed = false,
+  onPressedChange,
+  disabled,
+  onClick,
+  onKeyDown,
+  onKeyUp,
+  "aria-label": suppliedAriaLabel,
+  title: suppliedTitle,
+  ref,
+  ...buttonProps
+}: ToggleStandardProps) {
+  const [uncontrolledPressed, setUncontrolledPressed] = reactHostPort.useState(defaultPressed);
+  const isControlled = pressed !== undefined;
+  const currentPressed = isControlled ? pressed : uncontrolledPressed;
+  const level = useLevel();
+  const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const tooltipText = useControlTooltipText(id, text);
+  const ariaLabel = suppliedAriaLabel ?? (inlineText ? undefined : accessibleLabel);
+  const title = suppliedTitle ?? tooltipText;
+
+  const activate = () => {
+    const nextPressed = !currentPressed;
+    if (!isControlled) setUncontrolledPressed(nextPressed);
+    onPressedChange?.(nextPressed);
+  };
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
+    if (!event.defaultPrevented && !disabled) activate();
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    onKeyDown?.(event);
+    if (event.defaultPrevented || disabled) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.currentTarget.click();
+    } else if (event.key === " ") {
+      event.preventDefault();
+    }
+  };
+  const handleKeyUp = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    onKeyUp?.(event);
+    if (event.defaultPrevented || disabled || event.key !== " ") return;
+    event.preventDefault();
+    event.currentTarget.click();
+  };
+
+  const button = (
+    <button
+      {...buttonProps}
+      ref={ref}
+      type="button"
+      id={id}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      aria-pressed={currentPressed}
+      title={title}
+      data-slot="toggle-group-item"
+      data-level={level}
+      data-state={currentPressed ? "on" : "off"}
+      className={cn(
+        chromeControlItemClass,
+        chromeControlItemOnClass,
+        "aspect-square",
+        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+        inlineText && "flex items-center gap-single py-single px-double aspect-auto",
+      )}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+    >
+      {inlineText ? (
+        <span data-slot="inline-label" className="text-xs whitespace-nowrap">
+          {inlineText}
+        </span>
+      ) : null}
+      <ControlHotkeyBadge id={id} allowInline={Boolean(inlineText)} />
+      <span>{renderControlIcon(addIconSize(icon))}</span>
+    </button>
+  );
+  const toggle = (
+    <div data-slot="toggle-group" data-detail-panel-control="fit" data-state={currentPressed ? "on" : "off"} role="group" className={cn(chromeControlGroupClass, "group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}>
+      {button}
+    </div>
+  );
+
+  return showLabel ? (
+    <Label id={id} labelElementId={`${id}-label`}>
+      {toggle}
+    </Label>
+  ) : (
+    toggle
+  );
+}
+// #endregion 🟢️PressedButton
+
 /**
  * Toggle holds the data fields for a Toggle record.
  **/
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {
-    const { actionIcon, onActionClick, icon, text, pressed, defaultPressed, onPressedChange, id, showLabel, className, actionId } = props as ToggleWithActionProps;
-    const value = pressed !== undefined ? (pressed ? "on" : undefined) : undefined;
+    const { actionIcon, onActionClick, icon, text, pressed, defaultPressed, onPressedChange, id, showLabel, className, actionId, disabled, ref } = props as ToggleWithActionProps;
+    const controlledValueProps = pressed !== undefined ? { value: pressed ? ["on"] : [] } : { defaultValue: defaultPressed ? ["on"] : [] };
     return (
       <ToggleGroup
         showLabel={showLabel}
         kind="multiple"
-        value={value ? [value] : []}
-        defaultValue={pressed === undefined && defaultPressed ? ["on"] : []}
+        disabled={disabled}
+        {...controlledValueProps}
         onValueChange={(val: string[]) => onPressedChange?.(val.includes("on"))}
         className={className}
         items={[
@@ -119,8 +237,9 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
             value: "on",
             icon: addIconSize(icon),
             text: text,
-            action: <Action as="div" id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} />,
+            action: <Action as="button" disabled={disabled} id={actionId} icon={addIconSize(actionIcon)} onClick={onActionClick} />,
             id: id,
+            ref,
           },
         ]}
       />
@@ -149,6 +268,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       open: controlledOpen,
       onOpenChange,
       onValueChange,
+      disabled,
+      ref,
     } = dropdownProps;
     const [internalValue, setInternalValue] = reactHostPort.useState<T | undefined>(defaultValue);
     const [internalOpen, setInternalOpen] = reactHostPort.useState(false);
@@ -184,8 +305,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger>
-          <Action as="button" type="button" id={dropdownId} icon={<ChevronDownIcon className="size-small" />} />
+        <PopoverTrigger asChild>
+          <Action as="button" type="button" disabled={disabled} id={dropdownId} icon={<ChevronDownIcon className="size-small" />} />
         </PopoverTrigger>
         <PopoverContent
           side={dropdownSide}
@@ -234,6 +355,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       id,
       showLabel,
       kind: "single" as const,
+      disabled,
       onValueChange: handleToggleGroupValueChange,
       className,
       items: [
@@ -242,8 +364,8 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
           icon: addIconSize(selectedItem.icon),
           text: selectedItem.text,
           action: dropdownAction,
-
           id: selectedItem.id,
+          ref,
         },
       ],
     };
@@ -257,27 +379,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     return <ToggleGroup {...toggleGroupProps} />;
   }
 
-  const { id, showLabel, className, icon, text, pressed, defaultPressed, onPressedChange } = props as ToggleStandardProps;
-  const value = pressed !== undefined ? (pressed ? "on" : "") : undefined;
-  return (
-    <ToggleGroup
-      id={id}
-      showLabel={showLabel}
-      className={className}
-      kind="single"
-      value={value}
-      defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
-      onValueChange={(val: string) => onPressedChange?.(val === "on")}
-      items={[
-        {
-          value: "on",
-          id,
-          icon: addIconSize(icon),
-          text: text,
-        },
-      ]}
-    />
-  );
+  return <ToggleStandardButton {...(props as ToggleStandardProps)} />;
 }
 export { Toggle };
 

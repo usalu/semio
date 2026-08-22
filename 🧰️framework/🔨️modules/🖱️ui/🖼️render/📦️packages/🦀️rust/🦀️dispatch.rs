@@ -366,6 +366,12 @@ pub enum ImeEvent {
     Cancel,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextEditTarget {
+    Text,
+    Paste,
+}
+
 /// 📥️ Input events a host feeds into [`Dispatcher::dispatch`] — the same shape as
 /// `events.rs::UiEvent`, generalized to carry a full [`PointerInfo`] instead of bare x/y (U3: multi-
 /// pointer capable, never a winit type).
@@ -379,6 +385,10 @@ pub enum DispatchEvent {
     KeyUp { key: String, modifiers: EventModifiers },
     TextInput { text: String },
     Paste { text: String },
+    TextEditStart { stream: u64, target: TextEditTarget, declared_bytes: usize },
+    TextEditChunk { stream: u64, text: String },
+    TextEditCommit { stream: u64 },
+    TextEditAbort { stream: u64 },
     Ime(ImeEvent),
 }
 
@@ -1463,6 +1473,7 @@ impl Dispatcher {
                     outcome.invalidation.insert(InvalidationReason::PAINT);
                 }
             }
+            DispatchEvent::TextEditStart { .. } | DispatchEvent::TextEditChunk { .. } | DispatchEvent::TextEditCommit { .. } | DispatchEvent::TextEditAbort { .. } => {}
             DispatchEvent::Ime(ime_event) => {
                 outcome.handled = self.route_ime(ime_event);
                 if outcome.handled {

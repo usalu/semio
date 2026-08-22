@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceJob, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::ReplaceJob, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.job == base.job {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Reconstruction job already has this value.");
     }

@@ -301,12 +301,20 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "name",
+        "moduleId",
         "typologyPath",
         "availability",
         "geometry"
       ],
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "moduleId": {
           "type": "string"
         },
         "typologyPath": {

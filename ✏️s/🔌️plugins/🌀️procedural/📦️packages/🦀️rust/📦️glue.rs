@@ -8,12 +8,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-// 🚦️ R7/R3: `Constraint` (`⛓️constraint`) is `#[dyn_enum]`-annotated with `async fn` methods.
-// Send-ness comes structurally from the generated `Constraints` enum, never from a `+ Send` bound
-// on the trait — this silences the resulting `async_fn_in_trait` lint without taking rustc's
-// `-> impl Future + Send` suggestion, which would break guest `?Send` futures.
-#![allow(async_fn_in_trait)]
-
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -1183,36 +1177,50 @@ pub mod artifacts {
 //#region 🧩️WfcEngine
 #[path = "."]
 pub(crate) mod wfc_engine {
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs"]
     pub(crate) mod beam;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎛️bitset/🦀️component.rs"]
     pub mod bitset;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🍰️chunk/🦀️component.rs"]
     pub(crate) mod chunk;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs"]
     pub mod constraint;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs"]
     pub mod constraints_card;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs"]
     pub mod constraints_conn;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🩺️diag/🦀️component.rs"]
     pub mod diag;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌐️domain/🦀️component.rs"]
     pub mod domain;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs"]
     pub mod error;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧬️evolve/🦀️component.rs"]
     pub mod evolve;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs"]
     pub mod extract;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌊️flow/🦀️component.rs"]
     pub mod flow;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs"]
     pub mod grid2d;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs"]
     pub mod grid3d;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧭️heuristics/🦀️component.rs"]
     pub mod heuristics;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪜️hierarchy/🦀️component.rs"]
     pub(crate) mod hierarchy;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs"]
@@ -1221,46 +1229,66 @@ pub(crate) mod wfc_engine {
     pub mod job;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs"]
     pub mod model;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎼️motif/🦀️component.rs"]
     pub(crate) mod motif;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🚫️nogood/🦀️component.rs"]
     pub(crate) mod nogood;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs"]
     pub mod oracle;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs"]
     pub mod outcome;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️parallel/🦀️component.rs"]
     pub(crate) mod parallel;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔁️prop-ac3/🦀️component.rs"]
     pub(crate) mod prop_ac3;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔄️prop-ac4/🦀️component.rs"]
     pub(crate) mod prop_ac4;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/📣️propagate/🦀️component.rs"]
     pub(crate) mod propagate;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔧️repair/🦀️component.rs"]
     pub(crate) mod repair;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎲️sample/🦀️component.rs"]
     pub mod sample;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs"]
     pub mod search;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs"]
     pub mod serial;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs"]
     pub mod soft;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕸️solver-graph/🦀️component.rs"]
     pub mod solver_graph;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs"]
     pub mod solver_grid2d;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs"]
     pub mod solver_grid3d;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕳️sparse-3d/🦀️component.rs"]
     pub mod sparse3d;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs"]
     pub mod symmetry;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🀄️tiled/🦀️component.rs"]
     pub mod tiled;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🗺️topology/🦀️component.rs"]
     pub(crate) mod topology;
+    #[cfg(test)]
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🐾️trail/🦀️component.rs"]
     pub(crate) mod trail;
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs"]
@@ -1603,6 +1631,7 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+pub(crate) use plugin::{generation_form, generation_tree, scene_surface};
 #[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ProceduralApps);
 

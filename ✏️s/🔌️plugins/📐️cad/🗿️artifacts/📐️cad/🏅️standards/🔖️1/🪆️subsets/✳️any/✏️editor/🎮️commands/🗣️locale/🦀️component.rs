@@ -8,7 +8,7 @@ use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_config_from_runtime, runtime_of};
+use crate::editor::cad::{runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -22,10 +22,10 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.snapshot);
-        config.locale = payload.value.clone();
-        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
+    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let mut runtime = runtime_of(cfg);
+        runtime.locale = payload.value.clone();
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -40,10 +40,10 @@ pub mod set_terminology {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mut config = cad_config_from_runtime(&runtime_of(cfg), cfg.snapshot);
-        config.terminology = payload.value.clone();
-        Ok(Emit::config(vec![CadConfigMutation::Snapshot { config }]))
+    pub async fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let mut runtime = runtime_of(cfg);
+        runtime.terminology = payload.value.clone();
+        Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
     }
 }
 //#endregion 🔖️SetTerminology

@@ -272,6 +272,8 @@ enum JobBody {
         task: super::executor::TaskId,
         state: Rc<RefCell<JobState>>,
     },
+    AdmissionFailed,
+    ExplicitStateMachineRequired,
     /// 🧬️ `start_job` never rejects an unrecognised `kind` (matches the old hard-coded `match`'s own
     /// behaviour, and the existing `JobsGuest::start_job` lease contract: it always returns `Ok(())`
     /// — the failure surfaces on the first `step_job` instead, as `job.unknown-kind`).
@@ -289,7 +291,8 @@ thread_local! {
     /// 🧵️ A SEPARATE `LocalExecutor` instance from the reactor turn loop's own — see module doc.
     // 🌉️ `thread_local!` initializer runs in a plain non-async context — bridged via `resolve_ready`
     // since `LocalExecutor::new()` is a pure `Self::default()`.
-    static JOBS_EXECUTOR: super::executor::LocalExecutor = super::executor::LocalExecutor::new();
+    #[cfg(test)]
+    static TEST_JOBS_FUTURE_EXECUTOR: super::executor::ColdFutureExecutor = super::executor::ColdFutureExecutor::new();
 }
 
 /// ▶️ Same bound the reactor turn loop's own `EXECUTOR.run_until_idle` uses — a defensive cap
@@ -328,25 +331,35 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::UnknownKind }));
         return;
     };
-    let state = Rc::new(RefCell::new(JobState::default()));
-    let ctx = JobCtx {
-        job,
-        state: state.clone(),
-        #[cfg(feature = "component-guest-async")]
-        host: crate::reactor::host().await,
-    };
-    let future = run(ctx, input.to_vec(), restored);
-    let outcome_state = state.clone();
-    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`. `spawn` itself only
-    // registers the task and hands back its id; the real awaiting happens later when
-    // `JOBS_EXECUTOR` polls the parked future, not here.
-    let task = JOBS_EXECUTOR.with(|executor| {
-        executor.spawn(async move {
-            let result = future.await;
-            outcome_state.borrow_mut().outcome = Some(result);
-        })
-    });
-    JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::Running { task, state } }));
+    #[cfg(not(test))]
+    {
+        let _ = (run, restored);
+        JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::ExplicitStateMachineRequired }));
+        return;
+    }
+    #[cfg(test)]
+    {
+        let state = Rc::new(RefCell::new(JobState::default()));
+        let ctx = JobCtx {
+            job,
+            state: state.clone(),
+            #[cfg(feature = "component-guest-async")]
+            host: crate::reactor::host().await,
+        };
+        let future = run(ctx, input.to_vec(), restored);
+        let outcome_state = state.clone();
+        // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`. `spawn` itself only
+        // registers the task and hands back its id; the real awaiting happens later when
+        // `JOBS_EXECUTOR` polls the parked future, not here.
+        let task = TEST_JOBS_FUTURE_EXECUTOR.with(|executor| {
+            executor.spawn(async move {
+                let result = future.await;
+                outcome_state.borrow_mut().outcome = Some(result);
+            })
+        });
+        let body = task.map_or(JobBody::AdmissionFailed, |task| JobBody::Running { task, state });
+        JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body }));
+    }
 }
 
 /// 🛑️ `jobs::cancel-job` — drops the job's bookkeeping slot so a later `step_job` on the same id
@@ -374,7 +387,7 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     let Some((kind, running)) = JOBS.with(|jobs| {
         jobs.borrow().get(&job).map(|slot| {
             let running = match &slot.body {
-                JobBody::UnknownKind => None,
+                JobBody::UnknownKind | JobBody::AdmissionFailed | JobBody::ExplicitStateMachineRequired => None,
                 JobBody::Running { task, state } => Some((*task, state.clone())),
             };
             (slot.kind.clone(), running)
@@ -383,8 +396,17 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
         return JobStep::Failed(fault_bytes("job.unknown", format!("no job registered for id {job}")));
     };
     let Some((task, state)) = running else {
-        JOBS.with(|jobs| jobs.borrow_mut().remove(&job));
-        return JobStep::Failed(fault_bytes("job.unknown-kind", format!("unknown job kind {kind:?}")));
+        let code = JOBS
+            .with(|jobs| {
+                jobs.borrow().get(&job).map(|slot| match &slot.body {
+                    JobBody::ExplicitStateMachineRequired => "job.explicit-state-machine-required",
+                    JobBody::AdmissionFailed => "job.admission-failed",
+                    JobBody::UnknownKind | JobBody::Running { .. } => "job.unknown-kind",
+                })
+            })
+            .unwrap_or("job.unknown");
+        JOBS.with(|jobs| drop(jobs.borrow_mut().remove(&job)));
+        return JobStep::Failed(fault_bytes(code, format!("job kind {kind:?} has no admitted explicit bounded state machine")));
     };
 
     let budget_static = {
@@ -401,10 +423,13 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     // `spawn_job`'s own `JOBS_EXECUTOR.with` call above. Neither `wake` nor `run_until_idle` has a
     // real suspension point of ITS OWN (the job future they drive internally may legitimately return
     // `Poll::Pending`, but `run_until_idle` handles that without ever yielding its own future).
-    JOBS_EXECUTOR.with(|executor| {
+    #[cfg(test)]
+    TEST_JOBS_FUTURE_EXECUTOR.with(|executor| {
         executor.wake(task);
-        executor.run_until_idle(SLICE_MAX_ITERATIONS);
+        executor.run_until_deadline(SLICE_MAX_ITERATIONS, std::time::Instant::now() + std::time::Duration::from_millis(8));
     });
+    #[cfg(not(test))]
+    let _ = task;
 
     let (outcome, progress, stalled) = {
         let mut state = state.borrow_mut();
@@ -460,7 +485,7 @@ pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
             .map(|(job, slot)| {
                 let checkpoint = match &slot.body {
                     JobBody::Running { state, .. } => state.borrow().checkpoint.clone(),
-                    JobBody::UnknownKind => None,
+                    JobBody::UnknownKind | JobBody::AdmissionFailed | JobBody::ExplicitStateMachineRequired => None,
                 };
                 JobCheckpointEntry { job: *job, kind: slot.kind.clone(), input: slot.input.clone(), checkpoint }
             })

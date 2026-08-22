@@ -1,7 +1,7 @@
 //! 🧬️ Remodel diff schema — sparse field delta over the artifact.
 
 use crate::artifacts::remodel::schema::{RemodelArtifact, RemodelUiCamera, RemodelUiFrameCursor, RemodelUiLayers, RemodelUiSelection};
-use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild};
+use crate::artifacts::remodel::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelAssetChild, RemodelDurableArtifactStore};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -22,6 +22,8 @@ pub struct RemodelDiff {
     pub streams: Option<RemodelMediaStreamList>,
     #[state(artifact)]
     pub assets: Option<BTreeMap<String, RemodelAssetChild>>,
+    #[state(artifact)]
+    pub durable_artifacts: Option<RemodelDurableArtifactStore>,
     #[state(artifact)]
     pub calibration: Option<CalibrationState>,
     #[state(artifact)]

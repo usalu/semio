@@ -22,15 +22,15 @@ pub struct UpdateCamera {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for UpdateCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
-    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::update_camera::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::update_camera::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Update camera".to_string()
     }
 }

@@ -1,7 +1,8 @@
 //! 🤝️ `engagement-submit` command.
 
+use crate::editor::puzzle3d::commands::set_fill_count;
 use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
-use crate::editor::puzzle3d::{apply_puzzle3d_fill_count, apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_FILL_COUNT_MAX};
+use crate::editor::puzzle3d::{apply_puzzle3d_focus_selection, drive_precompute, Puzzle3dActionCtx, PUZZLE3D_FILL_COUNT_MAX};
 use semio_framework_plugin::strip_engagement_prefix;
 use serde_json::Value;
 
@@ -11,7 +12,7 @@ pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
         ctx.scene.active_utility = "fill".into();
         drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
         let count = rest.parse::<u32>().ok().unwrap_or(ctx.scene.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
-        apply_puzzle3d_fill_count(&mut ctx.app.precompute.borrow_mut(), ctx.scene, count);
+        ctx.effects.push(set_fill_count::request(count));
     } else {
         match raw.to_lowercase().as_str() {
             "brush" => {

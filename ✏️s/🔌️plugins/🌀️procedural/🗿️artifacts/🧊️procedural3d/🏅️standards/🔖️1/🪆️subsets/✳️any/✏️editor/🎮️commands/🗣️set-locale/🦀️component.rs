@@ -13,7 +13,7 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetLocale { value: payload.value.clone() }]))
 }
 
@@ -24,8 +24,8 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_locale_updates_config_locale() {
+    #[test]
+    fn set_locale_updates_config_locale() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         dispatch(&mut app, Procedural3dCommand::SetLocale(SetLocale { value: "de-DE".into() }));

@@ -4,6 +4,6 @@
 use crate::artifacts::assembly::mutations::{delete_slot, AssemblyMutation};
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn inverse(payload: &super::mutation::CreateSlot, _base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+pub fn inverse(payload: &super::mutation::CreateSlot, _base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     vec![delete_slot(payload.slot.id.clone())]
 }

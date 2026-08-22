@@ -4,9 +4,15 @@ export interface Process3dSnapshot {
   /** @state artifact */
   workshop: Process3dWorkshop;
   /** @state artifact */
-  stock: Process3dStock;
+  stockId: string;
+  stockLabel: string;
+  stockPose: Process3dPose;
+  stockPayload: Process3dStock;
+  stockSolid: ArtifactChildHandle;
   /** @state artifact */
-  steps: Process3dStep[];
+  steps: ArtifactChildHandle;
+  stepPayloads: Process3dStep[];
+  toolSolids: ArtifactChildHandle[];
   /** @state artifact */
   resolvedUpTo?: number;
 }
@@ -16,3 +22,4 @@ export interface Process3dWorkshopMachine { id: string; label: string; iconId: s
 export interface Process3dStock { id: string; label: string; solid: Record<string, unknown>; pose: Process3dPose; }
 export interface Process3dPose { position: [number, number, number]; axis: [number, number, number]; angle: number; }
 export interface Process3dStep { id: string; label: string; enabled: boolean; origin?: { machineId: string; capabilityId: string }; measure: Record<string, unknown>; }
+export interface ArtifactChildHandle { childId: string; target: string; }

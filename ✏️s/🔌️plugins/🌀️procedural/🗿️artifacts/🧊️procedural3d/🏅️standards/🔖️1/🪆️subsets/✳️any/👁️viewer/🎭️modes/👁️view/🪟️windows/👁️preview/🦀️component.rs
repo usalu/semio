@@ -13,7 +13,7 @@
 //! than silently duplicating the other surface's session machinery.
 
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -30,7 +30,7 @@ const PROCEDURAL3D_VIEW_TOLERANCE: f64 = 0.05;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::procedural3d::create_procedural3d_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Geometry
 /// 👁️ Read-only twin of the other surface's own `is_brep_geometry_handle` — duplicated (not
 /// imported) per `policyViewerPurityBreaches`.
-async fn is_brep_geometry_handle(handle: &str) -> bool {
+fn is_brep_geometry_handle(handle: &str) -> bool {
     if handle.is_empty() {
         return false;
     }
@@ -58,7 +58,7 @@ async fn is_brep_geometry_handle(handle: &str) -> bool {
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
-async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
             if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
@@ -79,7 +79,7 @@ async fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<Str
     }
 }
 
-async fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
@@ -92,13 +92,13 @@ async fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<Strin
     handles
 }
 
-async fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
+fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
 }
 
 /// 👁️ Evaluates the whole fixture fresh (no session cache — see module doc comment) and tessellates
 /// every preview widget's geometry handles into meshes/instances at the world origin.
-async fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, String) {
+fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, String) {
     let mut host = flow::FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     let eval_json = host.evaluate().unwrap_or_default();
@@ -133,11 +133,11 @@ async fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String,
 //#endregion 🔖️Geometry
 
 //#region 🔖️Render
-/// 👁️ Pure `Procedural3dSnapshot -> UiNode` read: default camera (a viewer has no persisted
+/// 👁️ Pure `Procedural3dSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real evaluated
 /// preview geometry — not a fallback placeholder: procedural3d's whole purpose is generated geometry,
 /// and the pure evaluate+tessellate path needs no session/config to run once.
-pub async fn render(document: &Procedural3dSnapshot) -> UiNode {
+pub fn render(document: &Procedural3dSnapshot) -> BuiltNode {
     let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
     let view = MeshView {
         camera_json: world3d_camera_json(PROCEDURAL3D_VIEW_DEFAULT_CAMERA_POSITION, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_TARGET, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_FOV),
@@ -154,20 +154,20 @@ pub async fn render(document: &Procedural3dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_shared_mesh_window_kit() {
+    #[test]
+    fn definition_declares_the_shared_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_scene_node_for_the_default_document() {
+    #[test]
+    fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::procedural3d::schema::default_snapshot();
         let _node = render(&document);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
+    #[test]
+    fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
         let document = crate::artifacts::procedural3d::schema::default_snapshot();
         let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
         assert_ne!(meshes_json, "[]", "default fixture should evaluate and tessellate at least one preview mesh");

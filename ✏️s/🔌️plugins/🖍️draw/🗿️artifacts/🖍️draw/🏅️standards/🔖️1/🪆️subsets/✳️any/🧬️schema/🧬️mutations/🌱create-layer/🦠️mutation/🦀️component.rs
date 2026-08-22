@@ -20,7 +20,7 @@ pub struct CreateLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_layer(parent_id: Option<String>, index: Option<usize>, layer: DrawLayerNode) -> DrawMutation {
+pub fn create_layer(parent_id: Option<String>, index: Option<usize>, layer: DrawLayerNode) -> DrawMutation {
     DrawMutation::CreateLayer(CreateLayer { parent_id, index, layer: Box::new(layer) })
 }
 

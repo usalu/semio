@@ -79,8 +79,12 @@ lossless command semantics without eviction or coalescing.
 - Interactivity audit: DENY mode clean.
 - Owned source scan: zero native UI executor/polling symbols and zero `Arc<Mutex<AppRuntime>>`.
 
-The wasm branch retains bounded cooperative `spawn_local` continuation driving and inline frame-job
-driving. Its compile was attempted but stopped before the renderer in four out-of-scope async
-`RenderContext::new` call sites (editor `component.rs:1381`; surface paint `:1051`, node graph `:590`,
-tiled map `:3316`). Those upstream E0599/E0277 diagnostics are the only remaining compiler-evidence
-gap recorded for this packet; no renderer wasm diagnostic was emitted.
+The browser-Wasm branch retains bounded cooperative `spawn_local` continuation driving and inline
+frame-job driving. Platform-specific wake storage is explicit: native uses `Arc + Send + Sync`, while
+wasm uses `Rc` for winit-web's non-`Send` event-loop proxy. The prior four upstream missing-await
+errors are repaired. The final `wasm32-unknown-unknown` renderer check passed in 21.91 s.
+
+WASI no longer attempts to compile winit. The crate root selects only the same target-neutral
+bounded mailbox core for `wasm32-wasip2`, and target-scoped dependencies exclude presentation and
+window-system code there. The final Wasip2 check passed in 0.46 s with only three mailbox-core
+dead-code warnings. There is no remaining renderer native/browser/WASI compiler-evidence gap.

@@ -534,6 +534,8 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema:
 pub struct Puzzle5dCatalogPartKindExtra {
     pub id: String,
     #[serde(default)]
+    pub name: String,
+    #[serde(default)]
     pub label: String,
     #[serde(default)]
     pub description: String,
@@ -589,6 +591,8 @@ pub struct Puzzle5dCatalogGripKindExtra {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogFastenerKindExtra {
     pub id: String,
+    #[serde(default)]
+    pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
@@ -598,6 +602,8 @@ pub struct Puzzle5dCatalogFastenerKindExtra {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogRopeKindExtra {
     pub id: String,
+    #[serde(default)]
+    pub name: String,
     #[serde(default)]
     pub label: String,
     #[serde(default)]
@@ -631,6 +637,7 @@ pub fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType {
 pub fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzzle5dCatalogPartKindExtra {
     Puzzle5dCatalogPartKindExtra {
         id: k.id.clone(),
+        name: k.name.clone(),
         label: k.label.clone(),
         description: k.description.clone(),
         icon: k.icon.clone(),
@@ -698,7 +705,7 @@ pub fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitT
     SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "fastener".into() }
 }
 pub fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra {
-    Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), label: k.label.clone() }
+    Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), name: k.name.clone(), label: k.label.clone() }
 }
 pub fn fastener_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogFastenerKindExtra) -> Puzzle5dCatalogFastenerKind {
     Puzzle5dCatalogFastenerKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone() }
@@ -708,7 +715,7 @@ pub fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType {
     SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "rope".into() }
 }
 pub fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra {
-    Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() }
+    Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), name: k.name.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() }
 }
 pub fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRopeKindExtra) -> Puzzle5dCatalogRopeKind {
     Puzzle5dCatalogRopeKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), default_fastener_kind: extra.default_fastener_kind.clone() }
@@ -776,40 +783,12 @@ pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::Art
 }
 //#endregion 🔖️WholeListConverters
 
-//#region 🔖️KindCatalogScratch
-thread_local! {
-    /// 🖌️ Ephemeral working-scene cache: `kind_catalogs` child_id → its live `SemioKitSnapshot` content.
-    /// Per this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/
-    /// `VcsArtifactApp.children` exist structurally in the framework but are NOT populated by any plugin
-    /// as of 2026-08-13 (no `open_child`/`register_child` caller yet), so there is no live resolver seam
-    /// to read a composed child's content back through — every render/export/inference/mutation call site
-    /// funnels through `kind_catalogs_of` below instead, which reads this cache. Populated wherever a
-    /// `Puzzle5dSnapshot` with real kind-catalog content is built (`puzzle5d_snapshot_from_kind_catalogs`,
-    /// `seed_kind_catalogs_scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant
-    /// (matches the repo-wide `EngineRep` contract). Staleness gap documented rather than fail-closed
-    /// (same category as `sourcing`'s `SOURCING_CATALOG_SCRATCH`: `kind_catalogs` is only ever whole-
-    /// value-replaced via `ReplaceKindCatalogs`, never incrementally mutated in-history, so there is no
-    /// undo/redo-of-a-partial-edit scenario to go stale across — only a whole-document undo/redo, which
-    /// re-seeds the cache from the restored snapshot's own DSL/pack parse path).
-    static PUZZLE5D_KIND_CATALOGS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
-fn kind_catalogs_scratch_set(child_id: &str, kit_snapshot: SemioKitSnapshot) {
-    PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), kit_snapshot));
-}
-
-fn kind_catalogs_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
-    PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
-}
-//#endregion 🔖️KindCatalogScratch
-
 /// 🌱 Seeds the working-scene cache for `catalogs`' deterministic `kind_catalogs_child_handle`,
 /// without building a whole `Puzzle5dSnapshot` — for fixture loaders that parse the persisted
 /// snapshot from DSL text (which never embeds child content) but still need the SAME content-
 /// addressed handle's catalogs resolvable immediately after loading.
-pub fn seed_kind_catalogs_scratch(catalogs: &Puzzle5dKindCatalogs) {
-    let handle = kind_catalogs_child_handle(catalogs);
-    kind_catalogs_scratch_set(&handle.child_id, kind_catalogs_kit_snapshot(catalogs));
+pub fn validate_kind_catalogs_payload(catalogs: &Puzzle5dKindCatalogs) {
+    let _ = kind_catalogs_child_handle(catalogs);
 }
 
 /// 🏗️ Mints a fresh content-addressed handle for `catalogs`, splits it into its composed-child half
@@ -822,20 +801,54 @@ pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (
         None => (None, None),
         Some(catalogs) => {
             let handle = kind_catalogs_child_handle(&catalogs);
-            kind_catalogs_scratch_set(&handle.child_id, kind_catalogs_kit_snapshot(&catalogs));
             (Some(handle), Some(kind_catalogs_extra_from_kind_catalogs(&catalogs)))
         }
     }
 }
 
 /// 👁️ The one accessor every render/export/inference/mutation call site funnels through to read the
-/// full reassembled kind-catalogs bundle back in its original `Puzzle5dKindCatalogs` shape — see
-/// `PUZZLE5D_KIND_CATALOGS_SCRATCH`'s doc comment for the staleness gap.
+/// full reassembled kind-catalogs bundle back in its original `Puzzle5dKindCatalogs` shape.
 pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
-    let handle = handle.as_ref()?;
-    let kit_snapshot = kind_catalogs_scratch_get(&handle.child_id).unwrap_or_default();
+    let _ = handle.as_ref()?;
     let extra = extra.clone().unwrap_or_default();
-    Some(kind_catalogs_from_kit_types_and_extra(&kit_snapshot.types, &extra))
+    Some(Puzzle5dKindCatalogs {
+        parts: extra
+            .parts
+            .iter()
+            .map(|row| Puzzle5dCatalogPartKind {
+                id: row.id.clone(),
+                name: row.name.clone(),
+                label: row.label.clone(),
+                description: row.description.clone(),
+                icon: row.icon.clone(),
+                image: row.image.clone(),
+                unit: row.unit.clone(),
+                is_abstract: row.is_abstract,
+                base_kinds: row.base_kinds.clone(),
+                representations: row.representations.clone(),
+                grips: row.grips.clone(),
+                attributes: row.attributes.clone(),
+                authors: row.authors.clone(),
+            })
+            .collect(),
+        grips: extra
+            .grips
+            .iter()
+            .map(|row| Puzzle5dCatalogGripKind {
+                id: row.id.clone(),
+                code: row.code.clone(),
+                label: row.label.clone(),
+                order: row.order,
+                compatible_with: row.compatible_with.clone(),
+                description: row.description.clone(),
+                icon: row.icon.clone(),
+                color: row.color.clone(),
+                default_rope_kind: row.default_rope_kind.clone(),
+            })
+            .collect(),
+        fasteners: extra.fasteners.iter().map(|row| Puzzle5dCatalogFastenerKind { id: row.id.clone(), name: row.name.clone(), label: row.label.clone() }).collect(),
+        ropes: extra.ropes.iter().map(|row| Puzzle5dCatalogRopeKind { id: row.id.clone(), name: row.name.clone(), label: row.label.clone(), default_fastener_kind: row.default_fastener_kind.clone() }).collect(),
+    })
 }
 //#endregion 🔖️KindCatalogComposition
 

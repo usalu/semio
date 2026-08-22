@@ -7,7 +7,7 @@ use std::collections::{BinaryHeap, HashMap};
 // #region 🔖️KdTree
 const KD_NONE: u32 = u32::MAX;
 
-async fn dist_sq<const D: usize>(a: &[f64; D], b: &[f64; D]) -> f64 {
+fn dist_sq<const D: usize>(a: &[f64; D], b: &[f64; D]) -> f64 {
     a.iter().zip(b.iter()).map(|(x, y)| (x - y) * (x - y)).sum()
 }
 
@@ -54,7 +54,7 @@ pub struct KdTree<const D: usize> {
 
 impl<const D: usize> KdTree<D> {
     /// 🏗️ Builds a balanced tree from point copies, remembering each point's original slice index as its payload; empty input yields an empty tree.
-    pub async fn build(points: &[[f64; D]]) -> Self {
+    pub fn build(points: &[[f64; D]]) -> Self {
         if D == 0 || points.is_empty() {
             return Self { nodes: Vec::new() };
         }
@@ -86,7 +86,7 @@ impl<const D: usize> KdTree<D> {
     }
 
     /// 🎯️ Nearest neighbour of `q` as `(payload index, squared distance)`; ties on distance resolve to the smallest index. `None` on an empty tree.
-    pub async fn nearest(&self, q: &[f64; D]) -> Option<(u32, f64)> {
+    pub fn nearest(&self, q: &[f64; D]) -> Option<(u32, f64)> {
         if self.nodes.is_empty() {
             return None;
         }
@@ -116,7 +116,7 @@ impl<const D: usize> KdTree<D> {
     }
 
     /// 🎯️ The `k` nearest neighbours of `q`, ascending by `(squared distance, payload index)`, found with a bounded max-heap; returns fewer than `k` entries only when the tree holds fewer points.
-    pub async fn k_nearest(&self, q: &[f64; D], k: usize) -> Vec<(u32, f64)> {
+    pub fn k_nearest(&self, q: &[f64; D], k: usize) -> Vec<(u32, f64)> {
         if k == 0 || self.nodes.is_empty() {
             return Vec::new();
         }
@@ -152,7 +152,7 @@ impl<const D: usize> KdTree<D> {
     }
 
     /// ⭕️ All points within euclidean distance `r` of `q` as `(payload index, squared distance)`, sorted by payload index for determinism; negative `r` yields no hits.
-    pub async fn radius(&self, q: &[f64; D], r: f64) -> Vec<(u32, f64)> {
+    pub fn radius(&self, q: &[f64; D], r: f64) -> Vec<(u32, f64)> {
         let mut out = Vec::new();
         if self.nodes.is_empty() || r < 0.0 {
             return out;
@@ -179,7 +179,7 @@ impl<const D: usize> KdTree<D> {
     }
 
     /// 📦️ Calls `f` with the payload index of every point inside the closed axis-aligned box `[min, max]`, pruning subtrees by the splitting plane.
-    pub async fn for_each_in_aabb(&self, min: &[f64; D], max: &[f64; D], mut f: impl FnMut(u32)) {
+    pub fn for_each_in_aabb(&self, min: &[f64; D], max: &[f64; D], mut f: impl FnMut(u32)) {
         if self.nodes.is_empty() {
             return;
         }
@@ -211,24 +211,24 @@ pub struct VoxelGrid3 {
 
 impl VoxelGrid3 {
     /// 🧊️ Creates an empty grid with the given positive cell edge length.
-    pub async fn new(cell: f64) -> Self {
+    pub fn new(cell: f64) -> Self {
         assert!(cell > 0.0, "voxel cell size must be positive");
         Self { cell, map: HashMap::new() }
     }
 
     /// 🧭️ Integer cell containing `p`, via floor division that stays correct for negative coordinates.
-    pub async fn cell_of(&self, p: [f64; 3]) -> (i32, i32, i32) {
+    pub fn cell_of(&self, p: [f64; 3]) -> (i32, i32, i32) {
         ((p[0] / self.cell).floor() as i32, (p[1] / self.cell).floor() as i32, (p[2] / self.cell).floor() as i32)
     }
 
     /// ➕️ Buckets `id` into the cell containing `p`.
-    pub async fn insert(&mut self, p: [f64; 3], id: u32) {
+    pub fn insert(&mut self, p: [f64; 3], id: u32) {
         let key = self.cell_of(p);
         self.map.entry(key).or_default().push(id);
     }
 
     /// 🔍️ All ids bucketed in the 27 cells surrounding (and including) the cell of `p`, sorted ascending for determinism.
-    pub async fn neighbors27(&self, p: [f64; 3]) -> Vec<u32> {
+    pub fn neighbors27(&self, p: [f64; 3]) -> Vec<u32> {
         let (cx, cy, cz) = self.cell_of(p);
         let mut out = Vec::new();
         for dx in -1..=1 {
@@ -254,24 +254,24 @@ pub struct Grid2 {
 
 impl Grid2 {
     /// 🖼️ Creates an empty grid with the given positive cell edge length.
-    pub async fn new(cell: f64) -> Self {
+    pub fn new(cell: f64) -> Self {
         assert!(cell > 0.0, "grid cell size must be positive");
         Self { cell, map: HashMap::new() }
     }
 
     /// 🧭️ Integer cell containing `p`, via floor division that stays correct for negative coordinates.
-    pub async fn cell_of(&self, p: [f64; 2]) -> (i32, i32) {
+    pub fn cell_of(&self, p: [f64; 2]) -> (i32, i32) {
         ((p[0] / self.cell).floor() as i32, (p[1] / self.cell).floor() as i32)
     }
 
     /// ➕️ Buckets `id` into the cell containing `p`.
-    pub async fn insert(&mut self, p: [f64; 2], id: u32) {
+    pub fn insert(&mut self, p: [f64; 2], id: u32) {
         let key = self.cell_of(p);
         self.map.entry(key).or_default().push(id);
     }
 
     /// 🔍️ All ids bucketed in the 9 cells surrounding (and including) the cell of `p`, sorted ascending for determinism.
-    pub async fn neighbors9(&self, p: [f64; 2]) -> Vec<u32> {
+    pub fn neighbors9(&self, p: [f64; 2]) -> Vec<u32> {
         let (cx, cy) = self.cell_of(p);
         let mut out = Vec::new();
         for dx in -1..=1 {
@@ -291,7 +291,7 @@ impl Grid2 {
 const MORTON_BITS: u32 = 21;
 const MORTON_COORD_MAX: i64 = (1 << MORTON_BITS) - 1;
 
-async fn morton3_spread(v: u32) -> u64 {
+fn morton3_spread(v: u32) -> u64 {
     let mut x = u64::from(v) & 0x1F_FFFF;
     x = (x | (x << 32)) & 0x001F_0000_0000_FFFF;
     x = (x | (x << 16)) & 0x001F_0000_FF00_00FF;
@@ -301,7 +301,7 @@ async fn morton3_spread(v: u32) -> u64 {
     x
 }
 
-async fn morton3_compact(v: u64) -> u32 {
+fn morton3_compact(v: u64) -> u32 {
     let mut x = v & 0x1249_2492_4924_9249;
     x = (x | (x >> 2)) & 0x10C3_0C30_C30C_30C3;
     x = (x | (x >> 4)) & 0x100F_00F0_0F00_F00F;
@@ -312,16 +312,16 @@ async fn morton3_compact(v: u64) -> u32 {
 }
 
 /// 🧬️ Interleaves the low 21 bits of `x`, `y`, `z` into a 63-bit Morton code (`x` in bit 0, `y` in bit 1, `z` in bit 2 of each triple). <https://en.wikipedia.org/wiki/Z-order_curve>
-pub async fn morton3_encode(x: u32, y: u32, z: u32) -> u64 {
+pub fn morton3_encode(x: u32, y: u32, z: u32) -> u64 {
     morton3_spread(x) | (morton3_spread(y) << 1) | (morton3_spread(z) << 2)
 }
 
 /// 🧬️ Recovers the 21-bit `(x, y, z)` coordinates interleaved by [`morton3_encode`].
-pub async fn morton3_decode(code: u64) -> (u32, u32, u32) {
+pub fn morton3_decode(code: u64) -> (u32, u32, u32) {
     (morton3_compact(code), morton3_compact(code >> 1), morton3_compact(code >> 2))
 }
 
-async fn octree_grid_coord(origin: f64, size: f64, cells: f64, v: f64) -> i64 {
+fn octree_grid_coord(origin: f64, size: f64, cells: f64, v: f64) -> i64 {
     (((v - origin) / size) * cells).floor() as i64
 }
 
@@ -337,7 +337,7 @@ pub struct PointOctree {
 
 impl PointOctree {
     /// 🏗️ Builds the octree over the axis-aligned bounding cube of `points` (`max_depth` clamped to 21, degenerate clouds get a unit cube); point ids are their original slice indices.
-    pub async fn build(points: &[[f64; 3]], max_depth: u32) -> Self {
+    pub fn build(points: &[[f64; 3]], max_depth: u32) -> Self {
         let max_depth = max_depth.min(MORTON_BITS);
         if points.is_empty() {
             return Self { origin: [0.0; 3], size: 1.0, max_depth, entries: Vec::new(), points: Vec::new() };
@@ -369,7 +369,7 @@ impl PointOctree {
     }
 
     /// 🧊️ Voxel-downsample primitive: per occupied cell of edge length `cell` (anchored at the cube origin), the point count and centroid, sorted by the cell's Morton code for determinism.
-    pub async fn downsample(&self, cell: f64) -> Vec<(usize, [f64; 3])> {
+    pub fn downsample(&self, cell: f64) -> Vec<(usize, [f64; 3])> {
         if cell <= 0.0 || self.points.is_empty() {
             return Vec::new();
         }
@@ -396,7 +396,7 @@ impl PointOctree {
     }
 
     /// 📦️ Ids of all points inside the closed box `[min, max]`, sorted ascending; iterative octant descent over Morton-code intervals with exact per-point filtering at the leaves.
-    pub async fn range(&self, min: [f64; 3], max: [f64; 3]) -> Vec<u32> {
+    pub fn range(&self, min: [f64; 3], max: [f64; 3]) -> Vec<u32> {
         let mut out = Vec::new();
         if self.entries.is_empty() {
             return out;
@@ -449,20 +449,20 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    async fn lcg_next(state: &mut u64) -> u64 {
+    fn lcg_next(state: &mut u64) -> u64 {
         *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         *state
     }
 
-    async fn rand_unit(state: &mut u64) -> f64 {
+    fn rand_unit(state: &mut u64) -> f64 {
         (lcg_next(state) >> 11) as f64 / (1u64 << 53) as f64
     }
 
-    async fn rand_range(state: &mut u64, lo: f64, hi: f64) -> f64 {
+    fn rand_range(state: &mut u64, lo: f64, hi: f64) -> f64 {
         lo + (hi - lo) * rand_unit(state)
     }
 
-    async fn make_cloud<const D: usize>(n: usize, seed: u64) -> Vec<[f64; D]> {
+    fn make_cloud<const D: usize>(n: usize, seed: u64) -> Vec<[f64; D]> {
         let mut state = seed;
         let mut pts: Vec<[f64; D]> = (0..n)
             .map(|_| {
@@ -480,13 +480,13 @@ mod tests {
         pts
     }
 
-    async fn brute_all<const D: usize>(pts: &[[f64; D]], q: &[f64; D]) -> Vec<(u32, f64)> {
+    fn brute_all<const D: usize>(pts: &[[f64; D]], q: &[f64; D]) -> Vec<(u32, f64)> {
         let mut all: Vec<(u32, f64)> = pts.iter().enumerate().map(|(i, p)| (i as u32, dist_sq(p, q))).collect();
         all.sort_by(|a, b| a.1.total_cmp(&b.1).then(a.0.cmp(&b.0)));
         all
     }
 
-    async fn make_query<const D: usize>(state: &mut u64, qi: usize) -> [f64; D] {
+    fn make_query<const D: usize>(state: &mut u64, qi: usize) -> [f64; D] {
         let mut q = [0.0; D];
         for v in q.iter_mut() {
             *v = rand_range(state, -80.0, 80.0);
@@ -499,7 +499,7 @@ mod tests {
         q
     }
 
-    async fn check_kd_nearest_parity<const D: usize>(seed: u64) {
+    fn check_kd_nearest_parity<const D: usize>(seed: u64) {
         let pts = make_cloud::<D>(2000, seed);
         let tree = KdTree::build(&pts);
         let mut state = seed ^ 0xABCD;
@@ -515,17 +515,17 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_nearest_and_k_nearest_match_brute_force_d2() {
+    #[test]
+    fn kd_nearest_and_k_nearest_match_brute_force_d2() {
         check_kd_nearest_parity::<2>(11);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_nearest_and_k_nearest_match_brute_force_d3() {
+    #[test]
+    fn kd_nearest_and_k_nearest_match_brute_force_d3() {
         check_kd_nearest_parity::<3>(23);
     }
 
-    async fn check_kd_radius_parity<const D: usize>(seed: u64) {
+    fn check_kd_radius_parity<const D: usize>(seed: u64) {
         let pts = make_cloud::<D>(2000, seed);
         let tree = KdTree::build(&pts);
         let mut state = seed ^ 0x5150;
@@ -541,17 +541,17 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_radius_matches_brute_force_d2() {
+    #[test]
+    fn kd_radius_matches_brute_force_d2() {
         check_kd_radius_parity::<2>(31);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_radius_matches_brute_force_d3() {
+    #[test]
+    fn kd_radius_matches_brute_force_d3() {
         check_kd_radius_parity::<3>(41);
     }
 
-    async fn check_kd_aabb_parity<const D: usize>(seed: u64) {
+    fn check_kd_aabb_parity<const D: usize>(seed: u64) {
         let pts = make_cloud::<D>(2000, seed);
         let tree = KdTree::build(&pts);
         let mut state = seed ^ 0xBEEF;
@@ -572,18 +572,18 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_aabb_visits_match_brute_force_d2() {
+    #[test]
+    fn kd_aabb_visits_match_brute_force_d2() {
         check_kd_aabb_parity::<2>(51);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_aabb_visits_match_brute_force_d3() {
+    #[test]
+    fn kd_aabb_visits_match_brute_force_d3() {
         check_kd_aabb_parity::<3>(61);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kd_empty_tree_is_safe() {
+    #[test]
+    fn kd_empty_tree_is_safe() {
         let tree = KdTree::<3>::build(&[]);
         let q = [0.0; 3];
         assert_eq!(tree.nearest(&q), None);
@@ -596,15 +596,15 @@ mod tests {
         assert!(full.k_nearest(&[0.0, 0.0], 0).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn voxel_grid3_cell_of_floors_negative_coords() {
+    #[test]
+    fn voxel_grid3_cell_of_floors_negative_coords() {
         let grid = VoxelGrid3::new(2.5);
         assert_eq!(grid.cell_of([-0.1, 0.0, 2.5]), (-1, 0, 1));
         assert_eq!(grid.cell_of([-2.5, -2.6, 4.9]), (-1, -2, 1));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn voxel_grid3_neighbors27_matches_brute_force() {
+    #[test]
+    fn voxel_grid3_neighbors27_matches_brute_force() {
         let cell = 2.5;
         let mut grid = VoxelGrid3::new(cell);
         let mut state = 42u64;
@@ -636,8 +636,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn grid2_neighbors9_matches_brute_force() {
+    #[test]
+    fn grid2_neighbors9_matches_brute_force() {
         let cell = 4.0;
         let mut grid = Grid2::new(cell);
         let mut state = 77u64;
@@ -666,8 +666,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn morton3_round_trips() {
+    #[test]
+    fn morton3_round_trips() {
         assert_eq!(morton3_encode(0, 0, 0), 0);
         assert_eq!(morton3_encode(1, 0, 0), 1);
         assert_eq!(morton3_encode(0, 1, 0), 2);
@@ -681,8 +681,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn octree_downsample_preserves_counts_and_centroids() {
+    #[test]
+    fn octree_downsample_preserves_counts_and_centroids() {
         let pts = make_cloud::<3>(2000, 99);
         let tree = PointOctree::build(&pts, 8);
         let cell = 7.0;
@@ -717,8 +717,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn octree_range_matches_brute_force() {
+    #[test]
+    fn octree_range_matches_brute_force() {
         let pts = make_cloud::<3>(2000, 7);
         for &depth in &[0u32, 4, 8, 30] {
             let tree = PointOctree::build(&pts, depth);
@@ -742,8 +742,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn octree_empty_build_is_safe() {
+    #[test]
+    fn octree_empty_build_is_safe() {
         let tree = PointOctree::build(&[], 8);
         assert!(tree.range([-1.0; 3], [1.0; 3]).is_empty());
         assert!(tree.downsample(1.0).is_empty());

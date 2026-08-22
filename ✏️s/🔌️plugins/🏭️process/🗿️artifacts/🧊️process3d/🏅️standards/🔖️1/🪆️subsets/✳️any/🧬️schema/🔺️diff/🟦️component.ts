@@ -6,9 +6,15 @@ export interface Process3dDiff {
   /** @state artifact */
   workshop?: Process3dWorkshop;
   /** @state artifact */
-  stock?: Process3dStock;
+  stockId?: string;
+  stockLabel?: string;
+  stockPose?: Record<string, unknown>;
+  stockPayload?: Process3dStock;
+  stockSolid?: ArtifactChildHandle;
   /** @state artifact */
-  steps?: Process3dStepsDelta;
+  steps?: ArtifactChildHandle;
+  stepPayloads?: Process3dStep[];
+  toolSolids?: ArtifactChildHandle[];
   /** @state artifact */
   resolvedUpTo?: number | null;
   /** @state presence */
@@ -53,10 +59,22 @@ export interface Process3dDiff {
   hoveredId?: string | null;
 }
 
-export interface Process3dArtifact { workshop: Process3dWorkshop; stock: Process3dStock; steps: Process3dStep[]; resolvedUpTo?: number; }
+export interface Process3dArtifact {
+  workshop: Process3dWorkshop;
+  stockId: string;
+  stockLabel: string;
+  stockPose: Record<string, unknown>;
+  stockPayload: Process3dStock;
+  stockSolid: ArtifactChildHandle;
+  steps: ArtifactChildHandle;
+  stepPayloads: Process3dStep[];
+  toolSolids: ArtifactChildHandle[];
+  resolvedUpTo?: number;
+}
 export interface Process3dWorkshop { machines: unknown[]; }
 export interface Process3dStock { id: string; label: string; solid: Record<string, unknown>; pose: Record<string, unknown>; }
 export interface Process3dStep { id: string; label: string; enabled: boolean; }
+export interface ArtifactChildHandle { childId: string; target: string; }
 export interface Process3dStepsDelta {
   added: Process3dStep[];
   removed: string[];
@@ -64,3 +82,4 @@ export interface Process3dStepsDelta {
   reordered?: string[];
 }
 export interface Process3dStepPatchEntry { id: string; patch: Record<string, unknown>; }
+export interface ArtifactChildHandle { childId: string; target: string; }

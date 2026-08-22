@@ -4,7 +4,7 @@
 //! genuinely id-keyed, user-editable collection (the curation selection — which objects, how many
 //! units of each) addressed by `object_id`. `stock` is deliberately NOT represented in this enum:
 //! it is a bulk-populated reference catalogue (seeded from
-//! `crate::artifacts::curate::schema::sourcing_modules()`/hot-installed `sourcing.module`
+//! `crate::artifacts::curate::schema::sourcing_modules("[]")`/hot-installed `sourcing.module`
 //! contributions), never hand-authored item-by-item by a user — whole-catalogue population goes
 //! through `store::ArtifactStore::reset` (see `crate::apps::curate::reset_document_effect`), same
 //! non-history path as whole-document replace, never through this mutation enum. `CuratedItem` has

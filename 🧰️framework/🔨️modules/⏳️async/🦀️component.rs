@@ -1380,6 +1380,39 @@ where
 /// completion remains the future-polling executor's job (packet R2/P1b), built ON TOP of this pool.
 pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
+/// 🚦️ Exact finite admission bound for every worker/lane queue. Queue storage is reserved once
+/// when the process pool is constructed; a submitted step never grows or relocates the deque.
+pub const WORKER_JOBS_PER_LANE: usize = 1_024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkerSubmitErrorKind {
+    Shutdown,
+    Contended,
+    Poisoned,
+    Saturated,
+}
+
+pub struct WorkerSubmitError {
+    kind: WorkerSubmitErrorKind,
+    job: Job,
+}
+
+impl WorkerSubmitError {
+    pub fn kind(&self) -> WorkerSubmitErrorKind {
+        self.kind
+    }
+
+    pub fn into_job(self) -> Job {
+        self.job
+    }
+}
+
+fn admitted_job_queue() -> VecDeque<Job> {
+    let mut queue = VecDeque::new();
+    queue.try_reserve_exact(WORKER_JOBS_PER_LANE).expect("WorkerPool: failed to pre-admit its fixed per-lane queue");
+    queue
+}
+
 /// 🧵️ Construction parameters for [`WorkerPool::new`]. `process_kind` is never inferred — see
 /// [`ProcessKind`]'s doc — and `interactive_reserve` defaults to "on" for
 /// [`ProcessKind::InteractiveNative`] (admission control active, see [`WorkerPool`]'s doc) and "off"
@@ -1422,7 +1455,7 @@ mod native_pool {
 
     impl WorkerLocal {
         fn new() -> WorkerLocal {
-            WorkerLocal { queues: std::array::from_fn(|_| Mutex::new(VecDeque::new())) }
+            WorkerLocal { queues: std::array::from_fn(|_| Mutex::new(admitted_job_queue())) }
         }
     }
 
@@ -1473,9 +1506,7 @@ mod native_pool {
         }
 
         fn notify_idle(&self) {
-            let (lock, cvar) = &self.idle;
-            let _guard = lock.lock().unwrap_or_else(PoisonError::into_inner);
-            cvar.notify_all();
+            self.idle.1.notify_all();
         }
     }
 
@@ -1622,9 +1653,30 @@ mod native_pool {
         /// ▶️ Enqueues `job` onto `lane`, targeting one worker round-robin (siblings pick it up via
         /// [`steal`] if that worker is busy) and waking any idle-parked worker.
         pub fn submit(&self, lane: Lane, job: Job) {
+            if let Err(error) = self.try_submit(lane, job) {
+                panic!("WorkerPool: mandatory submission failed closed: {:?}", error.kind());
+            }
+        }
+
+        /// 🚦️ Attempts one hard-bounded admission without waiting for queue ownership. Failure
+        /// returns the exact closure so a persistent operation owner can retry without losing state.
+        pub fn try_submit(&self, lane: Lane, job: Job) -> Result<(), WorkerSubmitError> {
+            if self.is_shutdown() {
+                return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Shutdown, job });
+            }
             let index = self.inner.next_submit.fetch_add(1, Ordering::SeqCst) % self.inner.workers.len();
-            self.inner.workers[index].queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner).push_back(job);
+            let mut queue = match self.inner.workers[index].queues[lane.index()].try_lock() {
+                Ok(queue) => queue,
+                Err(std::sync::TryLockError::WouldBlock) => return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Contended, job }),
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Poisoned, job }),
+            };
+            if queue.len() >= WORKER_JOBS_PER_LANE {
+                return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Saturated, job });
+            }
+            queue.push_back(job);
+            drop(queue);
             self.inner.notify_idle();
+            Ok(())
         }
 
         /// ⏰️ Enqueues one finite job when the pool's monotonic clock reaches `deadline_ms`.
@@ -1713,7 +1765,7 @@ mod wasm_pool {
 
     impl SchedulerState {
         fn new() -> SchedulerState {
-            SchedulerState { queues: std::array::from_fn(|_| VecDeque::new()), cursor: 0, deficits: [0; LANE_COUNT] }
+            SchedulerState { queues: std::array::from_fn(|_| admitted_job_queue()), cursor: 0, deficits: [0; LANE_COUNT] }
         }
 
         fn select_and_pop(&mut self) -> Option<(Lane, Job)> {
@@ -1783,8 +1835,28 @@ mod wasm_pool {
         }
 
         pub fn submit(&self, lane: Lane, job: Job) {
-            let mut state = self.inner.state.lock().unwrap_or_else(PoisonError::into_inner);
-            state.queues[lane.index()].push_back(job);
+            if let Err(error) = self.try_submit(lane, job) {
+                panic!("WorkerPool: mandatory submission failed closed: {:?}", error.kind());
+            }
+        }
+
+        /// 🚦️ Cooperative equivalent of native `try_submit`: never waits, never grows a queue,
+        /// and returns the exact closure on contention, poison, shutdown, or finite saturation.
+        pub fn try_submit(&self, lane: Lane, job: Job) -> Result<(), WorkerSubmitError> {
+            if self.is_shutdown() {
+                return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Shutdown, job });
+            }
+            let mut state = match self.inner.state.try_lock() {
+                Ok(state) => state,
+                Err(std::sync::TryLockError::WouldBlock) => return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Contended, job }),
+                Err(std::sync::TryLockError::Poisoned(_)) => return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Poisoned, job }),
+            };
+            let queue = &mut state.queues[lane.index()];
+            if queue.len() >= WORKER_JOBS_PER_LANE {
+                return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Saturated, job });
+            }
+            queue.push_back(job);
+            Ok(())
         }
 
         /// ⏰️ Enqueues one finite job after a host-driven pump reaches `deadline_ms`.
@@ -2755,6 +2827,33 @@ mod tests {
         let single = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, 1));
         assert_eq!(single.worker_count(), 1, "a forced single-core host must still get exactly one worker");
         single.shutdown();
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn worker_pool_try_submit_preserves_exact_finite_saturation_authority() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let (started_tx, started_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        pool.submit(
+            Lane::Maintenance,
+            Box::new(move || {
+                started_tx.send(()).expect("blocking worker start");
+                release_rx.recv().expect("blocking worker release");
+            }),
+        );
+        started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("the only worker must be occupied");
+        for _ in 0..WORKER_JOBS_PER_LANE {
+            assert!(pool.try_submit(Lane::Maintenance, Box::new(|| {})).is_ok(), "every pre-admitted lane slot must accept exactly one closure");
+        }
+        let failure = match pool.try_submit(Lane::Maintenance, Box::new(|| {})) {
+            Ok(()) => panic!("the first closure past the fixed cap must be returned"),
+            Err(failure) => failure,
+        };
+        assert_eq!(failure.kind(), WorkerSubmitErrorKind::Saturated);
+        drop(failure.into_job());
+        release_tx.send(()).expect("release blocking worker");
+        pool.shutdown();
     }
 
     #[test]

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-22T03:17:37.596Z",
+  "generatedAt": "2026-08-22T15:31:57.009Z",
   "scope": {
     "excludes": [
       "compose/**",
@@ -17,9 +17,9 @@
   },
   "totals": {
     "manifests": 64,
-    "directRows": 616,
-    "externalRows": 304,
-    "noOwnedScopeEvidence": 98
+    "directRows": 575,
+    "externalRows": 263,
+    "noOwnedScopeEvidence": 74
   },
   "packages": [
     {
@@ -47,13 +47,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 65,
+              "line": 63,
               "text": "minify: \"esbuild\","
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 65,
+              "line": 63,
               "text": "minify: \"esbuild\","
             }
           ],
@@ -95,18 +95,6 @@
               "file": "🔒️dependencies.json",
               "line": 73,
               "text": "\"name\": \"@mdx-js/rollup\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 7,
-              "text": "import mdx from \"@mdx-js/rollup\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 7,
-              "text": "import mdx from \"@mdx-js/rollup\";"
             }
           ],
           "status": "evidenced"
@@ -197,13 +185,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 233,
+              "line": 231,
               "text": "if (id === \"@playwright/test\" || id === \"playwright\" || id === \"playwright-core\" || id === \"chromium-bidi\") {"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 233,
+              "line": 231,
               "text": "if (id === \"@playwright/test\" || id === \"playwright\" || id === \"playwright-core\" || id === \"chromium-bidi\") {"
             }
           ],
@@ -326,15 +314,15 @@
             },
             {
               "kind": "import",
-              "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts",
-              "line": 24,
-              "text": "import { CstParser, createToken, Lexer } from \"chevrotain\";"
+              "file": "🧰️framework/🔨️modules/🖼️assets/📃️list/🔣️animals.json",
+              "line": 266,
+              "text": "\"chevrotain\","
             },
             {
               "kind": "import",
               "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts",
-              "line": 25,
-              "text": "import type { CstNode, IToken } from \"chevrotain\";"
+              "line": 24,
+              "text": "import { CstParser, createToken, Lexer } from \"chevrotain\";"
             }
           ],
           "status": "evidenced"
@@ -344,6 +332,12 @@
           "section": "devDependencies",
           "version": "^16.10.0",
           "evidence": [
+            {
+              "kind": "config",
+              "file": "nx.json",
+              "line": 28,
+              "text": "\"{workspaceRoot}/.dependency-cruiser.cjs\""
+            },
             {
               "kind": "config",
               "file": "eslint.config.mjs",
@@ -361,12 +355,6 @@
               "file": "eslint.config.mjs",
               "line": 41,
               "text": "* `.dependency-cruiser.cjs`'s `crossPluginRules`/`crossPackageRelativeRule`. `no-restricted-imports`"
-            },
-            {
-              "kind": "config",
-              "file": "eslint.config.mjs",
-              "line": 46,
-              "text": "* `📜️script.ts` is excluded the same way `.dependency-cruiser.cjs`'s twin rule excludes it: every such"
             }
           ],
           "status": "evidenced"
@@ -376,6 +364,12 @@
           "section": "devDependencies",
           "version": "^10.0.1",
           "evidence": [
+            {
+              "kind": "config",
+              "file": "nx.json",
+              "line": 27,
+              "text": "\"{workspaceRoot}/eslint.config.mjs\","
+            },
             {
               "kind": "config",
               "file": "eslint.config.mjs",
@@ -393,12 +387,6 @@
               "file": "eslint.config.mjs",
               "line": 5,
               "text": "import eslint from \"@eslint/js\";"
-            },
-            {
-              "kind": "config",
-              "file": "eslint.config.mjs",
-              "line": 6,
-              "text": "import tseslint from \"typescript-eslint\";"
             }
           ],
           "status": "evidenced"
@@ -467,16 +455,16 @@
               "text": "\"name\": \"globals\","
             },
             {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️eslint.config.ts",
-              "line": 14,
-              "text": "import globals from \"globals\";"
+              "kind": "config",
+              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
+              "line": 432,
+              "text": "/** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */"
             },
             {
               "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️eslint.config.ts",
-              "line": 14,
-              "text": "import globals from \"globals\";"
+              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
+              "line": 459,
+              "text": "{ tag: \"link\", attrs: { rel: \"stylesheet\", href: \"./🎨️globals.css\", id: \"semio-play-styles\" }, injectTo: \"head\" },"
             }
           ],
           "status": "evidenced"
@@ -486,12 +474,6 @@
           "section": "devDependencies",
           "version": "21.6.11",
           "evidence": [
-            {
-              "kind": "config",
-              "file": "🧪️vitest.config.ts",
-              "line": 51,
-              "text": "/** 🧵️ Projects that are individually healthy (pass standalone via their own `nx test`"
-            },
             {
               "kind": "config",
               "file": "📋️project.json",
@@ -508,6 +490,12 @@
               "kind": "config",
               "file": "📋️project.json",
               "line": 16,
+              "text": "\"executor\": \"nx:run-commands\","
+            },
+            {
+              "kind": "config",
+              "file": "📋️project.json",
+              "line": 23,
               "text": "\"executor\": \"nx:run-commands\","
             }
           ],
@@ -533,13 +521,13 @@
             {
               "kind": "import",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 121,
+              "line": 124,
               "text": "exclude: [\"playwright\", \"playwright-core\", \"chromium-bidi\", \"fsevents\", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],"
             },
             {
               "kind": "config",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 121,
+              "line": 124,
               "text": "exclude: [\"playwright\", \"playwright-core\", \"chromium-bidi\", \"fsevents\", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],"
             }
           ],
@@ -553,13 +541,19 @@
             {
               "kind": "config",
               "file": "🧪️vitest.config.ts",
-              "line": 70,
+              "line": 33,
+              "text": "import { defineOwnedTestConfig, type OwnedTestProjectConfig } from \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts\";"
+            },
+            {
+              "kind": "config",
+              "file": "🧪️vitest.config.ts",
+              "line": 71,
               "text": "\"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️vitest.config.ts\","
             },
             {
               "kind": "config",
               "file": "🧪️vitest.config.ts",
-              "line": 115,
+              "line": 114,
               "text": "* respectively — the latter via `🧰️framework/🔨️modules/🖱️ui/⚛️react`, also excluded above),"
             },
             {
@@ -567,12 +561,6 @@
               "file": "tsconfig.json",
               "line": 8,
               "text": "\"jsx\": \"react-jsx\","
-            },
-            {
-              "kind": "config",
-              "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 4,
-              "text": "import react from \"@vitejs/plugin-react\";"
             }
           ],
           "status": "evidenced"
@@ -585,26 +573,26 @@
             {
               "kind": "import",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 85,
+              "line": 88,
               "text": "dedupe: [\"react\", \"react-dom\", \"three\", \"@react-three/fiber\", \"@react-three/drei\"],"
             },
             {
               "kind": "config",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 85,
+              "line": 88,
               "text": "dedupe: [\"react\", \"react-dom\", \"three\", \"@react-three/fiber\", \"@react-three/drei\"],"
-            },
-            {
-              "kind": "import",
-              "file": "♻️mit-bestand/🧺️demonstrator/📦️index.tsx",
-              "line": 5,
-              "text": "import { createRoot } from \"react-dom/client\";"
             },
             {
               "kind": "import",
               "file": "🔒️dependencies.json",
               "line": 1513,
               "text": "\"name\": \"react-dom\","
+            },
+            {
+              "kind": "import",
+              "file": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📦️index.tsx",
+              "line": 9,
+              "text": "import { createRoot } from \"react-dom/client\";"
             }
           ],
           "status": "evidenced"
@@ -619,18 +607,6 @@
               "file": "🔒️dependencies.json",
               "line": 1629,
               "text": "\"name\": \"rehype-autolink-headings\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 10,
-              "text": "import rehypeAutolinkHeadings from \"rehype-autolink-headings\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 10,
-              "text": "import rehypeAutolinkHeadings from \"rehype-autolink-headings\";"
             }
           ],
           "status": "evidenced"
@@ -645,18 +621,6 @@
               "file": "🔒️dependencies.json",
               "line": 1641,
               "text": "\"name\": \"rehype-slug\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 11,
-              "text": "import rehypeSlug from \"rehype-slug\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 11,
-              "text": "import rehypeSlug from \"rehype-slug\";"
             }
           ],
           "status": "evidenced"
@@ -671,18 +635,6 @@
               "file": "🔒️dependencies.json",
               "line": 1664,
               "text": "\"name\": \"remark-frontmatter\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 12,
-              "text": "import remarkFrontmatter from \"remark-frontmatter\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 12,
-              "text": "import remarkFrontmatter from \"remark-frontmatter\";"
             }
           ],
           "status": "evidenced"
@@ -697,24 +649,6 @@
               "file": "🔒️dependencies.json",
               "line": 1676,
               "text": "\"name\": \"remark-gfm\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 13,
-              "text": "import remarkGfm from \"remark-gfm\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 13,
-              "text": "import remarkGfm from \"remark-gfm\";"
-            },
-            {
-              "kind": "import",
-              "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx",
-              "line": 87,
-              "text": "import remarkGfm from \"remark-gfm\";"
             }
           ],
           "status": "evidenced"
@@ -729,18 +663,6 @@
               "file": "🔒️dependencies.json",
               "line": 1690,
               "text": "\"name\": \"remark-mdx-frontmatter\","
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 14,
-              "text": "import remarkMdxFrontmatter from \"remark-mdx-frontmatter\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts",
-              "line": 14,
-              "text": "import remarkMdxFrontmatter from \"remark-mdx-frontmatter\";"
             }
           ],
           "status": "evidenced"
@@ -752,27 +674,27 @@
           "evidence": [
             {
               "kind": "config",
-              "file": "eslint.config.mjs",
-              "line": 1,
-              "text": "// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format"
+              "file": "📋️project.json",
+              "line": 37,
+              "text": "\"dev-storybook\": {"
             },
             {
               "kind": "config",
-              "file": "eslint.config.mjs",
-              "line": 2,
-              "text": "import storybook from \"eslint-plugin-storybook\";"
+              "file": "📋️project.json",
+              "line": 41,
+              "text": "\"command\": \"bun ./📜️script.ts dev storybook\","
             },
             {
               "kind": "config",
-              "file": "eslint.config.mjs",
-              "line": 126,
-              "text": "storybook.configs[\"flat/recommended\"],"
+              "file": "📋️project.json",
+              "line": 48,
+              "text": "\"dev-storybook-ui\": {"
             },
             {
               "kind": "config",
-              "file": "tsconfig.json",
-              "line": 19,
-              "text": "\"include\": [\"**/*.ts\", \"**/*.tsx\", \"js/compose/.storybook/**/*.ts\", \"js/compose/.storybook/**/*.tsx\"],"
+              "file": "📋️project.json",
+              "line": 52,
+              "text": "\"command\": \"bun ./📜️script.ts dev storybook ui\","
             }
           ],
           "status": "evidenced"
@@ -797,14 +719,14 @@
             {
               "kind": "config",
               "file": "🧪️vitest.config.ts",
-              "line": 62,
-              "text": "\"🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️vitest.config.ts\","
+              "line": 33,
+              "text": "import { defineOwnedTestConfig, type OwnedTestProjectConfig } from \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts\";"
             },
             {
               "kind": "config",
               "file": "🧪️vitest.config.ts",
-              "line": 66,
-              "text": "\"🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🧪️vitest.config.ts\","
+              "line": 34,
+              "text": "import { loadOwnedTestProjectConfig } from \"./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🟦️config-tooling.ts\";"
             }
           ],
           "status": "evidenced"
@@ -867,7 +789,7 @@
             {
               "kind": "config",
               "file": "🧪️vitest.config.ts",
-              "line": 47,
+              "line": 48,
               "text": "relPath !== \"🧪️vitest.config.ts\""
             }
           ],
@@ -1121,20 +1043,20 @@
             {
               "kind": "config",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
-              "line": 75,
-              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
-            },
-            {
-              "kind": "config",
-              "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
               "line": 76,
-              "text": "{ find: \"@semio-tech/assets\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts\") },"
+              "text": "{ find: \"@semio-tech/ui-react/test\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts\") },"
             },
             {
               "kind": "config",
               "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
               "line": 77,
-              "text": "{ find: \"@semio-tech/ui-styling\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript\") },"
+              "text": "{ find: \"@semio-tech/ui-react/runtime\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts\") },"
+            },
+            {
+              "kind": "config",
+              "file": "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+              "line": 78,
+              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             }
           ],
           "status": "evidenced"
@@ -1705,6 +1627,26 @@
           "status": "evidenced"
         },
         {
+          "dependency": "pdfjs-dist",
+          "section": "dependencies",
+          "version": "^5.4.296",
+          "evidence": [
+            {
+              "kind": "import",
+              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
+              "line": 159,
+              "text": "vi.mock(\"pdfjs-dist\", () => ({"
+            },
+            {
+              "kind": "config",
+              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
+              "line": 159,
+              "text": "vi.mock(\"pdfjs-dist\", () => ({"
+            }
+          ],
+          "status": "evidenced"
+        },
+        {
           "dependency": "react",
           "section": "dependencies",
           "version": "^19.2.3",
@@ -1744,76 +1686,9 @@
           "status": "no-owned-scope-evidence"
         },
         {
-          "dependency": "react-pdf",
-          "section": "dependencies",
-          "version": "^10.3.0",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
-              "line": 164,
-              "text": "vi.mock(\"react-pdf\", () => ({"
-            },
-            {
-              "kind": "config",
-              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
-              "line": 164,
-              "text": "vi.mock(\"react-pdf\", () => ({"
-            },
-            {
-              "kind": "config",
-              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
-              "line": 175,
-              "text": "return createElement(\"div\", { className: \"react-pdf__Document\" }, children);"
-            },
-            {
-              "kind": "config",
-              "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
-              "line": 197,
-              "text": "className: \"react-pdf__Page\","
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "rehype-stringify",
-          "section": "dependencies",
-          "version": "^10.0.1",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "remark-gfm",
-          "section": "dependencies",
-          "version": "^4.0.1",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "remark-parse",
-          "section": "dependencies",
-          "version": "^11.0.0",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "remark-rehype",
-          "section": "dependencies",
-          "version": "^11.1.1",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
           "dependency": "reveal.js",
           "section": "dependencies",
           "version": "^5.2.1",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "unified",
-          "section": "dependencies",
-          "version": "^11.0.5",
           "evidence": [],
           "status": "no-owned-scope-evidence"
         },
@@ -1878,7 +1753,7 @@
               "kind": "config",
               "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🧪️vitest.config.ts",
               "line": 23,
-              "text": "replacement: resolve(repoRoot, \"./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementations/🟦️typescript/📦️index.ts\"),"
+              "text": "replacement: resolve(repoRoot, \"./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts\"),"
             }
           ],
           "status": "evidenced"
@@ -1903,13 +1778,13 @@
             {
               "kind": "config",
               "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 35,
+              "line": 39,
               "text": "setupFiles: [\"./🟦️vitest.setup.ts\"],"
             },
             {
               "kind": "import",
               "file": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🟦️vitest.setup.ts",
-              "line": 3,
+              "line": 2,
               "text": "import { vi } from \"vitest\";"
             }
           ],
@@ -2861,6 +2736,12 @@
               "file": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/tsconfig.json",
               "line": 15,
               "text": "\"../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts\","
+            },
+            {
+              "kind": "import",
+              "file": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts",
+              "line": 3,
+              "text": "import * as implementation from \"brepjs\";"
             }
           ],
           "status": "evidenced"
@@ -2869,8 +2750,27 @@
           "dependency": "brepjs-opencascade",
           "section": "dependencies",
           "version": "^0.15.6",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
+          "evidence": [
+            {
+              "kind": "import",
+              "file": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts",
+              "line": 2,
+              "text": "import openCascadeWasmBundledUrl from \"brepjs-opencascade/src/brepjs_single.wasm?url\";"
+            },
+            {
+              "kind": "import",
+              "file": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts",
+              "line": 4,
+              "text": "import initOpenCascade from \"brepjs-opencascade\";"
+            },
+            {
+              "kind": "import",
+              "file": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts",
+              "line": 41,
+              "text": "return pathToFileURL(createRequire(import.meta.url).resolve(\"brepjs-opencascade/src/brepjs_single.wasm\")).href;"
+            }
+          ],
+          "status": "evidenced"
         },
         {
           "dependency": "chevrotain",
@@ -5146,7 +5046,7 @@
               "kind": "import",
               "file": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx",
               "line": 9,
-              "text": "import { cleanup, render, screen, waitFor } from \"@testing-library/react\";"
+              "text": "import { cleanup, fireEvent, render, screen, waitFor } from \"@testing-library/react\";"
             }
           ],
           "status": "evidenced"
@@ -5563,13 +5463,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 94,
+              "line": 135,
               "text": "import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from \"@semio-tech/assets\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 95,
+              "line": 136,
               "text": "import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from \"@semio-tech/assets\";"
             }
           ],
@@ -5583,25 +5483,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 52,
+              "line": 46,
               "text": "} from \"@semio-tech/ui-styling\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 54,
+              "line": 48,
               "text": "// this barrel, never straight from \"@semio-tech/ui-styling\") can resolve these — a bare `import {...}"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 55,
+              "line": 49,
               "text": "// from \"@semio-tech/ui-styling\"` above does not itself make a name part of this module's public surface."
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 191,
+              "line": 229,
               "text": "export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, T"
             }
           ],
@@ -5615,25 +5515,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 57,
-              "text": "import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_"
+              "line": 104,
+              "text": "} from \"@semio-tech/framework\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 849,
+              "line": 859,
               "text": "export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 850,
+              "line": 860,
               "text": "export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from \"@semio-tech/framework\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 851,
+              "line": 861,
               "text": "export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from \"@semio-tech/framework\";"
             }
           ],
@@ -5647,19 +5547,19 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 67,
+              "line": 111,
               "text": "import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17054,
+              "line": 18039,
               "text": "export { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useDraggable, useDroppable, useSensor, useSensors } from \"@dnd-kit/core\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17055,
+              "line": 18040,
               "text": "export type { DragEndEvent, DragOverEvent, DragStartEvent } from \"@dnd-kit/core\";"
             }
           ],
@@ -5673,13 +5573,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 68,
+              "line": 112,
               "text": "import { SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17056,
+              "line": 18041,
               "text": "export { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from \"@dnd-kit/sortable\";"
             }
           ],
@@ -5693,183 +5593,17 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 69,
+              "line": 113,
               "text": "import { CSS } from \"@dnd-kit/utilities\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17057,
+              "line": 18042,
               "text": "export { CSS as DndCSS } from \"@dnd-kit/utilities\";"
             }
           ],
           "status": "evidenced"
-        },
-        {
-          "dependency": "@mdx-js/react",
-          "section": "dependencies",
-          "version": "^3.1.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17103,
-              "text": "export { MDXProvider } from \"@mdx-js/react\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "date-fns",
-          "section": "dependencies",
-          "version": "^4.1.0",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 59,
-              "text": "import { format, formatDistanceToNow } from \"date-fns\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17093,
-              "text": "export { format, formatDistanceToNow } from \"date-fns\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17094,
-              "text": "export { de as dateFnsDe, enUS as dateFnsEnUS } from \"date-fns/locale\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-avatar",
-          "section": "dependencies",
-          "version": "^1.1.11",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@radix-ui/react-collapsible",
-          "section": "dependencies",
-          "version": "^1.1.11",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 16,
-              "text": "import * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-dialog",
-          "section": "dependencies",
-          "version": "^1.1.15",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17,
-              "text": "import * as DialogPrimitive from \"@radix-ui/react-dialog\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-dropdown-menu",
-          "section": "dependencies",
-          "version": "^2.1.16",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 18,
-              "text": "import * as DropdownMenuPrimitive from \"@radix-ui/react-dropdown-menu\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-popover",
-          "section": "dependencies",
-          "version": "^1.1.15",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@radix-ui/react-select",
-          "section": "dependencies",
-          "version": "^2.3.3",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 19,
-              "text": "import * as SelectPrimitive from \"@radix-ui/react-select\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-slider",
-          "section": "dependencies",
-          "version": "^1.4.5",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 20,
-              "text": "import * as SliderPrimitive from \"@radix-ui/react-slider\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-slot",
-          "section": "dependencies",
-          "version": "^1.2.5",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 70,
-              "text": "import { Slot } from \"@radix-ui/react-slot\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-tabs",
-          "section": "dependencies",
-          "version": "^1.1.13",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 21,
-              "text": "import * as TabsPrimitive from \"@radix-ui/react-tabs\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@radix-ui/react-toggle",
-          "section": "dependencies",
-          "version": "^1.1.3",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@radix-ui/react-toggle-group",
-          "section": "dependencies",
-          "version": "^1.1.11",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
         },
         {
           "dependency": "@react-three/drei",
@@ -5879,13 +5613,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 71,
+              "line": 114,
               "text": "import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useG"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17061,
+              "line": 18046,
               "text": "export { Select as DreiSelect, Edges, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Sphere, useFBX, useGLTF } from \"@react-three/drei\";"
             }
           ],
@@ -5899,28 +5633,14 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 72,
+              "line": 115,
               "text": "import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from \"@react-three/fiber\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17062,
+              "line": 18047,
               "text": "export { Canvas as ThreeCanvas, useFrame, useLoader, useThree } from \"@react-three/fiber\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "@xstate/react",
-          "section": "dependencies",
-          "version": "^6.0.0",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17076,
-              "text": "export { useSelector as useXStateSelector } from \"@xstate/react\";"
             }
           ],
           "status": "evidenced"
@@ -5933,100 +5653,26 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 22,
+              "line": 16,
               "text": "import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node as FlowNode, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInst"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 23,
+              "line": 17,
               "text": "import \"@xyflow/react/dist/style.css\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 90,
+              "line": 134,
               "text": "} from \"@xyflow/react\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 9546,
-              "text": "// imported at the top of this barrel file (from \"@xyflow/react\" and \"d3-force\") — the Diagram element"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "class-variance-authority",
-          "section": "dependencies",
-          "version": "^0.7.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 91,
-              "text": "import { cva, type VariantProps } from \"class-variance-authority\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17107,
-              "text": "export { cva } from \"class-variance-authority\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17108,
-              "text": "export type { VariantProps } from \"class-variance-authority\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "clsx",
-          "section": "dependencies",
-          "version": "^2.1.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17109,
-              "text": "export { clsx } from \"clsx\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "cmdk",
-          "section": "dependencies",
-          "version": "^1.1.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 92,
-              "text": "import { Command as CommandPrimitive } from \"cmdk\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "d3-force",
-          "section": "dependencies",
-          "version": "^3.0.0",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 93,
-              "text": "import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from \"d3-force\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 9546,
-              "text": "// imported at the top of this barrel file (from \"@xyflow/react\" and \"d3-force\") — the Diagram element"
+              "line": 18053,
+              "text": "export { ConnectionMode, MiniMap } from \"@xyflow/react\";"
             }
           ],
           "status": "evidenced"
@@ -6035,47 +5681,8 @@
           "dependency": "dagre",
           "section": "dependencies",
           "version": "^0.8.5",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 58,
-              "text": "import * as dagre from \"dagre\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17072,
-              "text": "export * as dagre from \"dagre\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "fuse.js",
-          "section": "dependencies",
-          "version": "^7.1.0",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 60,
-              "text": "import Fuse, { type FuseResult } from \"fuse.js\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17098,
-              "text": "export { default as Fuse } from \"fuse.js\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17099,
-              "text": "export type { FuseResult } from \"fuse.js\";"
-            }
-          ],
-          "status": "evidenced"
+          "evidence": [],
+          "status": "no-owned-scope-evidence"
         },
         {
           "dependency": "i18next",
@@ -6085,13 +5692,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 61,
+              "line": 105,
               "text": "import i18next from \"i18next\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 3404,
+              "line": 3856,
               "text": "declare module \"i18next\" {"
             }
           ],
@@ -6105,7 +5712,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 62,
+              "line": 106,
               "text": "import LanguageDetector from \"i18next-browser-languagedetector\";"
             }
           ],
@@ -6119,19 +5726,19 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 488,
+              "line": 526,
               "text": "async function loadReferencePdfModule(): Promise<typeof import(\"pdfjs-dist\")> {"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 489,
+              "line": 527,
               "text": "const pdfjs = await import(\"pdfjs-dist\");"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 492,
+              "line": 530,
               "text": "pdfjs.GlobalWorkerOptions.workerSrc = new URL(\"pdfjs-dist/build/pdf.worker.min.mjs\", import.meta.url).toString();"
             }
           ],
@@ -6145,14 +5752,14 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 63,
+              "line": 107,
               "text": "import * as React from \"react\";"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️vitest.config.ts",
               "line": 9,
-              "text": "/** @emoji 🧪️ Vitest for `@semio-tech/ui-react` (inline tests in index.tsx). */"
+              "text": "/** @emoji 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */"
             },
             {
               "kind": "config",
@@ -6177,19 +5784,19 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 97,
+              "line": 138,
               "text": "import { createPortal } from \"react-dom\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 98,
+              "line": 139,
               "text": "import { createRoot, type Root } from \"react-dom/client\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 99,
+              "line": 140,
               "text": "import { renderToStaticMarkup } from \"react-dom/server\";"
             },
             {
@@ -6202,26 +5809,6 @@
           "status": "evidenced"
         },
         {
-          "dependency": "react-hotkeys-hook",
-          "section": "dependencies",
-          "version": "^5.2.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 100,
-              "text": "import { useHotkeys } from \"react-hotkeys-hook\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17089,
-              "text": "export { useHotkeys } from \"react-hotkeys-hook\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
           "dependency": "react-i18next",
           "section": "dependencies",
           "version": "^16.5.2",
@@ -6229,7 +5816,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 101,
+              "line": 141,
               "text": "import { I18nextProvider, initReactI18next, useTranslation } from \"react-i18next\";"
             }
           ],
@@ -6243,13 +5830,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 64,
+              "line": 108,
               "text": "import * as ResizablePrimitive from \"react-resizable-panels\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17113,
+              "line": 18086,
               "text": "export * as ResizablePrimitive from \"react-resizable-panels\";"
             }
           ],
@@ -6263,24 +5850,17 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 102,
+              "line": 142,
               "text": "import { Link, useNavigate } from \"react-router\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17081,
+              "line": 18061,
               "text": "export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from \"react-router\";"
             }
           ],
           "status": "evidenced"
-        },
-        {
-          "dependency": "tailwind-merge",
-          "section": "dependencies",
-          "version": "^3.4.0",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
         },
         {
           "dependency": "three",
@@ -6290,25 +5870,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 65,
+              "line": 109,
               "text": "import * as THREE from \"three\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 195,
+              "line": 233,
               "text": "import { GLTFLoader } from \"three/examples/jsm/loaders/GLTFLoader.js\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 196,
+              "line": 234,
               "text": "import { SVGRenderer } from \"three/examples/jsm/renderers/SVGRenderer.js\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17063,
+              "line": 18048,
               "text": "export * as THREE from \"three\";"
             }
           ],
@@ -6322,7 +5902,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17077,
+              "line": 18057,
               "text": "export { assign, createActor, fromCallback, setup, type ActorRefFrom, type AnyActorRef, type SnapshotFrom } from \"xstate\";"
             }
           ],
@@ -6343,25 +5923,19 @@
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 13,
-              "text": "// Configuration MUST use the @tailwindcss/postcss program."
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 21,
+              "line": 19,
               "text": "* Config MUST include the @tailwindcss/postcss program."
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 25,
+              "line": 23,
               "text": "\"@tailwindcss/postcss\": {},"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 25,
+              "line": 23,
               "text": "\"@tailwindcss/postcss\": {},"
             }
           ],
@@ -6378,22 +5952,15 @@
           "dependency": "@tailwindcss/vite",
           "section": "devDependencies",
           "version": "^4.1.18",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@types/d3-force",
-          "section": "devDependencies",
-          "version": "^3.0.10",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@types/dagre",
-          "section": "devDependencies",
-          "version": "^0.7.53",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
+          "evidence": [
+            {
+              "kind": "import",
+              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts",
+              "line": 2,
+              "text": "import tailwindcss from \"@tailwindcss/vite\";"
+            }
+          ],
+          "status": "evidenced"
         },
         {
           "dependency": "@types/node",
@@ -6424,25 +5991,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 9935,
+              "line": 10788,
               "text": "const { render, screen, fireEvent, waitFor, act } = await import(\"@testing-library/react\");"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 13473,
+              "line": 14405,
               "text": "const { render } = await import(\"@testing-library/react\");"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 13492,
+              "line": 14424,
               "text": "const { render } = await import(\"@testing-library/react\");"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 13507,
+              "line": 14439,
               "text": "const { render } = await import(\"@testing-library/react\");"
             }
           ],
@@ -6452,8 +6019,15 @@
           "dependency": "@vitejs/plugin-react",
           "section": "devDependencies",
           "version": "^5.1.2",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
+          "evidence": [
+            {
+              "kind": "import",
+              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts",
+              "line": 3,
+              "text": "import react from \"@vitejs/plugin-react\";"
+            }
+          ],
+          "status": "evidenced"
         },
         {
           "dependency": "@vitest/coverage-v8",
@@ -6470,46 +6044,14 @@
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 13,
-              "text": "// Configuration MUST use the @tailwindcss/postcss program."
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 15,
-              "text": "import { Config } from \"postcss-load-config\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 21,
+              "line": 19,
               "text": "* Config MUST include the @tailwindcss/postcss program."
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 25,
+              "line": 23,
               "text": "\"@tailwindcss/postcss\": {},"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "postcss-load-config",
-          "section": "devDependencies",
-          "version": "^6.0.1",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 15,
-              "text": "import { Config } from \"postcss-load-config\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 15,
-              "text": "import { Config } from \"postcss-load-config\";"
             }
           ],
           "status": "evidenced"
@@ -6557,19 +6099,13 @@
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 13,
-              "text": "// Configuration MUST use the @tailwindcss/postcss program."
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 21,
+              "line": 19,
               "text": "* Config MUST include the @tailwindcss/postcss program."
             },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️postcss.config.ts",
-              "line": 25,
+              "line": 23,
               "text": "\"@tailwindcss/postcss\": {},"
             }
           ],
@@ -6580,12 +6116,6 @@
           "section": "devDependencies",
           "version": "^5.9.3",
           "evidence": [
-            {
-              "kind": "config",
-              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️eslint.config.ts",
-              "line": 15,
-              "text": "import tseslint from \"typescript-eslint\";"
-            },
             {
               "kind": "config",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️tailwind.config.ts",
@@ -6603,6 +6133,12 @@
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
               "line": 22,
               "text": "\"cwd\": \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react\","
+            },
+            {
+              "kind": "config",
+              "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📋️project.json",
+              "line": 30,
+              "text": "\"cwd\": \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react\","
             }
           ],
           "status": "evidenced"
@@ -6615,25 +6151,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17121,
+              "line": 18094,
               "text": "describe: typeof import(\"vitest\").describe;"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17122,
+              "line": 18095,
               "text": "expect: typeof import(\"vitest\").expect;"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17123,
+              "line": 18096,
               "text": "it: typeof import(\"vitest\").it;"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 17124,
+              "line": 18097,
               "text": "vi: typeof import(\"vitest\").vi;"
             }
           ],
@@ -6646,13 +6182,6 @@
       "name": "@semio-tech/assets",
       "ownershipScope": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
       "rows": [
-        {
-          "dependency": "@types/jsdom",
-          "section": "devDependencies",
-          "version": "^21.1.7",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
         {
           "dependency": "@types/node",
           "section": "devDependencies",
@@ -6668,18 +6197,11 @@
             {
               "kind": "import",
               "file": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📜️script.ts",
-              "line": 14,
-              "text": "import { JSDOM } from \"jsdom\";"
+              "line": 23,
+              "text": "const { JSDOM } = createRequire(import.meta.url)(\"jsdom\") as { JSDOM: OwnedJsDomConstructor };"
             }
           ],
           "status": "evidenced"
-        },
-        {
-          "dependency": "tsx",
-          "section": "devDependencies",
-          "version": "^4.21.0",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
         }
       ]
     },
@@ -6891,13 +6413,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 28,
+              "line": 27,
               "text": "{ find: \"@semio-tech/ui-react\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 28,
+              "line": 27,
               "text": "{ find: \"@semio-tech/ui-react\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             }
           ],
@@ -6911,13 +6433,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 29,
+              "line": 28,
               "text": "{ find: \"@semio-tech/ui-styling\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 29,
+              "line": 28,
               "text": "{ find: \"@semio-tech/ui-styling\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts\") },"
             }
           ],
@@ -6931,26 +6453,26 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 2,
-              "text": "import react from \"@vitejs/plugin-react\";"
+              "line": 5,
+              "text": "import { defineOwnedTestConfig, uiReactBuildPlugin } from \"../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts\";"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 12,
+              "line": 11,
               "text": "const reactRoot = resolve(repoRoot, \"node_modules/react\");"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 13,
+              "line": 12,
               "text": "const reactDomRoot = resolve(repoRoot, \"node_modules/react-dom\");"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 22,
-              "text": "plugins: [react()],"
+              "line": 27,
+              "text": "{ find: \"@semio-tech/ui-react\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             }
           ],
           "status": "evidenced"
@@ -6963,19 +6485,19 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 13,
+              "line": 12,
               "text": "const reactDomRoot = resolve(repoRoot, \"node_modules/react-dom\");"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 33,
+              "line": 32,
               "text": "{ find: /^react-dom$/, replacement: resolve(reactDomRoot, \"index.js\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 34,
+              "line": 33,
               "text": "{ find: /^react-dom\\/client$/, replacement: resolve(reactDomRoot, \"client.js\") },"
             }
           ],
@@ -6989,25 +6511,25 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 14,
+              "line": 13,
               "text": "const threeModule = resolve(repoRoot, \"node_modules/three/build/three.module.js\");"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 15,
+              "line": 14,
               "text": "const threePackageRoot = resolve(repoRoot, \"node_modules/three\");"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 35,
+              "line": 34,
               "text": "{ find: /^three$/, replacement: threeModule },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 36,
+              "line": 35,
               "text": "{ find: /^three\\/addons\\/(.*)$/, replacement: `${threePackageRoot}/examples/jsm/$1` },"
             }
           ],
@@ -7021,7 +6543,7 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 49,
+              "line": 48,
               "text": "inline: [/@semio-tech\\/.*/, /three-mesh-bvh/],"
             }
           ],
@@ -7056,25 +6578,25 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 28,
+              "line": 5,
+              "text": "import { defineOwnedTestConfig, uiReactBuildPlugin } from \"../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts\";"
+            },
+            {
+              "kind": "config",
+              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
+              "line": 27,
               "text": "{ find: \"@semio-tech/ui-react\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 29,
+              "line": 28,
               "text": "{ find: \"@semio-tech/ui-styling\", replacement: resolve(repoRoot, \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/📋️project.json",
               "line": 8,
-              "text": "\"cwd\": \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript\","
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/📋️project.json",
-              "line": 16,
               "text": "\"cwd\": \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript\","
             }
           ],
@@ -7088,25 +6610,13 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 2,
-              "text": "import react from \"@vitejs/plugin-react\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 5,
-              "text": "import { defineConfig } from \"vitest/config\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 6,
+              "line": 4,
               "text": "import { createWorkspaceViteResolveConfig } from \"../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts\";"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 19,
+              "line": 18,
               "text": "/** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️component.tsx`. */"
             }
           ],
@@ -7118,21 +6628,9 @@
           "version": "^4.0.17",
           "evidence": [
             {
-              "kind": "import",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 5,
-              "text": "import { defineConfig } from \"vitest/config\";"
-            },
-            {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 5,
-              "text": "import { defineConfig } from \"vitest/config\";"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 19,
+              "line": 18,
               "text": "/** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️component.tsx`. */"
             }
           ],
@@ -7205,13 +6703,6 @@
           "status": "no-owned-scope-evidence"
         },
         {
-          "dependency": "react-reconciler",
-          "section": "dependencies",
-          "version": "^0.33.0",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
           "dependency": "@types/react",
           "section": "devDependencies",
           "version": "^19.2.8",
@@ -7222,13 +6713,6 @@
           "dependency": "@types/react-dom",
           "section": "devDependencies",
           "version": "^19.2.3",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@types/react-reconciler",
-          "section": "devDependencies",
-          "version": "^0.28.9",
           "evidence": [],
           "status": "no-owned-scope-evidence"
         },
@@ -7410,7 +6894,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 527,
+              "line": 525,
               "text": "import { useFrame, useLoader, useThree } from \"@react-three/fiber\";"
             }
           ],
@@ -7430,7 +6914,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 469,
+              "line": 467,
               "text": "} from \"@semio-tech/framework\";"
             },
             {
@@ -7456,7 +6940,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 503,
+              "line": 501,
               "text": "} from \"@semio-tech/framework-os\";"
             },
             {
@@ -7528,7 +7012,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 471,
+              "line": 469,
               "text": "import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from \"@semio-tech/infinite-canvas-react-renderer\";"
             },
             {
@@ -7554,7 +7038,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 567,
+              "line": 565,
               "text": "} from \"@semio-tech/infinite-world-r3f\";"
             },
             {
@@ -7572,7 +7056,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts",
-              "line": 273,
+              "line": 264,
               "text": "import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from \"@semio-tech/infinite-world-r3f\";"
             }
           ],
@@ -7586,7 +7070,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 318,
+              "line": 316,
               "text": "import { isIconName } from \"@semio-tech/assets\";"
             },
             {
@@ -7612,7 +7096,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 317,
+              "line": 315,
               "text": "} from \"@semio-tech/ui-react\";"
             },
             {
@@ -7644,7 +7128,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 568,
+              "line": 566,
               "text": "import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName, STYLING_BOARD"
             },
             {
@@ -7661,13 +7145,6 @@
             }
           ],
           "status": "evidenced"
-        },
-        {
-          "dependency": "fuse.js",
-          "section": "dependencies",
-          "version": "^7.1.0",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
         },
         {
           "dependency": "katex",
@@ -7716,7 +7193,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 470,
+              "line": 468,
               "text": "import { createRoot } from \"react-dom/client\";"
             },
             {
@@ -7748,30 +7225,23 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 526,
+              "line": 524,
               "text": "} from \"three\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
-              "line": 528,
+              "line": 526,
               "text": "import { GLTFLoader } from \"three/examples/jsm/loaders/GLTFLoader.js\";"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts",
-              "line": 2354,
+              "line": 2416,
               "text": "const { OrthographicCamera, PerspectiveCamera } = await import(\"three\");"
             }
           ],
           "status": "evidenced"
-        },
-        {
-          "dependency": "@types/katex",
-          "section": "devDependencies",
-          "version": "^0.16.7",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
         },
         {
           "dependency": "@types/react",
@@ -7973,22 +7443,8 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts",
-              "line": 8,
-              "text": "import { decodePackValue, encodePackValue } from \"@semio-tech/framework-os\";"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "fflate",
-          "section": "dependencies",
-          "version": "^0.8.2",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts",
               "line": 7,
-              "text": "import { strToU8, unzipSync, zipSync } from \"fflate\";"
+              "text": "import { decodePackValue, encodePackValue } from \"@semio-tech/framework-os\";"
             }
           ],
           "status": "evidenced"
@@ -8118,19 +7574,19 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 91,
+              "line": 94,
               "text": "{ find: \"@semio-tech/framework-renderer-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 92,
+              "line": 95,
               "text": "{ find: \"@semio-tech/framework-renderer-wgpu\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️tar"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 93,
+              "line": 96,
               "text": "{ find: \"@semio-tech/framework\", replacement: path.resolve(repoRoot, \"./🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts\") },"
             }
           ],
@@ -8144,13 +7600,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 94,
+              "line": 97,
               "text": "{ find: \"@semio-tech/framework-os\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 94,
+              "line": 97,
               "text": "{ find: \"@semio-tech/framework-os\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts\") },"
             },
             {
@@ -8176,25 +7632,25 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 91,
+              "line": 94,
               "text": "{ find: \"@semio-tech/framework-renderer-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 91,
+              "line": 94,
               "text": "{ find: \"@semio-tech/framework-renderer-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 152,
+              "line": 155,
               "text": "exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === \"wgpu\" ? [\"@semio-tech/framework-renderer-react\"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOpti"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 152,
+              "line": 155,
               "text": "exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === \"wgpu\" ? [\"@semio-tech/framework-renderer-react\"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOpti"
             }
           ],
@@ -8208,13 +7664,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 92,
+              "line": 95,
               "text": "{ find: \"@semio-tech/framework-renderer-wgpu\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️tar"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 92,
+              "line": 95,
               "text": "{ find: \"@semio-tech/framework-renderer-wgpu\", replacement: path.resolve(repoRoot, \"./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️tar"
             }
           ],
@@ -8228,14 +7684,26 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 86,
-              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
+              "line": 87,
+              "text": "{ find: \"@semio-tech/ui-react/test\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 86,
-              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
+              "line": 87,
+              "text": "{ find: \"@semio-tech/ui-react/test\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts\") },"
+            },
+            {
+              "kind": "import",
+              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+              "line": 88,
+              "text": "{ find: \"@semio-tech/ui-react/runtime\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts\") },"
+            },
+            {
+              "kind": "config",
+              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+              "line": 88,
+              "text": "{ find: \"@semio-tech/ui-react/runtime\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts\") },"
             }
           ],
           "status": "evidenced"
@@ -8248,13 +7716,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 88,
+              "line": 91,
               "text": "{ find: \"@semio-tech/ui-styling\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 88,
+              "line": 91,
               "text": "{ find: \"@semio-tech/ui-styling\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript\") },"
             }
           ],
@@ -8322,20 +7790,6 @@
           "status": "evidenced"
         },
         {
-          "dependency": "@types/pixelmatch",
-          "section": "devDependencies",
-          "version": "^5.2.6",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@types/pngjs",
-          "section": "devDependencies",
-          "version": "^6.0.5",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
           "dependency": "pixelmatch",
           "section": "devDependencies",
           "version": "^7.1.0",
@@ -8343,7 +7797,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-              "line": 59,
+              "line": 55,
               "text": "import pixelmatch from \"pixelmatch\";"
             }
           ],
@@ -8369,13 +7823,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-              "line": 2430,
+              "line": 2417,
               "text": "async function waitForStudioE2eCondition(page: import(\"playwright\").Page, predicate: (state: { text: string; children: number }) => boolean, label: string, deadline: number): Promi"
             },
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-              "line": 2443,
+              "line": 2430,
               "text": "async function openStudioE2e(page: import(\"playwright\").Page, deadline: number): Promise<{ text: string; children: number }> {"
             }
           ],
@@ -8389,8 +7843,8 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-              "line": 58,
-              "text": "import { PNG } from \"pngjs\";"
+              "line": 66,
+              "text": "const { PNG } = createRequire(import.meta.url)(\"pngjs\") as { PNG: OwnedPngConstructor };"
             }
           ],
           "status": "evidenced"
@@ -8435,13 +7889,13 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 100,
+              "line": 103,
               "text": "dedupe: [\"react\", \"react-dom\", \"three\", \"@react-three/fiber\", \"@react-three/drei\"],"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 100,
+              "line": 103,
               "text": "dedupe: [\"react\", \"react-dom\", \"three\", \"@react-three/fiber\", \"@react-three/drei\"],"
             }
           ],
@@ -8461,20 +7915,20 @@
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
-              "line": 86,
-              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
               "line": 87,
-              "text": "{ find: \"@semio-tech/assets\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts\") },"
+              "text": "{ find: \"@semio-tech/ui-react/test\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts\") },"
             },
             {
               "kind": "config",
               "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
               "line": 88,
-              "text": "{ find: \"@semio-tech/ui-styling\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript\") },"
+              "text": "{ find: \"@semio-tech/ui-react/runtime\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts\") },"
+            },
+            {
+              "kind": "config",
+              "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts",
+              "line": 89,
+              "text": "{ find: \"@semio-tech/ui-react\", replacement: path.resolve(repoRoot, \"./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx\") },"
             }
           ],
           "status": "evidenced"
@@ -8633,13 +8087,6 @@
           "status": "no-owned-scope-evidence"
         },
         {
-          "dependency": "@types/mocha",
-          "section": "devDependencies",
-          "version": "^10.0.10",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
           "dependency": "@types/node",
           "section": "devDependencies",
           "version": "^24.10.1",
@@ -8786,7 +8233,7 @@
             {
               "kind": "import",
               "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts",
-              "line": 3349,
+              "line": 3401,
               "text": "TypeScript: \"typescript\","
             },
             {
@@ -8873,6 +8320,12 @@
               "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🟦️next.config.ts",
               "line": 13,
               "text": "serverExternalPackages: [\"pg\", \"pg-boss\"],"
+            },
+            {
+              "kind": "import",
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🟦️server-implementations.ts",
+              "line": 30,
+              "text": "const { Pool } = createRequire(import.meta.url)(\"pg\") as { readonly Pool: OwnedPostgresPoolConstructor };"
             }
           ],
           "status": "evidenced"
@@ -8887,38 +8340,12 @@
               "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🟦️next.config.ts",
               "line": 13,
               "text": "serverExternalPackages: [\"pg\", \"pg-boss\"],"
-            }
-          ],
-          "status": "evidenced"
-        },
-        {
-          "dependency": "zod",
-          "section": "dependencies",
-          "version": "^3.25.67",
-          "evidence": [
-            {
-              "kind": "import",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/repo/route.ts",
-              "line": 9,
-              "text": "import { z } from \"zod\";"
             },
             {
               "kind": "import",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/event/route.ts",
-              "line": 9,
-              "text": "import { z } from \"zod\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/ticket/route.ts",
-              "line": 15,
-              "text": "import { z } from \"zod\";"
-            },
-            {
-              "kind": "import",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/diff/route.ts",
-              "line": 9,
-              "text": "import { z } from \"zod\";"
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🟦️server-implementations.ts",
+              "line": 4,
+              "text": "import PgBoss from \"pg-boss\";"
             }
           ],
           "status": "evidenced"
@@ -8927,13 +8354,6 @@
           "dependency": "@types/node",
           "section": "devDependencies",
           "version": "^22.19.6",
-          "evidence": [],
-          "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "@types/pg",
-          "section": "devDependencies",
-          "version": "^8.15.4",
           "evidence": [],
           "status": "no-owned-scope-evidence"
         },
@@ -8950,26 +8370,6 @@
           "version": "^19.1.6",
           "evidence": [],
           "status": "no-owned-scope-evidence"
-        },
-        {
-          "dependency": "tsx",
-          "section": "devDependencies",
-          "version": "^4.19.4",
-          "evidence": [
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-              "line": 16,
-              "text": "coverage: { include: [\"app/**/*.ts\", \"app/**/*.tsx\"] },"
-            },
-            {
-              "kind": "config",
-              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-              "line": 22,
-              "text": "\"include\": [\"🟦️next-env.d.ts\", \"**/*.ts\", \"**/*.tsx\", \".next/type/**/*.ts\"],"
-            }
-          ],
-          "status": "evidenced"
         },
         {
           "dependency": "typescript",
@@ -9002,6 +8402,20 @@
             }
           ],
           "status": "evidenced"
+        },
+        {
+          "dependency": "vitest",
+          "section": "devDependencies",
+          "version": "^4.0.17",
+          "evidence": [
+            {
+              "kind": "import",
+              "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🧪️validation.test.ts",
+              "line": 2,
+              "text": "import { describe, expect, it } from \"vitest\";"
+            }
+          ],
+          "status": "evidenced"
         }
       ]
     }
@@ -9018,59 +8432,9 @@
       "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
     },
     {
-      "dependency": "rehype-stringify",
-      "section": "dependencies",
-      "version": "^10.0.1",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/animate-js",
-      "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "remark-gfm",
-      "section": "dependencies",
-      "version": "^4.0.1",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/animate-js",
-      "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "remark-parse",
-      "section": "dependencies",
-      "version": "^11.0.0",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/animate-js",
-      "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "remark-rehype",
-      "section": "dependencies",
-      "version": "^11.1.1",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/animate-js",
-      "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
-    },
-    {
       "dependency": "reveal.js",
       "section": "dependencies",
       "version": "^5.2.1",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/animate-js",
-      "ownershipScope": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "unified",
-      "section": "dependencies",
-      "version": "^11.0.5",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json",
@@ -9111,16 +8475,6 @@
       "dependency": "@react-three/fiber",
       "section": "dependencies",
       "version": "^9.4.2",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/cad-js",
-      "ownershipScope": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "brepjs-opencascade",
-      "section": "dependencies",
-      "version": "^0.15.6",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
@@ -9368,49 +8722,9 @@
       "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"
     },
     {
-      "dependency": "@radix-ui/react-avatar",
+      "dependency": "dagre",
       "section": "dependencies",
-      "version": "^1.1.11",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@radix-ui/react-popover",
-      "section": "dependencies",
-      "version": "^1.1.15",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@radix-ui/react-toggle",
-      "section": "dependencies",
-      "version": "^1.1.3",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@radix-ui/react-toggle-group",
-      "section": "dependencies",
-      "version": "^1.1.11",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "tailwind-merge",
-      "section": "dependencies",
-      "version": "^3.4.0",
+      "version": "^0.8.5",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
@@ -9431,36 +8745,6 @@
       "dependency": "@tailwindcss/typography",
       "section": "devDependencies",
       "version": "^0.5.19",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@tailwindcss/vite",
-      "section": "devDependencies",
-      "version": "^4.1.18",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@types/d3-force",
-      "section": "devDependencies",
-      "version": "^3.0.10",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@types/dagre",
-      "section": "devDependencies",
-      "version": "^0.7.53",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
@@ -9491,16 +8775,6 @@
       "dependency": "@types/react-dom",
       "section": "devDependencies",
       "version": "^19.2.3",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/ui-react",
-      "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@vitejs/plugin-react",
-      "section": "devDependencies",
-      "version": "^5.1.2",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
@@ -9568,29 +8842,9 @@
       "ownershipScope": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"
     },
     {
-      "dependency": "@types/jsdom",
-      "section": "devDependencies",
-      "version": "^21.1.7",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/assets",
-      "ownershipScope": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"
-    },
-    {
       "dependency": "@types/node",
       "section": "devDependencies",
       "version": "^20.0.0",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/assets",
-      "ownershipScope": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "tsx",
-      "section": "devDependencies",
-      "version": "^4.21.0",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
@@ -9658,16 +8912,6 @@
       "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"
     },
     {
-      "dependency": "react-reconciler",
-      "section": "dependencies",
-      "version": "^0.33.0",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/infinite-canvas-react-renderer",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"
-    },
-    {
       "dependency": "@types/react",
       "section": "devDependencies",
       "version": "^19.2.8",
@@ -9688,39 +8932,9 @@
       "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"
     },
     {
-      "dependency": "@types/react-reconciler",
-      "section": "devDependencies",
-      "version": "^0.28.9",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/infinite-canvas-react-renderer",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "fuse.js",
-      "section": "dependencies",
-      "version": "^7.1.0",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/framework-renderer-react",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
       "dependency": "katex",
       "section": "dependencies",
       "version": "^0.16.22",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
-      "package": "@semio-tech/framework-renderer-react",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react"
-    },
-    {
-      "dependency": "@types/katex",
-      "section": "devDependencies",
-      "version": "^0.16.7",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
@@ -9798,26 +9012,6 @@
       "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"
     },
     {
-      "dependency": "@types/pixelmatch",
-      "section": "devDependencies",
-      "version": "^5.2.6",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/framework-os-dev",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "@types/pngjs",
-      "section": "devDependencies",
-      "version": "^6.0.5",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/framework-os-dev",
-      "ownershipScope": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"
-    },
-    {
       "dependency": "@napi-rs/canvas",
       "section": "dependencies",
       "version": "^1.0.2",
@@ -9851,16 +9045,6 @@
       "dependency": "@vscode/vsce",
       "section": "devDependencies",
       "version": "^3.5.0",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/repo-vscode",
-      "ownershipScope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "@types/mocha",
-      "section": "devDependencies",
-      "version": "^10.0.10",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json",
@@ -9951,16 +9135,6 @@
       "dependency": "@types/node",
       "section": "devDependencies",
       "version": "^22.19.6",
-      "evidence": [],
-      "status": "no-owned-scope-evidence",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",
-      "package": "@semio-tech/repo-coordinator",
-      "ownershipScope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
-    },
-    {
-      "dependency": "@types/pg",
-      "section": "devDependencies",
-      "version": "^8.15.4",
       "evidence": [],
       "status": "no-owned-scope-evidence",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json",

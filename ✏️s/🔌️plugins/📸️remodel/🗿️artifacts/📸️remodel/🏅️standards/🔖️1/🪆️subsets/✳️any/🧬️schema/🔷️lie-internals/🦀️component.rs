@@ -15,17 +15,17 @@ pub struct Quatd {
 
 impl Quatd {
     /// 🪞️ Identity rotation quaternion.
-    pub async fn identity() -> Self {
+    pub fn identity() -> Self {
         Self { w: 1.0, x: 0.0, y: 0.0, z: 0.0 }
     }
 
     /// 📐️ Four-vector dot product, `1` for equal unit quaternions and `-1` for their antipodes.
-    pub async fn dot(self, other: Self) -> f64 {
+    pub fn dot(self, other: Self) -> f64 {
         self.w * other.w + self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     /// 📏️ Unit-norm copy; a near-zero quaternion falls back to identity.
-    pub async fn normalize(self) -> Self {
+    pub fn normalize(self) -> Self {
         let n = self.dot(self).sqrt();
         if n < 1e-300 {
             return Self::identity();
@@ -35,7 +35,7 @@ impl Quatd {
 
     /// ✖️ Hamilton product `self ⊗ other`, applying `other` first and `self` second.
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul mirrors crate::algebra::Mat3d::mul; operator overloading is intentionally avoided in this workspace")]
-    pub async fn mul(self, other: Self) -> Self {
+    pub fn mul(self, other: Self) -> Self {
         Self {
             w: self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z,
             x: self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
@@ -45,12 +45,12 @@ impl Quatd {
     }
 
     /// 🔄️ Conjugate, the inverse rotation for unit quaternions.
-    pub async fn conjugate(self) -> Self {
+    pub fn conjugate(self) -> Self {
         Self { w: self.w, x: -self.x, y: -self.y, z: -self.z }
     }
 
     /// 🌪️ Rotates a 3D vector by this unit quaternion via the Rodrigues-style two-cross shortcut.
-    pub async fn rotate(self, v: [f64; 3]) -> [f64; 3] {
+    pub fn rotate(self, v: [f64; 3]) -> [f64; 3] {
         let u = [self.x, self.y, self.z];
         let tw = vec3d_cross(u, v);
         let tw = [2.0 * tw[0], 2.0 * tw[1], 2.0 * tw[2]];
@@ -59,7 +59,7 @@ impl Quatd {
     }
 
     /// 🧊️ Column-major rotation matrix of the normalized quaternion.
-    pub async fn to_mat3d(self) -> Mat3d {
+    pub fn to_mat3d(self) -> Mat3d {
         let q = self.normalize();
         let (w, x, y, z) = (q.w, q.x, q.y, q.z);
         Mat3d::from_axes(
@@ -70,7 +70,7 @@ impl Quatd {
     }
 
     /// 🎯️ Quaternion from a rotation matrix via Shepperd's method, branching on the largest diagonal entry for stability at negative traces.
-    pub async fn from_mat3d(m: &Mat3d) -> Self {
+    pub fn from_mat3d(m: &Mat3d) -> Self {
         let e = |r: usize, c: usize| m.cols[c][r];
         let trace = e(0, 0) + e(1, 1) + e(2, 2);
         let q = if trace > 0.0 {
@@ -90,7 +90,7 @@ impl Quatd {
     }
 
     /// 🌈️ Spherical linear interpolation along the shortest arc, degrading to normalized lerp for nearly parallel inputs.
-    pub async fn slerp(a: Self, b: Self, t: f64) -> Self {
+    pub fn slerp(a: Self, b: Self, t: f64) -> Self {
         let mut d = a.dot(b);
         let mut bq = b;
         if d < 0.0 {
@@ -111,31 +111,31 @@ impl Quatd {
 // #endregion 🔖️Quat
 
 // #region 🔖️So3
-async fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-async fn vec3_scale(v: [f64; 3], s: f64) -> [f64; 3] {
+fn vec3_scale(v: [f64; 3], s: f64) -> [f64; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
-async fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-async fn mat3_axpy(base: Mat3d, m: Mat3d, s: f64) -> Mat3d {
+fn mat3_axpy(base: Mat3d, m: Mat3d, s: f64) -> Mat3d {
     Mat3d { cols: std::array::from_fn(|c| std::array::from_fn(|r| base.cols[c][r] + s * m.cols[c][r])) }
 }
 
-async fn mat3_scaled_identity(s: f64) -> Mat3d {
+fn mat3_scaled_identity(s: f64) -> Mat3d {
     Mat3d::from_axes([s, 0.0, 0.0], [0.0, s, 0.0], [0.0, 0.0, s])
 }
 
-async fn mat3_det(m: Mat3d) -> f64 {
+fn mat3_det(m: Mat3d) -> f64 {
     vec3_dot(m.cols[0], vec3d_cross(m.cols[1], m.cols[2]))
 }
 
-async fn mat3_inverse(m: Mat3d) -> Option<Mat3d> {
+fn mat3_inverse(m: Mat3d) -> Option<Mat3d> {
     let det = mat3_det(m);
     if det.abs() < 1e-300 {
         return None;
@@ -150,7 +150,7 @@ async fn mat3_inverse(m: Mat3d) -> Option<Mat3d> {
     Some(Mat3d { cols: std::array::from_fn(|c| std::array::from_fn(|r| cof(c, r) * inv)) })
 }
 
-async fn sym3_eigen(m: Mat3d) -> ([f64; 3], Mat3d) {
+fn sym3_eigen(m: Mat3d) -> ([f64; 3], Mat3d) {
     let e = |r: usize, c: usize| 0.5 * (m.cols[c][r] + m.cols[r][c]);
     let mut a = [[e(0, 0), e(0, 1), e(0, 2)], [e(1, 0), e(1, 1), e(1, 2)], [e(2, 0), e(2, 1), e(2, 2)]];
     let mut v = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
@@ -197,7 +197,7 @@ async fn sym3_eigen(m: Mat3d) -> ([f64; 3], Mat3d) {
     ([vals[order[0]], vals[order[1]], vals[order[2]]], Mat3d::from_axes(col(order[0]), col(order[1]), col(order[2])))
 }
 
-async fn pick_orthogonal(a: [f64; 3]) -> [f64; 3] {
+fn pick_orthogonal(a: [f64; 3]) -> [f64; 3] {
     let e = if a[0].abs() <= a[1].abs() && a[0].abs() <= a[2].abs() {
         [1.0, 0.0, 0.0]
     } else if a[1].abs() <= a[2].abs() {
@@ -208,7 +208,7 @@ async fn pick_orthogonal(a: [f64; 3]) -> [f64; 3] {
     vec3d_normalize(vec3d_sub(e, vec3_scale(a, vec3_dot(e, a))))
 }
 
-async fn svd3(m: Mat3d) -> (Mat3d, [f64; 3], Mat3d) {
+fn svd3(m: Mat3d) -> (Mat3d, [f64; 3], Mat3d) {
     let (vals, vecs) = sym3_eigen(m.transpose().mul(m));
     let v_cols = [vecs.cols[2], vecs.cols[1], vecs.cols[0]];
     let sigma: [f64; 3] = std::array::from_fn(|i| vals[2 - i].max(0.0).sqrt());
@@ -235,22 +235,22 @@ pub struct So3(pub Mat3d);
 
 impl So3 {
     /// 🪞️ Identity rotation.
-    pub async fn identity() -> Self {
+    pub fn identity() -> Self {
         Self(Mat3d::IDENTITY)
     }
 
     /// 🎩️ Skew-symmetric hat operator: `hat(w) · v = w × v`.
-    pub async fn hat(w: [f64; 3]) -> Mat3d {
+    pub fn hat(w: [f64; 3]) -> Mat3d {
         Mat3d { cols: [[0.0, w[2], -w[1]], [-w[2], 0.0, w[0]], [w[1], -w[0], 0.0]] }
     }
 
     /// 🎣️ Inverse of [`So3::hat`], reading the axis vector out of a skew-symmetric matrix.
-    pub async fn vee(m: &Mat3d) -> [f64; 3] {
+    pub fn vee(m: &Mat3d) -> [f64; 3] {
         [m.cols[1][2], m.cols[2][0], m.cols[0][1]]
     }
 
     /// 🚀️ Exponential map via the Rodrigues formula, with a Taylor fallback for small angles.
-    pub async fn exp(w: [f64; 3]) -> Self {
+    pub fn exp(w: [f64; 3]) -> Self {
         let theta = vec3d_length(w);
         let k = Self::hat(w);
         let k2 = k.mul(k);
@@ -260,7 +260,7 @@ impl So3 {
     }
 
     /// 🪵️ Logarithm map returning the rotation vector, robust near zero (Taylor) and near `π` (largest-diagonal axis extraction).
-    pub async fn log(&self) -> [f64; 3] {
+    pub fn log(&self) -> [f64; 3] {
         let e = |r: usize, c: usize| self.0.cols[c][r];
         let vee_twice = [e(2, 1) - e(1, 2), e(0, 2) - e(2, 0), e(1, 0) - e(0, 1)];
         let sin_t = 0.5 * vec3d_length(vee_twice);
@@ -295,22 +295,22 @@ impl So3 {
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub async fn semio_compose_rs(&self, other: &Self) -> Self {
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
         Self(self.0.mul(other.0))
     }
 
     /// ↩️ Inverse rotation, the transpose of the matrix.
-    pub async fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         Self(self.0.transpose())
     }
 
     /// 🎬️ Rotates a point or vector.
-    pub async fn act(&self, v: [f64; 3]) -> [f64; 3] {
+    pub fn act(&self, v: [f64; 3]) -> [f64; 3] {
         self.0.mul_vec3(v)
     }
 
     /// 🃏️ Left Jacobian `J_l(w)` of SO(3), with small-angle Taylor coefficients.
-    pub async fn jl(w: [f64; 3]) -> Mat3d {
+    pub fn jl(w: [f64; 3]) -> Mat3d {
         let theta = vec3d_length(w);
         let k = Self::hat(w);
         let k2 = k.mul(k);
@@ -320,7 +320,7 @@ impl So3 {
     }
 
     /// 🂠️ Inverse left Jacobian `J_l(w)⁻¹`, with small-angle Taylor coefficients and a guard where `sin θ` vanishes.
-    pub async fn jl_inv(w: [f64; 3]) -> Mat3d {
+    pub fn jl_inv(w: [f64; 3]) -> Mat3d {
         let theta = vec3d_length(w);
         let k = Self::hat(w);
         let k2 = k.mul(k);
@@ -339,7 +339,7 @@ impl So3 {
     }
 
     /// 🧲️ Nearest rotation (Frobenius norm) with det `+1` via a local 3×3 Jacobi-eigen polar decomposition, since `crate::algebra` exposes no SVD yet; swap to the shared SVD once it lands.
-    pub async fn project_to_so3(m: &Mat3d) -> Self {
+    pub fn project_to_so3(m: &Mat3d) -> Self {
         let (u, _sigma, v) = svd3(*m);
         let d = if mat3_det(u) * mat3_det(v) < 0.0 { -1.0 } else { 1.0 };
         let u_fixed = Mat3d::from_axes(u.cols[0], u.cols[1], vec3_scale(u.cols[2], d));
@@ -347,19 +347,19 @@ impl So3 {
     }
 
     /// 🎯️ Rotation from a unit quaternion.
-    pub async fn from_quat(q: Quatd) -> Self {
+    pub fn from_quat(q: Quatd) -> Self {
         Self(q.to_mat3d())
     }
 
     /// 🧭️ Unit quaternion of this rotation.
-    pub async fn to_quat(&self) -> Quatd {
+    pub fn to_quat(&self) -> Quatd {
         Quatd::from_mat3d(&self.0)
     }
 }
 // #endregion 🔖️So3
 
 // #region 🔖️Se3
-async fn xi6_scale(xi: [f64; 6], s: f64) -> [f64; 6] {
+fn xi6_scale(xi: [f64; 6], s: f64) -> [f64; 6] {
     std::array::from_fn(|k| xi[k] * s)
 }
 
@@ -372,37 +372,37 @@ pub struct Se3 {
 
 impl Se3 {
     /// 🪞️ Identity transform.
-    pub async fn identity() -> Self {
+    pub fn identity() -> Self {
         Self { r: So3::identity(), t: [0.0; 3] }
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub async fn semio_compose_rs(&self, other: &Self) -> Self {
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
         Self { r: self.r.semio_compose_rs(&other.r), t: vec3_add(self.r.act(other.t), self.t) }
     }
 
     /// ↩️ Inverse transform.
-    pub async fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         let rinv = self.r.inverse();
         Self { r: rinv, t: vec3_scale(rinv.act(self.t), -1.0) }
     }
 
     /// 🚀️ Exponential map of a twist `xi = (rho, phi)`, translating via the SO(3) left Jacobian `V = J_l(phi)`.
-    pub async fn exp(xi: [f64; 6]) -> Self {
+    pub fn exp(xi: [f64; 6]) -> Self {
         let rho = [xi[0], xi[1], xi[2]];
         let phi = [xi[3], xi[4], xi[5]];
         Self { r: So3::exp(phi), t: So3::jl(phi).mul_vec3(rho) }
     }
 
     /// 🪵️ Logarithm map returning the twist `(rho, phi)` with `rho = J_l(phi)⁻¹ · t`.
-    pub async fn log(&self) -> [f64; 6] {
+    pub fn log(&self) -> [f64; 6] {
         let phi = self.r.log();
         let rho = So3::jl_inv(phi).mul_vec3(self.t);
         [rho[0], rho[1], rho[2], phi[0], phi[1], phi[2]]
     }
 
     /// 🗺️ 6×6 adjoint `[[R, hat(t)·R], [0, R]]` acting on twists ordered `(rho, phi)`.
-    pub async fn adjoint(&self) -> MatD {
+    pub fn adjoint(&self) -> MatD {
         let rot = self.r.0;
         let t_hat_r = So3::hat(self.t).mul(rot);
         let mut adj = MatD::zeros(6, 6);
@@ -417,14 +417,14 @@ impl Se3 {
     }
 
     /// 🎬️ Applies the rigid transform to a point.
-    pub async fn act(&self, p: [f64; 3]) -> [f64; 3] {
+    pub fn act(&self, p: [f64; 3]) -> [f64; 3] {
         vec3_add(self.r.act(p), self.t)
     }
 }
 // #endregion 🔖️Se3
 
 // #region 🔖️Sim3
-async fn sim3_w(phi: [f64; 3], sigma: f64) -> Mat3d {
+fn sim3_w(phi: [f64; 3], sigma: f64) -> Mat3d {
     let theta = vec3d_length(phi);
     let k = So3::hat(phi);
     let k2 = k.mul(k);
@@ -470,29 +470,29 @@ pub struct Sim3 {
 
 impl Sim3 {
     /// 🪞️ Identity similarity.
-    pub async fn identity() -> Self {
+    pub fn identity() -> Self {
         Self { s: 1.0, r: So3::identity(), t: [0.0; 3] }
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub async fn semio_compose_rs(&self, other: &Self) -> Self {
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
         Self { s: self.s * other.s, r: self.r.semio_compose_rs(&other.r), t: vec3_add(vec3_scale(self.r.act(other.t), self.s), self.t) }
     }
 
     /// ↩️ Inverse similarity.
-    pub async fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         let rinv = self.r.inverse();
         let sinv = 1.0 / self.s;
         Self { s: sinv, r: rinv, t: vec3_scale(rinv.act(self.t), -sinv) }
     }
 
     /// 🎬️ Applies the similarity to a point.
-    pub async fn act(&self, p: [f64; 3]) -> [f64; 3] {
+    pub fn act(&self, p: [f64; 3]) -> [f64; 3] {
         vec3_add(vec3_scale(self.r.act(p), self.s), self.t)
     }
 
     /// 🚀️ Exponential map of `xi = (rho, phi, sigma)` using the scale-aware `W` integral matrix with small-value Taylor guards.
-    pub async fn exp(xi: [f64; 7]) -> Self {
+    pub fn exp(xi: [f64; 7]) -> Self {
         let rho = [xi[0], xi[1], xi[2]];
         let phi = [xi[3], xi[4], xi[5]];
         let sigma = xi[6];
@@ -500,7 +500,7 @@ impl Sim3 {
     }
 
     /// 🪵️ Logarithm map returning `(rho, phi, sigma)` with `rho = W(phi, sigma)⁻¹ · t`.
-    pub async fn log(&self) -> [f64; 7] {
+    pub fn log(&self) -> [f64; 7] {
         let sigma = self.s.ln();
         let phi = self.r.log();
         let rho = mat3_inverse(sim3_w(phi, sigma)).map_or(self.t, |inv| inv.mul_vec3(self.t));
@@ -511,7 +511,7 @@ impl Sim3 {
 
 // #region 🔖️Align
 /// 🧷️ Umeyama/Kabsch closed-form alignment: least-squares similarity `dst ≈ s·R·src + t` from paired 3D points, `None` for fewer than three pairs, mismatched lengths or rank-deficient (collinear/coincident) configurations.
-pub async fn umeyama(src: &[[f64; 3]], dst: &[[f64; 3]], with_scale: bool) -> Option<Sim3> {
+pub fn umeyama(src: &[[f64; 3]], dst: &[[f64; 3]], with_scale: bool) -> Option<Sim3> {
     let n = src.len();
     if n < 3 || dst.len() != n {
         return None;
@@ -557,13 +557,13 @@ pub async fn umeyama(src: &[[f64; 3]], dst: &[[f64; 3]], with_scale: bool) -> Op
 
 // #region 🔖️Interpolate
 /// 🎚️ Geodesic interpolation between rigid poses via the relative twist: `a · exp(t · log(a⁻¹ · b))`.
-pub async fn se3_lerp(a: &Se3, b: &Se3, t: f64) -> Se3 {
+pub fn se3_lerp(a: &Se3, b: &Se3, t: f64) -> Se3 {
     let xi = a.inverse().semio_compose_rs(b).log();
     a.semio_compose_rs(&Se3::exp(xi6_scale(xi, t)))
 }
 
 /// 🎢️ Cumulative cubic B-spline over timestamped control poses (De Boor form with uniform-knot cumulative basis on tangent increments), clamped to the valid span `[t₁, tₙ₋₂]`; `None` for fewer than four poses.
-pub async fn se3_spline(poses: &[(f64, Se3)], t: f64) -> Option<Se3> {
+pub fn se3_spline(poses: &[(f64, Se3)], t: f64) -> Option<Se3> {
     let n = poses.len();
     if n < 4 {
         return None;
@@ -594,25 +594,25 @@ mod tests {
     use crate::algebra::VecD;
     use std::f64::consts::PI;
 
-    async fn lcg(state: &mut u64) -> f64 {
+    fn lcg(state: &mut u64) -> f64 {
         *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
         ((*state >> 11) as f64 / (1_u64 << 53) as f64) * 2.0 - 1.0
     }
 
-    async fn vec3_close(a: [f64; 3], b: [f64; 3], tol: f64) -> bool {
+    fn vec3_close(a: [f64; 3], b: [f64; 3], tol: f64) -> bool {
         (0..3).all(|k| (a[k] - b[k]).abs() < tol)
     }
 
-    async fn vecn_close(a: &[f64], b: &[f64], tol: f64) -> bool {
+    fn vecn_close(a: &[f64], b: &[f64], tol: f64) -> bool {
         a.iter().zip(b).all(|(x, y)| (x - y).abs() < tol)
     }
 
-    async fn mat_close(a: &Mat3d, b: &Mat3d, tol: f64) -> bool {
+    fn mat_close(a: &Mat3d, b: &Mat3d, tol: f64) -> bool {
         (0..3).all(|c| (0..3).all(|r| (a.cols[c][r] - b.cols[c][r]).abs() < tol))
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn so3_exp_log_round_trips_small_moderate_and_near_pi() {
+    #[test]
+    fn so3_exp_log_round_trips_small_moderate_and_near_pi() {
         let axis = vec3d_normalize([1.0, 2.0, -2.0]);
         let cases = [[1e-9, -2e-9, 1.5e-9], [0.3, -0.4, 0.5], [1.2, 0.7, -0.9], vec3_scale(axis, PI - 1e-4), vec3_scale(axis, PI - 1e-6)];
         for w in cases {
@@ -620,16 +620,16 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn so3_log_matrix_round_trip_at_pi() {
+    #[test]
+    fn so3_log_matrix_round_trip_at_pi() {
         let axis = vec3d_normalize([0.3, -0.5, 0.81]);
         let r = So3::exp(vec3_scale(axis, PI));
         let back = So3::exp(r.log());
         assert!(mat_close(&r.0, &back.0, 1e-9));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn so3_compose_inverse_and_hat_vee_round_trip() {
+    #[test]
+    fn so3_compose_inverse_and_hat_vee_round_trip() {
         let r = So3::exp([0.4, -0.9, 0.2]);
         assert!(mat_close(&r.semio_compose_rs(&r.inverse()).0, &Mat3d::IDENTITY, 1e-12));
         let w = [0.7, -0.2, 1.4];
@@ -638,8 +638,8 @@ mod tests {
         assert!(vec3_close(So3::hat(w).mul_vec3(v), vec3d_cross(w, v), 1e-12));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn quat_matrix_round_trip_covers_all_shepperd_branches() {
+    #[test]
+    fn quat_matrix_round_trip_covers_all_shepperd_branches() {
         let axes = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], vec3d_normalize([0.6, 0.64, 0.48])];
         for axis in axes {
             for angle in [0.2, PI - 1e-3] {
@@ -653,16 +653,16 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn quat_rotate_matches_matrix_action() {
+    #[test]
+    fn quat_rotate_matches_matrix_action() {
         let q = So3::exp([0.5, -0.3, 0.9]).to_quat();
         let v = [1.2, -0.7, 0.4];
         assert!(vec3_close(q.rotate(v), q.to_mat3d().mul_vec3(v), 1e-12));
         assert!(vec3_close(q.conjugate().rotate(q.rotate(v)), v, 1e-12));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn quat_slerp_hits_endpoints_and_stays_unit() {
+    #[test]
+    fn quat_slerp_hits_endpoints_and_stays_unit() {
         let a = So3::exp([0.2, 0.0, 0.0]).to_quat();
         let b = So3::exp([0.0, 1.1, 0.4]).to_quat();
         assert!((Quatd::slerp(a, b, 0.0).dot(a).abs() - 1.0).abs() < 1e-12);
@@ -675,16 +675,16 @@ mod tests {
         assert!((lerped.dot(lerped) - 1.0).abs() < 1e-12);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn jl_times_jl_inv_is_identity() {
+    #[test]
+    fn jl_times_jl_inv_is_identity() {
         for w in [[1e-6, -2e-6, 1e-6], [0.4, -0.2, 0.7], [1.5, 0.9, -1.1]] {
             let product = So3::jl(w).mul(So3::jl_inv(w));
             assert!(mat_close(&product, &Mat3d::IDENTITY, 1e-9), "failed for {w:?}");
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn se3_exp_log_round_trips() {
+    #[test]
+    fn se3_exp_log_round_trips() {
         let axis = vec3d_normalize([-0.2, 0.9, 0.4]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
         let cases = [[1e-9, -2e-9, 1.5e-9, 2e-9, 1e-9, -1e-9], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6], [-1.2, 0.7, 0.3, 1.1, -0.8, 0.9], [0.6, -0.4, 1.0, near_pi[0], near_pi[1], near_pi[2]]];
@@ -696,8 +696,8 @@ mod tests {
         assert!(mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sim3_exp_log_round_trips() {
+    #[test]
+    fn sim3_exp_log_round_trips() {
         let axis = vec3d_normalize([0.5, -0.1, 0.86]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
         let cases = [[1e-9, 2e-9, -1e-9, -2e-9, 1e-9, 1e-9, 1e-9], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.0], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.3], [-0.9, 0.6, 0.2, 1.2, -0.5, 0.7, -0.4], [0.3, 0.8, -0.5, near_pi[0], near_pi[1], near_pi[2], 0.25]];
@@ -709,8 +709,8 @@ mod tests {
         assert!((round.s - 1.0).abs() < 1e-12 && mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn se3_adjoint_matches_conjugation() {
+    #[test]
+    fn se3_adjoint_matches_conjugation() {
         let g = Se3::exp([0.4, -0.2, 0.3, 0.5, 0.2, -0.4]);
         let xi = [0.3, 0.1, -0.2, 0.25, -0.15, 0.2];
         let adj_xi = g.adjoint().mul_vec(&VecD::from_vec(xi.to_vec()));
@@ -724,8 +724,8 @@ mod tests {
         assert!(vec3_close(lhs.t, rhs.t, 1e-8));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn umeyama_recovers_planted_similarity() {
+    #[test]
+    fn umeyama_recovers_planted_similarity() {
         let mut state = 12345_u64;
         let src: Vec<[f64; 3]> = (0..10).map(|_| [lcg(&mut state), lcg(&mut state), lcg(&mut state)]).collect();
         let truth = Sim3 { s: 1.7, r: So3::exp([0.3, -0.7, 0.5]), t: [0.4, -1.2, 2.5] };
@@ -739,8 +739,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn umeyama_rigid_without_scale() {
+    #[test]
+    fn umeyama_rigid_without_scale() {
         let mut state = 777_u64;
         let src: Vec<[f64; 3]> = (0..10).map(|_| [lcg(&mut state), lcg(&mut state), lcg(&mut state)]).collect();
         let truth = Sim3 { s: 1.0, r: So3::exp([-0.6, 0.2, 0.9]), t: [1.5, 0.3, -0.8] };
@@ -751,8 +751,8 @@ mod tests {
         assert!(vec3_close(sim.t, truth.t, 1e-9));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn umeyama_rejects_degenerate_inputs() {
+    #[test]
+    fn umeyama_rejects_degenerate_inputs() {
         assert!(umeyama(&[[0.0; 3], [1.0; 3]], &[[0.0; 3], [1.0; 3]], true).is_none());
         let line: Vec<[f64; 3]> = (0..10).map(|k| vec3_scale([1.0, 1.0, 1.0], k as f64)).collect();
         let shifted: Vec<[f64; 3]> = line.iter().map(|p| vec3_add(*p, [0.5, -0.2, 0.1])).collect();
@@ -761,8 +761,8 @@ mod tests {
         assert!(umeyama(&coincident, &coincident, true).is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn project_to_so3_restores_perturbed_rotation() {
+    #[test]
+    fn project_to_so3_restores_perturbed_rotation() {
         let r_true = So3::exp([0.4, -0.8, 0.3]);
         assert!(mat_close(&So3::project_to_so3(&r_true.0).0, &r_true.0, 1e-9));
         let mut state = 99_u64;
@@ -773,8 +773,8 @@ mod tests {
         assert!(mat_close(&projected.0, &r_true.0, 0.15));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn se3_lerp_endpoints_and_midpoint() {
+    #[test]
+    fn se3_lerp_endpoints_and_midpoint() {
         let a = Se3::exp([0.5, -0.3, 0.8, 0.4, 0.2, -0.6]);
         let b = Se3::exp([-0.9, 0.6, 0.2, 1.2, -0.5, 0.7]);
         let at0 = se3_lerp(&a, &b, 0.0);
@@ -787,8 +787,8 @@ mod tests {
         assert!(vecn_close(&rel_half, &xi6_scale(rel_full, 0.5), 1e-9));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn se3_spline_tracks_constant_velocity() {
+    #[test]
+    fn se3_spline_tracks_constant_velocity() {
         let v = [0.1, -0.05, 0.2, 0.3, 0.1, -0.2];
         let poses: Vec<(f64, Se3)> = (0..7).map(|k| (k as f64, Se3::exp(xi6_scale(v, k as f64)))).collect();
         for t in [1.0, 2.5, 4.7, 5.0] {

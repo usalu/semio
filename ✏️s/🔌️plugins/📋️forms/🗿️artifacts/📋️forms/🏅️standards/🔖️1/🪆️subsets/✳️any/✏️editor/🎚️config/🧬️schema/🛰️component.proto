@@ -1,10 +1,11 @@
 syntax = "proto3";
 package semio.app.forms.forms;
+message FormsTryValueChunks { repeated string chunks = 1; }
 message FormsConfig {
   // @state config
   uint32 current_step_index = 1;
   // @state config
-  string try_values_json = 2;
+  map<string, FormsTryValueChunks> try_values = 2;
   // @state config
   string locale = 3;
   // @state config

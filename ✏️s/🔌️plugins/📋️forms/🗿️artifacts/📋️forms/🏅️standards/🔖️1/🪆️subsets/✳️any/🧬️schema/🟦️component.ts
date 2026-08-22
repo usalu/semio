@@ -7,7 +7,7 @@ export interface FormsArtifact {
   steps: FormStep[];
   selectedIds: string[];
   currentStepIndex: number;
-  tryValuesJson: string;
+  tryValues: Record<string, string[]>;
   locale: string;
   contributionsJson: string;
 }

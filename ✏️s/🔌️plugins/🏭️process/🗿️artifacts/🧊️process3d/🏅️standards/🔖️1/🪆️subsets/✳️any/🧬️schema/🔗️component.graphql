@@ -2,8 +2,14 @@
 
 type Process3dArtifact {
   workshop: Workshop! @state(class: ARTIFACT)
-  stock: Stock! @state(class: ARTIFACT)
-  steps: [ProcessStep!]! @state(class: ARTIFACT)
+  stockId: String! @state(class: ARTIFACT)
+  stockLabel: String! @state(class: ARTIFACT)
+  stockPose: Pose! @state(class: ARTIFACT)
+  stockPayload: Stock! @state(class: ARTIFACT)
+  stockSolid: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.brep")
+  steps: ArtifactLink! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.flow")
+  stepPayloads: [ProcessStep!]! @state(class: ARTIFACT)
+  toolSolids: [ArtifactLink!]! @state(class: ARTIFACT) @child(kind: "s.stdio.semio.brep")
   resolvedUpTo: Int @state(class: ARTIFACT)
   selectedId: String @state(class: PRESENCE)
   selectedFaceId: Int @state(class: PRESENCE)
@@ -26,4 +32,3 @@ type Process3dArtifact {
   contributionsJson: String! @state(class: CONFIG)
   hoveredId: String @state(class: ARTIFACT)
 }
-

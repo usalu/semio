@@ -58,6 +58,11 @@ pub struct CadConfig {
     #[state(config)]
     pub engagement_session_json: Option<String>,
     #[state(config)]
+    pub engagement_preview_operation_json: Option<String>,
+    /// 🔢️ Lossless cross-surface generation domain: `0..=2_147_483_647`.
+    #[state(config)]
+    pub engagement_preview_generation: i32,
+    #[state(config)]
     pub last_finalized_interaction_id: Option<String>,
     #[state(config)]
     pub sun: CadSunConfig,

@@ -17,20 +17,20 @@ pub struct UpdateCamera {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_camera(camera: CameraJson) -> Procedural2dMutation {
+pub fn update_camera(camera: CameraJson) -> Procedural2dMutation {
     Procedural2dMutation::UpdateCamera(UpdateCamera { camera })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for UpdateCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
-    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Update camera to ({}, {}, zoom {})", self.camera.x, self.camera.y, self.camera.zoom)
     }
 }

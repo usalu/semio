@@ -14,7 +14,7 @@ pub struct FlowTessellateResolve {
     pub output_json: String,
 }
 
-pub async fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &FlowTessellateResolve, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let _ = session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
     Ok(Emit::default())
 }

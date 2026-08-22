@@ -14,24 +14,24 @@ use crate::spatial::KdTree;
 use remodel_feature::{forward_backward_prune, klt_track, shi_tomasi_grid};
 
 // #region 🔖️Vec3Helpers
-async fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-async fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
+fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
 
-async fn dist3(a: [f64; 3], b: [f64; 3]) -> f64 {
+fn dist3(a: [f64; 3], b: [f64; 3]) -> f64 {
     let d = sub3(a, b);
     (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt()
 }
 
-async fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
+fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
     std::array::from_fn(|r| std::array::from_fn(|c| (0..3).map(|k| a[r][k] * b[k][c]).sum()))
 }
 // #endregion 🔖️Vec3Helpers
@@ -62,7 +62,7 @@ pub struct Tracker2d {
 
 impl Tracker2d {
     /// 🆕️ An empty tracker with no live or historical tracks.
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { tracks: Vec::new(), live: Vec::new(), next_id: 0 }
     }
 
@@ -72,7 +72,7 @@ impl Tracker2d {
     /// `redetect_per_cell` live tracks, spawning a fresh [`Track2d`] per new corner. Returns the full
     /// (live + historical) track list, same as [`Tracker2d::tracks`].
     #[allow(clippy::too_many_arguments, reason = "one argument per physically distinct KLT/redetect tuning knob; a config struct would just move the same 7 fields one level down for this single call site")]
-    pub async fn step(&mut self, pyr_prev: &Pyramid, pyr_curr: &Pyramid, frame_idx: u32, window_radius: i32, max_iters: usize, redetect_grid: u32, redetect_per_cell: usize) -> &[Track2d] {
+    pub fn step(&mut self, pyr_prev: &Pyramid, pyr_curr: &Pyramid, frame_idx: u32, window_radius: i32, max_iters: usize, redetect_grid: u32, redetect_per_cell: usize) -> &[Track2d] {
         if pyr_prev.levels.is_empty() || pyr_curr.levels.is_empty() {
             return &self.tracks;
         }
@@ -120,12 +120,12 @@ impl Tracker2d {
     }
 
     /// 📜️ Every track this tracker has ever produced (live or dropped), in creation order.
-    pub async fn tracks(&self) -> &[Track2d] {
+    pub fn tracks(&self) -> &[Track2d] {
         &self.tracks
     }
 }
 
-async fn bucket_index(x: f32, y: f32, cell: u32, cells_x: u32, cells_y: u32) -> usize {
+fn bucket_index(x: f32, y: f32, cell: u32, cells_x: u32, cells_y: u32) -> usize {
     let bx = ((x.max(0.0) as u32) / cell).min(cells_x.saturating_sub(1));
     let by = ((y.max(0.0) as u32) / cell).min(cells_y.saturating_sub(1));
     (by * cells_x + bx) as usize
@@ -173,12 +173,12 @@ pub struct MultiObjectTracker {
 
 impl MultiObjectTracker {
     /// 🎬️ An empty tracker with no live tracks.
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { tracks: Vec::new(), next_id: 0 }
     }
 
     /// 🔮️ Constant-velocity prediction step: advances every live track's `(x, y)` by `(vx, vy) * dt`.
-    pub async fn predict(&mut self, dt: f32) {
+    pub fn predict(&mut self, dt: f32) {
         for t in &mut self.tracks {
             t.x += t.vx * dt;
             t.y += t.vy * dt;
@@ -193,7 +193,7 @@ impl MultiObjectTracker {
     /// [`MOT_MAX_MISSED`]; unmatched detections spawn fresh tracks. Returns `(track_id, detection_index)`
     /// pairs for every detection associated with a track this call — both re-matched existing tracks and
     /// freshly spawned ones, so callers always learn the id backing every input detection.
-    pub async fn update(&mut self, detections: &[Detection], gate_radius: f32) -> Vec<(u32, usize)> {
+    pub fn update(&mut self, detections: &[Detection], gate_radius: f32) -> Vec<(u32, usize)> {
         let mut candidates: Vec<(f32, usize, usize)> = Vec::new();
         for (ti, t) in self.tracks.iter().enumerate() {
             for (di, d) in detections.iter().enumerate() {
@@ -269,7 +269,7 @@ const TRAJECTORY_WINDOW_RADIUS: usize = 3;
 /// camera's baseline change across that short window. This is a deliberate simplification of the more
 /// general synced-rig formulation (multiple simultaneous observations at one frame index), which the flat
 /// [`Track2d`] type cannot represent without a per-observation camera id.
-pub async fn triangulate_tracks(cams_per_frame: &[(u32, CameraPose, Intrinsics)], tracks: &[Track2d], frame_timestamps: &std::collections::HashMap<u32, f64>) -> Vec<Trajectory3d> {
+pub fn triangulate_tracks(cams_per_frame: &[(u32, CameraPose, Intrinsics)], tracks: &[Track2d], frame_timestamps: &std::collections::HashMap<u32, f64>) -> Vec<Trajectory3d> {
     let mut pose_by_frame: std::collections::HashMap<u32, (CameraPose, Intrinsics)> = std::collections::HashMap::new();
     for &(frame, pose, intr) in cams_per_frame {
         pose_by_frame.entry(frame).or_insert((pose, intr));
@@ -307,13 +307,13 @@ pub async fn triangulate_tracks(cams_per_frame: &[(u32, CameraPose, Intrinsics)]
 const KINEMATICS_SG_WINDOW: usize = 5;
 const KINEMATICS_SG_ORDER: usize = 2;
 
-async fn odd_window(desired: usize, max_len: usize) -> usize {
+fn odd_window(desired: usize, max_len: usize) -> usize {
     let cap = desired.min(max_len);
     let odd = if cap.is_multiple_of(2) { cap.saturating_sub(1) } else { cap };
     odd.max(3)
 }
 
-async fn mean_dt(traj: &Trajectory3d) -> f64 {
+fn mean_dt(traj: &Trajectory3d) -> f64 {
     let n = traj.samples.len();
     if n < 2 {
         return 1.0;
@@ -330,7 +330,7 @@ async fn mean_dt(traj: &Trajectory3d) -> f64 {
 /// sampling (`dt` = mean spacing between consecutive timestamps) and applies
 /// [`crate::signal::savitzky_golay`] independently to each of the x/y/z channels. Falls back to all
 /// zeros when there are too few samples for even the smallest valid odd window (`< 3` points).
-async fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
+fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
     let n = traj.samples.len();
     if n < 3 {
         return vec![[0.0; 3]; n];
@@ -350,18 +350,18 @@ async fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
 
 /// ⚡️ Per-sample velocity of a [`Trajectory3d`] via first-order Savitzky-Golay differentiation, assuming
 /// roughly-uniform timestamp spacing (see [`sg_derivative`]).
-pub async fn velocity(traj: &Trajectory3d) -> Vec<[f64; 3]> {
+pub fn velocity(traj: &Trajectory3d) -> Vec<[f64; 3]> {
     sg_derivative(traj, 1)
 }
 
 /// 🚀️ Per-sample acceleration of a [`Trajectory3d`] via second-order Savitzky-Golay differentiation,
 /// assuming roughly-uniform timestamp spacing (see [`sg_derivative`]).
-pub async fn acceleration(traj: &Trajectory3d) -> Vec<[f64; 3]> {
+pub fn acceleration(traj: &Trajectory3d) -> Vec<[f64; 3]> {
     sg_derivative(traj, 2)
 }
 
 /// 📏️ Polyline arc length: the sum of Euclidean distances between consecutive samples.
-pub async fn arc_length(traj: &Trajectory3d) -> f64 {
+pub fn arc_length(traj: &Trajectory3d) -> f64 {
     traj.samples.windows(2).map(|w| dist3(w[0].1, w[1].1)).sum()
 }
 
@@ -379,7 +379,7 @@ const STRAIN_MIN_NEIGHBORS: usize = 3;
 /// independent per-row least squares ([`solve_llsq`]) — this crate depends on `crate::algebra`
 /// (already required transitively via `remodel_camera`/`remodel_sfm`), so a hand-rolled 3x3 normal-equation
 /// solve would just duplicate its QR-based `solve_llsq`.
-async fn fit_affine_3x3(d0: &[[f64; 3]], d1: &[[f64; 3]]) -> Option<[[f64; 3]; 3]> {
+fn fit_affine_3x3(d0: &[[f64; 3]], d1: &[[f64; 3]]) -> Option<[[f64; 3]; 3]> {
     let mut a = MatD::zeros(d0.len(), 3);
     for (row, p) in d0.iter().enumerate() {
         a.set(row, 0, p[0]);
@@ -395,7 +395,7 @@ async fn fit_affine_3x3(d0: &[[f64; 3]], d1: &[[f64; 3]]) -> Option<[[f64; 3]; 3
     Some(f)
 }
 
-async fn green_lagrange_frobenius(f: &[[f64; 3]; 3]) -> f64 {
+fn green_lagrange_frobenius(f: &[[f64; 3]; 3]) -> f64 {
     let mut sum_sq = 0.0;
     for i in 0..3 {
         for j in 0..3 {
@@ -414,7 +414,7 @@ async fn green_lagrange_frobenius(f: &[[f64; 3]; 3]) -> f64 {
 /// reports the Green-Lagrange strain tensor's Frobenius norm `‖(FᵀF - I) / 2‖_F` (zero for a pure rotation,
 /// since `FᵀF = I` there) once per `(point_a: i, point_b: neighbour)` edge that supported the fit.
 /// <https://en.wikipedia.org/wiki/Finite_strain_theory>
-pub async fn neighborhood_affine_strain(cloud_t0: &[[f64; 3]], cloud_t1: &[[f64; 3]], radius: f64) -> Vec<StrainPair> {
+pub fn neighborhood_affine_strain(cloud_t0: &[[f64; 3]], cloud_t1: &[[f64; 3]], radius: f64) -> Vec<StrainPair> {
     if cloud_t0.len() != cloud_t1.len() || cloud_t0.is_empty() {
         return Vec::new();
     }
@@ -453,7 +453,7 @@ const MODAL_WELCH_SEG_LEN: usize = 512;
 const MODAL_WELCH_OVERLAP: f64 = 0.5;
 const MODAL_PROMINENCE_FRACTION: f64 = 0.05;
 
-async fn half_power_bandwidth_damping(psd: &[f64], peak_idx: usize, bin_hz: f64, freq_hz: f64) -> f64 {
+fn half_power_bandwidth_damping(psd: &[f64], peak_idx: usize, bin_hz: f64, freq_hz: f64) -> f64 {
     if freq_hz <= 0.0 {
         return 0.0;
     }
@@ -476,7 +476,7 @@ async fn half_power_bandwidth_damping(psd: &[f64], peak_idx: usize, bin_hz: f64,
 /// each mode's half-power-bandwidth damping ratio, and derives every track's mode shape from cross-spectral
 /// analysis ([`crate::signal::cross_spectrum`]) against the reference track at each modal frequency.
 /// <https://en.wikipedia.org/wiki/Q_factor#Bandwidth_definition>
-pub async fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_modes: usize) -> ModalResult {
+pub fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_modes: usize) -> ModalResult {
     if tracks.is_empty() || fps <= 0.0 || max_modes == 0 || reference_track >= tracks.len() {
         return ModalResult { frequencies_hz: Vec::new(), damping_ratios: Vec::new(), mode_shapes: Vec::new() };
     }
@@ -533,7 +533,7 @@ pub struct SyncResult {
 /// ([`crate::signal::subsample_peak`]) to fractional-frame precision. `fps` is accepted for interface
 /// symmetry with time-domain callers (and to mirror [`refine_subframe`]'s frame-domain contract) — the
 /// correlation itself already operates in frame-index units, so it does not change the computation.
-pub async fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f64) -> SyncResult {
+pub fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f64) -> SyncResult {
     let _ = fps;
     if motion_signal_a.is_empty() || motion_signal_b.is_empty() {
         return SyncResult { offset_frames: 0.0, confidence: 0.0 };
@@ -547,7 +547,7 @@ pub async fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], f
     SyncResult { offset_frames: peak_idx_f - max_lag as f64, confidence }
 }
 
-async fn correlation_at_offset(a: &[f64], b: &[f64], offset: f64) -> f64 {
+fn correlation_at_offset(a: &[f64], b: &[f64], offset: f64) -> f64 {
     let mut sum_ab = 0.0;
     let mut sum_a2 = 0.0;
     let mut sum_b2 = 0.0;
@@ -576,7 +576,7 @@ async fn correlation_at_offset(a: &[f64], b: &[f64], offset: f64) -> f64 {
 /// ([`crate::optimize::golden_section`]) over `[coarse_offset - 1, coarse_offset + 1]` maximizing the
 /// linearly-interpolated normalized correlation between `motion_signal_a` and a continuously-shifted
 /// `motion_signal_b`.
-pub async fn refine_subframe(motion_signal_a: &[f64], motion_signal_b: &[f64], coarse_offset: f64) -> f64 {
+pub fn refine_subframe(motion_signal_a: &[f64], motion_signal_b: &[f64], coarse_offset: f64) -> f64 {
     if motion_signal_a.is_empty() || motion_signal_b.is_empty() {
         return coarse_offset;
     }
@@ -586,7 +586,7 @@ pub async fn refine_subframe(motion_signal_a: &[f64], motion_signal_b: &[f64], c
 // #endregion 🔖️Sync
 
 // #region 🔖️RollingShutterComp
-async fn linear_regression(x: &[f64], y: &[f64]) -> (f64, f64) {
+fn linear_regression(x: &[f64], y: &[f64]) -> (f64, f64) {
     let n = x.len() as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
@@ -609,7 +609,7 @@ async fn linear_regression(x: &[f64], y: &[f64]) -> (f64, f64) {
 /// requested `[f64; 6]` slot as `[vx0, vy0, kx, ky, 0.0, 0.0]`: a baseline per-frame velocity `(vx0, vy0)`
 /// plus its row-dependent gradient `(kx, ky)` (px/frame per pixel-row), the standard rolling-shutter
 /// approximation when only image-plane correspondences are available.
-pub async fn estimate_rs_velocity(tracks: &[Track2d], image_height: u32) -> [f64; 6] {
+pub fn estimate_rs_velocity(tracks: &[Track2d], image_height: u32) -> [f64; 6] {
     let mut rows = Vec::new();
     let mut dxs = Vec::new();
     let mut dys = Vec::new();
@@ -636,7 +636,7 @@ pub async fn estimate_rs_velocity(tracks: &[Track2d], image_height: u32) -> [f64
 /// rolling-shutter skew) short-circuits to the identity map; otherwise, since the fitted `model` is already
 /// expressed directly in px-per-row units, `line_delay_s`'s absolute seconds value does not further scale
 /// the correction under this simplified model — an explicit, honest limitation of using only 2D track data.
-pub async fn build_rs_rectify_maps(model: [f64; 6], image_width: u32, image_height: u32, line_delay_s: f64) -> (Vec<f32>, Vec<f32>) {
+pub fn build_rs_rectify_maps(model: [f64; 6], image_width: u32, image_height: u32, line_delay_s: f64) -> (Vec<f32>, Vec<f32>) {
     let n = image_width as usize * image_height as usize;
     let mut map_x = vec![0.0f32; n];
     let mut map_y = vec![0.0f32; n];
@@ -673,7 +673,7 @@ const STABILIZE_SG_ORDER: usize = 2;
 /// the smoothed twists are reintegrated via [`Se3::exp`]/[`Se3::semio_compose_rs`] — so the result stays exactly on
 /// the SE(3) manifold instead of naively averaging matrix or quaternion components. `window` is clamped to
 /// the largest valid odd value `>= 3` for however many pose-to-pose twists are available.
-pub async fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
+pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     let n = poses.len();
     if n < 2 {
         return poses.to_vec();
@@ -696,11 +696,11 @@ pub async fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     out
 }
 
-async fn intrinsics_matrix(intr: &Intrinsics) -> [[f64; 3]; 3] {
+fn intrinsics_matrix(intr: &Intrinsics) -> [[f64; 3]; 3] {
     [[intr.fx, intr.skew, intr.cx], [0.0, intr.fy, intr.cy], [0.0, 0.0, 1.0]]
 }
 
-async fn intrinsics_matrix_inverse(intr: &Intrinsics) -> [[f64; 3]; 3] {
+fn intrinsics_matrix_inverse(intr: &Intrinsics) -> [[f64; 3]; 3] {
     let (fx, fy, cx, cy, skew) = (intr.fx, intr.fy, intr.cx, intr.cy, intr.skew);
     [[1.0 / fx, -skew / (fx * fy), (skew * cy - cx * fy) / (fx * fy)], [0.0, 1.0 / fy, -cy / fy], [0.0, 0.0, 1.0]]
 }
@@ -708,7 +708,7 @@ async fn intrinsics_matrix_inverse(intr: &Intrinsics) -> [[f64; 3]; 3] {
 /// 🪟️ Per-frame pure-rotation stabilization homography `H = K · ΔR · K⁻¹` warping the original jittery
 /// viewpoint into the smoothed one, appropriate for a distant scene where translational parallax is
 /// negligible; `ΔR` is the rotation from `original[i]`'s orientation to `smoothed[i]`'s.
-pub async fn stabilization_warps(original: &[Se3], smoothed: &[Se3], intr: &Intrinsics) -> Vec<[[f64; 3]; 3]> {
+pub fn stabilization_warps(original: &[Se3], smoothed: &[Se3], intr: &Intrinsics) -> Vec<[[f64; 3]; 3]> {
     let k = intrinsics_matrix(intr);
     let k_inv = intrinsics_matrix_inverse(intr);
     original
@@ -737,7 +737,7 @@ pub struct Psf {
 const DEBLUR_KERNEL_MARGIN: f32 = 2.0;
 const DEBLUR_WIENER_EPS: f32 = 1e-6;
 
-async fn splat_bilinear(kernel: &mut [f32], size: u32, x: f32, y: f32, weight: f32) {
+fn splat_bilinear(kernel: &mut [f32], size: u32, x: f32, y: f32, weight: f32) {
     let x0 = x.floor();
     let y0 = y.floor();
     let (fx, fy) = (x - x0, y - y0);
@@ -753,7 +753,7 @@ async fn splat_bilinear(kernel: &mut [f32], size: u32, x: f32, y: f32, weight: f
 /// 💨️ Simple linear motion-blur kernel: a line segment of length `speed * exposure_fraction` (clamped to at
 /// least 1px) along the velocity direction, rasterized into a small square kernel via bilinear splatting
 /// and normalized to sum to 1.
-pub async fn estimate_motion_psf(track_velocity_px_per_frame: (f32, f32), exposure_fraction: f32) -> Psf {
+pub fn estimate_motion_psf(track_velocity_px_per_frame: (f32, f32), exposure_fraction: f32) -> Psf {
     let (vx, vy) = track_velocity_px_per_frame;
     let speed = vx.hypot(vy);
     let length = (speed * exposure_fraction.clamp(0.0, 1.0)).max(1.0);
@@ -779,7 +779,7 @@ pub async fn estimate_motion_psf(track_velocity_px_per_frame: (f32, f32), exposu
 /// to the DFT of the (zero-padded, power-of-two) image via [`crate::signal::fft2`]/[`crate::signal::ifft2`],
 /// with the PSF's center wrapped to the origin for circular convolution, then cropped back to the input size.
 /// <https://en.wikipedia.org/wiki/Wiener_deconvolution>
-pub async fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
+pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
     if img.width == 0 || img.height == 0 || psf.width == 0 || psf.height == 0 {
         return img.clone();
     }
@@ -844,7 +844,7 @@ pub struct DeformationGraph {
 
 /// 🏗️ Builds a deformation graph with one identity-transform node per `seed_points` entry, connected by an
 /// undirected edge whenever two nodes are within `edge_radius` of each other.
-pub async fn build_deformation_graph(seed_points: &[[f64; 3]], edge_radius: f64) -> DeformationGraph {
+pub fn build_deformation_graph(seed_points: &[[f64; 3]], edge_radius: f64) -> DeformationGraph {
     let nodes: Vec<DeformationNode> = seed_points.iter().map(|&p| DeformationNode { position: p, transform: Se3::identity() }).collect();
     let mut edges = Vec::new();
     for i in 0..nodes.len() {
@@ -863,15 +863,15 @@ struct DeformationNodeFitProblem<'a> {
 }
 
 impl LeastSquaresProblem for DeformationNodeFitProblem<'_> {
-    async fn residual_count(&self) -> usize {
+    fn residual_count(&self) -> usize {
         self.offsets.len() * 3
     }
 
-    async fn parameter_count(&self) -> usize {
+    fn parameter_count(&self) -> usize {
         6
     }
 
-    async fn residuals(&self, x: &VecD, out: &mut VecD) {
+    fn residuals(&self, x: &VecD, out: &mut VecD) {
         let xi: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let se3 = Se3::exp(xi);
         for (row, (off, tgt)) in self.offsets.iter().zip(self.targets.iter()).enumerate() {
@@ -882,11 +882,11 @@ impl LeastSquaresProblem for DeformationNodeFitProblem<'_> {
         }
     }
 
-    async fn jacobian(&self, x: &VecD, out: &mut MatD) {
+    fn jacobian(&self, x: &VecD, out: &mut MatD) {
         numeric_jacobian(self, x, 1e-6, out);
     }
 
-    async fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
+    fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let d: [f64; 6] = std::array::from_fn(|k| dx.get(k));
         VecD::from_vec(Se3::exp(d).semio_compose_rs(&Se3::exp(cur)).log().to_vec())
@@ -902,7 +902,7 @@ const NONRIGID_MIN_CORRESPONDENCES: usize = 3;
 /// fit uses only its own local data, ignoring the `edges` regularization term, trading joint-consistency for
 /// simplicity while remaining a real, working, per-node rigid fit. Nodes with fewer than
 /// [`NONRIGID_MIN_CORRESPONDENCES`] nearby correspondences keep their prior transform unchanged.
-pub async fn fit_deformation(graph: &DeformationGraph, src_points: &[[f64; 3]], dst_correspondences: &[(usize, [f64; 3])], correspondence_radius: f64) -> DeformationGraph {
+pub fn fit_deformation(graph: &DeformationGraph, src_points: &[[f64; 3]], dst_correspondences: &[(usize, [f64; 3])], correspondence_radius: f64) -> DeformationGraph {
     let mut nodes = graph.nodes.clone();
     for node in &mut nodes {
         let mut offsets = Vec::new();
@@ -931,7 +931,7 @@ const NONRIGID_WEIGHT_EPS: f64 = 1e-6;
 /// each contributing `node.transform.act(point - node.position) + node.position`. Falls back to `point`
 /// unchanged when no node is within range. The natural complement to [`fit_deformation`] — without this,
 /// a fitted [`DeformationGraph`]'s per-node transforms have no way to be evaluated at an arbitrary point.
-pub async fn deform_point(graph: &DeformationGraph, point: [f64; 3], radius: f64) -> [f64; 3] {
+pub fn deform_point(graph: &DeformationGraph, point: [f64; 3], radius: f64) -> [f64; 3] {
     let mut weighted = [0.0; 3];
     let mut weight_sum = 0.0;
     for node in &graph.nodes {
@@ -960,7 +960,7 @@ const POSE6D_MIN_VISIBLE_POINTS: usize = 6;
 /// frames with fewer than [`POSE6D_MIN_VISIBLE_POINTS`] visible points, `epnp`'s own minimum), polishes it
 /// with `remodel_sfm::refine_pose_lm`, then temporally smooths the recovered sequence via
 /// [`smooth_camera_path`]'s SE(3) log-tangent Savitzky-Golay filter.
-pub async fn track_rigid_body(model_points: &[[f64; 3]], per_frame_obs: &[(u32, Vec<Option<[f64; 2]>>)], intr: &Intrinsics) -> Vec<(u32, Se3)> {
+pub fn track_rigid_body(model_points: &[[f64; 3]], per_frame_obs: &[(u32, Vec<Option<[f64; 2]>>)], intr: &Intrinsics) -> Vec<(u32, Se3)> {
     let mut raw: Vec<(u32, Se3)> = Vec::new();
     for (frame, obs) in per_frame_obs {
         let mut world_pts = Vec::new();
@@ -999,12 +999,12 @@ mod tests {
     use remodel_image::{build_pyramid, scharr_gradients, warp_affine};
 
     // #region 🔖️Fixtures
-    async fn lcg_next(state: &mut u64) -> f64 {
+    fn lcg_next(state: &mut u64) -> f64 {
         *state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
         (*state >> 11) as f64 / (1u64 << 53) as f64
     }
 
-    async fn grid_texture(size: u32) -> ImageGray {
+    fn grid_texture(size: u32) -> ImageGray {
         let mut img = ImageGray::new(size, size);
         for v in img.data.iter_mut() {
             *v = 0.1;
@@ -1026,7 +1026,7 @@ mod tests {
         img
     }
 
-    async fn look_at_pose(eye: [f64; 3], target: [f64; 3], up: [f64; 3]) -> Se3 {
+    fn look_at_pose(eye: [f64; 3], target: [f64; 3], up: [f64; 3]) -> Se3 {
         let forward = vec3d_normalize(vec3d_sub(target, eye));
         let right = vec3d_normalize(vec3d_cross(up, forward));
         let true_up = vec3d_cross(forward, right);
@@ -1036,19 +1036,19 @@ mod tests {
         Se3 { r: r_wc, t }
     }
 
-    async fn pinhole(fx: f64, fy: f64, cx: f64, cy: f64) -> Intrinsics {
+    fn pinhole(fx: f64, fy: f64, cx: f64, cy: f64) -> Intrinsics {
         Intrinsics { fx, fy, cx, cy, skew: 0.0, distortion: Distortion::None }
     }
 
-    async fn se3_error_norm(a: &Se3, b: &Se3) -> f64 {
+    fn se3_error_norm(a: &Se3, b: &Se3) -> f64 {
         let xi = a.inverse().semio_compose_rs(b).log();
         xi.iter().map(|v| v * v).sum::<f64>().sqrt()
     }
     // #endregion 🔖️Fixtures
 
     // #region 🔖️Track2dTests
-    #[semio_framework_async_macros::async_test]
-    async fn tracker2d_maintains_tracks_and_redetects_lost_coverage() {
+    #[test]
+    fn tracker2d_maintains_tracks_and_redetects_lost_coverage() {
         let base = grid_texture(80);
         let mut pyrs = vec![build_pyramid(&base, 3)];
         for i in 1..6u32 {
@@ -1068,8 +1068,8 @@ mod tests {
     // #endregion 🔖️Track2dTests
 
     // #region 🔖️MotTests
-    #[semio_framework_async_macros::async_test]
-    async fn multi_object_tracker_associates_spawns_and_prunes() {
+    #[test]
+    fn multi_object_tracker_associates_spawns_and_prunes() {
         let mut tracker = MultiObjectTracker::new();
         let det_a = |t: f32| Detection { x: 10.0 + t, y: 10.0, id_hint: None };
         let det_b = |t: f32| Detection { x: 60.0 - t, y: 30.0, id_hint: None };
@@ -1106,8 +1106,8 @@ mod tests {
     // #endregion 🔖️MotTests
 
     // #region 🔖️Trajectory3dTests
-    #[semio_framework_async_macros::async_test]
-    async fn triangulate_tracks_recovers_a_slow_moving_point_from_a_single_orbiting_camera() {
+    #[test]
+    fn triangulate_tracks_recovers_a_slow_moving_point_from_a_single_orbiting_camera() {
         let intr = pinhole(700.0, 700.0, 320.0, 240.0);
         let n_frames = 24u32;
         let p0 = [0.2, 0.1, 0.0];
@@ -1140,8 +1140,8 @@ mod tests {
     // #endregion 🔖️Trajectory3dTests
 
     // #region 🔖️KinematicsTests
-    #[semio_framework_async_macros::async_test]
-    async fn velocity_and_acceleration_recover_planted_constant_motion() {
+    #[test]
+    fn velocity_and_acceleration_recover_planted_constant_motion() {
         let p0 = [1.0, -2.0, 0.5];
         let v = [0.3, -0.1, 0.2];
         let samples: Vec<(f64, [f64; 3])> = (0..20).map(|i| (f64::from(i), add3(p0, scale3(v, f64::from(i))))).collect();
@@ -1165,8 +1165,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn neighborhood_affine_strain_distinguishes_rotation_from_stretch() {
+    #[test]
+    fn neighborhood_affine_strain_distinguishes_rotation_from_stretch() {
         let mut state = 42u64;
         let cloud_t0: Vec<[f64; 3]> = (0..40).map(|_| [lcg_next(&mut state) * 4.0 - 2.0, lcg_next(&mut state) * 4.0 - 2.0, lcg_next(&mut state) * 4.0 - 2.0]).collect();
 
@@ -1191,8 +1191,8 @@ mod tests {
     // #endregion 🔖️KinematicsTests
 
     // #region 🔖️ModalTests
-    #[semio_framework_async_macros::async_test]
-    async fn modal_analysis_recovers_a_planted_frequency() {
+    #[test]
+    fn modal_analysis_recovers_a_planted_frequency() {
         let fps = 50.0;
         let n = 2048usize;
         let target_hz = 4.0;
@@ -1217,8 +1217,8 @@ mod tests {
     // #endregion 🔖️ModalTests
 
     // #region 🔖️SyncTests
-    #[semio_framework_async_macros::async_test]
-    async fn estimate_offset_and_refine_subframe_recover_a_fractional_shift() {
+    #[test]
+    fn estimate_offset_and_refine_subframe_recover_a_fractional_shift() {
         let f = |t: f64| (2.0 * std::f64::consts::PI * t / 37.0).sin() + 0.5 * (2.0 * std::f64::consts::PI * t / 11.0).sin();
         let n = 220usize;
         let signal_a: Vec<f64> = (0..n).map(|i| f(i as f64)).collect();
@@ -1233,8 +1233,8 @@ mod tests {
     // #endregion 🔖️SyncTests
 
     // #region 🔖️RollingShutterCompTests
-    #[semio_framework_async_macros::async_test]
-    async fn rolling_shutter_velocity_and_rectify_maps_are_sane() {
+    #[test]
+    fn rolling_shutter_velocity_and_rectify_maps_are_sane() {
         let mut tracks = Vec::new();
         for (idx, &row) in [10.0f32, 30.0, 50.0, 70.0].iter().enumerate() {
             let base_vx = 2.0f32;
@@ -1268,8 +1268,8 @@ mod tests {
     // #endregion 🔖️RollingShutterCompTests
 
     // #region 🔖️StabilizeTests
-    #[semio_framework_async_macros::async_test]
-    async fn smooth_camera_path_reduces_planted_jitter() {
+    #[test]
+    fn smooth_camera_path_reduces_planted_jitter() {
         let true_xi = [0.02, 0.0, 0.0, 0.0, 0.0, 0.03];
         let n = 81;
         let mut true_poses = Vec::with_capacity(n);
@@ -1292,8 +1292,8 @@ mod tests {
         assert!(smooth_err < orig_err * 0.85, "smoothing should reduce total pose error: orig {orig_err} smoothed {smooth_err}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn stabilization_warps_are_near_identity_for_matching_poses() {
+    #[test]
+    fn stabilization_warps_are_near_identity_for_matching_poses() {
         let intr = pinhole(500.0, 500.0, 160.0, 120.0);
         let pose = Se3::exp([0.0, 0.0, 0.0, 0.1, 0.0, 0.0]);
         let warps = stabilization_warps(&[pose], &[pose], &intr);
@@ -1308,8 +1308,8 @@ mod tests {
     // #endregion 🔖️StabilizeTests
 
     // #region 🔖️DeblurTests
-    #[semio_framework_async_macros::async_test]
-    async fn wiener_deconvolve_measurably_sharpens_a_blurred_image() {
+    #[test]
+    fn wiener_deconvolve_measurably_sharpens_a_blurred_image() {
         let size = 48u32;
         let mut sharp = ImageGray::new(size, size);
         let mut state = 99u64;
@@ -1353,8 +1353,8 @@ mod tests {
     // #endregion 🔖️DeblurTests
 
     // #region 🔖️NonRigidTests
-    #[semio_framework_async_macros::async_test]
-    async fn build_and_fit_deformation_graph_recovers_a_planted_bend_for_held_out_points() {
+    #[test]
+    fn build_and_fit_deformation_graph_recovers_a_planted_bend_for_held_out_points() {
         let radius = 3.0;
         let mut seed_points = Vec::new();
         for j in 0..4 {
@@ -1398,8 +1398,8 @@ mod tests {
     // #endregion 🔖️NonRigidTests
 
     // #region 🔖️Pose6dTests
-    #[semio_framework_async_macros::async_test]
-    async fn track_rigid_body_recovers_a_known_rotating_translating_cube_with_partial_visibility() {
+    #[test]
+    fn track_rigid_body_recovers_a_known_rotating_translating_cube_with_partial_visibility() {
         let intr = pinhole(700.0, 700.0, 320.0, 240.0);
         let model_points: Vec<[f64; 3]> = (0..8).map(|i| [if i & 1 == 0 { -0.3 } else { 0.3 }, if i & 2 == 0 { -0.3 } else { 0.3 }, if i & 4 == 0 { -0.3 } else { 0.3 }]).collect();
 

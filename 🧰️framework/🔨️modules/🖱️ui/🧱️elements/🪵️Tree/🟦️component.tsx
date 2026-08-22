@@ -32,7 +32,17 @@ import { childElementId } from "../🆔️ElementId/🟦️component.tsx";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
-import { dropZoneReadyFillClass, dropZoneReadyTextClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import {
+  dropZoneReadyFillClass,
+  dropZoneReadyTextClass,
+  loadingBorderStateClass,
+  waitingBorderStateClass,
+  panelTabIconSlotClass,
+  panelTabLabelClass,
+  windowMeasureTreeGroupLabelClass,
+  windowMeasureTreeLeafLabelClass,
+  windowPaneChromeToggleClass,
+} from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
@@ -121,6 +131,7 @@ const useTreeOpenState = (itemId: string, defaultOpen: boolean) => {
 };
 
 const treeSectionElementMarker = Symbol.for("ui.tree.section");
+const treeSectionDoubleClickDelayMs = 300;
 
 type TreeComponentMarker = {
   [treeSectionElementMarker]?: boolean;
@@ -969,12 +980,16 @@ const treeInteractionDefinition = (selectionMode: TreeSelectionMode): Interactio
  * notion of either. */
 export const normalizeTreeSelectedIds = (selectedIds: readonly string[], selectionMode: TreeSelectionMode): string[] => {
   const sanitizedIds = Array.from(new Set(selectedIds.filter(Boolean)));
-  const validated = validateState([treeInteractionDefinition(selectionMode)], { domains: {} }, {
-    selection: { [TREE_INTERACTION_DOMAIN]: { granularity: TREE_INTERACTION_GRANULARITY, ids: sanitizedIds } },
-    hover: {},
-    activeMode: {},
-    activeGranularity: {},
-  });
+  const validated = validateState(
+    [treeInteractionDefinition(selectionMode)],
+    { domains: {} },
+    {
+      selection: { [TREE_INTERACTION_DOMAIN]: { granularity: TREE_INTERACTION_GRANULARITY, ids: sanitizedIds } },
+      hover: {},
+      activeMode: {},
+      activeGranularity: {},
+    },
+  );
   return [...(validated.selection[TREE_INTERACTION_DOMAIN]?.ids ?? [])];
 };
 
@@ -1435,7 +1450,11 @@ const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuIt
   if (!items?.length) {
     return <>{children}</>;
   }
-  return <ContextMenu items={items} title={contextMenuTitle}>{children}</ContextMenu>;
+  return (
+    <ContextMenu items={items} title={contextMenuTitle}>
+      {children}
+    </ContextMenu>
+  );
 };
 
 /** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
@@ -1494,6 +1513,36 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
       onOpenChange?.(value);
     },
     [onOpenChange, treeOpenState],
+  );
+  const pendingPointerActivation = reactHostPort.useRef<number | null>(null);
+  const clearPendingPointerActivation = reactHostPort.useCallback(() => {
+    if (pendingPointerActivation.current === null) return;
+    window.clearTimeout(pendingPointerActivation.current);
+    pendingPointerActivation.current = null;
+  }, []);
+  reactHostPort.useEffect(() => clearPendingPointerActivation, [clearPendingPointerActivation]);
+  const handleExpandableSectionClick = reactHostPort.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!onDoubleClick || event.defaultPrevented || event.detail === 0) return;
+      event.preventDefault();
+      clearPendingPointerActivation();
+      if (event.detail !== 1) return;
+      pendingPointerActivation.current = window.setTimeout(() => {
+        pendingPointerActivation.current = null;
+        setOpen(!open);
+      }, treeSectionDoubleClickDelayMs);
+    },
+    [clearPendingPointerActivation, onDoubleClick, open, setOpen],
+  );
+  const handleExpandableSectionDoubleClick = reactHostPort.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!onDoubleClick) return;
+      clearPendingPointerActivation();
+      event.preventDefault();
+      event.stopPropagation();
+      onDoubleClick(event);
+    },
+    [clearPendingPointerActivation, onDoubleClick],
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
@@ -1586,6 +1635,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         className={rowClassName}
         role="button"
         draggable={effectiveDraggable}
+        onClick={handleExpandableSectionClick}
         onPointerEnter={onSectionPointerEnter}
         onPointerLeave={(event) => {
           if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
@@ -1598,12 +1648,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onDoubleClick={(event) => {
-          if (!onDoubleClick) return;
-          event.preventDefault();
-          event.stopPropagation();
-          onDoubleClick(event);
-        }}
+        onDoubleClick={handleExpandableSectionDoubleClick}
       >
         <TreeAlignedRow
           level={level}
@@ -1771,9 +1816,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   </span>
                 </div>
                 {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                {isDragHandle && !driverSurfaceDrag ? (
-                  <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
-                ) : null}
+                {isDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} /> : null}
               </div>
             </TreeAlignedRow>
           </div>
@@ -1848,9 +1891,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {isDragHandle && !driverSurfaceDrag ? (
-                <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
-              ) : null}
+              {isDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} /> : null}
             </div>
           </TreeAlignedRow>
         </div>
@@ -1902,9 +1943,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            {isDragHandle && !driverSurfaceDrag ? (
-              <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
-            ) : null}
+            {isDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} /> : null}
           </div>
         </TreeAlignedRow>
       </div>
@@ -1943,9 +1982,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </span>
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          {isDragHandle && !driverSurfaceDrag ? (
-            <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
-          ) : null}
+          {isDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} /> : null}
         </div>
       </TreeAlignedRow>
     </div>
@@ -2083,25 +2120,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const isExpandable = expandable ?? hasChildren;
   const driverSurfaceDrag = useUiDriverDragSurface();
   const resolvedDragRoles: readonly TreeDragRole[] =
-    dragRoles ??
-    (driverSurfaceDrag
-      ? []
-      : draggable
-        ? dragInitiation === "surface"
-          ? []
-          : deriveTreeDragRoles({ draggable, isDragHandle }, Boolean(transferPointerDown))
-        : isDragHandle
-          ? ["sort"]
-          : []);
+    dragRoles ?? (driverSurfaceDrag ? [] : draggable ? (dragInitiation === "surface" ? [] : deriveTreeDragRoles({ draggable, isDragHandle }, Boolean(transferPointerDown))) : isDragHandle ? ["sort"] : []);
   const effectiveDragInitiation = driverSurfaceDrag ? "surface" : dragInitiation;
   const [dragArmed, setDragArmed] = reactHostPort.useState(false);
   const armDrag = reactHostPort.useCallback(() => {
     setDragArmed(true);
     window.addEventListener("pointerup", () => setDragArmed(false), { once: true });
   }, []);
-  const effectiveDraggable =
-    draggable &&
-    (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface") || ((resolvedDragRoles.length > 0 || effectiveDragInitiation === "handle") && dragArmed));
+  const effectiveDraggable = draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface") || ((resolvedDragRoles.length > 0 || effectiveDragInitiation === "handle") && dragArmed));
   const handleDragEnd = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       setDragArmed(false);
@@ -4263,9 +4289,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
           {inlineText}
         </span>
       ) : null}
-      {showDragHandle && !surfaceDrag ? (
-        <DragHandle labelId="ui.tree.drag.sort" subject={label} {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} />
-      ) : null}
+      {showDragHandle && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" subject={label} {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
     </button>
   );
 };

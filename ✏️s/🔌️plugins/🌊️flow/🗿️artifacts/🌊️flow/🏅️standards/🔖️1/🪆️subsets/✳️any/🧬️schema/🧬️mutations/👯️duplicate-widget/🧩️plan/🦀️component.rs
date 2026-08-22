@@ -12,13 +12,13 @@ use super::mutation::DuplicateWidget;
 
 //#region 🧩️Plan
 pub async fn plan(payload: &DuplicateWidget, base: &FlowSnapshot, planner: &mut Planner<FlowSnapshot, FlowMutation>) -> Result<(), PlanError> {
-    precondition(payload, base).map_err(PlanError::Invalid)?;
-    let scene = flow_working_scene(base);
+    precondition(payload, base).await.map_err(PlanError::Invalid)?;
+    let scene = flow_working_scene(base).await;
     let source = scene.widgets.iter().find(|widget| widget.id() == &payload.source_id).expect("precondition confirmed source_id is present");
     let copy = widget_with_id(source, payload.new_id.clone());
     planner.call(FlowMutation::CreateWidget(CreateWidget { index: scene.widgets.len(), widget: copy }))?;
 
-    let wired = flow_working_scene(planner.base());
+    let wired = flow_working_scene(planner.base()).await;
     planner.call(FlowMutation::ConnectWidgets(ConnectWidgets {
         index: wired.synapses.len(),
         id: payload.synapse_id.clone(),
@@ -37,7 +37,7 @@ pub async fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Res
     if payload.source_id == payload.new_id {
         return Err("duplicate-widget: new_id must differ from source_id".into());
     }
-    let scene = flow_working_scene(base);
+    let scene = flow_working_scene(base).await;
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.source_id) {
         return Err(format!("duplicate-widget: source widget \"{}\" not found", payload.source_id));
     }
@@ -96,7 +96,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn precondition_rejects_a_missing_source_widget() {
         let base = FlowSnapshot::default();
-        let error = precondition(&sample_payload(), &base).expect_err("note-1 does not exist yet");
+        let error = precondition(&sample_payload(), &base).await.expect_err("note-1 does not exist yet");
         assert!(error.contains("note-1"));
     }
 
@@ -104,7 +104,7 @@ mod tests {
     async fn precondition_rejects_a_new_id_already_taken() {
         let base = base_with_source_widget();
         let payload = DuplicateWidget { new_id: "note-1".into(), ..sample_payload() };
-        let error = precondition(&payload, &base).expect_err("new_id collides with source_id");
+        let error = precondition(&payload, &base).await.expect_err("new_id collides with source_id");
         assert!(error.contains("differ"));
     }
 }

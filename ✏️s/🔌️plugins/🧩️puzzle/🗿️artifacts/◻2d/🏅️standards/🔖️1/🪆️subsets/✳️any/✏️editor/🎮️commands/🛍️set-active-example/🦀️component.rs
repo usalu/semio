@@ -7,7 +7,7 @@ use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Pu
 use crate::editor::puzzle2d::{PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::Emit;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use std::sync::LazyLock;
 
 pub const STEP_ACTION_ID: &str = "setActiveExampleStep";
@@ -20,7 +20,7 @@ const STAGE_ADD_COMPATIBILITY: &str = "addCompatibility";
 const STAGE_CATALOGS: &str = "catalogs";
 const STAGE_NODES: &str = "nodes";
 const STAGE_EDGES: &str = "edges";
-pub(crate) const MAX_MUTATIONS_PER_STEP: usize = 16;
+pub(crate) const MAX_MUTATIONS_PER_STEP: usize = 4;
 
 static EMPTY: LazyLock<Puzzle2dSnapshot> = LazyLock::new(Puzzle2dSnapshot::default);
 static CONCRETE_FOREST: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| serde_json::from_str(crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest example json must match Puzzle2dSnapshot"));

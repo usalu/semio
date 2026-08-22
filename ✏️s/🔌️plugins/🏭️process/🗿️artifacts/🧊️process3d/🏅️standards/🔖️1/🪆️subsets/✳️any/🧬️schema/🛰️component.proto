@@ -7,53 +7,61 @@ message Process3dArtifact {
   // @state artifact
   Process3dWorkshop workshop = 1;
   // @state artifact
-  Process3dStock stock = 2;
+  string stock_id = 2;
+  string stock_label = 3;
+  Process3dPose stock_pose = 4;
+  Process3dStock stock_payload = 5;
+  ArtifactChildHandle stock_solid = 6;
   // @state artifact
-  repeated Process3dStep steps = 3;
+  ArtifactChildHandle steps = 7;
+  repeated Process3dStep step_payloads = 8;
+  repeated ArtifactChildHandle tool_solids = 9;
   // @state artifact
-  optional uint32 resolved_up_to = 4;
+  optional uint32 resolved_up_to = 10;
   // @state presence
-  optional string selected_id = 5;
+  optional string selected_id = 11;
   // @state presence
-  optional uint32 selected_face_id = 6;
+  optional uint32 selected_face_id = 12;
   // @state presence
-  string active_utility_id = 7;
+  string active_utility_id = 13;
   // @state config
-  string selection_method = 8;
+  string selection_method = 14;
   // @state config
-  string engagement_input = 9;
+  string engagement_input = 15;
   // @state config
-  double camera_position_x = 10;
+  double camera_position_x = 16;
   // @state config
-  double camera_position_y = 11;
+  double camera_position_y = 17;
   // @state config
-  double camera_position_z = 12;
+  double camera_position_z = 18;
   // @state config
-  double camera_target_x = 13;
+  double camera_target_x = 19;
   // @state config
-  double camera_target_y = 14;
+  double camera_target_y = 20;
   // @state config
-  double camera_target_z = 15;
+  double camera_target_z = 21;
   // @state config
-  double camera_fov = 16;
+  double camera_fov = 22;
   // @state config
-  bool sun_enabled = 17;
+  bool sun_enabled = 23;
   // @state config
-  double sun_azimuth = 18;
+  double sun_azimuth = 24;
   // @state config
-  double sun_elevation = 19;
+  double sun_elevation = 25;
   // @state config
-  double sun_intensity = 20;
+  double sun_intensity = 26;
   // @state config
-  string sun_color = 21;
+  string sun_color = 27;
   // @state config
-  string locale = 22;
+  string locale = 28;
   // @state config
-  string contributions_json = 23;
+  string contributions_json = 29;
   // @state artifact
-  optional string hovered_id = 24;
+  optional string hovered_id = 30;
 }
 
 message Process3dWorkshop {}
 message Process3dStock {}
 message Process3dStep {}
+message Process3dPose {}
+message ArtifactChildHandle { string child_id = 1; string target = 2; }

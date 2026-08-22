@@ -12,24 +12,16 @@
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
 use std::borrow::Cow;
-use std::io::{Cursor, Write};
 use std::sync::Arc;
 
-use image::{ImageBuffer, Rgba};
+use crate::artifacts::layout::io::LayoutError;
+use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
+use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 use parley::fontique::Blob;
 use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, StyleProperty};
 use serde_json::Value;
-use zip::write::SimpleFileOptions;
-use zip::ZipWriter;
-
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioRgba, SemioTransform};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-
-use crate::artifacts::layout::io::{compose_svg_from_drawing, rect_path_segments, LayoutError};
-use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
-use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 
 //#region 🖼️Display
 #[derive(Clone, Debug)]
@@ -387,191 +379,8 @@ pub async fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64,
 //#endregion ⚙️Scene
 
 //#region 📤️Export
-/// 🌉️ Maps a rendered `DisplayList` onto a real `SemioDrawingSnapshot`: one white background rect,
-/// one rect-shaped `DrawNode::Path` per filled/stroked `DisplayRect` (real fill/stroke color, same
-/// two-pass fill-then-stroke behavior the previous hand-rolled SVG had), one colored rect per
-/// `DisplayImage` (placeholder vs. resolved tint), and one small filled rect per `DisplayGlyph` —
-/// same "glyph as a small box" fidelity the previous string builder had (this engine never emits
-/// real font outlines to SVG on either path).
-async fn display_list_to_semio_drawing(list: &DisplayList) -> SemioDrawingSnapshot {
-    let mut styles = vec![DrawStyle { name: "background".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }];
-    let mut children = vec![DrawNode::Path { segments: rect_path_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), style: Some("background".into()) }];
-
-    for (index, rect) in list.rects.iter().enumerate() {
-        let segments = rect_path_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64);
-        if let Some(fill) = &rect.fill {
-            let name = format!("rect-fill-{index}");
-            styles.push(DrawStyle { name: name.clone(), fill: Some(color_to_semio_rgba(fill)), stroke: None, stroke_width: None, opacity: None });
-            children.push(DrawNode::Path { segments: segments.clone(), style: Some(name) });
-        }
-        if let Some(stroke) = &rect.stroke {
-            let name = format!("rect-stroke-{index}");
-            styles.push(DrawStyle { name: name.clone(), fill: None, stroke: Some(color_to_semio_rgba(stroke)), stroke_width: Some(1.0), opacity: None });
-            children.push(DrawNode::Path { segments, style: Some(name) });
-        }
-    }
-
-    for (index, image) in list.images.iter().enumerate() {
-        let color = if image.placeholder { SemioRgba { r: 0.92, g: 0.88, b: 0.84, a: 1.0 } } else { SemioRgba { r: 0.86, g: 0.86, b: 0.86, a: 1.0 } };
-        let name = format!("image-{index}");
-        styles.push(DrawStyle { name: name.clone(), fill: Some(color), stroke: None, stroke_width: None, opacity: None });
-        children.push(DrawNode::Path { segments: rect_path_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64), style: Some(name) });
-    }
-
-    for run in &list.text_runs {
-        for (index, glyph) in run.glyphs.iter().enumerate() {
-            let name = format!("glyph-{}-{index}", run.object_id);
-            styles.push(DrawStyle { name: name.clone(), fill: Some(SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None });
-            children.push(DrawNode::Path { segments: rect_path_segments(glyph.x as f64, glyph.y as f64, (glyph.font_size * 0.45) as f64, glyph.font_size as f64), style: Some(name) });
-        }
-    }
-
-    SemioDrawingSnapshot {
-        schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas: DrawCanvas { width: list.page_width as f64, height: list.page_height as f64, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
-        styles,
-        layers: vec![DrawLayer { id: list.page_id.clone(), name: list.page_id.clone(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
-    }
-}
-
-async fn color_to_semio_rgba(color: &DisplayColor) -> SemioRgba {
-    SemioRgba { r: color.0[0], g: color.0[1], b: color.0[2], a: color.0[3] }
-}
-
-/// 🌉️ Composes through stdio's real `drawing↔svg` bridge (`io_dispatch`, via
-/// `crate::artifacts::layout::io::compose_svg_from_drawing`) — no hand-rolled SVG string here anymore.
-pub async fn export_display_list_svg(list: &DisplayList) -> Result<String, LayoutError> {
-    let drawing = display_list_to_semio_drawing(list);
-    compose_svg_from_drawing(&drawing).map_err(LayoutError::Svg)
-}
-
-pub async fn export_document_svg(doc: &LayoutSnapshot, page_id: &str) -> Result<String, LayoutError> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
-    export_display_list_svg(&list)
-}
-
-pub async fn export_document_pdf(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
-    let mut body = String::new();
-    body.push_str("BT\n/F1 12 Tf\n");
-    body.push_str(&format!("{} {} {} {} re\nf\n", 0, 0, page.width, page.height));
-    for rect in &list.rects {
-        if rect.fill.is_some() {
-            body.push_str(&format!("{} {} {} {} re\nf\n", rect.x, rect.y, rect.width, rect.height));
-        }
-    }
-    body.push_str("ET\n");
-    let objects = vec![
-        "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n".to_string(),
-        "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n".to_string(),
-        format!("3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n", page.width, page.height),
-        format!("4 0 obj<< /Length {} >>stream\n{}endstream\nendobj\n", body.len(), body),
-        "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n".to_string(),
-    ];
-    let mut pdf = String::from("%PDF-1.4\n");
-    let mut offsets = vec![0usize];
-    for object in &objects {
-        offsets.push(pdf.len());
-        pdf.push_str(object);
-    }
-    let xref_start = pdf.len();
-    pdf.push_str(&format!("xref\n0 {}\n", objects.len() + 1));
-    pdf.push_str("0000000000 65535 f \n");
-    for offset in offsets.iter().skip(1) {
-        pdf.push_str(&format!("{:010} 00000 n \n", offset));
-    }
-    pdf.push_str(&format!("trailer<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n", objects.len() + 1, xref_start));
-    Ok(pdf.into_bytes())
-}
-
-pub async fn export_document_png_cpu(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, LayoutError> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| LayoutError::PageNotFound(page_id.to_string()))?;
-    let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, page_id, &[], None, false);
-    let width = list.page_width.max(1.0) as u32;
-    let height = list.page_height.max(1.0) as u32;
-    let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));
-    for rect in &list.rects {
-        if let Some(fill) = &rect.fill {
-            let color = Rgba([(fill.0[0] * 255.0) as u8, (fill.0[1] * 255.0) as u8, (fill.0[2] * 255.0) as u8, (fill.0[3] * 255.0) as u8]);
-            let x0 = rect.x.max(0.0) as u32;
-            let y0 = rect.y.max(0.0) as u32;
-            let x1 = (rect.x + rect.width).min(width as f32) as u32;
-            let y1 = (rect.y + rect.height).min(height as f32) as u32;
-            for y in y0..y1 {
-                for x in x0..x1 {
-                    img.put_pixel(x, y, color);
-                }
-            }
-        }
-    }
-    let mut bytes = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut bytes, width, height);
-        encoder.set_color(png::ColorType::Rgba);
-        encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header()?;
-        writer.write_image_data(img.as_raw())?;
-    }
-    Ok(bytes)
-}
-
-pub async fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, LayoutError> {
-    let doc: LayoutSnapshot = serde_json::from_str(doc_json)?;
-    let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
-    let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-    zip.start_file("document.json", options)?;
-    zip.write_all(doc_json.as_bytes())?;
-    zip.start_file("preflight-report.json", options)?;
-    zip.write_all(preflight_json.as_bytes())?;
-    let manifest_links: Vec<Value> = doc
-        .links
-        .iter()
-        .map(|link| {
-            let hash = if link.hash.is_empty() { format!("sha256:{}", semio_framework_hash::sha256_hex(link.path.as_bytes())) } else { link.hash.clone() };
-            serde_json::json!({
-                "id": link.id,
-                "path": link.path,
-                "hash": hash,
-                "state": link.state,
-                "missing": link.state.as_deref() == Some("missing"),
-            })
-        })
-        .collect();
-    let manifest = serde_json::json!({
-        "schema": "layout.package-manifest/v1",
-        "document": "document.json",
-        "preflight": "preflight-report.json",
-        "links": manifest_links,
-        "generatedAt": "2026-07-02T00:00:00Z",
-    });
-    zip.start_file("package-manifest.json", options)?;
-    zip.write_all(manifest.to_string().as_bytes())?;
-    let data = zip.finish()?;
-    Ok(data.into_inner())
-}
-
-pub async fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, LayoutError> {
-    let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
-    let viewport = Viewport { width: list.page_width.max(1.0) as u32, height: list.page_height.max(1.0) as u32, dpr: 1.0 };
-    let _scene = display_list_to_scene(list, false, &camera, &viewport, None);
-    let width = list.page_width.max(1.0) as u32;
-    let height = list.page_height.max(1.0) as u32;
-    let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));
-    let mut bytes = Vec::new();
-    {
-        let mut encoder = png::Encoder::new(&mut bytes, width, height);
-        encoder.set_color(png::ColorType::Rgba);
-        encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header()?;
-        writer.write_image_data(img.as_raw())?;
-    }
-    Ok(bytes)
-}
+#[cfg(test)]
+pub use crate::editor::layout::engine::export::{export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch};
 //#endregion 📤️Export
 
 //#region 🧪️Tests
@@ -752,14 +561,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn png_cpu_export_writes_valid_rgba_png() {
         let doc = sample_document();
-        let bytes = export_document_png_cpu(&doc, "page-1").expect("png export succeeds");
+        let bytes = export_document_png_headless_batch(&doc, "page-1").expect("png export succeeds");
         assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn pdf_export_writes_pdf_header() {
         let doc = sample_document();
-        let bytes = export_document_pdf(&doc, "page-1").expect("pdf export succeeds");
+        let bytes = export_document_pdf_headless_batch(&doc, "page-1").expect("pdf export succeeds");
         assert!(bytes.starts_with(b"%PDF-1.4"));
     }
 
@@ -767,7 +576,7 @@ mod tests {
     async fn package_zip_bundles_document_and_preflight() {
         let doc = sample_document();
         let json = serde_json::to_string(&doc).expect("serialize sample document to json");
-        let bytes = export_package_zip(&json, "[]").expect("package export succeeds");
+        let bytes = export_package_zip_headless_batch(&json, "[]").expect("package export succeeds");
         assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         assert!(bytes.starts_with(b"PK"));
     }
@@ -776,37 +585,24 @@ mod tests {
     async fn svg_export_contains_path_and_wraps_a_valid_document() {
         crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
         let doc = sample_document();
-        let svg = export_document_svg(&doc, "page-1").expect("svg export succeeds");
+        let svg = export_document_svg_headless_batch(&doc, "page-1").expect("svg export succeeds");
         assert!(svg.starts_with("<svg"));
-        // 🌉️ Composed through stdio's real semio/drawing→svg bridge now — `DrawNode::Path` always
-        // lowers to an SVG `<path>` element (the bridge's vocabulary has no `<rect>`), unlike the
-        // previous hand-rolled string builder this replaced.
-        assert!(svg.contains("<path"));
+        assert!(svg.contains("<rect"));
         assert!(svg.ends_with("</svg>"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn exports_error_when_page_missing() {
         let doc = sample_document();
-        assert!(matches!(export_document_svg(&doc, "no-such-page"), Err(LayoutError::PageNotFound(id)) if id == "no-such-page"));
-        assert!(matches!(export_document_pdf(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
-        assert!(matches!(export_document_png_cpu(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
+        assert!(matches!(export_document_svg_headless_batch(&doc, "no-such-page"), Err(LayoutError::PageNotFound(id)) if id == "no-such-page"));
+        assert!(matches!(export_document_pdf_headless_batch(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
+        assert!(matches!(export_document_png_headless_batch(&doc, "no-such-page"), Err(LayoutError::PageNotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn package_zip_rejects_invalid_document_json() {
-        let error = export_package_zip("not json", "[]").expect_err("invalid json must fail");
+        let error = export_package_zip_headless_batch("not json", "[]").expect_err("invalid json must fail");
         assert!(matches!(error, LayoutError::Json(_)));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn scene_png_from_display_list_writes_a_valid_png() {
-        let doc = sample_document();
-        let page = doc.pages.iter().find(|p| p.id == "page-1").expect("page-1");
-        let mut engine = LayoutEngine::new();
-        let list = build_display_list_for_page(&mut engine, &doc, page, "page-1", &[], None, false);
-        let bytes = scene_png_from_display_list(&list).expect("scene png export succeeds");
-        assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
     }
 }
 //#endregion 🧪️Tests

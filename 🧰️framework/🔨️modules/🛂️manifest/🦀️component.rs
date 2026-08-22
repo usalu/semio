@@ -885,8 +885,15 @@ impl ActionDefinition {
         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
 
-    /// ⚡️ Explicitly declares a first-step reducer guarded by the interactive-step watchdog.
+    /// ⚡️ Builds a catalog row without granting UI execution authority. A factory registration or
+    /// static bounded-first-step proof must classify the exact key separately.
     pub fn bounded_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
+        Self::new_catalog(id, label, kind)
+    }
+
+    /// 🧵️ Grants execution classification only to framework routes backed by the explicit
+    /// route-specific resumable factories registered by `VcsArtifactApp`.
+    pub fn resumable_framework_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         let mut definition = Self::new_catalog(id, label, kind);
         definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
         definition
@@ -961,17 +968,14 @@ pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::bounded_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
-        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::bounded_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
-        ActionDefinition::bounded_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
-        ActionDefinition::bounded_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
-        ActionDefinition::bounded_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
-        ActionDefinition::bounded_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
-        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }.with_args([ActionArgDef::number(
-            "entrySeq",
-            LocalizedLabel::native("Entry", "Eintrag"),
-        )
-        .required()]),
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::resumable_framework_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
+        ActionDefinition::resumable_framework_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
+        ActionDefinition::resumable_framework_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
+        ActionDefinition::resumable_framework_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
+        ActionDefinition::resumable_framework_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }
+            .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
     ]
 }
 
@@ -1030,9 +1034,9 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
     ];
     vec![
-        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::bounded_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::bounded_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::bounded_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::resumable_framework_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::resumable_framework_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::resumable_framework_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
             ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(serde_json::json!("original")),
             ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
@@ -1299,11 +1303,10 @@ impl CommandDefinition {
         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
     }
 
-    /// ⚡️ Explicitly declares a first-step reducer guarded by the interactive-step watchdog.
+    /// ⚡️ Builds a catalog row without granting UI execution authority. A factory registration or
+    /// static bounded-first-step proof must classify the exact key separately.
     pub fn bounded_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
-        let mut definition = Self::new_catalog(id, label, category, kind);
-        definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
-        definition
+        Self::new_catalog(id, label, category, kind)
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
@@ -5102,12 +5105,11 @@ mod app_label_tests {
         assert_eq!(shell.policy.scopes, vec![kernel::CapabilityId("shell.navigate".into())]);
     }
 
-    /// @emoji 🧪️ `bounded_catalog` explicitly opts into worker dispatch while retaining kind defaults.
+    /// @emoji 🧪️ `bounded_catalog` retains kind defaults but never grants execution authority.
     #[semio_framework_async_macros::async_test]
     async fn action_definition_semantics_default_from_kind_and_builders_compose() {
         let mutation = ActionDefinition::bounded_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
-        let mut expected = ActionSemantics::for_kind(ActionKind::Mutation);
-        expected.execution.interactive_job = InteractiveJobClassification::Migrated;
+        let expected = ActionSemantics::for_kind(ActionKind::Mutation);
         assert_eq!(mutation.semantics, expected);
 
         let action = ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
@@ -5124,8 +5126,11 @@ mod app_label_tests {
 
     #[test]
     fn interactive_job_classification_is_explicit_and_release_validated() {
-        let migrated_action = ActionDefinition::bounded_catalog("select", LocalizedLabel::data("Select"), ActionKind::Interaction);
-        let migrated_command = CommandDefinition::bounded_catalog("solve", LocalizedLabel::data("Solve"), "analysis", ActionKind::Mutation);
+        let mut migrated_action = ActionDefinition::bounded_catalog("select", LocalizedLabel::data("Select"), ActionKind::Interaction);
+        let mut migrated_command = CommandDefinition::bounded_catalog("solve", LocalizedLabel::data("Solve"), "analysis", ActionKind::Mutation);
+        assert_eq!(migrated_action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified);
+        migrated_action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        migrated_command.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
         assert_eq!(migrated_action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
         assert!(validate_interactive_job_classification([("app", &migrated_action)], [("app", &migrated_command)]).is_ok());
 

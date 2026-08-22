@@ -30,7 +30,7 @@ impl Deserializer<NoteSnapshot> for PdfIntoNote {
         let PdfPage { media_box: [x0, y0, x1, y1], text, .. } = page;
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text, bold: None, italic: None, underline: None, link: None }] }];
         snap.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_handle_and_cache("pdf-text-1", &paragraphs),
+            content: crate::artifacts::note::note_text_child_record("pdf-text-1", &paragraphs),
             id: "pdf-text-1".into(),
             name: "PDF".into(),
             x: 0.0,

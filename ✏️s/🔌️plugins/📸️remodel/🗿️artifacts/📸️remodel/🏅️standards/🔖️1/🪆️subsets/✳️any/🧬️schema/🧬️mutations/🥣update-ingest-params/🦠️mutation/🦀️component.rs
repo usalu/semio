@@ -16,7 +16,7 @@ pub struct UpdateIngestParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_ingest_params(params: IngestParams) -> RemodelMutation {
+pub fn update_ingest_params(params: IngestParams) -> RemodelMutation {
     RemodelMutation::UpdateIngestParams(UpdateIngestParams { params })
 }
 

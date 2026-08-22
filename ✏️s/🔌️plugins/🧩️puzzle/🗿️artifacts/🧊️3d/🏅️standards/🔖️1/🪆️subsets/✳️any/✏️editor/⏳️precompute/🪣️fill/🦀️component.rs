@@ -1444,7 +1444,6 @@ mod tests {
         assert!(first_candidate.is_some_and(|elapsed| elapsed < Duration::from_millis(50)), "adversarial fill did not publish its first candidate within 50ms: {first_candidate:?}");
         assert_eq!(builder.stage, FillJobStage::Complete);
         assert_eq!(builder.sequence.len(), 1);
-        eprintln!("[DEBUG] puzzle3d-fill-adversarial first-preview-us={} max-step-us={} transitions={}", first_candidate.expect("first candidate").as_micros(), max_step.as_micros(), builder.transition_count);
     }
 }
 //#endregion 🧪️Tests

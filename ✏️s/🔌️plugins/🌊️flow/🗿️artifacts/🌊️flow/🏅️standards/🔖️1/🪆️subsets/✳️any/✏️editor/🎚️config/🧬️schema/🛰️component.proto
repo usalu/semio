@@ -25,6 +25,8 @@ message FlowConfig {
   string generation_json = 11;
   // @state config
   string locale = 12;
+  // @state config
+  string duplicate_widget_progress_json = 13;
 }
 
 message CameraJson {

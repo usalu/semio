@@ -13,23 +13,23 @@ pub struct CreateGeneration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_generation(generation: FormGeneration) -> Procedural2dMutation {
+pub fn create_generation(generation: FormGeneration) -> Procedural2dMutation {
     Procedural2dMutation::CreateGeneration(CreateGeneration { generation })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for CreateGeneration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "generation", kind: "create-generation", record: "CreatedGeneration" };
 
-    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create generation \"{}\"", self.generation.name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.generation.id.clone()]
     }
 }

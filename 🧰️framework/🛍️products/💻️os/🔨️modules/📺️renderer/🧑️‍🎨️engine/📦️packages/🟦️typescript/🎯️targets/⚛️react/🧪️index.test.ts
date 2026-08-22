@@ -35,21 +35,10 @@ import {
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts";
-import {
-  ENTWERFEN_MIT_BESTAND_BRAND_IDS,
-  ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION,
-} from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
+import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
-import {
-  aProjectOfLuhUdkFooterItem,
-  fundedByZukunftBauFooterItem,
-  LUH_LOGO_URL,
-  LUH_URL,
-  UDK_LOGO_URL,
-  UDK_URL,
-  ZUKUNFT_BAU_PROJECT_URL,
-} from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
   worldToScreenLogical,
@@ -270,18 +259,19 @@ import {
   derivePeerInteractionByDomain,
   peerIdsSelecting,
   peerIdsHovering,
+  SyncAttachCard,
 } from "./📦️index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
-// cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
+// Renderer hosts measure through ResizeObserver; jsdom does not implement it.
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
 if (!globalThis.ResizeObserver) globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
-// cmdk calls scrollIntoView on the active item; jsdom does not implement it.
+// Renderer navigation calls scrollIntoView; jsdom does not implement it.
 if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {};
 //#endregion 🔌️jsdom polyfills
 
@@ -357,6 +347,31 @@ function renderContractTree(root: ContractNodeSpec, presenceByKey?: Readonly<Rec
 //#endregion 🧪️Contract test fixtures
 
 describe("framework sync utilities", () => {
+  it("renders the real SyncAttachCard popover as a dismissible nonmodal dialog", () => {
+    const close = vi.fn();
+    const { getByRole } = render(
+      createElement(SyncAttachCard, {
+        activeUri: null,
+        cardKind: "file",
+        draftPath: "/tmp/document.json",
+        syncUtilities: [],
+        status: null,
+        quarantinedConflicts: [],
+        onAction: vi.fn(),
+        onDraftPathChange: vi.fn(),
+        onClose: close,
+        onAttach: vi.fn(),
+        onDetach: vi.fn(),
+      }),
+    );
+    const dialog = getByRole("dialog");
+    expect(dialog.getAttribute("aria-modal")).toBeNull();
+    expect(document.activeElement).toBe(getByRole("textbox"));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    cleanup();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
   it("builds three sync backbone toggles", async () => {
     const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os");
     const utilities = buildFrameworkSyncUtilities("file:///demo");
@@ -861,6 +876,7 @@ describe("shell store reducer", () => {
       manifest,
       createApp: async () => 0,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics: [], requestedEffects: [], events: [] }),
       refreshUi: async () => ({}),
       contextMenu: async () => [],
@@ -1051,7 +1067,10 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     expect(activeUtilityByWindowId).toEqual({ "puzzle3d-main-top": "transform" });
     const request = buildUiRefreshRequest(
       { kind: "full" },
-      [{ id: "puzzle3d-main-top", bodyKey: "puzzle3d.play.composite" }, { id: "puzzle3d-main-perspective", bodyKey: "puzzle3d.play.composite" }],
+      [
+        { id: "puzzle3d-main-top", bodyKey: "puzzle3d.play.composite" },
+        { id: "puzzle3d-main-perspective", bodyKey: "puzzle3d.play.composite" },
+      ],
       [],
       { activeUtilityByWindowId, activeUtilityId: undefined },
       new Map(),
@@ -1168,9 +1187,10 @@ describe("framework plugin runtime", () => {
   // `PluginWasmHandle` header doc). This helper re-creates `exchange`'s old request/reply shape on
   // top of the two new primitives, purely for these fakes' own convenience — production code never
   // has a synchronous responder like this to call.
-  function exchangeStyleChannel(
-    respond: (instanceId: number, frames: Uint8Array[]) => Uint8Array[] | Promise<Uint8Array[]>,
-  ): { readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void; readonly outcomes: AsyncIterable<TurnOutcome> } {
+  function exchangeStyleChannel(respond: (instanceId: number, frames: Uint8Array[]) => Uint8Array[] | Promise<Uint8Array[]>): {
+    readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void;
+    readonly outcomes: AsyncIterable<TurnOutcome>;
+  } {
     const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
     return {
       enqueue: (instanceId, events) => {
@@ -1193,6 +1213,7 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       ...exchangeStyleChannel(() => {
         throw new Error("adaptPluginHandle.refreshUi must not call enqueue() — there is no AppCommand for it anymore");
       }),
@@ -1370,12 +1391,22 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 3,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
         const invocation = decodePackValue(new Uint8Array(command.Command.command));
         return [
-          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })), history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })), messages: [] } }),
+          encodeAppFrame({
+            Invocation: {
+              in_reply_to: command.Command.seq,
+              output: Array.from(encodePackValue({ echo: invocation })),
+              diagnostics: Array.from(encodePackValue([])),
+              ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })),
+              history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })),
+              messages: [],
+            },
+          }),
         ];
       }),
       dispose: () => {},
@@ -1397,6 +1428,7 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-merge", label: "Mock Merge", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 9,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         sentCommands.push(command);
@@ -1449,6 +1481,7 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-remote-merge", label: "Mock Remote Merge", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 11,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         if (!command || typeof command !== "object" || !("ApplyEnvelopes" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
@@ -1574,17 +1607,38 @@ describe("framework renderer types", () => {
 describe("owned declarative controls", () => {
   it("renders and dispatches a panel input through the Interpreter export", () => {
     const onAction = vi.fn();
-    const { getByRole } = render(
-      renderUiControl(
-        { type: "input", id: "name", inputKind: "text", value: "before", onChange: { controllerId: "test", action: "rename", args: { retained: true } } },
-        onAction,
-        "panel.name",
-      ),
-    );
+    const { getByRole } = render(renderUiControl({ type: "input", id: "name", inputKind: "text", value: "before", onChange: { controllerId: "test", action: "rename", args: { retained: true } } }, onAction, "panel.name"));
     const input = getByRole("textbox");
     expect(input.getAttribute("data-ui-path")).toBe("panel.name");
     fireEvent.change(input, { target: { value: "after" } });
     expect(onAction).toHaveBeenCalledWith({ controllerId: "test", action: "rename", args: { retained: true, value: "after" } });
+  });
+
+  it("dispatches a declarative select through the owned listbox", () => {
+    const onAction = vi.fn();
+    const { getByRole } = render(
+      renderUiControl(
+        {
+          type: "select",
+          id: "mode",
+          value: "alpha",
+          items: [
+            { value: "alpha", label: "Alpha" },
+            { value: "beta", label: "Beta" },
+          ],
+          onChange: { controllerId: "test", action: "mode", args: { retained: true } },
+        },
+        onAction,
+        "panel.mode",
+      ),
+    );
+    const trigger = getByRole("combobox");
+    expect(trigger.textContent).toContain("Alpha");
+    fireEvent.click(trigger);
+    const beta = document.querySelector<HTMLElement>('[role="option"][data-value="beta"]')!;
+    expect(beta.textContent).toContain("Beta");
+    fireEvent.click(beta);
+    expect(onAction).toHaveBeenCalledWith({ controllerId: "test", action: "mode", args: { retained: true, value: "beta" } });
   });
 });
 
@@ -1602,6 +1656,7 @@ describe("framework external slots", () => {
       manifest: async () => encodePackValue({ pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
+      takeSegmentedDownloadChunk: async () => undefined,
       // 🎫️ `exchange-removal`: this handle is only ever placed in `ExternalSlotResolverContext.plugins`
       // (typed `ReadonlyMap<string, PluginWasmHandle>`, `🎠️kernel/🟦️component.ts`) — `resolveExternalSlots`
       // degrades to "unavailable" before ever touching `enqueue`/`outcomes` (see this test's own header
@@ -1623,10 +1678,10 @@ describe("framework external slots", () => {
       children: [],
     };
     const resolved = await resolveExternalSlots(externalNode, {
-        plugins: new Map([["forms-module-procedural", handle]]),
-        contributorInstances: new Map(),
-        viewState: {},
-      });
+      plugins: new Map([["forms-module-procedural", handle]]),
+      contributorInstances: new Map(),
+      viewState: {},
+    });
     expect(resolved).toEqual({ ...externalNode, component: { type: "text", value: "Extension unavailable: forms-module-procedural", emphasize: null, dataAttributes: null }, children: [] });
   });
 
@@ -2248,7 +2303,6 @@ describe("framework renderer hosts", () => {
     unregisterBoard2dPeer("notify-test", "pane.sibling");
   });
 
-
   it("maps context menu specs onto UI items with icons, colors, hover, and select handlers", () => {
     const dispatch = vi.fn();
     const items = mapContextMenuSpecs(
@@ -2338,17 +2392,10 @@ describe("framework renderer hosts", () => {
 
   it("enriches context menu shortcuts from app keybindings via mapContextMenuSpecs", () => {
     const keys = new Map([["deleteSelection", "delete,backspace"]]);
-    const items = mapContextMenuSpecs(
-      [{ id: "delete-selection", label: "Delete Selection (8 nodes and 13 edges)", action: "deleteSelection", destructive: true }],
-      () => {},
-      keys,
-    );
+    const items = mapContextMenuSpecs([{ id: "delete-selection", label: "Delete Selection (8 nodes and 13 edges)", action: "deleteSelection", destructive: true }], () => {}, keys);
     expect(items[0]?.shortcut).toBeTruthy();
     expect(items[0]?.label).toContain("8 nodes and 13 edges");
   });
-
-
-
 
   it("parses a catalogue drag payload and builds a drop-preview JSON", () => {
     const encoded = JSON.stringify({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 });
@@ -2435,11 +2482,7 @@ describe("framework renderer hosts", () => {
     expect(getWorldCatalogueDropPreview("puzzle3d-play")?.origin).toEqual([3, 4, 0]);
     clearWorldCatalogueDropPreview("puzzle3d-play");
     expect(getWorldCatalogueDropPreview("puzzle3d-play")).toBeNull();
-    expect(notifications).toEqual([
-      { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [1, 2, 0] },
-      { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [3, 4, 0] },
-      null,
-    ]);
+    expect(notifications).toEqual([{ objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [1, 2, 0] }, { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [3, 4, 0] }, null]);
 
     unsub();
     unregisterA();
@@ -2509,7 +2552,11 @@ describe("framework renderer hosts", () => {
     const containerSize = { w: 800, h: 600 };
     // 🎯️ The camera's own world position always maps to the viewport center.
     expect(puzzle2dWorldToScreen(cameraJson, containerSize, { x: 120, y: 80 })).toEqual({ x: 400, y: 300 });
-    for (const screen of [{ x: 0, y: 0 }, { x: 400, y: 300 }, { x: 733, y: 12 }]) {
+    for (const screen of [
+      { x: 0, y: 0 },
+      { x: 400, y: 300 },
+      { x: 733, y: 12 },
+    ]) {
       const world = puzzle2dScreenToWorld(cameraJson, containerSize, screen);
       expect(world).not.toBeNull();
       const roundTrip = puzzle2dWorldToScreen(cameraJson, containerSize, world!);
@@ -2925,8 +2972,6 @@ describe("framework renderer hosts", () => {
     );
     expect(markup).toContain("semio-text-editor-host");
   });
-
-
 
   it("multiSpanReplace renames every occurrence and remaps spans", () => {
     const result = multiSpanReplace(
@@ -4106,9 +4151,7 @@ describe("s workflow flow routing", () => {
   // no existing pattern for; not added this lane — see `📓️w2-c-report.md`.
   it("shellActorId mints user:{userId}#{sessionId} once identity resolves, else client-{sessionId}", () => {
     expect(shellActorId("sess-1", null)).toBe("client-sess-1");
-    expect(
-      shellActorId("sess-1", { userId: "u-1", email: "u1@semio.dev", displayName: "U1", hubBaseUrl: "http://127.0.0.1:8787", sessionToken: "tok", issuedAtMs: 0 }),
-    ).toBe("user:u-1#sess-1");
+    expect(shellActorId("sess-1", { userId: "u-1", email: "u1@semio.dev", displayName: "U1", hubBaseUrl: "http://127.0.0.1:8787", sessionToken: "tok", issuedAtMs: 0 })).toBe("user:u-1#sess-1");
   });
 
   it("canonicalSurfaceId formats <kind>@<standard>/<subset>#<role>", () => {
@@ -4250,13 +4293,7 @@ describe("s workflow flow routing", () => {
     function FaultyChild(): ReactElement {
       throw new Error("boom");
     }
-    const { getByRole } = render(
-      createElement(
-        ShellFaultBoundary,
-        { boundaryId: "test", fallbackLabel: "Fault" as never },
-        createElement(FaultyChild),
-      ),
-    );
+    const { getByRole } = render(createElement(ShellFaultBoundary, { boundaryId: "test", fallbackLabel: "Fault" as never }, createElement(FaultyChild)));
     expect(getByRole("alert").textContent).toContain("boom");
   });
 
@@ -4293,11 +4330,13 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
 
   it("UISearch renders all items and fuzzy-filters them through the owned ranker", async () => {
     const { render, fireEvent } = await import("@semio-tech/ui-react/test");
+    const selected = vi.fn();
+    const openChange = vi.fn();
     const items: UISearchItem[] = [
-      { id: "a", label: "Alpha", category: "Test", onSelect: noopAction },
+      { id: "a", label: "Alpha", category: "Test", onSelect: selected },
       { id: "b", label: "Bravo", category: "Test", onSelect: noopAction },
     ];
-    render(createElement(UIFindProvider, null, createElement(UISearch, { items, open: true, onOpenChange: noopAction })));
+    render(createElement(UIFindProvider, null, createElement(UISearch, { items, open: true, onOpenChange: openChange })));
     expect(document.body.textContent).toContain("Alpha");
     expect(document.body.textContent).toContain("Bravo");
     const input = document.querySelector('[data-slot="command-input"]') as HTMLInputElement;
@@ -4305,6 +4344,9 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
     fireEvent.change(input, { target: { value: "alp" } });
     expect(document.body.textContent).toContain("Alpha");
     expect(document.body.textContent).not.toContain("Bravo");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(openChange).toHaveBeenCalledWith(false);
+    expect(selected).toHaveBeenCalledTimes(1);
   });
 
   it("UIFind renders and fuzzy-filters items registered on its context through the owned ranker", async () => {
@@ -4321,6 +4363,8 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
         { id: "2", label: "Table", category: "Test" },
       ]);
     });
+    const selected = vi.fn();
+    act(() => contextValue!.setOnFindItem(selected));
     expect(document.body.textContent).toContain("Chair");
     expect(document.body.textContent).toContain("Table");
     const input = document.querySelector('[data-slot="command-input"]') as HTMLInputElement;
@@ -4328,6 +4372,8 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
     fireEvent.change(input, { target: { value: "cha" } });
     expect(document.body.textContent).toContain("Chair");
     expect(document.body.textContent).not.toContain("Table");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(selected).toHaveBeenCalledWith("1");
   });
 });
 
@@ -4588,46 +4634,20 @@ describe("registry-derived utilities and activation (P5)", () => {
 
   it("gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args", () => {
     const base = { mode: "mesh", ids: ["obj-1"] };
-    expect(
-      gumballTransformDeltaBetweenPoses(
-        "move",
-        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [2, -1, 0.5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        base,
-      ),
-    ).toEqual({ action: "translateSelection", args: { ...base, dx: 2, dy: -1, dz: 0.5 } });
-    expect(
-      gumballTransformDeltaBetweenPoses(
-        "move",
-        { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        base,
-      ),
-    ).toBeNull();
-    const rotate = gumballTransformDeltaBetweenPoses(
-      "rotate",
-      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] },
-      base,
-    );
+    expect(gumballTransformDeltaBetweenPoses("move", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [2, -1, 0.5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, base)).toEqual({
+      action: "translateSelection",
+      args: { ...base, dx: 2, dy: -1, dz: 0.5 },
+    });
+    expect(gumballTransformDeltaBetweenPoses("move", { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, base)).toBeNull();
+    const rotate = gumballTransformDeltaBetweenPoses("rotate", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] }, base);
     expect(rotate?.action).toBe("rotateSelection");
     expect(rotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
-    const scale = gumballTransformDeltaBetweenPoses(
-      "scale",
-      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 3, 4] },
-      base,
-    );
+    const scale = gumballTransformDeltaBetweenPoses("scale", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 3, 4] }, base);
     expect(scale).toEqual({ action: "scaleSelection", args: { ...base, sx: 2, sy: 3, sz: 4 } });
-    expect(
-      gumballTransformDeltaBetweenPoses(
-        "transform",
-        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [1, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        base,
-        "moveX",
-      ),
-    ).toEqual({ action: "translateSelection", args: { ...base, dx: 1, dy: 0, dz: 0 } });
+    expect(gumballTransformDeltaBetweenPoses("transform", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [1, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, base, "moveX")).toEqual({
+      action: "translateSelection",
+      args: { ...base, dx: 1, dy: 0, dz: 0 },
+    });
     const transformRotate = gumballTransformDeltaBetweenPoses(
       "transform",
       { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
@@ -4640,39 +4660,27 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview", () => {
-    expect(
-      gumballLivePreviewDeltaBetweenPoses(
-        "move",
-        { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-        { position: [4, 2, 5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      ),
-    ).toEqual({ kind: "translate", dx: 3, dy: 0, dz: 2 });
-    const rotate = gumballLivePreviewDeltaBetweenPoses(
-      "rotate",
-      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] },
-    );
+    expect(gumballLivePreviewDeltaBetweenPoses("move", { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [4, 2, 5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] })).toEqual({ kind: "translate", dx: 3, dy: 0, dz: 2 });
+    const rotate = gumballLivePreviewDeltaBetweenPoses("rotate", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] });
     expect(rotate?.kind).toBe("rotate");
-    const scaled = applyGumballLivePreviewDeltaToPose(
-      { position: [10, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] },
-      { kind: "scale", sx: 1.5, sy: 1, sz: 2 },
-    );
+    const scaled = applyGumballLivePreviewDeltaToPose({ position: [10, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] }, { kind: "scale", sx: 1.5, sy: 1, sz: 2 });
     expect(scaled).toEqual({ position: [10, 0, 0], quaternion: [0, 0, 0, 1], scale: [3, 2, 4] });
-    const translated = applyGumballLivePreviewDeltaToPose(
-      { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      { kind: "translate", dx: 2, dy: -3, dz: 0.5 },
-    );
+    const translated = applyGumballLivePreviewDeltaToPose({ position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { kind: "translate", dx: 2, dy: -3, dz: 0.5 });
     expect(translated.position).toEqual([3, -2, 1.5]);
   });
 
   it("resolveWindowActions preserves every definition owned by the window", () => {
     const actionsApp = {
       controllerId: "draw",
-      windowKinds: [{ actions: [
-        { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [] },
-        { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
-        { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
-      ] as ActionDefinition[] }],
+      windowKinds: [
+        {
+          actions: [
+            { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [] },
+            { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
+            { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
+          ] as ActionDefinition[],
+        },
+      ],
     };
     const resolved = resolveWindowActions(actionsApp, actionsApp.windowKinds[0]!);
     expect(resolved.map((action) => action.id)).toEqual(["extrude", "undo", "setActiveUtility"]);
@@ -4788,9 +4796,11 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(resolveModeTools(toolApp, "nonexistent")).toEqual([]);
   });
 
-    it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
+  it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
     const activeToolIdRef = { current: "fill" as string | null };
-    const toolMeasuresByToolIdRef = { current: { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 3, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] } as Readonly<Record<string, readonly WindowMeasure[]>> };
+    const toolMeasuresByToolIdRef = {
+      current: { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 3, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] } as Readonly<Record<string, readonly WindowMeasure[]>>,
+    };
     const onAction = vi.fn();
     const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
     expect(tabs.map((tab) => tab.id)).toEqual(["tool.fill", "tool.brush"]);
@@ -4918,11 +4928,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("resolveBootExampleId seeds the first registered example when nothing is active or defaulted", () => {
-    const options = [
-      { id: "hexagonal-mushroom-column" },
-      { id: "rectangle-extrude-volume" },
-      { id: "sphere-cut-with-torus" },
-    ];
+    const options = [{ id: "hexagonal-mushroom-column" }, { id: "rectangle-extrude-volume" }, { id: "sphere-cut-with-torus" }];
     expect(resolveBootExampleId("", options)).toBe("hexagonal-mushroom-column");
     expect(resolveBootExampleId("", options, "sphere-cut-with-torus")).toBe("sphere-cut-with-torus");
     expect(resolveBootExampleId("rectangle-extrude-volume", options, "sphere-cut-with-torus")).toBe("rectangle-extrude-volume");
@@ -5001,11 +5007,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       { kind: "pan", id: "puzzle3d-main" },
       { kind: "orbit", id: "puzzle3d-main" },
     ]);
-    expect(viewport.interactions.map((interaction) => interaction.label)).toEqual([
-      "Zoomen (Mausrad)",
-      "Verschieben (Mittelklick ziehen)",
-      "Orbitieren (Alt + Rechtsklick ziehen)",
-    ]);
+    expect(viewport.interactions.map((interaction) => interaction.label)).toEqual(["Zoomen (Mausrad)", "Verschieben (Mittelklick ziehen)", "Orbitieren (Alt + Rechtsklick ziehen)"]);
     expect(viewport.body).toMatch(/Mausrad|Mittelklick|Alt \+ Rechtsklick/i);
     expect(steps.find((step) => step.id === "panels")).toMatchObject({
       introduce: "framework.panel.catalogue",
@@ -5358,13 +5360,7 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
         throw new Error("decode failed");
       },
     });
-    await runRequestMediaFrames(
-      { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 },
-      "video/mp4",
-      payload,
-      dispatchOne,
-      () => throwingVideo,
-    );
+    await runRequestMediaFrames({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, "video/mp4", payload, dispatchOne, () => throwingVideo);
     expect(dispatchOne).toHaveBeenCalledTimes(1);
     const [action, args] = dispatchOne.mock.calls[0]! as [string, Record<string, unknown>];
     expect(action).toBe("fallback");
@@ -5376,13 +5372,7 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     mockCanvasCapture();
     const dispatchOne = vi.fn().mockResolvedValue(undefined);
     const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
-    await runRequestMediaFrames(
-      { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 },
-      "video/mp4",
-      payload,
-      dispatchOne,
-      () => mockVideoElement(1000, 16, 16),
-    );
+    await runRequestMediaFrames({ frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 }, "video/mp4", payload, dispatchOne, () => mockVideoElement(1000, 16, 16));
     const actions = dispatchOne.mock.calls.map((call) => call[0] as string);
     expect(actions.at(-1)).toBe("done");
     expect(actions.filter((action) => action === "frame").length).toBeGreaterThan(0);
@@ -5435,7 +5425,7 @@ describe("Display Windows tab — projection drag templates", () => {
     expect(sections[0]!.items).toHaveLength(1);
   });
 
-  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Parallel children top-to-bottom", () => {
+  it('pre-reverses every level so the bottom-anchored (direction="up") Tree\'s own sibling-reversal renders Parallel children top-to-bottom', () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
@@ -5522,9 +5512,7 @@ describe("createFrameworkMarketplacePanelTab", () => {
   });
 
   it("marks installing/reloading rows as loading, and every status is reflected in the row label", () => {
-    const items = marketplaceTreeSections(
-      host({ plugins: [plugin("a", "available", true), plugin("b", "installing", true), plugin("c", "loaded", true), plugin("d", "failed", true), plugin("e", "reloading", true)] }),
-    )[1]!.items!;
+    const items = marketplaceTreeSections(host({ plugins: [plugin("a", "available", true), plugin("b", "installing", true), plugin("c", "loaded", true), plugin("d", "failed", true), plugin("e", "reloading", true)] }))[1]!.items!;
     const byId = (pluginId: string) => items.find((item) => item.id === `framework.marketplace.plugin.${pluginId}`)!;
     expect(byId("a").loading).toBe(false);
     expect(byId("b").loading).toBe(true);
@@ -5712,10 +5700,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     );
     // 🪟️ A refresh that only knows the bare kind id would leave Top/Perspective as "Fehlendes Fenster".
     // Live extras must be in the fetch list: base kind + each default-layout instance.
-    const windowInstances = [
-      { id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" },
-      ...seed.extraInstances.map((entry) => ({ id: entry.id, bodyKey: "puzzle3d.play.composite" })),
-    ];
+    const windowInstances = [{ id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" }, ...seed.extraInstances.map((entry) => ({ id: entry.id, bodyKey: "puzzle3d.play.composite" }))];
     const request = buildUiRefreshRequest({ kind: "full" }, windowInstances, [], {}, new Map());
     expect(request?.windows?.map((window) => window.key)).toEqual(["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"]);
   });
@@ -5758,9 +5743,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
         },
       },
     ];
-    const extraInstances = [
-      { id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "3D Editor" },
-    ];
+    const extraInstances = [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "3D Editor" }];
     const layout = {
       kind: "stack" as const,
       children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: uiDataLabel("3D Editor") }],
@@ -5791,7 +5774,15 @@ describe("classifyWindowLayoutChange", () => {
   });
 
   it("returns null for a pure active-window-flag change (skeleton and sizes both unchanged)", () => {
-    const previous = { kind: "stack" as const, size: 100, activeId: "a", children: [{ kind: "window" as const, id: "a" }, { kind: "window" as const, id: "b" }] };
+    const previous = {
+      kind: "stack" as const,
+      size: 100,
+      activeId: "a",
+      children: [
+        { kind: "window" as const, id: "a" },
+        { kind: "window" as const, id: "b" },
+      ],
+    };
     const next = { ...previous, activeId: "b" };
     expect(classifyWindowLayoutChange(previous, next)).toBeNull();
   });
@@ -5869,11 +5860,18 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
 
   it("FrameworkOsShell portal layer is unconstrained by z-tutorial so portaled elements sit above elevated windows", () => {
     if (!window.matchMedia) {
-      window.matchMedia = (() => ({ matches: false, media: "", onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false })) as unknown as typeof window.matchMedia;
+      window.matchMedia = (() => ({
+        matches: false,
+        media: "",
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      })) as unknown as typeof window.matchMedia;
     }
-    const { container } = render(
-      createElement(FrameworkOsShell, { plugins: [], appId: "test" })
-    );
+    const { container } = render(createElement(FrameworkOsShell, { plugins: [], appId: "test" }));
     const portalLayer = container.querySelector("[data-semio-portal-layer]");
     expect(portalLayer).toBeTruthy();
     expect(portalLayer?.className).not.toContain("z-tutorial");

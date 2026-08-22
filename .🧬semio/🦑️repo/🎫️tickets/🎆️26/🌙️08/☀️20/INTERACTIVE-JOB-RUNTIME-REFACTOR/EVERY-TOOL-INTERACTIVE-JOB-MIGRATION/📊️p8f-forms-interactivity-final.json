@@ -1,0 +1,27 @@
+{
+  "macroHostFiles": 50,
+  "macroInvocations": 50,
+  "commandRows": 775,
+  "uniqueCommandRows": 773,
+  "duplicateRows": [
+    {
+      "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setEditorSetting"
+    },
+    {
+      "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "id": "setEditorSetting"
+    }
+  ],
+  "fixtureMacroHostFiles": 1,
+  "fixtureMacroInvocations": 2,
+  "fixtureCommandRows": 4,
+  "boundedRows": 775,
+  "batchOnlyRows": 0,
+  "forbiddenRows": 0,
+  "deletedRows": 0,
+  "productionFactories": 1,
+  "productionRegistrations": 1,
+  "productionDispatches": 1,
+  "failures": []
+}

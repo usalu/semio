@@ -19,7 +19,7 @@ pub struct AddStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> RemodelMutation {
+pub fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> RemodelMutation {
     RemodelMutation::AddStreamFrame(AddStreamFrame { id, frame, kind })
 }
 

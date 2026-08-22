@@ -248,7 +248,6 @@ impl ArtifactEditor for SourcingCurateApp {
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
-        crate::artifacts::curate::schema::sync_sourcing_module_contributions(&cfg.snapshot.contributions_json);
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
         let labels = sourcing_curate_labels(config);

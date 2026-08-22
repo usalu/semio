@@ -16,7 +16,7 @@ use crate::artifacts::forms::op::FormMutation;
 use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use crate::editor::forms::commands::{
     add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
-    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_locale, set_spec_json, set_try_value, set_try_values, submit, update_form,
+    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_locale, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
 };
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint;
@@ -77,16 +77,20 @@ async fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
 //#endregion 🔖️Interaction
 
 //#region 🔖️Values
-/// 🔠️ `config.try_values_json`'s parsed form — the Try wizard's in-progress answer overrides (question id
-/// -> value), heterogeneous per question kind so it stays a JSON blob in `FormsConfig` rather than a
-/// typed `dsl` field (see `FormsConfig`'s doc). Falls back to an empty map on malformed JSON rather than
-/// erroring, matching every other "best-effort parse of a config blob" call site.
+/// 🔠️ Materializes the independently stored answer leaves for rendering and validation.
 pub async fn try_values_map(config: &FormsConfig) -> Map<String, Value> {
-    serde_json::from_str::<Value>(&config.try_values_json).ok().and_then(|value| value.as_object().cloned()).unwrap_or_default()
-}
-
-pub async fn try_values_json_text(values: &Map<String, Value>) -> String {
-    serde_json::to_string(values).unwrap_or_else(|_| "{}".into())
+    config
+        .try_values
+        .iter_chunks()
+        .into_iter()
+        .map(|(key, chunks)| {
+            let raw = chunks.iter().fold(String::new(), |mut raw, chunk| {
+                raw.push_str(&chunk);
+                raw
+            });
+            (key, serde_json::from_str(&raw).unwrap_or(Value::Null))
+        })
+        .collect()
 }
 
 pub async fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Map<String, Value> {
@@ -97,7 +101,7 @@ pub async fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) ->
 /// active step — was `reset_try_runtime`'s effect on the old `FormsPlayRuntime`, now two config operations
 /// instead of two field writes.
 pub async fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
-    vec![FormsConfigMutation::SetTryValues { json: "{}".into() }, FormsConfigMutation::SetStepIndex { index: 0 }]
+    vec![FormsConfigMutation::ClearTryValues, FormsConfigMutation::SetStepIndex { index: 0 }]
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
@@ -268,6 +272,7 @@ semio_framework_plugin::app_commands! {
         "setSpecJson" as "spec-json" => set_spec_json::SetSpecJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "exportFixture" as "export-fixture" => export_fixture::ExportFixture,
+        "setTryValueStep" as "try-value-step" => set_try_value_step::SetTryValueStep,
     }
 }
 
@@ -326,6 +331,18 @@ impl ArtifactEditor for FormsPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::forms::FORMS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<FormsPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.forms.forms@1/*#editor",
+        document_schema: "forms.form",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "setTryValue" => semio_framework::ToolExecutionContract::bounded_first_step(16_384, 64, 64, 4_096, 7_500),
+            "setTryValueStep" => semio_framework::ToolExecutionContract::bounded_first_step(16_384, 64, 64, 4_096, 7_500),
+        }
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::forms::config::schema::app_schema_descriptor())
@@ -465,7 +482,9 @@ pub fn create_forms_app() -> AppDefinition {
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
-            .action_interactive_job("setTryValue", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, LocalizedLabel::native("Set Try Value Step", "Testwert-Schritt festlegen"), ActionKind::View) })
+            .action_interactive_job("setTryValue", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
             .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
             .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
             .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))
@@ -611,7 +630,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 27, "every FormsCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 28, "every FormsCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -649,8 +668,8 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) async fn every_command() -> Vec<FormsCommand> {
         vec![
-            FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), option_value: None, vector_index: None, param_key: None }),
-            FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into() }),
+            FormsCommand::SetTryValue(set_try_value::SetTryValue { key: "q1".into(), value_json: Some("\"Ada\"".into()), ..Default::default() }),
+            FormsCommand::SetTryValues(set_try_values::SetTryValues { values_json: r#"{"name":"Ada"}"#.into(), ..Default::default() }),
             FormsCommand::ResetTry(reset_try::ResetTry {}),
             FormsCommand::PreviousStep(previous_step::PreviousStep {}),
             FormsCommand::NextStep(next_step::NextStep {}),
@@ -676,6 +695,7 @@ mod tests {
             FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: "{}".into() }),
             FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
             FormsCommand::ExportFixture(export_fixture::ExportFixture {}),
+            FormsCommand::SetTryValueStep(set_try_value_step::SetTryValueStep { app_id: "1".into(), document_id: "document".into(), operation_id: "1".into(), generation: 1, cursor: 64, target_index: 128, base_revision: "0".repeat(64) }),
         ]
     }
     //#endregion 🔖️CommandSurface

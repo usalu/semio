@@ -6,7 +6,7 @@ Generated from each manifest directory's static source/config/script evidence; `
 
 | Manifests | Direct rows | External rows | No package-scope evidence |
 | ---: | ---: | ---: | ---: |
-| 64 | 616 | 304 | 98 |
+| 64 | 575 | 263 | 74 |
 
 ## High-Confidence Candidate Rule
 
@@ -27,26 +27,26 @@ A row is a candidate only when its manifest directory has no static import/requi
 - `@types/three`: 4 rows
 - `@react-three/drei`: 3 rows
 - `@react-three/fiber`: 3 rows
-- `@tailwindcss/vite`: 3 rows
-- `remark-gfm`: 2 rows
-- `brepjs-opencascade`: 2 rows
 - `chevrotain`: 2 rows
 - `xstate`: 2 rows
-- `@vitejs/plugin-react`: 2 rows
+- `@tailwindcss/vite`: 2 rows
 - `@tailwindcss/typography`: 2 rows
-- `rehype-stringify`: 1 rows
-- `remark-parse`: 1 rows
-- `remark-rehype`: 1 rows
 - `reveal.js`: 1 rows
-- `unified`: 1 rows
 - `vitest`: 1 rows
 - `brepjs`: 1 rows
+- `brepjs-opencascade`: 1 rows
 - `three`: 1 rows
+- `@vitejs/plugin-react`: 1 rows
 - `tailwindcss`: 1 rows
-- `@radix-ui/react-avatar`: 1 rows
-- `@radix-ui/react-popover`: 1 rows
-- `@radix-ui/react-toggle`: 1 rows
-- `@radix-ui/react-toggle-group`: 1 rows
-- `tailwind-merge`: 1 rows
+- `dagre`: 1 rows
 - `@mdx-js/rollup`: 1 rows
-- `@types/d3-force`: 1 rows
+- `@vitest/coverage-v8`: 1 rows
+- `rehype-autolink-headings`: 1 rows
+- `rehype-slug`: 1 rows
+- `remark-frontmatter`: 1 rows
+- `remark-gfm`: 1 rows
+- `remark-mdx-frontmatter`: 1 rows
+- `katex`: 1 rows
+- `typescript`: 1 rows
+- `@bytecodealliance/jco`: 1 rows
+- `@napi-rs/canvas`: 1 rows

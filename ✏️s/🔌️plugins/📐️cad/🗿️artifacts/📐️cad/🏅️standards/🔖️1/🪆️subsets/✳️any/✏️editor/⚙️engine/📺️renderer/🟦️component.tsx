@@ -9,11 +9,11 @@ import {
   Button,
   borderNormalClass,
   canvasHostRootClass,
+  Checkbox,
   cn,
   CanvasPickMenu,
   editorShellRootClass,
   floatingFieldSurfaceClass,
-  floatingMenuItemClass,
   floatingMenuSurfaceClass,
   floatingPaneAsideClass,
   floatingTagClass,
@@ -25,6 +25,7 @@ import {
   isUiTypingTarget,
   LevelProvider,
   marqueeCoverageFromGesture,
+  MenuItem,
   normalizeEngagementActionText,
   Pane,
   queryWindowSearchInput,
@@ -44,6 +45,7 @@ import {
   type Anchor,
   type CanvasPickRequest,
   type CanvasPickTarget,
+  type CheckboxState,
   type EngagementControl,
   type EngagementSpec,
   type GumballConfig,
@@ -872,6 +874,12 @@ export function spatialToggleGroupState(keys: readonly string[], toggles: Readon
 /** @emoji ☑️ Sets every key in a chrome toggle group on or off. */
 export function spatialToggleGroupFill<T extends string>(keys: readonly T[], enabled: boolean): Record<T, boolean> {
   return Object.fromEntries(keys.map((key) => [key, enabled])) as Record<T, boolean>;
+}
+
+/** @emoji ☑️ Maps a chrome group aggregate onto the owned native checkbox state. */
+export function spatialToggleCheckboxState(state: SpatialToggleGroupState): CheckboxState {
+  if (state === "partial") return "indeterminate";
+  return state === "all";
 }
 
 /** @emoji 🧭️ Resolves the primitive entity kind for a pick target (typology object rows → `null`). */
@@ -4015,11 +4023,7 @@ export function InteractionSpatialView({
 // #region 🪩️Repl
 /** @emoji ☑️ Master checkbox for a chrome toggle group (supports indeterminate partial state). */
 function SpatialChromeMasterToggle({ state, onEnabledChange, ariaLabel }: { readonly state: SpatialToggleGroupState; readonly onEnabledChange: (enabled: boolean) => void; readonly ariaLabel: string }): ReactNode {
-  const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
-  reactHostPort.useEffect(() => {
-    if (inputRef.current) inputRef.current.indeterminate = state === "partial";
-  }, [state]);
-  return <input ref={inputRef} type="checkbox" aria-label={ariaLabel} checked={state === "all"} onChange={(e) => onEnabledChange(e.target.checked)} />;
+  return <Checkbox aria-label={ariaLabel} checked={spatialToggleCheckboxState(state)} onChange={(event) => onEnabledChange(event.target.checked)} />;
 }
 
 type ReplSuggestKind = "interaction" | "transition" | "action" | "selection";
@@ -6149,19 +6153,21 @@ export function InteractionRepl({
             ) : null}
             {interactionMenuOpen ? (
               <div
+                role="menu"
+                aria-label={WINDOW_SEARCH_USER.suggestionsAria}
                 onPointerDown={(e) => e.stopPropagation()}
                 className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-floating-menu-sm w-layout-floating-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
                 data-level="menu"
               >
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
-                    <button key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} type="button" className={floatingMenuItemClass} onClick={() => runSuggestion(suggestion)}>
+                    <MenuItem key={`${suggestion.kind}:${suggestion.key}:${suggestion.detail}`} onClick={() => runSuggestion(suggestion)}>
                       <div className="flex items-center gap-single">
                         <span className={cn(floatingTagClass, floatingTagOffClass, "inline-flex min-w-6 items-center justify-center px-half py-0 text-2xs font-bold uppercase")}>{suggestion.key}</span>
                         <span>{suggestion.label}</span>
                       </div>
                       {suggestion.detail ? <div className="text-muted-foreground text-2xs">{suggestion.detail}</div> : null}
-                    </button>
+                    </MenuItem>
                   ))
                 ) : (
                   <div className="text-muted-foreground px-single py-half text-xs">{WINDOW_SEARCH_USER.noMatches}</div>
@@ -6281,8 +6287,7 @@ export function InteractionRepl({
             <div role="group" aria-label="Show primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
                 <label key={`show-primitive-${kind}`} className={cn(floatingTagClass, filterPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={filterPrimitiveToggles[kind] !== false}
                     onChange={(e) => {
                       setFilterPrimitiveToggles((prev) => ({ ...prev, [kind]: e.target.checked }));
@@ -6316,8 +6321,7 @@ export function InteractionRepl({
             <div role="group" aria-label="Filter primitives" className="flex flex-wrap gap-half">
               {SPATIAL_PRIMITIVE_KINDS.map((kind) => (
                 <label key={`filter-primitive-${kind}`} className={cn(floatingTagClass, selectionPrimitiveToggles[kind] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={selectionPrimitiveToggles[kind] !== false}
                     onChange={(e) => {
                       const checked = e.target.checked;
@@ -6342,8 +6346,7 @@ export function InteractionRepl({
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
                   <label key={`show-${typology.id}`} className={cn(floatingTagClass, filterTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={filterTypologyToggles[typology.id] !== false}
                       onChange={(e) => {
                         setFilterTypologyToggles((prev) => ({ ...prev, [typology.id]: e.target.checked }));
@@ -6380,8 +6383,7 @@ export function InteractionRepl({
                 const label = spatialTypologyToggleLabel(typology.id, typology.label);
                 return (
                   <label key={`select-${typology.id}`} className={cn(floatingTagClass, selectionTypologyToggles[typology.id] !== false ? floatingTagOnClass : floatingTagOffClass)}>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selectionTypologyToggles[typology.id] !== false}
                       onChange={(e) => {
                         const checked = e.target.checked;
@@ -6542,7 +6544,7 @@ export function SelectionAttributesPane({ model, activeModelDefinitionId, select
             defn,
             current,
             <label className="flex items-center gap-single">
-              <input type="checkbox" checked={current === true} onChange={(e) => setField(defn, e.target.checked)} />
+              <Checkbox checked={current === true} onChange={(event) => setField(defn, event.target.checked)} />
               <span>Enabled</span>
             </label>,
           );
@@ -7403,6 +7405,9 @@ if (import.meta.vitest) {
       expect(spatialToggleGroupState(["a", "b"], { a: true, b: false })).toBe("partial");
       expect(spatialToggleGroupFill(["a", "b"], true)).toEqual({ a: true, b: true });
       expect(spatialToggleGroupFill(["a", "b"], false)).toEqual({ a: false, b: false });
+      expect(spatialToggleCheckboxState("all")).toBe(true);
+      expect(spatialToggleCheckboxState("none")).toBe(false);
+      expect(spatialToggleCheckboxState("partial")).toBe("indeterminate");
     });
 
     it("filterSpatialPickTargets matches primitive geometryKind in selection accept", () => {

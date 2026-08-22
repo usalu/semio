@@ -5,8 +5,14 @@
   "additionalProperties": false,
   "required": [
     "workshop",
-    "stock",
+    "stockId",
+    "stockLabel",
+    "stockPose",
+    "stockPayload",
+    "stockSolid",
     "steps",
+    "stepPayloads",
+    "toolSolids",
     "activeUtilityId",
     "selectionMethod",
     "engagementInput",
@@ -30,14 +36,41 @@
       "$ref": "#/$defs/Process3dWorkshop",
       "x-semio-state": "artifact"
     },
-    "stock": {
+    "stockId": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "stockLabel": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "stockPose": {
+      "$ref": "#/$defs/Process3dPose",
+      "x-semio-state": "artifact"
+    },
+    "stockPayload": {
       "$ref": "#/$defs/Process3dStock",
       "x-semio-state": "artifact"
     },
+    "stockSolid": {
+      "$ref": "#/$defs/ArtifactChildHandle",
+      "x-semio-state": "artifact"
+    },
     "steps": {
+      "$ref": "#/$defs/ArtifactChildHandle",
+      "x-semio-state": "artifact"
+    },
+    "stepPayloads": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/Process3dStep"
+      },
+      "x-semio-state": "artifact"
+    },
+    "toolSolids": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ArtifactChildHandle"
       },
       "x-semio-state": "artifact"
     },
@@ -145,6 +178,19 @@
     "Process3dStock": {
       "title": "Process3dStock",
       "type": "object"
+    },
+    "Process3dPose": {
+      "title": "Process3dPose",
+      "type": "object"
+    },
+    "ArtifactChildHandle": {
+      "title": "ArtifactChildHandle",
+      "type": "object",
+      "required": ["childId", "target"],
+      "properties": {
+        "childId": { "type": "string" },
+        "target": { "type": "string" }
+      }
     },
     "Process3dStep": {
       "title": "Process3dStep",

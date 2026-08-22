@@ -18,7 +18,7 @@ pub struct RemoveGcpObservation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn remove_gcp_observation(id: String, observation_index: u32) -> RemodelMutation {
+pub fn remove_gcp_observation(id: String, observation_index: u32) -> RemodelMutation {
     RemodelMutation::RemoveGcpObservation(RemoveGcpObservation { id, observation_index })
 }
 

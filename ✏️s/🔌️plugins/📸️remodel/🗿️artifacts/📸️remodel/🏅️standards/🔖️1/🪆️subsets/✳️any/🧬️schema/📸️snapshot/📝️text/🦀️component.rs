@@ -46,7 +46,7 @@ mod tests {
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::mint_and_stash_asset("asset-1", &asset_one));
+        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::store_remodel_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),

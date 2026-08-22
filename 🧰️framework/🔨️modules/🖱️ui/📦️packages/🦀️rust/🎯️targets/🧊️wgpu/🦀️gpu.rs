@@ -2,6 +2,8 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
 use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
+#[cfg(target_arch = "wasm32")]
+use crate::wgpu::prepared::OffscreenPresentToken;
 use crate::wgpu::prepared::{PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
 use crate::wgpu::text::FontAtlas;
 use std::sync::Arc;
@@ -34,6 +36,18 @@ impl GpuContext {
         let css_height = size.height as f32 / dpr;
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY }, ..Default::default() });
         let surface = instance.create_surface(wgpu::SurfaceTarget::Window(Box::new(window))).map_err(|err| format!("surface: {err:?}"))?;
+        Self::from_surface(instance, surface, css_width, css_height, dpr).await
+    }
+
+    /// 🧵️ Creates the browser GPU surface directly in a dedicated Worker from a transferred canvas.
+    #[cfg(target_arch = "wasm32")]
+    pub async fn from_offscreen_canvas(canvas: web_sys::OffscreenCanvas, css_width: f32, css_height: f32, dpr: f32) -> Result<Self, String> {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..Default::default() });
+        let surface = instance.create_surface(wgpu::SurfaceTarget::OffscreenCanvas(canvas)).map_err(|err| format!("offscreen surface: {err:?}"))?;
+        Self::from_surface(instance, surface, css_width, css_height, dpr).await
+    }
+
+    async fn from_surface(instance: wgpu::Instance, surface: Surface<'static>, css_width: f32, css_height: f32, dpr: f32) -> Result<Self, String> {
         let adapter =
             instance.request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: Some(&surface), force_fallback_adapter: false }).await.map_err(|err| format!("adapter: {err:?}"))?;
         let (device, queue) = adapter
@@ -136,6 +150,16 @@ impl GpuContext {
 
     /// 🖥️ Applies one validated worker-owned packet and presents it under a non-Send UI token.
     pub fn submit_prepared(&mut self, _token: &UiPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
+        self.submit_prepared_authorized(gate, packet, live_revision, live_generation)
+    }
+
+    /// 🧵️ Applies one packet under dedicated-Worker OffscreenCanvas authority.
+    #[cfg(target_arch = "wasm32")]
+    pub fn submit_prepared_offscreen(&mut self, _token: &OffscreenPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
+        self.submit_prepared_authorized(gate, packet, live_revision, live_generation)
+    }
+
+    fn submit_prepared_authorized(&mut self, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
         gate.validate(&packet, live_revision, live_generation).map_err(|error| error.to_string())?;
         self.apply_prepared_evictions(&packet.evictions);
         self.apply_prepared_uploads(&packet.uploads);

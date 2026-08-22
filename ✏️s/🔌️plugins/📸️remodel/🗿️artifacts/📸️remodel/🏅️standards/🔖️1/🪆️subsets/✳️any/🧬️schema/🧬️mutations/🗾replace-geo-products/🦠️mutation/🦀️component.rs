@@ -17,7 +17,7 @@ pub struct ReplaceGeoProducts {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_geo_products(geo: Option<GeoProducts>) -> RemodelMutation {
+pub fn replace_geo_products(geo: Option<GeoProducts>) -> RemodelMutation {
     RemodelMutation::ReplaceGeoProducts(ReplaceGeoProducts { geo })
 }
 

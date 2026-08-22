@@ -71,6 +71,7 @@ type Puzzle5dKindCatalogs {
 }
 type Puzzle5dCatalogPartKindExtra {
   id: String!
+  name: String
   label: String
   description: String
   icon: String
@@ -94,8 +95,8 @@ type Puzzle5dCatalogGripKindExtra {
   color: String
   defaultRopeKind: String
 }
-type Puzzle5dCatalogFastenerKindExtra { id: String! label: String }
-type Puzzle5dCatalogRopeKindExtra { id: String! label: String defaultFastenerKind: String }
+type Puzzle5dCatalogFastenerKindExtra { id: String! name: String label: String }
+type Puzzle5dCatalogRopeKindExtra { id: String! name: String label: String defaultFastenerKind: String }
 type Puzzle5dKindCatalogsExtra {
   parts: [Puzzle5dCatalogPartKindExtra!]
   grips: [Puzzle5dCatalogGripKindExtra!]

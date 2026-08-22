@@ -17,6 +17,14 @@ pub struct DrawConfig {
     #[state(config)]
     pub active_utility_id: String,
     #[state(config)]
+    pub trace_pointer_generation: u64,
+    #[state(config)]
+    pub trace_pointer_completed_work: u64,
+    #[state(config)]
+    pub trace_pointer_pending_work: u64,
+    #[state(config)]
+    pub gesture_checkpoint_json: String,
+    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Config

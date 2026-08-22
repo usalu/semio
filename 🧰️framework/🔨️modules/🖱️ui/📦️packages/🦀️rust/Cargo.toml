@@ -61,6 +61,7 @@ semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/�
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
+ui_contract = { path = "../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 # 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
@@ -98,6 +99,7 @@ web-sys = { version = "0.3.98", optional = true, features = [
     "Navigator",
     "Clipboard",
     "HtmlCanvasElement",
+    "OffscreenCanvas",
     "HtmlElement",
     "CssStyleDeclaration",
     "MouseEvent",

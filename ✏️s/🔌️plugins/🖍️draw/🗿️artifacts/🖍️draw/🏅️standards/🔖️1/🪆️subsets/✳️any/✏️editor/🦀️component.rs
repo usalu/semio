@@ -9,7 +9,7 @@
 
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
+use crate::editor::draw::commands::canvas_pointer_down::{DrawGestureCheckpoint, DrawSession};
 use crate::editor::draw::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
     engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
@@ -22,10 +22,13 @@ use crate::editor::draw::presence::{DrawPresence, DrawPresenceMutation};
 use crate::editor::draw::terminology::DrawPlayLabels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass,
-    MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
+    ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
+    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    WindowEngagementStatus,
 };
 use serde_json::Value;
+use std::collections::BTreeMap;
+use std::sync::{Mutex, OnceLock};
 use store::ArtifactPack;
 use store::EngineHandles;
 
@@ -103,6 +106,42 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🔖️DrawPlayApp
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct DrawSessionKey {
+    app_instance_id: u32,
+    document_id: String,
+    operation_id: u64,
+    generation: u64,
+    base_revision: String,
+}
+
+static DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<DrawSessionKey, DrawSession>>> = OnceLock::new();
+static ACTIVE_DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>>> = OnceLock::new();
+const MAX_LIVE_DRAW_SESSIONS: usize = 64;
+
+fn draw_sessions() -> &'static Mutex<BTreeMap<DrawSessionKey, DrawSession>> {
+    DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+fn active_draw_sessions() -> &'static Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>> {
+    ACTIVE_DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+fn checkpoint_from_config(config: &DrawConfig) -> Option<DrawGestureCheckpoint> {
+    if config.gesture_checkpoint_json.len() > 4_096 {
+        return None;
+    }
+    serde_json::from_str(&config.gesture_checkpoint_json).ok()
+}
+
+pub(crate) fn draw_document_revision(doc: &ArtifactView<'_, DrawSnapshot>, _config: &DrawConfig) -> String {
+    doc.operation_optional().map(|operation| operation.canonical_base_revision_hex()).unwrap_or_else(|| "0".repeat(64))
+}
+
+fn draw_session_key(app_instance_id: u32, document_id: &str, operation_id: u64, generation: u64, base_revision: &str) -> DrawSessionKey {
+    DrawSessionKey { app_instance_id, document_id: document_id.into(), operation_id, generation, base_revision: base_revision.into() }
+}
+
 /// 🧪️ Unit struct apart from `session`: every former `DrawInteractionState`/`ViewModel`-derived field
 /// lives in [`DrawConfig`], written through [`DrawConfigMutation`]s. `session` holds the one piece of
 /// state that is neither document nor view-config — the live gesture statechart — threaded into every
@@ -126,6 +165,17 @@ impl ArtifactEditor for DrawPlayApp {
 
     const DIALECT: semio_framework::Dialect = crate::artifacts::draw::DRAW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<DrawPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.draw.draw@1/*#editor",
+        document_schema: "draw.document",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+        }
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::draw::config::schema::app_schema_descriptor())
@@ -174,15 +224,69 @@ impl ArtifactEditor for DrawPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
-        thread_local! {
-            static DRAW_SESSION: std::cell::RefCell<DrawSession> = std::cell::RefCell::new(DrawSession::default());
+        if let DrawCommand::CanvasPointerDown(payload) = command {
+            if let Some(generation) = payload.generation {
+                let observed_revision = draw_document_revision(doc, cfg.snapshot);
+                if cfg.snapshot.active_utility_id != "trace" || cfg.snapshot.trace_pointer_generation != generation || payload.base_revision.as_deref() != Some(observed_revision.as_str()) {
+                    return Ok(Emit::default());
+                }
+            }
         }
         let selection_ids = interaction.selection(DRAW_INTERACTION_DOMAIN).ids.clone();
-        DRAW_SESSION.with(|session| {
-            let mut session = session.borrow_mut();
-            session.interaction.ids = selection_ids;
-            command.dispatch(doc, cfg, &mut session)
-        })
+        let operation = doc.operation()?;
+        let scope = (operation.app_instance_id, operation.parent_document_id.clone(), "gesture".to_string());
+        let observed_revision = draw_document_revision(doc, cfg.snapshot);
+        let active = active_draw_sessions().lock().expect("draw active session lock").get(&scope).cloned();
+        let (operation_id, generation, base_revision) = match active {
+            Some((operation_id, generation, base_revision)) if base_revision == observed_revision => (operation_id, generation, base_revision),
+            Some((operation_id, generation, base_revision)) => {
+                draw_sessions().lock().expect("draw session lock").remove(&draw_session_key(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision));
+                (operation.operation_id, operation.generation, observed_revision)
+            }
+            None => {
+                let restored = checkpoint_from_config(cfg.snapshot)
+                    .filter(|checkpoint| checkpoint.app_instance_id == operation.app_instance_id && checkpoint.document_id == operation.parent_document_id && checkpoint.base_revision == observed_revision)
+                    .map(|checkpoint| (checkpoint.operation_id, checkpoint.generation));
+                let (operation_id, generation) = restored.unwrap_or((operation.operation_id, operation.generation));
+                (operation_id, generation, observed_revision)
+            }
+        };
+        let key = draw_session_key(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision);
+        let stored_session = {
+            let mut sessions = draw_sessions().lock().expect("draw session lock");
+            if !sessions.contains_key(&key) && sessions.len() >= MAX_LIVE_DRAW_SESSIONS {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.busy"), "the bounded Draw gesture session pool is full"));
+            }
+            sessions.remove(&key)
+        };
+        active_draw_sessions().lock().expect("draw active session lock").insert(scope, (operation_id, generation, base_revision.clone()));
+        let mut session = stored_session
+            .or_else(|| {
+                checkpoint_from_config(cfg.snapshot)
+                    .filter(|checkpoint| {
+                        checkpoint.app_instance_id == operation.app_instance_id
+                            && checkpoint.document_id == operation.parent_document_id
+                            && checkpoint.operation_id == operation_id
+                            && checkpoint.generation == generation
+                            && checkpoint.base_revision == base_revision
+                    })
+                    .map(|checkpoint| DrawSession::from_checkpoint(&checkpoint))
+            })
+            .unwrap_or_default();
+        session.interaction.ids = selection_ids;
+        let mut emit = command.dispatch(doc, cfg, &mut session)?;
+        let checkpoint = session.checkpoint(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision);
+        let checkpoint_json = serde_json::to_string(&checkpoint).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.checkpoint-invalid"), error.to_string()))?;
+        if checkpoint_json.len() > 4_096 {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.checkpoint-too-large"), "the bounded Draw gesture checkpoint exceeds 4,096 UTF-8 bytes"));
+        }
+        emit.config_mutations.push(DrawConfigMutation::SetGestureCheckpoint { json: checkpoint_json });
+        if session.gesture.matches("idle") {
+            active_draw_sessions().lock().expect("draw active session lock").remove(&(operation.app_instance_id, operation.parent_document_id.clone(), "gesture".to_string()));
+        } else {
+            draw_sessions().lock().expect("draw session lock").insert(key, session);
+        }
+        Ok(emit)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiNode {
@@ -190,9 +294,11 @@ impl ArtifactEditor for DrawPlayApp {
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
-        let session = DrawSession::default();
         match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, &session.gesture, active_utility),
+            DRAW_PLAY_BODY_COMPOSITE => {
+                let session = checkpoint_from_config(config).map(|checkpoint| DrawSession::from_checkpoint(&checkpoint)).unwrap_or_default();
+                canvas_window::render(document, config, &session.gesture, active_utility)
+            }
             DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
             DRAW_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
             DRAW_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
@@ -295,7 +401,7 @@ pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
             .action_with(draw_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
             .action_with(draw_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation))
-            .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation))
             .action_with(draw_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
             .action_with(draw_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
@@ -563,7 +669,23 @@ mod tests {
     async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 10.0, y: 10.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 10.0,
+                y: 10.0,
+                width: 800.0,
+                height: 600.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("down");
         let before = app.snapshot().unwrap();
         let result = app.dispatch_typed(DrawCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }), &fw_testkit::meta("local")).expect("switch utility");
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
@@ -595,7 +717,23 @@ mod tests {
     async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         let mut app = draw_app_with_registry();
         set_utility(&mut app, "shapeRect");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 500.0,
+                y: 400.0,
+                width: 1000.0,
+                height: 800.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &fw_testkit::meta("local")).expect("move");
         let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
@@ -614,8 +752,40 @@ mod tests {
     async fn pen_draft_commits_path_layer_on_enter() {
         let mut app = draw_app();
         set_utility(&mut app, "pen");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p1");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 500.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p2");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 400.0,
+                y: 300.0,
+                width: 800.0,
+                height: 600.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("p1");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 500.0,
+                y: 300.0,
+                width: 800.0,
+                height: 600.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("p2");
         let result = app.dispatch_typed(DrawCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &fw_testkit::meta("local")).expect("commit");
         assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
         let projection = app.snapshot().unwrap();
@@ -628,7 +798,23 @@ mod tests {
         let mut app = draw_app();
         let before = app.snapshot().unwrap().layers.len();
         set_utility(&mut app, "pen");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("p1");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 400.0,
+                y: 300.0,
+                width: 800.0,
+                height: 600.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("p1");
         let result = app.dispatch_typed(DrawCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &fw_testkit::meta("local")).expect("escape");
         assert!(result.mutations.is_empty());
         assert_eq!(app.snapshot().unwrap().layers.len(), before);
@@ -658,7 +844,23 @@ mod tests {
         }
 
         app.dispatch_typed(DrawCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
-        app.dispatch_typed(DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("down");
+        app.dispatch_typed(
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 400.0,
+                y: 300.0,
+                width: 800.0,
+                height: 600.0,
+                shift: false,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
+            &fw_testkit::meta("local"),
+        )
+        .expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
         let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -863,7 +1065,19 @@ mod tests {
             DrawCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
             DrawCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
             DrawCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: true, ctrl: false, meta: false }),
+            DrawCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: 1.0,
+                y: 2.0,
+                width: 800.0,
+                height: 600.0,
+                shift: true,
+                ctrl: false,
+                meta: false,
+                generation: None,
+                checkpoint_completed_work: None,
+                checkpoint_pending_work: None,
+                ..Default::default()
+            }),
             DrawCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
             DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false }),
             DrawCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick {}),

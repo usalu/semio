@@ -16,7 +16,7 @@ pub struct MoveMediaNode {
     pub y: f64,
 }
 
-pub async fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.move_widget(&payload.node_id, payload.x, payload.y);

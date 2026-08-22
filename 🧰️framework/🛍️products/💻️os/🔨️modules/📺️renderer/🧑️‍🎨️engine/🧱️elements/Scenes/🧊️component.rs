@@ -5878,7 +5878,7 @@ fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::w
         }
         "rename" => {
             if let Some(info) = text_editor_rename_info(editor) {
-                ctx.input.focus_input(&format!("{}.editor.rename", scene.surface_id), &info.name);
+                ctx.input.focus_input_owned(format!("{}.editor.rename", scene.surface_id), info.name);
                 ui_state.rename_active = true;
                 ui_state.rename_occurrences = info.occurrences.iter().map(|span| (span.start, span.end)).collect();
             }
@@ -5978,7 +5978,7 @@ fn render_text_editor_context_menu(ctx: &mut FrameworkWidgetContext<'_>, menu: &
 
 fn render_text_editor_rename_input(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, scene: &UiComponentSceneNode) {
     let theme = ctx.theme;
-    let text = ctx.input.text_buffer.clone();
+    let text = ctx.input.text_view().to_string();
     let (x, y) = engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0));
     let rect = Rect::new(x, (y - theme.control_height_small * 0.5).max(inner.y), 180.0, theme.control_height_small);
     // 🖊️ `border border-border bg-panel` on the rename input in `text-editor-host.tsx` — previously
@@ -6038,7 +6038,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     let rename_id = format!("{}.editor.rename", scene.surface_id);
     let seed_focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
     if seed_focused && ctx.input.text_buffer.is_empty() && !editor.buffer.is_empty() {
-        ctx.input.focus_input(&editor_id, &editor.buffer);
+        ctx.input.focus_id_owned(editor_id.clone());
     }
 
     let mut ui_state = text_editor_ui_state(&scene.surface_id);
@@ -6095,7 +6095,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 for action in actions {
                     ctx.input.queue_event(action);
                 }
-                ctx.input.focus_input(&editor_id, &editor.buffer);
+                ctx.input.focus_id_owned(editor_id.clone());
                 ui_state.completions_open = false;
                 ui_state.context_menu = Some(TextEditorContextMenu { x: ctx.input.pointer_x, y: ctx.input.pointer_y, items: text_editor_context_menu_items(editor) });
             } else if ctx.input.pointer_button == 0 && hovered {
@@ -6103,7 +6103,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 // drag-selection for this same press (via `apply_scene_ui_command`); this only tracks
                 // double-click timing/offset locally and closes the completions popup / (re)focuses for
                 // keyboard routing.
-                ctx.input.focus_input(&editor_id, &editor.buffer);
+                ctx.input.focus_id_owned(editor_id.clone());
                 ui_state.completions_open = false;
                 let click_offset = cursor_from_click(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0.0);
                 let now = now_ms();
@@ -6133,7 +6133,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 }
                 KeyAction::Enter => {
                     let occurrences: Vec<Value> = ui_state.rename_occurrences.iter().map(|(start, end)| json!({ "start": start, "end": end })).collect();
-                    ctx.input.queue_event(scene_action(scene, "commitRename", json!({ "surfaceId": scene.surface_id, "occurrences": occurrences, "text": ctx.input.text_buffer.clone() })));
+                    ctx.input.queue_event(scene_action(scene, "commitRename", json!({ "surfaceId": scene.surface_id, "occurrences": occurrences, "text": ctx.input.text_view() })));
                     ui_state.rename_active = false;
                     ctx.input.blur_input();
                 }
@@ -6530,7 +6530,7 @@ mod text_editor_tests {
         assert!(ui_state.rename_active);
         assert_eq!(ui_state.rename_occurrences, vec![(0, 5)]);
         assert_eq!(fixture.input.focused_id.as_deref(), Some("editor.action.rename.editor.rename"));
-        assert_eq!(fixture.input.text_buffer, "count");
+        assert_eq!(fixture.input.text_view(), "count");
     }
 
     #[test]
@@ -6593,7 +6593,7 @@ mod text_editor_tests {
         let scene = text_editor_scene("editor.rename.paint", "count", None, None);
         let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
         let mut fixture = Fixture::new();
-        fixture.input.text_buffer = "count2".into();
+        fixture.input.focus_input_owned("test".to_string(), "count2".to_string());
         {
             let mut ctx = fixture.ctx();
             render_text_editor_rename_input(&mut ctx, inner, &scene);

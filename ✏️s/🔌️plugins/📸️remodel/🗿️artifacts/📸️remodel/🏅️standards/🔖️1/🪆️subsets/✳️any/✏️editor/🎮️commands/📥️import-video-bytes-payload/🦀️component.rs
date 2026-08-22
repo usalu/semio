@@ -27,7 +27,7 @@ const BLUR_GATE_MIN_SAMPLES: usize = 3;
 /// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
 /// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
 /// the identical signal.
-async fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
+fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     let gray = remodel_image::ImageGray::from_rgba8_luma(image);
     let grad = remodel_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -37,7 +37,7 @@ async fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     sum_sq / grad.gx.len() as f32
 }
 
-async fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
+fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
     let mut v: Vec<f32> = scores.iter().copied().collect();
     v.sort_by(f32::total_cmp);
     v[v.len() / 2]
@@ -45,7 +45,7 @@ async fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
 /// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-async fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
+fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
     if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
         let median = local_rolling_median(&scratch.rolling_scores);
         if score < min_sharpness * median {
@@ -119,7 +119,7 @@ pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) ->
 }
 
 #[cfg(test)]
-async fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
     let mut image = remodel_image::ImageRgba8::new(w, h);
     for y in 0..h {
         for x in 0..w {

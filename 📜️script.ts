@@ -830,6 +830,14 @@ type ToolJobCoverageReport = {
   productionFactories: number;
   productionRegistrations: number;
   productionDispatches: number;
+  aliases: number;
+  factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[];
+  frameworkReservedRoutes: { id: string; status: "failClosedPendingFactory" }[];
+  reservedImporterOwners: { owner: string; file: string; id: "import-media"; status: "failClosedPendingFactory" }[];
+  globalPayloadStores: { file: string; line: number; text: string }[];
+  literalRegistrations: number;
+  remainingCommands: { file: string; id: string; reason: string; source: "literal" | "macro" }[];
+  selfTests: number;
   failures: string[];
 };
 
@@ -882,6 +890,955 @@ function toolJobRustBlock(source: string, open: number): { body: string; end: nu
   return undefined;
 }
 
+type ToolJobStaticRow = { file: string; id: string; source: "literal" | "macro" };
+
+const TOOL_JOB_FRAMEWORK_RESERVED_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"] as const;
+const TOOL_JOB_PLUGIN_RESERVED_IDS = ["copy", "cut", "paste", "import-media"] as const;
+const TOOL_JOB_RESERVED_IDS = [...TOOL_JOB_FRAMEWORK_RESERVED_IDS, ...TOOL_JOB_PLUGIN_RESERVED_IDS] as const;
+const TOOL_JOB_IMPORTER_INVENTORY = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📊️p8yj-importer-cohorts.json";
+
+/** 🧹️ Removes in-file test modules from the production registration census. */
+function toolJobProductionSource(source: string): string {
+  const lines = source.split("\n");
+  for (const span of policyTestModSpans(lines)) for (let line = span.startLine - 1; line < span.endLine; line += 1) lines[line] = "";
+  return lines.join("\n");
+}
+
+/** 🎯️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
+function toolJobStaticRows(files: ReadonlyMap<string, string>): ToolJobStaticRow[] {
+  const rows: ToolJobStaticRow[] = [];
+  for (const [file, source] of files) {
+    const invocation = /^\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*app_commands!\s*\{/gm;
+    let match: RegExpExecArray | null;
+    while ((match = invocation.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) break;
+      const row = /^\s*"([^"]+)"(?:\s+as\s+"[^"]+")?\s*=>/gm;
+      let item: RegExpExecArray | null;
+      while ((item = row.exec(block.body))) rows.push({ file, id: item[1]!, source: "macro" });
+      invocation.lastIndex = block.end;
+    }
+    const literal = /\.(?:mutation|operation|view_action|shell_action)\(\s*"([^"]+)"|\.action_with\(\s*ActionDefinition(?:\s*\{[\s\S]{0,300}?\.\.)?::(?:new_catalog|bounded_catalog|new)\(\s*"([^"]+)"|\.(?:app_command|command_with)\(\s*CommandDefinition::(?:new_catalog|bounded_catalog|new)\(\s*"([^"]+)"/g;
+    while ((match = literal.exec(source))) rows.push({ file, id: match[1] ?? match[2] ?? match[3]!, source: "literal" });
+  }
+  const unique = new Map<string, ToolJobStaticRow>();
+  for (const row of rows) unique.set(`${row.file}\0${row.id}`, row);
+  return [...unique.values()].sort((left, right) => left.file.localeCompare(right.file) || left.id.localeCompare(right.id));
+}
+
+/** 🔒️ Reads exact explicit dispositions; constructors never count as proof. */
+function toolJobDispositions(files: ReadonlyMap<string, string>): Map<string, string> {
+  const result = new Map<string, string>();
+  const constants = new Map<string, string>();
+  for (const source of files.values()) {
+    for (const match of source.matchAll(/(?:pub(?:\([^)]*\))?\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&str\s*=\s*"([^"]+)"/g)) constants.set(match[1]!, match[2]!);
+  }
+  for (const [file, source] of files) {
+    const explicit = /\.action_interactive_job\(\s*(?:"([^"]+)"|(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*))\s*,\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite|ForbiddenFromUi|Deleted)\s*\)/g;
+    let match: RegExpExecArray | null;
+    while ((match = explicit.exec(source))) {
+      const id = match[1] ?? constants.get(match[2] ?? "");
+      if (id) result.set(`${file}\0${id}`, match[3]!);
+    }
+  }
+  return result;
+}
+
+type ToolJobProof = { sourceFile: string; ownerFile: string; ownerTypeName: string; controllerId: string; factory: string; toolId: string; documentSchema: string; values: readonly number[] };
+
+/** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. */
+function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
+  const proofs: ToolJobProof[] = [];
+  for (const [sourceFile, source] of files) {
+    const invocation = /(?:semio_framework_plugin::)?bounded_first_step_tool_proofs!\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = invocation.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) break;
+      const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)",\s*tools:\s*\{/s);
+      if (header) {
+        const rows = /"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::bounded_first_step\(([^)]*)\)/g;
+        for (const row of block.body.matchAll(rows)) {
+          const values = row[2]!.split(",").map((value) => Number(value.trim().replaceAll("_", "")));
+          if (values.length === 5 && values.every((value) => Number.isFinite(value) && value > 0) && values[4]! < 8_000) {
+            proofs.push({ sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, toolId: row[1]!, values });
+          }
+        }
+      }
+      invocation.lastIndex = block.end;
+    }
+  }
+  return proofs;
+}
+
+function toolJobProofIdentity(proof: ToolJobProof): string {
+  return `${proof.ownerFile}\0${proof.ownerTypeName}\0${proof.controllerId}\0${proof.factory}\0${proof.toolId}\0${proof.documentSchema}.tool-command.v1`;
+}
+
+/** 🧬️ Enforces an exact dynamic proof/declaration bijection without a shared magic row count. */
+function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: readonly ToolJobStaticRow[], dispositions: ReadonlyMap<string, string>, proofs: readonly ToolJobProof[]): string[] {
+  const failures: string[] = [];
+  const identities = new Set<string>();
+  const publicKeys = new Set<string>();
+  const constants = new Map<string, string>();
+  for (const source of files.values()) for (const match of source.matchAll(/(?:pub\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)) constants.set(match[1]!, match[2]!);
+  if (proofs.length === 0) failures.push("bounded reducer proof catalogs contain no exact owner-local rows");
+  for (const proof of proofs) {
+    const identity = toolJobProofIdentity(proof);
+    const publicKey = `${proof.controllerId}\0${proof.toolId}`;
+    if (!identities.add(identity)) failures.push(`duplicate bounded reducer proof identity ${identity}`);
+    if (!publicKeys.add(publicKey)) failures.push(`ambiguous bounded reducer public key ${publicKey}`);
+    const source = files.get(proof.sourceFile) ?? "";
+    const owner = proof.ownerTypeName.match(/(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>/)?.[1];
+    const ownerStart = owner ? source.indexOf(`impl ArtifactEditor for ${owner}`) : -1;
+    const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
+    const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);
+    const schemaExpression = ownerImpl?.body.match(/const\s+DOCUMENT_SCHEMA\s*:\s*&'static\s+str\s*=\s*(?:"([^"]+)"|([A-Z][A-Z0-9_]*))/);
+    const declaredSchema = schemaExpression?.[1] ?? constants.get(schemaExpression?.[2] ?? "");
+    if (proof.sourceFile !== proof.ownerFile || !ownerImpl) failures.push(`forged bounded reducer owner/file authority ${identity}`);
+    if (declaredSchema !== proof.documentSchema) failures.push(`forged bounded reducer document schema ${identity}`);
+    if (proof.factory !== "BoundedFirstStepCommandJobFactory") failures.push(`forged bounded reducer factory ${identity}`);
+    if (!rows.some((row) => row.file === proof.ownerFile && row.id === proof.toolId) || dispositions.get(`${proof.ownerFile}\0${proof.toolId}`) !== "Migrated") failures.push(`extra bounded reducer proof lacks its exact Migrated declaration ${identity}`);
+  }
+  for (const row of rows) {
+    if (dispositions.get(`${row.file}\0${row.id}`) !== "Migrated") continue;
+    const matches = proofs.filter((proof) => proof.ownerFile === row.file && proof.toolId === row.id);
+    if (matches.length !== 1) failures.push(`Migrated declaration has ${matches.length} exact bounded reducer proofs ${row.file}\0${row.id}`);
+  }
+  return failures;
+}
+
+type ToolJobReservedSpec = { id: string; job: string; factory: string; line: number; values: readonly number[] };
+
+function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
+  const specs: ToolJobReservedSpec[] = [];
+  const row = /framework_reserved_job!\(\s*([A-Za-z0-9_]+),\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*\d+,\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),?\s*\);/g;
+  for (const match of source.matchAll(row)) {
+    const values = match.slice(4, 8).map((value) => Number(value!.replaceAll("_", "")));
+    if (values.every((value) => Number.isFinite(value) && value > 0)) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values });
+  }
+  return specs;
+}
+
+function toolJobFrameworkReservedRoutesExact(source: string): boolean {
+  const start = source.indexOf("async fn dispatch_action");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  const macroIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => id !== "configuration-binary");
+  const specs = toolJobReservedSpecs(source).filter((spec) => macroIds.includes(spec.id as (typeof macroIds)[number]));
+  const ids = new Set(specs.map((spec) => spec.id));
+  const uniqueJobs = new Set(specs.map((spec) => spec.job));
+  const uniqueFactories = new Set(specs.map((spec) => spec.factory));
+  if (!block || specs.length !== macroIds.length || ids.size !== macroIds.length || uniqueJobs.size !== macroIds.length || uniqueFactories.size !== macroIds.length || macroIds.some((id) => !ids.has(id))) return false;
+  const reservedStart = source.indexOf("async fn dispatch_framework_reserved_action");
+  const reservedOpen = reservedStart < 0 ? -1 : source.indexOf("{", reservedStart);
+  const reserved = reservedOpen < 0 ? undefined : toolJobRustBlock(source, reservedOpen);
+  const runnerStart = source.indexOf("async fn run_framework_reserved_job");
+  const runnerOpen = runnerStart < 0 ? -1 : source.indexOf("{", runnerStart);
+  const runner = runnerOpen < 0 ? undefined : toolJobRustBlock(source, runnerOpen);
+  if (!reserved || !runner) return false;
+  const noDirectBranches = !block.body.includes("else if HISTORY_ACTION_IDS.contains(&action)") && !block.body.includes("else if CLIPBOARD_ACTION_IDS.contains(&action)") && !block.body.includes("self.store.dispatch(command)");
+  const exactGuard = block.body.includes("return self.dispatch_framework_reserved_action(action, args, meta).await");
+  const exactRoutes = specs.every(
+    (spec) => source.includes(`registry.register(${spec.factory}::<A>::new(&controller_id))`) && reserved.body.includes(`${spec.job}::new(`),
+  );
+  const configurationExact =
+    source.includes("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A>") &&
+    source.includes("registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))") &&
+    source.includes('const TOOL_IDS: &\'static [&\'static str] = &["configuration-binary"]') &&
+    source.includes('run_framework_reserved_job("configuration-binary"') &&
+    source.includes("FrameworkConfigurationBinaryStage::Envelope") &&
+    source.includes("FrameworkConfigurationBinaryStage::Decode") &&
+    source.includes("FrameworkConfigurationBinaryStage::Complete");
+  const pluginSeamExact =
+    source.includes("fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>)") &&
+    source.includes("fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<Self>)") &&
+    source.includes("A::register_tool_job_factories(&mut app_tool_registry)") &&
+    source.includes("A::build_reserved_tool_job(request)") &&
+    !source.includes("registry.register(FrameworkCopyJobFactory::<A>::new(&controller_id))") &&
+    !source.includes("registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))") &&
+    !source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
+    !source.includes("registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))");
+  const routeStateMachines = !/impl\s+FrameworkReservedCursor\s*\{[\s\S]*?fn\s+step\s*\(/.test(source) && source.includes('cx.set_stage(concat!("framework-reserved-", $route, "-envelope"))');
+  const exactRunner = runner.body.includes("admit_exact_wire") && runner.body.includes("proof.admits::<A>") && runner.body.includes("WorkerJobSession::new") && runner.body.includes("session.step(&pool") && runner.body.includes("CheckpointReady(checkpoint)") && runner.body.includes("candidate.output.len() > proof.contract().max_output_bytes");
+  const commitPermit = source.includes("struct FrameworkReservedCommitPermit") && source.includes("validate_framework_reserved_commit(action, &permit).await?") && source.indexOf("permit.finish();", reservedStart) > source.indexOf("let result = if HISTORY_ACTION_IDS", reservedStart);
+  const importStart = source.indexOf("async fn dispatch_import_media");
+  const importOpen = importStart < 0 ? -1 : source.indexOf("{", importStart);
+  const importBlock = importOpen < 0 ? undefined : toolJobRustBlock(source, importOpen);
+  const configStart = source.indexOf("async fn dispatch_config_command_inner");
+  const configOpen = configStart < 0 ? -1 : source.indexOf("{", configStart);
+  const configBlock = configOpen < 0 ? undefined : toolJobRustBlock(source, configOpen);
+  const binaryFailClosed =
+    !!importBlock &&
+    !!configBlock &&
+    importBlock.body.includes("build_artifact_reserved_media_job") &&
+    importBlock.body.includes('run_framework_reserved_job("import-media"') &&
+    !importBlock.body.includes("A::import_media(") &&
+    configBlock.body.includes("FrameworkConfigurationBinaryJob::<A>") &&
+    configBlock.body.includes('run_framework_reserved_job("configuration-binary"') &&
+    !configBlock.body.includes("decode_op(") &&
+    source.includes("ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw)");
+  const ownsRealWork =
+    !source.includes("envelope_cursor") &&
+    !source.includes("Ok(self.raw.clone())") &&
+    !source.includes("decode_op(&self.raw)") &&
+    !reserved.body.includes("dispatch_history_action(") &&
+    !reserved.body.includes("dispatch_clipboard_action(") &&
+    !source.includes("ensure_reserved_emit_bounded") &&
+    !importBlock?.body.includes("serde_json::to_vec(&(port, media))");
+  return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && ownsRealWork;
+}
+
+function toolJobImportPreparationBounded(source: string): boolean {
+  const start = source.indexOf("async fn dispatch_import_media");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return !!block && !block.body.includes("serde_json::to_vec(&(port, media))") && !block.body.includes("raw.clone()") && block.body.includes("build_artifact_reserved_media_job(port, media");
+}
+
+function toolJobFullOperationBounded(source: string): boolean {
+  const start = source.indexOf("async fn dispatch_typed_command_inner");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  if (!block) return false;
+  const worker = block.body.indexOf("WorkerJobSession::new");
+  if (worker < 0) return false;
+  const before = block.body.slice(0, worker);
+  const after = block.body.slice(worker);
+  const preJobWork = ["refresh_cache().await", "draft_store.snapshot().await", "interaction_store.snapshot().await", "ChildContentView::new", "presence_store.peers().await", "transient_store.current().await", "store.content_revision().await", "store.envelope().await"];
+  const postJobWork = ["presence_store.apply", "transient_store.apply", "dispatch_emit("];
+  const operationStart = source.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
+  const operationOpen = operationStart < 0 ? -1 : source.indexOf("{", operationStart);
+  const operation = operationOpen < 0 ? undefined : toolJobRustBlock(source, operationOpen);
+  const operationJob = source.includes("struct TypedCommandFullOperationJob") && !!operation;
+  const exactStages = ["typed-command-prepare", "typed-command-reducer", "typed-command-output-validation", "typed-command-ephemeral", "typed-command-emit", "typed-command-expose"].every((stage) => source.includes(stage));
+  const boundedControl = !!operation && operation.body.includes("cx.is_cancelled()") && operation.body.includes("cx.should_yield()") && operation.body.includes("max_decoded_items") && operation.body.includes("max_output_bytes") && operation.body.includes("PreviewReady") && operation.body.includes("CheckpointReady");
+  const freshness = !!operation && operation.body.includes("validate_commit") && operation.body.includes("base_revision") && operation.body.includes("generation");
+  const monolithicOutput = !!operation && ["serde_json::to_vec(&emit.effects)", "serde_json::to_vec(&emit.events)", "for child in emit.child_emits.iter()", "bounded_command_output_bytes"].some((needle) => operation.body.includes(needle));
+  return operationJob && exactStages && boundedControl && freshness && !monolithicOutput && preJobWork.every((needle) => !before.includes(needle)) && postJobWork.every((needle) => !after.includes(needle));
+}
+
+function toolJobTypedRouteFailsClosedBeforePreparation(source: string): boolean {
+  const start = source.indexOf("async fn dispatch_typed_command_inner");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  const guard = block?.body.indexOf("require_complete_tool_operation_pipeline(&admission)?") ?? -1;
+  const preparation = block?.body.indexOf("refresh_cache().await") ?? -1;
+  const authorityStart = source.indexOf("fn require_complete_tool_operation_pipeline");
+  const authorityOpen = authorityStart < 0 ? -1 : source.indexOf("{", authorityStart);
+  const authority = authorityOpen < 0 ? undefined : toolJobRustBlock(source, authorityOpen);
+  return guard >= 0 && preparation >= 0 && guard < preparation && !!authority && authority.body.includes('FaultCode::new("interactive-job.full-operation-pending")') && !authority.body.includes("Ok(");
+}
+
+function toolJobSegmentedTerminalDrainExact(source: string): boolean {
+  const start = source.indexOf("async fn take_segmented_download_chunk(&mut self, operation_id: u64)");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return !!block && block.body.includes("let chunk = output.chunks.take_chunk()?") && block.body.includes("if chunk.is_none()") && block.body.includes("self.segmented_downloads.remove(operation_id)") && !block.body.includes("chunks_remaining() == 0") && source.includes("segmented_download_remains_addressable_until_terminal_none_is_observed") && source.includes("take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>") && source.includes("async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>") && source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id)") && source.includes(".map_err($crate::component::component::plugin_error)") && !source.includes("plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).ok().flatten()");
+}
+
+function toolJobPuzzleReservedRoutesExact(source: string): boolean {
+  const declarations = [...source.matchAll(/puzzle5d_reserved_factory!\(\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*"([^"]+)"\s*\);/g)].map((match) => ({ factory: match[1]!, id: match[2]!, schema: match[3]! }));
+  const ids = new Set(declarations.map((declaration) => declaration.id));
+  if (declarations.length !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || ids.size !== TOOL_JOB_PLUGIN_RESERVED_IDS.length || TOOL_JOB_PLUGIN_RESERVED_IDS.some((id) => !ids.has(id))) return false;
+  const implStart = source.indexOf("impl ArtifactEditor for Puzzle5dPlayApp");
+  const implOpen = implStart < 0 ? -1 : source.indexOf("{", implStart);
+  const implementation = implOpen < 0 ? undefined : toolJobRustBlock(source, implOpen);
+  if (!implementation) return false;
+  const exactFactories = declarations.every(
+    ({ factory, id }) =>
+      implementation.body.includes(`registry.register(${factory}::new(&controller_id))`) &&
+      implementation.body.includes(`"${id}" =>`) &&
+      source.includes(`impl ArtifactOwnedToolJobFactory for $factory`) &&
+      source.includes("type Owner = EditorApp<Puzzle5dPlayApp>") &&
+      source.includes("const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA"),
+  );
+  const routeJobs = ["Puzzle5dCopyJob", "Puzzle5dCutJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"];
+  const resumableJobs = routeJobs.every((job) => source.includes(`impl InteractiveJob for ${job}`)) && source.includes("CheckpointReady(") && source.includes("cx.is_cancelled()") && source.includes("PUZZLE5D_RESERVED_RAW_BYTES") && source.includes("PUZZLE5D_RESERVED_ITEMS") && source.includes("PUZZLE5D_RESERVED_OUTPUT_BYTES");
+  return exactFactories && resumableJobs && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
+}
+
+function toolJobSegmentedQueueHardBounded(source: string): boolean {
+  const chunksStart = source.indexOf("impl ArtifactOutputChunks");
+  const chunksOpen = chunksStart < 0 ? -1 : source.indexOf("{", chunksStart);
+  const chunks = chunksOpen < 0 ? undefined : toolJobRustBlock(source, chunksOpen);
+  const sealStart = source.indexOf("pub fn seal(&self)", chunksStart);
+  const sealOpen = sealStart < 0 ? -1 : source.indexOf("{", sealStart);
+  const seal = sealOpen < 0 ? undefined : toolJobRustBlock(source, sealOpen);
+  return (
+    !!chunks &&
+    !!seal &&
+    chunks.body.includes("checked_add(chunk.len())") &&
+    chunks.body.includes("chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES") &&
+    chunks.body.includes("state.chunks.push(chunk)") &&
+    chunks.body.includes("state.chunks.pop()") &&
+    chunks.body.includes("self.inner.state.try_lock()") &&
+    source.includes("struct ArtifactFixedQueue<T>") &&
+    source.includes("items.try_reserve_exact(capacity)") &&
+    source.includes("self.items.len() >= self.capacity") &&
+    source.includes("self.items.push_back(value)") &&
+    source.includes("self.items.pop_front()") &&
+    source.includes("segmented_output_preallocates_exact_former_growth_boundary_and_drains_terminal_storage_to_zero") &&
+    source.includes("segmented_output_seal_is_linearly_ordered_with_push") &&
+    !source.includes("Box<[Option<Vec<u8>>]>") &&
+    seal.body.indexOf("self.inner.state.try_lock()") >= 0 &&
+    seal.body.indexOf("self.inner.state.try_lock()") < seal.body.indexOf("compare_exchange(false, true") &&
+    seal.body.indexOf("compare_exchange(false, true") < seal.body.indexOf("self.inner.bytes.load")
+  );
+}
+
+function toolJobMediaExportBounded(source: string): boolean {
+  const pollStart = source.indexOf("async fn poll_owned_media_export");
+  const pollOpen = pollStart < 0 ? -1 : source.indexOf("{", pollStart);
+  const poll = pollOpen < 0 ? undefined : toolJobRustBlock(source, pollOpen);
+  const submitStart = source.indexOf("async fn submit_owned_media_export");
+  const submitOpen = submitStart < 0 ? -1 : source.indexOf("{", submitStart);
+  const submit = submitOpen < 0 ? undefined : toolJobRustBlock(source, submitOpen);
+  const worker = submit?.body.indexOf("WorkerJobSession::new") ?? -1;
+  return (
+    !!poll &&
+    !!submit &&
+    worker >= 0 &&
+    !submit.body.slice(0, worker).includes("ArtifactOutputChunks::new") &&
+    poll.body.includes("pending_step.try_recv()") &&
+    poll.body.includes("active.output_credit.validate_terminal()") &&
+    poll.body.includes("validate_media_export_structure(&result, &active.output_chunks") &&
+    !poll.body.includes("serde_json::to_vec") &&
+    !poll.body.includes("into_batch_media") &&
+    /result\s*\.\s*schema\s*\.\s*len\(\)\s*\.\s*checked_add\(result\s*\.\s*chunks\s*\.\s*bytes\(\)\)/.test(source) &&
+    source.includes("result.chunks.same_operation(operation_chunks)") &&
+    source.includes("result.chunks.is_sealed()") &&
+    source.includes("actual_bytes != credited_bytes || actual_bytes > maximum") &&
+    toolJobSegmentedQueueHardBounded(source) &&
+    source.includes("std::sync::Arc::ptr_eq") &&
+    source.includes("ArtifactToolCompletionValue::Download") &&
+    source.includes("complete_download") &&
+    source.includes("plugin_take_segmented_download_chunk") &&
+    source.includes("semio-segmented-handle-v1") &&
+    source.includes("segmented_output_accepts_exact_cap_and_rejects_plus_one_or_foreign_authority") &&
+    source.includes("struct RuntimeAppCell<PA: PluginApp>") &&
+    source.includes("dropping_a_pending_owner_restores_the_instance_collection_and_wakes_the_waiter") &&
+    source.includes("a_pending_instance_does_not_block_an_unrelated_instance_cell") &&
+    source.includes("submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting") &&
+    !/plugin_(?:submit|poll|cancel)_media_export[\s\S]{0,700}?resolve_ready/.test(source)
+  );
+}
+
+function toolJobDetachedOutputOwnershipExact(source: string): boolean {
+  const blockOf = (needle: string) => {
+    const start = source.indexOf(needle);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  };
+  const registry = blockOf("impl<T> ArtifactFixedRegistry<T>");
+  const submit = blockOf("async fn submit_owned_media_export");
+  const finish = blockOf("fn finish_media_poll");
+  const poll = blockOf("async fn poll_owned_media_export");
+  const cancel = blockOf("async fn cancel_owned_media_export");
+  const typed = blockOf("async fn dispatch_typed_command_inner");
+  if (!registry || !submit || !finish || !poll || !cancel || !typed) return false;
+  const registryRejectsOccupied =
+    registry.body.includes("if self.entry(index).is_some()") &&
+    registry.body.includes("return Err(value)") &&
+    registry.body.includes("fn can_insert(&self, id: u64)") &&
+    registry.body.includes("fn insert_admitted(&mut self, id: u64, value: T)");
+  const mediaOperation = submit.body.indexOf("let operation_id = semio_framework_job::allocate_operation_id()");
+  const mediaPreAdmission = submit.body.indexOf("!self.media_exports.can_insert(operation_id.0)", mediaOperation);
+  const mediaConstruction = submit.body.indexOf("ArtifactSnapshotCloseLease::new", mediaOperation);
+  const wireAdmission = submit.body.indexOf("self.tool_jobs.admit_exact_wire");
+  const cancellationAdmission = submit.body.indexOf("self.tool_cancellations.begin(operation_key)", mediaOperation);
+  const persistentConstruction = submit.body.indexOf("self.media_closures.insert_admitted(", mediaOperation);
+  const builder = submit.body.indexOf("A::build_media_export_job(request)", mediaOperation);
+  const retainedJob = submit.body.indexOf("closing_job = Some(job.clone())", mediaOperation);
+  const dispatch = submit.body.indexOf("self.tool_jobs.dispatch(", mediaOperation);
+  const retainedSession = submit.body.indexOf("active.session = Some(session)", mediaOperation);
+  const pool = submit.body.indexOf("process_worker_pool", mediaOperation);
+  const exposeLive = submit.body.indexOf("self.media_closures.remove(operation_id.0)", mediaOperation);
+  const mediaExact =
+    mediaOperation >= 0 &&
+    mediaPreAdmission > mediaOperation &&
+    mediaConstruction > mediaPreAdmission &&
+    wireAdmission >= 0 &&
+    wireAdmission < mediaConstruction &&
+    cancellationAdmission > mediaPreAdmission &&
+    cancellationAdmission < mediaConstruction &&
+    persistentConstruction > mediaConstruction &&
+    builder > persistentConstruction &&
+    retainedJob > builder &&
+    dispatch > retainedJob &&
+    retainedSession > dispatch &&
+    pool > retainedSession &&
+    exposeLive > pool &&
+    submit.body.includes("!self.media_closures.can_insert(operation_id.0)") &&
+    submit.body.includes("!self.snapshot_retirements.can_insert(operation_id.0)") &&
+    submit.body.includes("self.snapshot_retirements.insert_admitted(operation_id.0, snapshot_retention)") &&
+    submit.body.includes("pending_step = Some(pending_step)") &&
+    submit.body.includes(".media_exports") &&
+    submit.body.includes(".insert_admitted(") &&
+    source.includes("#[derive(Clone)]\n    pub struct ArtifactReservedToolJob") &&
+    source.includes("state: std::sync::Arc<std::sync::Mutex<ArtifactReservedToolJobState>>") &&
+    !submit.body.includes("std::mem::forget");
+  const pollAdmission = poll.body.indexOf("!self.media_closures.can_insert(handle.operation_id.0)");
+  const pollDetach = poll.body.indexOf("self.media_exports.remove(handle.operation_id.0)");
+  const detachedExact =
+    pollAdmission >= 0 &&
+    pollDetach > pollAdmission &&
+    poll.body.includes("self.finish_media_poll(handle.operation_id.0, active") &&
+    !poll.body.includes("drop(active)") &&
+    finish.body.includes("self.media_closures.insert_admitted(operation_id, active)") &&
+    finish.body.includes("self.media_exports.insert_admitted(operation_id, active)") &&
+    !finish.body.includes("std::mem::forget") &&
+    !finish.body.includes("drop(active)") &&
+    cancel.body.includes("!self.media_closures.can_insert(handle.operation_id.0)") &&
+    cancel.body.indexOf("!self.media_closures.can_insert(handle.operation_id.0)") < cancel.body.indexOf("self.media_exports.remove(handle.operation_id.0)") &&
+    cancel.body.includes("self.media_closures.insert_admitted(handle.operation_id.0, active)") &&
+    !cancel.body.includes("drop(active)");
+  const segmentedOperation = typed.body.indexOf("let operation_id = semio_framework_job::allocate_operation_id()");
+  const segmentedPreAdmission = typed.body.indexOf("!self.segmented_downloads.can_insert(operation_id.0)", segmentedOperation);
+  const segmentedConstruction = typed.body.indexOf("ArtifactOutputChunks::new", segmentedOperation);
+  const segmentedExact =
+    segmentedOperation >= 0 &&
+    segmentedPreAdmission > segmentedOperation &&
+    segmentedConstruction > segmentedPreAdmission &&
+    typed.body.includes("!self.segmented_closures.can_insert(operation_id.0)") &&
+    typed.body.includes("self.segmented_downloads.insert_admitted(operation_id.0, download)") &&
+    !typed.body.includes("segmented_downloads.insert(operation_id.0, download).is_err()") &&
+    source.includes("segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>") &&
+    source.includes("close_segment_cleanup_cursor: usize") &&
+    source.includes("duplicate_id_never_drops_active_media_snapshot_or_segmented_download_ownership");
+  return registryRejectsOccupied && mediaExact && detachedExact && segmentedExact;
+}
+
+type ToolJobImporterInventory = {
+  count: number;
+  importers: { owner: string; file: string; route: string; currentMonolith: boolean }[];
+};
+
+function toolJobReservedImporterOwners(root: string, productionFiles: ReadonlyMap<string, string>): { pending: ToolJobCoverageReport["reservedImporterOwners"]; failures: string[] } {
+  const inventory = JSON.parse(policyReadFileSafe(root, TOOL_JOB_IMPORTER_INVENTORY)) as ToolJobImporterInventory;
+  const failures: string[] = [];
+  if (inventory.count !== inventory.importers.length || inventory.count !== 36) failures.push(`reserved importer inventory is not the exact 36-owner census (${inventory.count} declared, ${inventory.importers.length} rows)`);
+  const owners = new Set<string>();
+  const pending: ToolJobCoverageReport["reservedImporterOwners"] = [];
+  for (const row of inventory.importers) {
+    const identity = `${row.owner}\0${row.file}\0${row.route}`;
+    if (owners.has(identity)) failures.push(`duplicate reserved importer inventory identity ${identity}`);
+    owners.add(identity);
+    const source = productionFiles.get(row.file) ?? "";
+    const ownerStart = source.indexOf(`impl ArtifactEditor for ${row.owner}`);
+    const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
+    const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);
+    if (!ownerImpl || row.route !== "import-media") {
+      failures.push(`reserved importer inventory owner ${row.owner} does not resolve to its exact source implementation`);
+      pending.push({ owner: row.owner, file: row.file, id: "import-media", status: "failClosedPendingFactory" });
+      continue;
+    }
+    const migrated =
+      ownerImpl.body.includes("fn register_tool_job_factories(") &&
+      ownerImpl.body.includes("fn build_reserved_tool_job(") &&
+      ownerImpl.body.includes("ArtifactReservedToolInput::Media") &&
+      ownerImpl.body.includes("ArtifactReservedToolJob::new(") &&
+      source.includes('"import-media"') &&
+      source.includes("impl InteractiveJob for ") &&
+      source.includes("CheckpointReady(") &&
+      source.includes("cx.is_cancelled()");
+    if (row.currentMonolith === migrated) failures.push(`reserved importer inventory currentMonolith is stale for ${row.owner}`);
+    if (!migrated) pending.push({ owner: row.owner, file: row.file, id: "import-media", status: "failClosedPendingFactory" });
+  }
+  return { pending, failures };
+}
+
+function toolJobDecodeAfterAdmission(source: string): boolean {
+  const ordered = (functionName: string, admission: string, decode: string) => {
+    const start = source.lastIndexOf(functionName);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+    return !!block && block.body.indexOf(admission) >= 0 && block.body.indexOf(admission) < block.body.indexOf(decode);
+  };
+  return (
+    ordered("async fn dispatch_action", "admit_command_json", "A::command_from_action(action, args).await") &&
+    ordered("async fn dispatch_command(&mut self", "admit_command_json", "A::command_from_action(command_id, Some(&args)).await") &&
+    ordered("async fn handle_intent_frame(&mut self", "admit_command_wire", "A::command_from_intent(intent).await")
+  );
+}
+
+function toolJobRuntimeProofQualified(source: string): boolean {
+  return (
+    source.includes("pub struct ArtifactBoundedFirstStepProof") &&
+    source.includes("macro_rules! bounded_first_step_tool_proofs") &&
+    source.includes("struct QualifiedBoundedFirstStepProof") &&
+    source.includes("pub struct ToolOwnerWitness") &&
+    source.includes("std::any::TypeId::of::<A>()") &&
+    source.includes("std::any::type_name::<A>()") &&
+    source.includes("for row in A::bounded_first_step_tool_proofs()") &&
+    source.includes("row.owner != owner") &&
+    source.includes("row.controller_id != runtime_controller_id") &&
+    source.includes("row.document_schema != document_schema") &&
+    source.includes("row.factory != BOUNDED_FIRST_STEP_FACTORY") &&
+    source.includes("seen != expected") &&
+    /tool_job_registration\s*::<A>\s*\(\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
+    source.includes("fn qualified_tool_proof(&self, verb: &str)") &&
+    source.includes("owner: ToolOwnerWitness") &&
+    source.includes("runtime_controller_id: &str") &&
+    source.includes("addressed_controller_id: &str") &&
+    source.includes("async fn tool_owner_witness(&self) -> ToolOwnerWitness") &&
+    source.includes("admission.factory_type_id == std::any::TypeId::of::<BoundedFirstStepCommandJobFactory<A>>()") &&
+    source.includes("bounded_tool_contracts") &&
+    !source.includes("bounded_first_step_contract(document_schema, id)") &&
+    !source.includes("const BOUNDED_FIRST_STEP_PROOFS")
+  );
+}
+
+function toolJobTypedDispatchExact(source: string): boolean {
+  const start = source.indexOf("pub fn dispatch(&self");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return !!block && !block.body.includes("aliases.get") && block.body.includes("factory_by_key.get(&key)");
+}
+
+function toolJobWireDispatchExact(source: string): boolean {
+  const start = source.indexOf("pub fn dispatch_wire(&self");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return !!block && !block.body.includes("aliases.get") && block.body.includes("factory_by_key.get(&key)");
+}
+
+function toolJobLiveInstanceIsolated(source: string): boolean {
+  return (
+    source.includes("let app_id = app.instance_id().await.to_string()") &&
+    source.includes('format!("{}/{}/{verb}/{}", meta.instance_id') &&
+    source.includes("app_instance_id: meta.instance_id") &&
+    source.includes("tool_cancellation_isolated_by_live_instance_with_same_controller_and_document") &&
+    source.includes("cancel_document(ArtifactDocumentAuthority(41))")
+  );
+}
+
+function toolJobQualifiedProofBeforeDecode(source: string): boolean {
+  const ordered = (functionName: string, proof: string, decode: string) => {
+    const start = source.lastIndexOf(functionName);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+    return !!block && block.body.indexOf(proof) >= 0 && block.body.indexOf(proof) < block.body.indexOf(decode);
+  };
+  return ordered("async fn admit_command_json", "qualified_tool_proof", "bounded_json_items") && ordered("async fn handle_intent_frame", "qualified_tool_proof", "serde_json::to_value");
+}
+
+function toolJobLimitsMatch(proofs: readonly ToolJobProof[], publicLimits: ReadonlyMap<string, number>): boolean {
+  return proofs.every((proof) => publicLimits.get(`${proof.controllerId}\0${proof.toolId}`) === proof.values[0]);
+}
+
+function toolJobExternalCancellationOwned(source: string): boolean {
+  return /pub struct ToolOperationKey\s*\{[\s\S]*app_instance_id:[\s\S]*document:\s*ArtifactDocumentAuthority[\s\S]*operation_id:[\s\S]*base_revision:[\s\S]*generation:/.test(source) && source.includes("pub struct ArtifactDocumentAuthority(pub u32)") && source.includes("struct ToolDocumentCancellationScope") && source.includes("app_scope: semio_framework_job::CancelToken") && source.includes("self.tool_cancellations.begin(operation_key)") && source.includes("cancellation_lease.is_cancelled().await") && source.includes("cancel_scope_generation");
+}
+
+function toolJobDropCancellationBounded(source: string): boolean {
+  const start = source.indexOf("Drop for VcsArtifactApp<");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  return !!block && !block.body.includes("resolve_ready(self.tool_cancellations.cancel_all())") && !block.body.includes("drain()") && block.body.includes("cancel_scope_generation");
+}
+
+function toolJobCancellationScopesBounded(source: string): boolean {
+  const start = source.indexOf("impl ToolCancellationHandle");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  if (!block) return false;
+  const forbidden = [".iter().filter", ".keys()", ".drain()", "collect::<Vec", "resolve_ready(", "for token in", ".lock()", "HashMap<", "String"];
+  return forbidden.every((needle) => !block.body.includes(needle)) && block.body.includes("self.app_scope.child_now()") && block.body.includes("self.try_state()?") && block.body.includes("state.take(index)") && block.body.includes("drop(state)") && block.body.includes("scope.token.cancel_now()") && block.body.includes("self.app_scope.cancel_now()") && source.includes("const TOOL_CANCELLATION_SLOTS: usize = 1_024") && source.includes("slots: Box<[std::mem::MaybeUninit<ToolDocumentCancellationScope>]>") && source.includes("occupied: [u64; TOOL_CANCELLATION_WORDS]") && source.includes("app_generation: std::sync::Arc<std::sync::atomic::AtomicU64>") && source.includes("self.token.cancel_now()") && source.includes("cancellation_supersession_and_saturated_app_close_are_parent_scope_constant_time") && source.includes("cancellation_numeric_authority_rejects_collision_capacity_and_contention_without_blocking") && source.includes("poisoned_cancellation_authority_fails_closed_without_recovery_or_waiting") && !source.includes("self.media_exports.iter().filter");
+}
+
+function toolJobHardBoundedCloseExact(plugin: string, reactor: string): boolean {
+  const fixedAuthority =
+    plugin.includes("pub struct ArtifactDocumentAuthority(pub u32)") &&
+    plugin.includes("media_exports: ArtifactFixedRegistry<ActiveMediaExport>") &&
+    plugin.includes("segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput>") &&
+    !/HashMap\s*<[^>]*(?:ActiveMediaExport|ArtifactDownloadOutput|ToolDocumentCancellation)/.test(plugin);
+  const productionClose = toolJobRuntimeRegistryFixedClose(plugin, reactor);
+  const cleanupJob =
+    plugin.includes("struct RuntimeCloseCleanupJob<PA: PluginApp>") &&
+    plugin.includes("impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA>") &&
+    plugin.includes("const RUNTIME_CLOSE_ITEMS_PER_STEP: usize = 1") &&
+    plugin.includes("const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 4_096") &&
+    plugin.includes("plugin_step_close_cleanup") &&
+    reactor.includes("plugin_step_close_cleanup(runtime)") &&
+    plugin.includes("app_close_step_drains_at_most_one_segment_and_one_chunk_budget");
+  const noImplicitDestruction = plugin.includes("PluginCloseStep::Complete") && plugin.includes("artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained") && plugin.includes("cleanup_queue_saturation_preserves_detached_app_ownership");
+  return fixedAuthority && productionClose && cleanupJob && noImplicitDestruction && toolJobSnapshotRetirementBounded(plugin) && toolJobVcsOwnedDisposalExplicit(plugin) && toolJobErasedCloseTerminalExact(plugin) && toolJobDetachedOutputOwnershipExact(plugin) && toolJobRuntimeCloseCallbackBounded(plugin);
+}
+
+function toolJobVcsOwnedDisposalExplicit(plugin: string): boolean {
+  const driverStart = plugin.indexOf("fn drive_artifact_owned_disposer");
+  const driverOpen = driverStart < 0 ? -1 : plugin.indexOf("{", driverStart);
+  const driver = driverOpen < 0 ? undefined : toolJobRustBlock(plugin, driverOpen);
+  const closeStart = plugin.indexOf("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>", plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp"));
+  const closeOpen = closeStart < 0 ? -1 : plugin.indexOf("{", closeStart);
+  const close = closeOpen < 0 ? undefined : toolJobRustBlock(plugin, closeOpen);
+  if (!driver || !close) return false;
+  const terminalCheck = driver.body.indexOf("disposer_ref.terminal_is_empty(owner)");
+  const release = driver.body.indexOf("drop(disposer.take())");
+  return (
+    plugin.includes("pub trait ArtifactOwnedDisposer<T>: Send") &&
+    plugin.includes("fn close_step(&mut self, owner: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;") &&
+    plugin.includes("fn terminal_is_empty(&self, owner: &T) -> bool;") &&
+    terminalCheck >= 0 &&
+    release > terminalCheck &&
+    driver.body.includes('FaultCode::new("interactive-job.close-owned-disposer-missing")') &&
+    driver.body.includes('FaultCode::new("interactive-job.close-owned-terminal-not-empty")') &&
+    plugin.includes("close_document_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore") &&
+    plugin.includes("close_config_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ConfigStore") &&
+    plugin.includes("close_draft_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore") &&
+    plugin.includes("close_presence_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore") &&
+    plugin.includes("close_transient_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore") &&
+    ["document-store", "config-store", "draft-store", "presence-store", "transient-store"].every((lane) => close.body.includes(`drive_artifact_owned_disposer("${lane}"`)) &&
+    close.body.includes('FaultCode::new("interactive-job.close-app-retained-fields-missing")')
+  );
+}
+
+function toolJobRuntimeCloseCallbackBounded(plugin: string): boolean {
+  const blockOf = (needle: string) => {
+    const start = plugin.indexOf(needle);
+    const open = start < 0 ? -1 : plugin.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(plugin, open);
+  };
+  const job = blockOf("impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA>");
+  const inner = blockOf("fn run_runtime_close_turn_inner");
+  const whole = blockOf("fn run_runtime_close_turn<");
+  const nonterminal = blockOf("fn runtime_close_nonterminal_status");
+  return (
+    !!job &&
+    !!inner &&
+    !!whole &&
+    !!nonterminal &&
+    plugin.includes("const RUNTIME_CLOSE_INNER_GRANT_MS: u64 = 2") &&
+    plugin.includes("const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000") &&
+    inner.body.includes("saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)") &&
+    whole.body.indexOf("std::time::Instant::now()") < whole.body.indexOf("run_runtime_close_turn_inner(state)") &&
+    whole.body.indexOf("run_runtime_close_turn_inner(state)") < whole.body.indexOf("started.elapsed().as_micros()") &&
+    whole.body.includes("elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US") &&
+    whole.body.includes("state.status.store(RUNTIME_CLOSE_FAULT") &&
+    job.body.includes("Err(std::sync::TryLockError::WouldBlock)") &&
+    job.body.includes("self.contended = true") &&
+    job.body.includes("Err(std::sync::TryLockError::Poisoned(_))") &&
+    nonterminal.body.indexOf("if contended") < nonterminal.body.indexOf("stalled_steps.fetch_add") &&
+    plugin.includes("repeated_transient_close_lock_contention_never_consumes_structural_livelock_credit") &&
+    plugin.includes("structural_zero_progress_exhausts_its_exact_close_credit")
+  );
+}
+
+function toolJobErasedCloseTerminalExact(plugin: string): boolean {
+  return (
+    plugin.includes("fn close_terminal_is_empty(&self) -> bool;") &&
+    plugin.includes("fn terminal_is_empty(&self) -> bool;") &&
+    plugin.includes("interactive-job.reserved-terminal-not-empty") &&
+    plugin.includes("plugin close reported Complete without a terminal-empty app witness") &&
+    plugin.includes("std::sync::Arc::try_unwrap(detached)") &&
+    plugin.includes("slots: Box<[std::mem::MaybeUninit<(u32, T)>]>") &&
+    plugin.includes("slots: Box<[std::mem::MaybeUninit<(u64, T)>]>") &&
+    plugin.includes("cell: std::sync::Mutex<std::mem::ManuallyDrop<Option<std::sync::Arc<RuntimeAppCell<PA>>>>>") &&
+    !plugin.includes("slots: Box<[Option<(u32, T)>]>") &&
+    !plugin.includes("slots: Box<[Option<(u64, T)>]>")
+  );
+}
+
+function toolJobSnapshotRetirementBounded(plugin: string): boolean {
+  return (
+    plugin.includes("pub trait ArtifactSnapshotDisposer<T>: Send") &&
+    plugin.includes("fn terminal_is_empty(&self, snapshot: &Option<std::sync::Arc<T>>) -> bool") &&
+    plugin.includes("inner: std::mem::ManuallyDrop<Option<Box<dyn ErasedArtifactSnapshotDisposer>>>") &&
+    plugin.includes("interactive-job.snapshot-terminal-not-empty") &&
+    plugin.includes("snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>") &&
+    plugin.includes("self.snapshot_retirements.insert_admitted(operation_id.0, snapshot_retention)") &&
+    plugin.includes("close_snapshot_cursor: usize") &&
+    plugin.includes(".snapshot_retirements") &&
+    plugin.includes(".close_step(maximum_items, maximum_bytes)?") &&
+    plugin.includes("snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop") &&
+    !plugin.includes("std::sync::Arc::strong_count(snapshot) > 1")
+  );
+}
+
+function toolJobRuntimeRegistryFixedClose(plugin: string, reactor: string): boolean {
+  const destroyStart = plugin.indexOf("pub async fn plugin_destroy_app");
+  const destroyOpen = destroyStart < 0 ? -1 : plugin.indexOf("{", destroyStart);
+  const destroy = destroyOpen < 0 ? undefined : toolJobRustBlock(plugin, destroyOpen);
+  return (
+    !!destroy &&
+    plugin.includes("const PLUGIN_RUNTIME_INSTANCE_SLOTS: usize = 1_024") &&
+    plugin.includes("struct RuntimeInstanceRegistry<T>") &&
+    plugin.includes("slots.try_reserve_exact(PLUGIN_RUNTIME_INSTANCE_SLOTS)") &&
+    plugin.includes("instance_id as usize % PLUGIN_RUNTIME_INSTANCE_SLOTS") &&
+    plugin.includes("instances: RefCell<RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>>") &&
+    plugin.includes("close_quarantine: RefCell<RuntimeInstanceRegistry<RuntimeCloseEntry<PA>>>") &&
+    plugin.includes("instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>") &&
+    plugin.includes("bytes: [u8; PLUGIN_RUNTIME_ACTOR_BYTES]") &&
+    !plugin.includes("instances: LocalAsyncMutex<Vec<std::sync::Arc<RuntimeAppCell<PA>>>>") &&
+    !plugin.includes("struct LocalAsyncMutex") &&
+    destroy.body.includes("instances.take(instance_id)") &&
+    destroy.body.includes("quarantine.insert(instance_id, RuntimeCloseEntry") &&
+    !destroy.body.includes(".iter()") &&
+    !destroy.body.includes(".position(") &&
+    !destroy.body.includes("list.remove(") &&
+    reactor.includes("plugin_destroy_app(runtime, *numeric_instance)") &&
+    plugin.includes("runtime_instance_registry_has_fixed_capacity_collision_and_reuse") &&
+    plugin.includes("runtime_instance_close_quarantine_never_implicitly_drops_nested_value")
+  );
+}
+
+function toolJobReactorCloseBounded(reactor: string, requests: string, executor: string): boolean {
+  const cancelStart = reactor.indexOf("pub(crate) fn cancel_instance_tasks_step");
+  const cancelOpen = cancelStart < 0 ? -1 : reactor.indexOf("{", cancelStart);
+  const cancel = cancelOpen < 0 ? undefined : toolJobRustBlock(reactor, cancelOpen);
+  const requestStart = requests.indexOf("pub fn cancel_instance_step(&self");
+  const requestOpen = requestStart < 0 ? -1 : requests.indexOf("{", requestStart);
+  const requestCancel = requestOpen < 0 ? undefined : toolJobRustBlock(requests, requestOpen);
+  const closeStart = executor.indexOf("pub fn close_instance_step(&self");
+  const closeOpen = closeStart < 0 ? -1 : executor.indexOf("{", closeStart);
+  const executorClose = closeOpen < 0 ? undefined : toolJobRustBlock(executor, closeOpen);
+  const runStart = executor.indexOf("pub fn run_until_deadline(&self");
+  const runOpen = runStart < 0 ? -1 : executor.indexOf("{", runStart);
+  const executorRun = runOpen < 0 ? undefined : toolJobRustBlock(executor, runOpen);
+  return (
+    !!cancel &&
+    !!requestCancel &&
+    !!executorClose &&
+    !!executorRun &&
+    reactor.includes("static REACTOR_EXECUTOR: executor::ReactorExecutor") &&
+    reactor.includes("static TEST_FUTURE_EXECUTOR: executor::ColdFutureExecutor") &&
+    !reactor.includes("static REACTOR_EXECUTOR: executor::ColdFutureExecutor") &&
+    executor.includes("pub trait ReactorTask") &&
+    executor.includes("fn step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep") &&
+    executor.includes("fn close_step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep") &&
+    executor.includes("fn terminal_is_empty(&self) -> bool") &&
+    executor.includes("pub operation: u64") &&
+    executor.includes("pub generation: u64") &&
+    executor.includes("pub cancellation_generation: u64") &&
+    executor.includes("slots: VecDeque<ReactorTaskSlot>") &&
+    executor.includes("free: VecDeque<usize>") &&
+    !executor.includes("Result<TaskId, Box<dyn ReactorTask>>") &&
+    reactor.includes("struct FixedResumeQueue") &&
+    reactor.includes("fn cancel_instance_step(&mut self, instance: u32, remaining: &mut usize)") &&
+    reactor.includes("struct FixedTimerRegistry") &&
+    reactor.includes("struct ReactorFixedSlots<T>") &&
+    reactor.includes("values: Box<[std::mem::MaybeUninit<T>]>") &&
+    reactor.includes("impl<T> Drop for ReactorFixedSlots<T>") &&
+    reactor.includes("instance: u32") &&
+    reactor.includes("fn cancel_instance_step(&mut self, instance: u32, cursor: &mut usize)") &&
+    reactor.includes("plugin.timer-owner-missing") &&
+    !reactor.includes("static ARMED_TIMERS: RefCell<Vec<u64>>") &&
+    !reactor.includes("static OPEN_INSTANCES: RefCell<Vec<") &&
+    !reactor.includes("static TASK_RECORDS: RefCell<HashMap<") &&
+    !reactor.includes("static TASK_KEYS: RefCell<HashMap<") &&
+    !reactor.includes("static INSTANCE_QUOTAS: RefCell<HashMap<") &&
+    requests.includes("slots: Box<[std::mem::MaybeUninit<SlotEntry>]>") &&
+    requests.includes("outbound: std::mem::ManuallyDrop<VecDeque<(u32, Effect)>>") &&
+    !requests.includes("slots: Box<[Option<SlotEntry>]>") &&
+    !cancel.body.includes(".iter().filter") &&
+    !cancel.body.includes("collect::<Vec") &&
+    !requestCancel.body.includes(".iter().filter") &&
+    !executorClose.body.includes("ready.retain") &&
+    !executorClose.body.includes("free.contains") &&
+    !/ReactorTaskStep::Blocked[\s\S]{0,160}\bbreak\b/.test(executorRun.body) &&
+    !reactor.includes("for waker in state.waiters.drain(..)") &&
+    reactor.includes("reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps") &&
+    executor.includes("rejected_reactor_task_is_bounded_disposed_without_drop") &&
+    executor.includes("blocked_reactor_task_does_not_starve_ready_peer") &&
+    executor.includes("reactor_executor_shutdown_drains_every_slot_before_terminal_drop") &&
+    executor.includes("stale_generation_cannot_commit")
+  );
+}
+
+function toolJobOpaqueFutureProductionFailClosed(jobs: string): boolean {
+  const spawnStart = jobs.indexOf("async fn spawn_job(");
+  const spawnOpen = spawnStart < 0 ? -1 : jobs.indexOf("{", spawnStart);
+  const spawn = spawnOpen < 0 ? undefined : toolJobRustBlock(jobs, spawnOpen);
+  return (
+    !!spawn &&
+    jobs.includes("#[cfg(test)]\n    static TEST_JOBS_FUTURE_EXECUTOR: super::executor::ColdFutureExecutor") &&
+    !jobs.includes("static JOBS_EXECUTOR: super::executor::ColdFutureExecutor") &&
+    jobs.includes("JobBody::ExplicitStateMachineRequired") &&
+    jobs.includes('"job.explicit-state-machine-required"') &&
+    spawn.body.includes("#[cfg(not(test))]") &&
+    spawn.body.indexOf("JobBody::ExplicitStateMachineRequired") < spawn.body.indexOf("let future = run(") &&
+    spawn.body.includes("#[cfg(test)]")
+  );
+}
+
+/** 🧪️ Proves the verifier rejects the historical and audited false-positive classes. */
+function toolJobCoverageSelfTests(): number {
+  const evaluate = (sources: Record<string, string>) => {
+    const files = new Map(Object.entries(sources));
+    const rows = toolJobStaticRows(files);
+    const dispositions = toolJobDispositions(files);
+    const proofs = toolJobProofs(files);
+    const catalogClean = toolJobProofCatalogFailures(files, rows, dispositions, proofs).length === 0;
+    const registered = new Set(rows.map((row) => row.id));
+    const remaining = rows.filter((row) => {
+      const disposition = dispositions.get(`${row.file}\0${row.id}`);
+      const unbounded = /for\s+item\s+in\s+items\b|while\s+true\b/.test(sources[row.file] ?? "");
+      const proof = catalogClean ? proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory === "BoundedFirstStepCommandJobFactory" && candidate.toolId === row.id && candidate.documentSchema.length > 0) : undefined;
+      return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(disposition === "Migrated" && proof && !unbounded);
+    });
+    for (const [file, source] of files) {
+      for (const match of source.matchAll(/dispatch\(\s*"([^"]+)"/g)) if (!registered.has(match[1]!)) remaining.push({ file, id: match[1]!, source: "literal" });
+    }
+    return remaining;
+  };
+  const fixtures: readonly [string, Record<string, string>][] = [
+    ["old-775-default", { "plugin.rs": 'app_commands! { "one" => one::Payload, "two" => two::Payload }' }],
+    ["missing-alias-fallback", { "framework.rs": 'fn bounded_first_step_contract(id: &str) { match id { "exact" => Some(semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100)), _ => None } }', "plugin.rs": 'app_commands! { "exact" => exact::Payload }\n.action_interactive_job("exact", InteractiveJobClassification::Migrated)\ndispatch("alias");' }],
+    ["nonmacro-puzzle", { "puzzle.rs": '.mutation("scramble", label, kind)' }],
+    ["unbounded-handler", { "framework.rs": 'fn bounded_first_step_contract(id: &str) { match id { "export" => Some(semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100)), _ => None } }', "plugin.rs": 'app_commands! { "export" => export::Payload }\n.action_interactive_job("export", InteractiveJobClassification::Migrated)\nfn handle(items: &[u8]) { for item in items { work(item); } }' }],
+    ["default-migrated-builder", { "manifest.rs": 'fn bounded_catalog() { definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated; }', "plugin.rs": 'app_commands! { "solve" => solve::Payload }' }],
+  ];
+  for (const [name, sources] of fixtures) if (evaluate(sources).length === 0) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
+  const exactProof = (owner: string, controller: string, id: string, raw = 64) => {
+    const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
+    return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", document_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
+  };
+  const duplicateOwner = {
+    "owner-a.rs": `app_commands! { "same" => same::Payload }\n.action_interactive_job("same", InteractiveJobClassification::Migrated)\n${exactProof("owner-a.rs", "owner-a@1/*#editor", "same")}`,
+    "owner-b.rs": 'app_commands! { "same" => same::Payload }\n.action_interactive_job("same", InteractiveJobClassification::Migrated)',
+  };
+  const duplicateRemaining = evaluate(duplicateOwner);
+  if (duplicateRemaining.length !== 2) throw new Error("[verify interactivity tool-jobs] self-test declaration-without-proof was falsely accepted.");
+  const validCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${exactProof("owner.rs", "owner@1/*#editor", "bounded")}` };
+  if (evaluate(validCatalog).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test exact-dynamic-proof-catalog was falsely rejected.");
+  const duplicateCatalog = { "owner.rs": validCatalog["owner.rs"]!.replace('tools: { "bounded" =>', 'tools: { "bounded" => semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100), "bounded" =>') };
+  if (evaluate(duplicateCatalog).length === 0) throw new Error("[verify interactivity tool-jobs] self-test duplicate-proof was falsely accepted.");
+  const forgedOwner = { "owner.rs": validCatalog["owner.rs"]!.replace("EditorApp<Ownerownerrs>", "EditorApp<ForgedOwner>") };
+  if (evaluate(forgedOwner).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-owner was falsely accepted.");
+  const forgedSchema = { "owner.rs": validCatalog["owner.rs"]!.replace('document_schema: "fixture.document"', 'document_schema: "forged.document"') };
+  if (evaluate(forgedSchema).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-schema was falsely accepted.");
+  const forgedFactory = { "owner.rs": validCatalog["owner.rs"]!.replace('factory: "BoundedFirstStepCommandJobFactory"', 'factory: "ForgedFactory"') };
+  if (evaluate(forgedFactory).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-factory was falsely accepted.");
+  const extraProof = { "owner.rs": exactProof("owner.rs", "owner@1/*#editor", "extra") };
+  if (toolJobProofCatalogFailures(new Map(Object.entries(extraProof)), [], new Map(), toolJobProofs(new Map(Object.entries(extraProof)))).length === 0) throw new Error("[verify interactivity tool-jobs] self-test extra-proof was falsely accepted.");
+  const reservedBypass = 'async fn dispatch_action() { interactive-job.unknown-key; return self.dispatch_framework_reserved_action(action, args, meta).await; } async fn dispatch_framework_reserved_action() { self.store.dispatch(command); }';
+  if (toolJobFrameworkReservedRoutesExact(reservedBypass)) throw new Error("[verify interactivity tool-jobs] self-test registryless-reserved-bypass was falsely accepted.");
+  const decodeBeforeLookup = "async fn dispatch_action() { A::command_from_action(action, args).await; admit_command_json(action, args); } async fn dispatch_command() { A::command_from_action(action, args).await; admit_command_json(action, args); } async fn handle_intent_frame() { A::command_from_intent(intent).await; admit_command_wire(owner, tool); }";
+  if (toolJobDecodeAfterAdmission(decodeBeforeLookup)) throw new Error("[verify interactivity tool-jobs] self-test decode-before-lookup was falsely accepted.");
+  const mismatchProofs = toolJobProofs(new Map([["owner.rs", exactProof("owner.rs", "owner@1/*#editor", "bounded", 64)]]));
+  if (toolJobLimitsMatch(mismatchProofs, new Map([["owner@1/*#editor\0bounded", 128]]))) throw new Error("[verify interactivity tool-jobs] self-test contract-mismatch was falsely accepted.");
+  const externalCancellation = "let cancellation = JobScope::root(); session.step(cancel.cancel_token());";
+  if (toolJobExternalCancellationOwned(externalCancellation)) throw new Error("[verify interactivity tool-jobs] self-test external-cancellation was falsely accepted.");
+  const unqualifiedRuntime = "fn bounded_first_step_contract(document_schema, id) {} fn bounded_first_step_public_wire_limit(command_id) {}";
+  if (toolJobRuntimeProofQualified(unqualifiedRuntime)) throw new Error("[verify interactivity tool-jobs] self-test runtime-owner-proof-drop was falsely accepted.");
+  const proofAfterDecode = "async fn admit_command_json() { bounded_json_items(); qualified_tool_proof(); } async fn handle_intent_frame() { serde_json::to_value(); qualified_tool_proof(); }";
+  if (toolJobQualifiedProofBeforeDecode(proofAfterDecode)) throw new Error("[verify interactivity tool-jobs] self-test qualified-proof-after-decode was falsely accepted.");
+  const copiedOwnerStrings = 'struct QualifiedBoundedFirstStepProof; fn bounded_first_step_proof(controller_id: &str, factory: &str, tool_id: &str, document_schema: &str) { proof.owner_file != ""; } tool_job_registration(A::APP_ID, A::DOCUMENT_SCHEMA);';
+  if (toolJobRuntimeProofQualified(copiedOwnerStrings)) throw new Error("[verify interactivity tool-jobs] self-test copied-owner-without-compiler-witness was falsely accepted.");
+  const controllerScopedOperation = 'let app_id = app.instance_id().await.to_string(); format!("{}/{verb}/{}", self.tool_job_controller_id, base_revision.0); app_instance_id: meta.instance_id;';
+  if (toolJobLiveInstanceIsolated(controllerScopedOperation)) throw new Error("[verify interactivity tool-jobs] self-test controller-scoped-runtime-instance was falsely accepted.");
+  const typedAliasFallback = "pub fn dispatch(&self) { let exact = inner.aliases.get(&key); inner.factory_by_key.get(&exact); }";
+  if (toolJobTypedDispatchExact(typedAliasFallback)) throw new Error("[verify interactivity tool-jobs] self-test typed-alias-fallback was falsely accepted.");
+  const wireAliasFallback = "pub fn dispatch_wire(&self) { let exact = inner.aliases.get(&key); inner.factory_by_key.get(&exact); }";
+  if (toolJobWireDispatchExact(wireAliasFallback)) throw new Error("[verify interactivity tool-jobs] self-test wire-alias-fallback was falsely accepted.");
+  const genericReservedTerminal = `${TOOL_JOB_RESERVED_IDS.map((id, index) => `framework_reserved_job!(Job${index}, Factory${index}, "${id}", ${index}, 64, 1, 1, 64);`).join("\n")} impl FrameworkReservedCursor { fn step(&mut self) {} }`;
+  if (toolJobFrameworkReservedRoutesExact(genericReservedTerminal)) throw new Error("[verify interactivity tool-jobs] self-test generic-reserved-terminal was falsely accepted.");
+  const missingReservedFactory = TOOL_JOB_RESERVED_IDS.slice(1).map((id, index) => `framework_reserved_job!(Job${index}, Factory${index}, "${id}", ${index}, 64, 1, 1, 64);`).join("\n");
+  if (toolJobFrameworkReservedRoutesExact(missingReservedFactory)) throw new Error("[verify interactivity tool-jobs] self-test missing-reserved-factory was falsely accepted.");
+  const monolithicBinary = `${TOOL_JOB_RESERVED_IDS.map((id, index) => `framework_reserved_job!(Job${index}, Factory${index}, "${id}", ${index}, 64, 1, 1, 64);`).join("\n")} async fn dispatch_import_media() { A::import_media().await; } async fn dispatch_config_command_inner() { decode_op(); }`;
+  if (toolJobFrameworkReservedRoutesExact(monolithicBinary)) throw new Error("[verify interactivity tool-jobs] self-test monolithic-reserved-binary was falsely accepted.");
+  const earlyPermitFinish = `${TOOL_JOB_RESERVED_IDS.map((id, index) => `framework_reserved_job!(Job${index}, Factory${index}, "${id}", ${index}, 64, 1, 1, 64);`).join("\n")} struct FrameworkReservedCommitPermit; async fn dispatch_action() { interactive-job.unknown-key; return self.dispatch_framework_reserved_action(action, args, meta).await; } async fn dispatch_framework_reserved_action() { permit.finish(); let result = if HISTORY_ACTION_IDS {} }`;
+  if (toolJobFrameworkReservedRoutesExact(earlyPermitFinish)) throw new Error("[verify interactivity tool-jobs] self-test early-reserved-permit-finish was falsely accepted.");
+  const envelopeOnlyReserved = "struct Job { raw: Vec<u8>, envelope_cursor: usize } impl InteractiveJob for Job { fn step() { Ok(self.raw.clone()); } }";
+  if (toolJobFrameworkReservedRoutesExact(envelopeOnlyReserved)) throw new Error("[verify interactivity tool-jobs] self-test envelope-only-reserved-job was falsely accepted.");
+  const postJobMonolith = "async fn dispatch_framework_reserved_action() { run_framework_reserved_job().await; dispatch_history_action().await; } fn ensure_reserved_emit_bounded() { serde_json::to_vec(&emit); }";
+  if (toolJobFrameworkReservedRoutesExact(postJobMonolith)) throw new Error("[verify interactivity tool-jobs] self-test post-job-monolithic-operation was falsely accepted.");
+  const preJobImportSerialization = "async fn dispatch_import_media() { let raw = serde_json::to_vec(&(port, media)); build_artifact_reserved_media_job(port, media, raw); }";
+  if (toolJobImportPreparationBounded(preJobImportSerialization)) throw new Error("[verify interactivity tool-jobs] self-test pre-job-import-serialization was falsely accepted.");
+  const escapedTypedPreparation = "async fn dispatch_typed_command_inner() { refresh_cache().await; draft_store.snapshot().await; let session = WorkerJobSession::new(job); dispatch_emit().await; }";
+  if (toolJobFullOperationBounded(escapedTypedPreparation)) throw new Error("[verify interactivity tool-jobs] self-test typed-preparation-and-commit-outside-job was falsely accepted.");
+  const fakePhaseCursor = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); set_stage("typed-command-output-validation"); set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
+  if (toolJobFullOperationBounded(fakePhaseCursor)) throw new Error("[verify interactivity tool-jobs] self-test fake-full-operation-phase-cursor was falsely accepted.");
+  const monolithicHugeOutput = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { cx.is_cancelled(); cx.should_yield(); max_decoded_items; max_output_bytes; PreviewReady; CheckpointReady; validate_commit(base_revision, generation); set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); set_stage("typed-command-output-validation"); serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {} set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
+  if (toolJobFullOperationBounded(monolithicHugeOutput)) throw new Error("[verify interactivity tool-jobs] self-test monolithic-huge-output-and-child-validation was falsely accepted.");
+  const noStageWatchdog = monolithicHugeOutput.replace("cx.is_cancelled(); cx.should_yield();", "").replace("serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {}", "");
+  if (toolJobFullOperationBounded(noStageWatchdog)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stage-watchdog was falsely accepted.");
+  const staleExposure = noStageWatchdog.replace("validate_commit(base_revision, generation);", "").replace("fn step() { ", "fn step() { cx.is_cancelled(); cx.should_yield(); ");
+  if (toolJobFullOperationBounded(staleExposure)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stale-result-validation was falsely accepted.");
+  const unguardedIncompleteRoute = "async fn dispatch_typed_command_inner() { refresh_cache().await; let session = WorkerJobSession::new(job); }";
+  if (toolJobTypedRouteFailsClosedBeforePreparation(unguardedIncompleteRoute)) throw new Error("[verify interactivity tool-jobs] self-test incomplete-typed-route-without-preparation-guard was falsely accepted.");
+  const wholeMapDropCancellation = "impl<A: ArtifactApp> Drop for VcsArtifactApp<A> { fn drop() { resolve_ready(self.tool_cancellations.cancel_all()); operations.drain(); } }";
+  if (toolJobDropCancellationBounded(wholeMapDropCancellation)) throw new Error("[verify interactivity tool-jobs] self-test whole-map-drop-cancellation was falsely accepted.");
+  const collectionCancellation = "impl ToolCancellationHandle { fn begin() { live.iter().filter().collect::<Vec<_>>(); } fn cancel_document() { live.keys(); } fn cancel_scope_generation() {} }";
+  if (toolJobCancellationScopesBounded(collectionCancellation)) throw new Error("[verify interactivity tool-jobs] self-test collection-wide-cancellation was falsely accepted.");
+  const stringKeyedCancellation = "impl ToolCancellationHandle { fn begin(document: String) { let mut live: HashMap<String, Token> = HashMap::new(); live.insert(document, token); } fn cancel_document() {} fn cancel_scope_generation() {} }";
+  if (toolJobCancellationScopesBounded(stringKeyedCancellation)) throw new Error("[verify interactivity tool-jobs] self-test string-keyed-resizable-cancellation was falsely accepted.");
+  const blockingCancellation = "impl ToolCancellationHandle { fn begin() { let mut state = self.state.lock().unwrap(); state.token.cancel_now(); } fn cancel_document() {} fn cancel_scope_generation() {} }";
+  if (toolJobCancellationScopesBounded(blockingCancellation)) throw new Error("[verify interactivity tool-jobs] self-test blocking-lock-held-cancellation was falsely accepted.");
+  const implicitCloseDestruction = "pub struct ArtifactDocumentAuthority(pub u32); struct VcsArtifactApp { media_exports: ArtifactFixedRegistry<ActiveMediaExport>, segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput> } plugin_destroy_app(runtime, *numeric_instance);";
+  if (toolJobHardBoundedCloseExact(implicitCloseDestruction, implicitCloseDestruction)) throw new Error("[verify interactivity tool-jobs] self-test implicit-close-field-destruction was falsely accepted.");
+  const erasedCloseWithoutWitness = "trait PluginApp { fn close_step() -> PluginCloseStep; } trait ArtifactReservedJob { fn close_step() -> PluginCloseStep; } fn run_runtime_close_turn() { if close_step() == Complete { drop(app); } }";
+  if (toolJobErasedCloseTerminalExact(erasedCloseWithoutWitness)) throw new Error("[verify interactivity tool-jobs] self-test erased-close-without-terminal-witness was falsely accepted.");
+  const ordinaryFixedOptionSlots = "trait PluginApp { fn close_terminal_is_empty(&self) -> bool; } trait ArtifactReservedJob { fn terminal_is_empty(&self) -> bool; } struct RuntimeInstanceRegistry<T> { slots: Box<[Option<(u32, T)>]> } struct ArtifactFixedRegistry<T> { slots: Box<[Option<(u64, T)>]> }";
+  if (toolJobErasedCloseTerminalExact(ordinaryFixedOptionSlots)) throw new Error("[verify interactivity tool-jobs] self-test fixed-capacity-option-slot-implicit-drop was falsely accepted.");
+  const completeWithoutReservedWitness = "trait ArtifactReservedJob { fn terminal_is_empty(&self) -> bool; } fn close_step() { if step == Complete { drop(self.inner.take()); } }";
+  if (toolJobErasedCloseTerminalExact(completeWithoutReservedWitness)) throw new Error("[verify interactivity tool-jobs] self-test reserved-complete-ignored-terminal-witness was falsely accepted.");
+  const closeWithoutUniqueCell = "trait PluginApp { fn close_terminal_is_empty(&self) -> bool; } fn run_runtime_close_turn() { if app.close_terminal_is_empty() { drop(detached); } }";
+  if (toolJobErasedCloseTerminalExact(closeWithoutUniqueCell)) throw new Error("[verify interactivity tool-jobs] self-test runtime-close-without-unique-cell-ownership was falsely accepted.");
+  const unmeasuredTerminalHandoff = "const RUNTIME_CLOSE_INNER_GRANT_MS: u64 = 8; const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000; impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> { fn step() { try_lock(); } } fn run_runtime_close_turn_inner() { drive_step(StepBudget::new(1, now.saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS))); drop(instance); } fn run_runtime_close_turn() { run_runtime_close_turn_inner(state); } fn runtime_close_nonterminal_status() {}";
+  if (toolJobRuntimeCloseCallbackBounded(unmeasuredTerminalHandoff)) throw new Error("[verify interactivity tool-jobs] self-test runtime-close-terminal-handoff-outside-watchdog was falsely accepted.");
+  const contentionConsumesLivelock = "const RUNTIME_CLOSE_INNER_GRANT_MS: u64 = 2; const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000; impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> { fn step() { if let Err(std::sync::TryLockError::WouldBlock) = try_lock() { self.contended = true; } Err(std::sync::TryLockError::Poisoned(_)); } } fn run_runtime_close_turn_inner() { StepBudget::new(1, now.saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)); } fn run_runtime_close_turn() { let started = std::time::Instant::now(); run_runtime_close_turn_inner(state); let elapsed_us = started.elapsed().as_micros(); if elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US { state.status.store(RUNTIME_CLOSE_FAULT); } } fn runtime_close_nonterminal_status() { stalled_steps.fetch_add(1); if contended { return RUNTIME_CLOSE_READY; } } repeated_transient_close_lock_contention_never_consumes_structural_livelock_credit structural_zero_progress_exhausts_its_exact_close_credit";
+  if (toolJobRuntimeCloseCallbackBounded(contentionConsumesLivelock)) throw new Error("[verify interactivity tool-jobs] self-test transient-close-contention-consumed-livelock-credit was falsely accepted.");
+  const fakeCleanupQueue = `${implicitCloseDestruction} struct ArtifactCloseCleanupJob; impl semio_framework_job::InteractiveJob for ArtifactCloseCleanupJob {} const ARTIFACT_CLOSE_CLEANUP_ITEMS_PER_STEP: usize = 1; const ARTIFACT_CLOSE_CLEANUP_BYTES_PER_STEP: usize = 4096; fn handoff_close_cleanup(&mut self) { std::mem::replace(&mut self.media_exports); std::mem::replace(&mut self.segmented_downloads); }`;
+  if (toolJobHardBoundedCloseExact(fakeCleanupQueue, fakeCleanupQueue)) throw new Error("[verify interactivity tool-jobs] self-test cleanup-enqueue-without-saturation-ownership was falsely accepted.");
+  const replacingLiveOwner = "impl<T> ArtifactFixedRegistry<T> { fn insert(&mut self, id: u64, value: T) -> Result<Option<T>, T> { let previous = self.slots[index].replace((id, value)); Ok(previous) } fn can_insert(&self, id: u64) -> bool { true } fn insert_admitted(&mut self, id: u64, value: T) {} }";
+  if (toolJobDetachedOutputOwnershipExact(replacingLiveOwner)) throw new Error("[verify interactivity tool-jobs] self-test occupied-live-owner-replacement was falsely accepted.");
+  const detachedMediaDrop = "impl<T> ArtifactFixedRegistry<T> { fn insert(&mut self, id: u64, value: T) -> Result<(), T> { if self.entry(index).is_some() { return Err(value); } Ok(()) } fn can_insert(&self, id: u64) -> bool { true } fn insert_admitted(&mut self, id: u64, value: T) {} } async fn submit_owned_media_export() { let operation_id = semio_framework_job::allocate_operation_id(); if !self.media_exports.can_insert(operation_id.0) || !self.media_closures.can_insert(operation_id.0) || !self.snapshot_retirements.can_insert(operation_id.0) {} ArtifactSnapshotCloseLease::new(); self.snapshot_retirements.insert_admitted(operation_id.0, snapshot_retention); self.media_exports.insert_admitted(operation_id.0, active); } fn finish_media_poll() { drop(active); } async fn poll_owned_media_export() { if !self.media_closures.can_insert(handle.operation_id.0) {} let active = self.media_exports.remove(handle.operation_id.0); drop(active); } async fn cancel_owned_media_export() { let active = self.media_exports.remove(handle.operation_id.0); drop(active); } async fn dispatch_typed_command_inner() {}";
+  if (toolJobDetachedOutputOwnershipExact(detachedMediaDrop)) throw new Error("[verify interactivity tool-jobs] self-test detached-media-stack-drop was falsely accepted.");
+  const rejectedSegmentedDrop = detachedMediaDrop.replace("async fn dispatch_typed_command_inner() {}", "async fn dispatch_typed_command_inner() { let operation_id = semio_framework_job::allocate_operation_id(); ArtifactOutputChunks::new(maximum); if self.segmented_downloads.insert(operation_id.0, download).is_err() { return Err(fault); } }");
+  if (toolJobDetachedOutputOwnershipExact(rejectedSegmentedDrop)) throw new Error("[verify interactivity tool-jobs] self-test rejected-segmented-download-stack-drop was falsely accepted.");
+  const weakSnapshotLease = "pub trait ArtifactSnapshotDisposer<T>: Send {} struct VcsArtifactApp { snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>, close_snapshot_cursor: usize } impl Lease { fn can_release(snapshot: &Arc<T>) { Arc::strong_count(snapshot) > 1; } } snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop";
+  if (toolJobSnapshotRetirementBounded(weakSnapshotLease)) throw new Error("[verify interactivity tool-jobs] self-test weak-count-snapshot-retirement was falsely accepted.");
+  const activeOwnedSnapshot = "pub trait ArtifactSnapshotDisposer<T>: Send {} struct VcsArtifactApp { snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>, close_snapshot_cursor: usize } struct ActiveMediaExport { snapshot_retention: ArtifactSnapshotCloseRetention } fn close_step() { drop(active); } snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop";
+  if (toolJobSnapshotRetirementBounded(activeOwnedSnapshot)) throw new Error("[verify interactivity tool-jobs] self-test active-owned-last-snapshot-root was falsely accepted.");
+  const snapshotCompleteWithoutEmptyWitness = "pub trait ArtifactSnapshotDisposer<T>: Send { fn close_step() -> PluginCloseStep { PluginCloseStep::Complete } } struct VcsArtifactApp { snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>, close_snapshot_cursor: usize } snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop";
+  if (toolJobSnapshotRetirementBounded(snapshotCompleteWithoutEmptyWitness)) throw new Error("[verify interactivity tool-jobs] self-test snapshot-complete-without-terminal-empty-witness was falsely accepted.");
+  const ownedDisposerWithoutTerminal = "pub trait ArtifactOwnedDisposer<T>: Send { fn close_step(&mut self, owner: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>; fn terminal_is_empty(&self, owner: &T) -> bool; } fn drive_artifact_owned_disposer() { drop(disposer.take()); disposer_ref.terminal_is_empty(owner); } impl PluginApp for VcsArtifactApp { fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> { drive_artifact_owned_disposer(\"document-store\"); drive_artifact_owned_disposer(\"config-store\"); drive_artifact_owned_disposer(\"draft-store\"); drive_artifact_owned_disposer(\"presence-store\"); drive_artifact_owned_disposer(\"transient-store\"); FaultCode::new(\"interactive-job.close-app-retained-fields-missing\"); } }";
+  if (toolJobVcsOwnedDisposalExplicit(ownedDisposerWithoutTerminal)) throw new Error("[verify interactivity tool-jobs] self-test owned-store-disposer-release-before-terminal-witness was falsely accepted.");
+  const missingOwnedLane = ownedDisposerWithoutTerminal.replace('drop(disposer.take()); disposer_ref.terminal_is_empty(owner);', 'FaultCode::new("interactive-job.close-owned-disposer-missing"); FaultCode::new("interactive-job.close-owned-terminal-not-empty"); disposer_ref.terminal_is_empty(owner); drop(disposer.take());').replace('drive_artifact_owned_disposer("presence-store");', "");
+  if (toolJobVcsOwnedDisposalExplicit(missingOwnedLane)) throw new Error("[verify interactivity tool-jobs] self-test missing-owned-store-disposal-lane was falsely accepted.");
+  const resizableRuntimeInstances = "struct PluginRuntime<PA> { instances: LocalAsyncMutex<Vec<std::sync::Arc<RuntimeAppCell<PA>>>>, instance_actors: HashMap<u32, String> } async fn plugin_destroy_app() { list.iter().position(); list.remove(index); } plugin_destroy_app(runtime, *numeric_instance);";
+  if (toolJobRuntimeRegistryFixedClose(resizableRuntimeInstances, resizableRuntimeInstances)) throw new Error("[verify interactivity tool-jobs] self-test resizable-scanning-runtime-instance-close was falsely accepted.");
+  const scanningReactorClose = "static OPEN_INSTANCES: RefCell<Vec<(u32, String)>>; static TASK_RECORDS: RefCell<HashMap<TaskId, TaskRecord>>; static TASK_KEYS: RefCell<HashMap<(u32, String), TaskId>>; static INSTANCE_QUOTAS: RefCell<HashMap<u32, Quota>>; pub(crate) fn cancel_instance_tasks() { records.iter().filter().collect::<Vec<_>>(); } pub fn cancel_instance(&self) { instance_of.iter().filter(); } pub fn cancel(&self) { ready.retain(); free.contains(); } for waker in state.waiters.drain(..) {}";
+  if (toolJobReactorCloseBounded(scanningReactorClose, scanningReactorClose, scanningReactorClose)) throw new Error("[verify interactivity tool-jobs] self-test scanning-reactor-task-request-close was falsely accepted.");
+  const fixedOptionReactorClose = "struct ReactorFixedSlots<T> { values: Box<[Option<T>]> } struct Inner { slots: Box<[Option<SlotEntry>]>, outbound: VecDeque<(u32, Effect)> } fn cancel_instance_step() { drop(slots[index].take()); }";
+  if (toolJobReactorCloseBounded(fixedOptionReactorClose, fixedOptionReactorClose, fixedOptionReactorClose)) throw new Error("[verify interactivity tool-jobs] self-test fixed-option-reactor-request-implicit-drop was falsely accepted.");
+  const genericFutureReactor = "static REACTOR_EXECUTOR: executor::ColdFutureExecutor; pub trait ReactorTask { fn step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep; fn close_step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep; fn terminal_is_empty(&self) -> bool; }";
+  if (toolJobReactorCloseBounded(genericFutureReactor, genericFutureReactor, genericFutureReactor)) throw new Error("[verify interactivity tool-jobs] self-test generic-future-production-reactor was falsely accepted.");
+  const rejectedTaskDrop = "pub fn admit(&self, task: Box<dyn ReactorTask>) -> Result<TaskId, Box<dyn ReactorTask>> { Err(task) } rejected_reactor_task_is_bounded_disposed_without_drop blocked_reactor_task_does_not_starve_ready_peer reactor_executor_shutdown_drains_every_slot_before_terminal_drop stale_generation_cannot_commit";
+  if (toolJobReactorCloseBounded(rejectedTaskDrop, rejectedTaskDrop, rejectedTaskDrop)) throw new Error("[verify interactivity tool-jobs] self-test rejected-reactor-task-drop-escape was falsely accepted.");
+  const missingTerminalProof = "pub trait ReactorTask { fn step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep; fn close_step(&mut self, budget: ReactorTaskBudget) -> ReactorTaskStep; } fn close_instance_step() { drop(task); }";
+  if (toolJobReactorCloseBounded(missingTerminalProof, missingTerminalProof, missingTerminalProof)) throw new Error("[verify interactivity tool-jobs] self-test reactor-terminal-shell-without-empty-proof was falsely accepted.");
+  const blockedStarvation = "pub fn run_until_deadline(&self) { match task.step() { ReactorTaskStep::Blocked { .. } => break, _ => {} } }";
+  if (toolJobReactorCloseBounded(blockedStarvation, blockedStarvation, blockedStarvation)) throw new Error("[verify interactivity tool-jobs] self-test blocked-reactor-task-starvation was falsely accepted.");
+  const implicitExecutorDrop = "struct ReactorExecutor { slots: Box<[Option<Box<dyn ReactorTask>>]> } impl Drop for ReactorExecutor { fn drop(&mut self) {} }";
+  if (toolJobReactorCloseBounded(implicitExecutorDrop, implicitExecutorDrop, implicitExecutorDrop)) throw new Error("[verify interactivity tool-jobs] self-test implicit-reactor-executor-slot-drop was falsely accepted.");
+  const productionJobFuture = "static JOBS_EXECUTOR: super::executor::ColdFutureExecutor = super::executor::ColdFutureExecutor::new(); async fn spawn_job() { let future = run(ctx, input, restored); JOBS_EXECUTOR.spawn(future); }";
+  if (toolJobOpaqueFutureProductionFailClosed(productionJobFuture)) throw new Error("[verify interactivity tool-jobs] self-test production-opaque-job-future was falsely accepted.");
+  const dynamicallyGrowingChunks = "impl ArtifactOutputChunks { fn push(&self, chunk: Vec<u8>) { state.chunks.push_back(chunk); } fn seal(&self) { sealed.store(true); } fn take_chunk(&self) { state.chunks.pop_front(); } }";
+  if (toolJobSegmentedQueueHardBounded(dynamicallyGrowingChunks)) throw new Error("[verify interactivity tool-jobs] self-test dynamically-growing-segmented-chunks was falsely accepted.");
+  const boxedTerminalWalk = "struct ArtifactOutputChunksState { chunks: Box<[Option<Vec<u8>>]> } impl ArtifactOutputChunks { fn push(&self, chunk: Vec<u8>) { checked_add(chunk.len()); if chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES {} } fn seal(&self) {} fn take_chunk(&self) {} }";
+  if (toolJobSegmentedQueueHardBounded(boxedTerminalWalk)) throw new Error("[verify interactivity tool-jobs] self-test segmented-terminal-capacity-drop-walk was falsely accepted.");
+  const racySeal = "struct ArtifactFixedQueue<T>; impl ArtifactOutputChunks { fn push(&self, chunk: Vec<u8>) { self.inner.state.try_lock(); checked_add(chunk.len()); if chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES {} state.chunks.push(chunk); } fn seal(&self) { self.inner.sealed.compare_exchange(false, true); self.inner.bytes.load(); } fn take_chunk(&self) { state.chunks.pop(); } }";
+  if (toolJobSegmentedQueueHardBounded(racySeal)) throw new Error("[verify interactivity tool-jobs] self-test segmented-append-after-seal-race was falsely accepted.");
+  const prematureSegmentRemoval = "async fn take_segmented_download_chunk(&mut self, operation_id: u64) { let chunk = output.chunks.take_chunk()?; if output.chunks.chunks_remaining() == 0 { self.segmented_downloads.remove(&operation_id); } } segmented_download_remains_addressable_until_terminal_none_is_observed";
+  if (toolJobSegmentedTerminalDrainExact(prematureSegmentRemoval)) throw new Error("[verify interactivity tool-jobs] self-test premature-segmented-terminal-removal was falsely accepted.");
+  const genericPluginReserved = 'puzzle5d_reserved_factory!(CopyFactory, "copy", "copy.v1"); puzzle5d_reserved_factory!(CutFactory, "cut", "cut.v1"); puzzle5d_reserved_factory!(PasteFactory, "paste", "paste.v1"); puzzle5d_reserved_factory!(ImportFactory, "import-media", "import.v1"); impl ArtifactEditor for Puzzle5dPlayApp { fn register_tool_job_factories() {} fn build_reserved_tool_job() { ArtifactReservedToolInput::Media; ArtifactReservedToolJob::new(GenericJob); } } impl InteractiveJob for GenericJob { fn step() { CheckpointReady(()); cx.is_cancelled(); } }';
+  if (toolJobPuzzleReservedRoutesExact(genericPluginReserved)) throw new Error("[verify interactivity tool-jobs] self-test generic-plugin-reserved-job was falsely accepted.");
+  const terminalMediaSerialization = "async fn poll_owned_media_export() { pending_step.try_recv(); serde_json::to_vec(&media); active.output_credit.validate_terminal(); validate_media_export_structure(&media); }";
+  if (toolJobMediaExportBounded(terminalMediaSerialization)) throw new Error("[verify interactivity tool-jobs] self-test terminal-media-serialization was falsely accepted.");
+  const underCredit = "async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); } struct RuntimeAppCell<PA: PluginApp>; dropping_a_pending_owner_restores_the_instance_collection_and_wakes_the_waiter; a_pending_instance_does_not_block_an_unrelated_instance_cell; submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting;";
+  if (toolJobMediaExportBounded(underCredit)) throw new Error("[verify interactivity tool-jobs] self-test unsealed-media-output-credit was falsely accepted.");
+  const terminalBatchFlatten = "async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); validate_media_export_structure(&result, &active.output_chunks); result.into_batch_media(); }";
+  if (toolJobMediaExportBounded(terminalBatchFlatten)) throw new Error("[verify interactivity tool-jobs] self-test terminal-batch-flatten was falsely accepted.");
+  const copyableChunks = "impl ArtifactOutputChunks { fn push(chunk: Vec<u8>) { chunks.push(chunk); } fn take_chunk() { chunks.remove(0); } } async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); validate_media_export_structure(&result, &active.output_chunks); }";
+  if (toolJobMediaExportBounded(copyableChunks)) throw new Error("[verify interactivity tool-jobs] self-test copyable-unbounded-output-chunks was falsely accepted.");
+  const foreignOutput = "impl ArtifactOutputChunks { fn push(chunk: Vec<u8>) { checked_add(chunk.len()); if chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES {} state.chunks.push_back(chunk); } fn take_chunk() { state.chunks.pop_front(); } fn same_operation() { std::sync::Arc::ptr_eq; } } async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); validate_media_export_structure(&result, &active.output_chunks); }";
+  if (toolJobMediaExportBounded(foreignOutput)) throw new Error("[verify interactivity tool-jobs] self-test foreign-segmented-output-authority was falsely accepted.");
+  return fixtures.length + 71;
+}
+
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
 function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const macroFiles = new Set<string>();
@@ -917,13 +1874,9 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     seenRows.add(key);
   }
   const intentionalWriterDuplicates = duplicateRows.filter((row) => row.file.includes("✏️s/🔌️plugins/✒️writer/") && row.id === "setEditorSetting");
-  const dispositions = new Map<string, "BatchOnlyPendingRewrite" | "ForbiddenFromUi" | "Deleted">();
-  for (const file of macroFiles) {
-    const source = policyReadFileSafe(root, file);
-    const explicit = /\.action_interactive_job\(\s*"([^"]+)"\s*,\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(BatchOnlyPendingRewrite|ForbiddenFromUi|Deleted)\s*\)/g;
-    let match: RegExpExecArray | null;
-    while ((match = explicit.exec(source))) dispositions.set(`${file}\0${match[1]!}`, match[2]! as "BatchOnlyPendingRewrite" | "ForbiddenFromUi" | "Deleted");
-  }
+  const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionSource(policyReadFileSafe(root, file))]));
+  const staticRows = toolJobStaticRows(productionFiles);
+  const dispositions = toolJobDispositions(productionFiles);
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
   const deletedRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Deleted").length;
@@ -931,38 +1884,113 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
+  const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs");
-  const failures: string[] = [];
-  for (const id of ["runReconstruction", "retryStage", "runStage", "canvasPointerDown", "duplicateWidget", "setTryValue"]) {
-    if (!commandRows.some((row) => row.id === id && dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite")) failures.push(`opaque reducer ${id} is not explicitly batch-only pending rewrite`);
+  const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit");
+  const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs");
+  const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs");
+  const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs");
+  const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
+  const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
+  const proofs = toolJobProofs(productionFiles);
+  const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
+  const selfTests = toolJobCoverageSelfTests();
+  const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
+  for (const [file, source] of allRustFiles) {
+    const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = implementation.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) break;
+      factoryContracts.push({ file, line: source.slice(0, match.index).split("\n").length, factory: match[1]!, status: /fn\s+execution_contract\s*\(/.test(block.body) ? "explicit" : "missing" });
+      implementation.lastIndex = block.end;
+    }
   }
-  if (macroFiles.size < 50) failures.push(`expected at least 50 production app_commands! host files, found ${macroFiles.size}`);
-  if (commandRows.length < 771) failures.push(`expected at least 771 production generated command rows, found ${commandRows.length}`);
-  if (fixtureMacroFiles.size !== 1 || fixtureMacroInvocations !== 2 || fixtureCommandRows.length !== 4) failures.push(`expected 2 parser-fixture invocations / 4 rows in one test host, found ${fixtureMacroFiles.size} host(s), ${fixtureMacroInvocations} invocation(s), ${fixtureCommandRows.length} row(s)`);
-  if (duplicateRows.length !== 2 || intentionalWriterDuplicates.length !== 2) failures.push(`production duplicate rows must be exactly the three intentional Writer setEditorSetting variants, found ${JSON.stringify(duplicateRows)}`);
+  const globalPayloadStores: { file: string; line: number; text: string }[] = [];
+  for (const [file, source] of productionFiles) {
+    for (const pattern of [/thread_local!\s*\{/g, /(?:OnceLock|LazyLock)\s*<\s*(?:std::sync::)?Mutex\s*</g]) {
+      let match: RegExpExecArray | null;
+      while ((match = pattern.exec(source))) globalPayloadStores.push({ file, line: source.slice(0, match.index).split("\n").length, text: match[0] });
+    }
+  }
+  const failures: string[] = [];
+  if (staticRows.length < commandRows.length) failures.push(`literal registration census regressed below macro census (${staticRows.length} < ${commandRows.length})`);
   if (!plugin.includes("pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];")) failures.push("app_commands! does not generate the exact ToolCommandCatalog row list");
   if ((plugin.match(/const TOOL_JOB_IDS: &'static \[&'static str\] = Self::TOOL_JOB_IDS;/g) ?? []).length !== 6) failures.push("app_commands! does not publish every generated row list through both typed catalog traits");
   if (!actionBus.includes("pub struct ActionBus {") || !actionBus.includes("trait ErasedToolJobFactory")) failures.push("ActionBus is not a heterogeneous erased-factory registry");
   if (actionBus.includes("NoToolJobFactories") || actionBus.includes("NoInteractiveJobs") || platform.includes("NoToolJobFactories") || glue.includes("NoToolJobFactories")) failures.push("a hard-coded no-factory sentinel remains in production framework wiring");
   if (!platform.includes("pub action_bus: ActionBus,") || !platform.includes("ActionBus::production()")) failures.push("Platform does not own the shared production heterogeneous ActionBus");
-  if (!plugin.includes("ActionBus::production()") || !plugin.includes(".register_once(AppCommandJobFactory::<A>")) failures.push("VcsArtifactApp activation does not register its typed command factory in the shared production bus");
+  if (!plugin.includes("ActionBus::production()") || /register_once\(AppCommandJobFactory/.test(plugin)) failures.push("generic AppCommandJobFactory registration remains or production ActionBus activation is absent");
   if (!plugin.includes("<A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS")) failures.push("production factory registration is not generated from the typed command schema");
   if (!plugin.includes("ToolOperationSpec::new(") || !plugin.includes(".tool_jobs\n                .dispatch(")) failures.push("typed app commands do not dispatch a typed ToolOperationSpec through ActionBus");
+  if (!actionBus.includes("pub fn admit_exact_wire") || !plugin.includes(".admit_exact_wire(")) failures.push("typed command admission does not enforce the exact owner/tool/schema raw-wire contract before decoding");
+  if (!toolJobTypedDispatchExact(actionBus) || !actionBus.includes('bus.dispatch(operation_spec("app", "alias"))')) failures.push("public typed ActionBus dispatch still permits alias fallback");
+  if (!toolJobWireDispatchExact(actionBus) || !actionBus.includes('bus.dispatch_wire("app", "alias"')) failures.push("public wire ActionBus dispatch still permits alias fallback");
+  if (!toolJobDecodeAfterAdmission(plugin)) failures.push("a typed action, command, or intent decoder runs before exact wire admission");
+  if (!toolJobQualifiedProofBeforeDecode(plugin)) failures.push("a typed JSON or intent route decodes before selecting its exact qualified proof identity");
+  const frameworkReservedExact = toolJobFrameworkReservedRoutesExact(plugin);
+  const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5d);
+  const importPreparationBounded = toolJobImportPreparationBounded(plugin);
+  const fullToolOperationBounded = toolJobFullOperationBounded(plugin);
+  if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
+  if (!importPreparationBounded) failures.push("shared import submission serializes or clones the whole media envelope before resumable job construction");
+  if (!fullToolOperationBounded) failures.push("shared typed-command preparation or commit application remains outside the resumable job protocol");
+  if (!fullToolOperationBounded && !toolJobTypedRouteFailsClosedBeforePreparation(plugin)) failures.push("incomplete typed-command route remains reachable before its preparation boundary");
+  if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
+  if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
+  if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
+  if (!toolJobDropCancellationBounded(plugin)) failures.push("VcsArtifactApp Drop synchronously drains the whole live-operation cancellation map instead of O(1) scope cancellation with bounded asynchronous cleanup");
+  if (!toolJobCancellationScopesBounded(plugin)) failures.push("tool cancellation begin, supersession, document close, or app close performs collection-wide work instead of parent-scope O(1) cancellation");
+  if (!toolJobRuntimeRegistryFixedClose(plugin, reactor)) failures.push("runtime instance/actor authority still grows, hashes, scans, shifts, blocks, or drops the detached app on InstanceClose");
+  if (!toolJobHardBoundedCloseExact(plugin, reactor)) failures.push("instance close still permits implicit nested payload destruction or lacks saturation-safe bounded cleanup job ownership");
+  if (!toolJobReactorCloseBounded(reactor, reactorRequests, reactorExecutor)) failures.push("reactor task/request/open-instance close still scans resizable maps/vectors, retains ready queues, or wakes an unbounded waiter list");
+  if (!toolJobOpaqueFutureProductionFailClosed(reactorJobs)) failures.push("production reactor jobs still construct, poll, or implicitly destroy opaque Future ownership without an explicit bounded state machine");
+  if (!toolJobSegmentedTerminalDrainExact(`${plugin}\n${componentWit}`)) failures.push("segmented download authority lacks its exact WIT guest bridge or is removed before the host observes terminal None");
+  if (!toolJobLiveInstanceIsolated(plugin)) failures.push("typed operation/cancellation scope does not distinguish live app instances from static owner/controller identity");
+  failures.push(...toolJobProofCatalogFailures(allRustFiles, staticRows, dispositions, proofs));
+  if (proofIdentities.size !== proofs.length) failures.push("bounded reducer proof identities are not unique");
+  if (!toolJobRuntimeProofQualified(plugin)) failures.push("runtime activation or public DFF admission drops the compiler-derived owner witness or exact controller/owner/factory/tool/schema proof identity");
+  if (proofs.some((proof, index) => proofs.slice(index + 1).some((other) => other.controllerId === proof.controllerId && other.toolId === proof.toolId && other.values[0] !== proof.values[0]))) failures.push("same-controller/tool qualified proofs disagree on their public raw-wire limit");
   const innerStart = plugin.indexOf("async fn dispatch_typed_command_inner");
   const innerOpen = innerStart < 0 ? -1 : plugin.indexOf("{", innerStart);
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
-  if (!inner?.body.includes("run_on_worker_async") || inner.body.includes("run_to_completion") || inner.body.includes("thread_local!")) failures.push("production typed dispatch is not exclusively worker-scheduled with a Send-capable result channel");
+  if (!inner?.body.includes("WorkerJobSession::new") || inner.body.includes("run_on_worker_async") || inner.body.includes("run_to_completion") || inner.body.includes("thread_local!")) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
+  const jobStart = plugin.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for BoundedFirstStepCommandJob<A>");
+  const jobOpen = jobStart < 0 ? -1 : plugin.indexOf("{", jobStart);
+  const job = jobOpen < 0 ? undefined : toolJobRustBlock(plugin, jobOpen);
+  if (!job || !job.body.includes("self.contract.max_decoded_items") || !job.body.includes("self.contract.max_work_units_per_step") || !job.body.includes("self.contract.max_step_micros") || !job.body.includes("self.contract.max_output_bytes") || !job.body.includes("bounded_command_output_bytes")) failures.push("bounded command worker does not enforce decoded, work, step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
   if (!forKind || forKind.body.includes("InteractiveJobClassification::Migrated")) failures.push("ActionSemantics::for_kind still blanket-classifies declarations as Migrated");
-  if (!manifest.includes("pub fn bounded_catalog(") || !manifest.includes("definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;")) failures.push("bounded reducers lack an explicit declaration constructor");
+  if (/pub fn bounded_catalog\([\s\S]{0,500}?InteractiveJobClassification::Migrated/.test(manifest)) failures.push("bounded_catalog still self-certifies Migrated");
+  if (factoryContracts.some((factory) => factory.status === "missing")) failures.push(`${factoryContracts.filter((factory) => factory.status === "missing").length} ToolJobFactory implementation(s) lack explicit execution contracts`);
+  if (globalPayloadStores.length > 0) failures.push(`${globalPayloadStores.length} process-global payload store candidate(s) require operation-owned state or an explicit static exemption`);
+  if (/"typed-command"\.to_string\(\)/.test(inner?.body ?? "")) failures.push("typed-command dispatch fallback remains");
+  if (!inner?.body.includes("validate_commit(&operation") || inner.body.indexOf("validate_commit(&operation") > inner.body.indexOf("self.presence_store.apply")) failures.push("commit freshness is not validated immediately before result exposure");
+  const remainingCommands = staticRows
+    .filter((row) => {
+      const disposition = dispositions.get(`${row.file}\0${row.id}`);
+      const proof = proofs.find((candidate) => candidate.ownerFile === row.file && candidate.ownerTypeName.length > 0 && candidate.controllerId.length > 0 && candidate.factory === "BoundedFirstStepCommandJobFactory" && candidate.toolId === row.id && candidate.documentSchema.length > 0);
+      return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(fullToolOperationBounded && disposition === "Migrated" && proof && proofIdentities.has(toolJobProofIdentity(proof)));
+    })
+    .map((row) => ({ ...row, reason: dispositions.get(`${row.file}\0${row.id}`) === "Migrated" ? "owner-local handler proof exists but full prepare/job/commit operation is not bounded" : "no explicit factory, bounded-first-step proof, or fail-closed disposition" }));
+  const frameworkReservedRoutes = [
+    ...(frameworkReservedExact ? [] : TOOL_JOB_FRAMEWORK_RESERVED_IDS),
+    ...(puzzleReservedExact ? [] : TOOL_JOB_PLUGIN_RESERVED_IDS),
+  ].map((id) => ({ id, status: "failClosedPendingFactory" as const }));
+  const reservedImporters = toolJobReservedImporterOwners(root, productionFiles);
+  failures.push(...reservedImporters.failures);
+  if (frameworkReservedRoutes.length > 0) failures.push(`${frameworkReservedRoutes.length} framework-reserved route(s) remain fail-closed pending explicit resumable factories`);
+  if (reservedImporters.pending.length > 0) failures.push(`${reservedImporters.pending.length} app-owned import-media route(s) remain fail-closed pending explicit resumable factories`);
+  if (remainingCommands.length > 0) failures.push(`${remainingCommands.length} live command registration(s) remain fail-closed; see remainingCommands ledger`);
   if (!actionBus.includes("duplicate_key_inside_one_factory_is_rejected_atomically")) failures.push("factory key ownership lacks an atomic duplicate/bijection test");
   if (!plugin.includes("generated_tool_job_catalog_is_an_exact_bijection_with_rows")) failures.push("generated command rows lack an exact catalog bijection test");
   if (!plugin.includes("activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations")) failures.push("activation lacks an exact migrated-declaration/factory-key bijection test");
-  if (!plugin.includes("platform.action_bus.dispatch_count()") || !plugin.includes("typed command traverses the shared production bus")) failures.push("activation lacks an executable Platform/shared-bus traversal proof");
-  if (!plugin.includes("bounded_reducer_registration_is_rejected_when_its_actual_step_exceeds_eight_milliseconds")) failures.push("bounded reducers lack executable actual-step watchdog coverage");
+  if (!plugin.includes("copied_app_type_cannot_inherit_same_controller_schema_and_id_proof") || !plugin.includes("BoundedFirstStepCommandJobFactory::<CopyDrawApp>::from_proof")) failures.push("activation lacks an executable copied-owner compiler-witness fail-closed proof");
+  if (!plugin.includes("unproved_command_fails_before_an_overrun_reducer_can_start")) failures.push("unproved typed operations lack executable fail-closure before reducer watchdog work starts");
   return {
     macroHostFiles: macroFiles.size,
     macroInvocations,
@@ -972,13 +2000,21 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     fixtureMacroHostFiles: fixtureMacroFiles.size,
     fixtureMacroInvocations,
     fixtureCommandRows: fixtureCommandRows.length,
-    boundedRows: commandRows.length - batchOnlyRows - forbiddenRows - deletedRows,
+    boundedRows: staticRows.length - remainingCommands.length - batchOnlyRows - forbiddenRows - deletedRows,
     batchOnlyRows,
     forbiddenRows,
     deletedRows,
-    productionFactories: (plugin.match(/impl<A: ArtifactApp> semio_framework::ToolJobFactory/g) ?? []).length,
-    productionRegistrations: (plugin.match(/\.register_once\(AppCommandJobFactory::<A>/g) ?? []).length,
+    productionFactories: factoryContracts.length,
+    productionRegistrations: (plugin.match(/BoundedFirstStepCommandJobFactory::<A>::from_proof/g) ?? []).length,
     productionDispatches: (plugin.match(/\.tool_jobs\s*\.dispatch\(/g) ?? []).length,
+    aliases: (actionBus.match(/register_alias\(/g) ?? []).length,
+    factoryContracts,
+    frameworkReservedRoutes,
+    reservedImporterOwners: reservedImporters.pending,
+    globalPayloadStores,
+    literalRegistrations: staticRows.filter((row) => row.source === "literal").length,
+    remainingCommands,
+    selfTests,
     failures,
   };
 }
@@ -1118,12 +2154,25 @@ export class VerifyScript extends Script {
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
+    if (args.includes("--self-test")) {
+      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests()} clean.`);
+      return;
+    }
     const formatIndex = args.indexOf("--format");
     const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
     if (format !== "text" && format !== "json") throw new Error(`[verify interactivity tool-jobs] unsupported format ${JSON.stringify(format)}.`);
     const report = toolJobCoverageRun(this.root);
-    if (format === "json") console.log(JSON.stringify(report, null, 2));
-    else console.log(`[verify interactivity tool-jobs] production-hosts=${report.macroHostFiles} production-invocations=${report.macroInvocations} production-rows=${report.commandRows} fixture-hosts=${report.fixtureMacroHostFiles} fixture-invocations=${report.fixtureMacroInvocations} fixture-rows=${report.fixtureCommandRows} bounded=${report.boundedRows} batch-only=${report.batchOnlyRows} forbidden=${report.forbiddenRows} deleted=${report.deletedRows} unique=${report.uniqueCommandRows} factories=${report.productionFactories} registrations=${report.productionRegistrations} dispatches=${report.productionDispatches}`);
+    const outputIndex = args.indexOf("--output");
+    const output = outputIndex >= 0 ? args[outputIndex + 1] : undefined;
+    if (output) {
+      const path = resolve(this.root, output);
+      const relativePath = relative(this.root, path);
+      if (relativePath.startsWith("..") || relativePath === "") throw new Error("[verify interactivity tool-jobs] --output must name a file inside the repository.");
+      writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+    }
+    if (format === "json" && !output) console.log(JSON.stringify(report, null, 2));
+    else if (output) console.log(`[verify interactivity tool-jobs] wrote ${output}`);
+    else console.log(`[verify interactivity tool-jobs] production-hosts=${report.macroHostFiles} production-invocations=${report.macroInvocations} production-rows=${report.commandRows} literal-registrations=${report.literalRegistrations} fixture-hosts=${report.fixtureMacroHostFiles} fixture-invocations=${report.fixtureMacroInvocations} fixture-rows=${report.fixtureCommandRows} admitted=${report.boundedRows} batch-only=${report.batchOnlyRows} forbidden=${report.forbiddenRows} deleted=${report.deletedRows} remaining=${report.remainingCommands.length} unique=${report.uniqueCommandRows} factories=${report.productionFactories} registrations=${report.productionRegistrations} dispatches=${report.productionDispatches} aliases=${report.aliases} self-tests=${report.selfTests}`);
     if (report.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] ${report.failures.join("; ")}`);
   }
 
@@ -1142,10 +2191,14 @@ export class VerifyScript extends Script {
       if (format !== "text" && format !== "json") throw new Error(`[verify dependencies parity js] unsupported format ${JSON.stringify(format)}.`);
       const report = dependencyJsParity(this.root);
       if (format === "json") console.log(JSON.stringify(report, null, 2));
-      else console.log(`[verify dependencies parity js] manifests=${report.manifests} external-rows=${report.externalRows} evidenced=${report.evidencedRows} unowned=${report.unownedRows.length} undeclared-imports=${report.undeclaredImports.length}`);
+      else console.log(`[verify dependencies parity js] manifests=${report.manifests} external-rows=${report.externalRows} evidenced=${report.evidencedRows} unowned=${report.unownedRows.length} undeclared-imports=${report.undeclaredImports.length} lock-workspaces=${report.lockWorkspaces} lock-mismatches=${report.lockMismatches.length} lock-fixtures=${report.lockFixtureChecks}`);
       if (report.undeclaredImports.length > 0) {
         if (format === "text") for (const finding of report.undeclaredImports.slice(0, 100)) console.error(`  ${finding.file}:${finding.line}: ${finding.dependency} is not declared by ${finding.manifest}`);
         throw new Error(`[verify dependencies parity js] ${report.undeclaredImports.length} external import(s) have no declaration in their owning package.`);
+      }
+      if (report.lockMismatches.length > 0) {
+        if (format === "text") for (const finding of report.lockMismatches.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.kind}${finding.dependency ? ` ${finding.section}:${finding.dependency}` : ""}${finding.manifestVersion !== undefined || finding.lockVersion !== undefined ? ` (manifest=${JSON.stringify(finding.manifestVersion)}, lock=${JSON.stringify(finding.lockVersion)})` : ""}`);
+        throw new Error(`[verify dependencies parity js] ${report.lockMismatches.length} package manifest / bun.lock workspace snapshot mismatch(es).`);
       }
       if (args.includes("--no-unowned-rows") && report.unownedRows.length > 0) {
         if (format === "text") for (const finding of report.unownedRows.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.dependency} has no owned-scope source/config/script evidence`);
@@ -1881,11 +2934,82 @@ type DependencyJsEntry = { name: string; version: string; kind: DependencyKind; 
 type DependencyJsParityEvidence = { file: string; line: number; kind: "config" | "import" | "script" };
 type DependencyJsParityRow = { dependency: string; manifest: string; scope: string; evidence: DependencyJsParityEvidence[] };
 type DependencyJsParityImport = { dependency: string; file: string; line: number; manifest: string };
-type DependencyJsParityReport = { manifests: number; externalRows: number; evidencedRows: number; unownedRows: DependencyJsParityRow[]; undeclaredImports: DependencyJsParityImport[] };
+type DependencyJsManifestSection = "dependencies" | "devDependencies" | "optionalDependencies" | "peerDependencies";
+type DependencyJsLockMismatchKind = "invalid-lockfile" | "missing-in-lock" | "stale-in-lock" | "version-mismatch" | "workspace-missing";
+type DependencyJsLockMismatch = { dependency?: string; kind: DependencyJsLockMismatchKind; lockVersion?: string; manifest: string; manifestVersion?: string; section?: DependencyJsManifestSection };
+type DependencyJsParityReport = { manifests: number; externalRows: number; evidencedRows: number; unownedRows: DependencyJsParityRow[]; undeclaredImports: DependencyJsParityImport[]; lockMismatches: DependencyJsLockMismatch[]; lockFixtureChecks: number; lockWorkspaces: number };
 
 const DEPENDENCY_JS_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".css", ".mdx"]);
 const DEPENDENCY_JS_BUILTIN_PREFIXES = ["node:", "bun:"];
 const DEPENDENCY_JS_BUILTINS = new Set(builtinModules.flatMap((name) => [name, name.replace(/^node:/, "")]));
+const DEPENDENCY_JS_MANIFEST_SECTIONS: readonly DependencyJsManifestSection[] = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"];
+
+/** 🧪️ Compares package manifest dependency tables with Bun's live workspace snapshots. */
+function dependencyJsLockWorkspaceMismatches(manifestValues: ReadonlyMap<string, unknown>, workspaces: unknown): DependencyJsLockMismatch[] {
+  const workspaceRecords = workspaces && typeof workspaces === "object" ? (workspaces as Record<string, unknown>) : {};
+  const mismatches: DependencyJsLockMismatch[] = [];
+  const table = (value: unknown, section: DependencyJsManifestSection): Record<string, string> => {
+    if (!value || typeof value !== "object") return {};
+    const candidate = (value as Record<string, unknown>)[section];
+    if (!candidate || typeof candidate !== "object") return {};
+    return Object.fromEntries(Object.entries(candidate as Record<string, unknown>).map(([name, version]) => [name, String(version)]));
+  };
+  for (const [manifest, manifestValue] of manifestValues) {
+    const normalizedManifest = manifest.replaceAll("\\", "/");
+    const workspaceKey = normalizedManifest === "package.json" ? "" : normalizedManifest.replace(/\/package\.json$/u, "");
+    const lockValue = workspaceRecords[workspaceKey];
+    if (!lockValue || typeof lockValue !== "object") {
+      mismatches.push({ kind: "workspace-missing", manifest });
+      continue;
+    }
+    for (const section of DEPENDENCY_JS_MANIFEST_SECTIONS) {
+      const manifestTable = table(manifestValue, section);
+      const lockTable = table(lockValue, section);
+      for (const dependency of [...new Set([...Object.keys(manifestTable), ...Object.keys(lockTable)])].sort()) {
+        const manifestVersion = manifestTable[dependency];
+        const lockVersion = lockTable[dependency];
+        if (manifestVersion === undefined) mismatches.push({ dependency, kind: "stale-in-lock", lockVersion, manifest, section });
+        else if (lockVersion === undefined) mismatches.push({ dependency, kind: "missing-in-lock", manifest, manifestVersion, section });
+        else if (manifestVersion !== lockVersion) mismatches.push({ dependency, kind: "version-mismatch", lockVersion, manifest, manifestVersion, section });
+      }
+    }
+  }
+  return mismatches.sort((left, right) => left.manifest.localeCompare(right.manifest) || String(left.section).localeCompare(String(right.section)) || String(left.dependency).localeCompare(String(right.dependency)) || left.kind.localeCompare(right.kind));
+}
+
+/** 🧪️ Executes synthetic fixtures for stale, missing, drifted, and absent workspace snapshots. */
+function dependencyJsLockParitySelfTests(): number {
+  const manifest = new Map<string, unknown>([["unit/package.json", { dependencies: { alpha: "^1.0.0" }, devDependencies: { beta: "2.0.0" } }]]);
+  const fixtures: readonly { expected: readonly DependencyJsLockMismatchKind[]; name: string; workspaces: unknown }[] = [
+    { name: "matching snapshot", workspaces: { unit: { dependencies: { alpha: "^1.0.0" }, devDependencies: { beta: "2.0.0" } } }, expected: [] },
+    { name: "stale workspace row", workspaces: { unit: { dependencies: { alpha: "^1.0.0", retired: "1.0.0" }, devDependencies: { beta: "2.0.0" } } }, expected: ["stale-in-lock"] },
+    { name: "missing workspace row", workspaces: { unit: { dependencies: {}, devDependencies: { beta: "2.0.0" } } }, expected: ["missing-in-lock"] },
+    { name: "workspace version drift", workspaces: { unit: { dependencies: { alpha: "^2.0.0" }, devDependencies: { beta: "2.0.0" } } }, expected: ["version-mismatch"] },
+    { name: "missing workspace snapshot", workspaces: {}, expected: ["workspace-missing"] },
+  ];
+  for (const fixture of fixtures) {
+    const actual = dependencyJsLockWorkspaceMismatches(manifest, fixture.workspaces).map((finding) => finding.kind);
+    if (actual.join("\0") !== fixture.expected.join("\0")) throw new Error(`[verify dependencies parity js] lock self-test ${JSON.stringify(fixture.name)} failed: expected ${fixture.expected.join(",") || "clean"}, got ${actual.join(",") || "clean"}.`);
+  }
+  return fixtures.length;
+}
+
+/** 🔒️ Reads Bun's lockfile and audits configured in-scope workspace snapshots against their manifests. */
+function dependencyJsLockMismatches(repoRoot: string, manifests: readonly string[]): { mismatches: DependencyJsLockMismatch[]; workspaces: number } {
+  const contents = policyReadFileSafe(repoRoot, "bun.lock");
+  if (!contents) return { mismatches: [{ kind: "invalid-lockfile", manifest: "bun.lock" }], workspaces: 0 };
+  try {
+    const lock = Bun.JSONC.parse(contents) as { workspaces?: unknown };
+    const rootManifest = Bun.JSONC.parse(policyReadFileSafe(repoRoot, "package.json")) as { workspaces?: unknown };
+    const configuredWorkspaces = new Set(Array.isArray(rootManifest.workspaces) ? rootManifest.workspaces.filter((value): value is string => typeof value === "string").map((value) => value.replaceAll("\\", "/").replace(/\/$/u, "")) : []);
+    const auditedManifests = manifests.filter((manifest) => manifest === "package.json" || configuredWorkspaces.has(manifest.replaceAll("\\", "/").replace(/\/package\.json$/u, "")));
+    const manifestValues = new Map<string, unknown>();
+    for (const manifest of auditedManifests) manifestValues.set(manifest, Bun.JSONC.parse(policyReadFileSafe(repoRoot, manifest)));
+    return { mismatches: dependencyJsLockWorkspaceMismatches(manifestValues, lock.workspaces), workspaces: auditedManifests.length };
+  } catch {
+    return { mismatches: [{ kind: "invalid-lockfile", manifest: "bun.lock" }], workspaces: 0 };
+  }
+}
 
 /** 🔎️ Resolves source ownership for a JavaScript manifest. A technology package owns its taxonomy unit; a nested target does too when no canonical technology manifest exists, and otherwise owns only its target directory. */
 function dependencyJsOwnershipScope(manifest: string, manifests: readonly string[]): string {
@@ -2118,6 +3242,7 @@ function dependencyJsConfigReferences(contents: string): { dependency: string; l
 
 /** 🔎️ Audits direct JavaScript rows against taxonomy-owned source/import/script evidence. */
 function dependencyJsParity(repoRoot: string): DependencyJsParityReport {
+  const lockFixtureChecks = dependencyJsLockParitySelfTests();
   const manifests = dependencyDiscoverPackageJsonFiles(repoRoot);
   const internalNames = dependencyInternalJsPackageNames(repoRoot, manifests);
   const sources = dependencyDiscoverJsSourceFiles(repoRoot);
@@ -2182,7 +3307,8 @@ function dependencyJsParity(repoRoot: string): DependencyJsParityReport {
   }
   undeclaredImports.sort((left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.dependency.localeCompare(right.dependency));
   const unownedRows = rows.filter((row) => row.evidence.length === 0).sort((left, right) => left.manifest.localeCompare(right.manifest) || left.dependency.localeCompare(right.dependency));
-  return { manifests: manifests.length, externalRows: rows.length, evidencedRows: rows.length - unownedRows.length, unownedRows, undeclaredImports };
+  const lockParity = dependencyJsLockMismatches(repoRoot, manifests);
+  return { manifests: manifests.length, externalRows: rows.length, evidencedRows: rows.length - unownedRows.length, unownedRows, undeclaredImports, lockMismatches: lockParity.mismatches, lockFixtureChecks, lockWorkspaces: lockParity.workspaces };
 }
 
 /** 🔒️Every internal (workspace-owned) JS package name — the `"name"` field of every non-compose, non-node_modules `package.json`. Used to classify a dependency as first-party even when it isn't `@semio-tech/…`-scoped or `workspace:`-versioned. */

@@ -12,7 +12,7 @@ use crate::artifacts::procedural3d::schema::{commit_fixture, ensure_gumball_node
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back
 /// to the current config selection when the command carries no explicit ids.
-async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
+fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() {
         fallback.to_vec()
     } else {
@@ -23,7 +23,7 @@ async fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<St
 /// 🧭️ Runs a gumball transform (translate/rotate/scale) as a fixture operation, splicing transform
 /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets. `None` when no
 /// transform actually changed anything (nothing to commit).
-async fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Procedural3dMutation>, Vec<String>)> {
+fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Procedural3dMutation>, Vec<String>)> {
     let mut host = host_from_fixture(fixture);
     let mut new_selection = Vec::new();
     let mut changed = false;
@@ -62,7 +62,7 @@ pub struct RotateSelection {
     pub angle: f64,
 }
 
-async fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
+fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) -> Emit<Procedural3dMutation, Procedural3dConfigMutation> {
     match gumball_transform(fixture, ids, "rotate", move |host, transform_id| {
         let current_angle = gumball_widget_number_param(host, transform_id, "angle", 0.0);
         host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
@@ -76,20 +76,20 @@ async fn rotate_ids(fixture: &FlowFixture, ids: &[String], ax: f64, ay: f64, az:
 /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// reachable only through that macro-generated path (`Procedural3dPlayApp::handle` always routes this
 /// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
-pub async fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &RotateSelection, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
     Ok(rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle))
 }
 
 /// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
 /// command carries no explicit ids.
-pub async fn apply(
+pub fn apply(
     payload: &RotateSelection,
     doc: &ArtifactView<'_, Procedural3dSnapshot>,
     _cfg: &ConfigView<'_, Procedural3dConfig>,
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
-    let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
+    let ids = mesh_selection_ids_typed(&payload.node_ids, &semio_framework::io::resolve_ready(interaction.selection("graph")).ids);
     Ok(rotate_ids(&doc.snapshot.fixture, &ids, payload.ax, payload.ay, payload.az, payload.angle))
 }

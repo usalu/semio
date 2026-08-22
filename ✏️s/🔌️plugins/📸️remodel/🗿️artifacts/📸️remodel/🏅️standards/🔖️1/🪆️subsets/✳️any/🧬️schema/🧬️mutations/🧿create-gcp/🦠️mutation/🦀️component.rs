@@ -16,7 +16,7 @@ pub struct CreateGcp {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_gcp(gcp: GroundControlPoint) -> RemodelMutation {
+pub fn create_gcp(gcp: GroundControlPoint) -> RemodelMutation {
     RemodelMutation::CreateGcp(CreateGcp { gcp })
 }
 

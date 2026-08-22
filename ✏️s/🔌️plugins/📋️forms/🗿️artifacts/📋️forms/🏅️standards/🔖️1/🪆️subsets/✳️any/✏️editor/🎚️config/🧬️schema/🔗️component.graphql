@@ -1,6 +1,11 @@
+type FormsTryValue {
+  key: String!
+  chunks: [String!]!
+}
+
 type FormsConfig {
   currentStepIndex: Int! @state(class: CONFIG)
-  tryValuesJson: String! @state(class: CONFIG)
+  tryValues: [FormsTryValue!]! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }

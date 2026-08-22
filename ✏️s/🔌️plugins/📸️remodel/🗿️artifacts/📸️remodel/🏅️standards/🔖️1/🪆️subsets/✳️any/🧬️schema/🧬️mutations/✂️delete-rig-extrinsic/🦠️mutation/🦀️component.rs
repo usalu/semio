@@ -14,7 +14,7 @@ pub struct DeleteRigExtrinsic {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_rig_extrinsic(camera_id: String) -> RemodelMutation {
+pub fn delete_rig_extrinsic(camera_id: String) -> RemodelMutation {
     RemodelMutation::DeleteRigExtrinsic(DeleteRigExtrinsic { camera_id })
 }
 

@@ -20,19 +20,19 @@ pub struct DeleteWidgetPosition {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DeleteWidgetPosition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget-position", kind: "delete-widget-position", record: "DeletedWidgetPosition" };
 
-    async fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::delete_widget_position::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
+    fn inverse(&self, base: &Procedural3dSnapshot) -> Vec<Procedural3dMutation> {
         crate::artifacts::procedural3d::mutations::delete_widget_position::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete widget position \"{}\"", self.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

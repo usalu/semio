@@ -4,7 +4,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn diff(payload: &super::mutation::DeleteSlot, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+pub fn diff(payload: &super::mutation::DeleteSlot, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.slots.iter().any(|slot| slot.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Slot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

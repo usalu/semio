@@ -17,6 +17,6 @@ pub struct SetActiveUtility {
 /// itself — the framework owns `graph`'s hover exclusively now (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); a client wanting utility-switch-clears-hover
 /// dispatches the injected `interactionHover` verb with empty targets alongside this one.
-pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

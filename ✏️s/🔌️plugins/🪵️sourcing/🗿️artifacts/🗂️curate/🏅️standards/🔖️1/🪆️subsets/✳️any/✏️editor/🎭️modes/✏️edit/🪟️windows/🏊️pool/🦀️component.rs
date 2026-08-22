@@ -148,7 +148,7 @@ async fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig,
 }
 
 pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
-    let modules = available_modules();
+    let modules = available_modules(&cfg.contributions_json);
     ui_stack_vertical(vec![build_filter_bar(&cfg.filters, &modules, labels), build_pool_table(document, cfg, labels)])
 }
 //#endregion 🔖️Render
@@ -186,7 +186,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
         let filters = Filters { module_ids: vec!["beams".into()], ..Default::default() };
-        let modules = available_modules();
+        let modules = available_modules("[]");
         let node = build_filter_bar(&filters, &modules, crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"id\":\"sourcing-filter-module-beams\""), "beams toggle present: {json}");

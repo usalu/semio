@@ -16,7 +16,7 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> Block3dSnapshot {
-    crate::artifacts::block3d::seed_vortex_kind_catalog_scratch(&[
+    crate::artifacts::block3d::validate_vortex_kind_catalog(&[
         crate::artifacts::block3d::Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
         crate::artifacts::block3d::Block3dVortexKind { id: "hatch".into(), name: "hatch".into(), label: "Hatch".into(), color: "hsl(37 52% 48%)".into(), default_cable_kind: "cable.bus".into() },
     ]);

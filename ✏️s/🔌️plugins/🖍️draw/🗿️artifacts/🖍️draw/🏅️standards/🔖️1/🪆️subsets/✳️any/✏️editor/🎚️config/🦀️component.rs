@@ -29,6 +29,14 @@ pub struct DrawConfig {
     /// `ViewModel`, deleted by B1). Default mirrors the pre-migration `DRAW_DEFAULT_UTILITY`
     /// (`"selectDirect"`).
     pub active_utility_id: String,
+    /// 🧵️ Latest trace-pointer generation; zero means no live trace continuation.
+    pub trace_pointer_generation: u64,
+    /// ⏱️ Completed bounded trace work units for observable progress.
+    pub trace_pointer_completed_work: u64,
+    /// ⏳ Pending bounded trace work units for observable progress.
+    pub trace_pointer_pending_work: u64,
+    /// 🎭️ Portable bounded gesture checkpoint used to reconstruct a worker-hopped session.
+    pub gesture_checkpoint_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
 }
@@ -79,7 +87,16 @@ impl store::ArtifactPack for DrawConfig {
 
 impl Default for DrawConfig {
     fn default() -> Self {
-        Self { engagement_input: String::new(), camera: DrawCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
+        Self {
+            engagement_input: String::new(),
+            camera: DrawCamera::default(),
+            active_utility_id: "selectDirect".into(),
+            trace_pointer_generation: 0,
+            trace_pointer_completed_work: 0,
+            trace_pointer_pending_work: 0,
+            gesture_checkpoint_json: String::new(),
+            locale: "en-US".into(),
+        }
     }
 }
 
@@ -109,6 +126,10 @@ pub enum DrawConfigMutation {
     },
     #[dsl(key = "active-utility")]
     SetActiveUtility { utility_id: String },
+    #[dsl(key = "trace-pointer-progress")]
+    SetTracePointerProgress { generation: u64, completed_work: u64, pending_work: u64 },
+    #[dsl(key = "gesture-checkpoint")]
+    SetGestureCheckpoint { json: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -177,7 +198,18 @@ impl Mutation<DrawConfig> for DrawConfigMutation {
             DrawConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             DrawConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
             DrawConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            DrawConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            DrawConfigMutation::SetActiveUtility { utility_id } => {
+                next.active_utility_id = utility_id.clone();
+                next.trace_pointer_generation = 0;
+                next.trace_pointer_completed_work = 0;
+                next.trace_pointer_pending_work = 0;
+            }
+            DrawConfigMutation::SetTracePointerProgress { generation, completed_work, pending_work } => {
+                next.trace_pointer_generation = *generation;
+                next.trace_pointer_completed_work = *completed_work;
+                next.trace_pointer_pending_work = *pending_work;
+            }
+            DrawConfigMutation::SetGestureCheckpoint { json } => next.gesture_checkpoint_json = json.clone(),
             DrawConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
@@ -203,7 +235,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn draw_config_dsl_round_trips() {
-        let config = DrawConfig { engagement_input: "Renaming \"layer\"".into(), camera: DrawCamera { x: 12.0, y: -4.0, zoom: 1.5 }, active_utility_id: "pen".into(), locale: "de-DE".into() };
+        let config = DrawConfig { engagement_input: "Renaming \"layer\"".into(), camera: DrawCamera { x: 12.0, y: -4.0, zoom: 1.5 }, active_utility_id: "pen".into(), locale: "de-DE".into(), ..Default::default() };
         store::os_store::test_support::assert_dsl_round_trip(&config);
     }
 
@@ -225,6 +257,8 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetEngagementInput { value: "New \"Name\"".into() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetTracePointerProgress { generation: 7, completed_work: 32, pending_work: 4 });
+        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetGestureCheckpoint { json: r#"{"state":"idle"}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }

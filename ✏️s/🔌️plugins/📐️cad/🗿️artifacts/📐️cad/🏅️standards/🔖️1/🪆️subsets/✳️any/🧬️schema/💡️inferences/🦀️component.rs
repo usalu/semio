@@ -775,7 +775,7 @@ mod scene_compute {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     use serde_json::Value;
     use std::collections::HashSet;
-    use std::sync::{Mutex, OnceLock};
+    use std::sync::OnceLock;
 
     pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 
@@ -1154,11 +1154,6 @@ mod scene_compute {
     }
 
     //#region 🧩️Contributions
-    async fn last_cad_computer_contributions_json() -> &'static Mutex<String> {
-        static SLOT: OnceLock<Mutex<String>> = OnceLock::new();
-        SLOT.get_or_init(|| Mutex::new(String::new()))
-    }
-
     const CAD_COMPUTER_TOPIC: &str = "cad.computer";
 
     /// 🗂️ `cad.computer` topic payload shape (`TopicContribution` counterpart, ex `Contribution::CadComputer`).
@@ -1180,14 +1175,8 @@ mod scene_compute {
         Some((payload.app_id, payload.module_id, payload.computers_json))
     }
 
-    /// 🧩️ Parses and tracks host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
-    pub async fn sync_cad_computer_contributions(contributions_json: &str) {
-        let Ok(mut last) = last_cad_computer_contributions_json().lock() else {
-            return;
-        };
-        if *last == contributions_json {
-            return;
-        }
+    /// 🧩️ Validates host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
+    pub async fn validate_cad_computer_contributions(contributions_json: &str) {
         for entry in parse_contributions(contributions_json) {
             let Some((app_id, module_id, computers_json)) = cad_computer_fields(&entry) else {
                 continue;
@@ -1197,7 +1186,6 @@ mod scene_compute {
             }
             let _ = (module_id, computers_json);
         }
-        *last = contributions_json.to_string();
     }
     //#endregion 🧩️Contributions
 }

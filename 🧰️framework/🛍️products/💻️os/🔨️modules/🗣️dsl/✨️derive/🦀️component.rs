@@ -13,7 +13,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Type};
+use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 
 //#region 🔖️Attrs
 #[derive(Default, Clone)]
@@ -356,11 +356,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         } else if let Some(kind) = refs {
             Some(quote! { ::dsl::Shape::Ref(#kind) })
         } else if let Some(from) = lang_from {
-            let embed_lang_key = plans
-                .iter()
-                .find(|p| p.ident.to_string() == *from)
-                .map(|p| p.key.clone())
-                .unwrap_or_else(|| to_kebab(from));
+            let embed_lang_key = plans.iter().find(|p| p.ident.to_string() == *from).map(|p| p.key.clone()).unwrap_or_else(|| to_kebab(from));
             Some(quote! { ::dsl::Shape::EmbedFrom(#embed_lang_key) })
         } else if let Some(l) = lang {
             Some(quote! { ::dsl::Shape::Embed(#l) })
@@ -640,12 +636,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let envelope_id = match container.id.or(container.extension) {
         Some(id) => id,
         None => {
-            return syn::Error::new_spanned(
-                &input,
-                "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]",
-            )
-            .to_compile_error()
-            .into();
+            return syn::Error::new_spanned(&input, "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]").to_compile_error().into();
         }
     };
     let extension_suffix = envelope_id.rsplit('.').next().unwrap_or(&envelope_id);
@@ -996,12 +987,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     };
     let attrs = parse_mutations_attrs(&input);
     let (Some(snapshot_ty), Some(diff_ty), Some(schema)) = (attrs.snapshot, attrs.diff, attrs.schema) else {
-        return syn::Error::new_spanned(
-            &input,
-            "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]",
-        )
-        .to_compile_error()
-        .into();
+        return syn::Error::new_spanned(&input, "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]").to_compile_error().into();
     };
 
     let mut diff_arms = Vec::new();
@@ -1009,6 +995,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     let mut semantics_arms = Vec::new();
     let mut label_arms = Vec::new();
     let mut target_arms = Vec::new();
+    let mut may_emit_foreign_steps_arms = Vec::new();
     let mut foreign_steps_arms = Vec::new();
     let mut kind_consts = Vec::new();
     let mut const_asserts = Vec::new();
@@ -1017,12 +1004,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     for variant in &data.variants {
         let variant_ident = &variant.ident;
         let Fields::Unnamed(unnamed) = &variant.fields else {
-            return syn::Error::new_spanned(
-                variant,
-                "#[derive(Mutations)] requires every variant to be a single-field tuple wrapping a MutationKind payload struct, e.g. RenameWidget(rename_widget::RenameWidget)",
-            )
-            .to_compile_error()
-            .into();
+            return syn::Error::new_spanned(variant, "#[derive(Mutations)] requires every variant to be a single-field tuple wrapping a MutationKind payload struct, e.g. RenameWidget(rename_widget::RenameWidget)").to_compile_error().into();
         };
         if unnamed.unnamed.len() != 1 {
             return syn::Error::new_spanned(variant, "#[derive(Mutations)] requires every variant to wrap exactly one MutationKind payload struct").to_compile_error().into();
@@ -1046,6 +1028,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
         });
         target_arms.push(quote! {
             #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload)
+        });
+        may_emit_foreign_steps_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::may_emit_foreign_steps(payload)
         });
         foreign_steps_arms.push(quote! {
             #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base)
@@ -1081,6 +1066,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
             }
             fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
                 match self { #(#inverse_arms),* }
+            }
+            fn may_emit_foreign_steps(&self) -> bool {
+                match self { #(#may_emit_foreign_steps_arms),* }
             }
             fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 match self { #(#foreign_steps_arms),* }
@@ -1182,6 +1170,9 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
             }
             fn target(&self) -> Vec<String> {
                 ::semio_framework_os_kernel::CompositeMutationKind::target(self)
+            }
+            fn may_emit_foreign_steps(&self) -> bool {
+                true
             }
             fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 ::semio_framework_os_kernel::plan_foreign_steps(self, base)

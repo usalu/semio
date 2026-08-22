@@ -73,6 +73,10 @@ message Puzzle3dConfig {
   repeated string window_ids = 35;
   // @state config
   bytes fill_checkpoint = 36;
+  // @state config
+  uint64 fill_apply_generation = 37;
+  // @state config
+  uint32 fill_applied_count = 38;
 }
 
 message SelectionSet {

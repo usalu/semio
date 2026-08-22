@@ -5,7 +5,7 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use crate::editor::procedural3d::config::Procedural3dConfig;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
@@ -14,7 +14,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_MAIN: &str = "procedural.play";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Workflow"),
@@ -34,7 +34,7 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
-pub async fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
+pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     vec![WindowMeasure::Select {
         id: "procedural3d-measure-lod".into(),
@@ -51,7 +51,7 @@ pub async fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<ser
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession) -> BuiltNode {
     let fixture = &document.fixture;
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
@@ -64,10 +64,11 @@ pub async fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig
     // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
     // highlight until a future wave threads interaction into scene rendering. Flagged as a
     // discovered framework gap, not worked around here.
-    build_node_graph_scene(
+    let _ = PROCEDURAL_3D_PLAY_APP_ID;
+    crate::scene_surface(
         PROCEDURAL_3D_PLAY_SURFACE_MAIN,
-        PROCEDURAL_3D_PLAY_APP_ID,
-        NodeGraphScene {
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
+        &NodeGraphScene {
             editable: Some(true),
             operators: flow_extras.operators,
             catalogue_json: flow_extras.catalogue_json,
@@ -88,15 +89,15 @@ mod tests {
     use super::*;
     use crate::editor::procedural3d::testkit::{app, render as render_body};
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_node_graph_scene() {
+    #[test]
+    fn renders_node_graph_scene() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN).contains("node-graph"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+    #[test]
+    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL_3D_PLAY_BODY_MAIN);

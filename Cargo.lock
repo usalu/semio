@@ -6535,6 +6535,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-ui-styling",
  "serde",
@@ -7219,15 +7220,14 @@ dependencies = [
 name = "semio-s-plugin-layout"
 version = "0.1.0"
 dependencies = [
- "base64",
- "image",
  "js-sys",
  "parley",
- "png 0.17.16",
  "semio-framework",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -7241,7 +7241,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "zip 2.4.2",
 ]
 
 [[package]]
@@ -7366,6 +7365,7 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

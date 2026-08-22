@@ -72,3 +72,7 @@ pub fn build_icon_atlas() -> IconAtlas {
     }
     IconAtlas::from_packed(width, height, pixels, entries)
 }
+
+pub fn icon_atlas_source_count() -> usize {
+    ICON_SVGS.len() + 1
+}

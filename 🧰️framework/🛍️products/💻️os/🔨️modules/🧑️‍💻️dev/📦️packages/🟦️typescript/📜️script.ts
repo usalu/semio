@@ -51,11 +51,7 @@ import {
   transpilePluginComponentAsync,
   type PluginWebMaterializeContext,
 } from "../../../🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
-import {
-  defaultExtensionInstallRoot,
-  EXTENSION_INSTALL_META,
-  EXTENSION_WATCH_MARKER,
-} from "../../../🔌️plugin/🏪️store/📜️store.ts";
+import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📜️store.ts";
 import pixelmatch from "pixelmatch";
 
 type OwnedPng = { readonly width: number; readonly height: number; readonly data: Uint8Array };
@@ -152,9 +148,7 @@ async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqliteHandle
   if (existing) return existing;
   const Database = await backboneDatabaseCtorLazy();
   const db = new Database(dbPath);
-  db.run(
-    "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
-  );
+  db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)");
   backboneDbHandles.set(dbPath, db);
   return db;
 }
@@ -201,10 +195,13 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
     const dbPath = join(folder, ".semio", "documents.db");
     mkdirSync(dirname(dbPath), { recursive: true });
     const db = await backboneDbHandleFor(dbPath);
-    db.run(
-      "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
-      [documentId ?? SPACE_FOLDER_DOCUMENT_ID, schema ?? "", pack, spr, Date.now()],
-    );
+    db.run("INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at", [
+      documentId ?? SPACE_FOLDER_DOCUMENT_ID,
+      schema ?? "",
+      pack,
+      spr,
+      Date.now(),
+    ]);
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);
@@ -756,11 +753,7 @@ function ensureGuestSlimTypstFontsAsset(): void {
   const out = join(pluginOutRoot, "_vendor/guestslim-typst-fonts.bin");
   if (existsSync(out) && statSync(out).size > 0) return;
   mkdirSync(dirname(out), { recursive: true });
-  const status = runCmdStatus(
-    "cargo",
-    ["run", "-p", "semio-framework-os-infinite", "--bin", "dump-guestslim-typst-fonts", "--features", "render", "--", out],
-    { cwd: repoRoot, budgetMs: buildBudgetMs() },
-  );
+  const status = runCmdStatus("cargo", ["run", "-p", "semio-framework-os-infinite", "--bin", "dump-guestslim-typst-fonts", "--features", "render", "--", out], { cwd: repoRoot, budgetMs: buildBudgetMs() });
   if (status !== 0 || !existsSync(out)) {
     throw new Error(`guestslim typst fonts asset missing and dump-guestslim-typst-fonts failed (expected ${out})`);
   }
@@ -787,7 +780,6 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
-
 /** @emoji 🧹 Drops renamed/orphaned bridge artifacts in a plugin out dir before rewriting current outputs. */
 function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: string): void {
   if (!existsSync(outDir)) return;
@@ -801,7 +793,6 @@ function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: 
     rmSync(join(outDir, entry.name), { force: true });
   }
 }
-
 
 /** @emoji 🧹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): sweeps generated extension-module output
  * (`defaultExtensionInstallRoot()`, entirely gitignored — `.gitignore:90`) left over from BEFORE the
@@ -869,10 +860,7 @@ function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string)
   if (existsSync(outDir)) renameSync(outDir, retiredDir);
   renameSync(stagingDir, outDir);
   if (existsSync(retiredDir)) rmSync(retiredDir, { recursive: true, force: true });
-  writeFileSync(
-    join(extensionOutRoot, EXTENSION_WATCH_MARKER),
-    `${JSON.stringify({ kind: "installed", extensionId: target.pluginId, version: record.version, installedAt, emittedAt: Date.now() })}\n`,
-  );
+  writeFileSync(join(extensionOutRoot, EXTENSION_WATCH_MARKER), `${JSON.stringify({ kind: "installed", extensionId: target.pluginId, version: record.version, installedAt, emittedAt: Date.now() })}\n`);
   console.log(`published extension ${target.pluginId} -> ${moduleUrl}`);
 }
 
@@ -1350,7 +1338,9 @@ class PluginSizeScript extends BundleScript {
       const deltaLabel = delta === null ? "(new)" : delta === 0 ? "(=)" : `(${delta > 0 ? "+" : ""}${formatPluginSizeBytes(delta)})`;
       console.log(`  ${row.engineId.padEnd(40)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} ${deltaLabel}`);
     }
-    console.log(`engine total: ${formatPluginSizeBytes(engineTotalBytes)} (code ${formatPluginSizeBytes(engineTotalCode)}, data ${formatPluginSizeBytes(engineTotalData)}, name ${formatPluginSizeBytes(engineTotalName)} across ${engineRows.length} modules)`);
+    console.log(
+      `engine total: ${formatPluginSizeBytes(engineTotalBytes)} (code ${formatPluginSizeBytes(engineTotalCode)}, data ${formatPluginSizeBytes(engineTotalData)}, name ${formatPluginSizeBytes(engineTotalName)} across ${engineRows.length} modules)`,
+    );
     writeFileSync(ENGINE_SIZE_REPORT_PATH, `${JSON.stringify(engineRows, null, 2)}\n`);
   }
 }
@@ -1598,11 +1588,7 @@ async function awaitHttpOk(
  * `exitCode` is set synchronously before `'exit'` fires, so a late listener would otherwise hang
  * forever). `timeoutAfter` is a test-only injection point for the deadline race; production callers
  * keep the real `setTimeout`. */
-async function awaitChildExit(
-  child: SpawnDaemonHandle["child"],
-  deadlineMs: number,
-  opts: { readonly timeoutAfter?: (ms: number) => Promise<"timeout"> } = {},
-): Promise<"exited" | "timeout"> {
+async function awaitChildExit(child: SpawnDaemonHandle["child"], deadlineMs: number, opts: { readonly timeoutAfter?: (ms: number) => Promise<"timeout"> } = {}): Promise<"exited" | "timeout"> {
   const timeoutAfter = opts.timeoutAfter ?? ((ms: number) => new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), ms)));
   const exited = new Promise<"exited">((resolve) => {
     if (child.exitCode !== null) {
@@ -1926,20 +1912,16 @@ class BuildScript extends BundleScript {
     }
     await buildEngineWasm(plugin, renderer);
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    const viteStatus = runBunxStatus(
-      ["vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments],
-      this.root,
-      {
-        ...semioShipEnv(),
-        SEMIO_PLUGIN: plugin,
-        SEMIO_RENDERER: renderer,
-        VITE_SEMIO_RENDERER: renderer,
-        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
-        ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
-        ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
-        ...frameworkOsLockedPrefsEnv(),
-      },
-    );
+    const viteStatus = runBunxStatus(["vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments], this.root, {
+      ...semioShipEnv(),
+      SEMIO_PLUGIN: plugin,
+      SEMIO_RENDERER: renderer,
+      VITE_SEMIO_RENDERER: renderer,
+      VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
+      ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
+      ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
+      ...frameworkOsLockedPrefsEnv(),
+    });
     if (viteStatus !== 0) throw new Error("framework OS Vite build failed");
   }
 }
@@ -2151,9 +2133,7 @@ const LAYERING_ROLES = new Set<string>(["framework", "s-module", "plugin", "exte
  * so APA does not touch either; this entry keeps the gate green until whoever owns that boundary removes
  * the dependency, at which point this entry should be deleted, not left stale. */
 const KNOWN_LAYERING_VIOLATIONS = new Set<string>([
-  ...["brep", "math", "primitive", "logic", "dictionary", "list", "text"].map(
-    (ext) => `semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-${ext}`,
-  ),
+  ...["brep", "math", "primitive", "logic", "dictionary", "list", "text"].map((ext) => `semio-s-plugin-procedural: plugin->extension dependency on semio-s-plugin-flow-extension-${ext}`),
   "semio-framework-os-renderer-wgpu: framework->plugin dependency on semio-s-plugin-puzzle", // 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 ]);
 
@@ -2280,14 +2260,10 @@ class PluginIndexExportPathLintScript extends BundleScript {
       totalDead += deadSpecs.length;
       if (deadSpecs.length === 0) continue;
       pluginsWithDeadPaths++;
-      const cause = deadSpecs.some((s) => s.includes("🗿️artifacts/"))
-        ? "likely pre-standards path (🗿️artifacts/<a>/🧬️schema/…) against the migrated 🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/ tree"
-        : "target does not exist on disk";
+      const cause = deadSpecs.some((s) => s.includes("🗿️artifacts/")) ? "likely pre-standards path (🗿️artifacts/<a>/🧬️schema/…) against the migrated 🏅️standards/🔖️<v>/🪆️subsets/✳️<s>/ tree" : "target does not exist on disk";
       console.warn(`[plugin-index-export-path-lint] WARN ${relative(repoRoot, indexPath)}: ${deadSpecs.length}/${total} relative export path(s) resolve to nothing (${cause})`);
     }
-    console.log(
-      `plugin index export path lint: ${totalDead}/${totalAll} dead relative export path(s) across ${pluginsWithDeadPaths} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE)`,
-    );
+    console.log(`plugin index export path lint: ${totalDead}/${totalAll} dead relative export path(s) across ${pluginsWithDeadPaths} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE)`);
   }
 }
 //#endregion 🔖️PluginIndexExportPathLint
@@ -2501,7 +2477,7 @@ async function spawnStudioE2eDrawFromPalette(page: import("playwright").Page): P
   await paletteInput.fill("draw");
   await page.waitForTimeout(400);
   const drawSpawn = page
-    .locator("[cmdk-item]")
+    .locator('[data-slot="command-item"]')
     .filter({ hasText: /Spawn Draw/i })
     .first();
   if (await drawSpawn.count()) {
@@ -2559,12 +2535,12 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   const paletteInput = page.locator("[role='dialog'] [data-slot='command-input']").first();
   await paletteInput.fill("undo");
   await page.waitForTimeout(300);
-  spaceE2eAssert((await page.locator("[cmdk-item]").filter({ hasText: "Undo" }).count()) > 0, "undo should be in command palette");
+  spaceE2eAssert((await page.locator('[data-slot="command-item"]').filter({ hasText: "Undo" }).count()) > 0, "undo should be in command palette");
   await paletteInput.fill("checkpoint");
   await page.waitForTimeout(300);
   spaceE2eAssert(
     (await page
-      .locator("[cmdk-item]")
+      .locator('[data-slot="command-item"]')
       .filter({ hasText: /checkpoint/i })
       .count()) > 0,
     "checkpoint command should be in command palette",
@@ -2949,7 +2925,10 @@ async function collabRunScenario(
       artifactId = await collabWaitForNewRow(user1, "artifact", beforeUser1, 30_000);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
       const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
-      spaceE2eAssert(editorOpened, "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)");
+      spaceE2eAssert(
+        editorOpened,
+        "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)",
+      );
       record(3, true, `artifact ${artifactId} created, row replicated to user2, editor surface present for user1`);
     } catch (error) {
       await collabScreenshot(user1, "step3-user1");
@@ -2980,7 +2959,10 @@ async function collabRunScenario(
         if (seen.includes(probeText)) break;
         await user2.waitForTimeout(500);
       }
-      spaceE2eAssert(seen.includes(probeText), `user2's editor never showed user1's typed text ${JSON.stringify(probeText)} (last seen: ${JSON.stringify(seen.slice(-200))}) — both editors are likely unbound ephemeral instances rather than the same hub-synced document (same root cause as STEP 3)`);
+      spaceE2eAssert(
+        seen.includes(probeText),
+        `user2's editor never showed user1's typed text ${JSON.stringify(probeText)} (last seen: ${JSON.stringify(seen.slice(-200))}) — both editors are likely unbound ephemeral instances rather than the same hub-synced document (same root cause as STEP 3)`,
+      );
       record(4, true, "user1's typed text propagated to user2's editor");
     } catch (error) {
       await collabScreenshot(user1, "step4-user1");
@@ -2995,7 +2977,10 @@ async function collabRunScenario(
   try {
     const peers1 = user1.locator('[id="s-presence-peers"]');
     const peers2 = user2.locator('[id="s-presence-peers"]');
-    spaceE2eAssert((await peers1.count()) > 0, '#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️component.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)');
+    spaceE2eAssert(
+      (await peers1.count()) > 0,
+      "#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️component.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)",
+    );
     spaceE2eAssert((await peers2.count()) > 0, "#s-presence-peers does not exist in user2's shell either");
     const roster1 = await peers1.locator('[data-row-id^="peer:"]').count();
     const roster2 = await peers2.locator('[data-row-id^="peer:"]').count();
@@ -3013,8 +2998,16 @@ async function collabRunScenario(
     try {
       await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
-      const rowBefore1 = (await user1.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
-      const rowBefore2 = (await user2.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+      const rowBefore1 =
+        (await user1
+          .locator(`[data-row-id="artifact:${artifactId}"]`)
+          .innerText()
+          .catch(() => "")) ?? "";
+      const rowBefore2 =
+        (await user2
+          .locator(`[data-row-id="artifact:${artifactId}"]`)
+          .innerText()
+          .catch(() => "")) ?? "";
       const historyTab = user1.locator('[data-tab-id="framework.panel.history"]');
       spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — cannot reach #s-checkin");
       await historyTab.click();
@@ -3031,7 +3024,11 @@ async function collabRunScenario(
       const rowAfter1Deadline = Date.now() + 30_000;
       let rowAfter1 = rowBefore1;
       while (Date.now() < rowAfter1Deadline) {
-        rowAfter1 = (await user1.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+        rowAfter1 =
+          (await user1
+            .locator(`[data-row-id="artifact:${artifactId}"]`)
+            .innerText()
+            .catch(() => "")) ?? "";
         if (rowAfter1 !== rowBefore1) break;
         await user1.waitForTimeout(1_000);
       }
@@ -3041,7 +3038,11 @@ async function collabRunScenario(
       const rowAfter2Deadline = Date.now() + 30_000;
       let rowAfter2 = rowBefore2;
       while (Date.now() < rowAfter2Deadline) {
-        rowAfter2 = (await user2.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+        rowAfter2 =
+          (await user2
+            .locator(`[data-row-id="artifact:${artifactId}"]`)
+            .innerText()
+            .catch(() => "")) ?? "";
         if (rowAfter2 !== rowBefore2) break;
         await user2.waitForTimeout(1_000);
       }
@@ -3068,7 +3069,11 @@ async function collabRunScenario(
     spaceE2eAssert(adminRes.ok, `GET /admin returned ${adminRes.status}`);
     const contentType = adminRes.headers.get("content-type") ?? "";
     spaceE2eAssert(contentType.includes("html"), `GET /admin content-type is ${contentType}, expected html`);
-    record(7, true, "/admin/api/connections names both users; /admin returns HTML — note: /admin is a client-rendered SPA shell, so the raw HTML byte stream itself does not literally embed the user names (verified via /admin/api/connections instead)");
+    record(
+      7,
+      true,
+      "/admin/api/connections names both users; /admin returns HTML — note: /admin is a client-rendered SPA shell, so the raw HTML byte stream itself does not literally embed the user names (verified via /admin/api/connections instead)",
+    );
   } catch (error) {
     record(7, false, error instanceof Error ? error.message : String(error));
   }
@@ -3680,17 +3685,17 @@ function stateProbeCandidates(reactDump: ParityDump, wgpuDump: ParityDump): Stat
       const peer = wgpuByPath.get(node.path);
       return Boolean(
         peer &&
-          node.path.includes("#") &&
-          priority.has(node.kind) &&
-          peer.kind === node.kind &&
-          node.visible &&
-          peer.visible &&
-          !node.state.disabled &&
-          !peer.state.disabled &&
-          node.rect[2] > 0 &&
-          node.rect[3] > 0 &&
-          peer.rect[2] > 0 &&
-          peer.rect[3] > 0,
+        node.path.includes("#") &&
+        priority.has(node.kind) &&
+        peer.kind === node.kind &&
+        node.visible &&
+        peer.visible &&
+        !node.state.disabled &&
+        !peer.state.disabled &&
+        node.rect[2] > 0 &&
+        node.rect[3] > 0 &&
+        peer.rect[2] > 0 &&
+        peer.rect[3] > 0,
       );
     })
     .map((node) => ({ path: node.path, kind: node.kind }))
@@ -3765,11 +3770,7 @@ async function runStateTransitionProbe(reactPage: import("playwright").Page, wgp
 /** 🕹️Executes one non-`expect` step against a single page, resolving click/drag/wheel targets from
  * a dump pulled from THAT SAME page immediately beforehand — never the other renderer's dump, and
  * never a stale one — so react/wgpu layout drift never desyncs which element gets hit. */
-async function executeParityStep(
-  page: import("playwright").Page,
-  renderer: ParityRenderer,
-  step: Exclude<ProbeStep, { readonly kind: "expect" } | { readonly kind: "stateTransition" }>,
-): Promise<{ readonly ok: boolean; readonly detail?: string }> {
+async function executeParityStep(page: import("playwright").Page, renderer: ParityRenderer, step: Exclude<ProbeStep, { readonly kind: "expect" } | { readonly kind: "stateTransition" }>): Promise<{ readonly ok: boolean; readonly detail?: string }> {
   switch (step.kind) {
     case "click": {
       const node = parityFindNodeExact(await parityDumpFor(page, renderer), step.path);
@@ -3906,7 +3907,7 @@ async function runParityProbeSuite(reactPage: import("playwright").Page, wgpuPag
  *
  * KNOWN LIMITATION (confirmed by reading `openStudioE2eCommandPalette` in `🔖️StudioE2eVerify` above,
  * and `UISearch` in `framework/os/renderer/js/react/index.tsx`): the palette is FRAMEWORK CHROME, not
- * `UiNode`-declared app content — React renders it via shadcn/cmdk (`[role='dialog'] [data-slot=
+ * `UiNode`-declared app content — React renders it through the owned Command facade (`[role='dialog'] [data-slot=
  * 'command-input']`), which never carries `data-ui-path`, so `REACT_DOM_DUMP_SCRIPT` (see
  * `🔖️StructuralDump`) cannot see it at all. The `exists`/`absent` checks below are therefore
  * expected to be unreliable (likely FAIL on the react side) until the structural dump is extended to
@@ -4110,7 +4111,9 @@ function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
   const lines = ["# Wgpu Parity Report (v2 harness)", "", `Generated: ${reports.length} playground(s)`, "", "| Variant | React Boot | Wgpu Boot | Structural | Pixel | State | Action | React Δ | Wgpu Δ |", "|---|---|---|---|---|---|---|---:|---:|"];
   for (const r of reports) {
     const evidence = r.behavioral?.steps.find((step) => step.state)?.state;
-    lines.push(`| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} | ${r.behavioral?.status ?? "-"} | ${evidence ? `\`${evidence.actionKind}\` \`${evidence.actionPath}\`` : "-"} | ${evidence?.react.changedPaths.length ?? "-"} | ${evidence?.wgpu.changedPaths.length ?? "-"} |`);
+    lines.push(
+      `| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} | ${r.behavioral?.status ?? "-"} | ${evidence ? `\`${evidence.actionKind}\` \`${evidence.actionPath}\`` : "-"} | ${evidence?.react.changedPaths.length ?? "-"} | ${evidence?.wgpu.changedPaths.length ?? "-"} |`,
+    );
   }
   // 🪜️terra-parity-rebaseline: STALE-BRIDGE split OUT of `failed` — see `isParityStaleBridge`'s doc. A
   // blended "X/Y PASS" line conflates "the architecture regressed" with "the fleet hasn't regenerated
@@ -4271,7 +4274,7 @@ class ParityProbeScript extends BundleScript {
       const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
       const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
       if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
-        throw new Error(`parity probe FAILED: boot react=${reactBoot.status} wgpu=${wgpuBoot.status}${reactBoot.detail ?? wgpuBoot.detail ? ` (${reactBoot.detail ?? wgpuBoot.detail})` : ""}`);
+        throw new Error(`parity probe FAILED: boot react=${reactBoot.status} wgpu=${wgpuBoot.status}${(reactBoot.detail ?? wgpuBoot.detail) ? ` (${reactBoot.detail ?? wgpuBoot.detail})` : ""}`);
       }
       const result = await runParityProbeSuite(reactPage, wgpuPage, suite);
       console.log(JSON.stringify(result, null, 2));
@@ -4349,11 +4352,7 @@ const SCALE_FIXTURE_OWNER_REL = "🧰️framework/🛍️products/💻️os/🧫
 const SCALE_FIXTURE_PROFILES = ["idle", "cpu", "ui", "io", "hang", "crash", "stateful"] as const;
 type ScaleFixtureProfile = (typeof SCALE_FIXTURE_PROFILES)[number];
 
-type ScaleFixtureActivationEvent =
-  | { type: "on-startup-finished" }
-  | { type: "on-command"; id: string }
-  | { type: "on-artifact-kind"; kind: string }
-  | { type: "on-view-visible"; id: string };
+type ScaleFixtureActivationEvent = { type: "on-startup-finished" } | { type: "on-command"; id: string } | { type: "on-artifact-kind"; kind: string } | { type: "on-view-visible"; id: string };
 
 /** 📋️ Exact shape the `semio-framework-os-scale-fixture` crate's `FixtureConfig` (`🎭️profile/
  * 🦀️component.rs`) decodes from `instance-open`'s `config` pack — field names match its `serde`

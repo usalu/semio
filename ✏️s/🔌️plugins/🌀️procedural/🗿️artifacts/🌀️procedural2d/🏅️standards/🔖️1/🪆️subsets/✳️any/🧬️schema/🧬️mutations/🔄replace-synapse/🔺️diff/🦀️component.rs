@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::mutations::synapse_index;
 use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReplaceSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &ReplaceSynapse, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     let Some(index) = synapse_index(&base.fixture, &payload.synapse.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.synapse.id), [payload.synapse.id.clone()]);
     };

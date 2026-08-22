@@ -15,7 +15,7 @@ pub struct DeleteCameraCalibration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_camera_calibration(camera_id: String) -> RemodelMutation {
+pub fn delete_camera_calibration(camera_id: String) -> RemodelMutation {
     RemodelMutation::DeleteCameraCalibration(DeleteCameraCalibration { camera_id })
 }
 

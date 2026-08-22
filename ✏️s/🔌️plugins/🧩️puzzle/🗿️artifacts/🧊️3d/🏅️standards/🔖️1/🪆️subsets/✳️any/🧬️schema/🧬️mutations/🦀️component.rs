@@ -327,6 +327,9 @@ impl Mutation<Value> for Puzzle3dMutation {
         let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
         Mutation::<Puzzle3dSnapshot>::inverse(self, &base)
     }
+    fn may_emit_foreign_steps(&self) -> bool {
+        Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
+    }
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
@@ -350,12 +353,62 @@ pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
 /// same local-bridge shape as `puzzle2d`'s `Puzzle2dPlaySnapshot`. `Mutation`/`MutationDiff`
 /// delegate straight through to the `Value` impls above too.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Puzzle3dPlaySnapshot(pub Value);
+#[derive(Debug)]
+pub struct Puzzle3dPlaySnapshot {
+    typed: std::sync::Arc<Puzzle3dSnapshot>,
+    value: std::sync::OnceLock<std::sync::Arc<Value>>,
+}
+
+impl Puzzle3dPlaySnapshot {
+    /// 🎯️ Builds the typed snapshot once and retains the supplied projection for read paths.
+    pub fn new(value: Value) -> Self {
+        let typed = serde_json::from_value(value.clone()).unwrap_or_default();
+        let projected = std::sync::OnceLock::new();
+        let _ = projected.set(std::sync::Arc::new(value));
+        Self { typed: std::sync::Arc::new(typed), value: projected }
+    }
+
+    /// 🧬️ Keeps mutation application typed and defers the JSON bridge until a reader needs it.
+    fn from_typed(typed: Puzzle3dSnapshot) -> Self {
+        Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
+    }
+
+    /// 👁️ Materializes the legacy play projection at most once per immutable snapshot.
+    pub fn value(&self) -> &Value {
+        self.value.get_or_init(|| std::sync::Arc::new(serde_json::to_value(self.typed.as_ref()).unwrap_or(Value::Null))).as_ref()
+    }
+
+    /// 🧬️ Exposes the immutable typed authority without materializing the legacy JSON projection.
+    pub fn typed(&self) -> &Puzzle3dSnapshot {
+        self.typed.as_ref()
+    }
+}
+
+impl Clone for Puzzle3dPlaySnapshot {
+    fn clone(&self) -> Self {
+        let value = std::sync::OnceLock::new();
+        if let Some(projected) = self.value.get() {
+            let _ = value.set(std::sync::Arc::clone(projected));
+        }
+        Self { typed: std::sync::Arc::clone(&self.typed), value }
+    }
+}
+
+impl Serialize for Puzzle3dPlaySnapshot {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.value().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Puzzle3dPlaySnapshot {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Value::deserialize(deserializer).map(Self::new)
+    }
+}
 
 impl PartialEq for Puzzle3dPlaySnapshot {
     fn eq(&self, other: &Self) -> bool {
-        store::pack_rt::json_values_equal(&self.0, &other.0)
+        self.typed == other.typed
     }
 }
 
@@ -363,28 +416,28 @@ impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle3d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(Puzzle3dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map(Self::new).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(&self.0).unwrap_or_default()
+        serde_json::to_string_pretty(self.value()).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle3dPlaySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
+        dsl::to_dsl_value(self.value()).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value).map(Puzzle3dPlaySnapshot).map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Self::new).map_err(store::PackError::Schema)
     }
 }
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
     fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
-        MutationDiff::<Value>::apply(self, &projection.0).map(Puzzle3dPlaySnapshot)
+        MutationDiff::<Puzzle3dSnapshot>::apply(self, projection.typed.as_ref()).map(Puzzle3dPlaySnapshot::from_typed)
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
@@ -395,11 +448,14 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     type Diff = Puzzle3dDiff;
 
     fn diff(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-        Mutation::<Value>::diff(self, &projection.0)
+        Mutation::<Puzzle3dSnapshot>::diff(self, projection.typed.as_ref())
     }
 
     fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Vec<Puzzle3dMutation> {
-        Mutation::<Value>::inverse(self, &projection.0)
+        Mutation::<Puzzle3dSnapshot>::inverse(self, projection.typed.as_ref())
+    }
+    fn may_emit_foreign_steps(&self) -> bool {
+        Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
     }
 }
 

@@ -15,20 +15,20 @@ pub struct ChangeSeed {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_seed(seed: u64) -> AssemblyMutation {
+pub fn change_seed(seed: u64) -> AssemblyMutation {
     AssemblyMutation::ChangeSeed(ChangeSeed { seed })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for ChangeSeed {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "seed", kind: "change-seed", record: "ChangedSeed" };
 
-    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change seed to {}", self.seed)
     }
 }

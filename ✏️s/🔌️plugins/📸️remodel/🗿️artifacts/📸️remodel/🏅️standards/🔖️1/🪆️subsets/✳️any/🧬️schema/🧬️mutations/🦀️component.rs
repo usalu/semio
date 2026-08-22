@@ -54,6 +54,7 @@ pub enum RemodelMutation {
     ReplaceTracks(ReplaceTracks),
     ReplaceGeoProducts(ReplaceGeoProducts),
     ReplaceQc(ReplaceQc),
+    CommitReconstruction(CommitReconstruction),
 }
 //#endregion 🔖️Mutations
 
@@ -61,6 +62,7 @@ pub enum RemodelMutation {
 pub use super::add_gcp_observation::mutation::{add_gcp_observation, AddGcpObservation};
 pub use super::add_stream_frame::mutation::{add_stream_frame, AddStreamFrame};
 pub use super::change_stream_sync::mutation::{change_stream_sync, ChangeStreamSync};
+pub use super::commit_reconstruction::mutation::{commit_reconstruction, CommitReconstruction, ReconstructionAssetCommit};
 pub use super::create_asset::mutation::{create_asset, CreateAsset};
 pub use super::create_camera_calibration::mutation::{create_camera_calibration, CreateCameraCalibration};
 pub use super::create_gcp::mutation::{create_gcp, CreateGcp};
@@ -98,13 +100,13 @@ pub use super::update_sfm_params::mutation::{update_sfm_params, UpdateSfmParams}
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it
 /// by this name.
-pub async fn apply_remodel_mutation(snapshot: &RemodelSnapshot, mutation: &RemodelMutation) -> protocol::MutationApplyResult<RemodelSnapshot> {
+pub fn apply_remodel_mutation(snapshot: &RemodelSnapshot, mutation: &RemodelMutation) -> protocol::MutationApplyResult<RemodelSnapshot> {
     protocol::MutationDiff::apply(&mutation.diff(snapshot).into_parts().0, snapshot)
 }
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `inverse_sequence_mutation`).
-pub async fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
+pub fn inverse_remodel_mutation(base: &RemodelSnapshot, mutation: &RemodelMutation) -> Vec<RemodelMutation> {
     mutation.inverse(base)
 }
 //#endregion 🔖️ApplyInverse
@@ -136,7 +138,7 @@ mod tests {
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::mint_and_stash_asset("asset-1", &asset_one));
+        scene.assets.insert("asset-1".into(), crate::artifacts::remodel::store_remodel_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -342,7 +344,7 @@ mod tests {
 
         assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
         // 🎯️ Both assets are `image/jpeg` (unsupported by the real png bridge today, see
-        // `semio_image_snapshot_from_image_asset`'s doc comment), so `mint_and_stash_asset` falls back
+        // `semio_image_snapshot_from_image_asset`'s doc comment), so `store_remodel_asset` falls back
         // to the deterministic raw-bytes handle (`image_asset_child_handle`) — asserting on the HANDLE
         // (content-addressed, so identical for identical `(mime,data)` regardless of who mints it) is
         // the honest convergence check here, not a round-trip through the working-scene cache.

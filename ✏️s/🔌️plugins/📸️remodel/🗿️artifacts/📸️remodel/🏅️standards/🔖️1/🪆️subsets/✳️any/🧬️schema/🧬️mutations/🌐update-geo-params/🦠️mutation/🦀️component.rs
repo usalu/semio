@@ -16,7 +16,7 @@ pub struct UpdateGeoParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_geo_params(params: GeoParams) -> RemodelMutation {
+pub fn update_geo_params(params: GeoParams) -> RemodelMutation {
     RemodelMutation::UpdateGeoParams(UpdateGeoParams { params })
 }
 

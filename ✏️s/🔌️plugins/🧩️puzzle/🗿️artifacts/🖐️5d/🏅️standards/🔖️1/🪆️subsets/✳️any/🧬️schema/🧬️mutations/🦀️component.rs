@@ -314,6 +314,9 @@ impl Mutation<Value> for Puzzle5dMutation {
         let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
         Mutation::<Puzzle5dSnapshot>::inverse(self, &base)
     }
+    fn may_emit_foreign_steps(&self) -> bool {
+        Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
+    }
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
@@ -387,6 +390,9 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 
     fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
+    }
+    fn may_emit_foreign_steps(&self) -> bool {
+        Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
 }
 

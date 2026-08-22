@@ -37,11 +37,17 @@ impl Process3dDiff {
             if let Some(value) = &self.stock_pose {
                 next.stock_pose = value.clone();
             }
+            if let Some(value) = &self.stock_payload {
+                next.stock_payload = value.clone();
+            }
             if let Some(value) = &self.stock_solid {
                 next.stock_solid = value.clone();
             }
             if let Some(value) = &self.steps {
                 next.steps = value.clone();
+            }
+            if let Some(value) = &self.step_payloads {
+                next.step_payloads = value.clone();
             }
             if let Some(value) = &self.tool_solids {
                 next.tool_solids = value.values.clone();
@@ -133,11 +139,17 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
             if let Some(value) = &self.stock_pose {
                 next.stock_pose = value.clone();
             }
+            if let Some(value) = &self.stock_payload {
+                next.stock_payload = value.clone();
+            }
             if let Some(value) = &self.stock_solid {
                 next.stock_solid = value.clone();
             }
             if let Some(value) = &self.steps {
                 next.steps = value.clone();
+            }
+            if let Some(value) = &self.step_payloads {
+                next.step_payloads = value.clone();
             }
             if let Some(value) = &self.tool_solids {
                 next.tool_solids = value.values.clone();
@@ -164,8 +176,10 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(stock_id);
         take!(stock_label);
         take!(stock_pose);
+        take!(stock_payload);
         take!(stock_solid);
         take!(steps);
+        take!(step_payloads);
         take!(tool_solids);
         take!(resolved_up_to);
         take!(selected_id);

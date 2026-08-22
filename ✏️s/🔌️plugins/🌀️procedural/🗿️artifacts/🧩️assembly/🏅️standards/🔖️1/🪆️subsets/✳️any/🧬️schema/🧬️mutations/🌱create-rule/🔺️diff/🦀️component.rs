@@ -3,7 +3,7 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn diff(payload: &super::mutation::CreateRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+pub fn diff(payload: &super::mutation::CreateRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if base.rules.iter().any(|rule| rule.id == payload.rule.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A rule with id \"{}\" already exists.", payload.rule.id), [payload.rule.id.clone()]);
     }

@@ -57,6 +57,8 @@ pub struct FlowConfig {
     pub contributions_json: String,
     /// 🧬️ JSON-encoded `playbook::GenerationPlayState` (Generate-mode exploration surface).
     pub generation_json: String,
+    /// 📋️ JSON checkpoint for observable duplicate-widget progress; empty when idle.
+    pub duplicate_widget_progress_json: String,
     /// 🗣️ BCP-47 locale tag.
     pub locale: String,
 }
@@ -119,6 +121,7 @@ impl Default for FlowConfig {
             automation_enabled_json: String::new(),
             contributions_json: "[]".into(),
             generation_json: String::new(),
+            duplicate_widget_progress_json: String::new(),
             locale: "en-US".into(),
         }
     }
@@ -185,6 +188,10 @@ pub enum FlowConfigMutation {
     SetAutomationEnabled { json: String },
     #[dsl(key = "generation")]
     SetGeneration { json: String },
+    #[dsl(key = "duplicate-widget-progress")]
+    SetDuplicateWidgetProgress { json: String },
+    #[dsl(key = "cancel-duplicate-widget")]
+    CancelDuplicateWidget { generation: u64 },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
@@ -261,6 +268,13 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
             FlowConfigMutation::SetCatalogueSections { sections_json } => next.catalogue_sections_json = sections_json.clone(),
             FlowConfigMutation::SetAutomationEnabled { json } => next.automation_enabled_json = json.clone(),
             FlowConfigMutation::SetGeneration { json } => next.generation_json = json.clone(),
+            FlowConfigMutation::SetDuplicateWidgetProgress { json } => next.duplicate_widget_progress_json = json.clone(),
+            FlowConfigMutation::CancelDuplicateWidget { generation } => {
+                let active_generation = serde_json::from_str::<serde_json::Value>(&next.duplicate_widget_progress_json).ok().and_then(|value| value.get("generation").and_then(serde_json::Value::as_u64));
+                if active_generation == Some(*generation) {
+                    next.duplicate_widget_progress_json.clear();
+                }
+            }
             FlowConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
                 flow::sync_host_flow_extension_contributions(json);
@@ -311,6 +325,7 @@ mod tests {
             automation_enabled_json: "{\"auto-layout\":true}".into(),
             contributions_json: "[]".into(),
             generation_json: "{\"generations\":[]}".into(),
+            duplicate_widget_progress_json: String::new(),
             locale: "de-DE".into(),
         };
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
@@ -329,6 +344,8 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCatalogueSections { sections_json: "[]".into() });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetAutomationEnabled { json: "{\"auto-layout\":true}".into() });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGeneration { json: "{\"generations\":[]}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetDuplicateWidgetProgress { json: "{\"generation\":7}".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::CancelDuplicateWidget { generation: 7 });
         store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLocale { value: "de-DE".into() });
     }
 

@@ -8,7 +8,7 @@
 //! uses the sibling "collection of children" convention (`📐️cad`'s `CadDrawingChildList` precedent):
 //! a whole-list wrapper behind a single `Option`.
 
-use crate::artifacts::process3d::{Pose, Workshop};
+use crate::artifacts::process3d::{Pose, ProcessStep, Stock, Workshop};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
@@ -31,11 +31,15 @@ pub struct Process3dDiff {
     #[state(artifact)]
     pub stock_pose: Option<Pose>,
     #[state(artifact)]
+    pub stock_payload: Option<Stock>,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     pub stock_solid: Option<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub steps: Option<store::ArtifactChild<SemioFlowSnapshot>>,
+    #[state(artifact)]
+    pub step_payloads: Option<Vec<ProcessStep>>,
     #[state(artifact)]
     pub tool_solids: Option<Process3dToolSolidChildList>,
     #[state(artifact)]

@@ -15,19 +15,19 @@ id = "renderer-wgpu"
 workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "📦️glue.rs"
+path = "🦀️lib.rs"
 
-[dependencies]
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
 # ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): the interactivity watchdog
 # (`Watchdog::start`) `winit_app.rs`'s `redraw()` wraps around every renderer frame callback — zero
-# external deps, portable on every target (native + both wasm targets), so it lives in the
-# unconditional `[dependencies]` block rather than the native-only section below.
+# external deps, portable on the browser and native presentation targets. The WASI renderer build
+# compiles only the target-neutral mailbox core and therefore does not need this presentation edge.
 semio-framework-trace = { workspace = true }
 # 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `🦀️frame_job.rs`'s `InteractiveJob`
 # seam (`InteractiveJob`/`StepContext`/`StepOutcome`/`drive_step`/`run_to_completion`/`run_on_worker`,
 # design ticket packet P2a) — portable on every target (`run_on_worker` itself, which needs
 # `semio_framework_async::WorkerPool`, is only called from the native-only half of `frame_job.rs`; the
-# job-protocol types this crate names unconditionally build clean on wasm32 per P2a's own exit gate).
+# job-protocol types used by the browser and native presentation module build clean on wasm32).
 # Workspace-internal — `bun ./📜️script.ts verify dependencies` stays 238→238.
 semio-framework-job = { workspace = true }
 flow = { path = "../../../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
@@ -105,7 +105,7 @@ semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀�
 semio-framework-os-services = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
@@ -114,6 +114,7 @@ web-sys = { version = "0.3.98", features = [
     "Window",
     "Document",
     "HtmlCanvasElement",
+    "OffscreenCanvas",
     "CanvasRenderingContext2d",
     "Element",
     "Event",

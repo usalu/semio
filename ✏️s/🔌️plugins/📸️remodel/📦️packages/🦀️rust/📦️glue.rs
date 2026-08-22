@@ -452,6 +452,15 @@ pub mod artifacts {
                                     mod tests_advances_the_job_to_texturing;
                                 }
                                 #[path = "."]
+                                pub mod commit_reconstruction {
+                                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🔺️diff/🦀️component.rs"]
+                                    pub mod diff;
+                                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/↩️inverse/🦀️component.rs"]
+                                    pub mod inverse;
+                                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁commit-reconstruction/🦠️mutation/🦀️component.rs"]
+                                    pub mod mutation;
+                                }
+                                #[path = "."]
                                 pub mod replace_sparse {
                                     #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭐replace-sparse/🔺️diff/🦀️component.rs"]
                                     pub mod diff;
@@ -898,8 +907,12 @@ pub mod editor {
             pub mod add_gcp;
             #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️add-stream/🦀️component.rs"]
             pub mod add_stream;
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️advance-reconstruction/🦀️component.rs"]
+            pub mod advance_reconstruction;
             #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️calibrate-cameras/🦀️component.rs"]
             pub mod calibrate_cameras;
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️cancel-reconstruction/🦀️component.rs"]
+            pub mod cancel_reconstruction;
             #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-dense/🦀️component.rs"]
             pub mod clear_dense;
             #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-geo-products/🦀️component.rs"]

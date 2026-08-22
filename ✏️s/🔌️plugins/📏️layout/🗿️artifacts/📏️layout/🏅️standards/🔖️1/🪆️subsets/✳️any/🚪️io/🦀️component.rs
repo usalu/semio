@@ -111,8 +111,6 @@ pub enum LayoutError {
     Json(serde_json::Error),
     UnexpectedSchema(String),
     PageNotFound(String),
-    Png(png::EncodingError),
-    Zip(zip::result::ZipError),
     Io(std::io::Error),
     Svg(String),
 }
@@ -123,8 +121,6 @@ impl std::fmt::Display for LayoutError {
             Self::Json(error) => write!(formatter, "json: {error}"),
             Self::UnexpectedSchema(schema) => write!(formatter, "unexpected schema {schema}"),
             Self::PageNotFound(page) => write!(formatter, "page {page} not found"),
-            Self::Png(error) => write!(formatter, "png: {error}"),
-            Self::Zip(error) => write!(formatter, "zip: {error}"),
             Self::Io(error) => write!(formatter, "io: {error}"),
             Self::Svg(message) => write!(formatter, "svg: {message}"),
         }
@@ -135,8 +131,6 @@ impl std::error::Error for LayoutError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Json(error) => Some(error),
-            Self::Png(error) => Some(error),
-            Self::Zip(error) => Some(error),
             Self::Io(error) => Some(error),
             Self::UnexpectedSchema(_) | Self::PageNotFound(_) | Self::Svg(_) => None,
         }
@@ -146,18 +140,6 @@ impl std::error::Error for LayoutError {
 impl From<serde_json::Error> for LayoutError {
     fn from(error: serde_json::Error) -> Self {
         Self::Json(error)
-    }
-}
-
-impl From<png::EncodingError> for LayoutError {
-    fn from(error: png::EncodingError) -> Self {
-        Self::Png(error)
-    }
-}
-
-impl From<zip::result::ZipError> for LayoutError {
-    fn from(error: zip::result::ZipError) -> Self {
-        Self::Zip(error)
     }
 }
 
@@ -266,8 +248,8 @@ pub async fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<
 /// `Image` frames get a neutral outline (mirrors the blueprint chrome colors the app engine's scene
 /// module already uses for the same frame kinds). Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
 /// wave 4: if the document has a composed `background_drawing` child AND that child's content is
-/// still live in the working-scene scratch cache (`artifacts::layout::background_drawing_content`),
-/// its layers are merged in first (behind every page layer) — the real consumer of that cache, so an
+/// present in its snapshot-owned child record (`artifacts::layout::background_drawing_content`),
+/// its layers are merged in first (behind every page layer), so an
 /// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
 /// only ever informing page-boundary framing at import time.
 async fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
@@ -368,12 +350,10 @@ async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnaps
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: this used to build `drawing_snapshot` only
 /// to read `path_bounds` back out of it for page framing, then discard the rest of the decoded DWG
 /// geometry entirely. It now also mints a real content-addressed `background_drawing` composed child
-/// from the FULL drawing and caches its content in the working-scene scratch (see the artifact
-/// root's `🔖️WorkingScene` region) — nothing imported is thrown away anymore.
+/// whose snapshot-owned record retains the full drawing — nothing imported is thrown away anymore.
 pub async fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
     let background_child = crate::artifacts::layout::background_drawing_child_handle("dwg", &drawing_snapshot);
-    crate::artifacts::layout::cache_background_drawing_content(&background_child.child_id, drawing_snapshot.clone());
     let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
         Some(DrawNode::Group { children, .. }) => children,
         _ => &[],
@@ -474,24 +454,24 @@ mod media_import_export_tests {
     /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: DWG import now mints a real
     /// `background_drawing` composed child from the FULL decoded drawing (not just page-boundary
     /// rects) instead of discarding it — this asserts the mint, the handle shape, and that the
-    /// content actually landed in the working-scene scratch cache the mint call populates.
+    /// content is owned by the durable child record the mint call returns.
     #[semio_framework_async_macros::async_test]
-    async fn dwg_import_mints_and_caches_a_real_background_drawing_child() {
+    async fn dwg_import_mints_a_durable_background_drawing_child() {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
         let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
         assert_eq!(child.target.dialect.subset, "drawing");
-        let cached = crate::artifacts::layout::background_drawing_content(&document).expect("mint call cached real content");
-        assert_eq!(cached.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
+        let content = crate::artifacts::layout::background_drawing_content(&document).expect("mint call retained real content");
+        assert_eq!(content.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
     }
 
-    /// 🌉️ The real consumer of the working-scene cache: SVG export merges the cached background
-    /// content's layers in behind the document's own page layers, so an imported trace an author
+    /// 🌉️ SVG export merges the snapshot-owned background content's layers behind the document's
+    /// own page layers, so an imported trace an author
     /// draws pages on top of survives export instead of only ever informing import-time framing.
     #[semio_framework_async_macros::async_test]
-    async fn svg_export_merges_cached_background_drawing_behind_pages() {
+    async fn svg_export_merges_owned_background_drawing_behind_pages() {
         ensure_stdio_semio_drawing_registered();
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });

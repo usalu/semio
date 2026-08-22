@@ -7,10 +7,6 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-// 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
-// reactHostPort.createContext at module top level, which requires a non-circular import (see
-// 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { styleVariants } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
@@ -22,130 +18,225 @@ import { Label, useControlInlineText, useControlAccessibleLabel, useControlToolt
 import { renderControlIcon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
-// #region 🧩️ToggleGroup
-// Group of mutually exclusive or multi-select toggles.
-// Consumers MUST provide items with distinct values.
+// #region 🎛️Contracts
+type ToggleGroupOrientation = "horizontal" | "vertical";
+type ToggleGroupDirection = "ltr" | "rtl";
 
-const toggleVariants = styleVariants(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
-
-/**
- * ToggleGroupContext holds the data fields for a ToggleGroupContext record.
- **/
-const ToggleGroupContext = reactHostPort.createContext<{ level: Level }>({
-  level: "base",
-});
-
-/**
- * ToggleGroupItemProps holds the data fields for a ToggleGroupItemProps record.
- **/
-type ToggleGroupItemProps = Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Item>, "children"> & {
+interface ToggleGroupItemProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "value"> {
   id?: string;
   icon: ControlIcon;
   text?: string;
   action?: React.ReactNode;
   value: string;
-};
-
-/**
- * ToggleGroupProps holds the data fields for a ToggleGroupProps record.
- **/
-interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupPrimitive.Root>, "children" | "type" | "id"> {
-  id?: string;
-  showLabel?: boolean;
-  kind?: "single" | "multiple";
-  items: ToggleGroupItemProps[];
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
-/**
- * ToggleGroup holds the data fields for a ToggleGroup record.
- **/
-function ToggleGroup({ className, id, showLabel, items, kind = "single", ...restProps }: ToggleGroupProps) {
+interface ToggleGroupBaseProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "defaultValue" | "dir" | "onChange"> {
+  id?: string;
+  showLabel?: boolean;
+  items: ToggleGroupItemProps[];
+  disabled?: boolean;
+  orientation?: ToggleGroupOrientation;
+  dir?: ToggleGroupDirection;
+  loop?: boolean;
+  rovingFocus?: boolean;
+  ref?: React.Ref<HTMLDivElement>;
+}
+
+interface ToggleGroupSingleProps extends ToggleGroupBaseProps {
+  kind?: "single";
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+}
+
+interface ToggleGroupMultipleProps extends ToggleGroupBaseProps {
+  kind: "multiple";
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+}
+
+type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
+
+interface ToggleGroupContextValue {
+  level: Level;
+  disabled: boolean;
+  orientation: ToggleGroupOrientation;
+  dir: ToggleGroupDirection;
+  loop: boolean;
+  rovingFocus: boolean;
+  focusValue: string | undefined;
+  selected: ReadonlySet<string>;
+  activate: (value: string) => void;
+  moveFocus: (event: React.KeyboardEvent<HTMLButtonElement>, value: string) => void;
+  setFocusValue: (value: string) => void;
+}
+// #endregion 🎛️Contracts
+
+// #region 🎛️ToggleGroup
+const toggleVariants = styleVariants(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
+const ToggleGroupContext = reactHostPort.createContext<ToggleGroupContextValue | null>(null);
+
+/** 🎛️ Owns exact single/multiple selection and independent roving focus. */
+function ToggleGroup(props: ToggleGroupProps) {
+  const { className, id, showLabel, items, kind = "single", disabled = false, orientation = "horizontal", dir = "ltr", loop = true, rovingFocus = true, ref, ...rootProps } = props;
   const level = useLevel();
+  const isMultiple = kind === "multiple";
+  const controlled = props.value !== undefined;
+  const [uncontrolledSingle, setUncontrolledSingle] = React.useState<string | undefined>(() => (kind === "single" ? (props as ToggleGroupSingleProps).defaultValue : undefined));
+  const [uncontrolledMultiple, setUncontrolledMultiple] = React.useState<string[]>(() => (kind === "multiple" ? ((props as ToggleGroupMultipleProps).defaultValue ?? []) : []));
+  const singleValue = isMultiple ? undefined : controlled ? (props as ToggleGroupSingleProps).value : uncontrolledSingle;
+  const multipleValue = isMultiple ? (controlled ? ((props as ToggleGroupMultipleProps).value ?? []) : uncontrolledMultiple) : [];
+  const selected = React.useMemo<ReadonlySet<string>>(() => new Set<string>(isMultiple ? multipleValue : singleValue ? [singleValue] : []), [isMultiple, multipleValue, singleValue]);
+  const enabledItems = React.useMemo(() => items.filter((item) => !disabled && !item.disabled), [disabled, items]);
+  const [focusValue, setFocusValue] = React.useState(() => enabledItems.find((item) => selected.has(item.value))?.value ?? enabledItems[0]?.value);
 
-  const controlledValue = (restProps as any).value;
-  const rootDataState = kind === "single" && controlledValue !== undefined ? (controlledValue ? "on" : "off") : undefined;
+  React.useEffect(() => {
+    if (focusValue && enabledItems.some((item) => item.value === focusValue)) return;
+    setFocusValue(enabledItems.find((item) => selected.has(item.value))?.value ?? enabledItems[0]?.value);
+  }, [enabledItems, focusValue, selected]);
 
-  const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root
+  const activate = React.useCallback(
+    (itemValue: string) => {
+      if (disabled) return;
+      if (isMultiple) {
+        const next = selected.has(itemValue) ? multipleValue.filter((entry) => entry !== itemValue) : [...multipleValue, itemValue];
+        if (!controlled) setUncontrolledMultiple(next);
+        (props as ToggleGroupMultipleProps).onValueChange?.(next);
+        return;
+      }
+      const next = singleValue === itemValue ? "" : itemValue;
+      if (!controlled) setUncontrolledSingle(next);
+      (props as ToggleGroupSingleProps).onValueChange?.(next);
+    },
+    [controlled, disabled, isMultiple, multipleValue, props, selected, singleValue],
+  );
+  const moveFocus = React.useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>, itemValue: string) => {
+      if (!rovingFocus || event.target !== event.currentTarget) return;
+      const previousKey = orientation === "vertical" ? "ArrowUp" : dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+      const nextKey = orientation === "vertical" ? "ArrowDown" : dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+      if (![previousKey, nextKey, "Home", "End"].includes(event.key)) return;
+      const currentIndex = enabledItems.findIndex((item) => item.value === itemValue);
+      if (currentIndex < 0 || enabledItems.length === 0) return;
+      let nextIndex = event.key === "Home" ? 0 : event.key === "End" ? enabledItems.length - 1 : event.key === previousKey ? currentIndex - 1 : currentIndex + 1;
+      if (loop) nextIndex = (nextIndex + enabledItems.length) % enabledItems.length;
+      else nextIndex = Math.max(0, Math.min(enabledItems.length - 1, nextIndex));
+      const nextValue = enabledItems[nextIndex]?.value;
+      if (nextValue === undefined || nextValue === itemValue) return;
+      event.preventDefault();
+      const root = event.currentTarget.closest('[data-slot="toggle-group"]');
+      const next = Array.from(root?.querySelectorAll<HTMLButtonElement>('[data-slot="toggle-group-item"]') ?? []).find((item) => item.dataset.toggleValue === nextValue);
+      next?.focus();
+      setFocusValue(nextValue);
+    },
+    [dir, enabledItems, loop, orientation, rovingFocus],
+  );
+  const context = React.useMemo<ToggleGroupContextValue>(
+    () => ({ level, disabled, orientation, dir, loop, rovingFocus, focusValue, selected, activate, moveFocus, setFocusValue }),
+    [activate, dir, disabled, focusValue, level, loop, moveFocus, orientation, rovingFocus, selected],
+  );
+  const rootDataState = selected.size > 0 ? "on" : "off";
+  const { value: _value, defaultValue: _defaultValue, onValueChange: _onValueChange, ...htmlProps } = rootProps as ToggleGroupBaseProps & { value?: unknown; defaultValue?: unknown; onValueChange?: unknown };
+  const element = (
+    <div
+      {...htmlProps}
+      ref={ref}
+      id={id}
+      role="group"
+      dir={dir}
+      aria-disabled={disabled || undefined}
       data-slot="toggle-group"
       data-detail-panel-control="fit"
       data-state={rootDataState}
-      id={id}
-      type={kind}
+      data-disabled={disabled ? "" : undefined}
+      data-orientation={orientation}
       className={cn(chromeControlGroupClass, "group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}
-      {...(restProps as any)}
     >
-      <ToggleGroupContext.Provider value={{ level }}>
+      <ToggleGroupContext.Provider value={context}>
         {items.map((item) => (
-          <ToggleGroupItem key={item.value} {...item} id={item.id ?? id} />
+          <ToggleGroupItem key={item.value} {...item} id={item.id ?? (id ? `${id}-${item.value}` : undefined)} />
         ))}
       </ToggleGroupContext.Provider>
-    </ToggleGroupPrimitive.Root>
+    </div>
   );
-
-  if (showLabel && id) {
-    return (
-      <Label id={id} labelElementId={`${id}-label`}>
-        {toggleGroupElement}
-      </Label>
-    );
-  }
-
-  return toggleGroupElement;
+  return showLabel && id ? (
+    <Label id={id} labelElementId={`${id}-label`}>
+      {element}
+    </Label>
+  ) : (
+    element
+  );
 }
 
-/**
- * ToggleGroupItem holds the data fields for a ToggleGroupItem record.
- **/
-function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
+/** 🔘 Renders one owned native toggle with any secondary action as a sibling control. */
+function ToggleGroupItem({ className, id, icon, text, action, value, disabled = false, ref, onClick, onFocus, onKeyDown, "aria-label": suppliedAriaLabel, title: suppliedTitle, ...props }: ToggleGroupItemProps) {
   const context = reactHostPort.useContext(ToggleGroupContext);
+  if (!context) throw new Error("ToggleGroupItem must be rendered inside ToggleGroup");
+  const itemDisabled = context.disabled || disabled;
+  const pressed = context.selected.has(value);
   const level = context.level ?? "base";
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
   const tooltipText = useControlTooltipText(id, text);
-  const ariaLabel = inlineText ? undefined : accessibleLabel;
-
-  const toggleGroupItemElement = (
-    <ToggleGroupPrimitive.Item
-      data-slot="toggle-group-item"
-      id={id}
-      aria-label={ariaLabel}
-      title={tooltipText}
-      data-level={level}
-      className={cn(
-        toggleVariants(),
-        inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
-        inlineText && "w-auto",
-        className,
-      )}
-      {...props}
-    >
-      {inlineText ? (
-        <span data-slot="inline-label" className="text-xs whitespace-nowrap">
-          {inlineText}
-        </span>
-      ) : null}
-      <ControlHotkeyBadge id={id} allowInline={Boolean(inlineText)} />
-      <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
-      {action && (
-        <div
-          className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}
-          onClick={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-          onDoubleClick={(e) => e.stopPropagation()}
-        >
+  const ariaLabel = suppliedAriaLabel ?? (inlineText ? undefined : accessibleLabel);
+  const title = suppliedTitle ?? tooltipText;
+  return (
+    <div data-slot="toggle-group-item-shell" className={action ? "flex min-w-0 flex-1 items-stretch" : "contents"}>
+      <button
+        {...props}
+        ref={ref}
+        type="button"
+        id={id}
+        disabled={itemDisabled}
+        aria-label={ariaLabel}
+        aria-pressed={pressed}
+        title={title}
+        tabIndex={itemDisabled ? -1 : context.rovingFocus ? (context.focusValue === value ? 0 : -1) : props.tabIndex}
+        data-slot="toggle-group-item"
+        data-toggle-value={value}
+        data-level={level}
+        data-state={pressed ? "on" : "off"}
+        data-disabled={itemDisabled ? "" : undefined}
+        data-orientation={context.orientation}
+        className={cn(
+          toggleVariants(),
+          inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+          (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
+          inlineText && "w-auto",
+          className,
+        )}
+        onClick={(event) => {
+          onClick?.(event);
+          if (!event.defaultPrevented && !itemDisabled) context.activate(value);
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (!event.defaultPrevented && !itemDisabled) context.setFocusValue(value);
+        }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (!event.defaultPrevented && !itemDisabled) context.moveFocus(event, value);
+        }}
+      >
+        {inlineText ? (
+          <span data-slot="inline-label" className="text-xs whitespace-nowrap">
+            {inlineText}
+          </span>
+        ) : null}
+        <ControlHotkeyBadge id={id} allowInline={Boolean(inlineText)} />
+        <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
+      </button>
+      {action ? (
+        <div data-slot="toggle-group-item-action" aria-disabled={itemDisabled || undefined} className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}>
           {action}
         </div>
-      )}
-    </ToggleGroupPrimitive.Item>
+      ) : null}
+    </div>
   );
-
-  return toggleGroupItemElement;
 }
 
 export { ToggleGroup, ToggleGroupItem };
-
-// #endregion 🧩️ToggleGroup
+export type { ToggleGroupProps, ToggleGroupSingleProps, ToggleGroupMultipleProps, ToggleGroupItemProps, ToggleGroupOrientation, ToggleGroupDirection };
+// #endregion 🎛️ToggleGroup

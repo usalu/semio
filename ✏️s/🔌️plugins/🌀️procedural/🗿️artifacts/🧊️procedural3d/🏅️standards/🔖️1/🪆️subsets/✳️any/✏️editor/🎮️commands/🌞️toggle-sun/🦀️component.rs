@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "toggle-sun")]
 pub struct ToggleSun {}
 
-pub async fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(_payload: &ToggleSun, _doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let mut sun = cfg.snapshot.sun();
     apply_world3d_sun_action(&mut sun, "toggleSun", None);
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetSun { json: serde_json::to_string(&sun).unwrap_or_default() }]))
@@ -24,8 +24,8 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
 
-    #[semio_framework_async_macros::async_test]
-    async fn toggle_sun_never_mutates_the_document() {
+    #[test]
+    fn toggle_sun_never_mutates_the_document() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot");

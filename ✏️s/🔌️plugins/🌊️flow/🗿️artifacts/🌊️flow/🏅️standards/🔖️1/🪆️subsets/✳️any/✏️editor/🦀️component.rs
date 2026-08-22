@@ -12,9 +12,9 @@
 use crate::artifacts::flow::op::FlowMutation;
 use crate::artifacts::flow::{FlowSnapshot, FLOW_DOCUMENT_SCHEMA};
 use crate::editor::flow::commands::{
-    add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport, open_spotlight,
-    patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale, set_lod_mode,
-    set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
+    add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, duplicate_widget_step, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
+    open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
+    set_lod_mode, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::modes::edit::windows::{compiled, main};
@@ -144,6 +144,7 @@ semio_framework_plugin::app_commands! {
         "setLocale" as "locale" => set_locale::SetLocale,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "duplicateWidgetStep" as "duplicate-widget-step" => duplicate_widget_step::DuplicateWidgetStep,
     }
 }
 
@@ -263,6 +264,18 @@ impl ArtifactEditor for FlowPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::flow::FLOW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.flow.flow@1/*#editor",
+        document_schema: "flow.fixture",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "duplicateWidget" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 4_096, 7_500),
+            "duplicateWidgetStep" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 4_096, 7_500),
+        }
+    }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::flow::config::schema::app_schema_descriptor())
@@ -455,7 +468,9 @@ pub async fn create_flow_app() -> AppDefinition {
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
         // 🌉️ COMPOSITE — plans create-widget then connect-widgets (ticket 26/08/16/…-COMPOSITE-MUTATIONS).
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
-        .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(duplicate_widget::DUPLICATE_WIDGET_STEP_ACTION_ID, LocalizedLabel::native("Continue Duplicating Widget", "Widgetduplizierung fortsetzen"), ActionKind::Mutation) })
+        .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job(duplicate_widget::DUPLICATE_WIDGET_STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
         // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
         .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
@@ -548,10 +563,12 @@ pub async fn create_flow_app() -> AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::meta;
     use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_s_plugin_stdio::artifacts::semio::{create_semio_member, SemioMembers};
+    use store::ArtifactPack;
 
-    pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>>;
+    pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
 
     /// 🧪️ Testkit gap wrapper (`📓️w2-p5-flow-notes.md`): `new_app_with_registry` still takes
     /// `fn() -> App`, but `create_flow_app` now returns `AppDefinition` (contract §2.4) — mirrors the
@@ -591,16 +608,31 @@ pub(crate) mod testkit {
         });
     }
 
+    pub(crate) async fn register_content_child(app: &mut FlowApp) {
+        let snapshot = app.snapshot().await.expect("Flow parent snapshot");
+        let fixture = snapshot.to_fixture();
+        let content = crate::artifacts::flow::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout).await;
+        let dialect = snapshot.content.target.dialect.clone();
+        let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
+        app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");
+    }
+
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub async fn flow_app() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
-        new_app::<EditorApp<FlowPlayApp>>()
+        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::new(EditorApp::default()).await;
+        register_content_child(&mut app).await;
+        app
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn flow_app_with_registry() -> FlowApp {
         install_first_party_light_flow_extensions_for_tests();
-        new_app_with_registry::<EditorApp<FlowPlayApp>>(flow_manifest_for_testkit)
+        let definition = flow_manifest_for_testkit().await.definition;
+        let registry = AppActionRegistry::from_definition(&definition).await;
+        let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
+        register_content_child(&mut app).await;
+        app
     }
 
     pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
@@ -658,7 +690,7 @@ mod tests {
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-        assert_eq!(ids.len(), 34, "every FlowCommand row must be covered by every_command()");
+        assert_eq!(ids.len(), 37, "every FlowCommand row must be covered by every_command()");
     }
 
     /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -713,6 +745,7 @@ mod tests {
         vec![
             FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
             FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
+            FlowCommand::DuplicateWidget(duplicate_widget::DuplicateWidget { widget_id: "n1".into() }),
             FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}),
             FlowCommand::Disconnect(disconnect::Disconnect { synapse_id: "s1".into() }),
             FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() }),
@@ -729,6 +762,7 @@ mod tests {
             }),
             FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
             FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
+            FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
             FlowCommand::Evaluate(evaluate::Evaluate {}),
             FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
             FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 } }),
@@ -751,6 +785,7 @@ mod tests {
             FlowCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
             FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
             FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
+            FlowCommand::DuplicateWidgetStep(duplicate_widget_step::DuplicateWidgetStep { generation: 7, phase: "widget".into(), scan_index: 64, suffix: 2, candidate_id: "n1-copy-2".into(), ..Default::default() }),
         ]
     }
     //#endregion 🔖️CommandSurface

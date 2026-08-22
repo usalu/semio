@@ -8,6 +8,8 @@
     "selectionMethod",
     "overlapBudget",
     "fillCount",
+    "fillApplyGeneration",
+    "fillAppliedCount",
     "fillCheckpoint",
     "brushCandidateIndex",
     "objectKindWeights",
@@ -62,6 +64,17 @@
       "x-semio-state": "config"
     },
     "fillCount": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillApplyGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillAppliedCount": {
       "type": "integer",
       "format": "uint32",
       "minimum": 0,

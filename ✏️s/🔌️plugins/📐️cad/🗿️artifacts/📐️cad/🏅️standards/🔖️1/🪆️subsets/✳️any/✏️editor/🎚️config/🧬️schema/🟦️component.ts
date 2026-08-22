@@ -73,6 +73,10 @@ export interface CadConfig {
   /** @state config */
   engagementSessionJson?: string;
   /** @state config */
+  engagementPreviewOperationJson?: string;
+  /** @state config @minimum 0 @maximum 2147483647 Exact signed-32 generation. */
+  engagementPreviewGeneration: number;
+  /** @state config */
   lastFinalizedInteractionId?: string;
   /** @state config */
   sun: CadSunConfig;

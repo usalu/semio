@@ -35,6 +35,52 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+//#region 🧬️OpaqueSnapshotRead
+/// 👁️ Repository-owned immutable snapshot capability. Concrete shared ownership stays
+/// private while readers retain O(1) clone and dereference semantics.
+#[derive(Clone)]
+pub struct SnapshotRead<T: ?Sized> {
+    owner: Arc<T>,
+}
+
+impl<T: ?Sized> SnapshotRead<T> {
+    fn new(owner: Arc<T>) -> Self {
+        Self { owner }
+    }
+
+    /// 👁️ Borrows the captured immutable value without exposing its owner.
+    pub fn get(&self) -> &T {
+        self.owner.as_ref()
+    }
+}
+
+impl<T: ?Sized> std::ops::Deref for SnapshotRead<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.get()
+    }
+}
+
+/// 🧰 Type-erased snapshot capability used only until a composition view selects its
+/// repository-owned concrete artifact type.
+#[derive(Clone)]
+pub struct ErasedSnapshotRead {
+    owner: Arc<dyn std::any::Any + Send + Sync>,
+}
+
+impl ErasedSnapshotRead {
+    fn new(owner: Arc<dyn std::any::Any + Send + Sync>) -> Self {
+        Self { owner }
+    }
+
+    /// 🧬️ Selects the expected artifact type while keeping concrete ownership private.
+    pub fn typed<T: Send + Sync + 'static>(&self) -> Option<SnapshotRead<T>> {
+        self.owner.clone().downcast::<T>().ok().map(SnapshotRead::new)
+    }
+}
+//#endregion 🧬️OpaqueSnapshotRead
+
 // 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
@@ -4321,6 +4367,80 @@ pub async fn build_history_columns<P, Mutation>(envelope: &ArtifactEnvelope<P, M
 
 //#region 🔖️ArtifactStore
 //#region 🔖️ArtifactStore
+#[derive(Clone)]
+struct CursorRevisionRecord {
+    id: String,
+    edit_digest: [u8; 32],
+    prefix_digest: [u8; 32],
+}
+
+#[derive(Clone)]
+struct CursorRevisionAccumulator {
+    identity_digest: [u8; 32],
+    applied: Vec<CursorRevisionRecord>,
+    redo: Vec<CursorRevisionRecord>,
+}
+
+impl CursorRevisionAccumulator {
+    fn hash_record(domain: &[u8], parts: &[&[u8]]) -> [u8; 32] {
+        let mut digest = semio_framework_hash::Sha256::new();
+        digest.update(b"semio.artifact.cursor.v2");
+        digest.update(&(domain.len() as u64).to_be_bytes());
+        digest.update(domain);
+        for part in parts {
+            digest.update(&(part.len() as u64).to_be_bytes());
+            digest.update(part);
+        }
+        digest.finalize()
+    }
+
+    fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
+        let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
+        Self { identity_digest, applied: Vec::new(), redo: Vec::new() }
+    }
+
+    fn edit_digest<Mutation: Serialize>(edit: &Edit<Mutation>) -> [u8; 32] {
+        let encoded = serde_json::to_vec(edit).expect("validated durable edit must serialize");
+        Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded])
+    }
+
+    fn reconcile_stack<Mutation: Serialize>(records: &mut Vec<CursorRevisionRecord>, ids: &[String], edits: &[Edit<Mutation>], domain: &[u8], identity_digest: [u8; 32]) {
+        let mut common = 0;
+        while common < records.len().min(ids.len()) && records[common].id == ids[common] {
+            common += 1;
+        }
+        records.truncate(common);
+        if common == ids.len() && common != 0 {
+            let id = &ids[common - 1];
+            let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+            let edit_digest = Self::edit_digest(edit);
+            if records[common - 1].edit_digest != edit_digest {
+                records.pop();
+                common -= 1;
+            }
+        }
+        for id in &ids[common..] {
+            let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
+            let edit_digest = Self::edit_digest(edit);
+            let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
+            let prefix_digest = Self::hash_record(domain, &[&previous, &edit_digest]);
+            records.push(CursorRevisionRecord { id: id.clone(), edit_digest, prefix_digest });
+        }
+    }
+
+    fn reconcile<Mutation: Serialize>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &[Edit<Mutation>]) {
+        Self::reconcile_stack(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest);
+        Self::reconcile_stack(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest);
+    }
+
+    fn revision(&self, checkpoint_id: Option<&str>) -> [u8; 32] {
+        let applied = self.applied.last().map_or(self.identity_digest, |record| record.prefix_digest);
+        let redo = self.redo.last().map_or(self.identity_digest, |record| record.prefix_digest);
+        let checkpoint = checkpoint_id.unwrap_or_default().as_bytes();
+        Self::hash_record(b"cursor", &[&applied, &(self.applied.len() as u64).to_be_bytes(), &redo, &(self.redo.len() as u64).to_be_bytes(), checkpoint])
+    }
+}
+
 pub struct ArtifactStore<P, Mutation>
 where
     P: Clone + Serialize + DeserializeOwned,
@@ -4353,6 +4473,14 @@ where
     /// tick on every ingest — replaces the old per-call `HybridLogicalTimestamp::new(0, now_ms())`
     /// construction in `replay_mutations`. Not part of the wire envelope.
     clock: HybridLogicalTimestamp,
+    /// 🧬️ Stable identity of the immutable genesis content, computed once on load/reset rather
+    /// than by a composing app's action dispatch.
+    initial_digest: [u8; 32],
+    /// 🧬️ Fixed cursor digest refreshed at mutation boundaries and cloned by composition reads.
+    content_revision: [u8; 32],
+    /// 🧬️ Prefix-authenticated applied/redo cursor state. Tail mutations update one record;
+    /// load/reset and the already-cold interior-history paths rebuild only their changed suffix.
+    revision_accumulator: CursorRevisionAccumulator,
     /// @emoji ⚡️ The live, incrementally-maintained RAW fold of `initial_snapshot` over every
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
     /// {@link materialize_document_snapshot} replay computes BEFORE its single final
@@ -4361,14 +4489,14 @@ where
     /// O(total history). Cold-path commands (checkout/switch/set_state, which reassign
     /// `applied_edit_ids` wholesale rather than appending) fall back to a full raw-fold recompute —
     /// see `fold_current`. Differential ground truth: `test_support::assert_live_equals_replay`.
-    current: P,
+    current: Arc<P>,
     /// @emoji 🪢️ `(edit_id, snapshot right before that edit's forwards were first applied)` for
     /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AmendLast`
     /// (fresh-edit branch)/`Redo`, left untouched by further amends to the same edit (so it always
     /// points at the state before the edit as a whole, not before its latest increment). Powers an
     /// O(1) `Undo` of exactly this edit; any other undo (not the cached tail, or `None`) falls back
     /// to `fold_current` — always correct, just not always O(1).
-    tail_undo_cache: Option<(String, P)>,
+    tail_undo_cache: Option<(String, Arc<P>)>,
     /// @emoji 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
     /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
@@ -4455,6 +4583,10 @@ where
         };
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
+        let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
+        let mut revision_accumulator = CursorRevisionAccumulator::new(&envelope, initial_digest);
+        revision_accumulator.reconcile(&applied_edit_ids, &redo_edit_ids, &envelope.vcs.edits);
+        let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         let local_actor_id = applied_edit_ids.last().and_then(|edit_id| envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.actor.clone());
         let edit_messages = envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         let (dag, edit_sequence, clock) = Self::seed_runtime_state(&envelope).await;
@@ -4472,7 +4604,10 @@ where
             merge_policy: crate::os_spr::MergePolicy::default(),
             edit_messages,
             clock,
-            current,
+            initial_digest,
+            content_revision,
+            revision_accumulator,
+            current: Arc::new(current),
             tail_undo_cache: None,
             pending_report: PendingCommandReport::default(),
         })
@@ -4485,6 +4620,10 @@ where
     /// 🧬️ Returns the current history identity used to invalidate derived work.
     pub async fn artifact_revision(&self) -> ArtifactRevision {
         ArtifactRevision { artifact_id: self.envelope.id.clone(), schema: self.envelope.schema.clone(), applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() }
+    }
+
+    pub async fn content_revision(&self) -> [u8; 32] {
+        self.content_revision
     }
 
     /// 🎯️ Returns the exact revision plus local generation a projection result must match.
@@ -4614,6 +4753,7 @@ where
         validate_durable_history(&envelope).await?;
         validate_history_lanes(&envelope, &applied_edit_ids, &redo_edit_ids).await?;
         let current = Self::fold_history(&envelope, &applied_edit_ids).await?;
+        let initial_digest = *blake3::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let (dag, edit_sequence, clock) = Self::seed_runtime_state(&envelope).await;
         self.backbone = None;
         self.edit_sequence = edit_sequence;
@@ -4621,11 +4761,13 @@ where
         self.envelope = envelope;
         self.dag = dag;
         self.clock = clock;
+        self.initial_digest = initial_digest;
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
+        self.revision_accumulator = CursorRevisionAccumulator::new(&self.envelope, initial_digest);
         self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
         self.tail_undo_cache = None;
-        self.current = current;
+        self.current = Arc::new(current);
         self.bump().await;
         Ok(())
     }
@@ -4644,7 +4786,7 @@ where
         self.redo_edit_ids.clear();
         self.current_checkpoint_id = Some(checkpoint_id);
         self.tail_undo_cache = None;
-        self.current = current;
+        self.current = Arc::new(current);
         Ok(())
     }
 
@@ -4693,7 +4835,16 @@ where
     /// in practice (kept as `Result` for API stability); O(1) instead of a full replay. See the
     /// `current` field doc for the maintenance invariant.
     pub async fn snapshot(&self) -> Result<P, VcsError> {
-        Ok(self.current.clone())
+        Ok(self.current.as_ref().clone())
+    }
+
+    /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
+    pub async fn snapshot_read(&self) -> SnapshotRead<P> {
+        SnapshotRead::new(self.current.clone())
+    }
+
+    pub(crate) async fn snapshot_owner(&self) -> Arc<P> {
+        self.current.clone()
     }
 
     /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
@@ -4955,7 +5106,7 @@ where
                     self.redo_edit_ids.push(removed);
                     // 🔂️ Removing a MID-history edit has no cheap incremental inverse; cold-path replay.
                     self.tail_undo_cache = None;
-                    self.current = self.fold_current().await?;
+                    self.current = Arc::new(self.fold_current().await?);
                     self.bump().await;
                     Ok(())
                 }
@@ -5125,7 +5276,7 @@ where
                 self.current = cached_pre;
             }
             _ => {
-                self.current = self.fold_current().await?;
+                self.current = Arc::new(self.fold_current().await?);
             }
         }
         self.bump().await;
@@ -5142,12 +5293,12 @@ where
         self.applied_edit_ids.push(next.clone());
         if let Some(edit) = self.envelope.vcs.edits.iter().find(|entry| entry.id == next) {
             let pre = self.current.clone();
-            let mut folded = pre.clone();
+            let mut folded = pre.as_ref().clone();
             for operation in &edit.forwards {
                 // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
                 folded = apply_mutation(&folded, operation).await?.0;
             }
-            self.current = folded;
+            self.current = Arc::new(folded);
             self.tail_undo_cache = Some((next, pre));
         }
         self.bump().await;
@@ -5190,7 +5341,7 @@ where
         self.tail_undo_cache = Some((edit.id.clone(), pre_snapshot));
         self.applied_edit_ids.push(edit.id.clone());
         self.envelope.vcs.edits.push(edit);
-        self.current = post;
+        self.current = Arc::new(post);
         self.redo_edit_ids.clear();
         self.bump().await;
         Ok(())
@@ -5220,7 +5371,7 @@ where
                 edit.finished_at = Some(now_iso());
             }
             self.record_edit_messages(&edit_id, messages).await;
-            self.current = post;
+            self.current = Arc::new(post);
             self.redo_edit_ids.clear();
             self.bump().await;
             Ok(())
@@ -5242,7 +5393,7 @@ where
             self.tail_undo_cache = Some((edit_id.clone(), pre_snapshot));
             self.applied_edit_ids.push(edit.id.clone());
             self.envelope.vcs.edits.push(edit);
-            self.current = post;
+            self.current = Arc::new(post);
             self.redo_edit_ids.clear();
             self.bump().await;
             Ok(())
@@ -5516,7 +5667,7 @@ where
             order.insert(insert_at, edit.id.clone());
         }
         // 5
-        let base = if k == self.applied_edit_ids.len() { self.current.clone() } else { Self::fold_history(&self.envelope, &order[..k]).await? };
+        let base = if k == self.applied_edit_ids.len() { self.current.as_ref().clone() } else { Self::fold_history(&self.envelope, &order[..k]).await? };
         // 6 — walk order[k..] one edit at a time (H1 determinism fix): an already-committed edit
         // that this rewind proves invalid gets the SAME accept/quarantine verdict a fresh arrival
         // in true HLC order would have given it, instead of the whole suffix being judged
@@ -5630,7 +5781,7 @@ where
         }
         self.edit_sequence = self.applied_edit_ids.len() as i32;
         self.tail_undo_cache = None;
-        self.current = state;
+        self.current = Arc::new(state);
         let mut degraded_conflict_id = None;
         if !degraded_ids.is_empty() {
             // 🎯️ HIGH-2: `edits_for_ids` errors loudly instead of silently filtering — see its doc.
@@ -5727,6 +5878,9 @@ where
             merge_policy: crate::os_spr::MergePolicy::LaissezFaire,
             edit_messages: self.edit_messages.clone(),
             clock: self.clock,
+            initial_digest: self.initial_digest,
+            content_revision: self.content_revision,
+            revision_accumulator: self.revision_accumulator.clone(),
             current: self.current.clone(),
             tail_undo_cache: self.tail_undo_cache.clone(),
             pending_report: PendingCommandReport::default(),
@@ -5744,6 +5898,9 @@ where
         self.local_actor_id = candidate.local_actor_id;
         self.edit_messages = candidate.edit_messages;
         self.clock = candidate.clock;
+        self.initial_digest = candidate.initial_digest;
+        self.content_revision = candidate.content_revision;
+        self.revision_accumulator = candidate.revision_accumulator;
         self.current = candidate.current;
         self.tail_undo_cache = candidate.tail_undo_cache;
     }
@@ -5972,9 +6129,12 @@ where
             }
             let mut candidate_envelope = remote;
             candidate_envelope.backbone = self.envelope.backbone.clone();
+            let candidate_initial_digest = *blake3::hash(&candidate_envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
             let (candidate_dag, edit_sequence, _) = Self::seed_runtime_state(&candidate_envelope).await;
             let current_checkpoint_id = candidate_envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| candidate_envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()));
             self.envelope = candidate_envelope;
+            self.initial_digest = candidate_initial_digest;
+            self.revision_accumulator = CursorRevisionAccumulator::new(&self.envelope, candidate_initial_digest);
             self.dag = candidate_dag;
             self.edit_sequence = edit_sequence;
             self.applied_edit_ids = applied;
@@ -5982,7 +6142,7 @@ where
             self.edit_messages = self.envelope.edit_messages.iter().map(|entry| (entry.edit_id.clone(), entry.messages.clone())).collect();
             self.clock = remote_clock;
             self.tail_undo_cache = None;
-            self.current = current;
+            self.current = Arc::new(current);
             self.current_checkpoint_id = current_checkpoint_id;
             self.bump().await;
             self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
@@ -6089,7 +6249,7 @@ where
             }
             order.insert(insert_at, edit.id.clone());
         }
-        let base = if k == self.applied_edit_ids.len() { self.current.clone() } else { Self::fold_history(&self.envelope, &order[..k]).await? };
+        let base = if k == self.applied_edit_ids.len() { self.current.as_ref().clone() } else { Self::fold_history(&self.envelope, &order[..k]).await? };
         let mut edits_by_id: HashMap<String, Edit<Mutation>> = self.envelope.vcs.edits.iter().map(|edit| (edit.id.clone(), edit.clone())).collect();
         for edit in &batch {
             edits_by_id.insert(edit.id.clone(), edit.clone());
@@ -6172,7 +6332,7 @@ where
             }
         }
         self.tail_undo_cache = None;
-        self.current = state;
+        self.current = Arc::new(state);
         if worst.is_some_and(|level| level >= crate::os_dsl::Severity::Warning) {
             let edit_ids: Vec<String> = batch.iter().map(|edit| edit.id.clone()).collect();
             let kind = crate::os_spr::ConflictKind::Degraded { edit_ids };
@@ -6299,6 +6459,8 @@ where
     async fn bump(&mut self) {
         self.generation += 1;
         self.sync_cursor().await;
+        self.revision_accumulator.reconcile(&self.applied_edit_ids, &self.redo_edit_ids, &self.envelope.vcs.edits);
+        self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
     }
 }
 
@@ -6864,6 +7026,11 @@ pub trait BlobStore: Send + Sync {
 // site, never from a bound named here.
 pub trait SpaceMember {
     async fn document_id(&self) -> &str;
+    /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
+    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead;
+    /// 🧬️ Fixed-size, restart-stable identity for the member's current history cursor.
+    /// Implementations must not serialize or clone the materialized snapshot to answer this read.
+    async fn content_revision(&self) -> [u8; 32];
     /// @emoji 🩸️ Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
     async fn is_dirty(&self) -> bool;
@@ -7006,11 +7173,19 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
         self.envelope().await.id.as_str()
+    }
+
+    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
+        ErasedSnapshotRead::new(self.current.clone())
+    }
+
+    async fn content_revision(&self) -> [u8; 32] {
+        self.content_revision().await
     }
 
     async fn is_dirty(&self) -> bool {
@@ -7215,6 +7390,14 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
+    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
+        match *self {}
+    }
+
+    async fn content_revision(&self) -> [u8; 32] {
+        match *self {}
+    }
+
     async fn is_dirty(&self) -> bool {
         match *self {}
     }
@@ -7344,6 +7527,12 @@ macro_rules! space_members {
         impl $crate::os_store::SpaceMember for $enum_name {
             async fn document_id(&self) -> &str {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
+            }
+            async fn snapshot_read_erased(&self) -> $crate::os_store::ErasedSnapshotRead {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m).await),+ }
+            }
+            async fn content_revision(&self) -> [u8; 32] {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m).await),+ }
             }
             async fn is_dirty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m).await),+ }
@@ -9123,11 +9312,17 @@ mod tests {
 
     impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
         Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn document_id(&self) -> &str {
             SpaceMember::document_id(&self.0).await
+        }
+        async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
+            SpaceMember::snapshot_read_erased(&self.0).await
+        }
+        async fn content_revision(&self) -> [u8; 32] {
+            SpaceMember::content_revision(&self.0).await
         }
         async fn is_dirty(&self) -> bool {
             SpaceMember::is_dirty(&self.0).await
@@ -9397,6 +9592,27 @@ mod tests {
         fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
             vec![DemoMutation::SetN { n: snapshot.n }]
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
+        let mut original = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: 0 }, None)).await;
+        for n in [1, 2, 3] {
+            original.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).await.expect("seed revision edit");
+        }
+        let original_revision = original.content_revision().await;
+        let mut changed = original.envelope().await.clone();
+        changed.vcs.edits[1].forwards = vec![DemoMutation::SetN { n: 99 }];
+        changed.vcs.edits[1].inverse = vec![DemoMutation::SetN { n: 1 }];
+        let applied: Vec<String> = changed.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        changed.cursor = Some(ArtifactCursor { applied_edit_ids: applied.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None });
+
+        let loaded = ArtifactStore::new(changed.clone()).await;
+        assert_eq!(original.snapshot().await.expect("original snapshot").n, loaded.snapshot().await.expect("loaded snapshot").n, "interior ABA keeps the same materialized endpoint");
+        assert_ne!(original_revision, loaded.content_revision().await, "canonical identity must cover the changed interior edit, not only cursor endpoints");
+
+        original.reset(changed, applied, Vec::new()).await.expect("reset changed history");
+        assert_eq!(original.content_revision().await, loaded.content_revision().await, "reset reconstruction must recover the canonical loaded identity");
     }
 
     /// @emoji 🛰️ Builds a foreign {@link MutationEnvelope} (as if authored by `actor` on another peer) by

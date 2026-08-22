@@ -7,11 +7,11 @@ pub const PROCEDURAL2D_PLAY_MODE_GENERATE: &str = "generate";
 pub const PROCEDURAL2D_PLAY_LAYOUT_GENERATE: &str = "procedural2d-generate";
 
 //#region 🔖️Definition
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PROCEDURAL2D_PLAY_MODE_GENERATE.into(), label: LocalizedLabel::native("Generate", "Generieren"), icon_id: "sparkles".into(), tools: Vec::new(), layout_id: Some(PROCEDURAL2D_PLAY_LAYOUT_GENERATE.into()), commands: Vec::new() }
 }
 
-pub async fn layout() -> NamedLayout {
+pub fn layout() -> NamedLayout {
     create_named_layout(
         PROCEDURAL2D_PLAY_LAYOUT_GENERATE,
         "Generate",
@@ -33,8 +33,8 @@ pub async fn layout() -> NamedLayout {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn the_generate_layout_lists_all_three_windows() {
+    #[test]
+    fn the_generate_layout_lists_all_three_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(generations::PROCEDURAL2D_PLAY_WINDOW_GENERATIONS));
         assert!(json.contains(form::PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM));

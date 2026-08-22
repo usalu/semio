@@ -266,6 +266,8 @@ export interface ShardWorkerLike {
 }
 
 export type CreateShardWorker = (shardIndex: number) => ShardWorkerLike;
+const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4_096;
+const MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
 //#endregion 🌉️WorkerLike
 
 //#region 📨️WireMessages
@@ -275,6 +277,7 @@ type OutboundMessage =
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly budget: ShardJobBudget }
   | { readonly kind: "cancelJob"; readonly actorId: string; readonly job: number }
+  | { readonly kind: "takeSegmentedDownloadChunk"; readonly requestId: string; readonly actorId: string; readonly instanceId: number; readonly operationId: bigint }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
   | { readonly kind: "dispose"; readonly actorId: string }
@@ -501,6 +504,17 @@ export class ShardClient {
     }
     slot.actorIds.clear();
   }
+
+  private rejectActorPending(slot: ShardSlot, actorId: string, error: Error): void {
+    for (const requestId of [...slot.pendingRequestIds]) {
+      const entry = this.pending.get(requestId);
+      if (entry?.actorId !== actorId) continue;
+      this.pending.delete(requestId);
+      slot.pendingRequestIds.delete(requestId);
+      entry.reject(error);
+    }
+    this.recomputeOldestPending(slot);
+  }
   //#endregion 🌱️Lifecycle
 
   //#region 🧭️Assignment
@@ -629,6 +643,19 @@ export class ShardClient {
     void this.send(slot, { kind: "cancelJob", actorId, job }, null);
   }
 
+  /** 🧵 Requests exactly one operation-owned item and enforces the transport byte credit. */
+  async takeSegmentedDownloadChunk(actorId: string, instanceId: number, operationId: bigint): Promise<Uint8Array | undefined> {
+    if (!Number.isSafeInteger(instanceId) || instanceId < 0 || typeof operationId !== "bigint" || operationId <= 0n || operationId > MAX_SEGMENTED_DOWNLOAD_OPERATION_ID) throw new Error("segmented-download-authority-invalid");
+    const slot = this.requireShard(actorId);
+    const requestId = this.nextRequestId();
+    const value = await this.send<unknown>(slot, { kind: "takeSegmentedDownloadChunk", requestId, actorId, instanceId, operationId }, requestId);
+    if (value === undefined || value === null) return undefined;
+    if (Object.prototype.toString.call(value) !== "[object Uint8Array]") throw new Error("segmented-download-transport-type");
+    const chunk = value as Uint8Array;
+    if (chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES) throw new Error("segmented-download-transport-limit");
+    return chunk;
+  }
+
   async checkpoint(actorId: string): Promise<Uint8Array> {
     const slot = this.requireShard(actorId);
     const requestId = this.nextRequestId();
@@ -649,8 +676,10 @@ export class ShardClient {
     const shardIndex = this.actorShard.get(actorId);
     if (shardIndex === undefined) return;
     this.abortOutstandingEffects(actorId);
-    this.shards[shardIndex]!.worker.postMessage({ kind: "dispose", actorId } satisfies OutboundMessage);
-    this.shards[shardIndex]!.actorIds.delete(actorId);
+    const slot = this.shards[shardIndex]!;
+    this.rejectActorPending(slot, actorId, new Error(`ShardClient actor disposed: ${actorId}`));
+    slot.worker.postMessage({ kind: "dispose", actorId } satisfies OutboundMessage);
+    slot.actorIds.delete(actorId);
     this.actorShard.delete(actorId);
   }
 
@@ -946,6 +975,70 @@ if (import.meta.vitest) {
     it("rejects turn() for an actor never activated", async () => {
       const { client } = harness(2);
       await expect(client.turn("ghost", [], BUDGET)).rejects.toThrow(/not activated/);
+    });
+  });
+
+  describe("ShardClient segmented-download transport", () => {
+    async function activatedHarness() {
+      const state = harness(1);
+      const activation = state.client.activate("actor-download", "https://x/plugin.js", [], BUDGET);
+      const message = state.workers[0]!.sent[0] as { readonly requestId: string };
+      state.workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: undefined });
+      await activation;
+      return state;
+    }
+
+    it("preserves operation identity and last-Some then None ordering", async () => {
+      const { client, workers } = await activatedHarness();
+      for (const expected of [new Uint8Array([1, 2]), new Uint8Array([3]), undefined]) {
+        const read = client.takeSegmentedDownloadChunk("actor-download", 17, 91n);
+        const message = workers[0]!.sent.at(-1) as { readonly kind: string; readonly requestId: string; readonly instanceId: number; readonly operationId: bigint };
+        expect(message).toMatchObject({ kind: "takeSegmentedDownloadChunk", instanceId: 17, operationId: 91n });
+        workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: expected });
+        await expect(read).resolves.toEqual(expected);
+      }
+    });
+
+    it("propagates unknown-operation errors without manufacturing a terminal None", async () => {
+      const { client, workers } = await activatedHarness();
+      const read = client.takeSegmentedDownloadChunk("actor-download", 17, 404n);
+      const message = workers[0]!.sent.at(-1) as { readonly requestId: string };
+      workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: false, error: "interactive-job.unknown-segmented-download" });
+      await expect(read).rejects.toThrow("interactive-job.unknown-segmented-download");
+    });
+
+    it("rejects oversized or empty response items", async () => {
+      const { client, workers } = await activatedHarness();
+      for (const invalid of [new Uint8Array(4_097), new Uint8Array(0)]) {
+        const read = client.takeSegmentedDownloadChunk("actor-download", 17, 91n);
+        const message = workers[0]!.sent.at(-1) as { readonly requestId: string };
+        workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: invalid });
+        await expect(read).rejects.toThrow("segmented-download-transport-limit");
+      }
+    });
+
+    it("rejects an in-flight read when actor disposal cancels its transport ownership", async () => {
+      const { client } = await activatedHarness();
+      const read = client.takeSegmentedDownloadChunk("actor-download", 17, 91n);
+      client.dispose("actor-download");
+      await expect(read).rejects.toThrow("ShardClient actor disposed");
+    });
+
+    it("preserves the complete u64 operation authority through structured clone", async () => {
+      const { client, workers } = await activatedHarness();
+      for (const operationId of [(1n << 53n) + 1n, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID]) {
+        const read = client.takeSegmentedDownloadChunk("actor-download", 17, operationId);
+        const message = structuredClone(workers[0]!.sent.at(-1)) as { readonly requestId: string; readonly operationId: bigint };
+        expect(message.operationId).toBe(operationId);
+        workers[0]!.deliver({ kind: "result", requestId: message.requestId, ok: true, value: undefined });
+        await expect(read).resolves.toBeUndefined();
+      }
+    });
+
+    it("rejects zero and overflowing operation authorities", async () => {
+      const { client } = await activatedHarness();
+      await expect(client.takeSegmentedDownloadChunk("actor-download", 17, 0n)).rejects.toThrow("segmented-download-authority-invalid");
+      await expect(client.takeSegmentedDownloadChunk("actor-download", 17, 1n << 64n)).rejects.toThrow("segmented-download-authority-invalid");
     });
   });
 

@@ -263,14 +263,14 @@ impl BitWriter {
 /// marker (restart or otherwise) is encountered, so callers can react instead
 /// of silently consuming marker bytes as data.
 struct BitReader<'a> {
-    data: &'a [u8],
+    data: &'a dyn JpgByteSource,
     pos: usize,
     acc: u32,
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn new(data: &'a [u8], pos: usize) -> Self {
+    fn new(data: &'a dyn JpgByteSource, pos: usize) -> Self {
         Self { data, pos, acc: 0, nbits: 0 }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -278,9 +278,9 @@ impl<'a> BitReader<'a> {
         if self.pos >= self.data.len() {
             return None;
         }
-        let b = self.data[self.pos];
+        let b = self.data.byte(self.pos)?;
         if b == 0xFF {
-            let b2 = self.data.get(self.pos + 1).copied().unwrap_or(0);
+            let b2 = self.data.byte(self.pos.checked_add(1)?).unwrap_or(0);
             if b2 == 0x00 {
                 self.pos += 2;
                 return Some(0xFF);
@@ -329,7 +329,8 @@ impl<'a> BitReader<'a> {
     fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
         self.nbits = 0;
         self.acc = 0;
-        if self.pos + 1 < self.data.len() && self.data[self.pos] == 0xFF && (0xD0..=0xD7).contains(&self.data[self.pos + 1]) {
+        let Some(next) = self.pos.checked_add(1) else { return Err(JpgError::Malformed("restart cursor overflow".into())) };
+        if next < self.data.len() && self.data.byte(self.pos) == Some(0xFF) && self.data.byte(next).is_some_and(|marker| (0xD0..=0xD7).contains(&marker)) {
             self.pos += 2;
             Ok(())
         } else {
@@ -791,12 +792,56 @@ fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u16, u1
 }
 type JfifVersion = (u8, u8);
 
+/// 🧩️ Random-access compressed JPEG source; implementations may be chunk ropes and need
+/// not join the complete compressed input into a contiguous allocation.
+pub trait JpgByteSource {
+    fn len(&self) -> usize;
+    fn byte(&self, index: usize) -> Option<u8>;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl JpgByteSource for [u8] {
+    fn len(&self) -> usize {
+        <[u8]>::len(self)
+    }
+
+    fn byte(&self, index: usize) -> Option<u8> {
+        self.get(index).copied()
+    }
+}
+
+impl JpgByteSource for &[u8] {
+    fn len(&self) -> usize {
+        <[u8]>::len(self)
+    }
+
+    fn byte(&self, index: usize) -> Option<u8> {
+        self.get(index).copied()
+    }
+}
+
+fn source_range(data: &dyn JpgByteSource, at: usize, len: usize) -> Result<Vec<u8>, JpgError> {
+    let end = at.checked_add(len).ok_or_else(|| JpgError::Malformed("segment range overflow".into()))?;
+    if end > data.len() {
+        return Err(JpgError::Malformed("segment out of bounds".into()));
+    }
+    (at..end).map(|index| data.byte(index).ok_or_else(|| JpgError::Malformed("segment out of bounds".into()))).collect()
+}
+
 /// 📥 Decodes baseline sequential JPEG (SOF0 only) into an RGBA raster.
 /// Any other SOFn marker (progressive/extended/lossless/arithmetic) is a
 /// typed `JpgError::Unsupported` naming the exact variant — never decoded.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
-    if data.len() < 4 || data[0] != 0xFF || data[1] != 0xD8 {
+    decode_jpg_source(&data)
+}
+
+/// 🧩️ Decodes a baseline JPEG directly from a bounded random-access chunk source.
+pub fn decode_jpg_source(data: &dyn JpgByteSource) -> Result<JpgSnapshot, JpgError> {
+    if data.len() < 4 || data.byte(0) != Some(0xFF) || data.byte(1) != Some(0xD8) {
         return Err(JpgError::Malformed("missing SOI".into()));
     }
     let mut i = 2usize;
@@ -820,18 +865,18 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
         if i + 1 >= data.len() {
             return Err(JpgError::Malformed("truncated before EOI".into()));
         }
-        if data[i] != 0xFF {
+        if data.byte(i) != Some(0xFF) {
             i += 1;
             continue;
         }
-        let marker = data[i + 1];
+        let marker = data.byte(i.checked_add(1).ok_or_else(|| JpgError::Malformed("marker cursor overflow".into()))?).ok_or_else(|| JpgError::Malformed("truncated marker".into()))?;
         i += 2;
         match marker {
             0xD8 => continue, // stray SOI, tolerate
             0xD9 => return Err(JpgError::Malformed("EOI before SOS".into())),
             0xC0 => {
                 let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 if seg.len() < 6 {
                     return Err(JpgError::Malformed("SOF0 segment too short".into()));
                 }
@@ -875,20 +920,21 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     if p >= data.len() {
                         return Err(JpgError::Malformed("DQT truncated".into()));
                     }
-                    let pq = data[p] >> 4;
-                    let tq = data[p] & 0x0F;
+                    let table_info = data.byte(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
+                    let pq = table_info >> 4;
+                    let tq = table_info & 0x0F;
                     p += 1;
                     let mut tbl = [0i32; 64];
                     let mut tbl_u16 = [0u16; 64];
                     for (z, slot) in tbl.iter_mut().enumerate() {
                         if pq == 0 {
-                            let v = *data.get(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
+                            let v = data.byte(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
                             *slot = v as i32;
                             tbl_u16[z] = v as u16;
                             p += 1;
                         } else {
-                            let hi = *data.get(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
-                            let lo = *data.get(p + 1).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
+                            let hi = data.byte(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
+                            let lo = data.byte(p.checked_add(1).ok_or_else(|| JpgError::Malformed("DQT cursor overflow".into()))?).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
                             let v = ((hi as u16) << 8) | lo as u16;
                             *slot = v as i32;
                             tbl_u16[z] = v;
@@ -909,14 +955,15 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     if p + 16 >= data.len() {
                         return Err(JpgError::Malformed("DHT truncated".into()));
                     }
-                    let class = data[p] >> 4;
-                    let id = data[p] & 0x0F;
+                    let table_info = data.byte(p).ok_or_else(|| JpgError::Malformed("DHT truncated".into()))?;
+                    let class = table_info >> 4;
+                    let id = table_info & 0x0F;
                     p += 1;
                     let mut bits = [0u8; 16];
-                    bits.copy_from_slice(&data[p..p + 16]);
+                    bits.copy_from_slice(&source_range(data, p, 16)?);
                     p += 16;
                     let count: usize = bits.iter().map(|&b| b as usize).sum();
-                    let values = slice_at(data, p, count)?.to_vec();
+                    let values = source_range(data, p, count)?;
                     p += count;
                     let table = build_huffman(&bits, &values)?;
                     let huffman_class = JpgHuffmanClass::from_u8(class).map_err(JpgError::Malformed)?;
@@ -943,7 +990,7 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             }
             0xDD => {
                 let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, 2)?;
+                let seg = source_range(data, i + 2, 2)?;
                 restart_interval_raw = ((seg[0] as u16) << 8) | seg[1] as u16;
                 restart_interval = Some(restart_interval_raw);
                 i += len;
@@ -951,7 +998,7 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             0xDA => {
                 let frame = frame.clone().ok_or_else(|| JpgError::Malformed("SOS before SOF0".into()))?;
                 let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
                 let mut scan_tabs: Vec<(u8, u8)> = Vec::with_capacity(ns);
                 for k in 0..ns {
@@ -997,8 +1044,8 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             }
             0xE0 => {
                 let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
-                match parse_jfif_app0(seg) {
+                let seg = source_range(data, i + 2, len.saturating_sub(2))?;
+                match parse_jfif_app0(&seg) {
                     Some((version, units, xd, yd, thumb)) => {
                         jfif_version = version;
                         jfif_density_units = units;
@@ -1006,14 +1053,14 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                         jfif_y_density = yd;
                         jfif_thumbnail = thumb;
                     }
-                    None => other_segments.push(JpgSegment { marker, data: seg.to_vec() }),
+                    None => other_segments.push(JpgSegment { marker, data: seg }),
                 }
                 i += len;
             }
             0xE1..=0xEF | 0xFE => {
                 let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
-                other_segments.push(JpgSegment { marker, data: seg.to_vec() });
+                let seg = source_range(data, i + 2, len.saturating_sub(2))?;
+                other_segments.push(JpgSegment { marker, data: seg });
                 i += len;
             }
             0x01 | 0xD0..=0xD7 => {} // TEM / stray restart outside a scan: no length field, skip
@@ -1023,22 +1070,27 @@ pub fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_u16(data: &[u8], at: usize) -> Result<usize, JpgError> {
-    let hi = *data.get(at).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
-    let lo = *data.get(at + 1).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
+fn read_u16(data: &dyn JpgByteSource, at: usize) -> Result<usize, JpgError> {
+    let hi = data.byte(at).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
+    let lo = data.byte(at.checked_add(1).ok_or_else(|| JpgError::Malformed("marker length cursor overflow".into()))?).ok_or_else(|| JpgError::Malformed("marker length truncated".into()))?;
     Ok(((hi as usize) << 8) | lo as usize)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn slice_at(data: &[u8], at: usize, len: usize) -> Result<&[u8], JpgError> {
-    data.get(at..at + len).ok_or_else(|| JpgError::Malformed("segment out of bounds".into()))
-}
-
 /// 🎞️ Decodes the entropy-coded scan for all components (nearest-neighbor
 /// chroma upsampling for subsampled components; grayscale skips color
 /// conversion entirely) into RGBA.
 #[allow(clippy::too_many_arguments)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tabs: &[(u8, u8)], quant: &HashMap<u8, [i32; 64]>, dc_tables: &HashMap<u8, HuffTable>, ac_tables: &HashMap<u8, HuffTable>, restart_interval: u16) -> Result<Vec<u8>, JpgError> {
+fn decode_scan(
+    data: &dyn JpgByteSource,
+    start: usize,
+    frame: &JpgFrameHeader,
+    scan_tabs: &[(u8, u8)],
+    quant: &HashMap<u8, [i32; 64]>,
+    dc_tables: &HashMap<u8, HuffTable>,
+    ac_tables: &HashMap<u8, HuffTable>,
+    restart_interval: u16,
+) -> Result<Vec<u8>, JpgError> {
     let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
     let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
     let mcu_w = 8 * hmax;

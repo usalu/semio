@@ -17,7 +17,7 @@ pub struct UpdateCameraCalibration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_camera_calibration(camera: CameraCalibration) -> RemodelMutation {
+pub fn update_camera_calibration(camera: CameraCalibration) -> RemodelMutation {
     RemodelMutation::UpdateCameraCalibration(UpdateCameraCalibration { camera })
 }
 

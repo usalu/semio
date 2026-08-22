@@ -236,6 +236,8 @@ pub use prepared::{
     PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective,
     UiPresentToken,
 };
+#[cfg(target_arch = "wasm32")]
+pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated

@@ -5,7 +5,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::UpdateDenseParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::UpdateDenseParams, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.params == base.params.dense {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Dense params are already up to date.".to_string());
     }

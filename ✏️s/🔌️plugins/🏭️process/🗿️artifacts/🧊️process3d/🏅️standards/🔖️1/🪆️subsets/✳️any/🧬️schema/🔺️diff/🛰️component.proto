@@ -9,51 +9,57 @@ message Process3dDiff {
   // @state artifact
   optional Process3dWorkshop workshop = 2;
   // @state artifact
-  optional Process3dStock stock = 3;
+  optional string stock_id = 3;
+  optional string stock_label = 4;
+  optional Process3dPose stock_pose = 5;
+  optional Process3dStock stock_payload = 6;
+  optional ArtifactChildHandle stock_solid = 7;
   // @state artifact
-  optional Process3dStepsDelta steps = 4;
+  optional ArtifactChildHandle steps = 8;
+  repeated Process3dStep step_payloads = 9;
+  repeated ArtifactChildHandle tool_solids = 10;
   // @state artifact
-  optional uint32 resolved_up_to = 5;
+  optional uint32 resolved_up_to = 11;
   // @state presence
-  optional string selected_id = 6;
+  optional string selected_id = 12;
   // @state presence
-  optional uint32 selected_face_id = 7;
+  optional uint32 selected_face_id = 13;
   // @state presence
-  optional string active_utility_id = 8;
+  optional string active_utility_id = 14;
   // @state config
-  optional string selection_method = 9;
+  optional string selection_method = 15;
   // @state config
-  optional string engagement_input = 10;
+  optional string engagement_input = 16;
   // @state config
-  optional double camera_position_x = 11;
+  optional double camera_position_x = 17;
   // @state config
-  optional double camera_position_y = 12;
+  optional double camera_position_y = 18;
   // @state config
-  optional double camera_position_z = 13;
+  optional double camera_position_z = 19;
   // @state config
-  optional double camera_target_x = 14;
+  optional double camera_target_x = 20;
   // @state config
-  optional double camera_target_y = 15;
+  optional double camera_target_y = 21;
   // @state config
-  optional double camera_target_z = 16;
+  optional double camera_target_z = 22;
   // @state config
-  optional double camera_fov = 17;
+  optional double camera_fov = 23;
   // @state config
-  optional bool sun_enabled = 18;
+  optional bool sun_enabled = 24;
   // @state config
-  optional double sun_azimuth = 19;
+  optional double sun_azimuth = 25;
   // @state config
-  optional double sun_elevation = 20;
+  optional double sun_elevation = 26;
   // @state config
-  optional double sun_intensity = 21;
+  optional double sun_intensity = 27;
   // @state config
-  optional string sun_color = 22;
+  optional string sun_color = 28;
   // @state config
-  optional string locale = 23;
+  optional string locale = 29;
   // @state config
-  optional string contributions_json = 24;
+  optional string contributions_json = 30;
   // @state artifact
-  optional string hovered_id = 25;
+  optional string hovered_id = 31;
 }
 
 message Process3dArtifact {}
@@ -71,3 +77,5 @@ message Process3dStepPatchEntry {
   Process3dStepPatch patch = 2;
 }
 message Process3dStepPatch {}
+message Process3dPose {}
+message ArtifactChildHandle { string child_id = 1; string target = 2; }

@@ -116,6 +116,7 @@ const inFlightTurnActors = new Set();
 let turnSeq = 0;
 let heartbeatSabView = null;
 let heartbeatShardIndex = -1;
+const MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
 
 // 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
 const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
@@ -276,6 +277,13 @@ self.addEventListener("message", async (event) => {
       case "stepJob":
         reply(requestId, await actor.api.stepJob(msg.job, msg.budget));
         break;
+      case "takeSegmentedDownloadChunk": {
+        if (!Number.isSafeInteger(msg.instanceId) || msg.instanceId < 0 || typeof msg.operationId !== "bigint" || msg.operationId <= 0n || msg.operationId > ((1n << 64n) - 1n)) throw new Error("segmented-download-authority-invalid");
+        const chunk = await actor.api.takeSegmentedDownloadChunk(msg.instanceId, msg.operationId);
+        if (chunk !== undefined && chunk !== null && (Object.prototype.toString.call(chunk) !== "[object Uint8Array]" || chunk.byteLength === 0 || chunk.byteLength > MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES)) throw new Error("segmented-download-worker-limit");
+        reply(requestId, chunk ?? undefined);
+        break;
+      }
       case "checkpoint":
         reply(requestId, await actor.api.checkpoint());
         break;
@@ -322,7 +330,7 @@ self.addEventListener("message", async (event) => {
  * @emoji 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
  * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
  * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
- * `checkpoint`/`restore`.
+ * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`.
  *
  * DROPS the old `runSerialized` retry/reload loop entirely (design-runtime.md §3: "recovery is the
  * kernel's job now"). Under the old ABI a guest panic (`panic = "abort"`, no unwind) permanently
@@ -368,6 +376,7 @@ export async function createActorApi(actorId) {
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),
     cancelJob: async (job) => jobs.cancelJob(job),
+    takeSegmentedDownloadChunk: async (instanceId, operationId) => jobs.takeSegmentedDownloadChunk(instanceId, operationId),
     checkpoint: async () => checkpoint.checkpoint(),
     restore: async (state) => checkpoint.restore(state),
     describe: async () => describe.describe(),

@@ -77,7 +77,8 @@ impl Default for OsClock {
 
 #[cfg(target_arch = "wasm32")]
 fn performance_now_ms() -> f64 {
-    web_sys::window().and_then(|window| window.performance()).map(|performance| performance.now()).unwrap_or(0.0)
+    use wasm_bindgen::JsCast;
+    js_sys::Reflect::get(&js_sys::global(), &wasm_bindgen::JsValue::from_str("performance")).ok().and_then(|value| value.dyn_into::<web_sys::Performance>().ok()).map(|performance| performance.now()).unwrap_or(0.0)
 }
 
 //#endregion 🕰️OsClock
@@ -116,6 +117,8 @@ pub struct OsHost {
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
     pub frame_ready: bool,
+    pub(crate) platform_fullscreen: Option<bool>,
+    pub(crate) present_fault: Option<String>,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
     /// sink `WindowDelegate::handle_event`/`handle_metrics` write into instead of immediately spawning
     /// a heap-allocated future per event. `redraw()` drains it once per frame and dispatches the whole
@@ -135,6 +138,22 @@ pub struct OsHost {
     pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
 }
 
+pub(crate) struct OsHostRetirement {
+    runtime: Option<RuntimeMailbox>,
+    presenter: Option<AppPresenter>,
+    scheduler: Option<FrameScheduler>,
+    kernel: Option<AppKernelSeam>,
+    clock: Option<OsClock>,
+    caret: Option<CaretBlink>,
+    hot_swap: Option<HotSwapPoll>,
+    wheel_zoom_settle: Option<std::collections::hash_map::IntoIter<String, f64>>,
+    camera_settle: Option<std::collections::hash_map::IntoIter<String, f64>>,
+    events: Option<ui_host::EventQueue>,
+    ui_token: Option<ui_host::UiThreadToken>,
+    snapshot_sink: Option<RenderSnapshotSink>,
+    frame_build: Option<crate::frame_job::FrameBuildHandle>,
+}
+
 impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter) -> Self {
@@ -150,6 +169,8 @@ impl OsHost {
             camera_settle: HashMap::new(),
             frame_generation: 0,
             frame_ready: false,
+            platform_fullscreen: None,
+            present_fault: None,
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, semio_framework_trace::Generation(0), 0, CursorRequest::Default, None)),
@@ -161,6 +182,126 @@ impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn now_seconds(&self) -> f64 {
         self.clock.now_seconds()
+    }
+
+    pub(crate) fn into_retirement(self) -> OsHostRetirement {
+        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, wheel_zoom_settle, camera_settle, frame_generation: _, frame_ready: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
+        OsHostRetirement {
+            runtime: Some(runtime),
+            presenter: Some(presenter),
+            scheduler: Some(scheduler),
+            kernel: Some(kernel),
+            clock: Some(clock),
+            caret: Some(caret),
+            hot_swap: Some(hot_swap),
+            wheel_zoom_settle: Some(wheel_zoom_settle.into_iter()),
+            camera_settle: Some(camera_settle.into_iter()),
+            events: Some(events),
+            ui_token: Some(ui_token),
+            snapshot_sink: Some(snapshot_sink),
+            frame_build: Some(frame_build),
+        }
+    }
+}
+
+impl OsHostRetirement {
+    pub(crate) fn close_step(&mut self) -> bool {
+        if let Some(frame_build) = self.frame_build.as_mut() {
+            if !frame_build.close_step() {
+                return false;
+            }
+            if !frame_build.terminal_is_empty() {
+                return false;
+            }
+            self.frame_build = None;
+            return false;
+        }
+        if let Some(events) = self.events.as_mut() {
+            if !events.close_step() {
+                return false;
+            }
+            self.events = None;
+            return false;
+        }
+        if let Some(entries) = self.wheel_zoom_settle.as_mut() {
+            if entries.next().is_some() {
+                return false;
+            }
+            self.wheel_zoom_settle = None;
+            return false;
+        }
+        if let Some(entries) = self.camera_settle.as_mut() {
+            if entries.next().is_some() {
+                return false;
+            }
+            self.camera_settle = None;
+            return false;
+        }
+        for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.kernel, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
+            if owner.retire() {
+                return false;
+            }
+        }
+        self.terminal_is_empty()
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.runtime.is_none()
+            && self.presenter.is_none()
+            && self.scheduler.is_none()
+            && self.kernel.is_none()
+            && self.clock.is_none()
+            && self.caret.is_none()
+            && self.hot_swap.is_none()
+            && self.wheel_zoom_settle.is_none()
+            && self.camera_settle.is_none()
+            && self.events.is_none()
+            && self.ui_token.is_none()
+            && self.snapshot_sink.is_none()
+            && self.frame_build.is_none()
+    }
+}
+
+impl Drop for OsHostRetirement {
+    fn drop(&mut self) {
+        for owner in [
+            &mut self.snapshot_sink as &mut dyn RetirementOwner,
+            &mut self.ui_token,
+            &mut self.hot_swap,
+            &mut self.caret,
+            &mut self.clock,
+            &mut self.kernel,
+            &mut self.scheduler,
+            &mut self.runtime,
+            &mut self.presenter,
+            &mut self.events,
+            &mut self.frame_build,
+        ] {
+            owner.forget();
+        }
+        if let Some(entries) = self.wheel_zoom_settle.take() {
+            std::mem::forget(entries);
+        }
+        if let Some(entries) = self.camera_settle.take() {
+            std::mem::forget(entries);
+        }
+    }
+}
+
+trait RetirementOwner {
+    fn retire(&mut self) -> bool;
+    fn forget(&mut self);
+}
+
+impl<T> RetirementOwner for Option<T> {
+    fn retire(&mut self) -> bool {
+        self.take().is_some()
+    }
+
+    fn forget(&mut self) {
+        if let Some(owner) = self.take() {
+            std::mem::forget(owner);
+        }
     }
 }
 

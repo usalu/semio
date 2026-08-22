@@ -16,25 +16,25 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::assembly::create_assembly_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Structure", "Struktur"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `AssemblySnapshot -> UiNode` read: one branch per collection, no mutation affordance.
-pub async fn render(document: &AssemblySnapshot) -> UiNode {
-    async fn leaf(id: String, label: String) -> TreeNodeView {
+pub fn render(document: &AssemblySnapshot) -> UiNode {
+    fn leaf(id: String, label: String) -> TreeNodeView {
         TreeNodeView { id, label, children: Vec::new() }
     }
-    async fn slot_leaf(slot: &AssemblySlot) -> TreeNodeView {
+    fn slot_leaf(slot: &AssemblySlot) -> TreeNodeView {
         let pinned = slot.pinned_module_id.as_deref().map(|module_id| format!(" pinned={module_id}")).unwrap_or_default();
         leaf(format!("slot-{}", slot.id), format!("{} ({:.2}, {:.2}, {:.2}){pinned}", slot.id, slot.x, slot.y, slot.z))
     }
-    async fn edge_leaf(edge: &AssemblySlotEdge) -> TreeNodeView {
+    fn edge_leaf(edge: &AssemblySlotEdge) -> TreeNodeView {
         leaf(format!("edge-{}", edge.id), format!("{}: {} -> {}", edge.id, edge.from_slot_id, edge.to_slot_id))
     }
-    async fn rule_leaf(rule: &AssemblyRule) -> TreeNodeView {
+    fn rule_leaf(rule: &AssemblyRule) -> TreeNodeView {
         leaf(format!("rule-{}", rule.id), format!("{}: {} -> {} allowed={}", rule.id, rule.module_a_id, rule.module_b_id, rule.allowed))
     }
 
@@ -61,15 +61,15 @@ pub async fn render(document: &AssemblySnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_a_tree_window() {
+    #[test]
+    fn definition_declares_a_tree_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_lists_every_collection_branch() {
+    #[test]
+    fn render_lists_every_collection_branch() {
         let mut document = AssemblySnapshot::default();
         document.slots.push(AssemblySlot { id: "s1".into(), x: 1.0, y: 2.0, z: 0.0, pinned_module_id: None });
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };

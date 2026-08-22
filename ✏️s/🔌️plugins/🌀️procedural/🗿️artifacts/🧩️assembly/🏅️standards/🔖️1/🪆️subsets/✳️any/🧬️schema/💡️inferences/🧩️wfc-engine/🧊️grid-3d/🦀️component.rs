@@ -267,6 +267,20 @@ impl Topology for Grid3dTopology {
         RegionId(0)
     }
 
+    fn out_arc_bound(&self, n: NodeId) -> usize {
+        let (x, y, z) = self.coords(n);
+        self.is_active(x, y, z).then_some(self.offsets.len()).unwrap_or(0)
+    }
+
+    fn out_arc_at(&self, n: NodeId, index: usize) -> Option<(NodeId, RelationId)> {
+        let (x, y, z) = self.coords(n);
+        let &(dx, dy, dz) = self.offsets.get(index)?;
+        let nx = resolve_coord(x as i32 + dx, self.width, self.boundary_x)?;
+        let ny = resolve_coord(y as i32 + dy, self.height, self.boundary_y)?;
+        let nz = resolve_coord(z as i32 + dz, self.depth, self.boundary_z)?;
+        self.is_active(nx, ny, nz).then(|| (NodeId::from_index(self.index(nx, ny, nz)), self.relations[index]))
+    }
+
     fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let (x, y, z) = self.coords(n);
         if !self.is_active(x, y, z) {

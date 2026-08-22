@@ -7,7 +7,7 @@ import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@semio-tech/framework";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, useLabel } from "@semio-tech/ui-react";
+import { Aside, Button, Card, CardGrid, FileTree, Form, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, useLabel } from "@semio-tech/ui-react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
   SKETCHPAD_SHELL_CONTROLLER_ID,
@@ -142,7 +142,7 @@ function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSur
   };
 
   return (
-    <form
+    <Form
       className="flex h-full min-h-0 flex-col gap-standard p-4"
       onSubmit={(event) => {
         event.preventDefault();
@@ -165,7 +165,7 @@ function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSur
         {submitted && !sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-destructive">{missingMessageLabel}</span> : null}
         {submitted && sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-muted-foreground">{mailOpeningLabel}</span> : null}
       </div>
-    </form>
+    </Form>
   );
 }
 

@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
-use crate::artifacts::assembly::{ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA, AssemblyMutation, AssemblySnapshot};
+use crate::artifacts::assembly::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
 use crate::viewer::assembly::modes::view;
 use crate::viewer::assembly::modes::view::windows::structure;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
@@ -19,10 +19,10 @@ pub enum AssemblyViewCommand {
 }
 
 impl protocol::OpBinary for AssemblyViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(AssemblyViewCommand::Noop)
     }
 }
@@ -62,17 +62,17 @@ impl ArtifactViewer for AssemblyViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_assembly_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_assembly_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(ASSEMBLY_DIALECT)
         .document(["semio", "assembly"])
         .icon_id("network")
@@ -89,20 +89,20 @@ pub async fn create_assembly_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_assembly_viewer_builds_a_definition_for_the_viewer_role() {
+    #[test]
+    fn create_assembly_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_assembly_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, ASSEMBLY_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AssemblyViewer as ArtifactViewer>::DIALECT, ASSEMBLY_DIALECT);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_declares_the_structure_window() {
+    #[test]
+    fn viewer_declares_the_structure_window() {
         let def = create_assembly_viewer();
         assert!(def.window_kinds.iter().any(|w| w.id == structure::WINDOW_KIND_ID));
     }

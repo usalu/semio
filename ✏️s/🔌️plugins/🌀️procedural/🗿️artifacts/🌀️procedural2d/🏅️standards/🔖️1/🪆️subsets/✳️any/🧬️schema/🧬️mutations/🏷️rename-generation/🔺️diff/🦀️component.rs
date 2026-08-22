@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};
 use flow::playbook::GenerationMutation;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &RenameGeneration, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &RenameGeneration, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     let Some(entry) = base.generation.generations.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

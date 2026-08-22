@@ -16,7 +16,7 @@ pub struct DeleteAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_asset(key: String) -> RemodelMutation {
+pub fn delete_asset(key: String) -> RemodelMutation {
     RemodelMutation::DeleteAsset(DeleteAsset { key })
 }
 

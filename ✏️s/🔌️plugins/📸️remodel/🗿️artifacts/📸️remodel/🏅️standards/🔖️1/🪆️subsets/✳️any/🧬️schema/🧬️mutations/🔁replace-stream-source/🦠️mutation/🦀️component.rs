@@ -18,7 +18,7 @@ pub struct ReplaceStreamSource {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_stream_source(id: String, source: Option<VideoSource>) -> RemodelMutation {
+pub fn replace_stream_source(id: String, source: Option<VideoSource>) -> RemodelMutation {
     RemodelMutation::ReplaceStreamSource(ReplaceStreamSource { id, source })
 }
 

@@ -1,7 +1,7 @@
 //! 🧊️ Remodel viewer — the Model window: a read-only World3d render of the reconstructed mesh, the
 //! sparse/dense clouds, the recovered camera positions and the ground control points. Reads through
-//! the SAME artifact-level working-scene cache (`crate::artifacts::remodel::remodel_mesh_workspace`)
-//! the sibling editor's own Model window uses — this file itself imports nothing from the sibling
+//! the same fixed-constant/committed-bounded resolver the sibling editor's Model window uses — this
+//! file itself imports nothing from the sibling
 //! editor surface (`policyViewerPurityBreaches` forbids it outright). No selection, no gumball, no
 //! layer-visibility toggles: a viewer has no utilities that edit and emits no mutations by
 //! construction (`ViewEmit`); every point layer the editor gates behind a config toggle is
@@ -59,13 +59,10 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Read-only twin of the sibling editor's `world_meshes_json` — reads the composed
-/// `s.stdio.semio/v1/mesh` CHILD's real geometry through the same artifact-level working-scene cache.
-/// A cold cache renders no mesh entity (empty scene list), the identical fallback the editor's own
-/// `world_meshes_json` already carries while composed-child object resolution is unimplemented
-/// (pre-existing `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` gap, not introduced here) — real
-/// parity with the editor's CURRENT behaviour, not a regression.
+/// `s.stdio.semio/v1/mesh` CHILD's real geometry through the same production bounded resolver. An
+/// unavailable durable handle renders no mesh entity, matching the editor's behavior.
 async fn world_meshes_json(scene: &RemodelSnapshot) -> String {
-    let Some(mesh) = crate::artifacts::remodel::remodel_mesh_workspace(&scene.results.mesh.mesh) else {
+    let Some(mesh) = crate::artifacts::remodel::resolve_bounded_remodel_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
     serde_json::to_string(&vec![json!({ "id": REMODEL_VIEW_MESH_ID, "data": mesh })]).unwrap_or_else(|_| "[]".into())

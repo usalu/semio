@@ -12,8 +12,8 @@
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
-use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::artifacts::puzzle5d::op::{Puzzle5dMutation, Puzzle5dPlaySnapshot, puzzle5d_document_delta_operations};
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
     engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active, set_active_example, set_brush_placement_overlap_budget,
@@ -25,22 +25,24 @@ use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
 use crate::editor::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
+use crate::editor::puzzle5d::terminology::{Puzzle5dLabels, puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized};
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
-    InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod,
-    SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest,
+    ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, IconName,
+    InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
+    PluginCloseStep, SET_ACTIVE_UTILITY_ACTION_ID, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure,
 };
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
+use std::sync::atomic::{AtomicU32, Ordering};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -90,6 +92,60 @@ fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
 }
 
 static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
+const PUZZLE5D_RESERVED_ITEMS: usize = 4_096;
+const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
+
+macro_rules! puzzle5d_reserved_factory {
+    ($factory:ident, $tool:literal, $schema:literal) => {
+        struct $factory {
+            keys: Vec<ToolFactoryKey>,
+        }
+
+        impl $factory {
+            fn new(controller_id: &str) -> Self {
+                Self { keys: vec![ToolFactoryKey::new(controller_id, $tool)] }
+            }
+        }
+
+        impl ToolJobFactory for $factory {
+            type Payload = ArtifactReservedToolJob;
+            type Job = ArtifactReservedToolJob;
+
+            fn keys(&self) -> &[ToolFactoryKey] {
+                &self.keys
+            }
+
+            fn payload_schema_id(&self) -> &str {
+                $schema
+            }
+
+            fn classification(&self) -> semio_framework::InteractiveJobClassification {
+                semio_framework::InteractiveJobClassification::Migrated
+            }
+
+            fn execution_contract(&self) -> ToolExecutionContract {
+                ToolExecutionContract::resumable(PUZZLE5D_RESERVED_RAW_BYTES, PUZZLE5D_RESERVED_ITEMS, 4_096, PUZZLE5D_RESERVED_OUTPUT_BYTES, 7_500, 1, 1)
+            }
+
+            fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+                Ok(payload)
+            }
+        }
+
+        impl ArtifactOwnedToolJobFactory for $factory {
+            type Owner = EditorApp<Puzzle5dPlayApp>;
+            const TOOL_IDS: &'static [&'static str] = &[$tool];
+            const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
+        }
+    };
+}
+
+puzzle5d_reserved_factory!(Puzzle5dCopyJobFactory, "copy", "puzzle.5d.reserved.copy.v1");
+puzzle5d_reserved_factory!(Puzzle5dCutJobFactory, "cut", "puzzle.5d.reserved.cut.v1");
+puzzle5d_reserved_factory!(Puzzle5dPasteJobFactory, "paste", "puzzle.5d.reserved.paste.v1");
+puzzle5d_reserved_factory!(Puzzle5dImportJobFactory, "import-media", "puzzle.5d.reserved.import-media.v1");
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
@@ -374,11 +430,7 @@ pub fn window_instance_ids(kind_id: &str) -> Vec<String> {
 }
 
 pub fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
-    if grip_id.contains(':') {
-        grip_id.to_string()
-    } else {
-        format!("{part_id}:{grip_id}")
-    }
+    if grip_id.contains(':') { grip_id.to_string() } else { format!("{part_id}:{grip_id}") }
 }
 
 /// 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
@@ -1171,6 +1223,857 @@ fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<crate::artifacts::puzzl
 }
 //#endregion 🔖️KitIn
 
+//#region 🧵️ReservedJobs
+fn puzzle5d_job_fault(detail: impl Into<String>) -> StepOutcome {
+    StepOutcome::Fault(JobFault { detail: detail.into().into_bytes() })
+}
+
+fn puzzle5d_job_checkpoint(stage: u8, cursor: usize, progress: u64) -> StepOutcome {
+    let mut state = vec![stage];
+    state.extend_from_slice(&(cursor as u64).to_le_bytes());
+    StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: progress })
+}
+
+fn puzzle5d_step_envelope(raw: &[u8], cursor: &mut usize, progress: &mut u64, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+    if *cursor >= raw.len() {
+        return None;
+    }
+    let units = raw.len().saturating_sub(*cursor).min(4_096).min(cx.fuel_remaining() as usize);
+    if units == 0 {
+        return Some(StepOutcome::Yield);
+    }
+    *cursor += units;
+    *progress = progress.saturating_add(units as u64);
+    cx.consume_fuel(units as u64);
+    Some(puzzle5d_job_checkpoint(0, *cursor, *progress))
+}
+
+fn puzzle5d_selection_ids(interaction: &semio_framework::protocol::InteractionState) -> (HashSet<String>, HashSet<String>) {
+    match interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN) {
+        Some(selection) if selection.granularity == PUZZLE5D_GRANULARITY_PART => (selection.ids.iter().cloned().collect(), HashSet::new()),
+        Some(selection) if selection.granularity == PUZZLE5D_GRANULARITY_FASTENER => (HashSet::new(), selection.ids.iter().cloned().collect()),
+        _ => (HashSet::new(), HashSet::new()),
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dSelectionStage {
+    Endpoints,
+    Fasteners,
+    Parts,
+    Complete,
+}
+
+struct Puzzle5dSelectionScan {
+    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    part_ids: HashSet<String>,
+    explicit_fastener_ids: HashSet<String>,
+    stage: Puzzle5dSelectionStage,
+    cursor: usize,
+    parts: Vec<Puzzle5dPart>,
+    fasteners: Vec<Puzzle5dFastener>,
+}
+
+impl Puzzle5dSelectionScan {
+    fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::protocol::InteractionState) -> Self {
+        let (part_ids, explicit_fastener_ids) = puzzle5d_selection_ids(interaction);
+        Self { snapshot, part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
+    }
+
+    fn rows(&self, key: &str) -> &[Value] {
+        self.snapshot.0.get(key).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
+    }
+
+    fn step(&mut self) -> Result<bool, String> {
+        match self.stage {
+            Puzzle5dSelectionStage::Endpoints => {
+                if let Some(row) = self.rows("fasteners").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    if row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id)) {
+                        if let Some(source) = row.get("source").and_then(Value::as_str) {
+                            self.part_ids.insert(owning_part_id_local(source).to_string());
+                        }
+                        if let Some(target) = row.get("target").and_then(Value::as_str) {
+                            self.part_ids.insert(owning_part_id_local(target).to_string());
+                        }
+                    }
+                } else {
+                    self.stage = Puzzle5dSelectionStage::Fasteners;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dSelectionStage::Fasteners => {
+                if let Some(row) = self.rows("fasteners").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let source = row.get("source").and_then(Value::as_str).map(owning_part_id_local);
+                    let target = row.get("target").and_then(Value::as_str).map(owning_part_id_local);
+                    let selected = row.get("id").and_then(Value::as_str).is_some_and(|id| self.explicit_fastener_ids.contains(id))
+                        || source.zip(target).is_some_and(|(source, target)| !self.part_ids.is_empty() && self.part_ids.contains(source) && self.part_ids.contains(target));
+                    if selected {
+                        self.fasteners.push(serde_json::from_value(row).map_err(|error| error.to_string())?);
+                    }
+                } else {
+                    self.stage = Puzzle5dSelectionStage::Parts;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dSelectionStage::Parts => {
+                if let Some(row) = self.rows("parts").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    if row.get("id").and_then(Value::as_str).is_some_and(|id| self.part_ids.contains(id)) {
+                        self.parts.push(serde_json::from_value(row).map_err(|error| error.to_string())?);
+                    }
+                } else {
+                    self.stage = Puzzle5dSelectionStage::Complete;
+                }
+            }
+            Puzzle5dSelectionStage::Complete => return Ok(true),
+        }
+        Ok(self.stage == Puzzle5dSelectionStage::Complete)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dClipboardStage {
+    Envelope,
+    Select,
+    EncodeParts,
+    EncodeFasteners,
+    Complete,
+}
+
+struct Puzzle5dClipboardWork {
+    raw: Vec<u8>,
+    raw_cursor: usize,
+    progress: u64,
+    stage: Puzzle5dClipboardStage,
+    scan: Puzzle5dSelectionScan,
+    encode_cursor: usize,
+    dsl_text: String,
+    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+}
+
+impl Puzzle5dClipboardWork {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: semio_framework::protocol::InteractionState) -> Self {
+        Self { raw: request.raw_wire, raw_cursor: 0, progress: 0, stage: Puzzle5dClipboardStage::Envelope, scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction), encode_cursor: 0, dsl_text: String::new(), completion: request.completion }
+    }
+
+    fn step_work(&mut self, cx: &mut StepContext<'_>) -> Result<bool, String> {
+        match self.stage {
+            Puzzle5dClipboardStage::Envelope => {
+                if let Some(_) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.progress, cx) {
+                    return Ok(false);
+                }
+                self.stage = Puzzle5dClipboardStage::Select;
+            }
+            Puzzle5dClipboardStage::Select => {
+                if !self.scan.step()? {
+                    self.progress = self.progress.saturating_add(1);
+                    cx.consume_fuel(1);
+                    return Ok(false);
+                }
+                self.dsl_text = format!("{{\"schema\":{},\"parts\":[", serde_json::to_string(PUZZLE5D_SCHEMA).map_err(|error| error.to_string())?);
+                self.stage = Puzzle5dClipboardStage::EncodeParts;
+                self.encode_cursor = 0;
+            }
+            Puzzle5dClipboardStage::EncodeParts => {
+                if let Some(part) = self.scan.parts.get(self.encode_cursor) {
+                    if self.encode_cursor != 0 {
+                        self.dsl_text.push(',');
+                    }
+                    self.dsl_text.push_str(&serde_json::to_string(part).map_err(|error| error.to_string())?);
+                    self.encode_cursor += 1;
+                    self.progress = self.progress.saturating_add(1);
+                    cx.consume_fuel(1);
+                    return Ok(false);
+                }
+                self.dsl_text.push_str("],\"fasteners\":[");
+                self.stage = Puzzle5dClipboardStage::EncodeFasteners;
+                self.encode_cursor = 0;
+            }
+            Puzzle5dClipboardStage::EncodeFasteners => {
+                if let Some(fastener) = self.scan.fasteners.get(self.encode_cursor) {
+                    if self.encode_cursor != 0 {
+                        self.dsl_text.push(',');
+                    }
+                    self.dsl_text.push_str(&serde_json::to_string(fastener).map_err(|error| error.to_string())?);
+                    self.encode_cursor += 1;
+                    self.progress = self.progress.saturating_add(1);
+                    cx.consume_fuel(1);
+                    return Ok(false);
+                }
+                self.dsl_text.push_str("]}");
+                if self.dsl_text.len() > PUZZLE5D_RESERVED_OUTPUT_BYTES {
+                    return Err("puzzle5d clipboard fragment exceeds output cap".into());
+                }
+                self.stage = Puzzle5dClipboardStage::Complete;
+            }
+            Puzzle5dClipboardStage::Complete => return Ok(true),
+        }
+        self.progress = self.progress.saturating_add(1);
+        cx.consume_fuel(1);
+        Ok(self.stage == Puzzle5dClipboardStage::Complete)
+    }
+
+    fn checkpoint(&self) -> StepOutcome {
+        puzzle5d_job_checkpoint(self.stage as u8, self.encode_cursor.max(self.scan.cursor), self.progress)
+    }
+
+    fn fragment(&self) -> Option<ClipboardFragment> {
+        (!self.scan.parts.is_empty()).then(|| ClipboardFragment {
+            schema: PUZZLE5D_SCHEMA.to_string(),
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design },
+            dsl_text: self.dsl_text.clone(),
+            pack_bytes: None,
+            source_app: PUZZLE5D_PLAY_APP_ID.to_string(),
+            label: format!("{} part(s)", self.scan.parts.len()),
+        })
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if maximum_items == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(part) = self.scan.parts.last_mut() {
+            if let Some(grip) = part.grips.pop() {
+                let bytes = grip.id.len().saturating_add(grip.grip_kind.len()).saturating_add(grip.grip_2d.grip_kind.len()).saturating_add(grip.grip_3d.label.as_ref().map_or(0, String::len));
+                if bytes > maximum_bytes {
+                    part.grips.push(grip);
+                    return Err(Fault::from("puzzle5d clipboard grip exceeds its bounded disposal byte slice"));
+                }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            if matches!(part.part_3d.scale, Some(Value::Array(_)) | Some(Value::Object(_))) {
+                return Err(Fault::from("puzzle5d clipboard part retains an unproved recursive scale value"));
+            }
+            let part = self.scan.parts.pop().expect("last part exists");
+            let bytes = part.id.len()
+                .saturating_add(part.part_kind.len())
+                .saturating_add(part.part_2d.shape.len())
+                .saturating_add(part.part_2d.text.len())
+                .saturating_add(part.part_2d.icon_kind.as_ref().map_or(0, String::len))
+                .saturating_add(part.part_3d.mesh_url.as_ref().map_or(0, String::len))
+                .saturating_add(part.part_3d.label.as_ref().map_or(0, String::len));
+            if bytes > maximum_bytes {
+                self.scan.parts.push(part);
+                return Err(Fault::from("puzzle5d clipboard part exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(fastener) = self.scan.fasteners.pop() {
+            let bytes = fastener.id.len().saturating_add(fastener.source.len()).saturating_add(fastener.target.len()).saturating_add(fastener.fastener_kind.as_ref().map_or(0, String::len));
+            if bytes > maximum_bytes {
+                self.scan.fasteners.push(fastener);
+                return Err(Fault::from("puzzle5d clipboard fastener exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(key) = self.scan.part_ids.iter().next() {
+            if key.len() > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard selection id exceeds its bounded disposal byte slice"));
+            }
+            let key = key.clone();
+            self.scan.part_ids.remove(&key);
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: key.len() });
+        }
+        if let Some(key) = self.scan.explicit_fastener_ids.iter().next() {
+            if key.len() > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard fastener id exceeds its bounded disposal byte slice"));
+            }
+            let key = key.clone();
+            self.scan.explicit_fastener_ids.remove(&key);
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: key.len() });
+        }
+        Ok(PluginCloseStep::Complete)
+    }
+}
+
+struct Puzzle5dCopyJob {
+    work: Puzzle5dClipboardWork,
+    completed: bool,
+}
+
+impl InteractiveJob for Puzzle5dCopyJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if !self.completed {
+            match self.work.step_work(cx) {
+                Ok(false) => return self.work.checkpoint(),
+                Err(error) => return puzzle5d_job_fault(error),
+                Ok(true) => {
+                    let emit = match self.work.fragment() {
+                        Some(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
+                        None => Emit::default(),
+                    };
+                    if let Err(error) = self.work.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        return puzzle5d_job_fault(error.message);
+                    }
+                    self.completed = true;
+                }
+            }
+        }
+        StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dCopyJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        self.work.close_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        false
+    }
+}
+
+struct Puzzle5dCutJob {
+    work: Puzzle5dClipboardWork,
+    completed: bool,
+}
+
+impl InteractiveJob for Puzzle5dCutJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if !self.completed {
+            match self.work.step_work(cx) {
+                Ok(false) => return self.work.checkpoint(),
+                Err(error) => return puzzle5d_job_fault(error),
+                Ok(true) => {
+                    let mut mutations = self.work.scan.fasteners.iter().map(|fastener| crate::artifacts::puzzle5d::mutations::disconnect_grips(fastener.id.clone())).collect::<Vec<_>>();
+                    mutations.extend(self.work.scan.parts.iter().map(|part| crate::artifacts::puzzle5d::mutations::delete_part(part.id.clone())));
+                    let effects = self.work.fragment().map(|fragment| vec![Effect::ClipboardWrite { fragment }]).unwrap_or_default();
+                    let emit = Emit { artifact_mutations: mutations, effects, ..Default::default() };
+                    if let Err(error) = self.work.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        return puzzle5d_job_fault(error.message);
+                    }
+                    self.completed = true;
+                }
+            }
+        }
+        StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dCutJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        self.work.close_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        false
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dPasteStage {
+    Envelope,
+    Decode,
+    FragmentParts,
+    TargetParts,
+    MaterializeParts,
+    MaterializeFasteners,
+    Complete,
+}
+
+struct Puzzle5dPasteJob {
+    raw: Vec<u8>,
+    raw_cursor: usize,
+    progress: u64,
+    stage: Puzzle5dPasteStage,
+    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    args: Option<Value>,
+    fragment_value: Option<Value>,
+    fragment_parts: Vec<Puzzle5dPart>,
+    cursor: usize,
+    source_sum: (f64, f64),
+    target_sum: (f64, f64),
+    target_count: usize,
+    placement: PastePlacement,
+    delta: (f64, f64),
+    id_map: HashMap<String, String>,
+    mutations: Vec<Puzzle5dMutation>,
+    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+    completed: bool,
+}
+
+impl Puzzle5dPasteJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, args: Option<Value>) -> Self {
+        Self {
+            raw: request.raw_wire,
+            raw_cursor: 0,
+            progress: 0,
+            stage: Puzzle5dPasteStage::Envelope,
+            snapshot: request.snapshot,
+            args,
+            fragment_value: None,
+            fragment_parts: Vec::new(),
+            cursor: 0,
+            source_sum: (0.0, 0.0),
+            target_sum: (0.0, 0.0),
+            target_count: 0,
+            placement: PastePlacement::default(),
+            delta: (0.0, 0.0),
+            id_map: HashMap::new(),
+            mutations: Vec::new(),
+            completion: request.completion,
+            completed: false,
+        }
+    }
+
+    fn checkpoint(&self) -> StepOutcome {
+        puzzle5d_job_checkpoint(self.stage as u8, self.cursor, self.progress)
+    }
+}
+
+impl InteractiveJob for Puzzle5dPasteJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        match self.stage {
+            Puzzle5dPasteStage::Envelope => {
+                if let Some(outcome) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.progress, cx) {
+                    return outcome;
+                }
+                self.stage = Puzzle5dPasteStage::Decode;
+            }
+            Puzzle5dPasteStage::Decode => {
+                let Some(args) = self.args.as_ref() else {
+                    self.stage = Puzzle5dPasteStage::Complete;
+                    return self.checkpoint();
+                };
+                let Some(fragment_value) = args.get("fragment").cloned() else {
+                    self.stage = Puzzle5dPasteStage::Complete;
+                    return self.checkpoint();
+                };
+                let fragment: ClipboardFragment = match serde_json::from_value(fragment_value) {
+                    Ok(fragment) => fragment,
+                    Err(error) => return puzzle5d_job_fault(error.to_string()),
+                };
+                if fragment.media_type != (MediaType { class: MediaClass::Kit, form: MediaForm::Design }) {
+                    return puzzle5d_job_fault("puzzle5d paste received an incompatible media type");
+                }
+                if fragment.dsl_text.len() > PUZZLE5D_RESERVED_RAW_BYTES {
+                    return puzzle5d_job_fault("puzzle5d paste fragment exceeds its predecode cap");
+                }
+                self.fragment_value = match serde_json::from_str(&fragment.dsl_text) {
+                    Ok(value) => Some(value),
+                    Err(error) => return puzzle5d_job_fault(error.to_string()),
+                };
+                self.placement = serde_json::from_value(json!({
+                    "anchor": args.get("anchor").cloned().unwrap_or_else(|| json!("original")),
+                    "position": args.get("position").cloned()
+                }))
+                .unwrap_or_default();
+                self.stage = Puzzle5dPasteStage::FragmentParts;
+                self.cursor = 0;
+            }
+            Puzzle5dPasteStage::FragmentParts => {
+                let rows = self.fragment_value.as_ref().and_then(|value| value.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                if let Some(row) = rows.get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let part: Puzzle5dPart = match serde_json::from_value(row) {
+                        Ok(part) => part,
+                        Err(error) => return puzzle5d_job_fault(error.to_string()),
+                    };
+                    self.source_sum.0 += part.part_2d.x;
+                    self.source_sum.1 += part.part_2d.y;
+                    self.fragment_parts.push(part);
+                } else {
+                    self.stage = Puzzle5dPasteStage::TargetParts;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dPasteStage::TargetParts => {
+                let rows = self.snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                if let Some(row) = rows.get(self.cursor) {
+                    self.cursor += 1;
+                    self.target_sum.0 += row.get("2d").and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default();
+                    self.target_sum.1 += row.get("2d").and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default();
+                    self.target_count += 1;
+                } else {
+                    let offset = self.placement.position.map_or((0.0, 0.0), |position| (position[0], position[1]));
+                    self.delta = if matches!(self.placement.anchor, PasteAnchor::Original) || self.fragment_parts.is_empty() || self.target_count == 0 {
+                        offset
+                    } else {
+                        (self.target_sum.0 / self.target_count as f64 - self.source_sum.0 / self.fragment_parts.len() as f64 + offset.0, self.target_sum.1 / self.target_count as f64 - self.source_sum.1 / self.fragment_parts.len() as f64 + offset.1)
+                    };
+                    self.stage = Puzzle5dPasteStage::MaterializeParts;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dPasteStage::MaterializeParts => {
+                if let Some(part) = self.fragment_parts.get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let fresh_id = next_part_id();
+                    self.id_map.insert(part.id.clone(), fresh_id.clone());
+                    let mut next = part;
+                    next.id = fresh_id;
+                    next.part_2d.x += self.delta.0;
+                    next.part_2d.y += self.delta.1;
+                    next.part_3d.origin[0] += self.delta.0;
+                    next.part_3d.origin[1] += self.delta.1;
+                    let typed = match serde_json::to_value(next).and_then(serde_json::from_value::<crate::artifacts::puzzle5d::Puzzle5dPart>) {
+                        Ok(typed) => typed,
+                        Err(error) => return puzzle5d_job_fault(error.to_string()),
+                    };
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::create_part(typed, None));
+                } else {
+                    self.stage = Puzzle5dPasteStage::MaterializeFasteners;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dPasteStage::MaterializeFasteners => {
+                let rows = self.fragment_value.as_ref().and_then(|value| value.get("fasteners")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                if let Some(row) = rows.get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let fastener: Puzzle5dFastener = match serde_json::from_value(row) {
+                        Ok(fastener) => fastener,
+                        Err(error) => return puzzle5d_job_fault(error.to_string()),
+                    };
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                        next_fastener_id(),
+                        rewrite_grip_ref_local(&fastener.source, &self.id_map),
+                        rewrite_grip_ref_local(&fastener.target, &self.id_map),
+                        fastener.fastener_kind,
+                        fastener.gap,
+                        fastener.shift,
+                        fastener.rise,
+                        fastener.rotation,
+                        fastener.turn,
+                        fastener.tilt,
+                        fastener.x + self.delta.0,
+                        fastener.y + self.delta.1,
+                    ));
+                } else {
+                    self.stage = Puzzle5dPasteStage::Complete;
+                }
+            }
+            Puzzle5dPasteStage::Complete => {
+                if !self.completed {
+                    let emit = Emit::mutations(std::mem::take(&mut self.mutations));
+                    if let Err(error) = self.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                        return puzzle5d_job_fault(error.message);
+                    }
+                    self.completed = true;
+                }
+                return StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dPasteStage::Complete as u8], output: self.raw.clone() });
+            }
+        }
+        self.progress = self.progress.saturating_add(1);
+        cx.consume_fuel(1);
+        self.checkpoint()
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dPasteJob {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Err(Fault::from("puzzle5d paste retains recursive JSON and mutation owners without bounded disposal"))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        false
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dImportStage {
+    Envelope,
+    Decode,
+    IndexParts,
+    IndexGrips,
+    IndexCompatibility,
+    Parts,
+    Grips,
+    Compatibility,
+    Complete,
+}
+
+struct Puzzle5dImportJob {
+    raw: Vec<u8>,
+    raw_cursor: usize,
+    progress: u64,
+    stage: Puzzle5dImportStage,
+    port: String,
+    media_json: Option<String>,
+    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    fragment: Option<Value>,
+    initial_catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs,
+    catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs,
+    had_catalogs: bool,
+    compatibility: Vec<crate::artifacts::puzzle5d::Puzzle5dKindCompatibility>,
+    part_index: HashMap<String, usize>,
+    grip_index: HashMap<String, usize>,
+    compatibility_index: HashMap<(String, String), usize>,
+    compatibility_mutations: Vec<Puzzle5dMutation>,
+    cursor: usize,
+    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+    completed: bool,
+}
+
+impl Puzzle5dImportJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, port: String, media: Media) -> Self {
+        let media_json = match media.payload {
+            semio_framework_plugin::MediaPayload::Structured { json, .. } => Some(json),
+            semio_framework_plugin::MediaPayload::Binary { .. } => None,
+        };
+        Self {
+            raw: request.raw_wire,
+            raw_cursor: 0,
+            progress: 0,
+            stage: Puzzle5dImportStage::Envelope,
+            port,
+            media_json,
+            snapshot: request.snapshot,
+            fragment: None,
+            initial_catalogs: Default::default(),
+            catalogs: Default::default(),
+            had_catalogs: false,
+            compatibility: Vec::new(),
+            part_index: HashMap::new(),
+            grip_index: HashMap::new(),
+            compatibility_index: HashMap::new(),
+            compatibility_mutations: Vec::new(),
+            cursor: 0,
+            completion: request.completion,
+            completed: false,
+        }
+    }
+
+    fn checkpoint(&self) -> StepOutcome {
+        puzzle5d_job_checkpoint(self.stage as u8, self.cursor, self.progress)
+    }
+
+    fn rows(&self, key: &str) -> &[Value] {
+        self.fragment.as_ref().and_then(|value| value.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
+    }
+}
+
+impl InteractiveJob for Puzzle5dImportJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        match self.stage {
+            Puzzle5dImportStage::Envelope => {
+                if let Some(outcome) = puzzle5d_step_envelope(&self.raw, &mut self.raw_cursor, &mut self.progress, cx) {
+                    return outcome;
+                }
+                self.stage = Puzzle5dImportStage::Decode;
+            }
+            Puzzle5dImportStage::Decode => {
+                if self.port != "kit:in" {
+                    return puzzle5d_job_fault("puzzle5d import only implements kit:in");
+                }
+                let Some(media_json) = self.media_json.as_ref() else {
+                    return puzzle5d_job_fault("puzzle5d kit:in requires a structured payload");
+                };
+                if media_json.len() > PUZZLE5D_RESERVED_RAW_BYTES {
+                    return puzzle5d_job_fault("puzzle5d kit:in payload exceeds its predecode cap");
+                }
+                let fragment: Value = match serde_json::from_str(media_json) {
+                    Ok(fragment) => fragment,
+                    Err(error) => return puzzle5d_job_fault(error.to_string()),
+                };
+                let decoded_items = ["objectKinds", "vortexKinds", "kindCompatibility"]
+                    .into_iter()
+                    .map(|key| fragment.get(key).and_then(Value::as_array).map_or(0, Vec::len))
+                    .sum::<usize>();
+                if decoded_items > PUZZLE5D_RESERVED_ITEMS {
+                    return puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded");
+                }
+                self.had_catalogs = self.snapshot.0.get("kindCatalogs").is_some_and(|value| !value.is_null());
+                self.catalogs = self
+                    .snapshot
+                    .0
+                    .get("kindCatalogs")
+                    .cloned()
+                    .and_then(|value| serde_json::from_value(value).ok())
+                    .unwrap_or_default();
+                self.initial_catalogs = self.catalogs.clone();
+                self.compatibility = self
+                    .snapshot
+                    .0
+                    .get("kindCompatibility")
+                    .cloned()
+                    .and_then(|value| serde_json::from_value(value).ok())
+                    .unwrap_or_default();
+                self.fragment = Some(fragment);
+                self.stage = Puzzle5dImportStage::IndexParts;
+                self.cursor = 0;
+            }
+            Puzzle5dImportStage::IndexParts => {
+                if let Some(row) = self.catalogs.parts.get(self.cursor) {
+                    self.part_index.insert(row.id.clone(), self.cursor);
+                    self.cursor += 1;
+                } else {
+                    self.stage = Puzzle5dImportStage::IndexGrips;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dImportStage::IndexGrips => {
+                if let Some(row) = self.catalogs.grips.get(self.cursor) {
+                    self.grip_index.insert(row.id.clone(), self.cursor);
+                    self.cursor += 1;
+                } else {
+                    self.stage = Puzzle5dImportStage::IndexCompatibility;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dImportStage::IndexCompatibility => {
+                if let Some(row) = self.compatibility.get(self.cursor) {
+                    self.compatibility_index.insert((row.source.clone(), row.target.clone()), self.cursor);
+                    self.cursor += 1;
+                } else {
+                    self.stage = Puzzle5dImportStage::Parts;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dImportStage::Parts => {
+                if let Some(row) = self.rows("objectKinds").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let parsed: Puzzle5dKitInObjectKindFragment = match serde_json::from_value(row) {
+                        Ok(parsed) => parsed,
+                        Err(_) => return self.checkpoint(),
+                    };
+                    let next = crate::artifacts::puzzle5d::Puzzle5dCatalogPartKind {
+                        id: parsed.id.clone(),
+                        name: parsed.name,
+                        label: parsed.label,
+                        representations: parsed
+                            .mesh_url
+                            .map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation { id: "mesh".into(), name: "mesh".into(), url, mime: "model/gltf-binary".into(), ..Default::default() }])
+                            .unwrap_or_default(),
+                        grips: parsed
+                            .vortices
+                            .into_iter()
+                            .enumerate()
+                            .map(|(index, vortex)| crate::artifacts::puzzle5d::Puzzle5dGripTemplate {
+                                id: format!("g{index}"),
+                                name: vortex.vortex_kind.clone(),
+                                label: vortex.vortex_kind.clone(),
+                                grip_kind: Some(vortex.vortex_kind),
+                                point: vortex.position,
+                                direction: vortex.direction,
+                                radius: Some(vortex.radius),
+                                ..Default::default()
+                            })
+                            .collect(),
+                        ..Default::default()
+                    };
+                    match self.part_index.get(&parsed.id).copied() {
+                        Some(index) => self.catalogs.parts[index] = next,
+                        None => {
+                            self.part_index.insert(parsed.id, self.catalogs.parts.len());
+                            self.catalogs.parts.push(next);
+                        }
+                    }
+                } else {
+                    self.stage = Puzzle5dImportStage::Grips;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dImportStage::Grips => {
+                if let Some(row) = self.rows("vortexKinds").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let parsed: Puzzle5dKitInVortexKindFragment = match serde_json::from_value(row) {
+                        Ok(parsed) => parsed,
+                        Err(_) => return self.checkpoint(),
+                    };
+                    let id = parsed.id.clone();
+                    let next = crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind {
+                        id: parsed.id,
+                        code: Some(parsed.name),
+                        label: Some(parsed.label),
+                        color: parsed.color,
+                        default_rope_kind: parsed.default_cable_kind,
+                        ..Default::default()
+                    };
+                    match self.grip_index.get(&id).copied() {
+                        Some(index) => self.catalogs.grips[index] = next,
+                        None => {
+                            self.grip_index.insert(id, self.catalogs.grips.len());
+                            self.catalogs.grips.push(next);
+                        }
+                    }
+                } else {
+                    self.stage = Puzzle5dImportStage::Compatibility;
+                    self.cursor = 0;
+                }
+            }
+            Puzzle5dImportStage::Compatibility => {
+                if let Some(row) = self.rows("kindCompatibility").get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let parsed: crate::artifacts::puzzle5d::Puzzle5dKindCompatibility = match serde_json::from_value(row) {
+                        Ok(parsed) => parsed,
+                        Err(_) => return self.checkpoint(),
+                    };
+                    let key = (parsed.source.clone(), parsed.target.clone());
+                    match self.compatibility_index.get(&key).copied() {
+                        Some(index) if self.compatibility[index] == parsed => {}
+                        Some(index) => {
+                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone()));
+                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
+                                parsed.source.clone(),
+                                parsed.target.clone(),
+                                parsed.bidirectional,
+                                parsed.important,
+                                parsed.specificity,
+                            ));
+                            self.compatibility[index] = parsed;
+                        }
+                        None => {
+                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
+                                parsed.source.clone(),
+                                parsed.target.clone(),
+                                parsed.bidirectional,
+                                parsed.important,
+                                parsed.specificity,
+                            ));
+                            self.compatibility_index.insert(key, self.compatibility.len());
+                            self.compatibility.push(parsed);
+                        }
+                    }
+                } else {
+                    self.stage = Puzzle5dImportStage::Complete;
+                }
+            }
+            Puzzle5dImportStage::Complete => {
+                if !self.completed {
+                    let mut mutations = Vec::new();
+                    if !self.had_catalogs || self.catalogs != self.initial_catalogs {
+                        mutations.push(crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs))));
+                    }
+                    mutations.append(&mut self.compatibility_mutations);
+                    if let Err(error) = self.completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
+                        return puzzle5d_job_fault(error.message);
+                    }
+                    self.completed = true;
+                }
+                return StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dImportStage::Complete as u8], output: self.raw.clone() });
+            }
+        }
+        self.progress = self.progress.saturating_add(1);
+        cx.consume_fuel(1);
+        self.checkpoint()
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dImportJob {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Err(Fault::from("puzzle5d import retains recursive JSON, catalog, index, and mutation owners without bounded disposal"))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        false
+    }
+}
+//#endregion 🧵️ReservedJobs
+
 //#region 🔖️ContextMenu
 /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: `duplicateSelection`/`selectSameKindSelection`/
 /// `zoomToSelection` stay top-level verbs; the hide/lock toggles (bespoke rows — their label/icon flip
@@ -1179,7 +2082,7 @@ fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<crate::artifacts::puzzl
 /// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
 /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
 fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
+    use semio_framework_plugin::{ContextMenuItemSpec, Menu, selection_count_phrase};
     if part_ids.is_empty() {
         return Vec::new();
     }
@@ -1363,11 +2266,7 @@ pub struct Puzzle5dActionCtx<'a> {
 impl<'a> Puzzle5dActionCtx<'a> {
     fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
         let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE5D_INTERACTION_DOMAIN));
-        if selection.granularity == granularity_id {
-            selection.ids.clone()
-        } else {
-            Vec::new()
-        }
+        if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
     }
     pub fn selected_part_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE5D_GRANULARITY_PART)
@@ -1401,14 +2300,9 @@ fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>)
 // `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`.
 // Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
 // Undo/redo/checkpoints are handled by the wrapper.
-thread_local! {
-    /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
-    /// so the precompute session lives here until `EngineHandles` carries it.
-    static PUZZLE5D_PLAY_SESSION: RefCell<Puzzle5dPlayApp> = RefCell::new(Puzzle5dPlayApp::default());
-}
-
 fn with_puzzle5d_app<R>(f: impl FnOnce(&Puzzle5dPlayApp) -> R) -> R {
-    PUZZLE5D_PLAY_SESSION.with(|app| f(&app.borrow()))
+    let app = Puzzle5dPlayApp::default();
+    f(&app)
 }
 
 pub struct Puzzle5dPlayApp {
@@ -1690,6 +2584,49 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle5dCommand;
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(Puzzle5dCopyJobFactory::new(&controller_id))?;
+        registry.register(Puzzle5dCutJobFactory::new(&controller_id))?;
+        registry.register(Puzzle5dPasteJobFactory::new(&controller_id))?;
+        registry.register(Puzzle5dImportJobFactory::new(&controller_id))
+    }
+
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        let job = match request.tool_id.as_str() {
+            "copy" => {
+                let interaction = match &request.input {
+                    ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
+                    _ => return Err(Fault::from("puzzle5d copy requires action input")),
+                };
+                ArtifactReservedToolJob::new(Puzzle5dCopyJob { work: Puzzle5dClipboardWork::new(request, interaction), completed: false })
+            }
+            "cut" => {
+                let interaction = match &request.input {
+                    ArtifactReservedToolInput::Action { interaction, .. } => interaction.clone(),
+                    _ => return Err(Fault::from("puzzle5d cut requires action input")),
+                };
+                ArtifactReservedToolJob::new(Puzzle5dCutJob { work: Puzzle5dClipboardWork::new(request, interaction), completed: false })
+            }
+            "paste" => {
+                let args = match &request.input {
+                    ArtifactReservedToolInput::Action { args, .. } => args.clone(),
+                    _ => return Err(Fault::from("puzzle5d paste requires action input")),
+                };
+                ArtifactReservedToolJob::new(Puzzle5dPasteJob::new(request, args))
+            }
+            "import-media" => {
+                let (port, media) = match &request.input {
+                    ArtifactReservedToolInput::Media { port, media } => (port.clone(), media.clone()),
+                    _ => return Err(Fault::from("puzzle5d import requires media input")),
+                };
+                ArtifactReservedToolJob::new(Puzzle5dImportJob::new(request, port, media))
+            }
+            _ => return Ok(None),
+        };
+        Ok(Some(job))
+    }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
     /// `crate::editor::puzzle5d::config::schema::register_app_schema()` self-registering call, which
@@ -2170,7 +3107,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
 
     /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -2407,9 +3344,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
-        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
+        use crate::artifacts::puzzle5d::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
         use protocol::{ArtifactId, Edit, SchemaId};
-        use store::{create_document_envelope, EngineHandles};
+        use store::{EngineHandles, create_document_envelope};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };

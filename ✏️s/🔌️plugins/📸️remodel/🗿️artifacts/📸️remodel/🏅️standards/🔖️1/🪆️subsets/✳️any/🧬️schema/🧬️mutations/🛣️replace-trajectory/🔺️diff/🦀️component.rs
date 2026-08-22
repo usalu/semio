@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceTrajectory, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::ReplaceTrajectory, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.trajectory.is_none() && base.results.trajectory.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "There is no trajectory to clear.".to_string(), [base.id.clone()]);
     }

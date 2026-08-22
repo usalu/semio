@@ -1,7 +1,7 @@
 //! 🚨️ Every way building a model/topology/constraint or configuring a solve can fail validation.
 //! Kept flat (no nested `source()` chain, no external error crate) so callers can match
 //! exhaustively — the entropy crate's convention. `Contradiction`/`Unsatisfiable` are normal
-//! [`crate::wfc_engine::outcome::SolveOutcome`] variants, never errors: a search finding no solution is not a
+//! `SolveOutcome` variants, never errors: a search finding no solution is not a
 //! bug, a malformed model or an internal invariant violation is.
 
 // #region 🔖️ModelError
@@ -39,7 +39,7 @@ pub enum ModelError {
     IncompatibleSocketRule {
         reason: &'static str,
     },
-    /// 🚨️ A [`crate::wfc_engine::serial::SourceModelDoc`]'s schema version does not match this build's. No
+    /// 🚨️ A `SourceModelDoc`'s schema version does not match this build's. No
     /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
     SchemaVersionMismatch {
         expected: u32,
@@ -160,7 +160,7 @@ impl std::error::Error for ConstraintError {}
 
 // #region 🔖️SolveError
 /// 🚨️ Everything that can go wrong configuring or resuming a solve (as opposed to the solve
-/// itself finding no solution, which is a [`crate::wfc_engine::outcome::SolveOutcome`]).
+/// itself finding no solution, which is a `SolveOutcome`).
 #[derive(Clone, PartialEq, Debug)]
 pub enum SolveError {
     /// 🚨️ A solver was built from a model and topology whose relation universes disagree.

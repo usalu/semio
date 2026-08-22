@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::{Procedural2dDiff, Procedural2dSnapshot};
 use flow::playbook::GenerationMutation;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &CreateGeneration, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+pub fn diff(payload: &CreateGeneration, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
     if base.generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A generation with id \"{}\" already exists.", payload.generation.id), [payload.generation.id.clone()]);
     }

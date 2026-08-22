@@ -4,8 +4,9 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
-    use std::cell::RefCell;
+    use std::cell::{Cell, RefCell};
     use std::rc::Rc;
+    use std::sync::Arc;
 
     use infinite_canvas::camera::{self, Camera, Viewport};
     use infinite_canvas::Point;
@@ -15,9 +16,11 @@ mod wasm_session {
     use web_sys::HtmlCanvasElement;
 
     use crate::artifacts::layout::schema::parse_layout_document;
-    use crate::editor::layout::engine::scene::{
-        build_scene_from_document_json, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, hit_test_document_json, screen_to_world_json, LayoutDropPreview, LayoutEngine, SceneQuery,
-    };
+    use crate::artifacts::layout::LayoutSnapshot;
+    use crate::editor::layout::engine::export::{output_name, LayoutExportJob, LayoutExportKind, LayoutExportRequest, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES};
+    use crate::editor::layout::engine::scene::{build_scene_from_document_json, hit_test_document_json, screen_to_world_json, LayoutDropPreview, LayoutEngine, SceneQuery};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, Lane, Operation, ProcessKind, RevisionId, StepOutcome, WorkerJobSession, WorkerPool, WorkerPoolConfig};
+    use semio_framework_plugin::app::ArtifactOutputChunks;
 
     #[derive(Clone, Debug)]
     enum LayoutInteraction {
@@ -27,6 +30,8 @@ mod wasm_session {
 
     struct LayoutSessionInner {
         document_json: String,
+        snapshot: Arc<LayoutSnapshot>,
+        generation: u64,
         page_id: String,
         selected_ids: Vec<String>,
         hovered_id: Option<String>,
@@ -51,6 +56,8 @@ mod wasm_session {
             Self {
                 state: Rc::new(RefCell::new(LayoutSessionInner {
                     document_json: String::new(),
+                    snapshot: Arc::new(crate::artifacts::layout::schema::default_document()),
+                    generation: 0,
                     page_id: "page-1".into(),
                     selected_ids: Vec::new(),
                     hovered_id: None,
@@ -116,8 +123,11 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = setDocumentJson)]
         pub async fn set_artifact_json(&mut self, json: &str) -> Result<(), JsValue> {
-            parse_layout_document(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            self.state.borrow_mut().document_json = json.to_string();
+            let snapshot = parse_layout_document(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let mut inner = self.state.borrow_mut();
+            inner.document_json = json.to_string();
+            inner.snapshot = Arc::new(snapshot);
+            inner.generation = inner.generation.saturating_add(1);
             Ok(())
         }
 
@@ -231,33 +241,142 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = exportPng)]
-        pub async fn export_png(&self, page_id: &str) -> Result<Vec<u8>, JsValue> {
-            let inner = self.state.borrow();
-            let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            export_document_png_cpu(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn export_png(&self, page_id: String) -> Result<LayoutExportOperation, JsValue> {
+            self.submit_export(LayoutExportKind::Png, Some(page_id), None)
         }
 
         #[wasm_bindgen(js_name = exportSvg)]
-        pub async fn export_svg(&self, page_id: &str) -> Result<String, JsValue> {
-            let inner = self.state.borrow();
-            let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            export_document_svg(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn export_svg(&self, page_id: String) -> Result<LayoutExportOperation, JsValue> {
+            self.submit_export(LayoutExportKind::Svg, Some(page_id), None)
         }
 
         #[wasm_bindgen(js_name = exportPdf)]
-        pub async fn export_pdf(&self, page_id: &str) -> Result<Vec<u8>, JsValue> {
-            let inner = self.state.borrow();
-            let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            export_document_pdf(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn export_pdf(&self, page_id: String) -> Result<LayoutExportOperation, JsValue> {
+            self.submit_export(LayoutExportKind::Pdf, Some(page_id), None)
         }
 
         #[wasm_bindgen(js_name = exportPackage)]
-        pub async fn export_package(&self, preflight_json: &str) -> Result<Vec<u8>, JsValue> {
+        pub async fn export_package(&self, preflight_json: String) -> Result<LayoutExportOperation, JsValue> {
+            self.submit_export(LayoutExportKind::Package, None, Some(preflight_json))
+        }
+
+        fn submit_export(&self, kind: LayoutExportKind, page_id: Option<String>, preflight_json: Option<String>) -> Result<LayoutExportOperation, JsValue> {
+            if preflight_json.as_ref().is_some_and(|value| value.len() > MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES) {
+                return Err(JsValue::from_str("layout-export-preflight-byte-limit"));
+            }
             let inner = self.state.borrow();
-            export_package_zip(&inner.document_json, preflight_json).map_err(|e| JsValue::from_str(&e.to_string()))
+            let operation = Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(inner.generation), Generation(inner.generation), 0);
+            let request = LayoutExportRequest { kind, page_id, snapshot: inner.snapshot.clone(), preflight_json, parent_document_id: "layout.wasm.session".into(), canonical_base_revision_hex: format!("{:064x}", inner.generation) };
+            let name = output_name(&request);
+            let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
+            let job = LayoutExportJob::new(operation, request).map_err(|error| JsValue::from_str(&error))?.with_output_chunks(output_chunks.clone());
+            let cancel = semio_framework_job::root_cancel_token();
+            let params = BatchJobParams {
+                operation: operation.operation,
+                generation: operation.generation,
+                cancel: cancel.clone(),
+                config: BatchDriveConfig { site: "layout.export.wasm", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            Ok(LayoutExportOperation {
+                session: WorkerJobSession::new(job, params),
+                pool: semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1))),
+                cancel,
+                authority: self.state.clone(),
+                submitted_generation: inner.generation,
+                kind,
+                name,
+                status: RefCell::new("submitted".into()),
+                output_chunks,
+                completed: Cell::new(false),
+            })
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct LayoutExportOperation {
+        session: WorkerJobSession<LayoutExportJob>,
+        pool: WorkerPool,
+        cancel: semio_framework_job::CancelToken,
+        authority: Rc<RefCell<LayoutSessionInner>>,
+        submitted_generation: u64,
+        kind: LayoutExportKind,
+        name: String,
+        status: RefCell<String>,
+        output_chunks: ArtifactOutputChunks,
+        completed: Cell<bool>,
+    }
+
+    impl Drop for LayoutExportOperation {
+        fn drop(&mut self) {
+            if !self.completed.get() {
+                self.cancel.cancel_now();
+            }
+        }
+    }
+
+    #[wasm_bindgen]
+    impl LayoutExportOperation {
+        #[wasm_bindgen(js_name = step)]
+        pub async fn step(&self) -> Result<String, JsValue> {
+            if self.completed.get() {
+                return Ok("completed".into());
+            }
+            if self.authority.borrow().generation != self.submitted_generation {
+                self.cancel.cancel_now();
+                *self.status.borrow_mut() = "stale".into();
+                return Err(JsValue::from_str("layout-export-stale-generation"));
+            }
+            let outcome = self.session.step(&self.pool, Lane::UserVisible).await.map_err(|_| JsValue::from_str("layout-export-worker-closed"))?;
+            let status = match outcome {
+                StepOutcome::Yield => "running".into(),
+                StepOutcome::PreviewReady(preview) => String::from_utf8(preview).unwrap_or_else(|_| "preview".into()),
+                StepOutcome::CheckpointReady(checkpoint) => format!("checkpoint:{}", checkpoint.applied_progress),
+                StepOutcome::Complete(_) => {
+                    self.completed.set(true);
+                    "completed".into()
+                }
+                StepOutcome::Cancelled => "cancelled".into(),
+                StepOutcome::Fault(fault) => return Err(JsValue::from_str(&String::from_utf8_lossy(&fault.detail))),
+            };
+            *self.status.borrow_mut() = status.clone();
+            Ok(status)
+        }
+
+        #[wasm_bindgen(js_name = progress)]
+        pub fn progress(&self) -> String {
+            self.status.borrow().clone()
+        }
+
+        #[wasm_bindgen(js_name = cancel)]
+        pub fn cancel(&self) {
+            self.cancel.cancel_now();
+        }
+
+        #[wasm_bindgen(js_name = resultFilename)]
+        pub fn result_filename(&self) -> Option<String> {
+            self.completed.get().then(|| format!("{}.{}", self.name, self.kind.extension()))
+        }
+
+        #[wasm_bindgen(js_name = resultMimeType)]
+        pub fn result_mime_type(&self) -> Option<String> {
+            self.completed.get().then(|| self.kind.mime_type().to_string())
+        }
+
+        #[wasm_bindgen(js_name = resultEncoding)]
+        pub fn result_encoding(&self) -> Option<String> {
+            (self.completed.get() && self.kind.binary()).then(|| "base64".into())
+        }
+
+        #[wasm_bindgen(js_name = takeResultChunk)]
+        pub fn take_result_chunk(&self) -> Result<Option<Vec<u8>>, JsValue> {
+            if !self.completed.get() {
+                return Ok(None);
+            }
+            self.output_chunks.take_chunk().map_err(|error| JsValue::from_str(&error.to_string()))
         }
     }
 }
 
 #[cfg(target_arch = "wasm32")]
-pub use wasm_session::LayoutSession;
+pub use wasm_session::{LayoutExportOperation, LayoutSession};

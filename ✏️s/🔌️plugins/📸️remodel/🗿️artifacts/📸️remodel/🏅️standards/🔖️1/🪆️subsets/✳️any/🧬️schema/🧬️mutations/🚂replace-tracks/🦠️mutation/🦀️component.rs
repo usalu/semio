@@ -15,7 +15,7 @@ pub struct ReplaceTracks {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_tracks(tracks: Vec<MotionTrackSummary>) -> RemodelMutation {
+pub fn replace_tracks(tracks: Vec<MotionTrackSummary>) -> RemodelMutation {
     RemodelMutation::ReplaceTracks(ReplaceTracks { tracks })
 }
 

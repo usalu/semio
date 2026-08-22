@@ -17,7 +17,7 @@ pub struct ReplaceMeshResult {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_mesh_result(mesh: Box<RemodelMesh>) -> RemodelMutation {
+pub fn replace_mesh_result(mesh: Box<RemodelMesh>) -> RemodelMutation {
     RemodelMutation::ReplaceMeshResult(ReplaceMeshResult { mesh })
 }
 

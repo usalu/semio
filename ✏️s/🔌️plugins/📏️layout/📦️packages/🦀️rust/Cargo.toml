@@ -31,18 +31,16 @@ semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/�
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 parley = { version = "0.5.0" }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }
-image = { version = "0.25", default-features = false, features = ["png"] }
-png = "0.17"
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-zip = { version = "2.2", default-features = false, features = ["deflate"] }
-base64 = "0.22.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
+semio-framework-async = { workspace = true }
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"

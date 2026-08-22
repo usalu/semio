@@ -13,6 +13,6 @@ pub struct SetShowMode {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Procedural3dConfigMutation::SetShowMode { value: payload.value.clone() }]))
 }

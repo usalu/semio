@@ -6,7 +6,7 @@ use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot};
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::images as remodel_image;
-use crate::editor::remodel::{decode_still_image, payload_from_data_url};
+use crate::editor::remodel::payload_from_data_url;
 use base64::Engine as _;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -27,7 +27,7 @@ const BLUR_GATE_MIN_SAMPLES: usize = 3;
 /// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
 /// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
 /// the identical signal.
-async fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
+fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     let gray = remodel_image::ImageGray::from_rgba8_luma(image);
     let grad = remodel_image::scharr_gradients(&gray);
     if grad.gx.is_empty() {
@@ -37,7 +37,7 @@ async fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
     sum_sq / grad.gx.len() as f32
 }
 
-async fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
+fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
     let mut v: Vec<f32> = scores.iter().copied().collect();
     v.sort_by(f32::total_cmp);
     v[v.len() / 2]
@@ -45,7 +45,7 @@ async fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
 /// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-async fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
+fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
     if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
         let median = local_rolling_median(&scratch.rolling_scores);
         if score < min_sharpness * median {
@@ -64,15 +64,23 @@ async fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_shar
 /// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
 /// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
 /// ticks.
-async fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
+fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
     let mut scratch = VideoImportScratch::default();
     let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
     let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
     recent.reverse();
     for frame in recent {
-        let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
-        let Ok(image) = decode_still_image(&asset.mime, &bytes) else { continue };
+        let Some(source) = crate::artifacts::remodel::remodel_asset_chunk_source(scene, &frame.asset_id) else { continue };
+        let Ok(rope) = remodel_image::CompressedChunkRope::from_leaves(source.leaves, 1_114_112) else { continue };
+        let mut decoder = remodel_image::BoundedStillDecoder::new(&source.mime, rope);
+        let image = loop {
+            match decoder.advance() {
+                remodel_image::BoundedDecodeProgress::Working => {}
+                remodel_image::BoundedDecodeProgress::Complete(image) => break Some(image),
+                remodel_image::BoundedDecodeProgress::Failed(_) => break None,
+            }
+        };
+        let Some(image) = image else { continue };
         scratch.rolling_scores.push_back(local_sharpness_score(&image));
     }
     scratch
@@ -81,7 +89,7 @@ async fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) 
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
 /// prior call's already-committed mutations, since dispatches within one batch are sequential).
-async fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
+fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
     if index == 0 {
         next_remodel_id("stream")
     } else {
@@ -148,7 +156,7 @@ pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) ->
 }
 
 #[cfg(test)]
-async fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
+fn checker_image(w: u32, h: u32, cell: u32) -> remodel_image::ImageRgba8 {
     let mut image = remodel_image::ImageRgba8::new(w, h);
     for y in 0..h {
         for x in 0..w {

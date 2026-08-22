@@ -39,11 +39,11 @@ pub mod add_workshop_machine {
     pub async fn handle(
         payload: &AddWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
-        _cfg: &ConfigView<'_, Process3dConfig>,
+        cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        match catalog_machine(&payload.catalog_id, &payload.machine_id) {
+        match catalog_machine(&cfg.snapshot.contributions_json, &payload.catalog_id, &payload.machine_id) {
             Some(machine) => match add_workshop_machine_operation(fixture, machine) {
                 Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
                 None => Ok(Emit::default()),

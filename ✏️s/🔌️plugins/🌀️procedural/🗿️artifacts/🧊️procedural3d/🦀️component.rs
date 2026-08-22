@@ -16,7 +16,7 @@ pub const PROCEDURAL3D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural
 
 //#region 🔖️Helpers
 /// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
-pub async fn widget_id(widget: &Widget) -> &str {
+pub fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -34,7 +34,7 @@ pub async fn widget_id(widget: &Widget) -> &str {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::procedural3d::create_procedural3d_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.procedural".into(),
         name: "3D Procedural".into(),
@@ -56,7 +56,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 
 //#region 🔖️Declaration
 /// 🧾️ Defines s.procedural3d's immutable runtime capability leaves.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     ArtifactDefinition::new(ArtifactIdentity::parse("s.procedural3d")?)
         .capability(
@@ -129,7 +129,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 }
 
 /// 🔖️ Assembles s.procedural3d's typed runtime declaration.
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor()])
@@ -144,20 +144,20 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn artifact_kind_schema_matches_the_document_schema() {
+    #[test]
+    fn artifact_kind_schema_matches_the_document_schema() {
         assert_eq!(artifact_kind().schema, PROCEDURAL_3D_SCHEMA);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dialect_artifact_kind_matches_the_schema_capability_descriptor() {
+    #[test]
+    fn dialect_artifact_kind_matches_the_schema_capability_descriptor() {
         assert_eq!(PROCEDURAL3D_DIALECT.artifact_kind, "s.procedural.procedural3d");
         assert_eq!(PROCEDURAL3D_DIALECT.standard, StandardId("1"));
         assert_eq!(PROCEDURAL3D_DIALECT.subset, SubsetId::ANY);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn widget_id_covers_all_widget_kinds() {
+    #[test]
+    fn widget_id_covers_all_widget_kinds() {
         let widgets: Vec<Widget> = vec![
             Widget::Neuron { id: "neuron-1".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
             Widget::InputSlider { id: "slider-1".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },

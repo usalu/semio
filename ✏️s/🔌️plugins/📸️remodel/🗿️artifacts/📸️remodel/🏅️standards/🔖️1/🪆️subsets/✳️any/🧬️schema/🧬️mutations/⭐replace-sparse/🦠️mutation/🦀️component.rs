@@ -17,7 +17,7 @@ pub struct ReplaceSparse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelMutation {
+pub fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelMutation {
     RemodelMutation::ReplaceSparse(ReplaceSparse { sparse })
 }
 

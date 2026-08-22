@@ -8,7 +8,7 @@ export interface FormsTryViewModel {
   windowKindId: "forms-try";
   bodyKey: "forms.play.try";
   currentStepIndex: number;
-  tryValuesJson: string;
+  tryValues: Record<string, string[]>;
 }
 
 export const FORMS_PLAY_TRY_WINDOW_KIND_ID = "forms-try" as const;

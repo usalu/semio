@@ -41,6 +41,14 @@ pub struct WeightTable {
 }
 
 impl WeightTable {
+    /// 🧵 Completes a table whose validated columns were materialized by a resumable model compiler.
+    pub(crate) fn from_resumable_parts(w: Vec<f64>, ln_w: Vec<f64>, w_ln_w: Vec<f64>, w_int: Option<Vec<u64>>) -> Self {
+        debug_assert_eq!(w.len(), ln_w.len());
+        debug_assert_eq!(w.len(), w_ln_w.len());
+        debug_assert!(w_int.as_ref().is_none_or(|values| values.len() == w.len()));
+        Self { w, ln_w, w_ln_w, w_int }
+    }
+
     /// ⚖️ Builds a table from raw positive-finite weights. `w_int` is populated only when every
     /// weight is already an exact non-negative integer value (the common case for hand-authored
     /// tilesets and frequency-counted extraction).

@@ -29,26 +29,26 @@ impl Default for Procedural3dPreviewCamera {
     }
 }
 
-pub async fn default_preview_cam_pos() -> [f64; 3] {
+pub fn default_preview_cam_pos() -> [f64; 3] {
     [4.0, -4.0, 3.0]
 }
 
-pub async fn default_preview_cam_target() -> [f64; 3] {
+pub fn default_preview_cam_target() -> [f64; 3] {
     [0.0, 0.0, 0.0]
 }
 
-pub async fn default_preview_fov() -> f64 {
+pub fn default_preview_fov() -> f64 {
     45.0
 }
 
-pub async fn default_show_mode() -> String {
+pub fn default_show_mode() -> String {
     "shaded".into()
 }
 
 /// 🌞️ Serialized default [`semio_framework_plugin::WorldSunConfig`] — the sun toggle/azimuth/
 /// elevation/intensity display options, stored as raw JSON since `WorldSunConfig` is a framework type
 /// without a `dsl::DslRecord` impl (see [`Procedural3dConfig::sun`]).
-pub async fn default_sun_json() -> String {
+pub fn default_sun_json() -> String {
     serde_json::to_string(&semio_framework_plugin::WorldSunConfig::default()).unwrap_or_default()
 }
 
@@ -94,10 +94,10 @@ pub struct Procedural3dConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for Procedural3dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -105,7 +105,7 @@ impl store::ArtifactDsl for Procedural3dConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -114,12 +114,12 @@ impl store::ArtifactDsl for Procedural3dConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for Procedural3dConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -127,7 +127,7 @@ impl store::ArtifactPack for Procedural3dConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -152,7 +152,7 @@ impl Default for Procedural3dConfig {
 
 impl Procedural3dConfig {
     /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
-    pub async fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
+    pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
         serde_json::from_str(&self.sun_json).unwrap_or_default()
     }
 }
@@ -200,7 +200,7 @@ pub enum Procedural3dConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Procedural3dConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -211,7 +211,7 @@ impl protocol::OpText for Procedural3dConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -221,7 +221,7 @@ impl protocol::OpText for Procedural3dConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Procedural3dConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -234,7 +234,7 @@ impl protocol::OpBinary for Procedural3dConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -256,7 +256,7 @@ impl protocol::OpBinary for Procedural3dConfigMutation {
 impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
     type Diff = Procedural3dConfig;
 
-    async fn diff(&self, base: &Procedural3dConfig) -> protocol::MutationOutcome<Procedural3dConfig> {
+    fn diff(&self, base: &Procedural3dConfig) -> protocol::MutationOutcome<Procedural3dConfig> {
         let mut next = base.clone();
         match self {
             Procedural3dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -275,7 +275,7 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    async fn inverse(&self, base: &Procedural3dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Procedural3dConfig) -> Vec<Self> {
         vec![Procedural3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -286,8 +286,8 @@ impl Mutation<Procedural3dConfig> for Procedural3dConfigMutation {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn procedural3d_config_default_matches_the_former_runtime_defaults() {
+    #[test]
+    fn procedural3d_config_default_matches_the_former_runtime_defaults() {
         let config = Procedural3dConfig::default();
         assert_eq!(config.show_mode, "shaded");
         assert_eq!(config.active_utility_id, "move");
@@ -295,7 +295,7 @@ mod tests {
         assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
     }
 
-    async fn config_round_trip(base: &Procedural3dConfig, operation: &Procedural3dConfigMutation) -> Procedural3dConfig {
+    fn config_round_trip(base: &Procedural3dConfig, operation: &Procedural3dConfigMutation) -> Procedural3dConfig {
         let forward = operation.diff(base).into_parts().0;
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -306,8 +306,8 @@ mod tests {
         forward
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_camera_and_preview_camera_round_trip() {
+    #[test]
+    fn config_set_camera_and_preview_camera_round_trip() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
         assert_eq!(next.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
@@ -316,23 +316,23 @@ mod tests {
         assert_eq!(next2.preview_camera, camera);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_sun_round_trip_as_raw_json() {
+    #[test]
+    fn config_set_sun_round_trip_as_raw_json() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetSun { json: "{\"enabled\":true}".into() });
         assert_eq!(next.sun_json, "{\"enabled\":true}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_generation_round_trips() {
+    #[test]
+    fn config_set_generation_round_trips() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) });
         assert_eq!(next.selected_generation_id, Some("generation-1".to_string()));
         assert_eq!(next.generation_preview_text, Some("42".to_string()));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_active_utility_and_locale_round_trip() {
+    #[test]
+    fn config_set_active_utility_and_locale_round_trip() {
         let base = Procedural3dConfig::default();
         let next = config_round_trip(&base, &Procedural3dConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
         assert_eq!(next.active_utility_id, "rotate");
@@ -340,8 +340,8 @@ mod tests {
         assert_eq!(next2.locale, "de-DE");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_op_text_round_trips_every_variant() {
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetLodMode { value: "coarse".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetShowMode { value: "wireframe".into() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Procedural3dConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });

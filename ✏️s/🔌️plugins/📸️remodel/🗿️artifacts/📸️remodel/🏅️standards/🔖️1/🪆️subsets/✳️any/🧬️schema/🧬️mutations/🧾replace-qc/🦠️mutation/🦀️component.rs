@@ -17,7 +17,7 @@ pub struct ReplaceQc {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_qc(qc: Option<QcReportSnapshot>) -> RemodelMutation {
+pub fn replace_qc(qc: Option<QcReportSnapshot>) -> RemodelMutation {
     RemodelMutation::ReplaceQc(ReplaceQc { qc })
 }
 

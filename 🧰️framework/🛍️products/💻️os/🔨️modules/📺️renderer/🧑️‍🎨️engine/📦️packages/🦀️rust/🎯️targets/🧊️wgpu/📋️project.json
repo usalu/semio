@@ -21,6 +21,20 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
       }
     },
+    "test-browser-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
+    "check-browser-worker": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts check-browser-worker",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu"
+      }
+    },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {

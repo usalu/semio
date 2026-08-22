@@ -23,7 +23,7 @@ pub struct Procedural3dTopology {
 }
 
 /// 🪪️ A `flow::Widget`'s stable id, across every variant.
-async fn widget_id(widget: &Widget) -> &str {
+fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
@@ -39,7 +39,7 @@ async fn widget_id(widget: &Widget) -> &str {
 
 /// 🧭️ Computes `topology` from a procedural3d snapshot's `fixture.widgets`/`fixture.synapses` via
 /// Kahn's algorithm: widgets are nodes, synapses (`from` → `to`) are directed edges.
-pub async fn compute_procedural3d_topology(snapshot: &Procedural3dSnapshot) -> Procedural3dTopology {
+pub fn compute_procedural3d_topology(snapshot: &Procedural3dSnapshot) -> Procedural3dTopology {
     let widget_ids: Vec<String> = snapshot.fixture.widgets.iter().map(|w| widget_id(w).to_string()).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut in_degree: BTreeMap<String, u32> = widget_ids.iter().map(|id| (id.clone(), 0)).collect();

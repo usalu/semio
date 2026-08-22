@@ -14,7 +14,7 @@
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Kit, type Type as ComposeType, type Design, type Representation } from "@semio-tech/compose-react";
-import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio-tech/ui-react";
+import { Button, Input, ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio-tech/ui-react";
 import "../🎨️globals.css";
 
 // #endregion 🔌️Adapters
@@ -280,13 +280,15 @@ function TreeNodeView({ node, depth, onImportKit, onImportRepresentation }: { no
         <TreeNodeIcon kind={node.kind} />
         <span className="truncate text-sm">{node.label}</span>
         {showAction && (
-          <button
-            className="ml-auto shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+          <Button
+            type="button"
+            variant="ghost"
+            icon={<AddIcon className="h-3.5 w-3.5" />}
+            className="ml-auto h-auto shrink-0 border-0 bg-transparent [&_[data-slot=button-group-item]]:h-auto [&_[data-slot=button-group-item]]:w-auto [&_[data-slot=button-group-item]]:flex-none [&_[data-slot=button-group-item]]:rounded [&_[data-slot=button-group-item]]:p-0.5 [&_[data-slot=button-group-item]]:text-zinc-400 [&_[data-slot=button-group-item]]:hover:bg-zinc-200 [&_[data-slot=button-group-item]]:hover:text-zinc-700 dark:[&_[data-slot=button-group-item]]:hover:bg-zinc-700 dark:[&_[data-slot=button-group-item]]:hover:text-zinc-200"
             onClick={handleAction}
             title={node.kind === "kits" ? "Import Kit" : "Import Representation"}
-          >
-            <AddIcon className="h-3.5 w-3.5" />
-          </button>
+            aria-label={node.kind === "kits" ? "Import Kit" : "Import Representation"}
+          />
         )}
       </div>
       {expanded && hasChildren && node.children!.map((child) => <TreeNodeView key={child.id} node={child} depth={depth + 1} onImportKit={onImportKit} onImportRepresentation={onImportRepresentation} />)}
@@ -363,17 +365,25 @@ export function RhinoPanel() {
       {/* Import URL */}
       <div className="border-b border-zinc-200 px-3 py-2 dark:border-zinc-700">
         <div className="flex gap-1">
-          <input
+          <Input
             type="text"
             className="min-w-0 flex-1 rounded border border-zinc-300 bg-transparent px-2 py-1 text-xs focus:border-blue-500 focus:outline-none dark:border-zinc-600"
             placeholder="Kit URL (.zip)"
+            aria-label="Kit URL"
             value={importUrl}
             onChange={(e) => setImportUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleImportKit()}
           />
-          <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50" onClick={handleImportKit} disabled={isImporting || !importUrl.trim()}>
+          <Button
+            type="button"
+            variant="ghost"
+            icon={<AddIcon className="h-3.5 w-3.5" />}
+            className="h-auto border-0 bg-transparent [&_[data-slot=button-group-item]]:h-auto [&_[data-slot=button-group-item]]:w-auto [&_[data-slot=button-group-item]]:flex-none [&_[data-slot=button-group-item]]:aspect-auto [&_[data-slot=button-group-item]]:rounded [&_[data-slot=button-group-item]]:bg-blue-600 [&_[data-slot=button-group-item]]:px-2 [&_[data-slot=button-group-item]]:py-1 [&_[data-slot=button-group-item]]:text-xs [&_[data-slot=button-group-item]]:text-white [&_[data-slot=button-group-item]]:hover:bg-blue-700 [&_[data-slot=button-group-item]]:disabled:opacity-50"
+            onClick={handleImportKit}
+            disabled={isImporting || !importUrl.trim()}
+          >
             {isImporting ? "..." : "Import"}
-          </button>
+          </Button>
         </div>
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       </div>

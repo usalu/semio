@@ -1,5 +1,4 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
-
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -7,6 +6,7 @@ use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtens
 
 //#region 🗃️Apps
 /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
+#[allow(unused_doc_comments, unused_qualifications)]
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum ProceduralApps: PluginApp {
         Procedural2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedural2d::Procedural2dPlayApp>>),
@@ -17,11 +17,133 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
+//#region 🖼️SemanticUi
+/// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
+pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> BuiltNode {
+    surface(ui_wgpu::wgpu::encode_surface_doc(kind, scene)).id(id).build()
+}
+
+/// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
+pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &flow::playbook::GenerationPlayState, locale: ui_wgpu::wgpu::Locale, terminology: ui_wgpu::wgpu::Terminology) -> BuiltNode {
+    let _ = terminology;
+    let label = |key: &str| {
+        match (key, locale) {
+            ("remove", ui_wgpu::wgpu::Locale::De) => "Entfernen",
+            ("remove", _) => "Remove",
+            ("rename", ui_wgpu::wgpu::Locale::De) => "Umbenennen",
+            ("rename", _) => "Rename",
+            ("generations", ui_wgpu::wgpu::Locale::De) => "Generierungen",
+            ("generations", _) => "Generations",
+            ("add", ui_wgpu::wgpu::Locale::De) => "Generierung hinzufügen",
+            ("add", _) => "Add Generation",
+            ("empty", ui_wgpu::wgpu::Locale::De) => "(keine Generierungen)",
+            ("empty", _) => "(no generations)",
+            ("actions", ui_wgpu::wgpu::Locale::De) => "Aktionen",
+            ("actions", _) => "Actions",
+            _ => key,
+        }
+        .to_string()
+    };
+    let factory = ActionFactory::new(controller_id);
+    let mut items = Vec::with_capacity(generation.generations.len());
+    for entry in &generation.generations {
+        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(serde_json::json!({ "id": entry.id }))));
+        if let Component::TreeItem(props) = &mut item.component {
+            props.icon = Some("layers".into());
+            props.row_actions = [("pencil", label("rename"), "renameGeneration", serde_json::json!({ "id": entry.id, "name": format!("{} copy", entry.name) })), ("trash-2", label("remove"), "removeGeneration", serde_json::json!({ "id": entry.id }))]
+                .into_iter()
+                .map(|(icon, label, action, args)| {
+                    let (action, args) = factory.action(action, Some(args));
+                    RowAction { icon: icon.into(), label: Some(label.into()), action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None }, placement: RowActionPlacement::Menu }
+                })
+                .collect();
+        }
+        items.push(item);
+    }
+    PanelTreeBuilder::new(surface_prefix)
+        .section_or_placeholder(format!("{surface_prefix}.generations"), Some(label("generations").into()), true, items, label("empty"))
+        .section(format!("{surface_prefix}.actions"), Some(label("actions").into()), true, vec![tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None))])
+        .build()
+}
+
+fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: serde_json::Value) -> B {
+    let (action, args) = ActionFactory::new(controller_id).action(action, Some(args));
+    match args {
+        Some(args) => builder.on_with(Trigger::Change, action, args),
+        None => builder.on(Trigger::Change, action),
+    }
+}
+
+/// 📝 Renders generation questions as semantic controls with typed change bindings.
+pub(crate) fn generation_form(spec: &flow::playbook::PlaybookSpec, values: &serde_json::Map<String, serde_json::Value>, controller_id: &'static str, action: &str, generation_id: &str) -> BuiltNode {
+    let mut root = column().id("generate.form");
+    let mut has_children = false;
+    for step in &spec.steps {
+        if !step.blocks.is_empty() {
+            root = root.child(text(step.title.clone()).id(format!("generate.step.{}", step.id)));
+            has_children = true;
+        }
+        for question in &step.blocks {
+            if !flow::playbook::is_block_visible(question, values) {
+                continue;
+            }
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| flow::playbook::dsl_value_to_json(flow::playbook::default_value_for_block(question)));
+            let field_id = format!("generate.form.{}", question.id);
+            let args = || serde_json::json!({ "generationId": generation_id, "questionId": question.id });
+            let control = match question.kind.as_str() {
+                "text" | "longText" => {
+                    generation_control_action(input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(value.as_str().unwrap_or_default()).id(format!("{field_id}.input")), controller_id, action, args()).build()
+                }
+                "number" => generation_control_action(input(InputKind::Number).value(value.as_f64().map(|number| number.to_string()).unwrap_or_default()).id(format!("{field_id}.input")), controller_id, action, args()).build(),
+                "slider" => generation_control_action(
+                    slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0)).id(format!("{field_id}.slider")),
+                    controller_id,
+                    action,
+                    args(),
+                )
+                .build(),
+                "boolean" => generation_control_action(toggle(value.as_bool().unwrap_or(false)).icon("toggle-left").text(question.label.clone()).id(format!("{field_id}.toggle")), controller_id, action, args()).build(),
+                "single" => {
+                    let items = question.options.as_ref().into_iter().flatten().map(|option| SelectItem { value: option.value.clone(), label: option.label.clone().into() });
+                    generation_control_action(select(value.as_str().unwrap_or_default()).items(items).id(format!("{field_id}.select")), controller_id, action, args()).build()
+                }
+                "vector" => {
+                    let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
+                    let labels: Vec<String> = question
+                        .fields
+                        .as_ref()
+                        .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
+                        .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
+                    let fields = numbers.iter().enumerate().map(|(index, number)| {
+                        let args = serde_json::json!({ "generationId": generation_id, "questionId": question.id, "fieldIndex": index });
+                        let control = generation_control_action(input(InputKind::Number).value(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default()).id(format!("{field_id}.vector.{index}.input")), controller_id, action, args);
+                        field(labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1))).id(format!("{field_id}.vector.{index}")).child(control).build()
+                    });
+                    column().id(format!("{field_id}.vector")).children(fields).build()
+                }
+                "note" => text(question.text.clone().unwrap_or_default()).id(format!("{field_id}.note")).build(),
+                "image" => text(question.src.clone().unwrap_or_else(|| "(no image)".into())).id(format!("{field_id}.image")).build(),
+                _ => generation_control_action(input(InputKind::Text).value(value.to_string()).id(format!("{field_id}.input")), controller_id, action, args()).build(),
+            };
+            root = root.child(field(question.label.clone()).id(field_id).child(control));
+            has_children = true;
+        }
+    }
+    if !has_children {
+        return text("No input widgets to generate from.").build();
+    }
+    root.build()
+}
+//#endregion 🖼️SemanticUi
+
 /// 🔌️ Builds the plugin surface for host registration.
-pub async fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::PluginAssemblyError> {
+    crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::register_assembly_inference_factory(&semio_framework::ActionBus::production())
+        .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("assembly-inference-factory", error.to_string()))?;
     Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
+        .routed_inference(crate::artifacts::assembly::standards::v1::subsets::any::schema::inferences::assembly_inference_metadata())
         .artifact(crate::artifacts::procedural2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::procedural3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_dwg_bridge(
@@ -79,15 +201,8 @@ pub async fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::
         // are unsatisfied until assembly's schema gains its missing artifact-facet descriptor + leaf
         // set — see `📓️w2-p5-assembly-notes.md`. Wire once that lands.
         //
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
-        // `.requests(…)` (`📓️design-abi.md` §3/§6). Only procedural2d/procedural3d get an
-        // activation event: `assembly` (its 10,930 LOC `wfc_engine` solve, see
-        // `🗿️artifacts/🧩️assembly/…/🧬️schema/💡️inferences/🦀️component.rs`) is not mounted as an
-        // `.artifact(…)`/`.editor(…)` on this plugin yet (the comment above), so it is not part of
-        // this plugin's real activation surface — see `📓️terra-M5-report.md` for why its
-        // `store::InferredField::compute` solve is the genuine "WFC precompute" this packet's brief
-        // named, and why moving it to `Effect::SpawnJob`'s `semio.infer` job kind is blocked
-        // upstream, not by anything in this crate.
+        // 🧬️ Assembly's editor remains unmounted, but its schema-owned `semio.infer` WFC factory
+        // is registered above on the production action bus and needs no artifact surface.
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural2d::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
@@ -109,22 +224,22 @@ mod surface_tests {
     use crate::viewer::procedural3d::Procedural3dViewer;
 
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
-    #[semio_framework_async_macros::async_test]
-    async fn procedural2d_viewer_never_mutates() {
+    #[test]
+    fn procedural2d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural2dViewer>();
     }
-    #[semio_framework_async_macros::async_test]
-    async fn procedural3d_viewer_never_mutates() {
+    #[test]
+    fn procedural3d_viewer_never_mutates() {
         semio_framework_plugin::testkit::assert_viewer_never_mutates::<Procedural3dViewer>();
     }
 
     /// 🤝️ Editor and viewer surfaces agree on the artifact dialect they address.
-    #[semio_framework_async_macros::async_test]
-    async fn procedural2d_editor_and_viewer_share_dialect() {
+    #[test]
+    fn procedural2d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural2dPlayApp, Procedural2dViewer>();
     }
-    #[semio_framework_async_macros::async_test]
-    async fn procedural3d_editor_and_viewer_share_dialect() {
+    #[test]
+    fn procedural3d_editor_and_viewer_share_dialect() {
         semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<Procedural3dPlayApp, Procedural3dViewer>();
     }
 }

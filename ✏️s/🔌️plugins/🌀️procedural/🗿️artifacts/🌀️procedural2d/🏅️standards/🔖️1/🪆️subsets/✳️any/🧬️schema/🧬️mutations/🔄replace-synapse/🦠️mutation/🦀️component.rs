@@ -13,23 +13,23 @@ pub struct ReplaceSynapse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_synapse(synapse: SynapseSpec) -> Procedural2dMutation {
+pub fn replace_synapse(synapse: SynapseSpec) -> Procedural2dMutation {
     Procedural2dMutation::ReplaceSynapse(ReplaceSynapse { synapse })
 }
 
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ReplaceSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "synapse", kind: "replace-synapse", record: "ReplacedSynapse" };
 
-    async fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+    fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace synapse \"{}\"", self.synapse.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.synapse.id.clone()]
     }
 }

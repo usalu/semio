@@ -55,7 +55,7 @@ pub struct DictEntryDsl {
     value: ValueDsl,
 }
 
-async fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
+fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
     match value {
         NeuralValue::Atom(Atom::Null) => dsl_value.null = Some(true),
@@ -68,7 +68,7 @@ async fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     dsl_value
 }
 
-async fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
+fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     if dsl_value.null.is_some() {
         return NeuralValue::Atom(Atom::Null);
     }
@@ -90,11 +90,11 @@ async fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     }
 }
 
-pub async fn dictionary_to_value_dsl_entries(dict: &Dictionary) -> Vec<DictEntryDsl> {
+pub fn dictionary_to_value_dsl_entries(dict: &Dictionary) -> Vec<DictEntryDsl> {
     dict.keys().map(|key| DictEntryDsl { key: key.clone(), value: value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")) }).collect()
 }
 
-pub async fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
+pub fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, entry| dict.insert(entry.key.clone(), value_dsl_to_value(&entry.value)))
 }
 
@@ -106,11 +106,11 @@ pub struct CameraJsonDsl {
     zoom: f64,
 }
 
-pub async fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
+pub fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
     CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
-pub async fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
+pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
     CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
@@ -121,11 +121,11 @@ pub struct WidgetLayoutDsl {
     y: f64,
 }
 
-pub async fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
+pub fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
     WidgetLayoutDsl { x: layout.x, y: layout.y }
 }
 
-pub async fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
+pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
@@ -137,7 +137,7 @@ pub struct SynapseSpecDsl {
     wire: dsl::Wire,
 }
 
-pub async fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
+pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
     SynapseSpecDsl {
         id: synapse.id.clone(),
         wire: dsl::Wire(dsl::WireValue {
@@ -149,7 +149,7 @@ pub async fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
     }
 }
 
-pub async fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
+pub fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
     let wire = synapse.wire.0;
     let to = wire.edge.map(|(_, to)| to).unwrap_or_default();
     SynapseSpec { id: synapse.id, from: wire.from.id, to: to.id, from_port: wire.from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() }
@@ -210,7 +210,7 @@ pub enum WidgetDsl {
     },
 }
 
-pub async fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
+pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     match widget {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), preview: *preview, input_ports: input_ports.clone(), output_ports: output_ports.clone(), params: dictionary_to_value_dsl_entries(params) }
@@ -226,7 +226,7 @@ pub async fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     }
 }
 
-pub async fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
+pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
         WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
@@ -253,11 +253,11 @@ pub struct FormGenerationDsl {
     values: BTreeMap<String, dsl::DslValue>,
 }
 
-pub async fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
+pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
     FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect() }
 }
 
-pub async fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
+pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
     FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect() }
 }
 
@@ -284,10 +284,10 @@ struct Procedural2dSnapshotDsl {
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl store::ArtifactDsl for Procedural2dSnapshotDsl {
     const EXTENSION: &'static str = "procedural2d";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "procedural.procedural2d"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -295,7 +295,7 @@ impl store::ArtifactDsl for Procedural2dSnapshotDsl {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -303,12 +303,12 @@ impl store::ArtifactDsl for Procedural2dSnapshotDsl {
 }
 
 impl store::ArtifactPack for Procedural2dSnapshotDsl {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -316,13 +316,13 @@ impl store::ArtifactPack for Procedural2dSnapshotDsl {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-async fn procedural2d_document_to_dsl(document: &Procedural2dSnapshot) -> Procedural2dSnapshotDsl {
+fn procedural2d_document_to_dsl(document: &Procedural2dSnapshot) -> Procedural2dSnapshotDsl {
     let fixture = &document.fixture;
     let generation = &document.generation;
     Procedural2dSnapshotDsl {
@@ -337,7 +337,7 @@ async fn procedural2d_document_to_dsl(document: &Procedural2dSnapshot) -> Proced
     }
 }
 
-async fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Procedural2dSnapshot, store::TextError> {
+fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Result<Procedural2dSnapshot, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
@@ -351,12 +351,12 @@ async fn procedural2d_document_from_dsl(parsed: Procedural2dSnapshotDsl) -> Resu
 impl store::ArtifactDsl for Procedural2dSnapshot {
     const EXTENSION: &'static str = "procedural2d";
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let parsed = <Procedural2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
         procedural2d_document_from_dsl(parsed)
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         <Procedural2dSnapshotDsl as store::ArtifactDsl>::print_dsl(&procedural2d_document_to_dsl(self))
     }
 }
@@ -364,11 +364,11 @@ impl store::ArtifactDsl for Procedural2dSnapshot {
 /// 📦️ `.procedural2d` binary pack — same `Procedural2dSnapshotDsl` mirror as `ArtifactDsl` above;
 /// `dsl::DslArtifact`'s derive already gives `Procedural2dSnapshotDsl` its own `ArtifactPack` impl.
 impl store::ArtifactPack for Procedural2dSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <Procedural2dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let parsed = <Procedural2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
         procedural2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
@@ -376,12 +376,12 @@ impl store::ArtifactPack for Procedural2dSnapshot {
 //#endregion 🔖️DslMirror
 
 /// 📖️ Parses `.procedural2d` DSL text into a `Procedural2dSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<Procedural2dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Procedural2dSnapshot, store::TextError> {
     <Procedural2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Procedural2dSnapshot` back to `.procedural2d` DSL text.
-pub async fn print_dsl(document: &Procedural2dSnapshot) -> String {
+pub fn print_dsl(document: &Procedural2dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -394,21 +394,21 @@ mod tests {
     use store::ArtifactDsl;
 
     //#region 🔖️DslTests
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_empty_projection() {
+    #[test]
+    fn dsl_round_trip_empty_projection() {
         test_support::assert_dsl_round_trip(&Procedural2dSnapshot::default());
         test_support::assert_dsl_pack_equivalence(&Procedural2dSnapshot::default());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_example_fixture() {
+    #[test]
+    fn dsl_round_trip_example_fixture() {
         let projection = Procedural2dSnapshot::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀️default.procedural2d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_with_generation_state() {
+    #[test]
+    fn dsl_round_trip_with_generation_state() {
         let mut projection = Procedural2dSnapshot::default();
         let mut values = serde_json::Map::new();
         // 🌱️ A fractional literal, not a whole number: `dsl::from_dsl_value` normalizes a whole-number
@@ -424,8 +424,8 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_covers_every_widget_kind() {
+    #[test]
+    fn dsl_round_trip_covers_every_widget_kind() {
         let mut projection = Procedural2dSnapshot::default();
         projection.fixture.widgets = vec![
             Widget::InputSlider { id: "slider".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
@@ -444,8 +444,8 @@ mod tests {
     //#region 🔖️CommandEnvelopeTests
     /// 🎫️ CW7 command-envelope law: proves `Procedural2dMutation`'s `Edit` round-trips through
     /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
-    #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::procedural2d::op::Procedural2dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
@@ -458,55 +458,55 @@ mod tests {
     //#endregion 🔖️CommandEnvelopeTests
 
     //#region 🔖️DslErrorTests
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_malformed_text() {
+    #[test]
+    fn dsl_parse_rejects_malformed_text() {
         let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture").unwrap_err();
         assert!(error.message.contains("unterminated string literal"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_missing_required_field() {
+    #[test]
+    fn dsl_parse_rejects_missing_required_field() {
         let text = "camera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("found Absent"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_missing_camera_block() {
+    #[test]
+    fn dsl_parse_rejects_missing_camera_block() {
         let error = Procedural2dSnapshot::parse_dsl("schema=\"flow.fixture\"\n").unwrap_err();
         assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_unquoted_value_for_string_field() {
+    #[test]
+    fn dsl_parse_rejects_unquoted_value_for_string_field() {
         let text = "schema=123\ncamera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected Text"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_non_numeric_value_for_number_field() {
+    #[test]
+    fn dsl_parse_rejects_non_numeric_value_for_number_field() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a float"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_invalid_bool_value() {
+    #[test]
+    fn dsl_parse_rejects_invalid_bool_value() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected 'true' or 'false'"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_malformed_value_literal() {
+    #[test]
+    fn dsl_parse_rejects_malformed_value_literal() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { cluster id=\"n\" name=\"n\" tree=bogusvalue flow= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a value literal"), "unexpected error: {}", error.message);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_parse_rejects_unknown_widget_kind() {
+    #[test]
+    fn dsl_parse_rejects_unknown_widget_kind() {
         let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"n\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dSnapshot::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected RBrace"), "unexpected error: {}", error.message);

@@ -175,23 +175,37 @@ importantly than the textual scan, every native submitted future is compiler-che
 - Current renderer test binary, `kernel_seam::tests`: 3 passed, including continuation wake and
   capacity-64 lossless backpressure.
 - Current renderer test binary, `frame_job::tests`: 6 passed, including stale-generation rejection.
-- Mounted pointer-storm callback test: 1 passed for 20,000 samples with asserted p99 below 2 ms.
+- Target-neutral mailbox-core test: 1 passed, covering shared ready/in-flight capacity, keyless
+  rejection, matching-key coalescing, and the interaction-return reserve.
+- Mounted pointer- and resize-storm callback tests: 2 passed for 20,000 samples each, with both p99
+  assertions below 2 ms.
 - Stalled-shell mailbox-poll test: 1 passed with asserted p99 below 2 ms.
 - `bun ./📜️script.ts verify interactivity`: DENY mode clean.
 - Owned source scan: no `TASK_POOL`, `poll_tasks`, `install_waker`, `thread::spawn`, or
-  `Arc<Mutex<AppRuntime>>`; `git diff --check` passed.
+  `Arc<Mutex<AppRuntime>>`; the only two `MutexGuard` matches are synchronous `try_lock` return
+  signatures. The owned diff adds no `[DEBUG]` output, rustfmt check passed for the four focused Rust
+  files, and `git diff --check` passed.
 
-### Wasm audit and remaining cross-target evidence
+### Wasm audit and cross-target evidence
 
-Wasm deliberately preserves its single-thread cooperative behavior: `spawn_app_task` uses
+Browser Wasm deliberately preserves its single-thread cooperative behavior: `spawn_app_task` uses
 `spawn_local`, the same capacity-128/revision-checked runtime mailbox bounds continuations, and the
-capacity-one frame path drives the small `InteractiveJob` inline. It has no native mutex guard in a
-future and no unbounded task queue, but it still has no Web Worker and therefore does not claim
-native-equivalent thread isolation.
+capacity-one frame path drives the small `InteractiveJob` inline. Its host wakers use `Rc` because
+winit-web's event-loop proxy is intentionally non-`Send`; native continues to require
+`Arc<dyn Fn() + Send + Sync>`. It has no mutex guard in a future and no unbounded task queue, but it still has no
+Web Worker and therefore does not claim native-equivalent thread isolation.
 
-The final renderer wasm check was attempted, but the compiler stopped in out-of-scope dependencies
-before reaching this crate: editor `component.rs:1381` and surface `paint/component.rs:1051`,
-`node-graph/component.rs:590`, and `tiled-map/component.rs:3316` call the now-async
-`RenderContext::new` as if it were a result, producing E0599 plus derived E0277 diagnostics. Thus the
-native continuation/UI-isolation blocker is closed and measured; a green renderer wasm compiler
-claim remains blocked on those four upstream await repairs.
+The renderer now has a real target boundary. Native and browser presentation include `📦️glue.rs`;
+`wasm32-wasip2` excludes winit/window and presentation dependencies while compiling the same generic
+bounded mailbox core through `🦀️runtime_mailbox_core.rs`. Final commands on 2026-08-22:
+
+- `cargo check -p semio-framework-os-renderer-wgpu --target wasm32-unknown-unknown
+  --message-format=short`: passed in 21.91 s, warnings only, and reached the renderer.
+- `cargo check -p semio-framework-os-renderer-wgpu --target wasm32-wasip2
+  --message-format=short`: passed in 0.46 s with three expected dead-code warnings from the isolated
+  mailbox core.
+- `cargo test -p semio-framework-os-renderer-wgpu --lib --no-run --message-format=short`: passed in
+  1 min 25 s.
+
+The previously recorded editor/surface missing-await blockers were repaired upstream and are no
+longer gaps. Both required Wasm compiler gates are green.

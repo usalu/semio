@@ -1,0 +1,15 @@
+1147 |         if (format === "text") for (const finding of report.undeclaredImports.slice(0, 100)) console.error(`  ${finding.file}:${finding.line}: ${finding.dependency} is not declared by ${finding.manifest}`);
+1148 |         throw new Error(`[verify dependencies parity js] ${report.undeclaredImports.length} external import(s) have no declaration in their owning package.`);
+1149 |       }
+1150 |       if (report.lockMismatches.length > 0) {
+1151 |         if (format === "text") for (const finding of report.lockMismatches.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.kind}${finding.dependency ? ` ${finding.section}:${finding.dependency}` : ""}${finding.manifestVersion !== undefined || finding.lockVersion !== undefined ? ` (manifest=${JSON.stringify(finding.manifestVersion)}, lock=${JSON.stringify(finding.lockVersion)})` : ""}`);
+1152 |         throw new Error(`[verify dependencies parity js] ${report.lockMismatches.length} package manifest / bun.lock workspace snapshot mismatch(es).`);
+                         ^
+error: [verify dependencies parity js] 13 package manifest / bun.lock workspace snapshot mismatch(es).
+      at runDependencyFreeze (/Users/ueli/Documents/semio/📜️script.ts:1152:19)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:1011:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:16628:11
+
+Bun v1.3.14 (macOS arm64)

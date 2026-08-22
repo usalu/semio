@@ -10,12 +10,12 @@ use crate::artifacts::remodel::schema::mutations::text::RemodelMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RemodelMutation` to its binary command form.
-pub async fn encode_op(operation: &RemodelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &RemodelMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `RemodelMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<RemodelMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<RemodelMutation, protocol::ProtocolError> {
     RemodelMutation::decode_op(bytes)
 }
 

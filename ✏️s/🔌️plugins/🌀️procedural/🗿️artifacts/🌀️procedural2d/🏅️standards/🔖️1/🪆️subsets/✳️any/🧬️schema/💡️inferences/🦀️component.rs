@@ -23,19 +23,19 @@ pub struct Procedural2dInference {
 }
 
 impl protocol::Inference<Procedural2dSnapshot> for Procedural2dInference {
-    async fn infer(snapshot: &Procedural2dSnapshot) -> Self {
+    fn infer(snapshot: &Procedural2dSnapshot) -> Self {
         Self { topology: compute_procedural2d_topology(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Procedural2dSnapshot> for Procedural2dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.procedural.procedural2d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.procedural.procedural2d.inference.topology", reads: &["fixture"] }]
     }
 }
@@ -55,7 +55,7 @@ impl ArtifactInferrer for crate::artifacts::procedural2d::standards::v1::subsets
 /// 💡️ Registers `s.procedural.procedural2d.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `procedural2d_artifact_schema_descriptor`'s
 /// registration.
-pub async fn procedural2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn procedural2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.procedural.procedural2d.inference",
         inference: schema::FacetLeaves {
@@ -77,7 +77,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn sample_snapshot() -> Procedural2dSnapshot {
+    fn sample_snapshot() -> Procedural2dSnapshot {
         let mut snapshot = Procedural2dSnapshot::default();
         snapshot.fixture = FlowFixture {
             schema: "flow.fixture".into(),
@@ -98,19 +98,19 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    #[test]
+    fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(Procedural2dInference::infer(&snapshot), Procedural2dInference::infer(&snapshot));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    #[test]
+    fn inference_default_law() {
         assert_eq!(Procedural2dInference::infer(&Procedural2dSnapshot::default()), Procedural2dInference::default());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn topology_matches_the_linear_chain() {
+    #[test]
+    fn topology_matches_the_linear_chain() {
         let snapshot = sample_snapshot();
         let inferred = Procedural2dInference::infer(&snapshot);
         assert_eq!(inferred.topology.node_count, 3);

@@ -8,9 +8,14 @@ type FormsArtifact {
   steps: [FormStep!]! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
   currentStepIndex: Int! @state(class: CONFIG)
-  tryValuesJson: String! @state(class: CONFIG)
+  tryValues: [FormsTryValue!]! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
+}
+
+type FormsTryValue {
+  key: String!
+  chunks: [String!]!
 }
 
 type FormStep {

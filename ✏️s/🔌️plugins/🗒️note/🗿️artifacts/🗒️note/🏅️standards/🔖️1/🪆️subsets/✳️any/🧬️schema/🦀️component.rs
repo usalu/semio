@@ -367,7 +367,7 @@ pub async fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
         _ => {
             let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: String::new(), bold: None, italic: None, underline: None, link: None }] }];
             NoteBlockNode::Text {
-                content: crate::artifacts::note::note_text_child_handle_and_cache(&id, &paragraphs),
+                content: crate::artifacts::note::note_text_child_record(&id, &paragraphs),
                 id,
                 name: "Text".into(),
                 x,
@@ -404,9 +404,8 @@ pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
     // 🧬️ A duplicated Text block must never keep its source's composed `content` child handle — two
     // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
-    // owned by exactly one parent" invariant composition assumes. Recover the source's live
-    // paragraphs from the working-scene cache BEFORE the id changes (the cache is keyed by the OLD
-    // handle's `child_id`), then remint under the NEW id once it's assigned below.
+    // owned by exactly one parent" invariant composition assumes. Copy the source record's durable
+    // paragraphs before the id changes, then remint them under the new id assigned below.
     let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::artifacts::note::note_block_text(content)) } else { None };
     match block {
         NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {
@@ -417,7 +416,7 @@ pub async fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
         }
     }
     if let (NoteBlockNode::Text { id, content, .. }, Some(paragraphs)) = (&mut *block, recovered_paragraphs) {
-        *content = crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs);
+        *content = crate::artifacts::note::note_text_child_record(id, &paragraphs);
     }
     if let NoteBlockNode::Group { children, .. } = block {
         for child in children.iter_mut() {
@@ -615,7 +614,7 @@ pub async fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, 
                 let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
                 let mut updated = block;
                 if let NoteBlockNode::Text { id, content, .. } = &mut updated {
-                    *content = crate::artifacts::note::note_text_child_handle_and_cache(id, &paragraphs);
+                    *content = crate::artifacts::note::note_text_child_record(id, &paragraphs);
                 }
                 update_block_in_tree(&mut next.blocks, block_id, updated);
             }

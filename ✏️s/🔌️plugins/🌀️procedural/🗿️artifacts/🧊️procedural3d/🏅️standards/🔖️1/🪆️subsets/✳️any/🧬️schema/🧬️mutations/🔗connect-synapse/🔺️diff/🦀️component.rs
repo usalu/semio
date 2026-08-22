@@ -7,7 +7,7 @@ use crate::artifacts::procedural3d::mutations::{synapse_index, widget_index};
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta for one new synapse edge.
-pub async fn diff(payload: &ConnectSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub fn diff(payload: &ConnectSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     let id = &payload.synapse.id;
     if synapse_index(&base.fixture, id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A synapse with id \"{id}\" already exists."), [id.clone()]);

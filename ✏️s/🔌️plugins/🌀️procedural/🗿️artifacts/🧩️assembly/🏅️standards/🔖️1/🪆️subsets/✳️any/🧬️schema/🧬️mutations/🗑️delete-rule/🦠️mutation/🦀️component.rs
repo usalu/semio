@@ -13,23 +13,23 @@ pub struct DeleteRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_rule(id: String) -> AssemblyMutation {
+pub fn delete_rule(id: String) -> AssemblyMutation {
     AssemblyMutation::DeleteRule(DeleteRule { id })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for DeleteRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "rule", kind: "delete-rule", record: "DeletedRule" };
 
-    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete rule \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -13,7 +13,7 @@ pub struct SetEvalOutputs {
     pub outputs_json: String,
 }
 
-pub async fn handle(payload: &SetEvalOutputs, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(payload: &SetEvalOutputs, _doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     session.set_eval_json(payload.outputs_json.clone());
     Ok(Emit::default())
 }
@@ -25,8 +25,8 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_eval_outputs_does_not_mutate_the_document() {
+    #[test]
+    fn set_eval_outputs_does_not_mutate_the_document() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot");
         dispatch(&mut app, Procedural2dCommand::SetEvalOutputs(SetEvalOutputs { outputs_json: "{}".into() }));

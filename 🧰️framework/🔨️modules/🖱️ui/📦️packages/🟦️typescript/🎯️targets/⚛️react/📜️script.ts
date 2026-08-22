@@ -65,7 +65,6 @@ class TypecheckScript extends BundleScript {
  * are confined to `ui/` and `framework/`. Seeded from a live repo scan on 2026-07-19; a listed file with zero hits
  * is a stale entry (fails), a hit outside this list fails, a hit inside it is allowed. */
 export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
-  "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript/📦️index.tsx",
   "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
   "♻️mit-bestand/🧺️demonstrator/📦️index.tsx",
 ] as const;

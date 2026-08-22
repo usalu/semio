@@ -101,13 +101,7 @@ function ActionGroupItem({
       aria-label={ariaLabel}
       title={tooltipText}
       data-level={context.level || level}
-      className={cn(
-        actionGroupItemVariants(),
-        "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel",
-        !id && "flex-1",
-        hasText && "aspect-auto gap-single",
-        className,
-      )}
+      className={cn(actionGroupItemVariants(), "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel", !id && "flex-1", hasText && "aspect-auto gap-single", className)}
       {...(props as any)}
     >
       {children}
@@ -165,28 +159,28 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
   };
 
   const buttonElement = (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <ActionGroup id={id} className={className}>
+    <ActionGroup id={id} className={className}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
           <ActionGroupItem id={id} icon={selectedOption?.icon ?? "chevron-down"} {...props} />
-        </ActionGroup>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-single min-w-layout-popover" align="start">
-        <div className="flex flex-col">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleSelect(option.value)}
-              className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && interactiveActiveFillClass)}
-            >
-              <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
-              {option.label && <span className="flex-1 text-start">{option.label}</span>}
-              {value === option.value && <CheckIcon className="size-tiny ms-auto" />}
-            </button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-single min-w-layout-popover" align="start">
+          <div className="flex flex-col">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleSelect(option.value)}
+                className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && interactiveActiveFillClass)}
+              >
+                <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
+                {option.label && <span className="flex-1 text-start">{option.label}</span>}
+                {value === option.value && <CheckIcon className="size-tiny ms-auto" />}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </ActionGroup>
   );
 
   return buttonElement;

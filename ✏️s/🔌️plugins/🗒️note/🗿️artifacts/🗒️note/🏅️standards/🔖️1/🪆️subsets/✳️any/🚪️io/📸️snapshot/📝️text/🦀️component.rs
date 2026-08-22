@@ -54,7 +54,7 @@ mod tests {
             linked_artifact: None,
             blocks: vec![
                 NoteBlockNode::Text {
-                    content: crate::artifacts::note::note_text_child_handle_and_cache(
+                    content: crate::artifacts::note::note_text_child_record(
                         "text-1",
                         &[NoteTextParagraph {
                             runs: vec![
@@ -116,7 +116,7 @@ mod tests {
                     visible: true,
                     locked: false,
                     children: vec![NoteBlockNode::Text {
-                        content: crate::artifacts::note::note_text_child_handle_and_cache("child-text-1", &[]),
+                        content: crate::artifacts::note::note_text_child_record("child-text-1", &[]),
                         id: "child-text-1".into(),
                         name: "Child".into(),
                         x: 0.0,

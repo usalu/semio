@@ -7,6 +7,14 @@ export interface DrawConfig {
   /** @state config */
   activeUtilityId: string;
   /** @state config */
+  tracePointerGeneration: number;
+  /** @state config */
+  tracePointerCompletedWork: number;
+  /** @state config */
+  tracePointerPendingWork: number;
+  /** @state config */
+  gestureCheckpointJson: string;
+  /** @state config */
   locale: string;
 }
 export interface DrawCamera { x: number; y: number; zoom: number; }

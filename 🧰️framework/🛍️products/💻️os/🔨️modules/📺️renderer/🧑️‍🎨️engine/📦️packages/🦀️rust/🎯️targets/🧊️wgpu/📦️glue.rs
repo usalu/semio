@@ -1,11 +1,11 @@
-//! 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
-//!
-//! 🧭️ Rough correspondence with the React shell (`framework/renderer/react/os-shell.tsx`), as a
-//! discoverability breadcrumb rather than a rigorous mapping:
-//! - this crate's top-level shell/state struct ~ React's `#region 🔖️types` + `FrameworkOsShell`.
-//! - the `dock` module below (window tree, stack chrome, split resize) ~ React's `Mode`
-//!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
-//! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
+// 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
+//
+// 🧭️ Rough correspondence with the React shell (`framework/renderer/react/os-shell.tsx`), as a
+// discoverability breadcrumb rather than a rigorous mapping:
+// - this crate's top-level shell/state struct ~ React's `#region 🔖️types` + `FrameworkOsShell`.
+// - the `dock` module below (window tree, stack chrome, split resize) ~ React's `Mode`
+//   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
+// - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
 extern crate framework_surface_node_graph as framework_surface_tiled_map;
 extern crate infinite_canvas as infinite_world;
@@ -14,13 +14,6 @@ extern crate semio_framework_os_kernel as dsl_core;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as store_sync;
-#[macro_export]
-macro_rules! action_args_json {
-    ($($tt:tt)*) => {
-        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))
-    };
-}
-
 #[path = "../../../../🧱️elements/Dock/🧊️component.rs"]
 pub mod dock;
 
@@ -69,11 +62,18 @@ mod os_host;
 #[path = "🦀️render_snapshot.rs"]
 mod render_snapshot;
 
+#[path = "🦀️runtime_mailbox_core.rs"]
+mod runtime_mailbox_core;
+
 // 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the `InteractiveJob` seam for the
 // slice of `AppRuntime::frame()` that genuinely is `Send`-safe today — see that file's own module
 // docstring for exactly what moves and, more importantly, what still cannot.
 #[path = "🦀️frame_job.rs"]
 mod frame_job;
+
+#[cfg(target_arch = "wasm32")]
+#[path = "🦀️browser_worker.rs"]
+mod browser_worker;
 
 #[path = "🦀️winit_app.rs"]
 mod winit_app;
@@ -208,7 +208,11 @@ pub(crate) mod kernel_runtime {
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
     use ui_contract::{Activity, Component, ContainerRole, SurfaceId, TransitionHint, Trigger, UiDocumentLimits, UiNodeRecord, UiRevision, UiSnapshotState, UiValue};
-    use ui_wgpu::wgpu::{ActionDescriptor, Label as LegacyLabel, StyleSpec as LegacyStyleSpec, UiButtonNode, UiDropOverlaySpec, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+    use ui_wgpu::wgpu::{
+        ActionDescriptor, Label as LegacyLabel, StyleSpec as LegacyStyleSpec, UiButtonNode, UiDropOverlaySpec, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef,
+        UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode,
+        UiTreeNode, UiTreeSectionNode,
+    };
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
     fn next_seq() -> u64 {
@@ -490,10 +494,21 @@ pub(crate) mod kernel_runtime {
         match &record.component {
             Component::Container(props) => match props.role {
                 ContainerRole::Section => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
-                ContainerRole::Group => UiNode::Group(UiGroupNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), default_open: props.default_open, presence, menu, children: children() }),
+                ContainerRole::Group => {
+                    UiNode::Group(UiGroupNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), default_open: props.default_open, presence, menu, children: children() })
+                }
                 ContainerRole::Field => {
                     let child = children().into_iter().next().unwrap_or_default();
-                    UiNode::Field(UiFieldNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), description: props.description.clone(), required: props.required, error: props.error.clone(), child: Box::new(child), presence, menu })
+                    UiNode::Field(UiFieldNode {
+                        id: record.key.clone(),
+                        label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label),
+                        description: props.description.clone(),
+                        required: props.required,
+                        error: props.error.clone(),
+                        child: Box::new(child),
+                        presence,
+                        menu,
+                    })
                 }
                 ContainerRole::Plain | ContainerRole::Form | ContainerRole::Toolbar => {
                     let (direction, gap, padding) = present_stack_layout(&record.layout);
@@ -512,7 +527,15 @@ pub(crate) mod kernel_runtime {
                 }
             },
             Component::Text(props) => UiNode::Text(UiTextNode { value: present_label(&props.value), emphasize: props.emphasize, data_attributes: props.data_attributes.clone(), presence, menu }),
-            Component::Button(props) => UiNode::Button(UiButtonNode { id: Some(record.key.clone()), icon_id: props.icon.as_str().into(), label: present_label(&props.label), action: binding_action_or_inert(record, Trigger::Activate), style: Some(present_style(&record.style)), presence, menu }),
+            Component::Button(props) => UiNode::Button(UiButtonNode {
+                id: Some(record.key.clone()),
+                icon_id: props.icon.as_str().into(),
+                label: present_label(&props.label),
+                action: binding_action_or_inert(record, Trigger::Activate),
+                style: Some(present_style(&record.style)),
+                presence,
+                menu,
+            }),
             Component::Separator(_) => UiNode::Separator(UiSeparatorNode { presence, menu }),
             Component::Input(props) => UiNode::Input(UiInputNode {
                 id: record.key.clone(),
@@ -545,18 +568,57 @@ pub(crate) mod kernel_runtime {
                 presence,
                 menu,
             }),
-            Component::Toggle(props) => UiNode::Toggle(UiToggleNode { id: record.key.clone(), icon_id: props.icon.as_str().into(), text: props.text.as_ref().map(present_label), on_change: binding_action_or_inert(record, Trigger::Change), presence: UiPresence { selected: props.on, ..presence }, menu }),
+            Component::Toggle(props) => UiNode::Toggle(UiToggleNode {
+                id: record.key.clone(),
+                icon_id: props.icon.as_str().into(),
+                text: props.text.as_ref().map(present_label),
+                on_change: binding_action_or_inert(record, Trigger::Change),
+                presence: UiPresence { selected: props.on, ..presence },
+                menu,
+            }),
             Component::KeyValueList(props) => UiNode::KeyValue(UiKeyValueNode { entries: props.entries.iter().map(|entry| UiKeyValueEntry { label: present_label(&entry.label), value: entry.value.clone() }).collect(), presence, menu }),
-            Component::Slider(props) => UiNode::Slider(UiSliderNode { id: record.key.clone(), value: props.value, min: props.min, max: props.max, step: props.step, unit: props.unit.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
-            Component::NumberStepper(props) => UiNode::NumberStepper(UiNumberStepperNode { id: record.key.clone(), value: props.value, step: props.step, uniform: props.uniform, on_absolute: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action), on_delta: binding_action_or_inert(record, Trigger::Delta), presence, menu }),
+            Component::Slider(props) => {
+                UiNode::Slider(UiSliderNode { id: record.key.clone(), value: props.value, min: props.min, max: props.max, step: props.step, unit: props.unit.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu })
+            }
+            Component::NumberStepper(props) => UiNode::NumberStepper(UiNumberStepperNode {
+                id: record.key.clone(),
+                value: props.value,
+                step: props.step,
+                uniform: props.uniform,
+                on_absolute: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action),
+                on_delta: binding_action_or_inert(record, Trigger::Delta),
+                presence,
+                menu,
+            }),
             Component::Ring(props) => UiNode::Ring(UiRingNode { id: record.key.clone(), orb_id: props.orb_id.clone(), t: props.t, on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
-            Component::IconSelect(props) => UiNode::IconSelect(UiIconSelectNode { id: record.key.clone(), value: props.value.clone(), uniform: props.uniform, classifier_kind: props.classifier_kind.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
+            Component::IconSelect(props) => UiNode::IconSelect(UiIconSelectNode {
+                id: record.key.clone(),
+                value: props.value.clone(),
+                uniform: props.uniform,
+                classifier_kind: props.classifier_kind.clone(),
+                on_change: binding_action_or_inert(record, Trigger::Change),
+                presence,
+                menu,
+            }),
             Component::Tree(props) => UiNode::Tree(present_tree(state, record, props.interaction_domain.clone(), presence, menu)),
             Component::TreeSection(props) => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
-            Component::TreeItem(_) => UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(record.key.clone()), presence, activate: binding_action(record, Trigger::Activate), drop_action: binding_action(record, Trigger::Drop), drop_overlay: None, menu, children: children() }),
+            Component::TreeItem(_) => UiNode::Stack(UiStackNode {
+                direction: "vertical".into(),
+                gap: None,
+                padding: None,
+                id: Some(record.key.clone()),
+                presence,
+                activate: binding_action(record, Trigger::Activate),
+                drop_action: binding_action(record, Trigger::Drop),
+                drop_overlay: None,
+                menu,
+                children: children(),
+            }),
             Component::Image(props) => UiNode::Image(UiImageNode { id: record.key.clone(), src: props.src.clone(), alt: props.alt.as_ref().map(present_label), presence, menu }),
             Component::Surface(props) => present_surface(state, record, props, presence, menu),
-            Component::Extension(props) => UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: props.extension.clone(), app_id: String::new(), body_key: record.key.clone(), params_json: serde_json::to_string(&props.props).unwrap_or_else(|_| "null".into()), presence, menu }),
+            Component::Extension(props) => {
+                UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: props.extension.clone(), app_id: String::new(), body_key: record.key.clone(), params_json: serde_json::to_string(&props.props).unwrap_or_else(|_| "null".into()), presence, menu })
+            }
         }
     }
 
@@ -566,7 +628,13 @@ pub(crate) mod kernel_runtime {
         for child_id in &record.children {
             let Some(child) = state.nodes.get(child_id) else { continue };
             match &child.component {
-                Component::TreeSection(props) => sections.push(UiTreeSectionNode { id: child.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence: present_presence(child), items: child.children.iter().filter_map(|id| state.nodes.get(id)).filter_map(|item| present_tree_item(state, item)).collect() }),
+                Component::TreeSection(props) => sections.push(UiTreeSectionNode {
+                    id: child.key.clone(),
+                    label: props.label.as_ref().map(present_label),
+                    default_open: props.default_open,
+                    presence: present_presence(child),
+                    items: child.children.iter().filter_map(|id| state.nodes.get(id)).filter_map(|item| present_tree_item(state, item)).collect(),
+                }),
                 Component::TreeItem(_) => {
                     if let Some(item) = present_tree_item(state, child) {
                         loose.push(item);
@@ -595,7 +663,9 @@ pub(crate) mod kernel_runtime {
             ui_contract::SurfaceKind::TextEditor => decode_scene!(ui_wgpu::wgpu::TextEditorScene, ui_wgpu::wgpu::build_text_editor_scene),
             ui_contract::SurfaceKind::Table => decode_scene!(ui_wgpu::wgpu::TableScene, ui_wgpu::wgpu::build_table_scene),
             ui_contract::SurfaceKind::Paint2d => decode_scene!(ui_wgpu::wgpu::Paint2dScene, ui_wgpu::wgpu::build_paint_2d_scene),
-            ui_contract::SurfaceKind::VirtualFileSystem => ui_wgpu::wgpu::decode_surface_doc::<ui_wgpu::wgpu::VirtualFileSystemScene>(props).map(|scene| ui_wgpu::wgpu::build_virtual_file_system_scene(state.surface.0.clone(), controller.clone(), scene, None, None)),
+            ui_contract::SurfaceKind::VirtualFileSystem => {
+                ui_wgpu::wgpu::decode_surface_doc::<ui_wgpu::wgpu::VirtualFileSystemScene>(props).map(|scene| ui_wgpu::wgpu::build_virtual_file_system_scene(state.surface.0.clone(), controller.clone(), scene, None, None))
+            }
             ui_contract::SurfaceKind::TiledMap => decode_scene!(ui_wgpu::wgpu::TiledMapScene, ui_wgpu::wgpu::build_tiled_map_scene),
             ui_contract::SurfaceKind::Board2d => decode_scene!(ui_wgpu::wgpu::Board2dScene, ui_wgpu::wgpu::build_board2d_scene),
             ui_contract::SurfaceKind::IconRender => decode_scene!(ui_wgpu::wgpu::IconRenderScene, ui_wgpu::wgpu::build_icon_render_scene),
@@ -612,7 +682,7 @@ pub(crate) mod kernel_runtime {
                 node
             }
             Err(error) => {
-                crate::log_debug(&format!("[DEBUG] semantic surface {} could not be decoded: {error:?}", props.doc_schema));
+                crate::log_debug(&format!("semantic surface {} could not be decoded: {error:?}", props.doc_schema));
                 UiNode::Text(UiTextNode { value: LegacyLabel::data(format!("Unsupported surface {}", props.doc_schema)), emphasize: None, data_attributes: None, presence, menu })
             }
         }
@@ -638,7 +708,21 @@ pub(crate) mod kernel_runtime {
             presence: present_presence(record),
             default_open: props.default_open,
             action: binding_action(record, Trigger::Activate),
-            actions: (!props.row_actions.is_empty()).then(|| props.row_actions.iter().map(|item| UiTreeItemAction { icon_id: item.icon.as_str().into(), label: item.label.as_ref().map(present_label), action: present_action(&item.action), placement: Some(match item.placement { ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row, ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu }) }).collect()),
+            actions: (!props.row_actions.is_empty()).then(|| {
+                props
+                    .row_actions
+                    .iter()
+                    .map(|item| UiTreeItemAction {
+                        icon_id: item.icon.as_str().into(),
+                        label: item.label.as_ref().map(present_label),
+                        action: present_action(&item.action),
+                        placement: Some(match item.placement {
+                            ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row,
+                            ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu,
+                        }),
+                    })
+                    .collect()
+            }),
             draggable: props.draggable,
             drag_data: props.drag_data.clone(),
             items: (!items.is_empty()).then_some(items),
@@ -961,7 +1045,7 @@ pub(crate) mod kernel_runtime {
             let rejections: Vec<(u32, SurfaceId)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
             for key in rejections {
                 if let Some((revision, reason)) = self.pending_rejections.remove(&key) {
-                    events.insert(0, Event::PatchRejected { surface: key.1.0, revision: revision.0, reason });
+                    events.insert(0, Event::PatchRejected { surface: key.1 .0, revision: revision.0, reason });
                 }
             }
             self.run_turn(actor, instance, events).await
@@ -1283,7 +1367,6 @@ pub(crate) mod kernel_runtime {
         }
     }
     //#endregion
-
 }
 //#endregion 🎠️KernelRuntime
 
@@ -2367,73 +2450,19 @@ type RuntimeApply = Box<dyn FnOnce(&mut AppRuntime, &AppHandle) + 'static>;
 
 const RUNTIME_COMPLETION_CAPACITY: usize = 128;
 
-struct RuntimeCompletion {
-    key: Option<&'static str>,
-    revision: u64,
-    requires_interaction: bool,
-    apply: RuntimeApply,
-}
+#[cfg(not(target_arch = "wasm32"))]
+type RuntimeHostWaker = Arc<dyn Fn() + Send + Sync>;
 
-struct RuntimeCompletionQueue {
-    ready: std::collections::VecDeque<RuntimeCompletion>,
-    in_flight: usize,
-}
+#[cfg(target_arch = "wasm32")]
+type RuntimeHostWaker = std::rc::Rc<dyn Fn()>;
 
-impl RuntimeCompletionQueue {
-    fn new() -> Self {
-        Self { ready: std::collections::VecDeque::with_capacity(RUNTIME_COMPLETION_CAPACITY), in_flight: 0 }
-    }
-
-    fn len(&self) -> usize {
-        self.ready.len() + self.in_flight
-    }
-
-    fn make_room_for(&mut self, key: Option<&'static str>, limit: usize) -> bool {
-        if self.len() < limit {
-            return true;
-        }
-        let Some(key) = key else { return false };
-        let Some(index) = self.ready.iter().position(|queued| queued.key == Some(key)) else { return false };
-        self.ready.remove(index);
-        true
-    }
-
-    fn enqueue(&mut self, completion: RuntimeCompletion) -> bool {
-        if !self.make_room_for(completion.key, RUNTIME_COMPLETION_CAPACITY - 1) {
-            return false;
-        }
-        self.ready.push_back(completion);
-        true
-    }
-
-    fn reserve(&mut self, key: Option<&'static str>) -> bool {
-        if !self.make_room_for(key, RUNTIME_COMPLETION_CAPACITY - 1) {
-            return false;
-        }
-        self.in_flight += 1;
-        true
-    }
-
-    fn reserve_interaction(&mut self) -> bool {
-        if self.len() == RUNTIME_COMPLETION_CAPACITY {
-            return false;
-        }
-        self.in_flight += 1;
-        true
-    }
-
-    fn finish(&mut self, completion: RuntimeCompletion) {
-        assert!(self.in_flight > 0, "runtime completion without reservation");
-        self.in_flight -= 1;
-        self.ready.push_front(completion);
-        assert!(self.len() <= RUNTIME_COMPLETION_CAPACITY, "runtime completion mailbox capacity exceeded");
-    }
-}
+type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
+type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
 
 struct RuntimeMailboxInner {
     runtime: Mutex<AppRuntime>,
     completions: Mutex<RuntimeCompletionQueue>,
-    waker: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
+    waker: Mutex<Option<RuntimeHostWaker>>,
     next_revision: std::sync::atomic::AtomicU64,
     applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
     frame_inputs: Mutex<crate::frame_job::FrameBuildInputs>,
@@ -2494,7 +2523,7 @@ impl RuntimeMailbox {
         self.0.try_lock()
     }
 
-    fn set_waker(&self, waker: Arc<dyn Fn() + Send + Sync>) {
+    fn set_waker(&self, waker: RuntimeHostWaker) {
         *self.0.waker.lock().expect("runtime completion waker lock") = Some(waker);
     }
 
@@ -2504,6 +2533,14 @@ impl RuntimeMailbox {
 
     fn has_lossless_capacity(&self) -> bool {
         self.0.completions.lock().expect("runtime completion mailbox lock").len() < RUNTIME_COMPLETION_CAPACITY - 1
+    }
+
+    fn has_pending_text_work(&self) -> bool {
+        self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
+    }
+
+    fn take_text_fault(&self) -> Option<String> {
+        self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
     }
 
     fn frame_inputs(&self, now_ms: f64) -> crate::frame_job::FrameBuildInputs {
@@ -2516,14 +2553,10 @@ impl RuntimeMailbox {
         if !runtime.interaction_available() {
             return;
         }
-        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = crate::frame_job::FrameBuildInputs {
-            world3d_camera_dispatch_deadlines_ms: runtime.world3d_camera_dispatch_deadlines_ms.clone(),
-            wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms,
-            now_ms: app_now_ms(),
-        };
+        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") =
+            crate::frame_job::FrameBuildInputs { world3d_camera_dispatch_deadlines_ms: runtime.world3d_camera_dispatch_deadlines_ms.clone(), wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn reserve_future(&self, key: Option<&'static str>) -> bool {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve(key)
     }
@@ -2623,6 +2656,14 @@ type AppHandle = std::sync::Weak<RuntimeMailboxInner>;
 
 //#region 🎮️AppInteractionState
 
+const TEXT_STREAM_CAPACITY: usize = 64;
+
+#[derive(Clone, Copy)]
+struct AppTextStream {
+    id: u64,
+    token: ui_contract::TextIngressToken,
+}
+
 struct AppRuntime {
     atlas: FontAtlas,
     icons: IconAtlas,
@@ -2660,6 +2701,9 @@ pub(crate) struct AppInteractionState {
     caret_blink_at_ms: f64,
     caret_blink_visible: bool,
     asset_poll_pending: bool,
+    text_streams: [Option<AppTextStream>; TEXT_STREAM_CAPACITY],
+    text_fault: Option<String>,
+    text_cancel_pending: bool,
     #[cfg(not(target_arch = "wasm32"))]
     last_sync_pump_ms: f64,
 }
@@ -2761,7 +2805,9 @@ pub(crate) struct AppPresenter {
     gpu: GpuContext,
     engine: engine_canvas::EngineCanvasPresenter,
     gate: ui_wgpu::wgpu::PreparedRenderGate,
-    window: Arc<Window>,
+    window: Option<Arc<Window>>,
+    #[cfg(target_arch = "wasm32")]
+    offscreen_token: Option<ui_wgpu::wgpu::OffscreenPresentToken>,
     last_cursor: Option<(SemioCursor, bool)>,
 }
 
@@ -2774,16 +2820,18 @@ impl AppPresenter {
         self.gpu.resize(css_width, css_height, dpr);
     }
 
-    pub(crate) fn present(&mut self, frame: AppFramePresentation) {
+    pub(crate) fn present(&mut self, frame: AppFramePresentation) -> Result<Option<bool>, String> {
         if let Some(active) = frame.fullscreen {
             #[cfg(not(target_arch = "wasm32"))]
             {
-                self.window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
+                if let Some(window) = self.window.as_ref() {
+                    window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
+                }
             }
             #[cfg(target_arch = "wasm32")]
             {
                 use winit::platform::web::WindowExtWebSys;
-                if let Some(canvas) = self.window.canvas() {
+                if let Some(canvas) = self.window.as_ref().and_then(|window| window.canvas()) {
                     let document = canvas.owner_document();
                     if active {
                         if let Err(error) = canvas.request_fullscreen() {
@@ -2795,16 +2843,23 @@ impl AppPresenter {
                 }
             }
         }
-        if let Err(error) = self.engine.realize(&mut self.gpu, &frame.engine_packets) {
-            log_debug(&format!("engine canvas present: {error}"));
-        }
-        let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
+        self.engine.realize(&mut self.gpu, &frame.engine_packets).map_err(|error| format!("engine canvas present: {error}"))?;
         let revision = frame.packet.scene_revision();
         let generation = frame.packet.preview_generation();
-        if let Err(error) = self.gpu.submit_prepared(&token, &mut self.gate, frame.packet, revision, generation) {
-            log_debug(&format!("prepared frame submit: {error}"));
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
+            self.gpu.submit_prepared(&token, &mut self.gate, frame.packet, revision, generation).map_err(|error| format!("prepared frame submit: {error}"))?;
         }
-        apply_window_cursor(&self.window, frame.cursor, frame.theme_dark, &mut self.last_cursor);
+        #[cfg(target_arch = "wasm32")]
+        {
+            let token = self.offscreen_token.as_ref().ok_or_else(|| "browser presentation requires dedicated Worker authority".to_string())?;
+            self.gpu.submit_prepared_offscreen(token, &mut self.gate, frame.packet, revision, generation).map_err(|error| format!("offscreen prepared frame submit: {error}"))?;
+        }
+        if let Some(window) = self.window.as_ref() {
+            apply_window_cursor(window, frame.cursor, frame.theme_dark, &mut self.last_cursor);
+        }
+        Ok(self.window.is_none().then_some(frame.fullscreen).flatten())
     }
 }
 
@@ -2875,26 +2930,21 @@ impl AppRuntime {
         let plugin_filter = self.shell.plugin_filter.clone();
         let modules_root = self.plugin_modules_root.clone();
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return };
-        let accepted = mailbox.submit(
-            Some("plugin-reload"),
-            true,
-            async move { load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter)) },
-            |app, result, handle| match result {
-                Ok(entries) => {
-                    let handle = handle.clone();
-                    app.submit_interaction(&handle, Some("plugin-boot"), move |mut interaction| async move {
-                        interaction.shell.prepare_hot_reload(entries);
-                        if let Err(error) = interaction.shell.boot().await {
-                            log_debug(&format!("wasm program hot reload failed: {error}"));
-                        } else {
-                            log_debug("wasm program hot reload complete");
-                        }
-                        interaction
-                    });
-                }
-                Err(error) => log_debug(&format!("wasm program reload failed: {error}")),
-            },
-        );
+        let accepted = mailbox.submit(Some("plugin-reload"), true, async move { load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter)) }, |app, result, handle| match result {
+            Ok(entries) => {
+                let handle = handle.clone();
+                app.submit_interaction(&handle, Some("plugin-boot"), move |mut interaction| async move {
+                    interaction.shell.prepare_hot_reload(entries);
+                    if let Err(error) = interaction.shell.boot().await {
+                        log_debug(&format!("wasm program hot reload failed: {error}"));
+                    } else {
+                        log_debug("wasm program hot reload complete");
+                    }
+                    interaction
+                });
+            }
+            Err(error) => log_debug(&format!("wasm program reload failed: {error}")),
+        });
         if !accepted {
             self.native_reload_pending = true;
         }
@@ -2905,6 +2955,7 @@ impl AppRuntime {
     /// list this method re-validates against LIVE state before acting on, never applies blindly. See
     /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
     fn frame(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32) -> AppFrameBuild {
+        self.drive_text_operation();
         let mut deferred_actions = Vec::new();
         let fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
             self.shell.fullscreen_active = !self.shell.fullscreen_active;
@@ -3085,6 +3136,66 @@ impl AppRuntime {
 }
 
 impl AppInteractionState {
+    fn start_text_operation(&mut self, stream: u64, declared_bytes: usize) -> Result<(), String> {
+        if self.text_streams.iter().any(|entry| entry.is_some_and(|entry| entry.id == stream)) {
+            return Err("text stream was already started".to_string());
+        }
+        let slot = self.text_streams.iter().position(Option::is_none).ok_or_else(|| "text stream slots exhausted".to_string())?;
+        let generation = self.input.text_buffer.generation();
+        let token = self.input.text_buffer.begin(generation, declared_bytes, self.input.cursor_pos, self.input.cursor_pos).map_err(|fault| format!("text admission failed: {fault:?}"))?;
+        self.text_streams[slot] = Some(AppTextStream { id: stream, token });
+        Ok(())
+    }
+
+    fn push_text_operation(&mut self, stream: u64, text: String) -> Result<(), String> {
+        let token = self.text_streams.iter().flatten().find(|entry| entry.id == stream).map(|entry| entry.token).ok_or_else(|| "text stream chunk arrived before start".to_string())?;
+        self.input.text_buffer.push(token, text).map_err(|fault| format!("text chunk admission failed: {fault:?}"))
+    }
+
+    fn commit_text_operation(&mut self, stream: u64) -> Result<(), String> {
+        let slot = self.text_streams.iter().position(|entry| entry.is_some_and(|entry| entry.id == stream)).ok_or_else(|| "text stream commit arrived before start".to_string())?;
+        let token = self.text_streams[slot].expect("text stream slot").token;
+        self.input.text_buffer.commit(token).map_err(|fault| format!("text stream commit failed: {fault:?}"))?;
+        self.text_streams[slot] = None;
+        Ok(())
+    }
+
+    fn abort_text_operation(&mut self, stream: u64) -> Result<(), String> {
+        let slot = self.text_streams.iter().position(|entry| entry.is_some_and(|entry| entry.id == stream)).ok_or_else(|| "text stream abort arrived before start".to_string())?;
+        let token = self.text_streams[slot].take().expect("text stream slot").token;
+        self.input.text_buffer.abort(token).map_err(|fault| format!("text stream abort failed: {fault:?}"))
+    }
+
+    fn enqueue_text_operation(&mut self, text: String) -> Result<(), String> {
+        let generation = self.input.text_buffer.generation();
+        self.input.text_buffer.enqueue_owned(generation, text, self.input.cursor_pos, self.input.cursor_pos).map_err(|fault| format!("text admission failed: {fault:?}"))
+    }
+
+    fn cancel_text_operations(&mut self) {
+        self.text_cancel_pending = true;
+    }
+
+    fn undo_text_operation(&mut self) -> bool {
+        let Some(cursor) = self.input.text_buffer.undo() else { return false };
+        self.input.cursor_pos = cursor.min(self.input.text_buffer.len());
+        true
+    }
+
+    fn has_pending_text_work(&self) -> bool {
+        self.input.text_buffer.reserved_bytes() != 0 || self.text_streams.iter().any(Option::is_some) || self.text_cancel_pending
+    }
+
+    fn drive_text_operation(&mut self) {
+        if self.text_cancel_pending {
+            let generation = self.input.text_buffer.generation();
+            let _ = self.input.text_buffer.step(generation, 1, true);
+            self.text_cancel_pending = self.input.text_buffer.reserved_bytes() != 0;
+            return;
+        }
+        if let Err(fault) = self.input.drive_text_step() {
+            self.text_fault = Some(format!("text edit step failed: {fault:?}"));
+        }
+    }
 
     /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): previously the native
     /// (`not(wasm32)`) branch of this function did SYNCHRONOUS network I/O on the UI thread —
@@ -3488,7 +3599,15 @@ async fn boot_runtime(
     shell.screen_h = css_height * dpr;
     shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
-    let presenter = AppPresenter { gpu, engine: engine_canvas::EngineCanvasPresenter::default(), gate: ui_wgpu::wgpu::PreparedRenderGate::default(), window: window.clone(), last_cursor: None };
+    let presenter = AppPresenter {
+        gpu,
+        engine: engine_canvas::EngineCanvasPresenter::default(),
+        gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+        window: Some(window.clone()),
+        #[cfg(target_arch = "wasm32")]
+        offscreen_token: None,
+        last_cursor: None,
+    };
     let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,
         icons,
@@ -3509,6 +3628,9 @@ async fn boot_runtime(
             caret_blink_at_ms: 0.0,
             caret_blink_visible: true,
             asset_poll_pending: false,
+            text_streams: std::array::from_fn(|_| None),
+            text_fault: None,
+            text_cancel_pending: false,
             #[cfg(not(target_arch = "wasm32"))]
             last_sync_pump_ms: 0.0,
         }),
@@ -3625,17 +3747,6 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
 /// also still page-global, not per-mount — two simultaneous wgpu mounts each render on their own
 /// independent GPU device/queue/surface (real, working isolation), but would still cross-talk on shared
 /// UI chrome auxiliary state (a tooltip or dialog opened in one mount could show in the other).
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = semioWgpuMount)]
-pub fn semio_wgpu_mount(canvas: web_sys::HtmlCanvasElement, plugins: JsValue, plugin_filter: String) -> Result<(), JsValue> {
-    let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().map_err(|err| JsValue::from_str(&format!("event loop: {err:?}")))?;
-    let proxy = event_loop.create_proxy();
-    let app = winit_app::WinitApp::new(proxy, plugin_filter, Some(plugins), Some(canvas));
-    use winit::platform::web::EventLoopExtWebSys;
-    event_loop.spawn_app(app);
-    Ok(())
-}
-
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = uploadIconAtlas)]
 pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &str) -> Result<(), JsValue> {

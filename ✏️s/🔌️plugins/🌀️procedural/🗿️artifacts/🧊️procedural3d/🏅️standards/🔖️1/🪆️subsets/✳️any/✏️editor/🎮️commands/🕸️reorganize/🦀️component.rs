@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 
-pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
+pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural3dMutation, Procedural3dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let mut host = host_from_fixture(fixture);
     if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
@@ -29,8 +29,8 @@ mod tests {
     use crate::editor::procedural3d::testkit::{app, dispatch};
     use crate::editor::procedural3d::Procedural3dCommand;
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_lod_mode_is_a_view_action_with_no_artifact_mutations_via_reorganize_baseline() {
+    #[test]
+    fn set_lod_mode_is_a_view_action_with_no_artifact_mutations_via_reorganize_baseline() {
         let _serial = crate::editor::procedural3d::test_support::lock();
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture.widgets.len();

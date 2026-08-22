@@ -28,6 +28,33 @@ impl PatternSet {
         set
     }
 
+    /// 🧱 Starts a domain whose backing words are appended by resumable builders.
+    pub(crate) fn with_word_capacity(len: usize) -> Self {
+        Self { words: Vec::new(), len }
+    }
+
+    /// 🧱 Restores a validated domain from checkpoint words.
+    pub(crate) fn from_words(len: usize, words: Vec<u64>) -> Option<Self> {
+        let set = Self { words, len };
+        set.is_well_formed().then_some(set)
+    }
+
+    #[inline]
+    pub(crate) fn word_count(&self) -> usize {
+        self.len.div_ceil(64)
+    }
+
+    #[inline]
+    pub(crate) fn word(&self, index: usize) -> u64 {
+        self.words[index]
+    }
+
+    #[inline]
+    pub(crate) fn push_word(&mut self, word: u64) {
+        debug_assert!(self.words.len() < self.word_count());
+        self.words.push(word);
+    }
+
     /// 🎭️ Number of patterns this set is defined over (not the popcount).
     #[inline]
     #[allow(clippy::len_without_is_empty)]

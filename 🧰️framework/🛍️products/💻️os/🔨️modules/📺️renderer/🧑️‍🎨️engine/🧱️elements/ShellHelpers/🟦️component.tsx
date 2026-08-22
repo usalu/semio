@@ -391,6 +391,19 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
   URL.revokeObjectURL(url);
 }
 
+export {
+  createSegmentedDownloadSink,
+  drainSegmentedMediaExport,
+  MAX_SEGMENTED_DOWNLOAD_BYTES,
+  MAX_SEGMENTED_DOWNLOAD_CHUNK_BYTES,
+  parseSegmentedDownloadMarker,
+  parseSegmentedDownloadOperationId,
+  SEGMENTED_DOWNLOAD_MARKER_PREFIX,
+  type SegmentedDownloadEncoding,
+  type SegmentedDownloadSink,
+  type SegmentedDownloadSinkFactory,
+} from "../SegmentedDownload/🟦️component.ts";
+
 export function downloadDataUrl(filename: string, dataUrl: string): void {
   if (typeof document === "undefined") return;
   const anchor = document.createElement("a");

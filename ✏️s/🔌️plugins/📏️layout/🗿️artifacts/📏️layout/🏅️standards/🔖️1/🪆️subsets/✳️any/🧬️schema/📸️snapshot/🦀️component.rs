@@ -162,7 +162,7 @@ async fn print_layout_snapshot_body(s: &LayoutSnapshot) -> String {
         enc_json(&s.pages),
         enc_json(&s.print_target),
         enc_json(&s.data_fields_json),
-        enc_child_opt(&s.background_drawing),
+        enc_json(&s.background_drawing),
         enc_json(&s.referenced_model),
     )
 }
@@ -200,7 +200,7 @@ async fn parse_layout_snapshot_body(body: &str) -> Result<LayoutSnapshot, String
         } else if let Some(rest) = line.strip_prefix("dataFieldsJson=") {
             snapshot.data_fields_json = dec_json(rest)?;
         } else if let Some(rest) = line.strip_prefix("backgroundDrawing=") {
-            snapshot.background_drawing = dec_child_opt(rest)?;
+            snapshot.background_drawing = dec_json(rest)?;
         } else if let Some(rest) = line.strip_prefix("referencedModel=") {
             snapshot.referenced_model = dec_json(rest)?;
         } else {
@@ -281,7 +281,7 @@ async fn encode_layout_snapshot_binary(s: &LayoutSnapshot) -> Vec<u8> {
     write_json(&mut out, &s.pages);
     write_json(&mut out, &s.print_target);
     write_json(&mut out, &s.data_fields_json);
-    write_child_opt(&mut out, &s.background_drawing);
+    write_str_lp(&mut out, &serde_json::to_string(&s.background_drawing).expect("layout drawing child is serializable"));
     write_json(&mut out, &s.referenced_model);
     out
 }
@@ -305,7 +305,7 @@ async fn decode_layout_snapshot_binary(bytes: &[u8]) -> Result<LayoutSnapshot, S
     snapshot.pages = read_json(&mut reader)?;
     snapshot.print_target = read_json(&mut reader)?;
     snapshot.data_fields_json = read_json(&mut reader)?;
-    snapshot.background_drawing = read_child_opt(&mut reader)?;
+    snapshot.background_drawing = serde_json::from_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     snapshot.referenced_model = read_json(&mut reader)?;
     Ok(snapshot)
 }
@@ -388,7 +388,10 @@ mod round_trip_tests {
             }],
             overrides: Vec::new(),
         }];
-        snapshot.background_drawing = Some(store::ArtifactChild::new("child-drawing-1".to_string(), store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")));
+        snapshot.background_drawing = Some(crate::artifacts::layout::LayoutDrawingChild {
+            handle: store::ArtifactChild::new("child-drawing-1".to_string(), store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")),
+            content: Default::default(),
+        });
         snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
         snapshot
     }

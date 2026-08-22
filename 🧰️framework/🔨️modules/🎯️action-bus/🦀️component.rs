@@ -10,7 +10,7 @@
 use crate::manifest::InteractiveJobClassification;
 use dsl::DslValue;
 use semio_framework_job::{InteractiveJob, Operation, StepContext, StepOutcome};
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
@@ -66,6 +66,102 @@ pub struct ToolJobDispatch {
     pub job: ErasedToolJob,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ToolWireAdmission {
+    pub key: ToolFactoryKey,
+    pub factory_type_id: TypeId,
+    pub factory_type_name: &'static str,
+    pub schema_id: String,
+    pub contract: ToolExecutionContract,
+}
+
+/// 🔒️ Exact, reviewable admission bounds owned by one UI-reachable command factory.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ToolExecutionContract {
+    pub max_raw_wire_bytes: usize,
+    pub max_decoded_items: usize,
+    pub max_work_units_per_step: u64,
+    pub max_output_bytes: usize,
+    pub max_step_micros: u32,
+    pub checkpoint_every_steps: u32,
+    pub progress_every_steps: u32,
+    pub cancellation: ToolCancellationPolicy,
+    pub freshness: ToolFreshnessPolicy,
+    pub shape: ToolExecutionShape,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolExecutionShape {
+    Resumable,
+    BoundedFirstStep,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolCancellationPolicy {
+    PerOperation,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolFreshnessPolicy {
+    ValidateImmediatelyBeforeExposure,
+}
+
+impl ToolExecutionContract {
+    pub const INTERACTIVE_MAX_STEP_MICROS: u32 = 8_000;
+
+    pub const fn resumable(max_raw_wire_bytes: usize, max_decoded_items: usize, max_work_units_per_step: u64, max_output_bytes: usize, max_step_micros: u32, checkpoint_every_steps: u32, progress_every_steps: u32) -> Self {
+        Self {
+            max_raw_wire_bytes,
+            max_decoded_items,
+            max_work_units_per_step,
+            max_output_bytes,
+            max_step_micros,
+            checkpoint_every_steps,
+            progress_every_steps,
+            cancellation: ToolCancellationPolicy::PerOperation,
+            freshness: ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure,
+            shape: ToolExecutionShape::Resumable,
+        }
+    }
+
+    pub const fn bounded_first_step(max_raw_wire_bytes: usize, max_decoded_items: usize, max_work_units: u64, max_output_bytes: usize, max_step_micros: u32) -> Self {
+        Self {
+            max_raw_wire_bytes,
+            max_decoded_items,
+            max_work_units_per_step: max_work_units,
+            max_output_bytes,
+            max_step_micros,
+            checkpoint_every_steps: 1,
+            progress_every_steps: 1,
+            cancellation: ToolCancellationPolicy::PerOperation,
+            freshness: ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure,
+            shape: ToolExecutionShape::BoundedFirstStep,
+        }
+    }
+
+    fn validate(self) -> Result<(), &'static str> {
+        if self.max_raw_wire_bytes == 0 {
+            return Err("max_raw_wire_bytes must be non-zero");
+        }
+        if self.max_decoded_items == 0 {
+            return Err("max_decoded_items must be non-zero");
+        }
+        if self.max_work_units_per_step == 0 {
+            return Err("max_work_units_per_step must be non-zero");
+        }
+        if self.max_output_bytes == 0 {
+            return Err("max_output_bytes must be non-zero");
+        }
+        if self.max_step_micros == 0 || self.max_step_micros >= Self::INTERACTIVE_MAX_STEP_MICROS {
+            return Err("max_step_micros must be strictly below 8000");
+        }
+        if self.checkpoint_every_steps == 0 || self.progress_every_steps == 0 {
+            return Err("checkpoint and progress cadence must be non-zero");
+        }
+        Ok(())
+    }
+}
+
 pub struct ErasedToolJob {
     inner: Box<dyn InteractiveJob>,
 }
@@ -89,7 +185,15 @@ pub trait ToolJobFactory: Send + 'static {
     fn keys(&self) -> &[ToolFactoryKey];
     fn payload_schema_id(&self) -> &str;
     fn classification(&self) -> InteractiveJobClassification;
+    fn execution_contract(&self) -> ToolExecutionContract;
     fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError>;
+
+    /// 🌉 Decodes the owned cold-job wire payload without exposing a serialization dependency
+    /// through the action-bus API. Factories mounted on a wire route override this explicitly; UI-only
+    /// factories retain the typed [`ToolOperationSpec`] path and reject wire dispatch.
+    fn create_job_from_wire(&mut self, _operation: Operation, _payload: &[u8], _checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
+        Err(ToolJobFactoryError::new("tool factory does not own a wire payload decoder"))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -117,7 +221,9 @@ impl Error for ToolJobFactoryError {}
 pub enum ToolRegistrationError {
     EmptyFactory,
     DuplicateKey { key: ToolFactoryKey },
+    InvalidExecutionContract { key: ToolFactoryKey, detail: &'static str },
     NonInteractiveClassification { key: ToolFactoryKey, classification: InteractiveJobClassification },
+    UnknownAliasTarget { alias: ToolFactoryKey, target: ToolFactoryKey },
 }
 
 impl Display for ToolRegistrationError {
@@ -125,7 +231,9 @@ impl Display for ToolRegistrationError {
         match self {
             Self::EmptyFactory => formatter.write_str("tool factory must own at least one controller/tool key"),
             Self::DuplicateKey { key } => write!(formatter, "tool factory key '{}/{}' is already registered", key.controller_id, key.tool_id),
+            Self::InvalidExecutionContract { key, detail } => write!(formatter, "tool factory '{}/{}' has an invalid execution contract: {detail}", key.controller_id, key.tool_id),
             Self::NonInteractiveClassification { key, classification } => write!(formatter, "tool factory '{}/{}' is not UI-reachable: {classification:?}", key.controller_id, key.tool_id),
+            Self::UnknownAliasTarget { alias, target } => write!(formatter, "tool alias '{}/{}' targets unknown exact factory '{}/{}'", alias.controller_id, alias.tool_id, target.controller_id, target.tool_id),
         }
     }
 }
@@ -136,6 +244,7 @@ impl Error for ToolRegistrationError {}
 pub enum ToolDispatchError {
     UnknownController { controller_id: String },
     Factory { controller_id: String, tool_id: String, detail: String },
+    RawWireLimit { controller_id: String, tool_id: String, actual: usize, maximum: usize },
 }
 
 impl Display for ToolDispatchError {
@@ -143,6 +252,7 @@ impl Display for ToolDispatchError {
         match self {
             Self::UnknownController { controller_id } => write!(formatter, "unknown tool controller '{controller_id}'"),
             Self::Factory { controller_id, tool_id, detail } => write!(formatter, "tool factory '{controller_id}' rejected '{tool_id}': {detail}"),
+            Self::RawWireLimit { controller_id, tool_id, actual, maximum } => write!(formatter, "tool factory '{controller_id}/{tool_id}' rejected {actual} raw bytes before decoding; maximum is {maximum}"),
         }
     }
 }
@@ -153,6 +263,7 @@ impl Error for ToolDispatchError {}
 //#region 🚌️Bus
 trait ErasedToolJobFactory: Send {
     fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
+    fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
 }
 
 struct ToolJobFactoryAdapter<F: ToolJobFactory> {
@@ -168,11 +279,17 @@ impl<F: ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F> {
         let payload = std::mem::replace(&mut spec.payload, placeholder).downcast::<F::Payload>()?;
         self.factory.create_job(spec.operation, payload).map(ErasedToolJob::new)
     }
+
+    fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError> {
+        self.factory.create_job_from_wire(operation, payload, checkpoint).map(ErasedToolJob::new)
+    }
 }
 
 struct ActionBusInner {
     factory_by_key: HashMap<ToolFactoryKey, usize>,
-    factory_identity_by_key: HashMap<ToolFactoryKey, (&'static str, String)>,
+    factory_identity_by_key: HashMap<ToolFactoryKey, (TypeId, &'static str, String)>,
+    contract_by_key: HashMap<ToolFactoryKey, ToolExecutionContract>,
+    aliases: HashMap<ToolFactoryKey, ToolFactoryKey>,
     factories: Vec<Box<dyn ErasedToolJobFactory>>,
     dispatch_count: u64,
 }
@@ -190,7 +307,7 @@ impl Default for ActionBus {
 
 impl ActionBus {
     pub fn new() -> Self {
-        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: HashMap::new(), factory_identity_by_key: HashMap::new(), factories: Vec::new(), dispatch_count: 0 })) }
+        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: HashMap::new(), factory_identity_by_key: HashMap::new(), contract_by_key: HashMap::new(), aliases: HashMap::new(), factories: Vec::new(), dispatch_count: 0 })) }
     }
 
     /// 🌐️ Process-wide production registry shared by Platform and activated app controllers.
@@ -208,6 +325,10 @@ impl ActionBus {
         if classification != InteractiveJobClassification::Migrated {
             return Err(ToolRegistrationError::NonInteractiveClassification { key: keys[0].clone(), classification });
         }
+        let contract = factory.execution_contract();
+        if let Err(detail) = contract.validate() {
+            return Err(ToolRegistrationError::InvalidExecutionContract { key: keys[0].clone(), detail });
+        }
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut factory_keys = HashSet::with_capacity(keys.len());
         for key in keys {
@@ -218,7 +339,8 @@ impl ActionBus {
         let index = inner.factories.len();
         for key in keys {
             inner.factory_by_key.insert(key.clone(), index);
-            inner.factory_identity_by_key.insert(key.clone(), (std::any::type_name::<F>(), factory.payload_schema_id().to_string()));
+            inner.factory_identity_by_key.insert(key.clone(), (TypeId::of::<F>(), std::any::type_name::<F>(), factory.payload_schema_id().to_string()));
+            inner.contract_by_key.insert(key.clone(), contract);
         }
         inner.factories.push(Box::new(ToolJobFactoryAdapter { factory }));
         Ok(())
@@ -234,11 +356,15 @@ impl ActionBus {
         if classification != InteractiveJobClassification::Migrated {
             return Err(ToolRegistrationError::NonInteractiveClassification { key: keys[0].clone(), classification });
         }
-        let identity = (std::any::type_name::<F>(), factory.payload_schema_id());
+        let contract = factory.execution_contract();
+        if let Err(detail) = contract.validate() {
+            return Err(ToolRegistrationError::InvalidExecutionContract { key: keys[0].clone(), detail });
+        }
+        let identity = (TypeId::of::<F>(), std::any::type_name::<F>(), factory.payload_schema_id());
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for key in keys {
-            if let Some((registered_type, registered_schema)) = inner.factory_identity_by_key.get(key) {
-                if (*registered_type, registered_schema.as_str()) != identity {
+            if let Some((registered_type_id, registered_type_name, registered_schema)) = inner.factory_identity_by_key.get(key) {
+                if (*registered_type_id, *registered_type_name, registered_schema.as_str()) != identity {
                     return Err(ToolRegistrationError::DuplicateKey { key: key.clone() });
                 }
             }
@@ -250,22 +376,61 @@ impl ActionBus {
         let index = inner.factories.len();
         for key in missing {
             inner.factory_by_key.insert(key.clone(), index);
-            inner.factory_identity_by_key.insert(key, (identity.0, identity.1.to_string()));
+            inner.factory_identity_by_key.insert(key.clone(), (identity.0, identity.1, identity.2.to_string()));
+            inner.contract_by_key.insert(key, contract);
         }
         inner.factories.push(Box::new(ToolJobFactoryAdapter { factory }));
         Ok(())
     }
 
     pub fn contains(&self, key: &ToolFactoryKey) -> bool {
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).factory_by_key.contains_key(key)
+        let inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        inner.factory_by_key.contains_key(key) || inner.aliases.contains_key(key)
+    }
+
+    /// 🏷️ Registers one explicit alias only after its exact target factory and contract exist.
+    pub fn register_alias(&self, alias: ToolFactoryKey, target: ToolFactoryKey) -> Result<(), ToolRegistrationError> {
+        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if inner.factory_by_key.contains_key(&alias) || inner.aliases.contains_key(&alias) {
+            return Err(ToolRegistrationError::DuplicateKey { key: alias });
+        }
+        if !inner.factory_by_key.contains_key(&target) {
+            return Err(ToolRegistrationError::UnknownAliasTarget { alias, target });
+        }
+        inner.aliases.insert(alias, target);
+        Ok(())
+    }
+
+    /// 🧬️ Returns the exact schema id owned by one registered controller/tool key.
+    pub fn payload_schema_id(&self, key: &ToolFactoryKey) -> Option<String> {
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).factory_identity_by_key.get(key).map(|(_, _, schema)| schema.clone())
     }
 
     pub fn keys(&self) -> Vec<ToolFactoryKey> {
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).factory_by_key.keys().cloned().collect()
+        let inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        inner.factory_by_key.keys().chain(inner.aliases.keys()).cloned().collect()
     }
 
     pub fn dispatch_count(&self) -> u64 {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).dispatch_count
+    }
+
+    /// 🛡️ Admits an exact owner/tool/schema wire envelope before any caller-specific decoder runs.
+    pub fn admit_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8]) -> Result<ToolWireAdmission, ToolDispatchError> {
+        let controller_id = controller_id.into();
+        let tool_id = tool_id.into();
+        let schema_id = schema_id.into();
+        let key = ToolFactoryKey::new(controller_id.clone(), tool_id.clone());
+        let inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let contract = *inner.contract_by_key.get(&key).ok_or_else(|| ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") })?;
+        if payload.len() > contract.max_raw_wire_bytes {
+            return Err(ToolDispatchError::RawWireLimit { controller_id, tool_id, actual: payload.len(), maximum: contract.max_raw_wire_bytes });
+        }
+        let (factory_type_id, factory_type_name, expected_schema) = inner.factory_identity_by_key.get(&key).expect("factory identity is registered atomically with its key");
+        if expected_schema != &schema_id {
+            return Err(ToolDispatchError::Factory { controller_id, tool_id, detail: format!("expected payload schema '{expected_schema}', got '{schema_id}'") });
+        }
+        Ok(ToolWireAdmission { key, factory_type_id: *factory_type_id, factory_type_name, schema_id, contract })
     }
 
     pub fn dispatch(&self, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, ToolDispatchError> {
@@ -277,6 +442,32 @@ impl ActionBus {
         let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
         let job = factory.create_job(&mut spec).map_err(|error| ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail })?;
         inner.dispatch_count = inner.dispatch_count.saturating_add(1);
+        Ok(ToolJobDispatch { spec, job })
+    }
+
+    /// 🌉 Resolves an owned byte payload through the same exact controller/tool identity as a
+    /// typed UI dispatch. The factory alone owns decoding into its schema-first payload type; an
+    /// optional lossless checkpoint is supplied separately so a cold-job restart never has to mutate
+    /// or reinterpret the authoritative input bytes.
+    pub fn dispatch_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8], checkpoint: Option<Vec<u8>>, operation: Operation) -> Result<ToolJobDispatch, ToolDispatchError> {
+        let controller_id = controller_id.into();
+        let tool_id = tool_id.into();
+        let schema_id = schema_id.into();
+        let key = ToolFactoryKey::new(controller_id.clone(), tool_id.clone());
+        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let index = inner.factory_by_key.get(&key).copied().ok_or_else(|| ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") })?;
+        let contract = *inner.contract_by_key.get(&key).expect("execution contract is registered atomically with its key");
+        if payload.len() > contract.max_raw_wire_bytes {
+            return Err(ToolDispatchError::RawWireLimit { controller_id, tool_id, actual: payload.len(), maximum: contract.max_raw_wire_bytes });
+        }
+        let expected_schema = inner.factory_identity_by_key.get(&key).map(|(_, _, schema)| schema.clone()).expect("factory identity is registered atomically with its key");
+        if expected_schema != schema_id {
+            return Err(ToolDispatchError::Factory { controller_id, tool_id, detail: format!("expected payload schema '{expected_schema}', got '{schema_id}'") });
+        }
+        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
+        let job = factory.create_job_from_wire(operation, payload, checkpoint).map_err(|error| ToolDispatchError::Factory { controller_id: controller_id.clone(), tool_id: tool_id.clone(), detail: error.detail })?;
+        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
+        let spec = ToolOperationSpec::new(controller_id, tool_id, schema_id, (), operation);
         Ok(ToolJobDispatch { spec, job })
     }
 }
@@ -323,6 +514,10 @@ mod tests {
             self.classification
         }
 
+        fn execution_contract(&self) -> ToolExecutionContract {
+            ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100)
+        }
+
         fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
             Ok(ImmediateJob { output: format!("{payload}:ok").into_bytes() })
         }
@@ -362,6 +557,36 @@ mod tests {
         assert!(matches!(bus.dispatch(operation_spec("missing", "ping")), Err(ToolDispatchError::UnknownController { .. })));
     }
 
+    #[test]
+    fn aliases_require_an_existing_exact_factory_and_never_fallback() {
+        let bus = ActionBus::new();
+        let alias = ToolFactoryKey::new("app", "alias");
+        let target = ToolFactoryKey::new("app", "exact");
+        assert!(matches!(bus.register_alias(alias.clone(), target.clone()), Err(ToolRegistrationError::UnknownAliasTarget { .. })));
+        bus.register(echo_factory("app", &["exact"], InteractiveJobClassification::Migrated)).unwrap();
+        bus.register_alias(alias, target).unwrap();
+        assert!(matches!(bus.dispatch(operation_spec("app", "alias")), Err(ToolDispatchError::UnknownController { .. })));
+        assert!(matches!(bus.dispatch(operation_spec("app", "missing")), Err(ToolDispatchError::UnknownController { .. })));
+    }
+
+    #[test]
+    fn exact_wire_admission_rejects_alias_schema_and_raw_limit_before_decode() {
+        let bus = ActionBus::new();
+        let exact = ToolFactoryKey::new("app", "exact");
+        let alias = ToolFactoryKey::new("app", "alias");
+        bus.register(echo_factory("app", &["exact"], InteractiveJobClassification::Migrated)).unwrap();
+        bus.register_alias(alias.clone(), exact.clone()).unwrap();
+        assert!(matches!(bus.admit_exact_wire("app", "alias", "test.echo.v1", b"ok"), Err(ToolDispatchError::UnknownController { .. })));
+        let operation = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), 1);
+        assert!(matches!(bus.dispatch_wire("app", "alias", "test.echo.v1", b"ok", None, operation), Err(ToolDispatchError::UnknownController { .. })));
+        assert!(matches!(bus.admit_exact_wire("app", "exact", "wrong.schema", b"ok"), Err(ToolDispatchError::Factory { .. })));
+        assert!(matches!(bus.admit_exact_wire("app", "exact", "test.echo.v1", &[0; 65]), Err(ToolDispatchError::RawWireLimit { actual: 65, maximum: 64, .. })));
+        let admission = bus.admit_exact_wire("app", "exact", "test.echo.v1", b"ok").unwrap();
+        assert_eq!(admission.key, exact);
+        assert_eq!(admission.factory_type_id, TypeId::of::<EchoFactory>());
+        assert_eq!(admission.contract.max_raw_wire_bytes, 64);
+    }
+
     struct NumberFactory {
         keys: Vec<ToolFactoryKey>,
     }
@@ -382,8 +607,19 @@ mod tests {
             InteractiveJobClassification::Migrated
         }
 
+        fn execution_contract(&self) -> ToolExecutionContract {
+            ToolExecutionContract::bounded_first_step(8, 1, 1, 8, 100)
+        }
+
         fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
             Ok(ImmediateJob { output: payload.to_le_bytes().to_vec() })
+        }
+
+        fn create_job_from_wire(&mut self, _operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
+            let value = u64::from_le_bytes(payload.try_into().map_err(|_| ToolJobFactoryError::new("number wire payload must contain exactly eight bytes"))?);
+            let mut output = value.to_le_bytes().to_vec();
+            output.extend(checkpoint.unwrap_or_default());
+            Ok(ImmediateJob { output })
         }
     }
 
@@ -413,6 +649,21 @@ mod tests {
         let result = bus.register(echo_factory("app", &["same", "same"], InteractiveJobClassification::Migrated));
         assert!(matches!(result, Err(ToolRegistrationError::DuplicateKey { key }) if key == ToolFactoryKey::new("app", "same")));
         assert_eq!(bus.keys().len(), 0);
+    }
+
+    #[test]
+    fn wire_dispatch_uses_the_factory_decoder_and_preserves_the_restart_checkpoint() {
+        let bus = ActionBus::new();
+        bus.register(NumberFactory { keys: vec![ToolFactoryKey::new("number", "decode-wire")] }).unwrap();
+        let operation = Operation::new(allocate_operation_id(), RevisionId(19), Generation(5), 13);
+        let mut dispatch = bus.dispatch_wire("number", "decode-wire", "test.number.v1", &42u64.to_le_bytes(), Some(vec![7, 8]), operation).expect("wire dispatch");
+        let mut sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        let mut expected = 42u64.to_le_bytes().to_vec();
+        expected.extend([7, 8]);
+        assert!(matches!(dispatch.job.step(&mut context), StepOutcome::Complete(candidate) if candidate.output == expected));
+        assert!(matches!(bus.dispatch_wire("number", "decode-wire", "wrong.schema", &42u64.to_le_bytes(), None, operation), Err(ToolDispatchError::Factory { .. })));
+        assert!(matches!(bus.dispatch_wire("number", "decode-wire", "test.number.v1", &[0; 9], None, operation), Err(ToolDispatchError::RawWireLimit { actual: 9, maximum: 8, .. })));
     }
 }
 //#endregion 🎯️ToolJobBus

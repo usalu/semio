@@ -1,6 +1,7 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
@@ -9,7 +10,7 @@ pub struct FormsConfig {
     #[state(config)]
     pub current_step_index: u32,
     #[state(config)]
-    pub try_values_json: String,
+    pub try_values: BTreeMap<String, Vec<String>>,
     #[state(config)]
     pub locale: String,
     #[state(config)]

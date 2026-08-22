@@ -6,7 +6,7 @@ use crate::artifacts::procedural3d::mutations::delete_generation::mutation::Dele
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::playbook::GenerationMutation;
 
-pub async fn diff(payload: &DeleteGeneration, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub fn diff(payload: &DeleteGeneration, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     if !base.generation.generations.iter().any(|entry| entry.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Generation \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

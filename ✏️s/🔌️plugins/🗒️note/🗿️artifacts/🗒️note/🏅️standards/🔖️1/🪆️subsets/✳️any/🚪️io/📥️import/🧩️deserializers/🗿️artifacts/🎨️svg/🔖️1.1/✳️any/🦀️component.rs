@@ -25,7 +25,7 @@ impl Deserializer<NoteSnapshot> for SvgIntoNote {
         snap.title = Some("Imported SVG".into());
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: xml.chars().take(512).collect(), bold: None, italic: None, underline: None, link: None }] }];
         snap.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_handle_and_cache("svg-text-1", &paragraphs),
+            content: crate::artifacts::note::note_text_child_record("svg-text-1", &paragraphs),
             id: "svg-text-1".into(),
             name: "SVG".into(),
             x: 0.0,

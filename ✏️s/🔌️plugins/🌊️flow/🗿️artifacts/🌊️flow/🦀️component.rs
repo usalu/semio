@@ -185,6 +185,11 @@ pub async fn cache_flow_content(child_id: &str, widgets: Vec<Widget>, synapses: 
     FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), FlowWorkingScene { widgets, synapses, layout }));
 }
 
+#[cfg(test)]
+pub async fn clear_flow_process_state() {
+    FLOW_SCRATCH.with(|cache| cache.borrow_mut().clear());
+}
+
 /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
 pub async fn flow_working_scene_for_handle(handle: &FlowContentChild) -> FlowWorkingScene {

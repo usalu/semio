@@ -1,6 +1,7 @@
 //! 🧪️ 🧪️ Forms play app commands command — `reset-try`.
 
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::editor::forms::commands::set_try_value::cancel_pending_generations;
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -10,6 +11,8 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reset-try")]
 pub struct ResetTry {}
 
-pub async fn handle(_payload: &ResetTry, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    Ok(Emit::config(reset_try_config_mutations()))
+pub async fn handle(_payload: &ResetTry, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
+    let mut mutations = cancel_pending_generations(doc.operation()?);
+    mutations.extend(reset_try_config_mutations());
+    Ok(Emit::config(mutations))
 }

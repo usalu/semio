@@ -1,6 +1,6 @@
 //! 🧬️ Process3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, StockQuantity, Workshop, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
@@ -25,11 +25,15 @@ pub struct Process3dArtifact {
     #[state(artifact)]
     pub stock_pose: Pose,
     #[state(artifact)]
+    pub stock_payload: Stock,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    #[state(artifact)]
+    pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
@@ -87,8 +91,10 @@ impl Default for Process3dArtifact {
             stock_id: base.stock_id,
             stock_label: base.stock_label,
             stock_pose: base.stock_pose,
+            stock_payload: base.stock_payload,
             stock_solid: base.stock_solid,
             steps: base.steps,
+            step_payloads: base.step_payloads,
             tool_solids: base.tool_solids,
             resolved_up_to: None,
             selected_id: None,
@@ -123,8 +129,10 @@ impl Process3dArtifact {
             stock_id: self.stock_id.clone(),
             stock_label: self.stock_label.clone(),
             stock_pose: self.stock_pose.clone(),
+            stock_payload: self.stock_payload.clone(),
             stock_solid: self.stock_solid.clone(),
             steps: self.steps.clone(),
+            step_payloads: self.step_payloads.clone(),
             tool_solids: self.tool_solids.clone(),
             resolved_up_to: self.resolved_up_to,
         }
@@ -137,8 +145,10 @@ impl Process3dArtifact {
             stock_id: snapshot.stock_id,
             stock_label: snapshot.stock_label,
             stock_pose: snapshot.stock_pose,
+            stock_payload: snapshot.stock_payload,
             stock_solid: snapshot.stock_solid,
             steps: snapshot.steps,
+            step_payloads: snapshot.step_payloads,
             tool_solids: snapshot.tool_solids,
             resolved_up_to: snapshot.resolved_up_to,
             ..Self::default()
@@ -344,15 +354,15 @@ fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capability
 pub struct GenericCatalog;
 
 impl MachineCatalog for GenericCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "geometry"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Geometry"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "shapes"
     }
 
@@ -366,15 +376,15 @@ impl MachineCatalog for GenericCatalog {
 pub struct MetalCatalog;
 
 impl MachineCatalog for MetalCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "metal"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Metal"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "wrench"
     }
 
@@ -501,15 +511,15 @@ pub fn metal_catalog() -> MetalCatalog {
 pub struct WoodCatalog;
 
 impl MachineCatalog for WoodCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "wood"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Wood"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "beam"
     }
 
@@ -650,15 +660,15 @@ pub fn wood_catalog() -> WoodCatalog {
 pub struct RoboticCatalog;
 
 impl MachineCatalog for RoboticCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "robotic"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Robotic"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "cpu"
     }
 
@@ -779,15 +789,15 @@ pub fn robotic_catalog() -> RoboticCatalog {
 pub struct ConcreteCatalog;
 
 impl MachineCatalog for ConcreteCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "concrete"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Concrete"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "slab"
     }
 

@@ -34,12 +34,12 @@ use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️AddressHelpers
 /// 🔎️ BASE-state widget index lookup by id — shared by every widget triad leaf's inverse.
-pub(crate) async fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub(crate) fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
 /// 🔎️ BASE-state synapse index lookup by id — shared by every synapse triad leaf's inverse.
-pub(crate) async fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 //#endregion 🔖️AddressHelpers
@@ -175,7 +175,7 @@ pub enum Procedural3dMutation {
 /// `Procedural3dMutation` variants, so app-layer callers that already hold a `GenerationMutation`
 /// (from `flow::playbook::generation_operations`) need only swap the mapping function at the call
 /// site, not learn this facet's internal triad-leaf module paths.
-pub async fn generation_mutation_to_procedural3d(operation: GenerationMutation) -> Procedural3dMutation {
+pub fn generation_mutation_to_procedural3d(operation: GenerationMutation) -> Procedural3dMutation {
     match operation {
         GenerationMutation::Add { generation } => Procedural3dMutation::CreateGeneration(create_generation::mutation::CreateGeneration { generation }),
         GenerationMutation::Remove { id } => Procedural3dMutation::DeleteGeneration(delete_generation::mutation::DeleteGeneration { id }),
@@ -190,7 +190,7 @@ pub async fn generation_mutation_to_procedural3d(operation: GenerationMutation) 
 /// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
 /// via `crate::artifacts::procedural3d::schema::commit_fixture`, unchanged) but every pushed
 /// mutation is now a real semantic variant.
-pub async fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dMutation> {
+pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dMutation> {
     let mut operations = Vec::new();
     for widget in &before.widgets {
         if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
@@ -240,14 +240,14 @@ pub type Procedural3dStore = ArtifactStore<Procedural3dSnapshot, Procedural3dMut
 
 //#region 🔖️Apply
 /// 🎬️ Fallible in-place `vcs::apply_mutation` boundary.
-pub async fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+pub fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = semio_framework::io::resolve_ready(vcs::apply_mutation(projection, mutation))?;
 
     *projection = next;
     Ok(())
 }
 
-pub async fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
+pub fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
     protocol::Mutation::inverse(mutation, projection)
 }
 //#endregion 🔖️Apply
@@ -276,7 +276,7 @@ mod tests {
     use update_synapse::mutation::UpdateSynapse;
     use update_widget::mutation::UpdateWidget;
 
-    async fn round_trip(projection: &Procedural3dSnapshot, operation: &Procedural3dMutation) -> Procedural3dSnapshot {
+    fn round_trip(projection: &Procedural3dSnapshot, operation: &Procedural3dMutation) -> Procedural3dSnapshot {
         let forward = vcs::apply_mutation(projection, operation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in operation.inverse(projection) {
@@ -288,7 +288,7 @@ mod tests {
 
     /// ⚖️ One value per `Procedural3dMutation` variant — the closed set the wire/semantics tests
     /// below iterate.
-    async fn every_mutation() -> Vec<Procedural3dMutation> {
+    fn every_mutation() -> Vec<Procedural3dMutation> {
         vec![
             Procedural3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } }),
             Procedural3dMutation::UpdateWidget(UpdateWidget { widget: Widget::InputNote { id: "note-9".into(), text: "new".into() } }),
@@ -307,8 +307,8 @@ mod tests {
         ]
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
+    #[test]
+    fn every_variant_registers_an_approved_semantic_descriptor() {
         for op in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&op);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {op:?}", descriptor.verb);
@@ -316,31 +316,31 @@ mod tests {
         assert_eq!(<Procedural3dMutation as protocol::SemanticMutation<Procedural3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn store_applies_widget_create() {
+    #[test]
+    fn store_applies_widget_create() {
         let mut store = ArtifactStore::<Procedural3dSnapshot, Procedural3dMutation>::new(store::create_document_envelope(crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None))
             .expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Procedural3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).expect("apply");
         assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_widget_round_trips() {
+    #[test]
+    fn create_widget_round_trips() {
         let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::CreateWidget(CreateWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }));
         assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn generation_op_round_trips() {
+    #[test]
+    fn generation_op_round_trips() {
         let before = empty_procedural3d_snapshot();
         let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dMutation::CreateGeneration(CreateGeneration { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn generation_mutation_bridge_covers_every_variant() {
+    #[test]
+    fn generation_mutation_bridge_covers_every_variant() {
         let generation = FormGeneration { id: "g1".into(), name: "G1".into(), values: serde_json::Map::new() };
         assert_eq!(generation_mutation_to_procedural3d(GenerationMutation::Add { generation: generation.clone() }), Procedural3dMutation::CreateGeneration(CreateGeneration { generation }));
         assert_eq!(generation_mutation_to_procedural3d(GenerationMutation::Remove { id: "g1".into() }), Procedural3dMutation::DeleteGeneration(DeleteGeneration { id: "g1".into() }));
@@ -351,8 +351,8 @@ mod tests {
         );
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fixture_ops_ignore_camera() {
+    #[test]
+    fn fixture_ops_ignore_camera() {
         let before = FlowFixture::default();
         let mut after = before.clone();
         after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
@@ -360,8 +360,8 @@ mod tests {
         assert!(operations.iter().all(|operation| !matches!(operation, Procedural3dMutation::UpdateCamera { .. })));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
+    #[test]
+    fn procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
         let mut before = FlowFixture { schema: "old-schema".into(), ..Default::default() };
         before.widgets = vec![Widget::InputNote { id: "w-gone".into(), text: String::new() }, Widget::InputNote { id: "w-keep".into(), text: "old".into() }];
         before.synapses = vec![
@@ -393,8 +393,8 @@ mod tests {
         assert!(operations.contains(&Procedural3dMutation::ChangeSchema(ChangeSchema { new_schema: "new-schema".into() })));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn update_widget_round_trip_replaces_existing_widget_by_id() {
+    #[test]
+    fn update_widget_round_trip_replaces_existing_widget_by_id() {
         let mut before = empty_procedural3d_snapshot();
         before.fixture.widgets.clear();
         before.fixture.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
@@ -403,14 +403,14 @@ mod tests {
         assert_eq!(after.fixture.widgets[0], Widget::InputNote { id: "note-9".into(), text: "new".into() });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_delete_widget_when_missing_returns_empty() {
+    #[test]
+    fn inverse_delete_widget_when_missing_returns_empty() {
         let projection = empty_procedural3d_snapshot();
         assert!(Procedural3dMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }).inverse(&projection).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
+    #[test]
+    fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
         let mut before = empty_procedural3d_snapshot();
         before.fixture.synapses.clear();
         before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
@@ -419,44 +419,44 @@ mod tests {
         assert_eq!(after.fixture.synapses[0].to, "c");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_disconnect_synapse_when_missing_returns_empty() {
+    #[test]
+    fn inverse_disconnect_synapse_when_missing_returns_empty() {
         let projection = empty_procedural3d_snapshot();
         assert!(Procedural3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ghost".into() }).inverse(&projection).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn move_widget_round_trip_inserts_when_absent() {
+    #[test]
+    fn move_widget_round_trip_inserts_when_absent() {
         let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }));
         assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn move_widget_round_trip_replaces_when_present() {
+    #[test]
+    fn move_widget_round_trip_replaces_when_present() {
         let mut before = empty_procedural3d_snapshot();
         before.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
         let after = round_trip(&before, &Procedural3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 5.0, y: 6.0 } }));
         assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_empty() {
+    #[test]
+    fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_empty() {
         let mut projection = empty_procedural3d_snapshot();
         projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
         assert_eq!(Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }).inverse(&projection), vec![Procedural3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })]);
         assert!(Procedural3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }).inverse(&projection).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn update_camera_round_trip_updates_camera() {
+    #[test]
+    fn update_camera_round_trip_updates_camera() {
         let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));
         assert_eq!(after.fixture.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn change_schema_round_trip_updates_schema() {
+    #[test]
+    fn change_schema_round_trip_updates_schema() {
         let before = empty_procedural3d_snapshot();
         let after = round_trip(&before, &Procedural3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }));
         assert_eq!(after.fixture.schema, "flow.fixture.v2");
@@ -468,8 +468,8 @@ mod tests {
     /// distinct new variants: an id-keyed create/delete pair (`create-widget`), a relationship
     /// connect/disconnect pair (`connect-synapse`), and a document-level facet setter
     /// (`update-camera`).
-    #[semio_framework_async_macros::async_test]
-    async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
+    #[test]
+    fn create_widget_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_procedural3d_snapshot();
         let mutation = Procedural3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -478,8 +478,8 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
+    #[test]
+    fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_procedural3d_snapshot();
         let mutation = Procedural3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -488,8 +488,8 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
+    #[test]
+    fn update_camera_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_procedural3d_snapshot();
         let mutation = Procedural3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);

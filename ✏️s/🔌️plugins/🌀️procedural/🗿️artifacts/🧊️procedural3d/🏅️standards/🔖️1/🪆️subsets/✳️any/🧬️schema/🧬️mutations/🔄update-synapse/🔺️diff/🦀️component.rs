@@ -8,7 +8,7 @@ use crate::artifacts::procedural3d::Procedural3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta replacing one existing synapse's ports. The index is
 /// irrelevant here — `apply_synapses_diff` resolves an existing entry by id first.
-pub async fn diff(payload: &UpdateSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
+pub fn diff(payload: &UpdateSynapse, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
     let id = &payload.synapse.id;
     let Some(index) = synapse_index(&base.fixture, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{id}\" does not exist."), [id.clone()]);

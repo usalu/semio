@@ -473,6 +473,12 @@ pub(crate) fn solve_cancellable<T: Topology + Clone + Send>(model: &CompiledMode
     drive_batch_job(model, topo, config, seed, init_domains, fixed, Some(cancel))
 }
 
+fn partial_from_job<T: Topology + Clone>(job: &WfcJob<T>) -> PartialState {
+    let domains = job.domain_masks();
+    let decided = domains.iter().map(|domain| (domain.count_ones() == 1).then(|| domain.first_set().expect("singleton WFC domain"))).collect();
+    PartialState { domains, decided }
+}
+
 fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext};
 
@@ -490,11 +496,7 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
     };
     let mut job = WfcJob::new(operation, model.clone(), topo.clone(), job_config, init_domains.map(<[PatternSet]>::to_vec), fixed.to_vec());
     let mut sequence = 0;
-    let mut batch_slices = 0u32;
     loop {
-        let masks = job.domain_masks();
-        let decided = masks.iter().map(|domain| (domain.count_ones() == 1).then(|| domain.first_set().expect("singleton WFC domain"))).collect();
-        let partial = PartialState { domains: masks, decided };
         let (observations, propagations, backtracks) = job.metrics();
         let metrics = Metrics { observations, propagations, backtracks, elapsed_millis: start.elapsed().as_millis() as u64, ..Metrics::default() };
         let run_report = |terminal: Event, observed: &[(NodeId, PatternId)]| {
@@ -508,19 +510,15 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
             RunReport { metrics, model_fingerprint: model.fingerprint(), seed, events }
         };
         if cancel.is_some_and(CancelToken::is_cancelled) {
-            return SolveOutcome::Cancelled { partial, report: run_report(Event::BudgetExceeded, job.observed()) };
+            return SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
         }
         if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
-            return SolveOutcome::BudgetExceeded { partial, report: run_report(Event::BudgetExceeded, job.observed()) };
+            return SolveOutcome::BudgetExceeded { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
         }
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || 0, &mut sequence);
-        batch_slices += 1;
-        if batch_slices > 16 {
-            return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
-        }
         match job.step(&mut context) {
-            semio_framework_job::StepOutcome::Complete(_) => {
-                let commit = job.commit().expect("completed WFC batch job has commit");
+            semio_framework_job::StepOutcome::Complete(candidate) => {
+                let commit: crate::wfc_engine::job::WfcCommit = serde_json::from_slice(&candidate.output).expect("completed WFC batch job has a valid commit");
                 let assignment = commit.assignment.into_iter().map(PatternId).collect();
                 return SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) });
             }
@@ -534,7 +532,9 @@ fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, 
             semio_framework_job::StepOutcome::Fault(_) => {
                 return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: run_report(Event::Contradiction { node: NodeId(0) }, job.observed()) });
             }
-            semio_framework_job::StepOutcome::Cancelled => return SolveOutcome::Cancelled { partial, report: run_report(Event::BudgetExceeded, job.observed()) },
+            semio_framework_job::StepOutcome::Cancelled => {
+                return SolveOutcome::Cancelled { partial: partial_from_job(&job), report: run_report(Event::BudgetExceeded, job.observed()) };
+            }
             semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
         }
     }

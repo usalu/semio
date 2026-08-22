@@ -16,7 +16,7 @@ pub struct AddGcpObservation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn add_gcp_observation(id: String, observation: GcpObservation) -> RemodelMutation {
+pub fn add_gcp_observation(id: String, observation: GcpObservation) -> RemodelMutation {
     RemodelMutation::AddGcpObservation(AddGcpObservation { id, observation })
 }
 

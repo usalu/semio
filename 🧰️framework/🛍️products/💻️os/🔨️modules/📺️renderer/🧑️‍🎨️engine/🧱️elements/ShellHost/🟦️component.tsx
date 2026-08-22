@@ -383,6 +383,7 @@ import {
   detectCommandPlatform,
   dispatchOpenedFiles,
   dispatchOsCommand,
+  drainSegmentedMediaExport,
   downloadDataUrl,
   downloadMediaExport,
   filterDefinitionsForRole,
@@ -435,6 +436,7 @@ import {
   retitleWindowLayoutNode,
   runRequestMediaFrames,
   scheduleDispatchAction,
+  SEGMENTED_DOWNLOAD_MARKER_PREFIX,
   sessionWindowInstances,
   setAsDefaultText,
   shellLabel,
@@ -1330,6 +1332,8 @@ function FrameworkOsShellInner({
    * `/extensions/install` fetch (`installExtension`/`installExtensionFromFile`/`uninstallExtension`) to
    * the component's own lifetime instead of leaving them free-running past unmount. */
   const extensionFetchAbortRef = useRef(new AbortController());
+  /** 🧵 Cancels every active operation-owned download drain when this shell unmounts. */
+  const segmentedDownloadAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
   /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
@@ -2353,6 +2357,7 @@ function FrameworkOsShellInner({
       // 🌐️ terra-web-shellhost (finding 4) — aborts any in-flight `/extensions/install` fetch at real
       // component unmount; see `extensionFetchAbortRef`'s own doc a few hundred lines up.
       extensionFetchAbortRef.current.abort();
+      segmentedDownloadAbortRef.current.abort(new Error("segmented-download-shell-unmounted"));
       for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
       pluginBackboneRouteUnregistersRef.current.clear();
       const primary = sessionRef.current;
@@ -2568,6 +2573,7 @@ function FrameworkOsShellInner({
                 manifest: async () => new Uint8Array(),
                 createApp: entry.handle.createApp,
                 destroyApp: entry.handle.destroyApp,
+                takeSegmentedDownloadChunk: entry.handle.takeSegmentedDownloadChunk,
                 enqueue: () => {},
                 outcomes: (async function* () {})(),
                 dispose: () => {},
@@ -3027,7 +3033,15 @@ function FrameworkOsShellInner({
         }
         if ("downloadMediaExport" in effect) {
           const { filename, mimeType, data, encoding } = effect.downloadMediaExport;
-          downloadMediaExport(filename, mimeType, data, encoding);
+          if (encoding?.startsWith(SEGMENTED_DOWNLOAD_MARKER_PREFIX)) {
+            const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+            if (!pluginEntry) throw new Error(`segmented-download-plugin-missing:${baseSession.pluginId}`);
+            await drainSegmentedMediaExport(filename, mimeType, data, encoding, (operationId) => pluginEntry.handle.takeSegmentedDownloadChunk(baseSession.instanceId, operationId), {
+              signal: segmentedDownloadAbortRef.current.signal,
+            });
+          } else {
+            downloadMediaExport(filename, mimeType, data, encoding);
+          }
           continue;
         }
         if ("iconRenderExport" in effect) {

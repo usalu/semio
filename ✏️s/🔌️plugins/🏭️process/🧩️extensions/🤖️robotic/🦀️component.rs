@@ -15,15 +15,15 @@ fn max_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capability
 }
 
 impl MachineCatalog for RoboticCatalog {
-    fn catalog_id(&self) -> &'static str {
+    fn catalog_id(&self) -> &str {
         "robotic"
     }
 
-    fn label(&self) -> &'static str {
+    fn label(&self) -> &str {
         "Robotic"
     }
 
-    fn icon_id(&self) -> &'static str {
+    fn icon_id(&self) -> &str {
         "cpu"
     }
 

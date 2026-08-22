@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P10bg Diagram Force Browser Harness</title>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: #071115;
+        color: #eff7f4;
+        font:
+          13px/1.4 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+      #p10-diagram-surface,
+      #p10-diagram-surface > div,
+      #p10-diagram-surface .react-flow {
+        height: 100%;
+        width: 100%;
+      }
+      button {
+        background: #17343c;
+        border: 1px solid #5ca6a6;
+        border-radius: 5px;
+        color: inherit;
+        cursor: pointer;
+        padding: 6px 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"><pre id="p10-boot-status" style="padding: 16px">Loading P10bg harness module…</pre></div>
+    <script>
+      window.__P10_DIAGRAM_FORCE_BOOT_ERRORS__ = [];
+      const showBootFault = (kind, value) => {
+        const fault = value instanceof Error ? `${value.name}: ${value.message}\n${value.stack ?? ""}` : String(value);
+        window.__P10_DIAGRAM_FORCE_BOOT_ERRORS__.push({ kind, fault });
+        const status = document.getElementById("p10-boot-status");
+        if (status) status.textContent = `${kind}: ${fault}`;
+      };
+      window.addEventListener("error", (event) => showBootFault("error", event.error ?? event.message));
+      window.addEventListener("unhandledrejection", (event) => showBootFault("unhandledrejection", event.reason));
+    </script>
+    <script type="module">
+      import RefreshRuntime from "/@react-refresh";
+      RefreshRuntime.injectIntoGlobalHook(window);
+      window.$RefreshReg$ = () => {};
+      window.$RefreshSig$ = () => (type) => type;
+      window.__vite_plugin_react_preamble_installed__ = true;
+    </script>
+    <script type="module" src="/@vite/client"></script>
+    <script type="module" src="./🟦️p10bg-diagram-force-harness.tsx"></script>
+  </body>
+</html>

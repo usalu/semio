@@ -15,6 +15,7 @@ use infinite_world::world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
 use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
@@ -31,7 +32,7 @@ use store_sync::PresencePeer;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
     client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport},
-    identity::{actor_id, mint_or_restore, Identity, IdentityEnv, IdentityOutcome, IdentityStatus},
+    identity::{actor_id, mint_or_restore, Identity, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
@@ -4322,9 +4323,9 @@ impl ShellState {
             if let Some(action) = hit.event.clone() {
                 self.dispatch_action(action).await?;
             } else if hit.kind == HitKind::Input {
-                if let Some(id) = &hit.control_id {
-                    let seed = self.widget_maps.input_metas.get(id).map(|meta| meta.value.clone()).or_else(|| self.staged_input_seed(id)).unwrap_or_default();
-                    input.focus_input(id, &seed);
+                if let Some(id) = hit.control_id {
+                    let seed = self.widget_maps.input_metas.get(&id).map(|meta| meta.value.clone()).or_else(|| self.staged_input_seed(&id)).unwrap_or_default();
+                    input.focus_input_owned(id, seed);
                 }
             }
         }
@@ -4970,21 +4971,21 @@ impl ShellState {
         };
         // 📝️ A staged action-arg input writes into the staging map (parsed per the arg's control kind)
         // instead of dispatching live — Architecture Decision 8, P2 (item 4).
-        if self.commit_staged_input(&id, &input.text_buffer) {
+        if self.commit_staged_input(&id, input.text_view()) {
             input.blur_input();
             return Ok(());
         }
         if id.ends_with(".input") {
             let base = id.trim_end_matches(".input");
             if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
-                let parsed = input.text_buffer.parse::<f64>().unwrap_or(meta.value);
+                let parsed = input.text_view().parse::<f64>().unwrap_or(meta.value);
                 self.dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: crate::action_args_json!({ "value": parsed }) }).await?;
                 input.blur_input();
                 return Ok(());
             }
         }
         if let Some(meta) = self.widget_maps.input_metas.get(&id).cloned() {
-            self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": input.text_buffer }) }).await?;
+            self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": input.text_view() }) }).await?;
             input.blur_input();
         }
         Ok(())
@@ -5648,7 +5649,11 @@ impl ShellState {
         }
         if input.focused_id.is_some() {
             match action {
-                ui_wgpu::wgpu::KeyAction::Char(key) => input.text_buffer.push_str(&key),
+                ui_wgpu::wgpu::KeyAction::Char(key) => {
+                    if let Some(ch) = key.chars().next() {
+                        input.insert_char(ch);
+                    }
+                }
                 ui_wgpu::wgpu::KeyAction::Backspace => input.backspace(),
                 ui_wgpu::wgpu::KeyAction::Delete => input.delete_forward(),
                 _ => {}
@@ -10918,7 +10923,7 @@ impl ShellState {
         // focused), else the last-committed value — mirrors `engagementActiveInlineCompletion`'s own
         // `query` input in `ui/js/react/index.tsx`.
         let focused = input.focused_id.as_deref() == Some(id.as_str());
-        let live_query = if focused { input.text_buffer.clone() } else { committed_value.clone() };
+        let live_query = if focused { input.text_view().to_string() } else { committed_value.clone() };
         let node = ui_wgpu::wgpu::widgets::WidgetNode::Input { id: id.clone(), input_kind: "text".into(), value: committed_value, placeholder: spec.placeholder.clone(), commit: None, on_change: spec.on_change.clone() };
         {
             let scroll_offsets = &mut self.scroll_offsets;
@@ -10951,8 +10956,9 @@ impl ShellState {
             if let Some(accepted) = engagement_ghost_accept_on_click(ghost_rect, input.pointer_x, input.pointer_y, self.chrome_build.clicked_this_frame, &live_query, &suffix) {
                 self.engagement_inputs.insert(id.clone(), accepted.clone());
                 if focused {
-                    input.text_buffer = accepted.clone();
-                    input.cursor_pos = accepted.len();
+                    let accepted_len = accepted.len();
+                    input.focus_input_owned(id, accepted);
+                    input.cursor_pos = accepted_len;
                 }
             }
         }
@@ -11219,7 +11225,7 @@ impl ShellState {
                 for axis in 0..3usize {
                     let control_id = format!("shell.action.argvec3::{window_id}::{action_id}::{}::{axis}", arg.id);
                     let focused = input.focused_id.as_deref() == Some(control_id.as_str());
-                    let display = if focused { input.text_buffer.clone() } else { fmt_num(arr.and_then(|a| a.get(axis)).and_then(|v| v.as_f64()).unwrap_or(0.0)) };
+                    let display = if focused { input.text_view().to_string() } else { fmt_num(arr.and_then(|a| a.get(axis)).and_then(|v| v.as_f64()).unwrap_or(0.0)) };
                     let rect = Rect::new(bounds.x + axis as f32 * (field_w + theme.gap_standard), bounds.y + row_h, field_w, row_h);
                     self.paint_staged_input_box(draw, atlas, input, theme, rect, &display, focused, enabled, &control_id);
                 }
@@ -11239,7 +11245,7 @@ impl ShellState {
     fn staged_arg_display_string(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, input: &InputState<ActionDescriptor>, control_id: Option<&str>) -> String {
         if let Some(control_id) = control_id {
             if input.focused_id.as_deref() == Some(control_id) {
-                return input.text_buffer.clone();
+                return input.text_view().to_string();
             }
         }
         match self.effective_arg_value(window_id, action_id, arg) {
@@ -13184,7 +13190,7 @@ mod media_frames_tests {
         }
         samples.sort_unstable();
         let p99 = samples[samples.len() * 99 / 100];
-        assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] shell I/O callback p99 was {p99:?}");
+        assert!(p99 < std::time::Duration::from_millis(2), "shell I/O callback p99 was {p99:?}");
     }
 
     #[test]

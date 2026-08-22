@@ -6,11 +6,11 @@
 //! `AppPresenter` retains platform/GPU presentation authority.
 //!
 //! The deadline candidates remain non-authoritative: `AppRuntime::frame` revalidates them against live
-//! state before applying them. The wasm implementation still drives the job and frame inline because
-//! this crate has no Web Worker bridge; that is an explicit cross-target P3 gate gap, not a claimed
-//! equivalent worker implementation.
+//! state before applying them. The wasm implementation drives the job synchronously only after the
+//! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
+//! closed and never execute the transaction inline.
 
-use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -98,11 +98,11 @@ fn now_ms_u64() -> u64 {
     crate::app_now_ms() as u64
 }
 
-fn batch_params(operation: OperationId, generation: Generation) -> BatchJobParams {
+fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
     BatchJobParams {
         operation,
         generation,
-        cancel: root_cancel_token(),
+        cancel,
         config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
         now_ms: now_ms_u64,
     }
@@ -122,6 +122,8 @@ pub(crate) struct FrameBuildHandle {
     completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,
     latest_requested_generation: Generation,
     last_submitted_generation: Option<Generation>,
+    cancel: CancelToken,
+    closing: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -141,12 +143,12 @@ impl FrameBuildHandle {
     // pattern this file cannot itself compile-check today (see module doc §7 of the report).
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn new() -> Self {
-        Self { runtime_in_flight: None, completion_waker: None, latest_requested_generation: Generation(0), last_submitted_generation: None }
+        Self { runtime_in_flight: None, completion_waker: None, latest_requested_generation: Generation(0), last_submitted_generation: None, cancel: root_cancel_token(), closing: false }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn new() -> Self {
-        Self { latest_requested_generation: Generation(0), last_submitted_generation: None }
+        Self { latest_requested_generation: Generation(0), last_submitted_generation: None, cancel: root_cancel_token(), closing: false }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -159,6 +161,9 @@ impl FrameBuildHandle {
 
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+        if self.closing {
+            return None;
+        }
         self.latest_requested_generation = generation;
         let mut completed = None;
         if let Some(receiver) = &self.runtime_in_flight {
@@ -176,19 +181,25 @@ impl FrameBuildHandle {
             }
         }
         if self.runtime_in_flight.is_none() && self.last_submitted_generation != Some(generation) {
+            self.cancel = root_cancel_token();
+            let cancel = self.cancel.clone();
             let (sender, receiver) = std::sync::mpsc::channel();
             let handle = runtime.downgrade();
             let waker = self.completion_waker.clone();
             crate::renderer_worker_pool().submit(
                 Lane::Interactive,
                 Box::new(move || {
+                    if cancel.is_cancelled_now() {
+                        let _ = sender.send(RuntimeFrameResult { generation, frame: None });
+                        return;
+                    }
                     runtime.apply_pending();
                     let mut job = FrameBuildJob::new(inputs);
-                    let directives = match semio_framework_job::run_to_completion(&mut job, &batch_params(operation, generation)) {
+                    let directives = match semio_framework_job::run_to_completion(&mut job, &batch_params(operation, generation, cancel.clone())) {
                         StepOutcome::Complete(candidate) => decode_directives(&candidate.output),
                         _ => FrameDirectives::default(),
                     };
-                    let frame = runtime.try_lock().ok().and_then(|mut app| {
+                    let frame = (!cancel.is_cancelled_now()).then(|| ()).and_then(|_| runtime.try_lock().ok()).and_then(|mut app| {
                         runtime.update_frame_inputs(&app);
                         app.interaction_available().then(|| app.frame(&handle, &directives, generation, dpr).prepare()).flatten()
                     });
@@ -206,9 +217,12 @@ impl FrameBuildHandle {
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+        if self.closing || web_sys::window().is_some() {
+            return None;
+        }
         self.latest_requested_generation = generation;
         let mut job = FrameBuildJob::new(inputs);
-        let directives = match run_to_completion(&mut job, &batch_params(operation, generation)) {
+        let directives = match run_to_completion(&mut job, &batch_params(operation, generation, self.cancel.clone())) {
             StepOutcome::Complete(candidate) => decode_directives(&candidate.output),
             _ => FrameDirectives::default(),
         };
@@ -218,6 +232,41 @@ impl FrameBuildHandle {
             runtime.update_frame_inputs(&app);
             app.interaction_available().then(|| app.frame(&handle, &directives, generation, dpr).prepare()).flatten()
         })
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if !self.closing {
+            self.closing = true;
+            self.cancel.cancel_now();
+            return false;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(receiver) = &self.runtime_in_flight {
+            match receiver.try_recv() {
+                Ok(_) | Err(TryRecvError::Disconnected) => self.runtime_in_flight = None,
+                Err(TryRecvError::Empty) => return false,
+            }
+            return false;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.completion_waker.take().is_some() {
+            return false;
+        }
+        true
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    self.runtime_in_flight.is_none() && self.completion_waker.is_none()
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    true
+                }
+            }
     }
 }
 //#endregion 📮️FrameBuildHandle

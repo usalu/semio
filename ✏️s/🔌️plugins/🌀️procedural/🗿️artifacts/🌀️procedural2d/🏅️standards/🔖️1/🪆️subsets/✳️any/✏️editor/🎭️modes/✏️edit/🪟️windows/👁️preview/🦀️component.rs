@@ -5,7 +5,7 @@ use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use crate::editor::procedural2d::config::Procedural2dConfig;
 use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
 use flow::FlowEvalSession;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -15,7 +15,7 @@ const PROCEDURAL2D_PLAY_SURFACE_PREVIEW: &str = "procedural2d.play.preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCEDURAL2D_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> BuiltNode {
     let fixture = &document.fixture;
     let eval_json = session.eval_json();
     let prefix = "procedural2d-preview";
@@ -69,10 +69,11 @@ pub async fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig
                 "height": 48.0}));
         }
     }
-    build_canvas_2d_scene(
+    let _ = PROCEDURAL2D_PLAY_APP_ID;
+    crate::scene_surface(
         PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
-        PROCEDURAL2D_PLAY_APP_ID,
-        Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) },
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) },
     )
 }
 //#endregion 🔖️Render
@@ -83,8 +84,8 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_preview_canvas_scene() {
+    #[test]
+    fn renders_preview_canvas_scene() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }

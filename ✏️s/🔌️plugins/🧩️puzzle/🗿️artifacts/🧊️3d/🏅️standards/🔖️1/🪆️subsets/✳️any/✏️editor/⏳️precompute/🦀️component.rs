@@ -38,15 +38,42 @@ use std::pin::Pin;
 
 //#region 💼️FillJobBridge
 pub(crate) const FILL_JOB_KIND: &str = "semio.puzzle3d.fill";
+const FILL_WORKER_MAX_BYTES: usize = 4 * 1024 * 1024;
+const FILL_WORKER_MAX_MESHES: usize = 64;
+const FILL_WORKER_MAX_MESH_VALUES: usize = 196_608;
+const FILL_WORKER_MAX_AGGREGATE_MESH_VALUES: usize = 393_216;
+const FILL_WORKER_MAX_URL_BYTES: usize = 4 * 1024;
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 struct FillJobRequest {
     job: u64,
     operation: u64,
     generation: u64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+struct FillWorkerMesh {
+    url: String,
+    positions: Vec<f32>,
+    indices: Vec<u32>,
+    fallback: bool,
+}
+
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+struct FillWorkerState {
+    fill_job: FillJobRequest,
+    scene: SceneConfig,
+    meshes: Vec<FillWorkerMesh>,
+    fill_checkpoint: Vec<u8>,
+    fill_steps_remaining: usize,
+    fill_revision: u64,
+    fill_generation: u64,
+    fill_preview_sequence: u64,
+    fill_observation: FillObservation,
+    last_emitted_fill_checkpoint: Vec<u8>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 struct FillObservation {
     generation: u64,
     sequence: u64,
@@ -56,7 +83,6 @@ struct FillObservation {
 
 struct FillJobSlice {
     progress: Option<Vec<u8>>,
-    checkpoint: Option<Vec<u8>>,
     done: bool,
 }
 //#endregion 💼️FillJobBridge
@@ -97,6 +123,7 @@ pub(crate) struct Puzzle3dCollision {
     scene_json: Option<String>,
     meshes: HashMap<String, CollisionBody>,
     mesh_is_fallback: HashMap<String, bool>,
+    mesh_sources: HashMap<String, FillWorkerMesh>,
     pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
     pub(crate) brush_queue: VecDeque<String>,
     fill_steps_remaining: usize,
@@ -114,6 +141,7 @@ impl Puzzle3dCollision {
             scene_json: None,
             meshes: HashMap::new(),
             mesh_is_fallback: HashMap::new(),
+            mesh_sources: HashMap::new(),
             brush_cache: HashMap::new(),
             brush_queue: VecDeque::new(),
             fill_steps_remaining: 0,
@@ -273,6 +301,12 @@ impl Puzzle3dCollision {
     }
 
     fn install_collision_mesh(&mut self, url: String, positions: &[f32], indices: &[u32], is_fallback: bool) {
+        if url.len() > FILL_WORKER_MAX_URL_BYTES || positions.len() > FILL_WORKER_MAX_MESH_VALUES || indices.len() > FILL_WORKER_MAX_MESH_VALUES {
+            return;
+        }
+        if !self.mesh_sources.contains_key(&url) && self.mesh_sources.len() >= FILL_WORKER_MAX_MESHES {
+            return;
+        }
         let Some(body) = crate::editor::puzzle3d::precompute::geometry::collision_body_from_buffers(positions, indices) else {
             return;
         };
@@ -283,7 +317,8 @@ impl Puzzle3dCollision {
             return;
         }
         self.meshes.insert(url.clone(), body);
-        self.mesh_is_fallback.insert(url, is_fallback);
+        self.mesh_is_fallback.insert(url.clone(), is_fallback);
+        self.mesh_sources.insert(url.clone(), FillWorkerMesh { url, positions: positions.to_vec(), indices: indices.to_vec(), fallback: is_fallback });
         self.brush_cache.clear();
         self.soft_replan_fill_tail();
         self.refresh_fill_job(true);
@@ -652,6 +687,14 @@ pub struct Puzzle3dPrecomputeSession {
     last_emitted_fill_checkpoint: RefCell<Vec<u8>>,
 }
 
+/// 🪣️ One fixed semantic prefix transition for resumable fill materialization.
+pub(crate) struct FillApplyChunk {
+    pub(crate) applied_count: u32,
+    pub(crate) added_objects: Vec<crate::artifacts::puzzle3d::schema::FixtureObject>,
+    pub(crate) added_attractions: Vec<crate::artifacts::puzzle3d::schema::AttractionProps>,
+    pub(crate) removed_object_ids: Vec<String>,
+}
+
 impl Default for Puzzle3dPrecomputeSession {
     fn default() -> Self {
         Self::new()
@@ -664,7 +707,11 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        self.engine.set_scene(json)
+        let result = self.engine.set_scene(json);
+        if result.is_ok() {
+            self.last_emitted_fill_checkpoint.borrow_mut().clear();
+        }
+        result
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
@@ -723,22 +770,42 @@ impl Puzzle3dPrecomputeSession {
         self.engine.fill.as_ref().map_or(0, |fill| fill.sequence.len() as u32)
     }
 
+    /// 🪣️ Restores the small persisted cursor independently of the immutable fill-plan checkpoint.
+    pub(crate) fn set_fill_applied_count(&mut self, count: u32) {
+        if let Some(fill) = &mut self.engine.fill {
+            fill.applied_count = (count as usize).min(fill.sequence.len());
+        }
+    }
+
+    /// 🧵️ Advances only one bounded plan-prefix delta and checkpoints the new applied cursor.
+    pub(crate) fn apply_fill_count_chunk(&mut self, requested: u32, max_delta: usize) -> Option<FillApplyChunk> {
+        let fill = self.engine.fill.as_mut()?;
+        let target = (requested as usize).min(fill.sequence.len());
+        let current = fill.applied_count.min(fill.sequence.len());
+        let next = if target > current { current.saturating_add(max_delta).min(target) } else { current.saturating_sub(max_delta).max(target) };
+        let (added_objects, added_attractions, removed_object_ids) = if next > current {
+            (fill.appended_objects[current..next].to_vec(), fill.appended_attractions[current..next].to_vec(), Vec::new())
+        } else {
+            (Vec::new(), Vec::new(), fill.appended_objects[next..current].iter().rev().map(|object| object.id.clone()).collect())
+        };
+        fill.applied_count = next;
+        Some(FillApplyChunk { applied_count: next as u32, added_objects, added_attractions, removed_object_ids })
+    }
+
     pub fn fill_is_done(&self) -> bool {
         self.engine.fill.as_ref().is_none_or(|fill| fill.stalled || fill.sequence.len() >= fill.max_count)
     }
 
     pub fn fill_checkpoint_bytes(&self) -> Vec<u8> {
-        let checkpoint = self.engine.fill.as_ref().map_or_else(Vec::new, FillBuilder::checkpoint_bytes);
-        *self.last_emitted_fill_checkpoint.borrow_mut() = checkpoint.clone();
-        checkpoint
+        self.last_emitted_fill_checkpoint.borrow().clone()
     }
 
     pub fn restore_persisted_fill(&mut self, checkpoint: &[u8]) -> bool {
+        if !self.last_emitted_fill_checkpoint.borrow().is_empty() {
+            return self.engine.fill.is_some();
+        }
         if checkpoint.is_empty() {
             return false;
-        }
-        if self.last_emitted_fill_checkpoint.borrow().as_slice() == checkpoint {
-            return true;
         }
         let Some(fixture) = self.engine.scene.as_ref().map(|scene| scene.fixture.clone()) else {
             return false;
@@ -752,14 +819,90 @@ impl Puzzle3dPrecomputeSession {
     }
 
     //#region 💼️FillJobBridge
+    fn fill_worker_state(&self) -> Option<FillWorkerState> {
+        let fill_job = self.fill_job.clone()?;
+        let scene = self.engine.scene.clone()?;
+        let fill_checkpoint = self.engine.fill.as_ref()?.checkpoint_bytes();
+        let aggregate_mesh_values = self.engine.mesh_sources.values().try_fold(0usize, |total, mesh| total.checked_add(mesh.positions.len())?.checked_add(mesh.indices.len()))?;
+        if aggregate_mesh_values > FILL_WORKER_MAX_AGGREGATE_MESH_VALUES {
+            return None;
+        }
+        let mut meshes: Vec<_> = self.engine.mesh_sources.values().cloned().collect();
+        meshes.sort_by(|left, right| left.url.cmp(&right.url));
+        Some(FillWorkerState {
+            fill_job,
+            scene,
+            meshes,
+            fill_checkpoint,
+            fill_steps_remaining: self.engine.fill_steps_remaining,
+            fill_revision: self.engine.fill_revision,
+            fill_generation: self.engine.fill_generation,
+            fill_preview_sequence: self.engine.fill_preview_sequence,
+            fill_observation: self.fill_observation,
+            last_emitted_fill_checkpoint: self.last_emitted_fill_checkpoint.borrow().clone(),
+        })
+    }
+
+    fn fill_worker_checkpoint_bytes(&self) -> Option<Vec<u8>> {
+        let bytes = serde_json::to_vec(&self.fill_worker_state()?).ok()?;
+        (bytes.len() <= FILL_WORKER_MAX_BYTES).then_some(bytes)
+    }
+
+    fn restore_fill_worker_state(bytes: &[u8]) -> Result<Self, &'static str> {
+        if bytes.len() > FILL_WORKER_MAX_BYTES {
+            return Err("fill worker checkpoint exceeds byte limit");
+        }
+        let state: FillWorkerState = serde_json::from_slice(bytes).map_err(|_| "fill worker checkpoint is malformed")?;
+        let aggregate_mesh_values = state.meshes.iter().try_fold(0usize, |total, mesh| total.checked_add(mesh.positions.len())?.checked_add(mesh.indices.len())).ok_or("fill worker checkpoint mesh cardinality overflow")?;
+        if state.meshes.len() > FILL_WORKER_MAX_MESHES
+            || aggregate_mesh_values > FILL_WORKER_MAX_AGGREGATE_MESH_VALUES
+            || state.meshes.iter().any(|mesh| mesh.url.len() > FILL_WORKER_MAX_URL_BYTES || mesh.positions.len() > FILL_WORKER_MAX_MESH_VALUES || mesh.indices.len() > FILL_WORKER_MAX_MESH_VALUES)
+        {
+            return Err("fill worker checkpoint mesh envelope exceeds limit");
+        }
+        let mut session = Self::new();
+        for mesh in &state.meshes {
+            session.engine.install_collision_mesh(mesh.url.clone(), &mesh.positions, &mesh.indices, mesh.fallback);
+        }
+        let scene_json = serde_json::to_string(&state.scene).map_err(|_| "fill worker scene cannot be encoded")?;
+        let catalogs = state.scene.kind_catalogs.clone().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
+        let mut fill = FillBuilder::new(state.scene.fixture.clone(), state.scene.seed, &session.engine.meshes, &catalogs);
+        fill.configure(
+            Operation::new(semio_framework_job::OperationId(state.fill_job.operation), RevisionId(state.fill_revision), Generation(state.fill_job.generation), state.scene.seed as u64),
+            state.scene.weights.clone(),
+            state.scene.kind_compatibility.clone(),
+            state.scene.host_rules.clone(),
+            state.scene.fixture.target_volumes.clone(),
+            state.scene.overlap_budget,
+        );
+        fill.restore_checkpoint(&state.fill_checkpoint).map_err(|_| "fill worker checkpoint cannot restore fill state")?;
+        if fill.operation.operation.0 != state.fill_job.operation || fill.operation.generation.0 != state.fill_job.generation {
+            return Err("fill worker checkpoint operation is stale");
+        }
+        session.engine.scene = Some(state.scene);
+        session.engine.scene_json = Some(scene_json);
+        session.engine.fill = Some(fill);
+        session.engine.fill_steps_remaining = state.fill_steps_remaining;
+        session.engine.fill_revision = state.fill_revision;
+        session.engine.fill_generation = state.fill_generation;
+        session.engine.fill_preview_sequence = state.fill_preview_sequence;
+        session.fill_job = Some(state.fill_job);
+        session.fill_observation = state.fill_observation;
+        *session.last_emitted_fill_checkpoint.borrow_mut() = state.last_emitted_fill_checkpoint;
+        Ok(session)
+    }
+
     pub fn enqueue_fill_job(&mut self) -> Option<(u64, Vec<u8>)> {
         if self.fill_job.is_some() || !self.engine.fill_lane_active() {
             return None;
         }
         let operation = self.engine.fill.as_ref()?.operation;
         let request = FillJobRequest { job: semio_framework_job::allocate_operation_id().0, operation: operation.operation.0, generation: operation.generation.0 };
-        let input = serde_json::to_vec(&request).expect("fill job request is serializable");
         self.fill_job = Some(request.clone());
+        let Some(input) = self.fill_worker_checkpoint_bytes() else {
+            self.fill_job = None;
+            return None;
+        };
         Some((request.job, input))
     }
 
@@ -790,10 +933,13 @@ impl Puzzle3dPrecomputeSession {
         let stable_change = prior_available != current_available || done;
         let progress = visible_change.then(|| serde_json::to_vec(&self.fill_progress()).expect("fill progress is serializable"));
         let checkpoint = stable_change.then(|| self.engine.fill.as_ref().map_or_else(Vec::new, FillBuilder::checkpoint_bytes));
+        if let Some(checkpoint) = &checkpoint {
+            *self.last_emitted_fill_checkpoint.borrow_mut() = checkpoint.clone();
+        }
         if done {
             self.fill_job = None;
         }
-        Some(FillJobSlice { progress, checkpoint, done })
+        Some(FillJobSlice { progress, done })
     }
 
     #[cfg(test)]
@@ -804,15 +950,6 @@ impl Puzzle3dPrecomputeSession {
                 break;
             }
         }
-    }
-
-    fn restore_fill_job(&mut self, request: &FillJobRequest, checkpoint: &[u8]) -> bool {
-        let Some(current) = &self.fill_job else { return false };
-        let Some(fill) = &mut self.engine.fill else { return false };
-        if current.job != request.job || fill.operation.operation.0 != request.operation || fill.operation.generation.0 != request.generation {
-            return false;
-        }
-        fill.restore_checkpoint(checkpoint).is_ok()
     }
 
     //#endregion 💼️FillJobBridge
@@ -863,19 +1000,30 @@ impl Puzzle3dPrecomputeSession {
 //#region 💼️SharedPluginJob
 pub(crate) fn fill_job(context: semio_framework_plugin::reactor::jobs::JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
     Box::pin(async move {
-        let request: FillJobRequest = serde_json::from_slice(&input).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.decode"), error.to_string()))?;
-        if let Some(checkpoint) = restored {
-            crate::editor::puzzle3d::with_puzzle3d_app_mut(|app| app.precompute.borrow_mut().restore_fill_job(&request, &checkpoint));
+        let admitted = Puzzle3dPrecomputeSession::restore_fill_worker_state(&input).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.decode"), error))?;
+        let admitted_request = admitted.fill_job.clone().ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.decode"), "fill worker input has no operation"))?;
+        let mut session = match restored {
+            Some(checkpoint) => {
+                Puzzle3dPrecomputeSession::restore_fill_worker_state(&checkpoint).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.restore"), error))?
+            }
+            None => admitted,
+        };
+        let request = session.fill_job.clone().ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.restore"), "restored fill worker has no operation"))?;
+        if request != admitted_request {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.stale"), "restored fill worker operation does not match admitted operation"));
         }
         loop {
             context.tick().await;
-            let Some(slice) = crate::editor::puzzle3d::with_puzzle3d_app_mut(|app| app.precompute.borrow_mut().drive_fill_job(&request)) else {
+            let Some(slice) = session.drive_fill_job(&request) else {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.stale"), "fill job no longer matches the live operation"));
             };
             if let Some(progress) = slice.progress.clone() {
                 context.progress(progress).await;
             }
-            if let Some(checkpoint) = slice.checkpoint {
+            if !slice.done {
+                let checkpoint = session
+                    .fill_worker_checkpoint_bytes()
+                    .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.checkpoint"), "fill worker checkpoint exceeds envelope"))?;
                 context.checkpoint(checkpoint).await;
             }
             if slice.done {
@@ -1318,6 +1466,61 @@ mod tests {
         assert!(fixture.objects.iter().any(|object| object.id == "host"));
     }
 
+    fn fill_worker_session(seed: u32) -> Puzzle3dPrecomputeSession {
+        let mut engine = fill_capable_engine();
+        if seed != 1 {
+            let mut scene = engine.scene.clone().expect("scene");
+            scene.seed = seed;
+            engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("reseed scene");
+        }
+        engine.fill.as_mut().expect("fill").max_count = FILL_COUNT_MAX;
+        Puzzle3dPrecomputeSession { engine, fill_job: None, fill_observation: FillObservation::default(), last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
+    }
+
+    #[test]
+    fn fill_worker_cold_reopen_restores_complete_session_and_first_tick_resumes() {
+        let mut admitted = fill_worker_session(7);
+        let (_, input) = admitted.enqueue_fill_job().expect("fill job");
+        let admitted_state: FillWorkerState = serde_json::from_slice(&input).expect("worker state");
+        let mut reopened = Puzzle3dPrecomputeSession::restore_fill_worker_state(&input).expect("cold reopen");
+
+        assert_eq!(reopened.fill_job, Some(admitted_state.fill_job.clone()));
+        assert_eq!(serde_json::to_vec(reopened.engine.scene.as_ref().expect("scene")).expect("reopened scene"), serde_json::to_vec(&admitted_state.scene).expect("admitted scene"));
+        assert!(reopened.engine.fill.is_some());
+        assert_eq!(reopened.engine.fill_generation, admitted_state.fill_generation);
+        assert_eq!(reopened.engine.fill.as_ref().expect("fill").checkpoint_bytes(), admitted_state.fill_checkpoint);
+        assert_eq!(reopened.fill_checkpoint_bytes(), admitted_state.last_emitted_fill_checkpoint);
+
+        let slice = reopened.drive_fill_job(&admitted_state.fill_job).expect("the first isolated-worker tick resumes instead of stale-faulting");
+        assert!(!slice.done, "one bounded turn preserves a resumable continuation");
+        let checkpoint = reopened.fill_worker_checkpoint_bytes().expect("complete worker checkpoint");
+        let mut restarted = Puzzle3dPrecomputeSession::restore_fill_worker_state(&checkpoint).expect("checkpoint restart");
+        let request = restarted.fill_job.clone().expect("restored request");
+        assert!(restarted.drive_fill_job(&request).is_some(), "the checkpoint-restored next tick also resumes");
+    }
+
+    #[test]
+    fn fill_worker_checkpoints_isolate_two_operations_and_reject_aba_swaps() {
+        let mut left = fill_worker_session(11);
+        let mut right = fill_worker_session(29);
+        let (_, left_input) = left.enqueue_fill_job().expect("left job");
+        let (_, right_input) = right.enqueue_fill_job().expect("right job");
+        let left_state: FillWorkerState = serde_json::from_slice(&left_input).expect("left state");
+        let right_state: FillWorkerState = serde_json::from_slice(&right_input).expect("right state");
+        assert_ne!(left_state.fill_job, right_state.fill_job);
+        assert_ne!(left_state.scene.seed, right_state.scene.seed);
+
+        let left_reopened = Puzzle3dPrecomputeSession::restore_fill_worker_state(&left_input).expect("left reopen");
+        let right_reopened = Puzzle3dPrecomputeSession::restore_fill_worker_state(&right_input).expect("right reopen");
+        assert_eq!(left_reopened.engine.scene.as_ref().expect("left scene").seed, 11);
+        assert_eq!(right_reopened.engine.scene.as_ref().expect("right scene").seed, 29);
+
+        let mut swapped = left_state;
+        swapped.fill_job = right_state.fill_job;
+        let swapped_bytes = serde_json::to_vec(&swapped).expect("swapped state");
+        assert!(Puzzle3dPrecomputeSession::restore_fill_worker_state(&swapped_bytes).is_err(), "operation/checkpoint ABA mismatch fails closed");
+    }
+
     #[test]
     fn precompute_session_native_wrapper_errors_without_scene() {
         let mut session = Puzzle3dPrecomputeSession::new();
@@ -1510,7 +1713,6 @@ mod tests {
             pool.shutdown();
             match outcome {
                 StepOutcome::Complete(candidate) => {
-                    eprintln!("[DEBUG] puzzle3d-fill-worker-parity workers={worker_count} commit-bytes={}", candidate.state.len());
                     outputs.push(candidate.state);
                 }
                 other => panic!("worker_count={worker_count} ended with {other:?}"),
@@ -1550,7 +1752,6 @@ mod tests {
             engine.fill.as_ref().map_or(0, |fill| fill.preview.rejected_count)
         );
         assert!(completed, "fill did not complete within the bounded resume budget");
-        eprintln!("[DEBUG] puzzle3d-fill-preview first-preview-us={} max-step-us={}", first_preview.expect("first preview").as_micros(), max_step.as_micros());
     }
 }
 //#endregion 🧪️Tests

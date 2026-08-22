@@ -1011,6 +1011,8 @@ mod presence;
 mod style;
 #[path = "🦀️surface.rs"]
 mod surface;
+#[path = "🦀️text_edit.rs"]
+mod text_edit;
 
 pub use accessibility::*;
 pub use action::*;
@@ -1022,3 +1024,4 @@ pub use limits::*;
 pub use presence::*;
 pub use style::*;
 pub use surface::*;
+pub use text_edit::*;

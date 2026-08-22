@@ -10,7 +10,7 @@
     "steps",
     "selectedIds",
     "currentStepIndex",
-    "tryValuesJson",
+    "tryValues",
     "locale",
     "contributionsJson"
   ],
@@ -38,7 +38,7 @@
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "tryValuesJson": { "type": "string", "x-semio-state": "config" },
+    "tryValues": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string", "maxLength": 4096 } }, "x-semio-state": "config" },
     "locale": { "type": "string", "x-semio-state": "config" },
     "contributionsJson": { "type": "string", "x-semio-state": "config" }
   },

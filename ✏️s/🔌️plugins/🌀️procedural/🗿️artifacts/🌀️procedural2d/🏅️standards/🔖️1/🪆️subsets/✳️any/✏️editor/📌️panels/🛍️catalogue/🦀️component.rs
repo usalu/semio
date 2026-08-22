@@ -1,8 +1,8 @@
 //! 🛍️ Procedural2d play app panel — the widget/component catalogue and show-mode toggles.
 
-use crate::editor::procedural2d::procedural2d_action;
 use crate::editor::procedural2d::terminology::Procedural2dLabels;
-use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use crate::editor::procedural2d::PROCEDURAL2D_PLAY_APP_ID;
+use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -10,7 +10,7 @@ pub const PROCEDURAL2D_PLAY_BODY_CATALOGUE: &str = "procedural2d.play.catalogue"
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -22,42 +22,45 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &Procedural2dLabels) -> UiNode {
+pub fn render(labels: &Procedural2dLabels) -> BuiltNode {
     let sources = [("inputSlider", labels.source_slider), ("inputNote", labels.source_note)];
     let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
     let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
     PanelTreeBuilder::new("procedural2d-play-catalogue")
         .section(
             "procedural2d-play-catalogue.sources",
-            Some(labels.sources.into()),
+            Some(labels.sources.as_str().into()),
             true,
-            sources.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": kind }))))).collect(),
+            sources
+                .iter()
+                .map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind })))))
+                .collect(),
         )
         .section(
             "procedural2d-play-catalogue.components",
-            Some(labels.components.into()),
+            Some(labels.components.as_str().into()),
             true,
-            components.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))))).collect(),
+            components
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))))
+                })
+                .collect(),
         )
         .section(
             "procedural2d-play-catalogue.sinks",
-            Some(labels.sinks.into()),
+            Some(labels.sinks.as_str().into()),
             true,
-            sinks.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": kind }))))).collect(),
+            sinks.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind }))))).collect(),
         )
         .section(
             "procedural2d-play-catalogue.modes",
-            Some(labels.show_mode_section.into()),
+            Some(labels.show_mode_section.as_str().into()),
             false,
             ["preview", "generate", "wire"]
                 .iter()
                 .map(|mode| {
-                    tree_item_with_action(
-                        format!("procedural2d-play-catalogue.mode.{mode}"),
-                        semio_framework_plugin::Label::data(format!("{} {mode}", labels.show_prefix.as_str())),
-                        None,
-                        procedural2d_action("setShowMode", Some(json!({ "value": mode }))),
-                    )
+                    tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("setShowMode", Some(json!({ "value": mode }))))
                 })
                 .collect(),
         )
@@ -71,14 +74,14 @@ mod tests {
     use super::*;
     use crate::editor::procedural2d::testkit::{app, render as render_body};
 
-    #[semio_framework_async_macros::async_test]
-    async fn catalogue_lists_show_modes() {
+    #[test]
+    fn catalogue_lists_show_modes() {
         let mut app = app();
         assert!(render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE).contains("procedural2d-play-catalogue.mode.preview"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn procedural2d_labels_resolve_native_english_by_default() {
+    #[test]
+    fn procedural2d_labels_resolve_native_english_by_default() {
         let mut app = app();
         let json = render_body(&mut app, PROCEDURAL2D_PLAY_BODY_CATALOGUE);
         assert!(json.contains("\"Sources\""));

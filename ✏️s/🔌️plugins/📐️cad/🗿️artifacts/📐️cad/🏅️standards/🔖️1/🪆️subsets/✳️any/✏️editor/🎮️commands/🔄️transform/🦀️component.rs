@@ -21,7 +21,7 @@ pub mod translate_selection {
         pub dz: f64,
     }
 
-    pub async fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &TranslateSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let ids = ids_or_selection(&payload.object_ids, &ctx.interaction.ids);
         if ids.is_empty() {
             return Ok(Emit::default());
@@ -49,7 +49,7 @@ pub mod rotate_selection {
         pub angle: f64,
     }
 
-    pub async fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &RotateSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let ids = ids_or_selection(&payload.object_ids, &ctx.interaction.ids);
         if ids.is_empty() {
             return Ok(Emit::default());
@@ -74,7 +74,7 @@ pub mod scale_selection {
         pub sz: f64,
     }
 
-    pub async fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &ScaleSelection, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let ids = ids_or_selection(&payload.object_ids, &ctx.interaction.ids);
         if ids.is_empty() {
             return Ok(Emit::default());
@@ -96,7 +96,7 @@ pub mod apply_transformation {
         pub qid: String,
     }
 
-    pub async fn handle(payload: &ApplyTransformation, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &ApplyTransformation, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::mutations(apply_transformation_mutations(doc.snapshot, &payload.qid)))
     }
 }

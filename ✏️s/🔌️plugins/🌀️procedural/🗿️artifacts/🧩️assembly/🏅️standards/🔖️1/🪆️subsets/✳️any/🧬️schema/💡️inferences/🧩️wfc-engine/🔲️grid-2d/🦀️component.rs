@@ -277,6 +277,19 @@ impl Topology for Grid2dTopology {
         RegionId(0)
     }
 
+    fn out_arc_bound(&self, n: NodeId) -> usize {
+        let (x, y) = self.coords(n);
+        self.is_active(x, y).then_some(self.offsets.len()).unwrap_or(0)
+    }
+
+    fn out_arc_at(&self, n: NodeId, index: usize) -> Option<(NodeId, RelationId)> {
+        let (x, y) = self.coords(n);
+        let &(dx, dy) = self.offsets.get(index)?;
+        let nx = resolve_coord(x as i32 + dx, self.width, self.boundary_x)?;
+        let ny = resolve_coord(y as i32 + dy, self.height, self.boundary_y)?;
+        self.is_active(nx, ny).then(|| (NodeId::from_index(ny * self.width + nx), self.relations[index]))
+    }
+
     fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let (x, y) = self.coords(n);
         if !self.is_active(x, y) {

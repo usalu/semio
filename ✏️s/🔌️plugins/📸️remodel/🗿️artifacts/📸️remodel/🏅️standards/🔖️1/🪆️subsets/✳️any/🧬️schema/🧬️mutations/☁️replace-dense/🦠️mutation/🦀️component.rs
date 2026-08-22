@@ -17,7 +17,7 @@ pub struct ReplaceDense {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_dense(dense: Option<DenseCloud>) -> RemodelMutation {
+pub fn replace_dense(dense: Option<DenseCloud>) -> RemodelMutation {
     RemodelMutation::ReplaceDense(ReplaceDense { dense })
 }
 

@@ -7,11 +7,11 @@ use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefiniti
 pub const PROCEDURAL_3D_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PROCEDURAL_3D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_default_layout(&[flow::PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(), preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition
@@ -21,8 +21,8 @@ pub async fn layout() -> WindowLayout {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn the_default_layout_lists_both_edit_windows() {
+    #[test]
+    fn the_default_layout_lists_both_edit_windows() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(flow::PROCEDURAL_3D_PLAY_WINDOW_MAIN) && json.contains(preview::PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
     }

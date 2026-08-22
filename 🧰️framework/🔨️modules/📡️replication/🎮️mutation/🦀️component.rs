@@ -130,6 +130,11 @@ pub trait Mutation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     fn state_class(&self) -> crate::StateClass {
         crate::StateClass::Artifact
     }
+    /// @emoji 🌐️ Conservative base-independent foreign-step capability used to avoid replaying
+    /// ordinary local operations solely for transaction-proposal discovery.
+    fn may_emit_foreign_steps(&self) -> bool {
+        true
+    }
     /// @emoji 🌐️ Foreign steps this operation additionally dispatches to OTHER artifacts — empty
     /// for every ordinary single-artifact operation. Defaults to `Vec::new().await` so no existing
     /// `impl Mutation` breaks; only a composite mutation's delegating `MutationKind::foreign_steps`

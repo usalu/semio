@@ -7,7 +7,7 @@
 use crate::artifacts::procedural2d::{Procedural2dSnapshot, PROCEDURAL2D_DIALECT, PROCEDURAL_2D_SCHEMA};
 use crate::viewer::procedural2d::modes::view;
 use crate::viewer::procedural2d::modes::view::windows::preview;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -21,10 +21,10 @@ pub enum Procedural2dViewCommand {
 }
 
 impl protocol::OpBinary for Procedural2dViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Procedural2dViewCommand::Noop)
     }
 }
@@ -66,17 +66,17 @@ impl ArtifactViewer for Procedural2dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             preview::BODY_KEY => preview::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_procedural2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_procedural2d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PROCEDURAL2D_DIALECT)
         .document(["semio", "procedural", "2d"])
         .icon_id("procedural2d")
@@ -93,15 +93,15 @@ pub async fn create_procedural2d_viewer() -> semio_framework_plugin::AppDefiniti
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_procedural2d_viewer_builds_a_definition_for_the_viewer_role() {
+    #[test]
+    fn create_procedural2d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_procedural2d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, PROCEDURAL2D_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Procedural2dViewer as ArtifactViewer>::DIALECT, PROCEDURAL2D_DIALECT);
     }
 }

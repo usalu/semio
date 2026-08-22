@@ -30,6 +30,8 @@ pub struct FlowConfig {
     #[state(config)]
     pub generation_json: String,
     #[state(config)]
+    pub duplicate_widget_progress_json: String,
+    #[state(config)]
     pub locale: String,
 }
 

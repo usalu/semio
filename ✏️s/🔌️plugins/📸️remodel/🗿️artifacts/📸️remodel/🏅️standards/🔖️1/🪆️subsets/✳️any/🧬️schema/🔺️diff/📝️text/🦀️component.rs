@@ -32,6 +32,9 @@ impl RemodelDiff {
             if let Some(assets) = &self.assets {
                 next.assets = assets.clone();
             }
+            if let Some(durable_artifacts) = &self.durable_artifacts {
+                next.durable_artifacts = durable_artifacts.clone();
+            }
             if let Some(calibration) = &self.calibration {
                 next.calibration = calibration.clone();
             }
@@ -92,6 +95,9 @@ impl MutationDiff<RemodelSnapshot> for RemodelDiff {
             if let Some(assets) = &self.assets {
                 next.assets = assets.clone();
             }
+            if let Some(durable_artifacts) = &self.durable_artifacts {
+                next.durable_artifacts = durable_artifacts.clone();
+            }
             if let Some(calibration) = &self.calibration {
                 next.calibration = calibration.clone();
             }
@@ -126,6 +132,7 @@ impl MutationDiff<RemodelSnapshot> for RemodelDiff {
         take!(id);
         take!(streams);
         take!(assets);
+        take!(durable_artifacts);
         take!(calibration);
         take!(params);
         take!(gcps);

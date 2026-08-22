@@ -100,17 +100,17 @@ impl Default for Procedural3dArtifact {
 
 impl Procedural3dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Procedural3dSnapshot {
+    pub fn to_snapshot(&self) -> Procedural3dSnapshot {
         Procedural3dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Procedural3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Procedural3dSnapshot) -> Self {
         Self { fixture: snapshot.fixture, generation: snapshot.generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Procedural3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Procedural3dSnapshot) {
         self.fixture = snapshot.fixture;
         self.generation = snapshot.generation;
     }
@@ -118,7 +118,7 @@ impl Procedural3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.procedural.procedural3d` — twenty handcrafted schema leaves.
-pub async fn procedural3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn procedural3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.procedural.procedural3d",
         artifact: schema::FacetLeaves {
@@ -174,10 +174,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Procedural3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Procedural3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Procedural3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Procedural3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -282,16 +282,16 @@ pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
 /// column" example fixture.
-pub async fn default_snapshot() -> Procedural3dSnapshot {
+pub fn default_snapshot() -> Procedural3dSnapshot {
     Procedural3dSnapshot::parse_dsl(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
 }
 
-pub async fn empty_procedural3d_snapshot() -> Procedural3dSnapshot {
+pub fn empty_procedural3d_snapshot() -> Procedural3dSnapshot {
     Procedural3dSnapshot::default()
 }
 
 /// 🧾️ Whether `example_id` names a bundled procedural-3d example fixture.
-pub async fn is_procedural3d_example_id(example_id: &str) -> bool {
+pub fn is_procedural3d_example_id(example_id: &str) -> bool {
     matches!(
         example_id,
         PROCEDURAL_EXAMPLE_HEX_COLUMN
@@ -307,7 +307,7 @@ pub async fn is_procedural3d_example_id(example_id: &str) -> bool {
 }
 
 /// 🧾️ Builds the projection for a named bundled example; unknown ids return `None`.
-pub async fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> {
+pub fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> {
     let dsl = match example_id {
         PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT),
         PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT),
@@ -323,11 +323,11 @@ pub async fn example_snapshot(example_id: &str) -> Option<Procedural3dSnapshot> 
 }
 
 /// 🧾️ Serializes an example's bare projection for registration via `App::example`.
-pub async fn example_document_json(example_id: &str) -> String {
+pub fn example_document_json(example_id: &str) -> String {
     serde_json::to_string(&example_snapshot(example_id).unwrap_or_default()).unwrap_or_default()
 }
 
-pub async fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
+pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
     if let Some(selected) = selected_generation(generation) {
         let patched = apply_generation_values_to_fixture(&serde_json::to_string(fixture).unwrap_or_default(), &selected.values);
         FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone())
@@ -336,28 +336,28 @@ pub async fn generation_fixture_for(fixture: &FlowFixture, generation: &Generati
     }
 }
 
-pub async fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
     host
 }
 
-pub async fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
+pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
     flow_host_with_session(fixture, session)
 }
 
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
-pub async fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::artifacts::procedural3d::op::Procedural3dMutation> {
+pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::artifacts::procedural3d::op::Procedural3dMutation> {
     let baseline = host_from_fixture(before).fixture;
     crate::artifacts::procedural3d::op::procedural3d_fixture_operations(&baseline, target)
 }
 
-pub async fn split_endpoint(endpoint: &str) -> (String, String) {
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord>) {
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord>) {
     let nodes: Vec<ui_wgpu::wgpu::NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -385,11 +385,11 @@ pub async fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::No
     (nodes, edges)
 }
 
-pub async fn widget_id_from_instance_id(instance_id: &str) -> &str {
+pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
     instance_id.split('#').next().unwrap_or(instance_id)
 }
 
-pub async fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
     let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
@@ -401,7 +401,7 @@ pub async fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_j
 
 //#region 🔖️GumballTransforms
 /// 🧭️ Maps a gumball drag operation to the flow-graph transform neuron kind that persists it.
-pub async fn gumball_xform_kind(operation: &str) -> &'static str {
+pub fn gumball_xform_kind(operation: &str) -> &'static str {
     match operation {
         "rotate" => "brep.xform.rotate",
         "scale" => "brep.xform.scale",
@@ -410,15 +410,15 @@ pub async fn gumball_xform_kind(operation: &str) -> &'static str {
 }
 
 /// 🪪️ Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.
-pub async fn gumball_widget_id(source_id: &str, operation: &str) -> String {
+pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
     format!("{source_id}__gumball_{operation}")
 }
 
-pub async fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<Value> {
+pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<Value> {
     host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).and_then(|widget| serde_json::to_value(widget).ok())
 }
 
-pub async fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
+pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
     let offset = gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get("offset")).cloned());
     [
         offset.as_ref().and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or(0.0),
@@ -427,22 +427,22 @@ pub async fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64
     ]
 }
 
-pub async fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
+pub fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
     gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(Value::as_f64)).unwrap_or(default)
 }
 
-pub async fn gumball_translate_params_json(offset: [f64; 3]) -> String {
+pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
     serde_json::json!({ "offset": { "$schema": "vector", "x": offset[0], "y": offset[1], "z": offset[2] } }).to_string()
 }
 
-pub async fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
+pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
     serde_json::json!({
         "axis": { "$schema": "vector", "x": axis[0], "y": axis[1], "z": axis[2] },
         "angle": { "$schema": "number", "value": angle }})
     .to_string()
 }
 
-pub async fn gumball_scale_params_json(factor: f64) -> String {
+pub fn gumball_scale_params_json(factor: f64) -> String {
     serde_json::json!({
         "factor": { "$schema": "number", "value": factor },
         "center": { "$schema": "point", "x": 0.0, "y": 0.0, "z": 0.0 }})
@@ -452,7 +452,7 @@ pub async fn gumball_scale_params_json(factor: f64) -> String {
 /// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
 /// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
 /// actually evaluates and exports.
-pub async fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
+pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
     let own_suffix = format!("__gumball_{operation}");
     if selected_id.ends_with(&own_suffix) && host.fixture.widgets.iter().any(|widget| widget_id(widget) == selected_id) {
         return Ok(selected_id.to_string());

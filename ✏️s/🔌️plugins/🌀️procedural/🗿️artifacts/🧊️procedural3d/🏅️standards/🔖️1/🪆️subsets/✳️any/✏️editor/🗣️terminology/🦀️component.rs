@@ -31,13 +31,13 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn procedural3d_labels(cfg: &Procedural3dConfig) -> &'static Procedural3dLabels {
+pub fn procedural3d_labels(cfg: &Procedural3dConfig) -> &'static Procedural3dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Procedural3dLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to
 /// the id itself.
-pub async fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
+pub fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
     match kind {
         "neuron" => labels.catalog_neuron.as_str(),
         "inputSlider" => labels.catalog_slider.as_str(),
@@ -53,14 +53,14 @@ pub async fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    #[test]
+    fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(procedural3d_labels(&Procedural3dConfig::default()).widgets.as_str(), "Widgets");
         assert_eq!(procedural3d_labels(&Procedural3dConfig { locale: "de-DE".into(), ..Procedural3dConfig::default() }).widgets.as_str(), "Elemente");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn unknown_catalog_kind_falls_back_to_the_id_itself() {
+    #[test]
+    fn unknown_catalog_kind_falls_back_to_the_id_itself() {
         let labels = procedural3d_labels(&Procedural3dConfig::default());
         assert_eq!(procedural3d_catalog_label("bogusKind", labels), "bogusKind");
     }

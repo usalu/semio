@@ -4,6 +4,6 @@
 use crate::artifacts::assembly::mutations::{change_seed, AssemblyMutation};
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn inverse(_payload: &super::mutation::ChangeSeed, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+pub fn inverse(_payload: &super::mutation::ChangeSeed, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     vec![change_seed(base.seed)]
 }

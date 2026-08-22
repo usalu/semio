@@ -4,12 +4,16 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceMeshResult, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
-    if *payload.mesh == base.results.mesh {
+pub fn diff(payload: &super::mutation::ReplaceMeshResult, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+    if payload.mesh.mesh.target.artifact_id.starts_with("mesh-stage:") {
+        return protocol::MutationOutcome::error("mutation.incomplete-mesh", "Private reconstruction staging handles are accepted only by CommitReconstruction.".into(), [payload.mesh.mesh.child_id.clone()]);
+    }
+    let mesh = (*payload.mesh).clone();
+    if mesh == base.results.mesh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mesh result is already up to date.".to_string());
     }
     let mut results = base.results.clone();
-    results.mesh = (*payload.mesh).clone();
+    results.mesh = mesh;
     protocol::MutationOutcome::new(RemodelDiff { results: Some(results), ..Default::default() })
 }
 //#endregion 🔖️Diff

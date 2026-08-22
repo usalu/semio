@@ -73,6 +73,8 @@ type CurateStringList {
 
 type ObjectKindExtra {
   id: String!
+  name: String!
+  moduleId: String!
   typologyPath: [String!]!
   availability: Int!
   geometry: GeometryRecipe!

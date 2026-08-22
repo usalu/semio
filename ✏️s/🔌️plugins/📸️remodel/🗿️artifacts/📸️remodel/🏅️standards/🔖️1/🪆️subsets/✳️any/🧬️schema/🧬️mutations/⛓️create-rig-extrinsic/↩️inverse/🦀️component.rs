@@ -4,7 +4,7 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::CreateRigExtrinsic, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub fn inverse(payload: &super::mutation::CreateRigExtrinsic, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     if base.calibration.rig.iter().any(|extrinsic| extrinsic.camera_id == payload.extrinsic.camera_id) {
         return Vec::new();
     }

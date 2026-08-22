@@ -17,7 +17,7 @@ pub struct RemoveWidget {
 
 /// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
 /// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub async fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     let target_id = &payload.widget_id;
     let operations = host_operations(fixture, |host| {

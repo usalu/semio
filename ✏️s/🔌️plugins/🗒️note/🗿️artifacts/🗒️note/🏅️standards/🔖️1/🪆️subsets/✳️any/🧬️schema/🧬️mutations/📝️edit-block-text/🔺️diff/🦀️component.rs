@@ -15,7 +15,7 @@ pub async fn diff(payload: &EditBlockText, base: &NoteSnapshot) -> protocol::Mut
     }
     let mut updated = block.clone();
     if let crate::artifacts::note::NoteBlockNode::Text { content, .. } = &mut updated {
-        *content = crate::artifacts::note::note_text_child_handle_and_cache(&payload.id, &payload.new_paragraphs);
+        *content = crate::artifacts::note::note_text_child_record(&payload.id, &payload.new_paragraphs);
     }
     protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, updated))
 }

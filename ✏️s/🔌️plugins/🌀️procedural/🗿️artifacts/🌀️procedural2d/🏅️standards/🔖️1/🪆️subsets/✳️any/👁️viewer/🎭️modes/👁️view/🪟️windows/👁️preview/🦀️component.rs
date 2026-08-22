@@ -7,7 +7,7 @@
 //! (`ViewEmit`), so this render duplicates the small, pure structural layer instead of sharing it.
 
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "procedural2d-view-preview";
@@ -20,7 +20,7 @@ const PROCEDURAL2D_VIEW_CONTROLLER_ID: &str = "procedural2d-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::procedural2d::create_procedural2d_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -41,11 +41,11 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `Procedural2dSnapshot -> UiNode` read: a fixed default camera (a viewer has no persisted
+/// 👁️ Pure `Procedural2dSnapshot -> BuiltNode` read: a fixed default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
 /// position — no evaluated drawing-handle overlay (that needs a live `flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
-pub async fn render(document: &Procedural2dSnapshot) -> UiNode {
+pub fn render(document: &Procedural2dSnapshot) -> BuiltNode {
     let fixture = &document.fixture;
     let layers: Vec<serde_json::Value> = fixture
         .widgets
@@ -64,7 +64,8 @@ pub async fn render(document: &Procedural2dSnapshot) -> UiNode {
             })
         })
         .collect();
-    build_canvas_2d_scene(SURFACE_ID, PROCEDURAL2D_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) })
+    let _ = PROCEDURAL2D_VIEW_CONTROLLER_ID;
+    crate::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) })
 }
 //#endregion 🔖️Render
 
@@ -73,15 +74,15 @@ pub async fn render(document: &Procedural2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    #[test]
+    fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let def = definition();
         assert_eq!(def.body_key, BODY_KEY);
         assert!(matches!(def.surface_kind, SurfaceKind::Canvas2d));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_scene_node_for_the_default_document() {
+    #[test]
+    fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::procedural2d::schema::default_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"));

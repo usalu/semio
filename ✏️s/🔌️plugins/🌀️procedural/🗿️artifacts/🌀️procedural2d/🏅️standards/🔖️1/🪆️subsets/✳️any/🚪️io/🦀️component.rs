@@ -1,11 +1,11 @@
 //! 🚪️ IO s.procedural2d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
 }
 // 🖊️ No "stdio.dwg" here (export-only list): procedural3d owns the EXPORT claim, see `🚪️IoRegistry`
 // region below. Import is unaffected — "stdio.dwg" stays in `import_stdio_kinds` above.
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.txt"]
 }
 //#region 🎹️DerivedComposition
@@ -40,7 +40,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = Procedural2dAnalyzer::analyze(&[native]);
+                    let analysis = Procedural2dAnalyzer::analyze(&[native]).await;
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -144,10 +144,10 @@ pub mod io_registry {
     async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::procedural2d::Procedural2dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCEDURAL2D_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => Procedural2dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => Procedural2dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => Procedural2dAnyBuilder::from_text(t).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => Procedural2dAnyBuilder::from_binary(b).await.map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "Procedural2dComposer export: build() failed".into(), diagnostics });
+            return builder.build().await.map_err(|diagnostics| ComposeError { message: "Procedural2dComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCEDURAL2D_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
@@ -163,33 +163,33 @@ pub mod io_registry {
     }
 
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    async fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
+            let snapshot = rebuild_native_snapshot(sources).await?;
             let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    async fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
+            let snapshot = rebuild_native_snapshot(sources).await?;
             let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
+            let snapshot = rebuild_native_snapshot(sources).await?;
             let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
+            let snapshot = rebuild_native_snapshot(sources).await?;
             let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
@@ -199,16 +199,16 @@ pub mod io_registry {
     // `definition()` docstring for the ownership rule). `derived_composition`'s `reads()` above still
     // lists `DEP_DWG`, so import is unaffected.
     const EXPORT_DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
-    async fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
+            let snapshot = rebuild_native_snapshot(sources).await?;
             let bytes = crate::artifacts::procedural2d::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

@@ -6,7 +6,7 @@ use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{def
 use crate::artifacts::cad::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{reset_document_effect, runtime_of, snapshot_of, CadPlayRuntime};
+use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayRuntime};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub mod focus_model_definition {
         pub model_definition_id: String,
     }
 
-    pub async fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub async fn handle(payload: &FocusModelDefinition, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::mutations(vec![CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: payload.model_definition_id.clone() })]))
     }
 }
@@ -36,10 +36,11 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let _ = runtime_of(cfg);
+    pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+        let current = runtime_of(cfg);
+        let preserved_shell = (current.active_utility_id, current.locale, current.terminology);
         let (scene, runtime) = if payload.example_id.is_empty() {
-            (default_document(), CadPlayRuntime::default())
+            (default_document(), CadPlayRuntime { active_utility_id: preserved_shell.0.clone(), locale: preserved_shell.1.clone(), terminology: preserved_shell.2.clone(), ..CadPlayRuntime::default() })
         } else if payload.example_id == CAD_EXAMPLE_FOREST_LEFT || payload.example_id == "forest-left" {
             let forest_camera = forest_play_camera();
             (
@@ -50,6 +51,9 @@ pub mod set_active_example {
                     camera_building: forest_camera.clone(),
                     camera_energy: forest_camera.clone(),
                     camera_structure_classic: forest_camera,
+                    active_utility_id: preserved_shell.0,
+                    locale: preserved_shell.1,
+                    terminology: preserved_shell.2,
                     ..CadPlayRuntime::default()
                 },
             )
@@ -57,7 +61,7 @@ pub mod set_active_example {
             return Ok(Emit::default());
         };
         let mut emit = Emit { effects: vec![reset_document_effect(&scene)], ..Default::default() };
-        emit.config_mutations = vec![snapshot_of(&runtime, cfg.snapshot)];
+        emit.config_mutations = vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?];
         Ok(emit)
     }
 }

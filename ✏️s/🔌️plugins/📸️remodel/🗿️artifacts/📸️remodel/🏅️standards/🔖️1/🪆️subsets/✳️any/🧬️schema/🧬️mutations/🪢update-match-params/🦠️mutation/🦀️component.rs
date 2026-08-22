@@ -16,7 +16,7 @@ pub struct UpdateMatchParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_match_params(params: MatchParams) -> RemodelMutation {
+pub fn update_match_params(params: MatchParams) -> RemodelMutation {
     RemodelMutation::UpdateMatchParams(UpdateMatchParams { params })
 }
 

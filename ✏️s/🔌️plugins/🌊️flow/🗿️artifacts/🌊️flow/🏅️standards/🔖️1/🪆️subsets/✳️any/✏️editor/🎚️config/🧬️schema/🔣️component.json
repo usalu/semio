@@ -15,6 +15,7 @@
     "automationEnabledJson",
     "contributionsJson",
     "generationJson",
+    "duplicateWidgetProgressJson",
     "locale"
   ],
   "properties": {
@@ -62,6 +63,10 @@
       "x-semio-state": "config"
     },
     "generationJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "duplicateWidgetProgressJson": {
       "type": "string",
       "x-semio-state": "config"
     },

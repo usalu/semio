@@ -88,6 +88,7 @@
       "required": ["id"],
       "properties": {
         "id": { "type": "string" },
+        "name": { "type": "string" },
         "label": { "type": "string" },
         "description": { "type": "string" },
         "icon": { "type": "string" },
@@ -125,6 +126,7 @@
       "required": ["id"],
       "properties": {
         "id": { "type": "string" },
+        "name": { "type": "string" },
         "label": { "type": "string" }
       }
     },
@@ -135,6 +137,7 @@
       "required": ["id"],
       "properties": {
         "id": { "type": "string" },
+        "name": { "type": "string" },
         "label": { "type": "string" },
         "defaultFastenerKind": { "type": "string" }
       }

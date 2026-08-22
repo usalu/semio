@@ -325,17 +325,6 @@ mod tests {
                 engine.propagate(&model, &topo, &mut domains_batch, &applied, &mut metrics_batch)
             });
 
-            if let (Err(_), Ok(())) | (Ok(()), Err(_)) = (&seq_result, &batch_result) {
-                eprintln!("DEBUG trial {trial}: pattern_count={pattern_count} node_count={node_count}");
-                eprintln!("DEBUG arcs={arcs:?}");
-                eprintln!("DEBUG seed_events={seed_events:?}");
-                for a in 0..pattern_count {
-                    for c in 0..pattern_count {
-                        eprintln!("DEBUG allowed(r,{a},{c})={}", model.allowed(r, PatternId::from_index(a)).get(PatternId::from_index(c)));
-                    }
-                }
-            }
-
             match (seq_result, batch_result) {
                 (Ok(()), Ok(())) => {
                     for n in 0..node_count {

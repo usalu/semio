@@ -16,7 +16,7 @@ pub struct UpdateMeshParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_mesh_params(params: MeshParams) -> RemodelMutation {
+pub fn update_mesh_params(params: MeshParams) -> RemodelMutation {
     RemodelMutation::UpdateMeshParams(UpdateMeshParams { params })
 }
 

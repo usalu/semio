@@ -1,181 +1,218 @@
-// #region 🧲️Header
-/** @emoji 🧊️ Trunk boot glue — loads wasm programs and starts the wgpu renderer. */
-// #endregion 🧲️Header
+//#region 🧲️PlatformBoot
+/** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
-import { pluginGraphErrorMessage, type PluginRegistryEntry, type ShellLocale } from "@semio-tech/framework";
-import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../../../../../../../🔌️plugin/📇️registry/🟦️catalog.ts";
-import { loadPluginModule, pluginHandleForBridge } from "./🐚️plugin-bridge.ts";
+import { BrowserFrameTransport, type BrowserFramePointer, type BrowserFrameWorkerFaultCode } from "./🧵️browser-frame-transport.ts";
+import { setInteractiveJobPort } from "../../../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️interactive-job.ts";
+
+const RENDERER_MODULE_URL = new URL("./semio-framework-os-renderer-wgpu.js", import.meta.url).href;
+const RENDERER_WASM_URL = new URL("./semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
+const FRAME_WORKER_URL = new URL("./🟨️frame-worker.js", import.meta.url);
+const BOOT_FIELD_CAPACITY = 2048;
+const LOCATION_SEARCH_CAPACITY = 8192;
 
 await new Promise<void>((resolve) => {
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => resolve(), { once: true });
-  } else {
-    resolve();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => resolve(), { once: true });
+  else resolve();
 });
 
-// 🛠️ Named (not `typeof handles`) so `semioWgpuMount`'s cast below doesn't reference the very
-// variable it types — TS flags that self-reference (TS2502) once the `handles` array's element type
-// itself involves a `ReturnType<...>` (see `pluginHandleForBridge`'s exported `WgpuJsBridge` return
-// type in `🐚️plugin-bridge.ts`).
-type WgpuBootPluginEntry = { readonly pluginId: string; readonly handle: ReturnType<typeof pluginHandleForBridge> };
-
-const bootVariant = new URLSearchParams(window.location.search).get("plugin") ?? "s";
-const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariant);
-const pluginTargets: PluginRegistryEntry[] = boot.plugins.map((entry) => ({
-  pluginId: entry.pluginId,
-  moduleUrl: entry.moduleUrl,
-  contributes: entry.contributes,
-  consumes: entry.consumes,
-}));
-const pluginFilter = boot.variant;
-
-async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
-  try {
-    const response = await fetch(moduleUrl, { method: "HEAD" });
-    return response.ok;
-  } catch {
-    return false;
-  }
+function locale(): "en" | "de" {
+  return navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
-function renderBootErrorBanner(message: string): void {
-  console.error(`[DEBUG] wgpu boot failed: ${message}`);
-  const root = document.getElementById("root");
-  if (!root) return;
-  const banner = document.createElement("div");
-  banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0a;color:#ffb4b4;font-family:monospace;font-size:14px;white-space:pre-wrap;overflow:auto;z-index:9999;";
-  banner.textContent = `wgpu renderer boot failed:\n\n${message}`;
-  root.appendChild(banner);
+function bounded(value: string, field: string): string {
+  if (value.length > BOOT_FIELD_CAPACITY) throw new Error(`boot-descriptor-overflow: ${field} exceeds ${BOOT_FIELD_CAPACITY} code units`);
+  return value;
 }
 
-/** 🌐️ No shell locale selector exists this early in boot (before any app/config has loaded) —
- * `navigator.language` is the best signal available, English/German only per the repo's
- * `ShellLocale` axis. */
-function resolveBootLocale(): ShellLocale {
-  return typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("de") ? "de" : "en";
-}
-
-/** 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: `VITE_SEMIO_APP_ROLE`,
- * values `"viewer"`/`"editor"`, default `"editor"`. This target is Trunk-served (`Trunk.toml`), not
- * Vite-bundled, so `import.meta.env.VITE_SEMIO_APP_ROLE` is read defensively (a harmless `undefined`
- * unless a deployment wraps this boot module through a Vite dev server) — a `?plugin=`-style URL
- * param is the always-available fallback for this shell, mirroring `bootVariant`'s own
- * `URLSearchParams` idiom a few lines below. */
-function resolveBootAppRole(): string {
-  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SEMIO_APP_ROLE;
-  const urlRole = new URLSearchParams(window.location.search).get("role") ?? undefined;
-  return viteEnv === "viewer" || urlRole === "viewer" ? "viewer" : "editor";
-}
-
-/** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0 — `S_HUB_URL`/
- * `S_USER`/`S_DATA_DIR` for the browser wgpu build. Same defensive-read posture as
- * `resolveBootAppRole` right above (this target is Trunk-served, not Vite-bundled, so
- * `import.meta.env.VITE_S_*` only resolves when a deployment wraps this boot module through a Vite
- * dev server) with `?hub=`/`?user=`/`?dataDir=` URL-param fallbacks mirroring `resolveBootAppRole`'s
- * own `?role=` idiom. `undefined` hub url ⇒ no hub env at all ⇒ `semioWgpuSetHubEnv` is never called
- * ⇒ the Rust side's `resolve_identity_env` stays `None` ⇒ unchanged local-only behaviour. */
-function resolveBootHubEnv(): { hubUrl: string; user: string; dataDir: string } | undefined {
-  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+function bootDescriptor(): { pluginVariant: string; appRole: string; hub?: { hubUrl: string; user: string; dataDir: string } } {
+  if (window.location.search.length > LOCATION_SEARCH_CAPACITY) throw new Error(`boot-descriptor-overflow: location.search exceeds ${LOCATION_SEARCH_CAPACITY} code units`);
   const params = new URLSearchParams(window.location.search);
-  const hubUrl = viteEnv?.VITE_S_HUB_URL ?? params.get("hub") ?? undefined;
-  if (!hubUrl) return undefined;
-  const user = viteEnv?.VITE_S_USER ?? params.get("user") ?? "";
-  const dataDir = viteEnv?.VITE_S_DATA_DIR ?? params.get("dataDir") ?? "";
-  return { hubUrl, user, dataDir };
+  const hubUrl = params.get("hub");
+  return {
+    pluginVariant: bounded(params.get("plugin") ?? "s", "plugin"),
+    appRole: params.get("role") === "viewer" ? "viewer" : "editor",
+    ...(hubUrl ? { hub: { hubUrl: bounded(hubUrl, "hub"), user: bounded(params.get("user") ?? "", "user"), dataDir: bounded(params.get("dataDir") ?? "", "dataDir") } } : {}),
+  };
 }
 
-/** 🌐️ Surfaces a missing/incompatible plugin dependency (ticket
- * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS) as a real, localized
- * banner instead of only a console error — non-fatal, since `boot.plugins` already excludes the
- * blocked entries and every OTHER plugin still boots (contract freeze §4 rule 5's fail-soft posture). */
-function renderDependencyFaultBanner(messages: readonly string[]): void {
-  const root = document.getElementById("root");
-  if (!root) return;
+function canvasElement(): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.tabIndex = 0;
+  canvas.setAttribute("aria-label", locale() === "de" ? "Semio Arbeitsfläche" : "Semio workspace");
+  canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none;outline:none;";
+  return canvas;
+}
+
+function statusElement(root: HTMLElement): HTMLElement {
+  const status = document.createElement("div");
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  status.style.cssText = "position:fixed;left:12px;bottom:12px;padding:6px 9px;background:#001117cc;color:#d7f7ff;font:12px monospace;z-index:9997;";
+  root.appendChild(status);
+  return status;
+}
+
+function renderFault(root: HTMLElement, code: string, detail: string): void {
   const banner = document.createElement("div");
-  banner.style.cssText = "position:fixed;top:0;left:0;right:0;padding:12px 24px;background:#4a2a00;color:#ffd8a8;font-family:monospace;font-size:13px;white-space:pre-wrap;z-index:9998;";
-  banner.textContent = messages.join("\n");
+  banner.setAttribute("role", "alert");
+  banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0acc;color:#ffb4b4;font:14px monospace;white-space:pre-wrap;overflow:auto;z-index:9999;";
+  banner.textContent = `wgpu renderer fault:\n\n${code}: ${detail}\n\nNo UI-thread frame fallback was attempted.`;
   root.appendChild(banner);
 }
+//#endregion 🧲️PlatformBoot
 
-if (boot.dependencyErrors.length > 0) {
-  const locale = resolveBootLocale();
-  const messages = boot.dependencyErrors.map((error) => pluginGraphErrorMessage(error, locale));
-  for (const message of messages) console.error(`[DEBUG] plugin dependency fault: ${message}`);
-  renderDependencyFaultBanner(messages);
+//#region 🎮️PlatformInput
+function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport): () => void {
+  const abort = new AbortController();
+  const options = { signal: abort.signal };
+  const pointer = (event: PointerEvent): BrowserFramePointer => ({
+    pointerId: event.pointerId,
+    pointerKind: event.pointerType === "touch" || event.pointerType === "pen" ? event.pointerType : "mouse",
+    x: event.offsetX * window.devicePixelRatio,
+    y: event.offsetY * window.devicePixelRatio,
+    pressure: event.pressure || undefined,
+    tiltX: event.tiltX || undefined,
+    tiltY: event.tiltY || undefined,
+  });
+  const observed = (site: string, startedAt: number) => void transport.observeUiTurn(site, performance.now() - startedAt);
+  canvas.addEventListener("pointermove", (event) => {
+    const startedAt = performance.now();
+    transport.enqueueReplaceable({ kind: "pointer-move", ...pointer(event) });
+    observed("pointer-move", startedAt);
+  }, options);
+  canvas.addEventListener("pointerdown", (event) => {
+    const startedAt = performance.now();
+    canvas.focus({ preventScroll: true });
+    canvas.setPointerCapture(event.pointerId);
+    transport.enqueueLossless({ kind: "pointer-down", ...pointer(event), button: event.button === 2 ? "secondary" : event.button === 1 ? "middle" : "primary" });
+    observed("pointer-down", startedAt);
+  }, options);
+  canvas.addEventListener("pointerup", (event) => {
+    const startedAt = performance.now();
+    transport.enqueueLossless({ kind: "pointer-up", ...pointer(event), button: event.button === 2 ? "secondary" : event.button === 1 ? "middle" : "primary" });
+    observed("pointer-up", startedAt);
+  }, options);
+  canvas.addEventListener("wheel", (event) => {
+    const startedAt = performance.now();
+    event.preventDefault();
+    transport.enqueueReplaceable({ kind: "wheel", x: event.offsetX * window.devicePixelRatio, y: event.offsetY * window.devicePixelRatio, deltaX: event.deltaX, deltaY: event.deltaY });
+    observed("wheel", startedAt);
+  }, { ...options, passive: false });
+  const key = (event: KeyboardEvent, kind: "key-down" | "key-up") => {
+    const startedAt = performance.now();
+    transport.enqueueLossless({ kind, key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey });
+    observed(kind, startedAt);
+  };
+  canvas.addEventListener("keydown", (event) => void key(event, "key-down"), options);
+  canvas.addEventListener("keyup", (event) => void key(event, "key-up"), options);
+  canvas.addEventListener("compositionstart", () => {
+    const startedAt = performance.now();
+    transport.enqueueLossless({ kind: "ime-start" });
+    observed("ime-start", startedAt);
+  }, options);
+  canvas.addEventListener("compositionupdate", (event) => {
+    const startedAt = performance.now();
+    transport.enqueueLossless({ kind: "ime-update", text: event.data, cursor: event.data.length });
+    observed("ime-update", startedAt);
+  }, options);
+  canvas.addEventListener("compositionend", (event) => {
+    const startedAt = performance.now();
+    transport.enqueueLossless({ kind: "ime-commit", text: event.data });
+    observed("ime-commit", startedAt);
+  }, options);
+  canvas.addEventListener("paste", (event) => {
+    const startedAt = performance.now();
+    const items = event.clipboardData?.items;
+    if (items) {
+      const count = Math.min(items.length, 16);
+      for (let index = 0; index < count; index++) {
+        const item = items[index];
+        if (item?.kind !== "string" || item.type !== "text/plain") continue;
+        item.getAsString((text) => {
+          const handoffStartedAt = performance.now();
+          transport.enqueueLossless({ kind: "paste", text });
+          transport.observeUiTurn("paste-handoff", performance.now() - handoffStartedAt);
+        });
+        break;
+      }
+    }
+    observed("paste", startedAt);
+  }, options);
+  return () => abort.abort();
+}
+//#endregion 🎮️PlatformInput
+
+//#region 🧵️WorkerLifecycle
+async function mount(root: HTMLElement): Promise<void> {
+  const descriptor = bootDescriptor();
+  if (typeof Worker === "undefined") throw new Error("worker-unavailable: Dedicated Worker is not supported");
+  const canvas = canvasElement();
+  if (typeof canvas.transferControlToOffscreen !== "function") throw new Error("offscreen-canvas-unavailable: OffscreenCanvas transfer is not supported");
+  root.replaceChildren(canvas);
+  const status = statusElement(root);
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+  const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+  canvas.width = width;
+  canvas.height = height;
+  let offscreen: OffscreenCanvas;
+  try {
+    offscreen = canvas.transferControlToOffscreen();
+  } catch (error) {
+    throw new Error(`offscreen-transfer-failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  let worker: Worker;
+  try {
+    worker = new Worker(FRAME_WORKER_URL, { type: "module", name: "semio-frame-worker" });
+  } catch (error) {
+    throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  let cleanupInput = () => {};
+  const transport = new BrowserFrameTransport({
+    worker,
+    boot: { bindingsModuleUrl: RENDERER_MODULE_URL, bindingsWasmUrl: RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, pluginVariant: descriptor.pluginVariant, locale: locale(), appRole: descriptor.appRole, hub: descriptor.hub },
+    requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
+    cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
+    onProgress: (stage, progress) => { status.textContent = `${stage} ${Math.round(progress * 100)}%`; },
+    onReady: () => {
+      status.remove();
+      cleanupInput = wireInput(canvas, transport);
+      transport.enqueueReplaceable({ kind: "resize", width, height, dpr });
+      canvas.focus({ preventScroll: true });
+    },
+    onDirectives: ({ cursor, fullscreen }) => {
+      canvas.style.cursor = cursor;
+      if (fullscreen === true) void canvas.requestFullscreen().catch(() => {});
+      if (fullscreen === false && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    },
+    onFault: (code: BrowserFrameWorkerFaultCode, detail) => {
+      cleanupInput();
+      renderFault(root, code, detail);
+    },
+  });
+  const previousInteractiveJobPort = setInteractiveJobPort(transport.interactiveJobs);
+  const resize = new ResizeObserver(() => {
+    const startedAt = performance.now();
+    const nextDpr = window.devicePixelRatio || 1;
+    transport.enqueueReplaceable({ kind: "resize", width: Math.max(1, Math.round(canvas.clientWidth * nextDpr)), height: Math.max(1, Math.round(canvas.clientHeight * nextDpr)), dpr: nextDpr });
+    transport.observeUiTurn("resize-observer", performance.now() - startedAt);
+  });
+  resize.observe(canvas);
+  window.addEventListener("pagehide", () => {
+    resize.disconnect();
+    cleanupInput();
+    setInteractiveJobPort(previousInteractiveJobPort);
+    transport.close();
+  }, { once: true });
 }
 
+const root = document.getElementById("root");
+if (!root) throw new Error("missing-root: #root is unavailable");
 try {
-  const availableTargets: PluginRegistryEntry[] = [];
-  for (const entry of pluginTargets) {
-    if (await pluginModuleAvailable(entry.moduleUrl)) {
-      availableTargets.push(entry);
-    }
-  }
-  if (availableTargets.length === 0) {
-    throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
-  }
-
-  // 🎯️ Loaded SEQUENTIALLY, in `boot.plugins`'s already dependency-ordered sequence (scout-2 §4:
-  // "boot must walk the dependency order... instead of relying on array order") — a concurrent
-  // `Promise.all` gives no guarantee a dependency finishes loading before its dependent starts.
-  const handles: WgpuBootPluginEntry[] = [];
-  for (const entry of availableTargets) {
-    handles.push({ pluginId: entry.pluginId, handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)) });
-  }
-
-  const bindings = await new Promise<Record<string, unknown>>((resolve, reject) => {
-    const host = window as { wasmBindings?: Record<string, unknown> };
-    const finish = () => {
-      if (!host.wasmBindings) {
-        reject(new Error("[DEBUG] trunk wasm bindings missing"));
-        return;
-      }
-      resolve(host.wasmBindings);
-    };
-    if (host.wasmBindings) {
-      finish();
-      return;
-    }
-    const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
-    const done = () => {
-      window.clearTimeout(timeout);
-      window.clearInterval(poll);
-      finish();
-    };
-    window.addEventListener("TrunkApplicationStarted", done, { once: true });
-    const poll = window.setInterval(() => {
-      if (host.wasmBindings) done();
-    }, 50);
-  });
-
-  if (!bindings.semioWgpuMount) throw new Error("[DEBUG] missing semioWgpuMount");
-  const root = document.getElementById("root");
-  if (!root) throw new Error("[DEBUG] missing #root");
-  const canvas = document.createElement("canvas");
-  canvas.style.display = "block";
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.touchAction = "none";
-  canvas.style.outline = "none";
-  root.replaceChildren(canvas);
-  // 👁️✏️ Contract freeze §5: boot role, applied before mount so the very first `Shell::set_window_layout`
-  // already carries it. Guarded — `semioWgpuSetAppRole` is new (this ticket) and a stale wasm build
-  // predating it simply skips role chrome rather than throwing, same fail-soft posture as every other
-  // optional binding this file checks.
-  if (bindings.semioWgpuSetAppRole) {
-    (bindings.semioWgpuSetAppRole as (role: string) => void)(resolveBootAppRole());
-  }
-  // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§1 — same guarded,
-  // fail-soft posture as `semioWgpuSetAppRole` right above: a stale wasm build predating this ticket
-  // simply skips identity/directory wiring rather than throwing.
-  const hubEnv = resolveBootHubEnv();
-  if (hubEnv && bindings.semioWgpuSetHubEnv) {
-    (bindings.semioWgpuSetHubEnv as (hubUrl: string, user: string, dataDir: string) => void)(hubEnv.hubUrl, hubEnv.user, hubEnv.dataDir);
-  }
-  (bindings.semioWgpuMount as (canvas: HTMLCanvasElement, handles: readonly WgpuBootPluginEntry[], pluginFilter: string) => void)(canvas, handles, pluginFilter);
+  await mount(root);
 } catch (error) {
-  renderBootErrorBanner(error instanceof Error ? error.message : String(error));
+  const detail = error instanceof Error ? error.message : String(error);
+  renderFault(root, "worker-boot-failed", detail);
   throw error;
 }
+//#endregion 🧵️WorkerLifecycle

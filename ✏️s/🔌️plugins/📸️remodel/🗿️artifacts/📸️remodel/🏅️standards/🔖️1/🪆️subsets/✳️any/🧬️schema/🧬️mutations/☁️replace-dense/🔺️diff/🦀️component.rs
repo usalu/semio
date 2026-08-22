@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceDense, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::ReplaceDense, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.dense == base.results.dense {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Dense results already have this value.");
     }

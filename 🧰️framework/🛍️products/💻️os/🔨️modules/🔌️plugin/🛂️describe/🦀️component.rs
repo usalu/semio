@@ -13,7 +13,7 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
+    AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, io, kernel,
 };
 
 /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
@@ -50,27 +50,26 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
     apps.iter().flat_map(|app| app.panel_tabs.iter().cloned()).collect()
 }
 
-/// 💡️ This plugin's own first-party inference services (`owner == plugin_id`) — `contributor ==
-/// owner`, `depends_on` empty, matching `ContributionSet.inference_services`'s own doc. Reads the
-/// SAME process-global registry `plugin_wire_list_artifact_inference_services` already serves; in a
-/// single-plugin wasm instance every entry with `owner == plugin_id` is this package's own.
-async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
-    crate::app::list_artifact_inference_services()
+/// 💡️ This plugin's frozen first-party inference roster (`owner == plugin_id`), including
+/// metadata-only ActionBus cold routes that deliberately have no synchronous service facade.
+async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
+    let bytes = crate::plugin_runtime::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
+    serde_json::from_slice::<Vec<crate::app::WireArtifactInferenceMetadata>>(&bytes)
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
         .map(|metadata| ContributedInferenceMetadata {
-            owner: metadata.owner.to_string(),
-            artifact_kind: metadata.artifact_kind.to_string(),
-            artifact_schema: metadata.artifact_schema.to_string(),
+            owner: metadata.owner.clone(),
+            artifact_kind: metadata.artifact_kind,
+            artifact_schema: metadata.artifact_schema,
             artifact_schema_version: metadata.artifact_schema_version,
-            document_schema: metadata.document_schema.to_string(),
+            document_schema: metadata.document_schema,
             document_schema_version: metadata.document_schema_version,
-            inference_schema: metadata.inference_schema.to_string(),
+            inference_schema: metadata.inference_schema,
             inference_schema_version: metadata.inference_schema_version,
             algorithm_version: metadata.algorithm_version,
             policy_version: metadata.policy_version,
-            contributor: metadata.owner.to_string(),
+            contributor: metadata.owner,
             depends_on: Vec::new(),
         })
         .collect()
@@ -108,7 +107,7 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
 /// 🗂️ Assembles `ContributionSet` from what `manifest` and the process-global runtime registries
 /// actually declare — see each field helper's own doc. `menus`/`themes` stay empty (E1's own survey,
 /// unchanged); `mutation_services` stays empty (see `plugin_io_contributions`'s doc).
-async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
+async fn plugin_contributions<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, manifest: &PluginManifest) -> ContributionSet {
     let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id).await;
     ContributionSet {
         commands: manifest.commands.clone(),
@@ -118,7 +117,7 @@ async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
         themes: Vec::new(),
         topic_contributions: manifest.topic_contributions.clone(),
         artifact_contributions: manifest.contributions.clone(),
-        inference_services: plugin_inference_services(&manifest.plugin_id).await,
+        inference_services: plugin_inference_services(runtime, &manifest.plugin_id).await,
         mutation_services: Vec::new(),
         io_entries,
         composer_entries,
@@ -128,7 +127,7 @@ async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
 pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
     let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
-    let contributions = plugin_contributions(&manifest).await;
+    let contributions = plugin_contributions(runtime, &manifest).await;
     let descriptor = PackageDescriptor {
         descriptor_version: 1,
         role: PackageRole::Plugin,
@@ -199,4 +198,34 @@ pub async fn describe_extension() -> Vec<u8> {
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
     store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&descriptor).unwrap_or(dsl::DslValue::Null))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
+        let metadata = crate::app::ArtifactInferenceServiceMetadata {
+            owner: "describe-routed-inference",
+            artifact_kind: "s.describe.route",
+            artifact_schema: "s.describe.route",
+            artifact_schema_version: 1,
+            document_schema: "s.describe.route",
+            document_schema_version: 1,
+            inference_schema: "s.describe.route.solve",
+            inference_schema_version: 1,
+            algorithm_version: 1,
+            policy_version: 1,
+        };
+        let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("routed plugin assembles");
+        let runtime = crate::plugin_runtime::PluginRuntime::new();
+        crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
+        let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
+        let descriptor: PackageDescriptor = dsl::from_dsl_value(value).expect("descriptor shape decodes");
+        assert_eq!(descriptor.contributions.inference_services.len(), 1);
+        let route = &descriptor.contributions.inference_services[0];
+        assert_eq!((route.owner.as_str(), route.artifact_kind.as_str(), route.inference_schema.as_str()), (metadata.owner, metadata.artifact_kind, metadata.inference_schema));
+        assert!(crate::app::artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none());
+    }
 }

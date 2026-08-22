@@ -4,7 +4,7 @@ use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceTracks, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
+pub fn diff(payload: &super::mutation::ReplaceTracks, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
     if payload.tracks == base.results.tracks {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Tracks already have this value.");
     }

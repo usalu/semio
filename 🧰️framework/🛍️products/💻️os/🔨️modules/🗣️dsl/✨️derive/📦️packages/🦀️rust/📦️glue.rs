@@ -13,7 +13,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Type};
+use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 
 //#region 🔖️Attrs
 #[derive(Default, Clone)]
@@ -1073,6 +1073,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
     let mut semantics_arms = Vec::new();
     let mut label_arms = Vec::new();
     let mut target_arms = Vec::new();
+    let mut may_emit_foreign_steps_arms = Vec::new();
     let mut foreign_steps_arms = Vec::new();
     let mut kind_consts = Vec::new();
     let mut const_asserts = Vec::new();
@@ -1105,6 +1106,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
         });
         target_arms.push(quote! {
             #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload)
+        });
+        may_emit_foreign_steps_arms.push(quote! {
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::may_emit_foreign_steps(payload)
         });
         foreign_steps_arms.push(quote! {
             #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base)
@@ -1143,6 +1147,9 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
             }
             fn inverse(&self, base: &#snapshot_ty) -> Vec<Self> {
                 match self { #(#inverse_arms),* }
+            }
+            fn may_emit_foreign_steps(&self) -> bool {
+                match self { #(#may_emit_foreign_steps_arms),* }
             }
             fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 match self { #(#foreign_steps_arms),* }
@@ -1245,6 +1252,9 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
             }
             fn target(&self) -> Vec<String> {
                 ::semio_framework_os_kernel::CompositeMutationKind::target(self)
+            }
+            fn may_emit_foreign_steps(&self) -> bool {
+                true
             }
             fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
                 ::semio_framework_os_kernel::plan_foreign_steps(self, base)

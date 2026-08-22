@@ -16,23 +16,23 @@ pub struct ConnectSlots {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn connect_slots(index: usize, edge: AssemblySlotEdge) -> AssemblyMutation {
+pub fn connect_slots(index: usize, edge: AssemblySlotEdge) -> AssemblyMutation {
     AssemblyMutation::ConnectSlots(ConnectSlots { index, edge })
 }
 
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for ConnectSlots {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
-    async fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+    fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Connect slots \"{}\" ↔ \"{}\"", self.edge.from_slot_id, self.edge.to_slot_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.edge.id.clone()]
     }
 }

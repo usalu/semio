@@ -314,6 +314,21 @@ impl EventQueue {
     pub fn pending_discrete_len(&self) -> usize {
         self.discrete.len()
     }
+
+    pub fn close_step(&mut self) -> bool {
+        if !self.coalesced.is_empty() {
+            self.coalesced.drain();
+            return false;
+        }
+        if self.discrete.pop_front().is_some() {
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.is_empty()
+    }
 }
 
 impl Default for EventQueue {

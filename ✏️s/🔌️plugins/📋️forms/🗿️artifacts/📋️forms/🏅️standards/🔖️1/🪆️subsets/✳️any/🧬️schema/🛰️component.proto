@@ -1,5 +1,6 @@
 syntax = "proto3";
 package semio.s.forms.forms.artifact;
+message FormsTryValueChunks { repeated string chunks = 1; }
 
 message FormsArtifact {
   string schema = 1;
@@ -9,7 +10,7 @@ message FormsArtifact {
   repeated FormStep steps = 5;
   repeated string selected_ids = 6;
   uint32 current_step_index = 7;
-  string try_values_json = 8;
+  map<string, FormsTryValueChunks> try_values = 8;
   string locale = 9;
   string contributions_json = 10;
 }

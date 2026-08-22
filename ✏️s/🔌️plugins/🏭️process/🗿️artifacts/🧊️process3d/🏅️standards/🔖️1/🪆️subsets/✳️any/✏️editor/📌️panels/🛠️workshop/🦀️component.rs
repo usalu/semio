@@ -32,7 +32,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// `"machine:{id}"` — the SAME canonical `"geometry"` domain target the old `selected_id` used for a
 /// machine pick — so `.interaction_domain` binding stamps/prunes this section correctly; the catalog
 /// sections stay un-bound (their items are install actions, not domain targets).
-pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> UiNode {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop");
     let machine_items: Vec<UiTreeItemNode> = fixture
         .workshop
@@ -51,7 +51,7 @@ pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> Ui
         })
         .collect();
     builder = builder.section("process3d-play-workshop.machines", Some(labels.machines.into()), true, machine_items).interaction_domain(PROCESS3D_INTERACTION_DOMAIN);
-    for catalog in installed_catalogs() {
+    for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();
         let items: Vec<UiTreeItemNode> = catalog
             .machines()

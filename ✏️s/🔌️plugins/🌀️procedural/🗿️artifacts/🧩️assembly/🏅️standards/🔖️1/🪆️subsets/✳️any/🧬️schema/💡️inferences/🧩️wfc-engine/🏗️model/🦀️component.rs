@@ -33,7 +33,7 @@ pub struct RelationInfo {
 
 // #region 🔖️Builder
 /// 🏗️ Accumulates patterns, relations, and directed compatibility pairs before [`ModelBuilder::compile`]
-/// resolves everything into dense bitset tables. The lowest-level builder in the crate — [`crate::wfc_engine::tiled::TiledModelBuilder`]
+/// resolves everything into dense bitset tables. The lowest-level builder in the crate — `TiledModelBuilder`
 /// and pattern extraction both compile down to this shape.
 #[derive(Clone, Debug, Default)]
 pub struct ModelBuilder {
@@ -185,6 +185,178 @@ pub struct CompiledModel {
     tag_ids: std::collections::HashMap<String, u32>,
     fingerprint: u64,
 }
+
+// #region 🧵️AssemblyCompiler
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum AssemblyModelPhase {
+    Weights,
+    Allowed,
+    Supporters,
+    Complete,
+}
+
+/// 🧵 Compiles Assembly's single adjacency relation without an opaque whole-model pass.
+pub(crate) struct AssemblyModelBuild {
+    phase: AssemblyModelPhase,
+    raw_weights: Vec<f64>,
+    allowed_pairs: std::collections::BTreeSet<(u32, u32)>,
+    cursor: usize,
+    word_cursor: usize,
+    current_words: Vec<u64>,
+    current_support: u32,
+    ln_w: Vec<f64>,
+    w_ln_w: Vec<f64>,
+    w_int: Vec<u64>,
+    all_integral: bool,
+    patterns: Vec<PatternInfo>,
+    allowed: Vec<PatternSet>,
+    supporters: Vec<PatternSet>,
+    base_support: Vec<u32>,
+    fingerprint: u64,
+    completed_units: usize,
+    total_units: usize,
+}
+
+impl AssemblyModelBuild {
+    pub(crate) fn new(raw_weights: Vec<f64>, allowed_pairs: std::collections::BTreeSet<(u32, u32)>) -> Result<Self, ModelError> {
+        if raw_weights.is_empty() {
+            return Err(ModelError::EmptyPatternUniverse);
+        }
+        let word_count = raw_weights.len().div_ceil(64);
+        let total_units = raw_weights.len().saturating_add(raw_weights.len().saturating_mul(word_count).saturating_mul(2)).saturating_add(4);
+        let mut build = Self {
+            phase: AssemblyModelPhase::Weights,
+            raw_weights,
+            allowed_pairs,
+            cursor: 0,
+            word_cursor: 0,
+            current_words: Vec::new(),
+            current_support: 0,
+            ln_w: Vec::new(),
+            w_ln_w: Vec::new(),
+            w_int: Vec::new(),
+            all_integral: true,
+            patterns: Vec::new(),
+            allowed: Vec::new(),
+            supporters: Vec::new(),
+            base_support: Vec::new(),
+            fingerprint: 0xcbf2_9ce4_8422_2325,
+            completed_units: 0,
+            total_units,
+        };
+        build.mix(&(build.raw_weights.len() as u64).to_le_bytes());
+        Ok(build)
+    }
+
+    pub(crate) fn progress(&self) -> (usize, usize) {
+        (self.completed_units, self.total_units)
+    }
+
+    fn mix(&mut self, bytes: &[u8]) {
+        for &byte in bytes {
+            self.fingerprint ^= u64::from(byte);
+            self.fingerprint = self.fingerprint.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    }
+
+    fn word(&self, supporters: bool) -> u64 {
+        let start = self.word_cursor * 64;
+        let end = (start + 64).min(self.raw_weights.len());
+        let mut word = 0;
+        for index in start..end {
+            let pair = if supporters { (index as u32, self.cursor as u32) } else { (self.cursor as u32, index as u32) };
+            if self.allowed_pairs.contains(&pair) {
+                word |= 1 << (index - start);
+            }
+        }
+        word
+    }
+
+    pub(crate) fn step(&mut self) -> Result<Option<CompiledModel>, ModelError> {
+        let pattern_count = self.raw_weights.len();
+        let word_count = pattern_count.div_ceil(64);
+        match self.phase {
+            AssemblyModelPhase::Weights => {
+                if let Some(&value) = self.raw_weights.get(self.cursor) {
+                    if !value.is_finite() || value < 0.0 {
+                        return Err(ModelError::InvalidWeight { pattern_index: self.cursor, value });
+                    }
+                    let ln = if value > 0.0 { value.ln() } else { 0.0 };
+                    self.ln_w.push(ln);
+                    self.w_ln_w.push(if value > 0.0 { value * ln } else { 0.0 });
+                    if value.fract() == 0.0 && value <= u64::MAX as f64 {
+                        self.w_int.push(value as u64);
+                    } else {
+                        self.all_integral = false;
+                    }
+                    self.patterns.push(PatternInfo { weight: value, tags: Vec::new(), tile: None, orbit_canonical: None });
+                    self.mix(&value.to_bits().to_le_bytes());
+                    self.mix(&0u64.to_le_bytes());
+                    self.cursor += 1;
+                } else {
+                    self.mix(&1u64.to_le_bytes());
+                    self.mix(b"adjacent");
+                    self.mix(&0u32.to_le_bytes());
+                    self.cursor = 0;
+                    self.phase = AssemblyModelPhase::Allowed;
+                }
+            }
+            AssemblyModelPhase::Allowed => {
+                if self.cursor < pattern_count {
+                    let word = self.word(false);
+                    self.current_words.push(word);
+                    self.mix(&word.to_le_bytes());
+                    self.word_cursor += 1;
+                    if self.word_cursor == word_count {
+                        let words = std::mem::take(&mut self.current_words);
+                        self.allowed.push(PatternSet::from_words(pattern_count, words).expect("assembly allowed row shape"));
+                        self.cursor += 1;
+                        self.word_cursor = 0;
+                    }
+                } else {
+                    self.cursor = 0;
+                    self.phase = AssemblyModelPhase::Supporters;
+                }
+            }
+            AssemblyModelPhase::Supporters => {
+                if self.cursor < pattern_count {
+                    let word = self.word(true);
+                    self.current_support += word.count_ones();
+                    self.current_words.push(word);
+                    self.word_cursor += 1;
+                    if self.word_cursor == word_count {
+                        let words = std::mem::take(&mut self.current_words);
+                        self.supporters.push(PatternSet::from_words(pattern_count, words).expect("assembly supporter row shape"));
+                        self.base_support.push(self.current_support);
+                        self.current_support = 0;
+                        self.cursor += 1;
+                        self.word_cursor = 0;
+                    }
+                } else {
+                    self.phase = AssemblyModelPhase::Complete;
+                }
+            }
+            AssemblyModelPhase::Complete => {
+                let weights = WeightTable::from_resumable_parts(std::mem::take(&mut self.raw_weights), std::mem::take(&mut self.ln_w), std::mem::take(&mut self.w_ln_w), self.all_integral.then(|| std::mem::take(&mut self.w_int)));
+                self.completed_units += 1;
+                return Ok(Some(CompiledModel {
+                    patterns: std::mem::take(&mut self.patterns),
+                    relations: vec![RelationInfo { name: "adjacent".into(), inverse: RelationId(0) }],
+                    allowed: std::mem::take(&mut self.allowed),
+                    supporters: std::mem::take(&mut self.supporters),
+                    base_support: std::mem::take(&mut self.base_support),
+                    weights,
+                    tag_names: Vec::new(),
+                    tag_ids: std::collections::HashMap::new(),
+                    fingerprint: self.fingerprint,
+                }));
+            }
+        }
+        self.completed_units += 1;
+        Ok(None)
+    }
+}
+// #endregion 🧵️AssemblyCompiler
 
 impl CompiledModel {
     #[inline]
@@ -417,6 +589,31 @@ mod tests {
     fn validate_passes_on_mirrored_model() {
         let m = checkerboard_model();
         assert!(m.validate().is_ok());
+    }
+
+    #[test]
+    fn assembly_cursor_compiler_matches_canonical_builder() {
+        let mut canonical = ModelBuilder::new();
+        let a = canonical.add_pattern(1.0);
+        let b = canonical.add_pattern(2.0);
+        let relation = canonical.add_relation("adjacent");
+        canonical.allow_mirrored(relation, a, b);
+        let canonical = canonical.compile().expect("canonical model");
+        let mut pairs = std::collections::BTreeSet::new();
+        pairs.insert((a.get(), b.get()));
+        pairs.insert((b.get(), a.get()));
+        let mut build = AssemblyModelBuild::new(vec![1.0, 2.0], pairs).expect("assembly compiler");
+        let incremental = loop {
+            if let Some(model) = build.step().expect("assembly unit") {
+                break model;
+            }
+        };
+        assert_eq!(build.progress(), (build.total_units, build.total_units));
+        assert_eq!(incremental.fingerprint(), canonical.fingerprint());
+        assert_eq!(incremental.allowed(relation, a), canonical.allowed(relation, a));
+        assert_eq!(incremental.allowed(relation, b), canonical.allowed(relation, b));
+        assert_eq!(incremental.supporters(relation, a), canonical.supporters(relation, a));
+        assert_eq!(incremental.supporters(relation, b), canonical.supporters(relation, b));
     }
 
     #[test]

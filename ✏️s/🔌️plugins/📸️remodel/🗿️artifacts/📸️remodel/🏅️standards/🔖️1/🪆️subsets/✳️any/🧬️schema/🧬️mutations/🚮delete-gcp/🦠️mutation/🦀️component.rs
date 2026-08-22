@@ -14,7 +14,7 @@ pub struct DeleteGcp {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_gcp(id: String) -> RemodelMutation {
+pub fn delete_gcp(id: String) -> RemodelMutation {
     RemodelMutation::DeleteGcp(DeleteGcp { id })
 }
 

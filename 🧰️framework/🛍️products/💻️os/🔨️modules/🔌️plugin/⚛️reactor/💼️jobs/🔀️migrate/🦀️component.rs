@@ -15,7 +15,7 @@
 //! decodes+validates `input` (parsing both dialect coordinates, reporting `"{from}->{to}"` as
 //! progress) and checkpoints; slice 2 runs the real `migrate_document` re-encode.
 
-use super::{run_two_phase, JobCtx};
+use super::{JobCtx, run_two_phase};
 use std::future::Future;
 use std::pin::Pin;
 

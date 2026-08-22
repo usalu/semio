@@ -115,6 +115,9 @@ function buildBootScript(bundleRoot: string): void {
   const bootTs = join(bundleRoot, "🟦️typescript/🟦️boot.ts");
   const bootJs = join(bundleRoot, "🟦️typescript/🟨️boot.js");
   if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨️boot.js build failed");
+  const workerTs = join(bundleRoot, "🟦️typescript/🧵️frame-worker.ts");
+  const workerJs = join(bundleRoot, "🟦️typescript/🟨️frame-worker.js");
+  if (runCmdStatus("bun", ["build", workerTs, "--outfile", workerJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨️frame-worker.js build failed");
 }
 
 class TrunkBuildScript extends BundleScript {
@@ -241,6 +244,20 @@ class TestScript extends BundleScript {
   }
 }
 
+/** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
+class BrowserWorkerTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runVitest(this.root, ["🧪️browser-frame-transport.test.ts", "🧪️browser-interactive-job-port.test.ts", ...segments], "🧪️vitest.config.ts");
+  }
+}
+
+/** @emoji 🧵️ Bundles both browser isolates without invoking Cargo or Trunk. */
+class BrowserWorkerCheckScript extends BundleScript {
+  run(_segments: string[]): void {
+    buildBootScript(this.root);
+  }
+}
+
 //#region 🔖️LintScript
 /** 🎨️Raw color-construction calls (`Rgba::new`/`from_srgb8`) must live only inside `framework/ui/wgpu`'s theme module — the renderer takes every color via `ui_wgpu::Theme`. */
 function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
@@ -281,6 +298,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native", NativeRunScript)
   .register("native-build", NativeBuildScript)
   .register("test", TestScript)
+  .register("test-browser-worker", BrowserWorkerTestScript)
+  .register("check-browser-worker", BrowserWorkerCheckScript)
   .register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

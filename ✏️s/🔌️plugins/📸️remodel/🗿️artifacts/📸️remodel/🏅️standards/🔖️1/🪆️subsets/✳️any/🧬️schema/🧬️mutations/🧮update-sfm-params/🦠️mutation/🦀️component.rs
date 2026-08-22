@@ -16,7 +16,7 @@ pub struct UpdateSfmParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_sfm_params(params: SfmParams) -> RemodelMutation {
+pub fn update_sfm_params(params: SfmParams) -> RemodelMutation {
     RemodelMutation::UpdateSfmParams(UpdateSfmParams { params })
 }
 

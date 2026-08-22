@@ -47,7 +47,7 @@ pub async fn widget_kind_label(widget: &Widget) -> &'static str {
 
 /// 👯️ Clones a widget with every field but `id` copied verbatim — the `duplicate-widget` composite
 /// mutation's plan uses this to mint the copy it hands to `create-widget`.
-pub async fn widget_with_id(widget: &Widget, id: String) -> Widget {
+pub fn widget_with_id(widget: &Widget, id: String) -> Widget {
     let mut copy = widget.clone();
     match &mut copy {
         Widget::Neuron { id: widget_id, .. }

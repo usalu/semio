@@ -47,12 +47,10 @@ use semio_framework_ui_contract as ui_contract;
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_ui_runtime::{is_stale_intent, DEFAULT_REVISION_TOLERANCE};
-use std::cell::RefCell;
-// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `HashMap`/`VecDeque` back `TASK_RECORDS`/
-// `TASK_KEYS`/`TASK_RESUMES`/`INSTANCE_QUOTAS` below, which are deliberately UNGATED (native
-// `dispatch_emit` tests spawn tasks too — see `🔌️plugin/🦀️component.rs`'s `spawn_task` call site),
-// unlike the wasm-only import above.
+use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+use std::cell::{Cell, RefCell};
+// 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
+// collections; all identity and close authority is held by fixed direct registries below.
 use std::collections::{HashMap, VecDeque};
 
 thread_local! {
@@ -73,31 +71,31 @@ thread_local! {
     /// app instance is the default" granularity design-abi.md §4 names — a multi-instance pooled
     /// actor is opt-in first-party-only future work, out of this wave).
     static REGISTRY: requests::RequestRegistry = requests::RequestRegistry::new();
-    static EXECUTOR: executor::LocalExecutor = executor::LocalExecutor::new();
+    static REACTOR_EXECUTOR: executor::ReactorExecutor = executor::ReactorExecutor::new();
+    #[cfg(test)]
+    static TEST_FUTURE_EXECUTOR: executor::ColdFutureExecutor = executor::ColdFutureExecutor::new();
     /// 🪪️ Every instance this actor currently has open — `(id, app_id)`, in `InstanceOpen` order.
     /// Used by `📸️checkpoint`.
-    static OPEN_INSTANCES: RefCell<Vec<(u32, String)>> = const { RefCell::new(Vec::new()) };
+    static INSTANCE_METADATA: RefCell<InstanceMetadataRegistry> = RefCell::new(InstanceMetadataRegistry::new());
     /// ⏱️ Live timer ids this actor has armed via `Effect::SetTimer`, carried into the checkpoint
     /// pack (design-abi.md §4).
-    static ARMED_TIMERS: RefCell<Vec<u64>> = const { RefCell::new(Vec::new()) };
+    static ARMED_TIMERS: RefCell<FixedTimerRegistry> = RefCell::new(FixedTimerRegistry::new());
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): every `AsyncTask` this actor
     /// currently has spawned on `EXECUTOR`, keyed by its `executor::TaskId` slot — the bookkeeping
     /// `spawn_task`'s quota gate counts against, `cancel_instance_tasks` (`Event::InstanceClose`)
     /// walks, and `checkpoint_now` reads `restart` out of.
-    static TASK_RECORDS: RefCell<HashMap<executor::TaskId, TaskRecord>> = RefCell::new(HashMap::new());
-    /// 🔑️ Latest-wins dedupe index: `(instance, key)` → the live `TaskId` spawned under that key,
-    /// for `AsyncTask::keyed(..)`. Absent unless a task actually declared a key.
-    static TASK_KEYS: RefCell<HashMap<(u32, String), executor::TaskId>> = RefCell::new(HashMap::new());
+    static TASK_RECORDS: RefCell<TaskRecordRegistry> = RefCell::new(TaskRecordRegistry::new());
     /// 📬️ Resolved-but-not-yet-redispatched `AsyncTask` follow-ups, type-erased to bytes at
     /// resolution time (see `spawn_task`'s doc) — drained by `drain_task_resumes`, called from
     /// `poll` right after `run_until_idle`. Also the target of a checkpoint `restore`'s replayed
     /// `task_restarts` (`restore_now`), so a restart is just an ordinary `Command` resume queued
     /// one call earlier than usual.
-    static TASK_RESUMES: RefCell<VecDeque<PendingResume>> = RefCell::new(VecDeque::new());
+    static TASK_RESUMES: RefCell<FixedResumeQueue> = RefCell::new(FixedResumeQueue::new());
     /// 🎛️ Per-instance `QuotaSchema`, real values decoded off `Event::InstanceOpen.quotas`
     /// (previously always defaulted — see `wit_event_to_kernel`'s `InstanceOpen` arm) and dropped
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
-    static INSTANCE_QUOTAS: RefCell<HashMap<u32, semio_framework::kernel::QuotaSchema>> = RefCell::new(HashMap::new());
+    static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
+    static REACTOR_CLOSE_CURSOR: Cell<usize> = const { Cell::new(0) };
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): one `AsyncTask` this actor's
@@ -111,6 +109,333 @@ struct TaskRecord {
     #[allow(dead_code)]
     label: String,
     restart: Option<Vec<u8>>,
+}
+
+const REACTOR_TASK_SLOTS: usize = 1_024;
+const REACTOR_FIXED_WORDS: usize = REACTOR_TASK_SLOTS / u64::BITS as usize;
+const REACTOR_TASK_KEY_BYTES: usize = 256;
+const REACTOR_TASK_LABEL_BYTES: usize = 256;
+const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
+
+struct ReactorFixedSlots<T> {
+    values: Box<[std::mem::MaybeUninit<T>]>,
+    occupied: [u64; REACTOR_FIXED_WORDS],
+    allocation_admitted: bool,
+}
+
+impl<T> ReactorFixedSlots<T> {
+    fn new() -> Self {
+        let mut values = Vec::new();
+        let allocation_admitted = values.try_reserve_exact(REACTOR_TASK_SLOTS).is_ok();
+        if allocation_admitted {
+            values.resize_with(REACTOR_TASK_SLOTS, std::mem::MaybeUninit::uninit);
+        }
+        Self { values: values.into_boxed_slice(), occupied: [0; REACTOR_FIXED_WORDS], allocation_admitted }
+    }
+
+    fn occupied(&self, index: usize) -> bool {
+        self.occupied[index / u64::BITS as usize] & (1u64 << (index % u64::BITS as usize)) != 0
+    }
+
+    fn set_occupied(&mut self, index: usize, occupied: bool) {
+        let word = &mut self.occupied[index / u64::BITS as usize];
+        let mask = 1u64 << (index % u64::BITS as usize);
+        if occupied {
+            *word |= mask;
+        } else {
+            *word &= !mask;
+        }
+    }
+
+    fn get(&self, index: usize) -> Option<&T> {
+        if !self.occupied(index) {
+            return None;
+        }
+        self.values.get(index).map(|value| {
+            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
+            unsafe { value.assume_init_ref() }
+        })
+    }
+
+    fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if !self.occupied(index) {
+            return None;
+        }
+        self.values.get_mut(index).map(|value| {
+            // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
+            unsafe { value.assume_init_mut() }
+        })
+    }
+
+    fn insert(&mut self, index: usize, value: T) -> Result<(), T> {
+        if !self.allocation_admitted || self.occupied(index) {
+            return Err(value);
+        }
+        self.values[index].write(value);
+        self.set_occupied(index, true);
+        Ok(())
+    }
+
+    fn insert_admitted(&mut self, index: usize, value: T) {
+        debug_assert!(self.allocation_admitted && !self.occupied(index));
+        self.values[index].write(value);
+        self.set_occupied(index, true);
+    }
+
+    fn take(&mut self, index: usize) -> Option<T> {
+        if !self.occupied(index) {
+            return None;
+        }
+        self.set_occupied(index, false);
+        // SAFETY: occupancy was checked and is now cleared before the exact initialized read.
+        Some(unsafe { self.values[index].assume_init_read() })
+    }
+
+    fn iter(&self) -> impl Iterator<Item = &T> {
+        (0..REACTOR_TASK_SLOTS).filter_map(|index| self.get(index))
+    }
+}
+
+impl<T> Drop for ReactorFixedSlots<T> {
+    fn drop(&mut self) {}
+}
+
+struct TaskRecordRegistry {
+    slots: ReactorFixedSlots<(executor::TaskId, TaskRecord)>,
+}
+
+impl TaskRecordRegistry {
+    fn new() -> Self {
+        Self { slots: ReactorFixedSlots::new() }
+    }
+
+    fn index(id: executor::TaskId) -> usize {
+        id as usize % REACTOR_TASK_SLOTS
+    }
+
+    fn can_insert(&self, id: executor::TaskId) -> bool {
+        self.slots.allocation_admitted && self.slots.get(Self::index(id)).is_none()
+    }
+
+    fn insert(&mut self, id: executor::TaskId, record: TaskRecord) -> Result<(), TaskRecord> {
+        if !self.can_insert(id) {
+            return Err(record);
+        }
+        self.slots.insert(Self::index(id), (id, record)).map_err(|(_, record)| record)
+    }
+
+    fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
+        debug_assert!(self.can_insert(id));
+        self.slots.insert_admitted(Self::index(id), (id, record));
+    }
+
+    fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
+        let index = Self::index(id);
+        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
+    }
+
+    fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
+        self.slots.iter().find_map(|(id, record)| (record.instance == instance && record.key.as_deref() == Some(key)).then_some(*id))
+    }
+
+    fn count_instance(&self, instance: u32) -> usize {
+        self.slots.iter().filter(|(_, record)| record.instance == instance).count()
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (executor::TaskId, &TaskRecord)> {
+        self.slots.iter().map(|(id, record)| (*id, record))
+    }
+
+    fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
+        self.slots.get(index).map(|(id, record)| (*id, record))
+    }
+}
+
+struct ReactorCloseState {
+    instance: u32,
+    task_cursor: usize,
+    timer_cursor: usize,
+    request_cursor: requests::RequestCloseCursor,
+    resume_remaining: usize,
+    requests_complete: bool,
+    resumes_complete: bool,
+    timers_complete: bool,
+    metadata_complete: bool,
+}
+
+struct ReactorCloseRegistry {
+    slots: ReactorFixedSlots<ReactorCloseState>,
+}
+
+impl ReactorCloseRegistry {
+    fn new() -> Self {
+        Self { slots: ReactorFixedSlots::new() }
+    }
+
+    fn index(instance: u32) -> usize {
+        instance as usize % PLUGIN_REACTOR_INSTANCE_SLOTS
+    }
+
+    fn insert(&mut self, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+        let index = Self::index(state.instance);
+        self.slots.insert(index, state)
+    }
+
+    fn take_at(&mut self, index: usize) -> Option<ReactorCloseState> {
+        self.slots.take(index)
+    }
+
+    fn put_at(&mut self, index: usize, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+        self.slots.insert(index, state)
+    }
+}
+
+const PLUGIN_REACTOR_INSTANCE_SLOTS: usize = 1_024;
+const PLUGIN_REACTOR_APP_ID_BYTES: usize = 256;
+
+const REACTOR_TIMER_SLOTS: usize = 1_024;
+
+struct TimerEntry {
+    id: u64,
+    instance: u32,
+    previous: Option<usize>,
+    next: Option<usize>,
+}
+
+struct FixedTimerRegistry {
+    slots: ReactorFixedSlots<TimerEntry>,
+    head: Option<usize>,
+    tail: Option<usize>,
+    live: usize,
+    allocation_admitted: bool,
+}
+
+impl FixedTimerRegistry {
+    fn new() -> Self {
+        let slots = ReactorFixedSlots::new();
+        let allocation_admitted = slots.allocation_admitted;
+        Self { slots, head: None, tail: None, live: 0, allocation_admitted }
+    }
+
+    fn index(id: u64) -> usize {
+        id as usize % REACTOR_TIMER_SLOTS
+    }
+
+    fn insert(&mut self, instance: u32, id: u64) -> Result<(), u64> {
+        let index = Self::index(id);
+        if !self.allocation_admitted || self.slots.get(index).is_some() {
+            return Err(id);
+        }
+        let previous = self.tail;
+        self.slots.insert(index, TimerEntry { id, instance, previous, next: None }).map_err(|entry| entry.id)?;
+        if let Some(previous) = previous {
+            self.slots.get_mut(previous).expect("fixed timer tail authority").next = Some(index);
+        } else {
+            self.head = Some(index);
+        }
+        self.tail = Some(index);
+        self.live += 1;
+        Ok(())
+    }
+
+    fn remove(&mut self, id: u64) -> bool {
+        let index = Self::index(id);
+        if !self.slots.get(index).is_some_and(|entry| entry.id == id) {
+            return false;
+        }
+        let entry = self.slots.take(index).expect("checked exact fixed timer authority");
+        if let Some(previous) = entry.previous {
+            self.slots.get_mut(previous).expect("fixed timer predecessor authority").next = entry.next;
+        } else {
+            self.head = entry.next;
+        }
+        if let Some(next) = entry.next {
+            self.slots.get_mut(next).expect("fixed timer successor authority").previous = entry.previous;
+        } else {
+            self.tail = entry.previous;
+        }
+        self.live = self.live.saturating_sub(1);
+        true
+    }
+
+    fn first(&self) -> Option<u64> {
+        self.head.and_then(|index| self.slots.get(index)).map(|entry| entry.id)
+    }
+
+    fn contains(&self, id: u64) -> bool {
+        self.slots.get(Self::index(id)).is_some_and(|entry| entry.id == id)
+    }
+
+    fn rows(&self) -> Vec<u64> {
+        let mut rows = Vec::with_capacity(self.live);
+        let mut cursor = self.head;
+        while let Some(index) = cursor {
+            let Some(entry) = self.slots.get(index) else { break };
+            rows.push(entry.id);
+            cursor = entry.next;
+        }
+        rows
+    }
+
+    fn is_empty(&self) -> bool {
+        self.live == 0
+    }
+
+    fn cancel_instance_step(&mut self, instance: u32, cursor: &mut usize) -> bool {
+        if *cursor >= REACTOR_TIMER_SLOTS {
+            return true;
+        }
+        let timer = self.slots.get(*cursor).and_then(|entry| (entry.instance == instance).then_some(entry.id));
+        if let Some(timer) = timer {
+            self.remove(timer);
+        }
+        *cursor += 1;
+        *cursor >= REACTOR_TIMER_SLOTS
+    }
+}
+
+struct InstanceMetadata {
+    instance: u32,
+    app_id: String,
+    quota: semio_framework::kernel::QuotaSchema,
+}
+
+struct InstanceMetadataRegistry {
+    slots: ReactorFixedSlots<InstanceMetadata>,
+}
+
+impl InstanceMetadataRegistry {
+    fn new() -> Self {
+        Self { slots: ReactorFixedSlots::new() }
+    }
+
+    fn index(instance: u32) -> usize {
+        instance as usize % PLUGIN_REACTOR_INSTANCE_SLOTS
+    }
+
+    fn insert(&mut self, instance: u32, app_id: String, quota: semio_framework::kernel::QuotaSchema) -> Result<(), semio_framework::Fault> {
+        if app_id.len() > PLUGIN_REACTOR_APP_ID_BYTES {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-app-id-too-large"), "instance app id exceeds its admitted fixed byte bound"));
+        }
+        let index = Self::index(instance);
+        if !self.slots.allocation_admitted || self.slots.get(index).is_some() {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority is saturated or collided"));
+        }
+        self.slots.insert(index, InstanceMetadata { instance, app_id, quota }).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority changed during insert"))
+    }
+
+    fn get(&self, instance: u32) -> Option<&InstanceMetadata> {
+        self.slots.get(Self::index(instance)).filter(|entry| entry.instance == instance)
+    }
+
+    fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
+        let index = Self::index(instance);
+        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) { self.slots.take(index) } else { None }
+    }
+
+    fn checkpoint_rows(&self) -> Vec<(u32, String)> {
+        self.slots.iter().map(|entry| (entry.instance, entry.app_id.clone())).collect()
+    }
 }
 
 /// 🧵️ A resolved `AsyncTask`, erased to bytes — see `spawn_task`'s doc for why no `Mutation`/
@@ -135,12 +460,105 @@ struct PendingResume {
     outcome: TaskResumeOutcome,
 }
 
+const REACTOR_RESUME_SLOTS: usize = 1_024;
+const REACTOR_RESUME_BYTES: usize = 3 * 64 * 1_024;
+const REACTOR_RESUME_ACTOR_BYTES: usize = 256;
+
+impl PendingResume {
+    fn admitted_bytes(&self) -> Option<usize> {
+        let mut bytes = self.meta.actor.len();
+        if bytes > REACTOR_RESUME_ACTOR_BYTES {
+            return None;
+        }
+        match &self.outcome {
+            TaskResumeOutcome::Command(command) => bytes = bytes.checked_add(command.len())?,
+            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => {
+                bytes = bytes.checked_add(artifact_ops.len())?.checked_add(config_ops.len())?.checked_add(draft_ops.len())?;
+            }
+            TaskResumeOutcome::Fault(fault) => {
+                if fault.causes.len() > 16 {
+                    return None;
+                }
+                bytes = bytes.checked_add(fault.code.0.len())?.checked_add(fault.message.len())?;
+                for value in [&fault.scope.plugin_id, &fault.scope.app_id, &fault.scope.instance_id, &fault.scope.module, &fault.scope.body_key].into_iter().flatten() {
+                    bytes = bytes.checked_add(value.len())?;
+                }
+                for cause in &fault.causes {
+                    bytes = bytes.checked_add(cause.message.len())?;
+                    if let Some(code) = &cause.code {
+                        bytes = bytes.checked_add(code.0.len())?;
+                    }
+                }
+            }
+        }
+        (bytes <= REACTOR_RESUME_BYTES).then_some(bytes)
+    }
+}
+
+struct FixedResumeQueue {
+    entries: std::mem::ManuallyDrop<VecDeque<PendingResume>>,
+    allocation_admitted: bool,
+}
+
+impl FixedResumeQueue {
+    fn new() -> Self {
+        let mut entries = VecDeque::new();
+        let allocation_admitted = entries.try_reserve_exact(REACTOR_RESUME_SLOTS).is_ok();
+        Self { entries: std::mem::ManuallyDrop::new(entries), allocation_admitted }
+    }
+
+    fn push(&mut self, value: PendingResume) -> Result<(), PendingResume> {
+        if !self.allocation_admitted || self.entries.len() >= REACTOR_RESUME_SLOTS || value.admitted_bytes().is_none() {
+            return Err(value);
+        }
+        self.entries.push_back(value);
+        Ok(())
+    }
+
+    fn push_admitted(&mut self, value: PendingResume) {
+        debug_assert!(self.allocation_admitted && self.entries.len() < REACTOR_RESUME_SLOTS && value.admitted_bytes().is_some());
+        self.entries.push_back(value);
+    }
+
+    fn pop(&mut self) -> Option<PendingResume> {
+        self.entries.pop_front()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    fn begin_cancel_instance(&self) -> usize {
+        self.entries.len()
+    }
+
+    fn cancel_instance_step(&mut self, instance: u32, remaining: &mut usize) -> bool {
+        if *remaining == 0 || self.entries.is_empty() {
+            *remaining = 0;
+            return true;
+        }
+        let Some(entry) = self.entries.pop_front() else {
+            *remaining = 0;
+            return true;
+        };
+        *remaining -= 1;
+        if entry.instance != instance {
+            self.push_admitted(entry);
+        }
+        *remaining == 0
+    }
+}
+
+impl Drop for FixedResumeQueue {
+    fn drop(&mut self) {}
+}
+
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the outstanding-task quota for
 /// `instance` — `QuotaSchema.outstanding_requests`, defaulting to 16 when the instance never
 /// declared one (or hasn't opened yet, which should not happen in practice: `spawn_task` is only
 /// ever reachable from `dispatch_emit`, itself only reachable after `Event::InstanceOpen`).
 async fn instance_task_quota(instance: u32) -> u64 {
-    INSTANCE_QUOTAS.with(|quotas| quotas.borrow().get(&instance).and_then(|schema| schema.outstanding_requests)).unwrap_or(16)
+    INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.outstanding_requests)).unwrap_or(16)
 }
 
 /// 🌐️ Every `host::Host` handle vended to plugin/extension code shares this actor's one
@@ -174,14 +592,15 @@ pub async fn host() -> crate::host::Host {
 /// on `TASK_RESUMES` — no `M`/`C`/`D` generic ever crosses into the executor or the resume queue,
 /// which is what lets ALL of this actor's apps (each with its own concrete `A`) share ONE
 /// `LocalExecutor`/`TASK_RESUMES` pair.
-pub async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+#[cfg(test)]
+pub(crate) async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
     D: ::protocol::OpBinary + 'static,
 {
     let quota = instance_task_quota(instance).await;
-    let live = TASK_RECORDS.with(|records| records.borrow().values().filter(|record| record.instance == instance).count() as u64);
+    let live = TASK_RECORDS.with(|records| records.borrow().count_instance(instance) as u64);
     if live >= quota {
         return Err(semio_framework::Fault::new(
             semio_framework::FaultOrigin::Plugin,
@@ -191,65 +610,57 @@ where
     }
 
     let (label, key, restart, run) = task.into_parts().await;
+    if label.len() > REACTOR_TASK_LABEL_BYTES || restart.as_ref().is_some_and(|bytes| bytes.len() > REACTOR_TASK_RESTART_BYTES) {
+        return Err(semio_framework::Fault::new(
+            semio_framework::FaultOrigin::Plugin,
+            semio_framework::FaultCode::new("plugin.task-authority-too-large"),
+            "task label or restart authority exceeds its fixed admitted byte bound",
+        ));
+    }
+    if key.as_ref().is_some_and(|key| key.len() > REACTOR_TASK_KEY_BYTES) {
+        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.key-too-large"), format!("task key exceeds {REACTOR_TASK_KEY_BYTES} bytes")));
+    }
 
     // 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
     // cancels the live one FIRST — its future (and anything it owns, including a parked
     // `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
     if let Some(key) = &key {
-        if let Some(old_id) = TASK_KEYS.with(|keys| keys.borrow().get(&(instance, key.clone())).copied()) {
-            EXECUTOR.with(|executor| executor.cancel(old_id));
-            TASK_RECORDS.with(|records| {
-                records.borrow_mut().remove(&old_id);
-            });
+        if TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)).is_some() {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession awaits bounded disposal of its previous owner"));
         }
     }
+
+    let reservation = TEST_FUTURE_EXECUTOR
+        .with(|executor| executor.reserve())
+        .map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
+    let task_id = reservation.id();
+    if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
+        return Err(semio_framework::Fault::new(
+            semio_framework::FaultOrigin::Framework,
+            semio_framework::FaultCode::new("plugin.task.record-capacity"),
+            "fixed task record authority rejected an executor-reserved direct slot",
+        ));
+    }
+    TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, label, restart }));
 
     let ctx = crate::app::TaskCtx { host: host_for_instance(instance).await, meta: meta.clone() };
     let future = run(ctx);
     let resume_instance = instance;
     let resume_meta = meta.clone();
-    let dedupe_key = key.clone();
-
-    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`; `spawn_with_id` only
-    // registers the task and hands back its id, the real awaiting happens later when the
-    // executor polls the parked future.
-    let task_id = EXECUTOR.with(|executor| {
-        executor.spawn_with_id(move |id| {
-            Box::pin(async move {
-                let outcome = match future.await {
-                    Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
-                    Ok(crate::app::TaskResolution::Emit(emit)) => {
-                        Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
-                    }
-                    Ok(crate::app::TaskResolution::Done) => None,
-                    Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
-                };
-                TASK_RECORDS.with(|records| {
-                    records.borrow_mut().remove(&id);
-                });
-                if let Some(key) = &dedupe_key {
-                    TASK_KEYS.with(|keys| {
-                        let mut keys = keys.borrow_mut();
-                        if keys.get(&(resume_instance, key.clone())) == Some(&id) {
-                            keys.remove(&(resume_instance, key.clone()));
-                        }
-                    });
-                }
-                if let Some(outcome) = outcome {
-                    TASK_RESUMES.with(|resumes| resumes.borrow_mut().push_back(PendingResume { instance: resume_instance, meta: resume_meta, outcome }));
-                }
-            })
-        })
-    });
-
-    TASK_RECORDS.with(|records| {
-        records.borrow_mut().insert(task_id, TaskRecord { instance, key: key.clone(), label, restart });
-    });
-    if let Some(key) = key {
-        TASK_KEYS.with(|keys| {
-            keys.borrow_mut().insert((instance, key), task_id);
-        });
-    }
+    reservation.install(Box::pin(async move {
+        let outcome = match future.await {
+            Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
+            Ok(crate::app::TaskResolution::Emit(emit)) => {
+                Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
+            }
+            Ok(crate::app::TaskResolution::Done) => None,
+            Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
+        };
+        TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(task_id)));
+        if let Some(outcome) = outcome {
+            assert!(TASK_RESUMES.with(|resumes| resumes.borrow_mut().push(PendingResume { instance: resume_instance, meta: resume_meta, outcome })).is_ok(), "fixed task-resume authority is saturated");
+        }
+    }));
 
     Ok(())
 }
@@ -257,6 +668,7 @@ where
 /// 🔀️ The exact wire shape `dispatch_emit`'s own `last_emit_wire` uses for one mutation lane —
 /// factored out so `spawn_task`'s `TaskResolution::Emit` erasure and `dispatch_emit` stay
 /// byte-identical without one calling the other across the crate's plugin/reactor split.
+#[cfg(test)]
 async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
     let mut encoded = Vec::with_capacity(ops.len());
     for op in ops.iter() {
@@ -276,18 +688,117 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// itself only ever handed to a task by `spawn_task`).
 // 🚫️async: E1 pure in-memory sweep over `TASK_RECORDS`/`EXECUTOR`/`TASK_KEYS` (all sync now,
 // R9) consumed by `poll`'s sync `world actor` boundary — zero suspension.
+pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
+    #[cfg(not(test))]
+    {
+        let budget = executor::ReactorTaskBudget {
+            operation: 0,
+            generation: 0,
+            cancellation_generation: 0,
+            maximum_units: 1,
+            maximum_bytes: 4_096,
+            deadline: std::time::Instant::now() + std::time::Duration::from_millis(8),
+        };
+        return matches!(REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, cursor, budget)), executor::ReactorTaskStep::Complete);
+    }
+    #[cfg(test)]
+    {
+    if *cursor >= REACTOR_TASK_SLOTS {
+        return true;
+    }
+    let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
+    if let Some(id) = entry {
+        let poll = TEST_FUTURE_EXECUTOR.with(|executor| executor.poll_one(id));
+        if poll == executor::TaskPoll::Pending {
+            return false;
+        }
+        TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(id)));
+    }
+    *cursor += 1;
+    *cursor >= REACTOR_TASK_SLOTS
+    }
+}
+
+fn begin_reactor_close(instance: u32) -> Result<(), semio_framework::Fault> {
+    let request_cursor = REGISTRY.with(|registry| registry.begin_cancel_instance(instance));
+    let resume_remaining = TASK_RESUMES.with(|resumes| resumes.borrow().begin_cancel_instance());
+    let state = ReactorCloseState {
+        instance,
+        task_cursor: 0,
+        timer_cursor: 0,
+        request_cursor,
+        resume_remaining,
+        requests_complete: false,
+        resumes_complete: false,
+        timers_complete: false,
+        metadata_complete: false,
+    };
+    REACTOR_CLOSES.with(|closes| {
+        closes
+            .try_borrow_mut()
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-busy"), "reactor close authority is busy"))?
+            .insert(state)
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-capacity"), "fixed reactor close authority is saturated or collided"))
+    })
+}
+
+fn abort_reactor_close(instance: u32) {
+    REACTOR_CLOSES.with(|closes| {
+        let Ok(mut closes) = closes.try_borrow_mut() else { return };
+        let index = ReactorCloseRegistry::index(instance);
+        if closes.slots.get(index).is_some_and(|state| state.instance == instance) {
+            drop(closes.take_at(index));
+        }
+    });
+}
+
+fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
+    let index = REACTOR_CLOSE_CURSOR.with(|cursor| {
+        let index = cursor.get();
+        cursor.set((index + 1) % PLUGIN_REACTOR_INSTANCE_SLOTS);
+        index
+    });
+    let Some(mut state) = REACTOR_CLOSES.with(|closes| closes.try_borrow_mut().ok().and_then(|mut closes| closes.take_at(index))) else { return Ok(false) };
+    let complete = if !state.requests_complete {
+        state.requests_complete = REGISTRY.with(|registry| registry.cancel_instance_step(&mut state.request_cursor) == requests::RequestCloseStep::Complete);
+        false
+    } else if !state.resumes_complete {
+        state.resumes_complete = TASK_RESUMES.with(|resumes| resumes.borrow_mut().cancel_instance_step(state.instance, &mut state.resume_remaining));
+        false
+    } else if state.task_cursor < REACTOR_TASK_SLOTS {
+        cancel_instance_tasks_step(state.instance, &mut state.task_cursor);
+        false
+    } else if !state.timers_complete {
+        state.timers_complete = ARMED_TIMERS.with(|timers| timers.borrow_mut().cancel_instance_step(state.instance, &mut state.timer_cursor));
+        false
+    } else if !state.metadata_complete {
+        INSTANCE_METADATA.with(|metadata| {
+            drop(metadata.borrow_mut().remove(state.instance));
+        });
+        state.metadata_complete = true;
+        false
+    } else {
+        true
+    };
+    if !complete {
+        REACTOR_CLOSES.with(|closes| {
+            closes
+                .try_borrow_mut()
+                .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-busy"), "reactor close authority is busy while restoring an exact cleanup cursor"))?
+                .put_at(index, state)
+                .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-lost"), "reactor close cursor lost its exact fixed slot"))
+        })?;
+    }
+    Ok(true)
+}
+
+#[cfg(test)]
 pub(crate) fn cancel_instance_tasks(instance: u32) {
-    let ids: Vec<executor::TaskId> = TASK_RECORDS.with(|records| records.borrow().iter().filter(|(_, record)| record.instance == instance).map(|(id, _)| *id).collect());
-    for id in ids {
-        // 🌉️ `LocalKey::with`'s closure is sync and cannot hold a future tied to the borrowed
-        // `executor` past its own return — bridged via `resolve_ready` (`cancel`'s body has no
-        // real suspension point; see the framework io module's `resolve_ready` doc comment).
-        EXECUTOR.with(|executor| executor.cancel(id));
-        let removed_key = TASK_RECORDS.with(|records| records.borrow_mut().remove(&id).and_then(|record| record.key));
-        if let Some(key) = removed_key {
-            TASK_KEYS.with(|keys| {
-                keys.borrow_mut().remove(&(instance, key));
-            });
+    let mut cursor = 0;
+    for _ in 0..REACTOR_TASK_SLOTS {
+        let before = cursor;
+        if cancel_instance_tasks_step(instance, &mut cursor) || cursor == before {
+            break;
         }
     }
 }
@@ -295,15 +806,15 @@ pub(crate) fn cancel_instance_tasks(instance: u32) {
 /// 📸️ `checkpoint::checkpoint` body — unconditional (no WIT type in its signature, only
 /// `Vec<u8>`/kernel types), unlike `poll`/the `wit_*`/`kernel_*_to_wit` bridge below.
 pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
-    let instances = OPEN_INSTANCES.with(|open| open.borrow().clone());
-    let timers = ARMED_TIMERS.with(|timers| timers.borrow().clone());
+    let instances = INSTANCE_METADATA.with(|metadata| metadata.borrow().checkpoint_rows());
+    let timers = ARMED_TIMERS.with(|timers| timers.borrow().rows());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the task itself is never
     // serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
     // `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
     // into the pack, one `TaskRestart{instance, command}` per such task.
     let task_restarts: Vec<checkpoint::TaskRestart> =
-        TASK_RECORDS.with(|records| records.borrow().values().filter_map(|record| record.restart.as_ref().map(|command| checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
+        TASK_RECORDS.with(|records| records.borrow().iter().filter_map(|(_, record)| record.restart.as_ref().map(|command| checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
     checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
 }
 
@@ -318,23 +829,29 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
     let pack = checkpoint::restore(runtime, state).await?;
     let instances = pack.instances().await;
     let armed_timers = pack.timers().await.to_vec();
-    let mut pending_resumes = Vec::new();
+    INSTANCE_METADATA.with(|metadata| {
+        let mut metadata = metadata.borrow_mut();
+        for (instance, app_id) in instances {
+            metadata.insert(instance, app_id, semio_framework::kernel::QuotaSchema::default())?;
+        }
+        Ok::<(), semio_framework::Fault>(())
+    })?;
+    ARMED_TIMERS.with(|timers| {
+        if !timers.borrow().is_empty() {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-restore-live"), "restore cannot replace live fixed timer authority"));
+        }
+        if !armed_timers.is_empty() {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-restore-owner-missing"), "checkpoint timer rows lack the exact numeric instance owner required by the fixed close authority"));
+        }
+        Ok::<(), semio_framework::Fault>(())
+    })?;
     for restart in pack.task_restarts().await {
         let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await, instance_id: restart.instance };
-        pending_resumes.push(PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) });
+        let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
+        TASK_RESUMES
+            .with(|resumes| resumes.borrow_mut().push(pending))
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task-resume-capacity"), "fixed task-resume authority is saturated during restore"))?;
     }
-    OPEN_INSTANCES.with(|open| {
-        *open.borrow_mut() = instances;
-    });
-    ARMED_TIMERS.with(|timers| {
-        *timers.borrow_mut() = armed_timers;
-    });
-    TASK_RESUMES.with(|resumes| {
-        let mut resumes = resumes.borrow_mut();
-        for pending in pending_resumes {
-            resumes.push_back(pending);
-        }
-    });
     Ok(())
 }
 
@@ -376,7 +893,7 @@ mod wit_bridge {
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
     /// module's `TurnResult`.
-    pub fn poll<PA: crate::app::PluginApp>(
+    pub fn poll<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
         budget: crate::component::component::exports::semio::framework::reactor::Budget,
@@ -391,13 +908,13 @@ mod wit_bridge {
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let result = poll_kernel(runtime, kernel_events, kernel_budget, &close_instances)?;
-        Ok(kernel_turn_result_to_wit(result, budget))
+        kernel_turn_result_to_wit(result, budget)
     }
 
     /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
     /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
     /// host's semantic authority.
-    pub fn poll_kernel<PA: crate::app::PluginApp>(
+    pub fn poll_kernel<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<Event>,
         _budget: semio_framework::kernel::Budget,
@@ -411,33 +928,35 @@ mod wit_bridge {
         let mut dirty_intents: HashMap<u32, Vec<ui_contract::UiIntent>> = HashMap::new();
 
         for numeric_instance in close_instances {
-            cancel_instance_tasks(*numeric_instance);
-            REGISTRY.with(|registry| registry.cancel_instance(*numeric_instance));
-            INSTANCE_QUOTAS.with(|quotas| {
-                quotas.borrow_mut().remove(numeric_instance);
-            });
+            begin_reactor_close(*numeric_instance)?;
+            if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance)) {
+                abort_reactor_close(*numeric_instance);
+                return Err(error);
+            }
         }
+        let _ = step_reactor_close()?;
+        let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
 
         for event in events {
             match event {
                 Event::InstanceOpen { instance, app_id, actor, quotas, .. } => {
                     let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
+                    INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(numeric_instance, app_id.0.clone(), quotas))?;
                     // 🚫️async: E5 executor bridge (× 2) — `plugin_create_app_with_id`/`set_instance_actor`
                     // stay genuinely `async fn` (broad `plugin_runtime` consumers elsewhere await them for
                     // real); `resolve_ready` is safe here for the same "world actor has no host-async
                     // import" reason as this file's other WIT-boundary bridges. R13: previously a BARE
                     // dropped future (`let _ = ...`/un-awaited statement) — now genuinely resolved.
-                    let _ = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0));
+                    if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0)) {
+                        INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
+                        return Err(error);
+                    }
                     // 🪪️ Channel v12 (A4) retired the `AppCommand::Hello` handshake that used to record
                     // this — lifecycle now arrives here as `Event::InstanceOpen` (design-abi.md §4).
-                    semio_framework::io::resolve_ready(crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor));
-                    OPEN_INSTANCES.with(|open| open.borrow_mut().push((numeric_instance, app_id.0)));
-                    // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `spawn_task`'s
-                    // quota gate is the first real reader — `quotas` used to be silently discarded here
-                    // (`wit_event_to_kernel`'s `InstanceOpen` arm always built a `default()`).
-                    INSTANCE_QUOTAS.with(|store| {
-                        store.borrow_mut().insert(numeric_instance, quotas);
-                    });
+                    if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor)) {
+                        INSTANCE_METADATA.with(|metadata| drop(metadata.borrow_mut().remove(numeric_instance)));
+                        return Err(error);
+                    }
                 }
                 Event::InstanceClose => {}
                 Event::AppCommandEvent { instance, command, .. } => {
@@ -484,7 +1003,7 @@ mod wit_bridge {
                     // `QuotaSchema.message_bytes` (default 64 MiB when unset/unknown — matches
                     // `instance_task_quota`'s own `unwrap_or` fallback idiom above).
                     REGISTRY.with(|registry| {
-                        let cap = registry.instance_of(req).and_then(|instance| INSTANCE_QUOTAS.with(|quotas| quotas.borrow().get(&instance).and_then(|schema| schema.message_bytes))).unwrap_or(64 * 1024 * 1024) as usize;
+                        let cap = registry.instance_of(req).and_then(|instance| INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.message_bytes))).unwrap_or(64 * 1024 * 1024) as usize;
                         registry.append_chunk(req, bytes, done, cap);
                     });
                 }
@@ -502,8 +1021,11 @@ mod wit_bridge {
                 }
                 Event::Message { .. } => {}
                 Event::Timer { id } => {
-                    ARMED_TIMERS.with(|timers| timers.borrow_mut().retain(|armed| *armed != id));
-                    EXECUTOR.with(|executor| executor.wake(id));
+                    ARMED_TIMERS.with(|timers| {
+                        timers.borrow_mut().remove(id);
+                    });
+                    #[cfg(test)]
+                    TEST_FUTURE_EXECUTOR.with(|executor| executor.wake(id));
                 }
                 Event::Wake => {}
                 Event::Request { .. } => {}
@@ -528,7 +1050,7 @@ mod wit_bridge {
                     // `route_app_frame`.
                     for one in &output.effects {
                         if let Ok(effect) = decode_wire_effect(one) {
-                            effects.push(effect);
+                            push_admitted_effect(&mut effects, instance, effect);
                         }
                     }
                     for one in &output.events {
@@ -558,7 +1080,7 @@ mod wit_bridge {
                     }
                     for one in &output.effects {
                         if let Ok(effect) = decode_wire_effect(one) {
-                            effects.push(effect);
+                            push_admitted_effect(&mut effects, instance, effect);
                         }
                     }
                     for one in &output.events {
@@ -617,8 +1139,10 @@ mod wit_bridge {
         // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
         // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
         // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
-        let more_work = EXECUTOR.with(|executor| executor.run_until_idle(64));
-        effects.extend(REGISTRY.with(|registry| registry.drain()));
+        let more_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(8)));
+        for effect in REGISTRY.with(|registry| registry.drain()) {
+            push_admitted_effect(&mut effects, 0, effect);
+        }
 
         // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumed `AsyncTask` follow-
         // ups (and any replayed `task_restarts` from a `restore` before this turn) — AFTER
@@ -627,7 +1151,7 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || resumes_remain || EXECUTOR.with(|executor| executor.has_ready());
+        let more_work = more_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending());
 
         let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
@@ -640,7 +1164,7 @@ mod wit_bridge {
         });
         let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first().copied()), status, fuel_used: 0 })
+        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0 })
     }
 
     thread_local! {
@@ -703,7 +1227,7 @@ mod wit_bridge {
     /// `turn-status::more-work` so a saturated resume queue is never silently dropped.
     pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
         for _ in 0..max_rounds {
-            let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop_front()) else {
+            let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
                 return false;
             };
             let input = match resume.outcome {
@@ -722,7 +1246,7 @@ mod wit_bridge {
             }
             for one in &output.effects {
                 if let Ok(effect) = decode_wire_effect(one) {
-                    effects.push(effect);
+                    push_admitted_effect(effects, resume.instance, effect);
                 }
             }
             for one in &output.events {
@@ -740,6 +1264,17 @@ mod wit_bridge {
     fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
         dsl::from_dsl_value(value).map_err(|_| ())
+    }
+
+    fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect) {
+        if let Effect::SetTimer { id, .. } = &effect {
+            if ARMED_TIMERS.with(|timers| timers.borrow_mut().insert(instance, *id)).is_err() {
+                let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-capacity"), "fixed timer authority is saturated or collided");
+                effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                return;
+            }
+        }
+        effects.push(effect);
     }
 
     fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
@@ -841,11 +1376,14 @@ mod wit_bridge {
     /// no STRUCTURAL wit change is needed to repoint what it carries: `wit-flip`'s doc comment there
     /// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
     /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
-    fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
+    fn kernel_turn_result_to_wit(
+        result: semio_framework::kernel::TurnResult,
+        _budget: crate::component::component::exports::semio::framework::reactor::Budget,
+    ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         use crate::component::component::exports::semio::framework::reactor as wit;
-        wit::TurnResult {
+        Ok(wit::TurnResult {
             ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
-            effects: result.effects.into_iter().map(kernel_effect_to_wit).collect(),
+            effects: result.effects.into_iter().map(kernel_effect_to_wit).collect::<Result<Vec<_>, _>>()?,
             presence: result.presence.into_iter().map(kernel_presence_update_to_wit).collect(),
             next_wake: result.next_wake,
             status: match result.status {
@@ -855,7 +1393,7 @@ mod wit_bridge {
                 TurnStatus::Faulted(bytes) => wit::TurnStatus::Faulted(bytes),
             },
             fuel_used: result.fuel_used,
-        }
+        })
     }
 
     /// 👥️ M2: pack-encodes a whole `ui_contract::PresenceUpdate` into the WIT `presence-update.update`
@@ -916,7 +1454,7 @@ mod wit_bridge {
     /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
     /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
     /// every existing host boundary in this crate already uses.
-    fn kernel_effect_to_wit(effect: Effect) -> crate::component::component::exports::semio::framework::reactor::Effect {
+    fn kernel_effect_to_wit(effect: Effect) -> Result<crate::component::component::exports::semio::framework::reactor::Effect, semio_framework::Fault> {
         use crate::component::component::exports::semio::framework::reactor as wit;
         // 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn`
         // (out of this packet's `path_scope`, `🏪️store/**`), but every caller in this match below is
@@ -926,7 +1464,7 @@ mod wit_bridge {
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
             store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
         }
-        match effect {
+        Ok(match effect {
             Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, params: wit_effects::OpenWindowParams { kind: kind.0, params: pack(&params) } }),
             Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit_effects::CloseWindowEffect { window: window.0 as u64 }),
             Effect::Notify { message } => wit::Effect::Notify(wit_effects::NotifyEffect { message }),
@@ -973,7 +1511,9 @@ mod wit_bridge {
             Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit_effects::CacheDeriveEffect { req: req.0, params: wit_effects::CacheDeriveParams { engine_id, input } }),
             Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit_effects::CacheReadEffect { req: req.0, params: wit_effects::CacheReadParams { engine_id, key: key.into_bytes() } }),
             Effect::SetTimer { id, after_ms, repeat } => {
-                ARMED_TIMERS.with(|timers| timers.borrow_mut().push(id));
+                if !ARMED_TIMERS.with(|timers| timers.borrow().contains(id)) {
+                    return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-owner-missing"), "timer effect reached the WIT boundary without exact pre-admitted instance ownership"));
+                }
                 wit::Effect::SetTimer(wit_effects::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
             }
             Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit_effects::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
@@ -989,7 +1529,7 @@ mod wit_bridge {
             Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
             Effect::Subscribe { topic } => wit::Effect::Subscribe(wit_effects::SubscribeEffect { topic }),
             Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit_effects::SubscribeEffect { topic }),
-        }
+        })
     }
 
     fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoint {
@@ -1032,7 +1572,7 @@ pub(crate) mod test_support {
 
     /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
     pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
-        EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
+        TEST_FUTURE_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
     }
 
     /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
@@ -1046,7 +1586,7 @@ pub(crate) mod test_support {
     /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
     /// `plugin_resume_task` at all).
     pub(crate) async fn pop_task_resume() -> Option<(u32, crate::app::ActionMeta, Result<crate::plugin_runtime::TaskResumeInput, semio_framework::Fault>)> {
-        TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop_front()).map(|resume| {
+        TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
             let input = match resume.outcome {
                 TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
                 TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
@@ -1057,16 +1597,21 @@ pub(crate) mod test_support {
     }
 
     pub(crate) async fn task_count_for_instance(instance: u32) -> usize {
-        TASK_RECORDS.with(|records| records.borrow().values().filter(|record| record.instance == instance).count())
+        TASK_RECORDS.with(|records| records.borrow().count_instance(instance))
     }
 
     pub(crate) async fn task_key_is_live(instance: u32, key: &str) -> bool {
-        TASK_KEYS.with(|keys| keys.borrow().contains_key(&(instance, key.to_string())))
+        TASK_RECORDS.with(|records| records.borrow().find_key(instance, key).is_some())
     }
 
     pub(crate) async fn set_instance_quota(instance: u32, outstanding_requests: u64) {
-        INSTANCE_QUOTAS.with(|quotas| {
-            quotas.borrow_mut().insert(instance, semio_framework::kernel::QuotaSchema { outstanding_requests: Some(outstanding_requests), ..Default::default() });
+        INSTANCE_METADATA.with(|metadata| {
+            let mut metadata = metadata.borrow_mut();
+            if let Some(entry) = metadata.slots.get_mut(InstanceMetadataRegistry::index(instance)).filter(|entry| entry.instance == instance) {
+                entry.quota.outstanding_requests = Some(outstanding_requests);
+            } else {
+                let _ = metadata.insert(instance, "test".into(), semio_framework::kernel::QuotaSchema { outstanding_requests: Some(outstanding_requests), ..Default::default() });
+            }
         });
     }
 
@@ -1078,7 +1623,12 @@ pub(crate) mod test_support {
     /// makes right after `cancel_instance_tasks`, exposed directly for a test to run the SAME
     /// two-step sequence natively.
     pub(crate) async fn cancel_instance_registry_requests(instance: u32) -> usize {
-        REGISTRY.with(|registry| registry.cancel_instance(instance))
+        REGISTRY.with(|registry| {
+            let before = registry.pending_ids().len();
+            let mut cursor = registry.begin_cancel_instance(instance);
+            while registry.cancel_instance_step(&mut cursor) != requests::RequestCloseStep::Complete {}
+            before.saturating_sub(registry.pending_ids().len())
+        })
     }
 
     //#region 🔖️M2PresenceHooks

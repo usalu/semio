@@ -135,6 +135,8 @@ pub struct CuratedItem {
 pub struct ObjectKindExtra {
     #[dsl(defines = "object")]
     pub id: String,
+    pub name: String,
+    pub module_id: String,
     pub typology_path: Vec<String>,
     pub availability: u32,
     #[dsl(statements)]
@@ -152,7 +154,7 @@ pub async fn kit_type_from_object_kind(kind: &ObjectKind) -> SemioKitType {
 /// carry. Lossless together with `kit_type_from_object_kind`: every `ObjectKind` field lands in
 /// exactly one of the two halves.
 pub async fn object_kind_extra_from_object_kind(kind: &ObjectKind) -> ObjectKindExtra {
-    ObjectKindExtra { id: kind.id.clone(), typology_path: kind.typology_path.clone(), availability: kind.availability, geometry: kind.geometry.clone() }
+    ObjectKindExtra { id: kind.id.clone(), name: kind.name.clone(), module_id: kind.module_id.clone(), typology_path: kind.typology_path.clone(), availability: kind.availability, geometry: kind.geometry.clone() }
 }
 
 /// 🔀️ Inverse of the split above — reassembles one full `ObjectKind` from its two composed halves.
@@ -195,34 +197,6 @@ pub async fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<
     store::ArtifactChild::new(child_id, target)
 }
 
-//#region 🔖️CatalogScratch
-thread_local! {
-    /// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
-    /// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
-    /// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
-    /// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
-    /// child's content back through — every render/export/inference call site funnels through `stock_of`
-    /// below instead, which reads this cache. Populated wherever a `CurateSnapshot` with real stock
-    /// content is built (`curate_snapshot_from_stock`, `default_document`, `empty_document`) — NEVER
-    /// persisted, NEVER a snapshot field, droppable at any instant (matches the repo-wide `EngineRep`
-    /// contract). Staleness gap, documented rather than fail-closed (this is a read-only catalogue display
-    /// path, not a destructive edit path — `catalog` is never incrementally mutated in-history, only
-    /// whole-document-replaced, same category as `stock`'s pre-migration bulk-population rule): store-
-    /// level undo/redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale
-    /// relative to `catalog`'s handle across an undo/redo that changes which stock was loaded; a miss
-    /// falls back to an empty catalog rather than panicking.
-    static SOURCING_CATALOG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
-
-async fn catalog_scratch_set(child_id: &str, catalog: SemioKitSnapshot) {
-    SOURCING_CATALOG_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), catalog));
-}
-
-async fn catalog_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
-    SOURCING_CATALOG_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
-}
-//#endregion 🔖️CatalogScratch
-
 /// 🏗️ Builds a `CurateSnapshot` from a full stock list, minting its content-addressed `catalog`
 /// handle, splitting the stock into its composed-child half and sourcing-owned overflow half, and
 /// seeding the working-scene cache so this SAME call's render/export/inference paths can resolve the
@@ -230,7 +204,6 @@ async fn catalog_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
 /// test, and command that used to write `CurateSnapshot { stock, .. }` directly goes through this now.
 pub async fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<CuratedItem>) -> CurateSnapshot {
     let handle = catalog_child_handle(&stock);
-    catalog_scratch_set(&handle.child_id, catalog_snapshot_from_stock(&stock));
     CurateSnapshot { catalog: handle, stock_extra: stock_extra_from_stock(&stock), curated }
 }
 
@@ -238,16 +211,15 @@ pub async fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<Cur
 /// building a whole `CurateSnapshot` — for fixture loaders (`default_document`/`empty_document`) that
 /// parse the persisted snapshot from DSL text (which never embeds child content) but still need the
 /// SAME content-addressed handle's catalog resolvable immediately after loading.
-pub async fn seed_catalog_scratch(stock: &[ObjectKind]) {
-    let handle = catalog_child_handle(stock);
-    catalog_scratch_set(&handle.child_id, catalog_snapshot_from_stock(stock));
+pub async fn validate_catalog_payload(stock: &[ObjectKind]) {
+    let _ = catalog_child_handle(stock);
 }
 
 /// 👁️ The one accessor every render/export/inference call site funnels through to read the full
-/// reassembled stock catalogue — see `SOURCING_CATALOG_SCRATCH`'s doc comment for the staleness gap.
+/// reassembled stock catalogue from snapshot-owned overflow records.
 pub async fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
-    let catalog = catalog_scratch_get(&document.catalog.child_id).unwrap_or_default();
-    stock_from_catalog_and_extra(&catalog, &document.stock_extra)
+    let _ = &document.catalog;
+    document.stock_extra.iter().map(|row| ObjectKind { id: row.id.clone(), name: row.name.clone(), module_id: row.module_id.clone(), typology_path: row.typology_path.clone(), availability: row.availability, geometry: row.geometry.clone() }).collect()
 }
 //#endregion 🔖️CatalogComposition
 

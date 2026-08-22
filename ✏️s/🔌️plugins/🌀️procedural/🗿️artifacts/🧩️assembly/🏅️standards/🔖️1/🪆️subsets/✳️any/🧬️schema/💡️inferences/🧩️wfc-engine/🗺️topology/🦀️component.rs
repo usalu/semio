@@ -19,6 +19,9 @@ pub(crate) trait Topology {
     fn node_count(&self) -> usize;
     fn arc_count(&self) -> usize;
     fn region_of(&self, n: NodeId) -> RegionId;
+    /// 🧵 Stable raw outgoing-arc slots let resumable jobs inspect at most one slot per unit.
+    fn out_arc_bound(&self, n: NodeId) -> usize;
+    fn out_arc_at(&self, n: NodeId, index: usize) -> Option<(NodeId, RelationId)>;
     /// 🗺️ Calls `f(target, relation)` once per outgoing arc of `n`, in a stable order.
     fn for_each_out_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId));
     /// 🗺️ Calls `f(source, relation, slot)` once per incoming arc of `n`. `slot` is a dense id
@@ -48,6 +51,8 @@ pub struct GraphTopology {
     in_sources: Vec<u32>,
     in_relations: Vec<u32>,
     regions: Vec<u32>,
+    arc_count: usize,
+    completed_units: usize,
 }
 
 impl GraphTopology {
@@ -87,6 +92,18 @@ impl Topology for GraphTopology {
     }
 
     #[inline]
+    fn out_arc_bound(&self, n: NodeId) -> usize {
+        self.out_degree(n)
+    }
+
+    #[inline]
+    fn out_arc_at(&self, n: NodeId, index: usize) -> Option<(NodeId, RelationId)> {
+        let start = self.out_starts[n.index()] as usize;
+        let absolute = start + index;
+        (absolute < self.out_starts[n.index() + 1] as usize).then(|| (NodeId(self.out_targets[absolute]), RelationId(self.out_relations[absolute])))
+    }
+
+    #[inline]
     fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let start = self.out_starts[n.index()] as usize;
         let end = self.out_starts[n.index() + 1] as usize;
@@ -109,6 +126,147 @@ impl Topology for GraphTopology {
     }
 }
 // #endregion 🔖️Graph
+
+// #region 🧵️AssemblyCompiler
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum AssemblyTopologyPhase {
+    Outgoing,
+    Incoming,
+    Regions,
+    Complete,
+}
+
+/// 🧵 Produces canonical CSR arrays one admitted arc or node boundary per unit.
+pub(crate) struct AssemblyTopologyBuild {
+    node_count: usize,
+    phase: AssemblyTopologyPhase,
+    node: usize,
+    out_arcs: std::collections::BTreeMap<(u32, u32, u32), usize>,
+    in_arcs: std::collections::BTreeMap<(u32, u32, u32), usize>,
+    out_starts: Vec<u32>,
+    out_targets: Vec<u32>,
+    out_relations: Vec<u32>,
+    in_starts: Vec<u32>,
+    in_sources: Vec<u32>,
+    in_relations: Vec<u32>,
+    regions: Vec<u32>,
+}
+
+impl AssemblyTopologyBuild {
+    pub(crate) fn new(node_count: usize) -> Self {
+        Self {
+            node_count,
+            phase: AssemblyTopologyPhase::Outgoing,
+            node: 0,
+            out_arcs: std::collections::BTreeMap::new(),
+            in_arcs: std::collections::BTreeMap::new(),
+            out_starts: Vec::new(),
+            out_targets: Vec::new(),
+            out_relations: Vec::new(),
+            in_starts: Vec::new(),
+            in_sources: Vec::new(),
+            in_relations: Vec::new(),
+            regions: Vec::new(),
+            arc_count: 0,
+            completed_units: 0,
+        }
+    }
+
+    pub(crate) fn add_arc(&mut self, from: NodeId, to: NodeId, relation: RelationId) -> Result<(), crate::wfc_engine::error::TopologyError> {
+        use crate::wfc_engine::error::TopologyError;
+        if from.index() >= self.node_count {
+            return Err(TopologyError::DanglingArc { from });
+        }
+        if to.index() >= self.node_count {
+            return Err(TopologyError::DanglingArc { from: to });
+        }
+        *self.out_arcs.entry((from.get(), to.get(), relation.get())).or_insert(0) += 1;
+        *self.in_arcs.entry((to.get(), from.get(), relation.get())).or_insert(0) += 1;
+        self.arc_count += 1;
+        Ok(())
+    }
+
+    pub(crate) fn progress(&self) -> (usize, usize) {
+        (self.completed_units, self.arc_count.saturating_mul(2).saturating_add(self.node_count.saturating_mul(3)).saturating_add(6))
+    }
+
+    fn emit_outgoing(&mut self) {
+        if self.out_starts.is_empty() {
+            self.out_starts.push(0);
+            return;
+        }
+        if self.node == self.node_count {
+            self.node = 0;
+            self.phase = AssemblyTopologyPhase::Incoming;
+            return;
+        }
+        if self.out_arcs.first_key_value().is_some_and(|(&(from, _, _), _)| from as usize == self.node) {
+            let ((from, to, relation), count) = self.out_arcs.pop_first().expect("outgoing key exists");
+            self.out_targets.push(to);
+            self.out_relations.push(relation);
+            if count > 1 {
+                self.out_arcs.insert((from, to, relation), count - 1);
+            }
+        } else {
+            self.out_starts.push(self.out_targets.len() as u32);
+            self.node += 1;
+        }
+    }
+
+    fn emit_incoming(&mut self) {
+        if self.in_starts.is_empty() {
+            self.in_starts.push(0);
+            return;
+        }
+        if self.node == self.node_count {
+            self.node = 0;
+            self.phase = AssemblyTopologyPhase::Regions;
+            return;
+        }
+        if self.in_arcs.first_key_value().is_some_and(|(&(to, _, _), _)| to as usize == self.node) {
+            let ((to, from, relation), count) = self.in_arcs.pop_first().expect("incoming key exists");
+            self.in_sources.push(from);
+            self.in_relations.push(relation);
+            if count > 1 {
+                self.in_arcs.insert((to, from, relation), count - 1);
+            }
+        } else {
+            self.in_starts.push(self.in_sources.len() as u32);
+            self.node += 1;
+        }
+    }
+
+    pub(crate) fn step(&mut self) -> Option<GraphTopology> {
+        match self.phase {
+            AssemblyTopologyPhase::Outgoing => self.emit_outgoing(),
+            AssemblyTopologyPhase::Incoming => self.emit_incoming(),
+            AssemblyTopologyPhase::Regions => {
+                if self.node < self.node_count {
+                    self.regions.push(0);
+                    self.node += 1;
+                } else {
+                    self.phase = AssemblyTopologyPhase::Complete;
+                }
+            }
+            AssemblyTopologyPhase::Complete => {
+                self.completed_units += 1;
+                return Some(GraphTopology {
+                    node_count: self.node_count,
+                    out_starts: std::mem::take(&mut self.out_starts),
+                    out_targets: std::mem::take(&mut self.out_targets),
+                    out_relations: std::mem::take(&mut self.out_relations),
+                    in_starts: std::mem::take(&mut self.in_starts),
+                    in_sources: std::mem::take(&mut self.in_sources),
+                    in_relations: std::mem::take(&mut self.in_relations),
+                    regions: std::mem::take(&mut self.regions),
+                });
+            }
+        }
+        self.completed_units += 1;
+        None
+    }
+}
+// #endregion 🧵️AssemblyCompiler
 
 // #region 🔖️Builder
 /// 🏗️ Accumulates directed arcs and per-node regions before [`GraphTopologyBuilder::build`]
@@ -252,6 +410,30 @@ mod tests {
         let mut b = GraphTopologyBuilder::new(2);
         b.arc(NodeId(0), NodeId(5), RelationId(0));
         assert!(b.build().is_err());
+    }
+
+    #[test]
+    fn assembly_cursor_compiler_matches_canonical_csr_order_and_multiplicity() {
+        let arcs = [(NodeId(2), NodeId(0), RelationId(1)), (NodeId(0), NodeId(1), RelationId(0)), (NodeId(0), NodeId(1), RelationId(0)), (NodeId(1), NodeId(2), RelationId(1))];
+        let mut canonical = GraphTopologyBuilder::new(3);
+        let mut incremental = AssemblyTopologyBuild::new(3);
+        for &(from, to, relation) in &arcs {
+            canonical.arc(from, to, relation);
+            incremental.add_arc(from, to, relation).expect("assembly arc");
+        }
+        let canonical = canonical.build().expect("canonical topology");
+        let incremental = loop {
+            if let Some(topology) = incremental.step() {
+                break topology;
+            }
+        };
+        assert_eq!(incremental.out_starts, canonical.out_starts);
+        assert_eq!(incremental.out_targets, canonical.out_targets);
+        assert_eq!(incremental.out_relations, canonical.out_relations);
+        assert_eq!(incremental.in_starts, canonical.in_starts);
+        assert_eq!(incremental.in_sources, canonical.in_sources);
+        assert_eq!(incremental.in_relations, canonical.in_relations);
+        assert_eq!(incremental.regions, canonical.regions);
     }
 
     #[test]

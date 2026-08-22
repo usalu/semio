@@ -72,17 +72,17 @@ impl Default for DrawArtifact {
 
 impl DrawArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> DrawSnapshot {
+    pub fn to_snapshot(&self) -> DrawSnapshot {
         DrawSnapshot { schema: self.schema.clone(), id: self.id.clone(), title: self.title.clone(), layers: self.layers.clone(), assets: self.assets.clone(), artboard: self.artboard.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: DrawSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: DrawSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, title: snapshot.title, layers: snapshot.layers, assets: snapshot.assets, artboard: snapshot.artboard, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: DrawSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: DrawSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -95,7 +95,7 @@ impl DrawArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.draw.draw` — twenty handcrafted schema leaves.
-pub async fn draw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn draw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.draw.draw",
         artifact: schema::FacetLeaves {
@@ -218,14 +218,14 @@ pub struct DrawCanvasLayerRecord {
 //#endregion 🔖️SceneTypes
 
 //#region 🔖️Tree
-async fn draw_id_hex(material: &[u8]) -> String {
+fn draw_id_hex(material: &[u8]) -> String {
     let mut hasher = DefaultHasher::new();
     material.hash(&mut hasher);
     format!("{:016x}", hasher.finish())
 }
 
 /// 🪪️ Content-addressed layer/object id — no process-wide counter.
-pub async fn create_draw_id(prefix: &str, material: &[u8]) -> String {
+pub fn create_draw_id(prefix: &str, material: &[u8]) -> String {
     format!("{prefix}-{}", draw_id_hex(material))
 }
 
@@ -234,7 +234,7 @@ pub async fn create_draw_id(prefix: &str, material: &[u8]) -> String {
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
 const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::artifacts::draw::dsl::SEMIO_DRAW_EXAMPLE_TEXT;
 
-pub async fn semio_draw_example_document() -> DrawSnapshot {
+pub fn semio_draw_example_document() -> DrawSnapshot {
     DrawSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_draw_snapshot())
 }
 
@@ -242,29 +242,29 @@ pub async fn semio_draw_example_document() -> DrawSnapshot {
 /// which hardcode `serde_json::from_str` on their `document_json`/`projection_override_json`
 /// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
 /// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
-pub async fn semio_draw_example_json() -> String {
+pub fn semio_draw_example_json() -> String {
     serde_json::to_string(&semio_draw_example_document()).unwrap_or_default()
 }
 
-pub async fn default_layer_base(name: &str) -> DrawLayerBase {
+pub fn default_layer_base(name: &str) -> DrawLayerBase {
     DrawLayerBase { id: create_draw_id("layer", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() }
 }
 
-pub async fn create_draw_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawLayerNode {
+pub fn create_draw_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawLayerNode {
     DrawLayerNode::Path(DrawPathBody {
         base: DrawLayerBase { id: create_draw_id("path", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         segments,
     })
 }
 
-pub async fn create_draw_group_layer(name: &str) -> DrawLayerNode {
+pub fn create_draw_group_layer(name: &str) -> DrawLayerNode {
     DrawLayerNode::Group(DrawGroupBody {
         base: DrawLayerBase { id: create_draw_id("group", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         children: Vec::new(),
     })
 }
 
-pub async fn create_draw_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawLayerNode {
+pub fn create_draw_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawLayerNode {
     DrawLayerNode::Boolean(DrawBooleanBody {
         base: DrawLayerBase { id: create_draw_id("boolean", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         operation: operation.into(),
@@ -272,7 +272,7 @@ pub async fn create_draw_boolean_layer(name: &str, operation: &str, children: Ve
     })
 }
 
-pub async fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
+pub fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
     DrawLayerNode::Trace(DrawTraceBody {
         base: DrawLayerBase { id: create_draw_id("trace", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         source_key: source_key.into(),
@@ -280,7 +280,7 @@ pub async fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerN
     })
 }
 
-pub async fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
+pub fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
     DrawLayerNode::Shape(DrawShapeBody {
         base: DrawLayerBase { id: create_draw_id("shape", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         shape_kind: "rect".into(),
@@ -292,7 +292,7 @@ pub async fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
     })
 }
 
-pub async fn create_draw_text_layer(name: &str) -> DrawLayerNode {
+pub fn create_draw_text_layer(name: &str) -> DrawLayerNode {
     DrawLayerNode::Text(DrawTextBody {
         base: DrawLayerBase {
             id: create_draw_id("text", name.as_bytes()),
@@ -311,7 +311,7 @@ pub async fn create_draw_text_layer(name: &str) -> DrawLayerNode {
     })
 }
 
-pub async fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
+pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
     DrawLayerNode::Image(DrawImageBody {
         base: DrawLayerBase { id: create_draw_id("image", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         image_key: image_key.into(),
@@ -320,7 +320,7 @@ pub async fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNo
     })
 }
 
-pub async fn default_draw_document(id: &str, title: Option<&str>) -> DrawSnapshot {
+pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawSnapshot {
     DrawSnapshot {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
         id: id.into(),
@@ -331,11 +331,11 @@ pub async fn default_draw_document(id: &str, title: Option<&str>) -> DrawSnapsho
     }
 }
 
-pub async fn empty_draw_snapshot() -> DrawSnapshot {
+pub fn empty_draw_snapshot() -> DrawSnapshot {
     default_draw_document("empty", None)
 }
 
-pub async fn layer_id(layer: &DrawLayerNode) -> &str {
+pub fn layer_id(layer: &DrawLayerNode) -> &str {
     match layer {
         DrawLayerNode::Shape(shape) => &shape.base.id,
         DrawLayerNode::Path(path) => &path.base.id,
@@ -347,7 +347,7 @@ pub async fn layer_id(layer: &DrawLayerNode) -> &str {
     }
 }
 
-pub async fn layer_base(layer: &DrawLayerNode) -> &DrawLayerBase {
+pub fn layer_base(layer: &DrawLayerNode) -> &DrawLayerBase {
     match layer {
         DrawLayerNode::Shape(shape) => &shape.base,
         DrawLayerNode::Path(path) => &path.base,
@@ -359,7 +359,7 @@ pub async fn layer_base(layer: &DrawLayerNode) -> &DrawLayerBase {
     }
 }
 
-pub async fn layer_kind_label(layer: &DrawLayerNode) -> String {
+pub fn layer_kind_label(layer: &DrawLayerNode) -> String {
     match layer {
         DrawLayerNode::Shape(shape) => format!("shape:{}", shape.shape_kind),
         DrawLayerNode::Path(_) => "path".into(),
@@ -371,7 +371,7 @@ pub async fn layer_kind_label(layer: &DrawLayerNode) -> String {
     }
 }
 
-pub async fn find_draw_layer<'a>(doc: &'a DrawSnapshot, layer_id: &str) -> Option<&'a DrawLayerNode> {
+pub fn find_draw_layer<'a>(doc: &'a DrawSnapshot, layer_id: &str) -> Option<&'a DrawLayerNode> {
     for layer in &doc.layers {
         if let Some(found) = find_draw_layer_in_node(layer, layer_id) {
             return Some(found);
@@ -380,7 +380,7 @@ pub async fn find_draw_layer<'a>(doc: &'a DrawSnapshot, layer_id: &str) -> Optio
     None
 }
 
-async fn find_draw_layer_in_node<'a>(node: &'a DrawLayerNode, target_id: &str) -> Option<&'a DrawLayerNode> {
+fn find_draw_layer_in_node<'a>(node: &'a DrawLayerNode, target_id: &str) -> Option<&'a DrawLayerNode> {
     if layer_id(node) == target_id {
         return Some(node);
     }
@@ -394,9 +394,9 @@ async fn find_draw_layer_in_node<'a>(node: &'a DrawLayerNode, target_id: &str) -
     None
 }
 
-pub async fn flatten_draw_layers(layers: &[DrawLayerNode]) -> Vec<&DrawLayerNode> {
+pub fn flatten_draw_layers(layers: &[DrawLayerNode]) -> Vec<&DrawLayerNode> {
     let mut out = Vec::new();
-    async fn walk<'a>(nodes: &'a [DrawLayerNode], out: &mut Vec<&'a DrawLayerNode>) {
+    fn walk<'a>(nodes: &'a [DrawLayerNode], out: &mut Vec<&'a DrawLayerNode>) {
         for node in nodes {
             out.push(node);
             if let DrawLayerNode::Group(group) = node {
@@ -408,7 +408,7 @@ pub async fn flatten_draw_layers(layers: &[DrawLayerNode]) -> Vec<&DrawLayerNode
     out
 }
 
-pub async fn draw_transform_to_matrix(transform: &DrawTransform) -> [f64; 6] {
+pub fn draw_transform_to_matrix(transform: &DrawTransform) -> [f64; 6] {
     let cos = transform.rotation.cos();
     let sin = transform.rotation.sin();
     let a = transform.scale_x * cos;
@@ -418,7 +418,7 @@ pub async fn draw_transform_to_matrix(transform: &DrawTransform) -> [f64; 6] {
     [a, b, c, d, transform.x, transform.y]
 }
 
-pub async fn draw_matrix_to_transform(matrix: [f64; 6]) -> DrawTransform {
+pub fn draw_matrix_to_transform(matrix: [f64; 6]) -> DrawTransform {
     let [a, b, c, d, e, f] = matrix;
     let scale_x = (a * a + b * b).sqrt();
     let rotation = b.atan2(a);
@@ -427,7 +427,7 @@ pub async fn draw_matrix_to_transform(matrix: [f64; 6]) -> DrawTransform {
     DrawTransform { x: e, y: f, scale_x, scale_y, rotation }
 }
 
-pub async fn draw_play_layers_tree_row_id(layer: &DrawLayerNode) -> String {
+pub fn draw_play_layers_tree_row_id(layer: &DrawLayerNode) -> String {
     let segment = match layer {
         DrawLayerNode::Group(_) => "group",
         DrawLayerNode::Boolean(_) => "boolean",
@@ -440,11 +440,11 @@ pub async fn draw_play_layers_tree_row_id(layer: &DrawLayerNode) -> String {
     format!("draw-play-layers.{segment}.{}", layer_id(layer))
 }
 
-pub async fn draw_play_boolean_child_row_id(boolean_id: &str, child_id: &str) -> String {
+pub fn draw_play_boolean_child_row_id(boolean_id: &str, child_id: &str) -> String {
     format!("draw-play-layers.boolean.{boolean_id}.child.{child_id}")
 }
 
-pub async fn draw_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
+pub fn draw_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
     if let Some(rest) = row_id.strip_prefix("draw-play-layers.") {
         let parts: Vec<&str> = rest.split('.').collect();
         if parts.len() >= 2 {
@@ -454,7 +454,7 @@ pub async fn draw_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String>
     None
 }
 
-pub async fn layer_to_path_segments(layer: &DrawLayerNode) -> Vec<PathSegment> {
+pub fn layer_to_path_segments(layer: &DrawLayerNode) -> Vec<PathSegment> {
     match layer {
         DrawLayerNode::Path(path) => path.segments.clone(),
         DrawLayerNode::Shape(shape) => shape_to_path_segments(shape),
@@ -462,7 +462,7 @@ pub async fn layer_to_path_segments(layer: &DrawLayerNode) -> Vec<PathSegment> {
     }
 }
 
-async fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<PathSegment> {
+fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<PathSegment> {
     let k = 0.552_284_749_8;
     let crx = rx * k;
     let cry = ry * k;
@@ -476,7 +476,7 @@ async fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<PathSe
     ]
 }
 
-async fn shape_to_path_segments(shape: &DrawShapeBody) -> Vec<PathSegment> {
+fn shape_to_path_segments(shape: &DrawShapeBody) -> Vec<PathSegment> {
     match shape.shape_kind.as_str() {
         "rect" => shape.rect.as_ref().map(|rect| {
             vec![
@@ -506,7 +506,7 @@ async fn shape_to_path_segments(shape: &DrawShapeBody) -> Vec<PathSegment> {
     .unwrap_or_default()
 }
 
-pub async fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64, f64, f64)> {
+pub fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64, f64, f64)> {
     let local = match layer {
         DrawLayerNode::Text(text) => {
             let width = (text.content.len() as f64 * text.size * 0.6).max(8.0);
@@ -554,14 +554,14 @@ pub async fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64,
     ))
 }
 
-async fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
+fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
     match segment {
         PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => Some(*to),
         PathSegment::Close => None,
     }
 }
 
-async fn transform_world_point(transform: &DrawTransform, x: f64, y: f64) -> (f64, f64) {
+fn transform_world_point(transform: &DrawTransform, x: f64, y: f64) -> (f64, f64) {
     let sx = x * transform.scale_x;
     let sy = y * transform.scale_y;
     let cos = transform.rotation.cos();
@@ -569,7 +569,7 @@ async fn transform_world_point(transform: &DrawTransform, x: f64, y: f64) -> (f6
     (transform.x + sx * cos - sy * sin, transform.y + sx * sin + sy * cos)
 }
 
-async fn scene_node_for_path(base: &DrawLayerBase, segments: Vec<PathSegment>) -> DrawSceneNode {
+fn scene_node_for_path(base: &DrawLayerBase, segments: Vec<PathSegment>) -> DrawSceneNode {
     DrawSceneNode {
         id: base.id.clone(),
         transform: draw_transform_to_matrix(&base.transform),
@@ -585,9 +585,9 @@ async fn scene_node_for_path(base: &DrawLayerBase, segments: Vec<PathSegment>) -
     }
 }
 
-pub async fn flatten_draw_document_to_scene_nodes(doc: &DrawSnapshot) -> Vec<DrawSceneNode> {
+pub fn flatten_draw_document_to_scene_nodes(doc: &DrawSnapshot) -> Vec<DrawSceneNode> {
     let mut out = Vec::new();
-    async fn walk(doc: &DrawSnapshot, layers: &[DrawLayerNode], out: &mut Vec<DrawSceneNode>) {
+    fn walk(doc: &DrawSnapshot, layers: &[DrawLayerNode], out: &mut Vec<DrawSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
@@ -658,7 +658,7 @@ pub async fn flatten_draw_document_to_scene_nodes(doc: &DrawSnapshot) -> Vec<Dra
     out
 }
 
-pub async fn canvas_layer_records(doc: &DrawSnapshot) -> Vec<DrawCanvasLayerRecord> {
+pub fn canvas_layer_records(doc: &DrawSnapshot) -> Vec<DrawCanvasLayerRecord> {
     flatten_draw_layers(&doc.layers)
         .into_iter()
         .filter(|layer| !matches!(layer, DrawLayerNode::Group(_)))
@@ -670,7 +670,7 @@ pub async fn canvas_layer_records(doc: &DrawSnapshot) -> Vec<DrawCanvasLayerReco
         .collect()
 }
 
-pub async fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> DrawLayerNode {
+pub fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> DrawLayerNode {
     let mut cloned = node.clone();
     let id_material = |base: &DrawLayerBase| format!("{}{name_suffix}{}", base.id, base.name).into_bytes();
     match &mut cloned {
@@ -707,7 +707,7 @@ pub async fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> D
     cloned
 }
 
-pub async fn layer_base_mut(layer: &mut DrawLayerNode) -> &mut DrawLayerBase {
+pub fn layer_base_mut(layer: &mut DrawLayerNode) -> &mut DrawLayerBase {
     match layer {
         DrawLayerNode::Shape(shape) => &mut shape.base,
         DrawLayerNode::Path(path) => &mut path.base,
@@ -719,14 +719,14 @@ pub async fn layer_base_mut(layer: &mut DrawLayerNode) -> &mut DrawLayerBase {
     }
 }
 
-pub async fn mutate_draw_layer(doc: &DrawSnapshot, target_id: &str, mutator: impl FnMut(&mut DrawLayerNode)) -> DrawSnapshot {
+pub fn mutate_draw_layer(doc: &DrawSnapshot, target_id: &str, mutator: impl FnMut(&mut DrawLayerNode)) -> DrawSnapshot {
     let mut next = doc.clone();
     let mut mutator = mutator;
     update_layer_in_tree(&mut next.layers, target_id, &mut mutator);
     next
 }
 
-pub async fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str, mutator: &mut impl FnMut(&mut DrawLayerNode)) -> bool {
+pub fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str, mutator: &mut impl FnMut(&mut DrawLayerNode)) -> bool {
     for layer in layers.iter_mut() {
         if layer_id(layer) == target_id {
             mutator(layer);
@@ -741,7 +741,7 @@ pub async fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str,
     false
 }
 
-pub async fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> bool {
+pub fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> bool {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
         layers.remove(index);
         return true;
@@ -756,7 +756,7 @@ pub async fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: 
     false
 }
 
-pub async fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> Option<DrawLayerNode> {
+pub fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> Option<DrawLayerNode> {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
         return Some(layers.remove(index));
     }
@@ -770,7 +770,7 @@ pub async fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str
     None
 }
 
-pub async fn insert_layer(layers: &mut Vec<DrawLayerNode>, parent_id: Option<&str>, index: usize, node: DrawLayerNode) {
+pub fn insert_layer(layers: &mut Vec<DrawLayerNode>, parent_id: Option<&str>, index: usize, node: DrawLayerNode) {
     if let Some(parent_id) = parent_id {
         if !insert_layer_in_parent(layers, parent_id, index, node.clone()) {
             layers.push(node);
@@ -781,7 +781,7 @@ pub async fn insert_layer(layers: &mut Vec<DrawLayerNode>, parent_id: Option<&st
     }
 }
 
-async fn insert_layer_in_parent(layers: &mut [DrawLayerNode], parent_id: &str, index: usize, node: DrawLayerNode) -> bool {
+fn insert_layer_in_parent(layers: &mut [DrawLayerNode], parent_id: &str, index: usize, node: DrawLayerNode) -> bool {
     for layer in layers.iter_mut() {
         if let DrawLayerNode::Group(group) = layer {
             if group.base.id == parent_id {
@@ -805,8 +805,8 @@ pub struct DrawLayerLocation {
     pub index: usize,
 }
 
-pub async fn find_draw_layer_location(doc: &DrawSnapshot, target_id: &str) -> Option<DrawLayerLocation> {
-    async fn search(layers: &[DrawLayerNode], parent_id: Option<String>, target_id: &str) -> Option<DrawLayerLocation> {
+pub fn find_draw_layer_location(doc: &DrawSnapshot, target_id: &str) -> Option<DrawLayerLocation> {
+    fn search(layers: &[DrawLayerNode], parent_id: Option<String>, target_id: &str) -> Option<DrawLayerLocation> {
         for (index, layer) in layers.iter().enumerate() {
             if layer_id(layer) == target_id {
                 return Some(DrawLayerLocation { parent_id, index });
@@ -822,7 +822,7 @@ pub async fn find_draw_layer_location(doc: &DrawSnapshot, target_id: &str) -> Op
     search(&doc.layers, None, target_id)
 }
 
-pub async fn create_layer_by_kind(kind: &str) -> DrawLayerNode {
+pub fn create_layer_by_kind(kind: &str) -> DrawLayerNode {
     if let Some(shape_kind) = kind.strip_prefix("shape:") {
         return match shape_kind {
             "rect" => create_draw_shape_layer_rect("Rectangle"),
@@ -853,26 +853,26 @@ pub async fn create_layer_by_kind(kind: &str) -> DrawLayerNode {
     }
 }
 
-pub async fn hex_to_rgba(hex: &str, alpha: f64) -> [f64; 4] {
+pub fn hex_to_rgba(hex: &str, alpha: f64) -> [f64; 4] {
     let normalized = hex.trim_start_matches('#');
     let value = if normalized.len() == 3 { normalized.chars().map(|c| format!("{c}{c}")).collect::<String>() } else { normalized.to_string() };
     let parse = |start: usize| u8::from_str_radix(&value[start..start + 2], 16).unwrap_or(0) as f64 / 255.0;
     [parse(0), parse(2), parse(4), alpha]
 }
 
-pub async fn rgba_to_hex(color: [f64; 4]) -> String {
+pub fn rgba_to_hex(color: [f64; 4]) -> String {
     let channel = |value: f64| format!("{:02x}", (value.clamp(0.0, 1.0) * 255.0).round() as u8);
     format!("#{}{}{}", channel(color[0]), channel(color[1]), channel(color[2]))
 }
 //#endregion 🔖️Tree
 
 //#region 🔖️SegmentGeometry
-async fn draw_map_point_by_matrix(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
+fn draw_map_point_by_matrix(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
     let [a, b, c, d, e, f] = matrix;
     [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
 }
 
-pub async fn transform_path_segments(segments: &[PathSegment], transform: &DrawTransform) -> Vec<PathSegment> {
+pub fn transform_path_segments(segments: &[PathSegment], transform: &DrawTransform) -> Vec<PathSegment> {
     let matrix = draw_transform_to_matrix(transform);
     segments
         .iter()
@@ -887,14 +887,14 @@ pub async fn transform_path_segments(segments: &[PathSegment], transform: &DrawT
         .collect()
 }
 
-pub async fn scale_path_segments(segments: &[PathSegment], scale_x: f64, scale_y: f64) -> Vec<PathSegment> {
+pub fn scale_path_segments(segments: &[PathSegment], scale_x: f64, scale_y: f64) -> Vec<PathSegment> {
     if scale_x == 1.0 && scale_y == 1.0 {
         return segments.to_vec();
     }
     transform_path_segments(segments, &DrawTransform { x: 0.0, y: 0.0, scale_x, scale_y, rotation: 0.0 })
 }
 
-pub async fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathSegment>> {
+pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathSegment>> {
     let mut contours = Vec::new();
     let mut current: Vec<PathSegment> = Vec::new();
     for segment in segments {
@@ -912,7 +912,7 @@ pub async fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec
     contours
 }
 
-pub async fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
+pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -931,7 +931,7 @@ pub async fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64,
     Some((min_x, min_y, max_x - min_x, max_y - min_y))
 }
 
-pub async fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_area: f64) -> Vec<PathSegment> {
+pub fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_area: f64) -> Vec<PathSegment> {
     if min_area <= 0.0 {
         return segments.to_vec();
     }
@@ -946,19 +946,19 @@ pub async fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_
     kept
 }
 
-async fn arc_ellipse_point(unit: [f64; 2], rx: f64, ry: f64, cos_phi: f64, sin_phi: f64, cx: f64, cy: f64) -> [f64; 2] {
+fn arc_ellipse_point(unit: [f64; 2], rx: f64, ry: f64, cos_phi: f64, sin_phi: f64, cx: f64, cy: f64) -> [f64; 2] {
     let x = unit[0] * rx;
     let y = unit[1] * ry;
     [cos_phi * x - sin_phi * y + cx, sin_phi * x + cos_phi * y + cy]
 }
 
-async fn arc_vector_angle(ux: f64, uy: f64, vx: f64, vy: f64) -> f64 {
+fn arc_vector_angle(ux: f64, uy: f64, vx: f64, vy: f64) -> f64 {
     let sign = if ux * vy - uy * vx < 0.0 { -1.0 } else { 1.0 };
     let dot = (ux * vx + uy * vy).clamp(-1.0, 1.0);
     sign * dot.acos()
 }
 
-async fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
+fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
     let a = (4.0 / 3.0) * ((ang2 - ang1) / 4.0).tan();
     let (sin1, cos1) = ang1.sin_cos();
     let (sin2, cos2) = ang2.sin_cos();
@@ -966,7 +966,7 @@ async fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64;
 }
 
 /// 🌙️ Converts one SVG endpoint-parameterized arc into cubic Bézier control triples (SVG spec F.6.5).
-async fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, large_arc: bool, sweep: bool, to: [f64; 2]) -> Vec<([f64; 2], [f64; 2], [f64; 2])> {
+fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, large_arc: bool, sweep: bool, to: [f64; 2]) -> Vec<([f64; 2], [f64; 2], [f64; 2])> {
     if rx.abs() < 1e-9 || ry.abs() < 1e-9 {
         return Vec::new();
     }
@@ -1030,7 +1030,7 @@ async fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f
 }
 
 /// 🌙️ Flattens `Arc` segments into `Cubic` runs so downstream consumers (booleans, canvas hosts) never see SVG endpoint arcs.
-pub async fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment> {
+pub fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment> {
     let mut out = Vec::with_capacity(segments.len());
     let mut cursor = [0.0, 0.0];
     for segment in segments {
@@ -1057,7 +1057,7 @@ pub async fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment
     out
 }
 
-pub async fn draw_layer_descendant_leaf_ids(layer: &DrawLayerNode) -> Vec<String> {
+pub fn draw_layer_descendant_leaf_ids(layer: &DrawLayerNode) -> Vec<String> {
     match layer {
         DrawLayerNode::Group(group) => group.children.iter().flat_map(draw_layer_descendant_leaf_ids).collect(),
         _ => vec![layer_id(layer).to_string()],
@@ -1066,7 +1066,7 @@ pub async fn draw_layer_descendant_leaf_ids(layer: &DrawLayerNode) -> Vec<String
 
 const CURVE_LINE_SAMPLE_STEPS: usize = 16;
 
-async fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
+fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
     (1..=steps)
         .map(|step| {
             let t = step as f64 / steps as f64;
@@ -1076,7 +1076,7 @@ async fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps:
         .collect()
 }
 
-async fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
+fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
     (1..=steps)
         .map(|step| {
             let t = step as f64 / steps as f64;
@@ -1087,7 +1087,7 @@ async fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], t
 }
 
 /// 📏️ Flattens `Quad`/`Cubic`/`Arc` segments into `Line` segments — the planar boolean kernel only understands polygons.
-pub async fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
+pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
     let curved = flatten_curve_segments(segments);
     let mut out = Vec::with_capacity(curved.len());
     let mut cursor = [0.0, 0.0];
@@ -1118,7 +1118,7 @@ pub async fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegm
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-async fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
+fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
     use semio_s_2d::PathSegment as KernelSegment;
     match segment {
         PathSegment::Move { to } => KernelSegment::Move { to: *to },
@@ -1130,7 +1130,7 @@ async fn to_kernel_segment(segment: &PathSegment) -> semio_s_2d::PathSegment {
     }
 }
 
-async fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
+fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
     use semio_s_2d::PathSegment as KernelSegment;
     match segment {
         KernelSegment::Move { to } => PathSegment::Move { to: *to },
@@ -1142,16 +1142,16 @@ async fn from_kernel_segment(segment: &semio_s_2d::PathSegment) -> PathSegment {
     }
 }
 
-async fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_s_2d::PathSegment> {
+fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_s_2d::PathSegment> {
     segments.iter().map(to_kernel_segment).collect()
 }
 
-async fn from_kernel_segments(segments: &[semio_s_2d::PathSegment]) -> Vec<PathSegment> {
+fn from_kernel_segments(segments: &[semio_s_2d::PathSegment]) -> Vec<PathSegment> {
     segments.iter().map(from_kernel_segment).collect()
 }
 
 /// 🪢️ Resolves a boolean layer's children (each transformed by its own local transform) through the planar kernel.
-async fn resolve_boolean_layer_segments(doc: &DrawSnapshot, boolean: &DrawBooleanBody) -> Vec<PathSegment> {
+fn resolve_boolean_layer_segments(doc: &DrawSnapshot, boolean: &DrawBooleanBody) -> Vec<PathSegment> {
     let child_segments: Vec<Vec<PathSegment>> = boolean
         .children
         .iter()
@@ -1170,7 +1170,7 @@ async fn resolve_boolean_layer_segments(doc: &DrawSnapshot, boolean: &DrawBoolea
 }
 
 /// 🖼️ Decodes a (possibly resized) PNG asset into an 8-bit luma buffer, matching the premigration canvas-based decode.
-async fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec<u8>)> {
+fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec<u8>)> {
     let base64_data = match asset.data.strip_prefix("data:") {
         Some(rest) => rest.split_once(',').map_or(rest, |(_, data)| data),
         None => asset.data.as_str(),
@@ -1189,7 +1189,7 @@ async fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u3
 }
 
 /// 📐️ Premigration artboard resolution: explicit artboard wins, else layer bounds excluding group/boolean/trace kinds.
-pub async fn resolve_draw_artboard(doc: &DrawSnapshot) -> Option<DrawArtboard> {
+pub fn resolve_draw_artboard(doc: &DrawSnapshot) -> Option<DrawArtboard> {
     if let Some(artboard) = &doc.artboard {
         if artboard.width > 0.0 && artboard.height > 0.0 {
             return Some(artboard.clone());
@@ -1213,7 +1213,7 @@ pub async fn resolve_draw_artboard(doc: &DrawSnapshot) -> Option<DrawArtboard> {
 }
 
 /// 🔍️ Resolves a trace layer's bitmap source into simplified, artboard-scaled contour segments.
-async fn resolve_trace_layer_segments(doc: &DrawSnapshot, trace: &DrawTraceBody) -> Vec<PathSegment> {
+fn resolve_trace_layer_segments(doc: &DrawSnapshot, trace: &DrawTraceBody) -> Vec<PathSegment> {
     let assets = &doc.assets;
     if assets.is_empty() {
         return Vec::new();
@@ -1234,7 +1234,7 @@ async fn resolve_trace_layer_segments(doc: &DrawSnapshot, trace: &DrawTraceBody)
 
 /// 🔎 Returns whether `s.draw.draw` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `default_draw_document` (same rule; mirrors `s.lowpoly.lowpoly`'s identical move).
-pub async fn artifact_schema_registered() -> bool {
+pub fn artifact_schema_registered() -> bool {
     ::schema::artifact_schema_descriptor_registered("s.draw.draw")
 }
 //#endregion 🔖️DocumentHelpers

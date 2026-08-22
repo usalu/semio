@@ -3,6 +3,6 @@
 use crate::artifacts::assembly::mutations::{disconnect_slots, AssemblyMutation};
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub async fn inverse(payload: &super::mutation::ConnectSlots, _base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
+pub fn inverse(payload: &super::mutation::ConnectSlots, _base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     vec![disconnect_slots(payload.edge.id.clone())]
 }

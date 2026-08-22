@@ -4,7 +4,7 @@ use crate::artifacts::remodel::mutations::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::CreateGcp, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
+pub fn inverse(payload: &super::mutation::CreateGcp, base: &RemodelSnapshot) -> Vec<RemodelMutation> {
     if base.gcps.iter().any(|gcp| gcp.id == payload.gcp.id) {
         return Vec::new();
     }

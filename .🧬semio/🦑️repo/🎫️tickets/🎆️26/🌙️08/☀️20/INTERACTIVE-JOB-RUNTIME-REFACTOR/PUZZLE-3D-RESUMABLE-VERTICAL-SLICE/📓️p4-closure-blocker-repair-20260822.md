@@ -48,7 +48,7 @@ The scoped production route/precompute source contains no `block_on`, `run_block
 - `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️component.rs`
 - `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`
 
-## Remaining Required Gate
+## Historical Required-Gate Failure — Superseded
 
 `bun ./📜️script.ts nx run @semio-tech/puzzle-plugin:test-quick --skip-nx-cache` remains red after repeated attempts, including a final frozen exclusive-Cargo window. The target's preliminary `cargo build --tests` completes, but its following `cargo nextest run --no-tests warn --profile fundamental ...` recompiles the same UI/plugin/Puzzle dependency chain and is killed by the wrapper's fixed 15,000 ms total command budget before assertions.
 
@@ -56,7 +56,7 @@ A direct, unbounded invocation of that exact nextest payload was used to finish 
 
 See `📝️p4-platform-static-runtime-evidence-20260822.txt` and `📝️p4-nx-quick-current-20260822.txt` for the concise command/result ledger.
 
-## Source Repair Pending Validation
+## Source Repair Implemented
 
 The two repository-gate blockers diagnosed above now have source repairs, but Phase 4 remains open until fresh runtime evidence is recorded.
 
@@ -66,4 +66,39 @@ The two repository-gate blockers diagnosed above now have source repairs, but Ph
 - `runCargoTestBudgeted` now invokes the exact nextest selection once with `--no-run` under `BUILD_BUDGET_MS`, then starts a separate assertion run under `testLevelBudgetMs(level)`. The cargo-test fallback retains its own build-budgeted `cargo build --tests` prewarm. This prevents nextest compile/prewarm time from consuming the 15-second fundamental assertion budget.
 - Source-only checks completed while another phase owned Cargo: Rust formatting over the owned Puzzle 2D/config files, Bun syntax validation of the shared TypeScript wrapper, JSON-schema parsing, and schema optionality assertions all exit zero.
 
-Fresh focused native tests, native release, wasm targets, and the exact Nx command are still required before changing `📌️important.md` or claiming closure.
+The source repairs above are validated by the final closure packet below.
+
+## Final Closure Evidence
+
+This section supersedes the historical failures retained above. All commands ran against the same final source after the continuation, cache, typed-snapshot, and checkpoint-authority repairs.
+
+| Gate | Final result |
+| --- | --- |
+| Exact repository quick target | **Pass** — `bun ./📜️script.ts nx run @semio-tech/puzzle-plugin:test-quick --skip-nx-cache`; nextest passed 1,130/1,130 with 0 skipped. The assertion-only phase completed in 12.500 s under the unchanged 15 s fundamental ceiling. The normal wrapper selected 7 assertion threads from the cross-platform `availableParallelism()` reserve formula. |
+| Native debug | **Pass** — `cargo check -p semio-s-plugin-puzzle --message-format=short`; exit 0, 41.22 s, warnings only. |
+| Native release | **Pass** — `cargo check --release -p semio-s-plugin-puzzle --lib --message-format=short`; exit 0, 1m 02s, warnings only. |
+| Browser Wasm | **Pass** — `cargo check -p semio-s-plugin-puzzle --target wasm32-unknown-unknown --message-format=short`; exit 0, 53.64 s, warnings only. |
+| WASI Preview 2 | **Pass** — `cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2 --message-format=short`; exit 0, 41.51 s, warnings only. |
+| Framework transaction/cache focus | **Pass** — `cargo test -p semio-framework-plugin --lib 'app::testkit::transaction_testkit_tests::' --quiet`; 10 passed, 0 failed, including no-foreign preflight bypass, immutable Arc sharing, and incremental amended-history cache extension. |
+| Fill route and reveal | **Pass** — poll/enqueue-only isolated worker route, direct render/reveal, and cross-pane synchronization focused tests passed; render/reveal completed in 0.14 s and cross-pane synchronization in 0.13 s. |
+| Maximum fill-count continuation | **Pass** — the maximum slider delta materialized through 69 generation-tagged continuations; maximum measured interaction step was 1.979125 ms, below 8 ms, with cancellation/supersession and final prefix-stable document assertions. |
+| Puzzle 2D continuation | **Pass** — repeated-action behavior completed in 0.06 s and cancellation/supersession in 1.58 s with a four-mutation maximum continuation slice. |
+| Worker-count determinism | **Pass** — worker counts 1, 2, 4, and default 10 each produced the same accepted sequence and byte-identical 2,691-byte commit. |
+| Preview ceiling | **Pass** — first substantive preview 245 µs and maximum fill resume 158 µs, both below their 50 ms and 8 ms ceilings. |
+| Adversarial whole-fill ceiling | **Pass** — 1,024 placed objects, first substantive preview 587 µs, maximum resume 167 µs, 3,122 transitions. |
+
+The typed Puzzle 3D play snapshot now owns an `Arc<Puzzle3dSnapshot>` and lazily projects JSON only for callers that require the value bridge. Command jobs share immutable snapshot/config/history inputs through `Arc`. Mutations that declare that they cannot emit foreign steps bypass the snapshot/diff/apply preflight. Coalesced `AmendLast` history refresh extends the cached tail incrementally instead of rebuilding the accumulated edit. These changes remove document-size-dependent work from each bounded continuation without weakening the `InteractiveJob` deadline, fuel, generation, checkpoint, or one-bounded-step semantics.
+
+The live fill worker's latest checkpoint is authoritative while an engine exists, so a stale persisted checkpoint cannot rewind worker progress between polls. Persistence still restores the engine when no live checkpoint exists, preserving resumability across reconstruction.
+
+## Final Static And Dependency Evidence
+
+- `cargo tree -p semio-s-plugin-puzzle --edges normal -i semio-framework-job` exits 0 and resolves Puzzle through the shared job runtime.
+- The production `fillBuildTick` action positively contains `poll_fill_job`, `enqueue_fill_job`, and isolated `Effect::SpawnJob`, with zero solver-step/executor/blocking matches.
+- Production Puzzle 3D precompute, before `#[cfg(test)]`, has zero `WorkerPool::new`, `available_parallelism`, private thread/Rayon, `block_on`, `run_to_completion`, `spawn_blocking`, or `run_blocking` matches.
+- `.config/nextest.toml` has no fixed `test-threads = 7`. The repository TypeScript wrapper contains the dynamic `availableParallelism()` formula, passes `--test-threads` to nextest, and retains `--status-level fail --final-status-level fail`.
+- `bun --check` passes for the repository TypeScript wrapper.
+- `rustfmt --edition 2021 --check` passes for the Puzzle 2D example continuation and Puzzle 3D fill action, fill-count continuation, precompute bridge, and resumable fill builder.
+- The scoped changed production/test sources contain no temporary `[DEBUG]` instrumentation.
+
+All four blockers identified by `📓️p4-closure-audit-20260822.md` now have source and runtime evidence: the inline route is removed, fill work is cursor-resumable below 8 ms, 1/2/4/default worker output is deterministic, and substantive preview is below 50 ms. The exact required Nx, native debug/release, browser Wasm, WASI Preview 2, static, dependency, and formatting gates are green.

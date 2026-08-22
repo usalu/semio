@@ -23,6 +23,8 @@ export interface FlowConfig {
   /** @state config */
   generationJson: string;
   /** @state config */
+  duplicateWidgetProgressJson: string;
+  /** @state config */
   locale: string;
 }
 

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "reorganize")]
 pub struct Reorganize {}
 
-pub async fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
+pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Procedural2dMutation, Procedural2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.fixture;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
@@ -27,8 +27,8 @@ mod tests {
     use crate::editor::procedural2d::testkit::{app, dispatch};
     use crate::editor::procedural2d::Procedural2dCommand;
 
-    #[semio_framework_async_macros::async_test]
-    async fn reorganize_emits_operations() {
+    #[test]
+    fn reorganize_emits_operations() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").fixture;
         dispatch(&mut app, Procedural2dCommand::Reorganize(Reorganize {}));
@@ -36,8 +36,8 @@ mod tests {
         assert_ne!(before.layout, after.layout);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn node_graph_viewport_sets_camera() {
+    #[test]
+    fn node_graph_viewport_sets_camera() {
         let mut app = app();
         dispatch(&mut app, Procedural2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: serde_json::to_string(&CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }).unwrap() }));
     }
